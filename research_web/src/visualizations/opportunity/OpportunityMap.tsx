@@ -17,6 +17,8 @@ import {
     gainColorBand,
     territoryLabelText,
     planTerritoryLabels,
+    comparisonShareLine,
+    shareLabel,
     type TerritoryLabelSpot,
     metricLabel,
     showPeakAreaReference,
@@ -58,8 +60,6 @@ const phaseLabel = {
 };
 const gainLabel = (value: number | null) =>
     value === null ? "不知道" : `${value >= 0 ? "+" : ""}${value.toFixed(0)}%`;
-const shareLabel = (value: number | null) =>
-    value === null ? "無法計算" : `${(value * 100).toFixed(0)}%`;
 const mix = (a: number, b: number, t: number) => a + (b - a) * t;
 const angleFor = (id: string) =>
     ([...id].reduce(
@@ -1389,12 +1389,12 @@ export function OpportunityMap({
                                                         }}
                                                     >
                                                         {spot.prefixes[i]}
-                                                        持股日上漲占比平均{" "}
-                                                        {shareLabel(average)}
-                                                        {known.length <
-                                                        group.nodeIds.length
-                                                            ? "（部分無法計算）"
-                                                            : ""}
+                                                        {comparisonShareLine(
+                                                            average,
+                                                            known.length <
+                                                                group.nodeIds
+                                                                    .length,
+                                                        )}
                                                     </tspan>
                                                 );
                                             },

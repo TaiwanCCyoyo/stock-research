@@ -13,7 +13,7 @@ import {
     territoryLabelText,
     planTerritoryLabels,
     labelWidth,
-    COMPARISON_LINE_TAIL,
+    comparisonShareLine,
     hasMapIndustry,
     mapGroupId,
     mapIndustries,
@@ -336,15 +336,31 @@ test("territory labels keep every drawn line inside a 320px map with 2-4 long co
             fontSize,
             limit: 5,
         });
+        assert.ok(plan.size > 0, `${count} comparisons: some label is placed`);
+        // The texts the map really draws, including the longest unknown share.
+        const shares = [
+            comparisonShareLine(1, false),
+            comparisonShareLine(1, true),
+            comparisonShareLine(null, false),
+            comparisonShareLine(null, true),
+        ];
+        assert.ok(shares.some((text) => text.includes("100%")));
+        assert.ok(
+            shares.some((text) => text.includes("無法計算（部分無法計算）")),
+        );
         for (const [id, spot] of plan) {
             const group = groups.find((item) => item.id === id)!;
             const rows = [
                 group.text,
-                ...spot.prefixes.map(
-                    (prefix) => `${prefix}${COMPARISON_LINE_TAIL}`,
+                ...spot.prefixes.flatMap((prefix) =>
+                    shares.map((share) => `${prefix}${share}`),
                 ),
             ];
-            rows.forEach((row, line) => {
+            rows.forEach((row, index) => {
+                const line =
+                    index === 0
+                        ? 0
+                        : 1 + Math.floor((index - 1) / shares.length);
                 const half = labelWidth(row, fontSize) / 2;
                 assert.ok(
                     spot.x - half >= view.x0 - 1e-9 &&

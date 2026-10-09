@@ -50,8 +50,24 @@ export function labelWidth(text: string, fontSize: number): number {
     );
 }
 
-/** The longest comparison line: share text with the "partly unknown" note. */
-export const COMPARISON_LINE_TAIL = "持股日上漲占比平均 100%（部分無法計算）";
+/** Share shown on a comparison line: a percentage, or 無法計算 when unknown. */
+export function shareLabel(value: number | null): string {
+    return value === null ? "無法計算" : `${(value * 100).toFixed(0)}%`;
+}
+
+/** The text of one comparison line under a territory label, without its name. */
+export function comparisonShareLine(
+    average: number | null,
+    partial: boolean,
+): string {
+    return `持股日上漲占比平均 ${shareLabel(average)}${partial ? "（部分無法計算）" : ""}`;
+}
+
+/** Every comparison line that can be drawn; label space is planned for the widest. */
+export const COMPARISON_LINE_VARIANTS: readonly string[] = [null, 0, 1].flatMap(
+    (share) =>
+        [false, true].map((partial) => comparisonShareLine(share, partial)),
+);
 
 export interface TerritoryLabelGroup {
     id: string;
@@ -86,7 +102,10 @@ export function planTerritoryLabels(input: {
     const plan = new Map<string, TerritoryLabelSpot>();
     const margin = font * 0.5;
     const available = view.x1 - view.x0 - 2 * margin;
-    const tail = labelWidth(COMPARISON_LINE_TAIL, font);
+    const tailText = COMPARISON_LINE_VARIANTS.reduce((widest, text) =>
+        labelWidth(text, font) > labelWidth(widest, font) ? text : widest,
+    );
+    const tail = labelWidth(tailText, font);
     const prefixes = comparisonNames.map((name) => {
         if (comparisonNames.length < 2) return "";
         const budget = available - tail - font * 0.6;
@@ -108,7 +127,7 @@ export function planTerritoryLabels(input: {
         const width = Math.max(
             labelWidth(group.text, font),
             ...prefixes.map((prefix) =>
-                labelWidth(`${prefix}${COMPARISON_LINE_TAIL}`, font),
+                labelWidth(`${prefix}${tailText}`, font),
             ),
         );
         if (width > available) continue;
