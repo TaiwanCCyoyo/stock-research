@@ -293,7 +293,7 @@ def test_changed_inventory_forces_full_without_execution(monkeypatch: pytest.Mon
     assert any("inventory differs" in reason for reason in plan["reasons"])
 
 
-def test_draft_full_gate_blocks_without_certifying_or_running_tests(tmp_path: Path) -> None:
+def test_draft_full_gate_blocks_without_certifying_or_running_tests() -> None:
     workflow = yaml.load((ci_scope.ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
     assert "ready_for_review" in workflow["on"]["pull_request"]["types"]
     steps = workflow["jobs"]["repository-checks"]["steps"]
@@ -301,8 +301,99 @@ def test_draft_full_gate_blocks_without_certifying_or_running_tests(tmp_path: Pa
     assert "github.event.pull_request.draft" in gate["if"]
     assert "steps.scope.outputs.full == 'true'" in gate["if"]
     assert steps.index(gate) < next(i for i, step in enumerate(steps) if step.get("name") == "Selected Python tests")
+
+
+@pytest.mark.skipif(shutil.which("pwsh") is None and shutil.which("powershell") is None, reason="PowerShell is unavailable; YAML gate contract remains covered")
+def test_draft_full_gate_native_exit(tmp_path: Path) -> None:
+    workflow = yaml.load((ci_scope.ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
+    gate = next(step for step in workflow["jobs"]["repository-checks"]["steps"] if step.get("name") == "Draft full validation remains pending")
     shell = shutil.which("pwsh") or shutil.which("powershell")
     assert shell is not None
     result = subprocess.run([shell, "-NoProfile", "-NonInteractive", "-Command", gate["run"]], cwd=tmp_path, capture_output=True, timeout=30)
     assert result.returncode == 1
     assert b"validation remains pending" in result.stdout
+
+
+@pytest.mark.parametrize("filename", ["test_widget.py", "widget_test.py"])
+def test_full_inventory_executes_both_pytest_filename_styles(tmp_path: Path, filename: str) -> None:
+    target = tmp_path / "tests" / filename
+    target.parent.mkdir()
+    target.write_text(
+        "from pathlib import Path\n"
+        "def test_actual_execution():\n"
+        "    Path(__file__).with_suffix('.executed').write_text('ran')\n"
+        "    assert False, 'new-test-executed'\n",
+        encoding="utf-8",
+    )
+    plan = ci_scope.make_plan([("A", f"tests/{filename}")], root=tmp_path)
+    assert plan["full"]
+    assert plan["python_tests"] == [f"tests/{filename}"]
+    # This invokes only the one synthetic failing fixture, never the repository suite.
+    assert ci_scope.execute_plan(plan, root=tmp_path) == 1
+    assert target.with_suffix(".executed").read_text() == "ran"
+
+
+@pytest.mark.parametrize("source", ["research_core/patterns/hhhl/sources.json", "research_core/patterns/hhhl/v4/sources.zip"])
+def test_hhhl_sources_select_fresh_process_consumer(source: str) -> None:
+    plan = ci_scope.make_plan([("M", source)])
+    assert not plan["full"]
+    assert "scripts/tests/test_cache_execution.py" in plan["python_tests"]
+
+
+@pytest.mark.parametrize(
+    "source", ["research_core/feature_atlas_outcomes.py", "research_core/market_context.py", "research_core/method_environment_interactions.py"]
+)
+def test_shared_research_domains_include_industry_role_consumers(source: str) -> None:
+    plan = ci_scope.make_plan([("M", source)])
+    assert not plan["full"]
+    assert "scripts/tests/test_industry_role_comparison.py" in plan["python_tests"]
+    assert "scripts/tests/test_industry_role_runner.py" in plan["python_tests"]
+
+
+def test_atlas_verification_includes_hhhl_builders_and_cycle_is_finite() -> None:
+    plan = ci_scope.make_plan([("M", "research_core/feature_atlas_dataset.py")])
+    assert not plan["full"]
+    assert "scripts/tests/test_build_hhhl_v4_probability.py" in plan["python_tests"]
+    assert "scripts/tests/test_validate_hhhl_v4_source.py" in plan["python_tests"]
+    assert {"sector", "method_environment", "hhhl", "opportunity", "atlas"} <= set(plan["domains"])
+    assert "scripts/tests/test_research_ledger.py" not in plan["python_tests"]
+
+
+def test_draft_runs_hosted_contracts_and_hooks_before_pending_gate() -> None:
+    workflow = yaml.load((ci_scope.ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
+    steps = workflow["jobs"]["repository-checks"]["steps"]
+    indices = {step["name"]: i for i, step in enumerate(steps) if "name" in step}
+    assert (
+        indices["Repository checks"]
+        < indices["Draft selector and CI contracts"]
+        < indices["Draft full validation remains pending"]
+        < indices["Selected Python tests"]
+    )
+    targeted = steps[indices["Draft selector and CI contracts"]]
+    assert "scripts/tests/test_ci_scope.py" in targeted["run"]
+    assert "scripts/tests/test_mypy_scopes.py" in targeted["run"]
+    assert "scripts/tests/test_file_hygiene.py" in targeted["run"]
+    assert "--execute" not in targeted["run"]
+
+
+def test_pinned_node_and_built_frontend_precede_python_consumers() -> None:
+    workflow = yaml.load((ci_scope.ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
+    steps = workflow["jobs"]["repository-checks"]["steps"]
+    indices = {step["name"]: i for i, step in enumerate(steps) if "name" in step}
+    assert indices["Setup Node"] < indices["Frontend validation"] < indices["Selected Python tests"]
+    assert "npm run build" in steps[indices["Frontend validation"]]["run"]
+    assert steps[indices["Setup Node"]]["with"]["node-version"] == "24"
+
+
+def test_changed_suffix_style_hook_test_is_always_selected(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    names = [".codex/hooks/tests/test_existing.py", ".codex/hooks/tests/checker_test.py"]
+    for name in names:
+        path = tmp_path / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("def test_example(): pass\n", encoding="utf-8")
+    manifest = ci_scope.load_manifest()
+    manifest["reviewed_tests"] = names
+    monkeypatch.setattr(ci_scope, "load_manifest", lambda: manifest)
+    plan = ci_scope.make_plan([("M", names[1])], root=tmp_path)
+    assert not plan["full"]
+    assert set(plan["python_tests"]) == set(names)

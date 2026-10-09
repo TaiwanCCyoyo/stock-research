@@ -45,11 +45,6 @@ jobs:
                       uv run --no-project python scripts/ci_scope.py --base "$env:CHECK_BASE" --head "$env:CHECK_HEAD" --plan .tmp/ci-plan.json --output "$env:GITHUB_OUTPUT"
                   }
                   if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-            - name: Draft full validation remains pending
-              if: github.event_name == 'pull_request' && github.event.pull_request.draft && steps.scope.outputs.full == 'true'
-              run: |
-                  "::error::Full validation remains pending for this draft. Mark ready for review to run it; this check does not certify a pass."
-                  exit 1
             - name: Install dependencies
               run: uv sync --locked --group dev --group viewer --group static-report
             - name: Identify hook interpreter
@@ -75,9 +70,14 @@ jobs:
                       uv run --no-sync pre-commit run --from-ref "$env:CHECK_BASE" --to-ref "$env:CHECK_HEAD" --show-diff-on-failure
                   }
                   if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-            - name: Selected Python tests
-              if: steps.scope.outputs.run_tests == 'true'
-              run: uv run --no-sync python scripts/ci_scope.py --execute --plan .tmp/ci-plan.json
+            - name: Draft selector and CI contracts
+              if: github.event_name == 'pull_request' && github.event.pull_request.draft && steps.scope.outputs.full == 'true'
+              run: uv run --no-sync python -m pytest scripts/tests/test_ci_scope.py scripts/tests/test_mypy_scopes.py scripts/tests/test_file_hygiene.py
+            - name: Draft full validation remains pending
+              if: github.event_name == 'pull_request' && github.event.pull_request.draft && steps.scope.outputs.full == 'true'
+              run: |
+                  "::error::Full validation remains pending for this draft. Mark ready for review to run it; this check does not certify a pass."
+                  exit 1
             - name: Setup Node
               if: steps.scope.outputs.frontend == 'true'
               uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -99,6 +99,9 @@ jobs:
                   if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
                   npm run build
                   if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            - name: Selected Python tests
+              if: steps.scope.outputs.run_tests == 'true'
+              run: uv run --no-sync python scripts/ci_scope.py --execute --plan .tmp/ci-plan.json
             - name: Publish scope explanation
               if: always()
               run: |

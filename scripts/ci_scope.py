@@ -18,7 +18,26 @@ def load_manifest() -> dict[str, Any]:
 
 
 def test_inventory(root: Path, manifest: dict[str, Any]) -> list[str]:
-    return sorted({p.relative_to(root).as_posix() for folder in manifest["test_roots"] for p in (root / folder).rglob("test_*.py")})
+    return sorted({
+        p.relative_to(root).as_posix()
+        for folder in manifest["test_roots"]
+        for p in (root / folder).rglob("*.py")
+        if any(fnmatch.fnmatchcase(p.name, pattern) for pattern in manifest["pytest_file_patterns"])
+    })
+
+
+def consumer_closure(names: set[str], manifest: dict[str, Any]) -> set[str]:
+    pending = list(names)
+    selected: set[str] = set()
+    while pending:
+        name = pending.pop()
+        if name in selected:
+            continue
+        if name not in manifest["domains"]:
+            raise ValueError(f"Unknown consumer domain: {name}")
+        selected.add(name)
+        pending.extend(manifest["domains"][name].get("consumers", []))
+    return selected
 
 
 def matches(path: str, patterns: list[str]) -> bool:
@@ -33,6 +52,7 @@ def make_plan(changes: list[tuple[str, str]], *, root: Path = ROOT, force_full: 
     manifest = load_manifest()
     inventory = test_inventory(root, manifest)
     selected_domains: set[str] = set()
+    changed_tests: set[str] = set()
     reasons: list[str] = []
     full = force_full
     frontend = force_full
@@ -43,6 +63,8 @@ def make_plan(changes: list[tuple[str, str]], *, root: Path = ROOT, force_full: 
         reasons.append("Explicit full validation (manual request or initial history)")
     for status, raw_path in changes:
         path = raw_path.replace("\\", "/")
+        if path in inventory:
+            changed_tests.add(path)
         if status == "A" or matches(path, manifest["full_paths"]):
             full = True
             reasons.append(f"{status} {path}: new path or shared/configuration safety fallback")
@@ -58,13 +80,13 @@ def make_plan(changes: list[tuple[str, str]], *, root: Path = ROOT, force_full: 
             reasons.append(f"{status} {path}: no reviewed impact mapping; full validation")
         for name in owners:
             selected_domains.add(name)
-            selected_domains.update(manifest["domains"][name].get("consumers", []))
             reasons.append(f"{status} {path}: {name} and declared downstream consumers")
     if not changes and not force_full:
         selected_domains.add("hooks")
         reasons.append("Empty diff: repository and selector contracts remain checked")
+    selected_domains = consumer_closure(selected_domains, manifest)
     patterns = [pattern for name in selected_domains for pattern in manifest["domains"][name]["tests"]]
-    selected = inventory if full else [path for path in inventory if matches(path, patterns)]
+    selected = inventory if full else [path for path in inventory if matches(path, patterns) or path in changed_tests]
     frontend = full or frontend or any(manifest["domains"][name].get("frontend", False) for name in selected_domains)
     if not selected and not frontend:
         full = True

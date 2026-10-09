@@ -91,7 +91,8 @@
             ],
             "tests": [
                 "scripts/tests/test_*hhhl*.py",
-                "scripts/tests/test_pattern_sources.py"
+                "scripts/tests/test_pattern_sources.py",
+                "scripts/tests/test_cache_execution.py"
             ],
             "consumers": ["opportunity"]
         },
@@ -106,7 +107,7 @@
                 "scripts/tests/test_*feature*atlas*.py",
                 "scripts/tests/test_export_market_atlas.py"
             ],
-            "consumers": ["opportunity", "method_environment"]
+            "consumers": ["opportunity", "method_environment", "sector", "hhhl"]
         },
         "sector": {
             "paths": [
@@ -135,7 +136,7 @@
                 "tasks/20261005-market-context-handoff/*"
             ],
             "tests": ["scripts/tests/test_market_context*.py"],
-            "consumers": ["opportunity", "method_environment"]
+            "consumers": ["opportunity", "method_environment", "sector"]
         },
         "method_environment": {
             "paths": [
@@ -144,7 +145,7 @@
                 "tasks/20261005-method-environment-interactions/*"
             ],
             "tests": ["scripts/tests/test_method_environment*.py"],
-            "consumers": ["opportunity"]
+            "consumers": ["opportunity", "sector"]
         },
         "hooks": {
             "paths": [
@@ -357,5 +358,6 @@
         "tests/test_task_wrapper_capital_mode.py",
         "tests/test_universe.py",
         "tests/test_wave_growth.py"
-    ]
+    ],
+    "pytest_file_patterns": ["test_*.py", "*_test.py"]
 }
