@@ -546,3 +546,75 @@ test("250-node synthetic layouts cover wide weights, arrivals, departures and on
         `Synthetic geometry only, 250 nodes: initial ${firstMs.toFixed(2)} ms; arrivals/departures/changed weights ${changedMs.toFixed(2)} ms; one group ${crowdedMs.toFixed(2)} ms. Excludes worker transport, rendering and browser FPS.`,
     );
 });
+
+test("long playback with departures stays as tight as a fresh layout and spreads to the frame shape", () => {
+    // Rolling membership: each stock lives 60 days, so holes open every day.
+    const dayNodes = (day: number): PackingNode[] =>
+        Array.from({ length: 80 }, (_, k) => day + k)
+            .filter((i) => i % 3 !== 0)
+            .map((i) => ({
+                id: `roll-${String(i).padStart(4, "0")}`,
+                groupId: `industry-${i % 7}`,
+                weight: (1 + ((i * 13) % 9) / 3) ** 2,
+            }));
+    const options = {
+        globalRadiusScale: 30,
+        gap: 2,
+        groupGap: 12,
+        outlinePadding: 8,
+        aspect: 1.7,
+    };
+    let previous: PackingLayout["nodes"] = [];
+    let worst = 0;
+    for (let day = 0; day < 240; day++) {
+        const nodes = dayNodes(day);
+        const warm = computePacking({
+            ...options,
+            nodes,
+            previous: previous.map(({ id, x, y, r }) => ({ id, x, y, r })),
+        });
+        previous = warm.nodes;
+        if (day % 40 !== 39) continue;
+        const cold = computePacking({ ...options, nodes });
+        // The zoom a 1.7-wide frame needs to show everything.
+        const span = (layout: PackingLayout) =>
+            Math.max(layout.bounds.width / 1.7, layout.bounds.height);
+        worst = Math.max(worst, span(warm) / span(cold));
+        verify(warm, 30, 2);
+        assert.ok(
+            cold.bounds.width > cold.bounds.height,
+            "a wide frame produces a wide composition",
+        );
+    }
+    assert.ok(
+        worst <= 1.15,
+        `playback spread to ${worst.toFixed(2)}× a fresh layout`,
+    );
+});
+
+test("extreme frame shapes stay finite and compact instead of diverging", () => {
+    const nodes = synthetic(60, 12);
+    const cold = computePacking({
+        nodes,
+        globalRadiusScale: 30,
+        gap: 2,
+        groupGap: 12,
+        outlinePadding: 8,
+    });
+    for (const aspect of [8, 1 / 8, 3]) {
+        const layout = computePacking({
+            nodes,
+            globalRadiusScale: 30,
+            gap: 2,
+            groupGap: 12,
+            outlinePadding: 8,
+            aspect,
+        });
+        verify(layout, 30, 2);
+        const area = layout.bounds.width * layout.bounds.height;
+        assert.ok(
+            area <= cold.bounds.width * cold.bounds.height * 4,
+            `aspect ${aspect} spread to ${area.toExponential(2)}`,
+        );
+    }
+});

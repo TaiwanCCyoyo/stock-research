@@ -4,21 +4,6 @@ import type {
     OpportunityWave,
 } from "../../domain/opportunities/types.ts";
 import type { PackedNode, PreviousPackingPosition } from "./packing.ts";
-import type { Camera } from "./camera.ts";
-
-export interface OverviewIndustryLabel {
-    id: string;
-    label: string;
-    maxGain: number | null;
-    displayMetric?: IndustryDisplayMetric;
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    anchorX: number;
-    anchorY: number;
-    side: "left" | "right";
-}
 
 export interface DisplayMetric {
     gain: number | null;
@@ -37,24 +22,22 @@ export function metricLabel(metric: DisplayMetric): string {
     return `${basis} ${value}`;
 }
 
-export function industryMetricLabel(
+/** Short label drawn on top of an industry's territory: name, size, best stock. */
+export function territoryLabelText(
     industry: Pick<
         MapView["industries"][number],
         "label" | "maxGain" | "displayMetric"
     >,
+    count: number,
 ): string {
-    if (industry.displayMetric !== undefined) {
-        const { displayMetric } = industry;
-        const leader = displayMetric.leaderName
-            ? ` · ${displayMetric.leaderName}`
-            : "";
-        return `${industry.label}　最高：${metricLabel(displayMetric)}${leader}`;
-    }
-    const value =
-        industry.maxGain === null
-            ? "不知道"
-            : `${industry.maxGain >= 0 ? "+" : ""}${industry.maxGain.toFixed(0)}%`;
-    return `${industry.label}　漲 ${value}`;
+    // Keep the leader's basis: one industry can mix actual and annualized values.
+    const best =
+        industry.displayMetric !== undefined
+            ? metricLabel(industry.displayMetric)
+            : industry.maxGain === null
+              ? "不知道"
+              : `${industry.maxGain >= 0 ? "+" : ""}${industry.maxGain.toFixed(0)}%`;
+    return `${industry.label} ${count} 檔 · 最高 ${best}`;
 }
 
 /** Raw peak gain cannot define an equivalent radius for duration-normalized cells. */
@@ -64,83 +47,13 @@ export function showPeakAreaReference(
     return row.displayMetric === undefined;
 }
 
-/** The ten largest visible territories keep readable labels outside the world geometry. */
-export function overviewIndustryLabels(
-    groups: readonly { id: string; x: number; y: number; weight: number }[],
-    industries: ReadonlyMap<
-        string,
-        {
-            label: string;
-            maxGain: number | null;
-            displayMetric?: IndustryDisplayMetric;
-        }
-    >,
-    camera: Camera,
-    fontSize: number,
-): OverviewIndustryLabel[] {
-    const ranked = groups
-        .filter((group) => group.weight > 0 && industries.has(group.id))
-        .slice()
-        .sort((a, b) => b.weight - a.weight || a.id.localeCompare(b.id))
-        .slice(0, 10)
-        .sort((a, b) => a.x - b.x || a.id.localeCompare(b.id));
-    const screenFont = fontSize * camera.zoom;
-    const longestLabel = Math.max(
-        0,
-        ...ranked.map((group) => {
-            const label = industryMetricLabel(industries.get(group.id)!);
-            return [...label].reduce(
-                (sum, letter) => sum + (letter.charCodeAt(0) <= 255 ? 0.6 : 1),
-                0,
-            );
-        }),
-    );
-    const width = Math.min(340, Math.max(180, (longestLabel + 4) * screenFont));
-    const height = screenFont * 2.5;
-    const gap = screenFont * 0.5;
-    const middle = Math.ceil(ranked.length / 2);
-    return [ranked.slice(0, middle), ranked.slice(middle)].flatMap(
-        (column, index) => {
-            const side = index === 0 ? "left" : "right";
-            const ordered = column
-                .slice()
-                .sort((a, b) => a.y - b.y || a.id.localeCompare(b.id));
-            const available = 620 - 54 - 18 - height;
-            const step =
-                ordered.length > 1 ? available / (ordered.length - 1) : 0;
-            return ordered.map((group, position) => ({
-                id: group.id,
-                ...industries.get(group.id)!,
-                x: side === "left" ? 14 : 1000 - 14 - width,
-                y:
-                    ordered.length === 1
-                        ? Math.max(
-                              54,
-                              Math.min(
-                                  620 - 18 - height,
-                                  310 +
-                                      (group.y - camera.y) * camera.zoom -
-                                      height / 2,
-                              ),
-                          )
-                        : 54 + position * Math.max(height + gap, step),
-                width,
-                height,
-                anchorX: 500 + (group.x - camera.x) * camera.zoom,
-                anchorY: 310 + (group.y - camera.y) * camera.zoom,
-                side: side as "left" | "right",
-            }));
-        },
-    );
-}
-
 /** Zero-area nodes have no visible location to preserve in the next packing. */
 export function visiblePackingPositions(
     nodes: readonly Pick<PackedNode, "id" | "x" | "y" | "r">[],
 ): PreviousPackingPosition[] {
     return nodes
         .filter((node) => node.r > 0)
-        .map(({ id, x, y }) => ({ id, x, y }));
+        .map(({ id, x, y, r }) => ({ id, x, y, r }));
 }
 
 /** Display-only inputs: the map never needs price history or full wave phases. */
@@ -182,26 +95,6 @@ export function gainColorBand(
 ): "strong" | "medium" | "light" | "unknown" {
     if (gain === null || !Number.isFinite(gain) || gain < 0) return "unknown";
     return gain >= 100 ? "strong" : gain >= 60 ? "medium" : "light";
-}
-
-/** Font and radius use world units, so zoom-dependent screen size stays comparable. */
-export function groupLabelFits(
-    label: string,
-    radius: number,
-    fontSize: number,
-    lines = 1,
-): boolean {
-    const width =
-        [...label].reduce(
-            (sum, letter) => sum + (letter.charCodeAt(0) <= 255 ? 0.6 : 1),
-            0,
-        ) * fontSize;
-    return (
-        Number.isFinite(radius) &&
-        radius > 0 &&
-        radius * 2 >= width * 1.1 &&
-        radius >= fontSize * lines
-    );
 }
 
 /** API catalog identity survives new JSON objects; preview retains object identity. */

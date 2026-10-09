@@ -6,7 +6,7 @@ import {
     useRef,
     useState,
 } from "react";
-import type { KeyboardEvent, PointerEvent } from "react";
+import type { KeyboardEvent, PointerEvent, RefObject } from "react";
 import type { PortfolioComparison } from "../../domain/opportunities/types.ts";
 import {
     sameSource,
@@ -15,9 +15,7 @@ import {
     mapIndustries,
     endedBurst,
     gainColorBand,
-    groupLabelFits,
-    overviewIndustryLabels,
-    industryMetricLabel,
+    territoryLabelText,
     metricLabel,
     showPeakAreaReference,
     visiblePackingPositions,
@@ -28,15 +26,15 @@ import { classificationLabel } from "../../features/opportunities/classification
 import {
     DEFAULT_CAMERA,
     WORLD_WIDTH as BASE_WIDTH,
-    WORLD_HEIGHT as BASE_HEIGHT,
+    frameFor,
     gestureCamera,
     fitBoundsCamera,
-    initialOverview,
-    isDefaultCamera,
+    stepZoom,
     wheelZoomFactor,
     zoomCameraAt,
     type Camera,
     type ScreenPoint,
+    type WorldFrame,
 } from "./camera.ts";
 import type { PackedGroup, PackedNode, PackingLayout } from "./packing.ts";
 import type { PackingRequest, PackingResponse } from "./packing.worker.ts";
@@ -45,6 +43,11 @@ import "./OpportunityMap.css";
 /** One fixed world scale, calibrated against the full synthetic calendar; never fitted per date. */
 export const OPPORTUNITY_RADIUS_SCALE = 30;
 const DURATION = 260;
+/** Share of the frame the map may use when the camera follows it. */
+const FOLLOW_FILL = 0.92;
+const LEGEND_STEPS = [10, 20, 50, 100, 200, 300, 500, 1000, 2000];
+const viewBoxFor = (camera: Camera, frame: WorldFrame) =>
+    `${camera.x - frame.width / 2 / camera.zoom} ${camera.y - frame.height / 2 / camera.zoom} ${frame.width / camera.zoom} ${frame.height / camera.zoom}`;
 const phaseLabel = {
     slow: "持續上漲",
     rising: "持續上漲",
@@ -84,6 +87,8 @@ export interface OpportunityMapProps {
     showComparisonDots?: boolean;
     groupingMode?: GroupingMode;
     colorBasis?: ColorBasis;
+    /** Fill the parent's height instead of keeping the 1000:620 shape. */
+    fill?: boolean;
 }
 
 type Snapshot = {
@@ -243,6 +248,7 @@ export function OpportunityMap({
     showComparisonDots = false,
     groupingMode = "historical",
     colorBasis = "phase",
+    fill = false,
 }: OpportunityMapProps) {
     const uid = `opportunity-${useId().replace(/:/g, "")}`;
     const [result, setResult] = useState<Result | null>(null);
@@ -252,11 +258,33 @@ export function OpportunityMap({
     const [systemReduced, setSystemReduced] = useState(false);
     const [animating, setAnimating] = useState(false);
     const [camera, setCamera] = useState<Camera>({ ...DEFAULT_CAMERA });
-    const overviewState = useRef({
-        camera: { ...DEFAULT_CAMERA } as Camera,
-        initialized: false,
-    });
-    const [pixelWidth, setPixelWidth] = useState(1000);
+    // The camera follows each day's map in steps until the user pans or zooms.
+    const [follow, setFollow] = useState(true);
+    const followLevel = useRef<number | null>(null);
+    const shownCamera = useRef<Camera>({ ...DEFAULT_CAMERA });
+    const cameraTween = useRef(0);
+    const stopFollowing = useRef(() => {});
+    // The legend is rendered for React's camera (a glide's destination); while
+    // the SVG glides, scale its circles by shown ÷ destination zoom.
+    const legendCircles = useRef<SVGGElement | null>(null);
+    // Text is laid out for the destination zoom, so it is hidden while the
+    // SVG is still between two zoom levels and shown again once it lands.
+    const markRescaling = (on: boolean) =>
+        mapElement.current?.classList.toggle("is-rescaling", on);
+    const scaleLegend = (factor: number) =>
+        legendCircles.current?.style.setProperty(
+            "transform",
+            Math.abs(factor - 1) < 1e-9 ? "" : `scale(${factor})`,
+        );
+    const [size, setSize] = useState({ width: 1000, height: 620 });
+    const pixelWidth = size.width;
+    const worldFrame = useMemo(() => frameFor(size), [size]);
+    const aspect = worldFrame.width / worldFrame.height;
+    const aspectRef = useRef(aspect);
+    aspectRef.current = aspect;
+    const packedAspect = useRef(aspect);
+    // Re-pack only when the frame shape changes noticeably.
+    const aspectKey = Math.round(Math.log(aspect) * 8);
     const surface = useRef<HTMLDivElement | null>(null);
     const mapElement = useRef<SVGSVGElement | null>(null);
     const worker = useRef<Worker | null>(null);
@@ -288,9 +316,16 @@ export function OpportunityMap({
 
     useEffect(() => {
         if (!surface.current) return;
-        const observer = new ResizeObserver((entries) =>
-            setPixelWidth(entries[0]?.contentRect.width || 1000),
-        );
+        const observer = new ResizeObserver((entries) => {
+            const box = entries[0]?.contentRect;
+            if (!box || box.width <= 0 || box.height <= 0) return;
+            setSize((old) =>
+                Math.abs(old.width - box.width) < 0.5 &&
+                Math.abs(old.height - box.height) < 0.5
+                    ? old
+                    : { width: box.width, height: box.height },
+            );
+        });
         observer.observe(surface.current);
         return () => observer.disconnect();
     }, []);
@@ -303,11 +338,18 @@ export function OpportunityMap({
             const factor = wheelZoomFactor(event, rect.height);
             if (factor === null) return;
             event.preventDefault();
+            stopFollowing.current();
             setCamera((old) =>
-                zoomCameraAt(old, factor, rect, {
-                    x: event.clientX - rect.left,
-                    y: event.clientY - rect.top,
-                }),
+                zoomCameraAt(
+                    old,
+                    factor,
+                    rect,
+                    {
+                        x: event.clientX - rect.left,
+                        y: event.clientY - rect.top,
+                    },
+                    frameFor(rect),
+                ),
             );
         };
         element.addEventListener("wheel", wheel, { passive: false });
@@ -344,14 +386,20 @@ export function OpportunityMap({
                     })),
                     globalRadiusScale: OPPORTUNITY_RADIUS_SCALE,
                     previous:
-                        old && sameSource(old.snapshot.view, snapshot.view)
+                        old &&
+                        sameSource(old.snapshot.view, snapshot.view) &&
+                        Math.abs(
+                            Math.log(packedAspect.current / aspectRef.current),
+                        ) < 0.1
                             ? visiblePackingPositions(old.layout.nodes)
                             : [],
                     gap: 2,
                     groupGap: 12,
                     outlinePadding: 8,
+                    aspect: aspectRef.current,
                 },
             };
+            packedAspect.current = aspectRef.current;
             geometryWorker.postMessage(request);
         };
         geometryWorker.onmessage = (event: MessageEvent<PackingResponse>) => {
@@ -399,7 +447,7 @@ export function OpportunityMap({
         setError(false);
         const ready = queue.current.offer(snapshot);
         if (ready && worker.current) dispatch.current(ready);
-    }, [view, groupingMode]);
+    }, [view, groupingMode, aspectKey]);
 
     useLayoutEffect(() => {
         if (!result) return;
@@ -414,17 +462,94 @@ export function OpportunityMap({
     }, [result]);
 
     useLayoutEffect(() => {
-        if (!frame) return;
-        const next = initialOverview(
-            overviewState.current,
-            frame.layout.bounds,
-            frame.layout.nodes.some((node) => node.r > 0),
-        );
-        if (next !== overviewState.current) {
-            overviewState.current = next;
-            setCamera(next.camera);
+        followLevel.current = null;
+    }, [size]);
+    useLayoutEffect(() => {
+        if (!frame || !follow) return;
+        if (!frame.layout.nodes.some((node) => node.r > 0)) {
+            // Nothing to fit; keep React's camera on whatever is shown.
+            setCamera({ ...shownCamera.current });
+            return;
         }
-    }, [frame]);
+        const fit = fitBoundsCamera(
+            frame.layout.bounds,
+            worldFrame,
+            FOLLOW_FILL,
+        );
+        const zoom = stepZoom(fit.zoom, followLevel.current);
+        followLevel.current = zoom;
+        const target = { x: fit.x, y: fit.y, zoom };
+        const from = { ...shownCamera.current };
+        setCamera(target);
+        const element = mapElement.current;
+        const settled =
+            Math.abs(from.zoom - target.zoom) <= target.zoom * 1e-9 &&
+            Math.abs(from.x - target.x) * target.zoom < 0.5 &&
+            Math.abs(from.y - target.y) * target.zoom < 0.5;
+        if (motionOff || settled) {
+            // Equal state skips the camera effect, so show the target here.
+            cancelAnimationFrame(cameraTween.current);
+            cameraTween.current = 0;
+            shownCamera.current = target;
+            element?.setAttribute("viewBox", viewBoxFor(target, worldFrame));
+            scaleLegend(1);
+            markRescaling(false);
+            return;
+        }
+        // Zoom-level changes glide; the SVG is updated directly so the stocks
+        // are not re-rendered on every animation frame.
+        // Start the clock on the first painted frame: a slow React commit must
+        // not make the glide begin halfway through.
+        let start = 0;
+        cancelAnimationFrame(cameraTween.current);
+        scaleLegend(from.zoom / target.zoom);
+        markRescaling(from.zoom !== target.zoom);
+        const tick = (now: number) => {
+            if (!start) start = now;
+            const t = Math.min(1, (now - start) / (DURATION * 1.6));
+            const eased = 1 - (1 - t) ** 3;
+            const shown = {
+                x: mix(from.x, target.x, eased),
+                y: mix(from.y, target.y, eased),
+                zoom: Math.exp(
+                    mix(Math.log(from.zoom), Math.log(target.zoom), eased),
+                ),
+            };
+            shownCamera.current = shown;
+            element?.setAttribute("viewBox", viewBoxFor(shown, worldFrame));
+            scaleLegend(shown.zoom / target.zoom);
+            cameraTween.current = t < 1 ? requestAnimationFrame(tick) : 0;
+            if (t >= 1) markRescaling(false);
+        };
+        cameraTween.current = requestAnimationFrame(tick);
+        return () => {
+            // A new frame interrupts the glide where it is on screen; the next
+            // run glides on from `shownCamera`, so playback never jumps back.
+            cancelAnimationFrame(cameraTween.current);
+            cameraTween.current = 0;
+        };
+    }, [frame, follow, worldFrame, motionOff]);
+    useLayoutEffect(() => {
+        if (cameraTween.current) return;
+        shownCamera.current = camera;
+        scaleLegend(1);
+        markRescaling(false);
+        mapElement.current?.setAttribute(
+            "viewBox",
+            viewBoxFor(camera, worldFrame),
+        );
+    }, [camera, worldFrame]);
+    // A gesture during a glide continues from the camera on screen, not from
+    // the glide's destination, so the map never jumps under the pointer.
+    const takeCamera = () => {
+        if (cameraTween.current) {
+            cancelAnimationFrame(cameraTween.current);
+            cameraTween.current = 0;
+            setCamera({ ...shownCamera.current });
+        }
+        setFollow(false);
+    };
+    stopFollowing.current = takeCamera;
 
     const worldFont = Math.max(
         12,
@@ -602,17 +727,87 @@ export function OpportunityMap({
             ),
         [renderedView, frame],
     );
-    const overviewLabels = useMemo(() => {
-        if (!frame || !overviewState.current.initialized) return [];
-        const baselineZoom = overviewState.current.camera.zoom;
-        if (camera.zoom > baselineZoom * 1.25) return [];
-        return overviewIndustryLabels(
-            frame.layout.groups,
-            industries,
-            camera,
-            worldFont,
-        );
-    }, [frame, industries, camera, worldFont]);
+    const territoryLabels = useMemo(() => {
+        const plan = new Map<string, { x: number; y: number }>();
+        if (!frame) return plan;
+        const limit = pixelWidth < 500 ? 5 : 10;
+        const placed: { x0: number; x1: number; y0: number; y1: number }[] = [];
+        const lines = shownComparisons.length + 1;
+        for (const { group } of frame.groups
+            .filter((item) => item.decorative && !item.exiting)
+            .sort((a, b) => b.group.weight - a.group.weight)) {
+            if (plan.size >= limit) break;
+            const industry = industries.get(group.id);
+            if (!industry || !group.points.length) continue;
+            if (group.nodeIds.length < 3 && plan.size >= 3) continue;
+            const rows = [
+                territoryLabelText(industry, group.nodeIds.length),
+                // Upper bound for each comparison line drawn under the name.
+                ...shownComparisons.map(
+                    (comparison) =>
+                        `${shownComparisons.length > 1 ? `${comparison.portfolio.name} ` : ""}持股日上漲占比平均 100%（部分無法計算）`,
+                ),
+            ];
+            const width =
+                Math.max(
+                    ...rows.map((text) =>
+                        [...text].reduce(
+                            (sum, letter) =>
+                                sum + (letter.charCodeAt(0) <= 255 ? 0.6 : 1),
+                            0,
+                        ),
+                    ),
+                ) * worldFont;
+            const top = Math.min(...group.points.map((p) => p.y));
+            const halfView = worldFrame.width / 2 / camera.zoom;
+            const x = Math.max(
+                camera.x - halfView + width / 2 + worldFont * 0.5,
+                Math.min(
+                    camera.x + halfView - width / 2 - worldFont * 0.5,
+                    group.x,
+                ),
+            );
+            const halfHeight = worldFrame.height / 2 / camera.zoom;
+            // Keep every line inside the frame; comparison lines push the
+            // name above the territory, which can leave the top edge.
+            const y = Math.max(
+                camera.y - halfHeight + worldFont * 1.2,
+                Math.min(
+                    camera.y +
+                        halfHeight -
+                        worldFont * (0.5 + 1.3 * (lines - 1)),
+                    top - worldFont * (0.45 + 1.3 * (lines - 1)),
+                ),
+            );
+            const box = {
+                x0: x - width / 2,
+                x1: x + width / 2,
+                y0: y - worldFont,
+                y1: y + worldFont * 1.3 * (lines - 1) + worldFont * 0.3,
+            };
+            if (
+                placed.some(
+                    (other) =>
+                        box.x0 < other.x1 &&
+                        other.x0 < box.x1 &&
+                        box.y0 < other.y1 &&
+                        other.y0 < box.y1,
+                )
+            )
+                continue;
+            placed.push(box);
+            plan.set(group.id, { x, y });
+        }
+        return plan;
+    }, [
+        frame,
+        industries,
+        worldFont,
+        pixelWidth,
+        shownComparisons,
+        camera,
+        worldFrame,
+    ]);
     const stockRef = (id: string) => {
         let refs = stockElements.current.get(id);
         if (!refs) {
@@ -626,14 +821,20 @@ export function OpportunityMap({
     };
     const zoom = (factor: number) => {
         const viewport = mapElement.current?.getBoundingClientRect();
-        if (viewport) setCamera((old) => zoomCameraAt(old, factor, viewport));
+        if (!viewport) return;
+        takeCamera();
+        setCamera((old) =>
+            zoomCameraAt(old, factor, viewport, undefined, frameFor(viewport)),
+        );
     };
-    const pan = (x: number, y: number) =>
+    const pan = (x: number, y: number) => {
+        takeCamera();
         setCamera((old) => ({
             ...old,
             x: old.x + x / old.zoom,
             y: old.y + y / old.zoom,
         }));
+    };
     const mapKey = (event: KeyboardEvent<SVGSVGElement>) => {
         const directions: Record<string, [number, number]> = {
             ArrowLeft: [-70, 0],
@@ -688,7 +889,10 @@ export function OpportunityMap({
             y: event.clientY,
         });
         const after = [...pointers.current.values()].map(local);
-        setCamera((old) => gestureCamera(old, before, after, rect));
+        takeCamera();
+        setCamera((old) =>
+            gestureCamera(old, before, after, rect, frameFor(rect)),
+        );
     };
     const pointerEnd = (event: PointerEvent<SVGSVGElement>) => {
         pointers.current.delete(event.pointerId);
@@ -698,10 +902,14 @@ export function OpportunityMap({
     };
     const overflow =
         !!frame &&
-        (frame.layout.bounds.minX < camera.x - 500 / camera.zoom ||
-            frame.layout.bounds.maxX > camera.x + 500 / camera.zoom ||
-            frame.layout.bounds.minY < camera.y - 310 / camera.zoom ||
-            frame.layout.bounds.maxY > camera.y + 310 / camera.zoom);
+        (frame.layout.bounds.minX <
+            camera.x - worldFrame.width / 2 / camera.zoom ||
+            frame.layout.bounds.maxX >
+                camera.x + worldFrame.width / 2 / camera.zoom ||
+            frame.layout.bounds.minY <
+                camera.y - worldFrame.height / 2 / camera.zoom ||
+            frame.layout.bounds.maxY >
+                camera.y + worldFrame.height / 2 / camera.zoom);
     const selectedRow = renderedView?.active.find(
         (row) =>
             row.security.id === selectedSecurityId &&
@@ -710,7 +918,7 @@ export function OpportunityMap({
 
     return (
         <section
-            className="opportunity-map"
+            className={`opportunity-map${fill ? " opportunity-map--fill" : ""}`}
             aria-label="股票地圖"
             data-reduced-motion={motionOff || undefined}
         >
@@ -725,7 +933,6 @@ export function OpportunityMap({
                 <svg
                     ref={mapElement}
                     className="opportunity-map-svg"
-                    viewBox={`${camera.x - 500 / camera.zoom} ${camera.y - 310 / camera.zoom} ${BASE_WIDTH / camera.zoom} ${BASE_HEIGHT / camera.zoom}`}
                     role="group"
                     aria-label="可選取股票的地圖；拖曳平移，Ctrl 或 Command 加滾輪及雙指縮放；方向鍵平移，加減鍵縮放"
                     aria-busy={locked}
@@ -1145,21 +1352,9 @@ export function OpportunityMap({
                             .filter((item) => item.decorative && !item.exiting)
                             .map(({ group }) => {
                                 const industry = industries.get(group.id);
-                                if (!industry || overviewLabels.length > 0)
+                                const spot = territoryLabels.get(group.id);
+                                if (!industry || spot === undefined)
                                     return null;
-                                if (
-                                    renderedView?.catalogId &&
-                                    !groupLabelFits(
-                                        industryMetricLabel(industry),
-                                        group.r,
-                                        worldFont,
-                                        shownComparisons.length + 1,
-                                    )
-                                )
-                                    return null;
-                                const bottom = Math.max(
-                                    ...group.points.map((p) => p.y),
-                                );
                                 return (
                                     <text
                                         key={group.id}
@@ -1174,13 +1369,16 @@ export function OpportunityMap({
                                                     group.id,
                                                 );
                                         }}
-                                        x={group.x}
-                                        y={bottom + worldFont * 1.25}
+                                        x={spot.x}
+                                        y={spot.y}
                                         textAnchor="middle"
                                         fontSize={worldFont}
                                     >
-                                        <tspan x={group.x}>
-                                            {industryMetricLabel(industry)}
+                                        <tspan x={spot.x}>
+                                            {territoryLabelText(
+                                                industry,
+                                                group.nodeIds.length,
+                                            )}
                                         </tspan>
                                         {shownComparisons.map(
                                             (comparison, i) => {
@@ -1214,7 +1412,7 @@ export function OpportunityMap({
                                                             comparison.portfolio
                                                                 .id
                                                         }
-                                                        x={group.x}
+                                                        x={spot.x}
                                                         dy={worldFont * 1.3}
                                                         className="opportunity-industry-share"
                                                         style={{
@@ -1239,77 +1437,6 @@ export function OpportunityMap({
                                 );
                             })}
                     </g>
-                    {overviewLabels.length > 0 && (
-                        <g
-                            className="opportunity-overview-labels"
-                            aria-hidden="true"
-                        >
-                            {overviewLabels.map((label) => {
-                                const toWorld = (x: number, y: number) => ({
-                                    x: camera.x + (x - 500) / camera.zoom,
-                                    y: camera.y + (y - 310) / camera.zoom,
-                                });
-                                const box = toWorld(label.x, label.y);
-                                const anchor = toWorld(
-                                    label.anchorX,
-                                    label.anchorY,
-                                );
-                                const width = label.width / camera.zoom;
-                                const height = label.height / camera.zoom;
-                                const edgeX =
-                                    label.side === "left"
-                                        ? box.x + width
-                                        : box.x;
-                                const edgeY = box.y + height / 2;
-                                const bend = (anchor.x - edgeX) * 0.42;
-                                const gain =
-                                    label.displayMetric === undefined
-                                        ? `漲 ${gainLabel(label.maxGain)}`
-                                        : `最高：${metricLabel(label.displayMetric)}${label.displayMetric.leaderName ? ` · ${label.displayMetric.leaderName}` : ""}`;
-                                return (
-                                    <g
-                                        key={label.id}
-                                        className="opportunity-overview-label"
-                                    >
-                                        <path
-                                            className="opportunity-overview-leader"
-                                            d={`M${edgeX},${edgeY} C${edgeX + bend},${edgeY} ${anchor.x - bend},${anchor.y} ${anchor.x},${anchor.y}`}
-                                        />
-                                        <circle
-                                            className="opportunity-overview-anchor"
-                                            cx={anchor.x}
-                                            cy={anchor.y}
-                                            r={3 / camera.zoom}
-                                        />
-                                        <rect
-                                            x={box.x}
-                                            y={box.y}
-                                            width={width}
-                                            height={height}
-                                            rx={6 / camera.zoom}
-                                            className="opportunity-overview-label-backdrop"
-                                        />
-                                        <text
-                                            x={box.x + 10 / camera.zoom}
-                                            y={box.y + 12 / camera.zoom}
-                                            fontSize={worldFont}
-                                        >
-                                            <tspan className="opportunity-overview-name">
-                                                {label.label}
-                                            </tspan>
-                                            <tspan
-                                                x={box.x + 10 / camera.zoom}
-                                                dy={worldFont * 1.15}
-                                                className="opportunity-overview-gain"
-                                            >
-                                                {gain}
-                                            </tspan>
-                                        </text>
-                                    </g>
-                                );
-                            })}
-                        </g>
-                    )}
                     <g
                         className="opportunity-exit-particles"
                         aria-hidden="true"
@@ -1371,38 +1498,67 @@ export function OpportunityMap({
                         {gainLabel(selectedRow.peakGain)}
                     </p>
                 )}
-                {view.catalogId && frame && (
-                    <button
-                        type="button"
-                        className="opportunity-map-reset"
-                        style={{ left: 12, right: "auto" }}
-                        disabled={locked}
-                        onClick={() => {
-                            const fitted = fitBoundsCamera(frame.layout.bounds);
-                            overviewState.current = {
-                                camera: fitted,
-                                initialized: true,
-                            };
-                            setCamera(fitted);
-                            mapElement.current?.focus();
-                        }}
-                    >
-                        看全市場
-                    </button>
+                {frame && frame.layout.nodes.length > 0 && (
+                    <ScaleLegend
+                        pixelsPerUnit={(pixelWidth * camera.zoom) / BASE_WIDTH}
+                        circlesRef={legendCircles}
+                    />
                 )}
-                {!isDefaultCamera(camera, overviewState.current.camera) && (
+                {!follow && (
                     <button
                         type="button"
                         className="opportunity-map-reset"
                         onClick={() => {
-                            setCamera({ ...overviewState.current.camera });
+                            followLevel.current = null;
+                            setFollow(true);
                             mapElement.current?.focus();
                         }}
                     >
-                        回到預設視野
+                        看全部
                     </button>
                 )}
             </div>
         </section>
+    );
+}
+
+/** Two dashed reference circles at the current scale: area grows with gain squared. */
+function ScaleLegend({
+    pixelsPerUnit,
+    circlesRef,
+}: {
+    pixelsPerUnit: number;
+    circlesRef: RefObject<SVGGElement | null>;
+}) {
+    const radius = (gain: number) =>
+        (gain / 100) * OPPORTUNITY_RADIUS_SCALE * pixelsPerUnit;
+    const cap = 40;
+    // Never shrink a circle to fit: pick a gain whose true size fits instead.
+    const big = LEGEND_STEPS.filter((gain) => radius(gain) <= cap).at(-1);
+    if (big === undefined) return null;
+    const small = LEGEND_STEPS.filter(
+        (gain) => gain <= big / 2.5 && radius(gain) >= 5,
+    ).at(-1);
+    const outer = radius(big);
+    const side = outer * 2 + 4;
+    return (
+        <div className="opportunity-map-legend" aria-hidden="true">
+            <svg width={side} height={side} viewBox={`0 0 ${side} ${side}`}>
+                <g ref={circlesRef}>
+                    <circle cx={side / 2} cy={side - 2 - outer} r={outer} />
+                    {small !== undefined && (
+                        <circle
+                            cx={side / 2}
+                            cy={side - 2 - radius(small)}
+                            r={radius(small)}
+                        />
+                    )}
+                </g>
+            </svg>
+            <span>
+                <b>圓的大小對照</b>
+                {small !== undefined ? `小圈 +${small}%、` : ""}大圈 +{big}%
+            </span>
+        </div>
     );
 }

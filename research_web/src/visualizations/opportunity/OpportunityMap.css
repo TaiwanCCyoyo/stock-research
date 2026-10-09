@@ -30,7 +30,6 @@
 }
 .opportunity-industries,
 .opportunity-industry-labels,
-.opportunity-overview-labels,
 .opportunity-exit-particles {
     pointer-events: none;
 }
@@ -99,45 +98,11 @@
     stroke: var(--surface);
     stroke-width: 4;
     stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
 }
 .opportunity-industry-share {
     font-weight: 400;
     stroke-width: 3;
-}
-.opportunity-overview-leader {
-    fill: none;
-    stroke: var(--muted);
-    stroke-width: 1.2;
-    stroke-dasharray: 3 3;
-    opacity: 0.72;
-    vector-effect: non-scaling-stroke;
-}
-.opportunity-overview-anchor {
-    fill: var(--accent);
-    stroke: var(--surface);
-    stroke-width: 1.5;
-    vector-effect: non-scaling-stroke;
-}
-.opportunity-overview-label-backdrop {
-    fill: color-mix(in srgb, var(--surface) 94%, var(--cell-light));
-    stroke: color-mix(in srgb, var(--membrane) 72%, var(--ink));
-    stroke-width: 1;
-    vector-effect: non-scaling-stroke;
-    filter: drop-shadow(0 2px 5px #00000018);
-}
-.opportunity-overview-label text {
-    fill: var(--ink);
-    paint-order: stroke fill;
-    stroke: var(--surface);
-    stroke-width: 2;
-    stroke-linejoin: round;
-}
-.opportunity-overview-name {
-    font-weight: 700;
-}
-.opportunity-overview-gain {
-    font-weight: 500;
-    fill: var(--muted);
 }
 .opportunity-comparison-dots {
     pointer-events: none;
@@ -187,8 +152,8 @@
     pointer-events: none;
 }
 .opportunity-map-overflow {
-    bottom: 12px;
-    left: 12px;
+    top: 52px;
+    right: 12px;
     max-width: 45%;
 }
 .opportunity-map-ghost-note {
@@ -215,4 +180,69 @@
     .opportunity-stock > path {
         transition: none;
     }
+}
+
+/* Fill mode: the parent decides the height; the SVG frame matches it exactly. */
+.opportunity-map--fill {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+}
+.opportunity-map--fill .opportunity-map-surface {
+    flex: 1;
+    min-height: 0;
+}
+.opportunity-map--fill .opportunity-map-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    aspect-ratio: auto;
+    min-height: 0;
+}
+.opportunity-map-legend {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    padding: 6px 9px;
+    border-radius: 9px;
+    background: color-mix(in srgb, var(--surface) 86%, transparent);
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.4;
+    pointer-events: none;
+}
+.opportunity-map-legend svg {
+    display: block;
+    overflow: visible;
+}
+.opportunity-map-legend g {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+}
+.opportunity-map-legend circle {
+    fill: none;
+    stroke: var(--ink);
+    stroke-opacity: 0.5;
+    stroke-dasharray: 3 2;
+}
+.opportunity-map-legend span {
+    display: grid;
+}
+.opportunity-map-legend b {
+    color: var(--ink);
+    font-weight: 600;
+}
+
+.opportunity-industry-labels,
+.opportunity-stock-label {
+    transition: opacity 0.15s ease;
+}
+.opportunity-map-svg.is-rescaling .opportunity-industry-labels,
+.opportunity-map-svg.is-rescaling .opportunity-stock-label {
+    opacity: 0;
 }

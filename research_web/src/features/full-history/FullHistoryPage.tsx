@@ -144,26 +144,26 @@ export function FullHistoryPage({ active }: { active: boolean }) {
     return (
         <div className="fh-page">
             <header className="fh-hero">
-                <div>
+                <div className="fh-hero-title">
                     <h1>飆股地圖</h1>
                     <p>
                         選一個日期，看哪些產業、哪些股票正在大漲，各漲了多少。
                     </p>
-                    <span className="fh-preview-badge">
-                        初步辨識，規則未定 · 事後回看
-                    </span>
                 </div>
                 <div className="fh-hero-date">
                     <strong>{renderedDate || "正在準備"}</strong>
-                    <p>
+                    <span>
                         {view
                             ? `${displayed.length.toLocaleString()} 檔股票 · ${view.industries.length} 個產業`
                             : "2010 年起的歷史行情"}
-                    </p>
-                    {frame && belowThreshold > 0 && (
-                        <small>另有 {belowThreshold} 檔未達門檻</small>
-                    )}
+                        {frame && belowThreshold > 0 && (
+                            <small>另有 {belowThreshold} 檔未達門檻</small>
+                        )}
+                    </span>
                 </div>
+                <span className="fh-preview-badge">
+                    初步辨識，規則未定 · 事後回看
+                </span>
             </header>
             {history.metadataError && (
                 <div className="fh-error" role="alert">
@@ -199,264 +199,220 @@ export function FullHistoryPage({ active }: { active: boolean }) {
             )}
             {metadata && (
                 <>
-                    <section
-                        className="fh-card fh-datebar"
-                        aria-label="歷史交易日"
-                    >
-                        <div className="fh-controls">
-                            <button
-                                className="fh-play"
-                                onClick={() =>
-                                    history.setPlaying(!history.playing)
-                                }
-                                disabled={!active || !!history.error}
-                                aria-label={
-                                    history.playing
-                                        ? "暫停播放"
-                                        : "播放歷史變化"
-                                }
-                            >
-                                {history.playing ? "Ⅱ" : "▶"}
-                            </button>
-                            <div>
-                                <b>時光軸 · 選擇觀察日期</b>
-                                <small>從全市場開始，不用先選產業</small>
-                            </div>
-                            <label className="fh-speed">
-                                播放速度
-                                <select
-                                    value={history.step}
-                                    onChange={(e) =>
-                                        history.setStep(Number(e.target.value))
-                                    }
-                                >
-                                    <option value={20}>慢</option>
-                                    <option value={40}>中</option>
-                                    <option value={60}>快</option>
-                                </select>
-                            </label>
-                            <form onSubmit={submitDate}>
-                                <input
-                                    name="observationDate"
-                                    aria-label="前往日期"
-                                    type="date"
-                                    min={metadata.dates[0]}
-                                    max={metadata.dates.at(-1)}
-                                    value={dateDraft}
-                                    onChange={(e) =>
-                                        setDateDraft(e.target.value)
-                                    }
-                                />
-                                <button type="submit">前往</button>
-                            </form>
-                        </div>
-                        <input
-                            aria-label="歷史交易日時間軸"
-                            type="range"
-                            min={0}
-                            max={metadata.dates.length - 1}
-                            value={history.index}
-                            onChange={(e) => {
-                                history.setPlaying(false);
-                                history.navigate(Number(e.target.value));
-                            }}
-                        />
-                        <div className="fh-date-labels">
-                            <span>{metadata.dates[0]}</span>
-                            <span role="status">
-                                {frameStatusMessage(frameDisplay)}
-                            </span>
-                            <span>{metadata.dates.at(-1)}</span>
-                        </div>
-                        <div className="fh-compare-toggle">
-                            <button
-                                aria-expanded={showComparisons}
-                                onClick={() => setShowComparisons((v) => !v)}
-                            >
-                                對照策略／ETF{" "}
-                                {comparisons.length
-                                    ? `· 已選 ${comparisons.length} 個`
-                                    : "→"}
-                            </button>
-                            <a href="#research">查看策略研究紀錄</a>
-                        </div>
-                        <div className="fh-growth-rule">
-                            <div>
-                                <b>把漲幅放回時間裡</b>
-                                <p>
-                                    滿一年看年化報酬；未滿一年看實際漲幅。圓形大小也用同一指標。
-                                </p>
-                            </div>
-                            <label>
-                                飆股門檻
-                                <select
-                                    aria-label="飆股門檻"
-                                    value={thresholdPct}
-                                    onChange={(event) =>
-                                        setThresholdPct(
-                                            Number(event.target.value),
-                                        )
-                                    }
-                                >
-                                    <option value={60}>至少 +60%</option>
-                                    <option value={80}>至少 +80%</option>
-                                    <option value={100}>至少 +100%</option>
-                                    <option value={200}>至少 +200%</option>
-                                </select>
-                            </label>
-                            <details>
-                                <summary>怎麼算、哪些資料保留</summary>
-                                {frame && (
-                                    <p>
-                                        未達 {thresholdPct}%：{belowThreshold}{" "}
-                                        檔；漲幅或時間待核對：{unknownGrowth}{" "}
-                                        檔。
-                                        {mode === "launched" &&
-                                            `另有 ${noCandidate} 檔開始點尚未判斷、${notYet} 檔尚未開始，未畫入。`}
-                                        資料未知不代表未達門檻。
-                                    </p>
-                                )}
-                                <p>
-                                    從本波起點算到觀察日。年化報酬 =（1 +
-                                    實際報酬）^(1 ÷ 年數) − 1；一年採 365.25
-                                    天，整日資料從第 366
-                                    天改用年化。未滿一年不放大短期漲幅。
-                                </p>
-                                <p>
-                                    原始總漲幅與完整波段仍可查；缺價或起點可能截斷時不猜數字。指標兩倍，等效直徑兩倍。年化是這段歷史走勢的換算，不是未來報酬預測。
-                                </p>
-                            </details>
-                        </div>
-                    </section>
-                    {history.error && (
-                        <div className="fh-error" role="alert">
-                            讀取 {desiredDate} 暫時失敗。
-                            {frame && `地圖仍顯示 ${frame.date}。`}
-                            <button onClick={history.retry}>重新讀取</button>
-                            <p>
-                                若歷史快照驗證失敗，請檢查本機快照並重新啟動資料服務。
-                            </p>
-                        </div>
-                    )}
-                    {frame && (
-                        <div hidden={!showComparisons}>
-                            <HistoryComparisons
-                                date={frame.date}
-                                rows={displayed}
-                                catalogId={frame.catalogId}
-                                onComparisons={setComparisons}
-                            />
-                        </div>
-                    )}
                     <div className="fh-market">
-                        <section className="fh-card fh-map">
-                            <div className="fh-section-heading">
-                                <div>
-                                    <h2>{renderedDate} 正在大漲的產業與股票</h2>
-                                    <p>
-                                        圓越大，代表這波漲得越快。滿一年採年化，未滿一年採實際漲幅。
-                                    </p>
+                        <div className="fh-map-column">
+                            <section className="fh-card fh-map">
+                                <div className="fh-section-heading">
+                                    <div>
+                                        <h2>
+                                            {renderedDate} 正在大漲的產業與股票
+                                        </h2>
+                                        <p>
+                                            圓越大，代表這波漲得越快。滿一年採年化，未滿一年採實際漲幅。
+                                        </p>
+                                    </div>
+                                    <label className="fh-threshold">
+                                        飆股門檻
+                                        <select
+                                            aria-label="飆股門檻"
+                                            value={thresholdPct}
+                                            onChange={(event) =>
+                                                setThresholdPct(
+                                                    Number(event.target.value),
+                                                )
+                                            }
+                                        >
+                                            <option value={60}>
+                                                至少 +60%
+                                            </option>
+                                            <option value={80}>
+                                                至少 +80%
+                                            </option>
+                                            <option value={100}>
+                                                至少 +100%
+                                            </option>
+                                            <option value={200}>
+                                                至少 +200%
+                                            </option>
+                                        </select>
+                                    </label>
                                 </div>
-                                <span>{frame?.date}</span>
-                            </div>
-                            {datedComparisons.length === 1 ? (
-                                <div className="fh-phase-legend">
-                                    <span>
-                                        <i
-                                            style={{
-                                                background: "var(--compare-1)",
-                                            }}
-                                        />
-                                        當日有持有證據
-                                    </span>
-                                    <span>
-                                        <i className="fh-phase-unknown" />
-                                        未持有
-                                    </span>
-                                    <span>斜線＝持股未知</span>
-                                    <small>
-                                        顏色只比較這天的持股，尚未比較整波收益。
-                                    </small>
-                                </div>
-                            ) : (
-                                <div className="fh-phase-legend">
-                                    <span>
-                                        <i className="fh-phase-rising" />
-                                        大漲中
-                                    </span>
-                                    <span>
-                                        <i className="fh-phase-slow" />
-                                        慢慢上漲
-                                    </span>
-                                    <span>
-                                        <i className="fh-phase-resting" />
-                                        漲多休息
-                                    </span>
-                                    <span>
-                                        <i className="fh-phase-retreat" />
-                                        從高點拉回
-                                    </span>
-                                    <span>
-                                        <i className="fh-phase-unknown" />
-                                        尚未判斷
-                                    </span>
-                                    {datedComparisons.length > 1 && (
+                                {datedComparisons.length === 1 ? (
+                                    <div className="fh-phase-legend">
+                                        <span>
+                                            <i
+                                                style={{
+                                                    background:
+                                                        "var(--compare-1)",
+                                                }}
+                                            />
+                                            當日有持有證據
+                                        </span>
+                                        <span>
+                                            <i className="fh-phase-unknown" />
+                                            未持有
+                                        </span>
+                                        <span>斜線＝持股未知</span>
                                         <small>
-                                            彩色小點與右側文字分別對照各策略的當日持股。
+                                            顏色只比較這天的持股，尚未比較整波收益。
                                         </small>
+                                    </div>
+                                ) : (
+                                    <div className="fh-phase-legend">
+                                        <span>
+                                            <i className="fh-phase-rising" />
+                                            大漲中
+                                        </span>
+                                        <span>
+                                            <i className="fh-phase-slow" />
+                                            慢慢上漲
+                                        </span>
+                                        <span>
+                                            <i className="fh-phase-resting" />
+                                            漲多休息
+                                        </span>
+                                        <span>
+                                            <i className="fh-phase-retreat" />
+                                            從高點拉回
+                                        </span>
+                                        <span>
+                                            <i className="fh-phase-unknown" />
+                                            尚未判斷
+                                        </span>
+                                        {datedComparisons.length > 1 && (
+                                            <small>
+                                                彩色小點與右側文字分別對照各策略的當日持股。
+                                            </small>
+                                        )}
+                                    </div>
+                                )}
+                                <div className="fh-map-frame">
+                                    {active && view && displayed.length ? (
+                                        <OpportunityMap
+                                            fill
+                                            view={view}
+                                            groupingMode="snapshot"
+                                            colorBasis="phase"
+                                            comparisons={datedComparisons}
+                                            selectedSecurityId={selectedId}
+                                            selectedWaveId={selected?.waveId}
+                                            onSelect={setSelectedId}
+                                            reducedMotion={reducedMotion}
+                                            showComparisonDots={
+                                                datedComparisons.length > 1
+                                            }
+                                        />
+                                    ) : (
+                                        <div className="fh-empty">
+                                            <strong>
+                                                {!frame
+                                                    ? frameStatusMessage(
+                                                          frameDisplay,
+                                                      )
+                                                    : !active
+                                                      ? "頁面已暫停"
+                                                      : "這天尚無符合顯示條件的候選大漲股"}
+                                            </strong>
+                                            <p>
+                                                {frame
+                                                    ? "完整行情保留在時間帶與目錄；也可以先看一個案例日期。"
+                                                    : "取得行情後才會判斷哪些股票符合顯示條件。"}
+                                            </p>
+                                            <div className="fh-controls">
+                                                {[
+                                                    "2014-06-30",
+                                                    "2021-04-29",
+                                                    "2024-06-28",
+                                                ].map((date) => (
+                                                    <button
+                                                        key={date}
+                                                        onClick={() =>
+                                                            history.goToDate(
+                                                                date,
+                                                            )
+                                                        }
+                                                    >
+                                                        {date.slice(0, 4)} 年
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
                                     )}
                                 </div>
-                            )}
-                            {active && view && displayed.length ? (
-                                <OpportunityMap
-                                    view={view}
-                                    groupingMode="snapshot"
-                                    colorBasis="phase"
-                                    comparisons={datedComparisons}
-                                    selectedSecurityId={selectedId}
-                                    selectedWaveId={selected?.waveId}
-                                    onSelect={setSelectedId}
-                                    reducedMotion={reducedMotion}
-                                    showComparisonDots={
-                                        datedComparisons.length > 1
+                            </section>
+                            <section
+                                className="fh-card fh-datebar"
+                                aria-label="歷史交易日"
+                            >
+                                <button
+                                    className="fh-play"
+                                    onClick={() =>
+                                        history.setPlaying(!history.playing)
                                     }
-                                />
-                            ) : (
-                                <div className="fh-empty">
-                                    <strong>
-                                        {!frame
-                                            ? frameStatusMessage(frameDisplay)
-                                            : !active
-                                              ? "頁面已暫停"
-                                              : "這天尚無符合顯示條件的候選大漲股"}
-                                    </strong>
-                                    <p>
-                                        {frame
-                                            ? "完整行情保留在時間帶與目錄；也可以先看一個案例日期。"
-                                            : "取得行情後才會判斷哪些股票符合顯示條件。"}
-                                    </p>
-                                    <div className="fh-controls">
-                                        {[
-                                            "2014-06-30",
-                                            "2021-04-29",
-                                            "2024-06-28",
-                                        ].map((date) => (
-                                            <button
-                                                key={date}
-                                                onClick={() =>
-                                                    history.goToDate(date)
-                                                }
-                                            >
-                                                {date.slice(0, 4)} 年
-                                            </button>
-                                        ))}
+                                    disabled={!active || !!history.error}
+                                    aria-label={
+                                        history.playing
+                                            ? "暫停播放"
+                                            : "播放歷史變化"
+                                    }
+                                >
+                                    {history.playing ? "Ⅱ" : "▶"}
+                                </button>
+                                <div className="fh-timebar-track">
+                                    <input
+                                        aria-label="歷史交易日時間軸"
+                                        type="range"
+                                        min={0}
+                                        max={metadata.dates.length - 1}
+                                        value={history.index}
+                                        onChange={(e) => {
+                                            history.setPlaying(false);
+                                            history.navigate(
+                                                Number(e.target.value),
+                                            );
+                                        }}
+                                    />
+                                    <div className="fh-date-labels">
+                                        <span>{metadata.dates[0]}</span>
+                                        <span role="status">
+                                            {frameStatusMessage(frameDisplay)}
+                                        </span>
+                                        <span>{metadata.dates.at(-1)}</span>
                                     </div>
                                 </div>
-                            )}
-                            <p className="fh-caption">
-                                產業旁數字，是族群內最高指標的那檔股票，不是全產業報酬。階段也是候選標記；產業分類沿用現有資料，當年歸屬仍待補證。
-                            </p>
-                        </section>
+                                <div className="fh-timebar-tools">
+                                    <form onSubmit={submitDate}>
+                                        <input
+                                            name="observationDate"
+                                            aria-label="前往日期"
+                                            type="date"
+                                            min={metadata.dates[0]}
+                                            max={metadata.dates.at(-1)}
+                                            value={dateDraft}
+                                            onChange={(e) =>
+                                                setDateDraft(e.target.value)
+                                            }
+                                        />
+                                        <button type="submit">前往</button>
+                                    </form>
+                                    <label className="fh-speed">
+                                        播放速度
+                                        <select
+                                            value={history.step}
+                                            onChange={(e) =>
+                                                history.setStep(
+                                                    Number(e.target.value),
+                                                )
+                                            }
+                                        >
+                                            <option value={20}>慢</option>
+                                            <option value={40}>中</option>
+                                            <option value={60}>快</option>
+                                        </select>
+                                    </label>
+                                </div>
+                            </section>
+                        </div>
                         <aside className="fh-card fh-aside">
                             <h2>
                                 {mode === "launched"
@@ -617,6 +573,73 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                             )}
                         </aside>
                     </div>
+                    {history.error && (
+                        <div className="fh-error" role="alert">
+                            讀取 {desiredDate} 暫時失敗。
+                            {frame && `地圖仍顯示 ${frame.date}。`}
+                            <button onClick={history.retry}>重新讀取</button>
+                            <p>
+                                若歷史快照驗證失敗，請檢查本機快照並重新啟動資料服務。
+                            </p>
+                        </div>
+                    )}
+                    <section className="fh-card fh-options">
+                        <div className="fh-compare-toggle">
+                            <button
+                                aria-expanded={showComparisons}
+                                onClick={() => setShowComparisons((v) => !v)}
+                            >
+                                對照策略／ETF{" "}
+                                {comparisons.length
+                                    ? `· 已選 ${comparisons.length} 個`
+                                    : "→"}
+                            </button>
+                            <a href="#research">查看策略研究紀錄</a>
+                        </div>
+                        <div className="fh-growth-rule">
+                            <div>
+                                <b>把漲幅放回時間裡</b>
+                                <p>
+                                    滿一年看年化報酬；未滿一年看實際漲幅。圓形大小也用同一指標。
+                                </p>
+                            </div>
+                            <details>
+                                <summary>怎麼算、哪些資料保留</summary>
+                                {frame && (
+                                    <p>
+                                        未達 {thresholdPct}%：{belowThreshold}{" "}
+                                        檔；漲幅或時間待核對：{unknownGrowth}{" "}
+                                        檔。
+                                        {mode === "launched" &&
+                                            `另有 ${noCandidate} 檔開始點尚未判斷、${notYet} 檔尚未開始，未畫入。`}
+                                        資料未知不代表未達門檻。
+                                    </p>
+                                )}
+                                <p>
+                                    從本波起點算到觀察日。年化報酬 =（1 +
+                                    實際報酬）^(1 ÷ 年數) − 1；一年採 365.25
+                                    天，整日資料從第 366
+                                    天改用年化。未滿一年不放大短期漲幅。
+                                </p>
+                                <p>
+                                    原始總漲幅與完整波段仍可查；缺價或起點可能截斷時不猜數字。指標兩倍，等效直徑兩倍。年化是這段歷史走勢的換算，不是未來報酬預測。
+                                </p>
+                            </details>
+                            <p className="fh-caption">
+                                產業旁數字，是族群內最高指標的那檔股票，不是全產業報酬。階段也是候選標記；產業分類沿用現有資料，當年歸屬仍待補證。
+                            </p>
+                        </div>
+                    </section>
+                    {frame && (
+                        <div hidden={!showComparisons}>
+                            <HistoryComparisons
+                                date={frame.date}
+                                rows={displayed}
+                                catalogId={frame.catalogId}
+                                onComparisons={setComparisons}
+                            />
+                        </div>
+                    )}
                     {directory ? (
                         <HistoryTimeline
                             directory={directory}

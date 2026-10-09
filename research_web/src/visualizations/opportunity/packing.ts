@@ -1,7 +1,11 @@
 /** World units have one scale across dates; callers must not fit each day separately. */
 export type PackingNode = { id: string; groupId: string; weight: number };
 export type PackingPoint = { x: number; y: number };
-export type PreviousPackingPosition = PackingPoint & { id: string };
+export type PreviousPackingPosition = PackingPoint & {
+    id: string;
+    /** Equivalent radius last shown; a change means the stock grew or shrank. */
+    r?: number;
+};
 export type PackingInput = {
     nodes: readonly PackingNode[];
     globalRadiusScale: number;
@@ -9,6 +13,8 @@ export type PackingInput = {
     gap?: number;
     groupGap?: number;
     outlinePadding?: number;
+    /** Width ÷ height of the frame the layout is shown in; groups spread to match it. */
+    aspect?: number;
 };
 export type PackedNode = PackingNode &
     PackingPoint & {
@@ -62,6 +68,11 @@ const RAYS = 40;
 const STOCK_SEGMENTS = 24;
 const CURVE_SAMPLES = 6;
 const ANCHOR_ATTRACTION = 0.28;
+const STOCK_COMPACTION_STEPS = 70;
+const GROUP_COMPACTION_STEPS = 110;
+const SETTLE_STEPS = 400;
+/** Wider or taller frames than this get the same composition shape. */
+const MAX_ASPECT = 3;
 const compareId = (a: { id: string }, b: { id: string }) =>
     a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
 const point = (x: number, y: number): PackingPoint => ({ x, y });
@@ -319,6 +330,72 @@ function placeDisk(
     return best;
 }
 
+/**
+ * Pull disks toward the origin while pushing overlaps apart, then settle with
+ * push-only passes. Warm starts keep continuity; the pull closes the holes that
+ * departures leave, so repeated playback cannot drift outward. `ky > kx` pulls
+ * harder vertically, which turns the composition into a wide ellipse.
+ */
+function compact(
+    disks: Disk[],
+    gap: number,
+    kx: number,
+    ky: number,
+    steps: number,
+): void {
+    if (disks.length < 2) return;
+    const scale = Math.max(1, ...disks.map((disk) => Math.abs(disk.r)));
+    for (let step = 0; step < steps + SETTLE_STEPS; step++) {
+        const settling = step >= steps;
+        if (!settling) {
+            const pull = 0.08 * (1 - step / steps) + 0.01;
+            for (const disk of disks) {
+                disk.x -= disk.x * pull * kx;
+                disk.y -= disk.y * pull * ky;
+            }
+        }
+        let worst = 0;
+        for (let pass = 0; pass < 2; pass++)
+            for (let i = 0; i < disks.length; i++) {
+                const a = disks[i];
+                if (a.r === 0) continue;
+                for (let j = i + 1; j < disks.length; j++) {
+                    const b = disks[j];
+                    if (b.r === 0) continue;
+                    let dx = b.x - a.x;
+                    let dy = b.y - a.y;
+                    const min = a.r + b.r + gap;
+                    const squared = dx * dx + dy * dy;
+                    if (squared >= min * min) continue;
+                    let distance = Math.sqrt(squared);
+                    if (distance < 1e-9) {
+                        // Deterministic separation for coincident centers.
+                        const angle = (hash(a.id + b.id) / 0x100000000) * TAU;
+                        dx = Math.cos(angle);
+                        dy = Math.sin(angle);
+                        distance = 1;
+                    }
+                    const push = (min - distance) / distance;
+                    const share = (b.r * b.r) / (a.r * a.r + b.r * b.r);
+                    worst = Math.max(worst, min - distance);
+                    a.x -= dx * push * share;
+                    a.y -= dy * push * share;
+                    b.x += dx * push * (1 - share);
+                    b.y += dy * push * (1 - share);
+                }
+            }
+        if (settling && worst <= scale * 1e-9) break;
+    }
+    // Push passes converge slowly when radii differ by orders of magnitude;
+    // the exact ray search guarantees clearance for whatever is left.
+    const repaired: Disk[] = [];
+    for (const disk of disks) {
+        if (!fits(disk, repaired, gap))
+            Object.assign(disk, placeDisk(disk, repaired, gap));
+        repaired.push(disk);
+    }
+}
+
 function convexHull(points: PackingPoint[]): PackingPoint[] {
     const sorted = [...points].sort((a, b) => a.x - b.x || a.y - b.y);
     const turn = (a: PackingPoint, b: PackingPoint, c: PackingPoint) =>
@@ -378,6 +455,7 @@ function localGroup(
     scale: number,
     gap: number,
     padding: number,
+    tighten: boolean,
 ): LocalGroup {
     const known = inputs.flatMap((node) =>
         previous.has(node.id) ? [previous.get(node.id)!] : [],
@@ -416,6 +494,13 @@ function localGroup(
         Object.assign(node, placeDisk(node, placed, gap));
         placed.push(node);
     }
+    const anchorX = nodes.reduce((s, p) => s + p.x / nodes.length, 0);
+    const anchorY = nodes.reduce((s, p) => s + p.y / nodes.length, 0);
+    for (const node of nodes) {
+        node.x -= anchorX;
+        node.y -= anchorY;
+    }
+    if (tighten) compact(nodes, gap, 1, 1, STOCK_COMPACTION_STEPS);
     // A deterministic node centroid can be reconstructed from next day's previous positions.
     const center = point(
         nodes.reduce((s, p) => s + p.x / nodes.length, 0),
@@ -476,9 +561,22 @@ export function computePacking(input: PackingInput): PackingLayout {
         group.push(node);
         byGroup.set(node.groupId, group);
     }
+    // Compact only when something changed, so an unchanged day never jiggles.
+    const tighten =
+        previous.size === 0 ||
+        [...previous.keys()].some((id) => !ids.has(id)) ||
+        input.nodes.some((node) => {
+            const old = previous.get(node.id);
+            if (!old) return true;
+            const r = Math.sqrt(node.weight) * scale;
+            return (
+                old.r !== undefined &&
+                Math.abs(old.r - r) > 1e-9 * Math.max(1, r)
+            );
+        });
     const groups = [...byGroup]
         .map(([id, nodes]) =>
-            localGroup(id, nodes, previous, scale, gap, padding),
+            localGroup(id, nodes, previous, scale, gap, padding, tighten),
         )
         .sort(
             (a, b) =>
@@ -502,8 +600,9 @@ export function computePacking(input: PackingInput): PackingLayout {
     for (const group of groups) {
         if (group.previous) {
             const target = targets.get(group.id)!;
-            group.x += (target.x - group.x) * ANCHOR_ATTRACTION;
-            group.y += (target.y - group.y) * ANCHOR_ATTRACTION;
+            const pull = tighten ? ANCHOR_ATTRACTION : 0;
+            group.x += (target.x - group.x) * pull;
+            group.y += (target.y - group.y) * pull;
         } else {
             const edge = hadPreviousGroups
                 ? placed.reduce(
@@ -522,6 +621,21 @@ export function computePacking(input: PackingInput): PackingLayout {
         Object.assign(group, placeDisk(group, placed, groupSeparation));
         placed.push(group);
     }
+    const aspect = input.aspect ?? 1;
+    if (!Number.isFinite(aspect) || aspect <= 0)
+        throw new RangeError("aspect must be a positive finite number");
+    // Pull the short axis harder. The aspect is capped so a pull step never
+    // exceeds the distance to the centre (0.09 × 3² < 1); beyond that the
+    // update overshoots and the layout diverges.
+    const shape = Math.min(MAX_ASPECT, Math.max(1 / MAX_ASPECT, aspect)) ** 2;
+    if (tighten)
+        compact(
+            groups,
+            groupSeparation,
+            Math.max(1, 1 / shape),
+            Math.max(1, shape),
+            GROUP_COMPACTION_STEPS,
+        );
     // Center the composition in world coordinates, never in the camera. The
     // strength anchors above keep large groups near the middle; pinning the largest
     // group's center instead would clip ordinary neighboring groups asymmetrically.
