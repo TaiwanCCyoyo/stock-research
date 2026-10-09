@@ -15,14 +15,14 @@ def swap_in(outputs: dict[Path, bytes]) -> None:
     leftovers = [str(x) for t in outputs for x in (t.with_name(t.name + ".partial"), t.with_name(t.name + ".previous")) if x.exists()]
     if leftovers:  # an earlier run was interrupted; never guess which copy is right
         raise SystemExit(f"leftover files from an interrupted run, resolve them by hand first: {leftovers}")
-    staged = {}
-    for target, data in outputs.items():
-        tmp = target.with_name(target.name + ".partial")
-        tmp.write_bytes(data)
-        staged[target] = tmp
+    staged: dict[Path, Path] = {}
     backups: dict[Path, Path] = {}
     placed: list[Path] = []
     try:
+        for target, data in outputs.items():
+            tmp = target.with_name(target.name + ".partial")
+            staged[target] = tmp  # registered first, so a failed or partial write is cleaned up too
+            tmp.write_bytes(data)
         for target in staged:
             if target.exists():
                 bak = target.with_name(target.name + ".previous")

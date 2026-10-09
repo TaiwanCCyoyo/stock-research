@@ -659,3 +659,31 @@ def test_recompute_uses_the_snapshot_it_verified_even_if_the_file_is_replaced(tm
             z.writestr(n, data)
     _docs, sets, _hits = recompute.load()
     assert sets["b5b"] == original
+
+
+def test_swap_in_cleans_up_staged_files_when_a_later_write_fails(tmp_path: Path, monkeypatch) -> None:  # noqa: ANN001
+    sys.path.insert(0, str(TASK))
+    import archive_io
+
+    a, b = tmp_path / "rule_hits.json", tmp_path / "rule_hits_inputs.zip"
+    a.write_bytes(b"current-a")
+    b.write_bytes(b"current-b")
+    real = Path.write_bytes
+
+    def full_disk(self: Path, data: bytes) -> int:
+        if self.name == "rule_hits_inputs.zip.partial":
+            raise OSError("disk full")
+        return real(self, data)
+
+    monkeypatch.setattr(Path, "write_bytes", full_disk)
+    try:
+        archive_io.swap_in({a: b"new-a", b: b"new-b"})
+    except OSError:
+        pass
+    else:
+        raise AssertionError("swap_in should have raised")
+    monkeypatch.undo()
+    assert (a.read_bytes(), b.read_bytes()) == (b"current-a", b"current-b")
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["rule_hits.json", "rule_hits_inputs.zip"]
+    archive_io.swap_in({a: b"new-a", b: b"new-b"})  # a retry is not blocked by leftovers
+    assert (a.read_bytes(), b.read_bytes()) == (b"new-a", b"new-b")
