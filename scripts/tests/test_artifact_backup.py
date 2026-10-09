@@ -451,7 +451,7 @@ def test_default_sources_include_only_cache_task_datasets_and_owner_labels(tmp_p
         "tasks/example/unrelated",
         "tasks/20261010-owner-hhhl-labels/datasets",
         "tasks/20261010-owner-hhhl-labels/annotations",
-        "shioaji_stock_prices/data",
+        "stock-data-downloader/data",
         "broker",
         "unrelated",
     ]

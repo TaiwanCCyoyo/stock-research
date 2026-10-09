@@ -53,7 +53,7 @@ ENVIRONMENT_SETTING.md
 
 # --- Stock Project Specific ---
 # Data (Ignore large binaries and raw CSVs)
-shioaji_stock_prices/data/*/
+stock-data-downloader/data/*/
 StockProject/data/
 *.parquet
 *.csv

@@ -17,13 +17,13 @@ def write_price_csv(data_root: Path, code: str = "2352") -> None:
 
 def test_data_audit_prefers_relative_paths(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.chdir(tmp_path)
-    data_root = tmp_path / "shioaji_stock_prices" / "data"
+    data_root = tmp_path / "stock-data-downloader" / "data"
     write_price_csv(data_root)
 
     audit = prepare_nightly_research.build_data_audit(data_root, ["2352"])
 
-    assert audit["data_path"] == "shioaji_stock_prices/data"
-    assert audit["price_file"] == "shioaji_stock_prices/data"
+    assert audit["data_path"] == "stock-data-downloader/data"
+    assert audit["price_file"] == "stock-data-downloader/data"
 
 
 def test_template_flag_is_rejected_with_a_pointer_to_the_experiment_spec_flow() -> None:
@@ -46,7 +46,7 @@ def make_args(**overrides: object) -> argparse.Namespace:
         "codes": "2352",
         "start": "2022-01-01",
         "end": None,
-        "data_path": "shioaji_stock_prices/data",
+        "data_path": "stock-data-downloader/data",
         "objective": None,
         "name": None,
         "template": None,
@@ -58,7 +58,7 @@ def make_args(**overrides: object) -> argparse.Namespace:
 
 def test_create_nightly_task_no_longer_writes_next_prompt(monkeypatch: MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     repo_root = tmp_path / "repo"
-    data_root = repo_root / "shioaji_stock_prices" / "data"
+    data_root = repo_root / "stock-data-downloader" / "data"
     write_price_csv(data_root, code="2352")
     monkeypatch.chdir(repo_root)
     monkeypatch.setattr(prepare_nightly_research, "REPO_ROOT", repo_root)

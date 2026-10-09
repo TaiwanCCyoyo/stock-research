@@ -6,8 +6,10 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+from research_core.producer_data import producer_data_root
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SYMBOL_MAPPING_PATH = REPO_ROOT / "shioaji_stock_prices" / "data" / "stock_symbol_mapping.json5"
+SYMBOL_MAPPING_PATH = producer_data_root() / "stock_symbol_mapping.json5"
 
 FIELD_LABELS = {
     "rank": "排名",

@@ -139,8 +139,8 @@ def seed_inputs(primary: Path, worktree: Path) -> dict[str, Any]:
     primary, worktree = safe_path(primary), safe_path(worktree)
     if primary == worktree or worktree in primary.parents:
         raise ValueError("independent worktree required")
-    source = safe_path(primary / "shioaji_stock_prices/data")
-    destination = safe_path(worktree / "shioaji_stock_prices/data")
+    source = safe_path(primary / "stock-data-downloader/data")
+    destination = safe_path(worktree / "stock-data-downloader/data")
     if not source.is_dir() or not destination.is_dir():
         raise ValueError("initialized producer data directories required")
     scratch = safe_path(worktree / ".tmp" / f"worktree-seed-{uuid.uuid4().hex}")

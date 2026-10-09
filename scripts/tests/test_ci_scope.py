@@ -28,7 +28,7 @@ def test_known_prose_skips_tests(path: str) -> None:
         "pyproject.toml",
         "uv.lock",
         "requirements.txt",
-        "shioaji_stock_prices",
+        "stock-data-downloader",
         "src/module.py",
         "research_web/package-lock.json",
         "docs/example.py",

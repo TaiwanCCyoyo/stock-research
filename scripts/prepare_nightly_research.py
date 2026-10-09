@@ -11,8 +11,13 @@ from typing import Any
 import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from research_core.producer_data import producer_data_root  # noqa: E402
+
 TASKS_ROOT = REPO_ROOT / "tasks"
-DEFAULT_DATA_PATH = REPO_ROOT / "shioaji_stock_prices" / "data"
+DEFAULT_DATA_PATH = producer_data_root()
 TASK_NAME_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]*$")
 ELECTRONICS_LARGE_CODES = [
     "2330",

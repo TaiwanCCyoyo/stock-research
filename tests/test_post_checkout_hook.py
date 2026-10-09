@@ -10,7 +10,7 @@ of re-downloadable data.
 Covers the guard conditions that must hold for *every* checkout (the
 higher-risk surface for a hook wired to fire on every `git checkout` and
 `git worktree add` repo-wide), plus a scratch submodule shaped like
-shioaji_stock_prices for the data-seeding behavior.
+stock-data-downloader for the data-seeding behavior.
 """
 
 from __future__ import annotations
@@ -33,7 +33,7 @@ SOME_SHA = "1" * 40
 
 # file:// submodule URLs are blocked by default (CVE-2022-39253); only needed
 # for these tests because the test double lives on the local filesystem —
-# the real shioaji_stock_prices submodule uses a normal https remote.
+# the real stock-data-downloader submodule uses a normal https remote.
 _ALLOW_FILE_PROTOCOL_ENV = {**os.environ, "GIT_ALLOW_PROTOCOL": "file"}
 
 
@@ -123,11 +123,11 @@ def test_hook_does_not_touch_a_worktree_with_no_submodule(main_repo: Path, tmp_p
     result = _run_hook(worktree, prev=ZERO_SHA)
 
     assert result.returncode == 0
-    # No shioaji_stock_prices submodule in this scratch repo, so the
+    # No stock-data-downloader submodule in this scratch repo, so the
     # data-symlink block's `[ -d "$main_data" ]` guard must skip cleanly
     # rather than erroring on a missing path.
     assert "failed to link" not in result.stdout
-    assert not (worktree / "shioaji_stock_prices").exists()
+    assert not (worktree / "stock-data-downloader").exists()
 
 
 def test_hook_script_exists_and_is_executable() -> None:
@@ -137,7 +137,7 @@ def test_hook_script_exists_and_is_executable() -> None:
 
 @pytest.fixture()
 def main_repo_with_submodule(tmp_path: Path) -> Path:
-    """A scratch repo shaped like this repo's shioaji_stock_prices submodule:
+    """A scratch repo shaped like this repo's stock-data-downloader submodule:
     `data/stock_category.json5` tracked by the submodule, plus (in the main
     checkout only) gitignored cache files standing in for the real ~18GB
     price cache — one of each class the hook must treat differently.
@@ -157,7 +157,7 @@ def main_repo_with_submodule(tmp_path: Path) -> Path:
     _run_git(["init", "-q"], repo)
     _run_git(["config", "user.email", "test@example.com"], repo)
     _run_git(["config", "user.name", "Test"], repo)
-    _run_git(["submodule", "add", str(sub_source), "shioaji_stock_prices"], repo, allow_file_protocol=True)
+    _run_git(["submodule", "add", str(sub_source), "stock-data-downloader"], repo, allow_file_protocol=True)
     modules = [
         "scripts/__init__.py",
         "scripts/seed_worktree_inputs.py",
@@ -171,7 +171,7 @@ def main_repo_with_submodule(tmp_path: Path) -> Path:
     _run_git(["add", *modules], repo)
     _run_git(["commit", "-q", "-m", "add submodule and seeding modules"], repo)
 
-    main_data = repo / "shioaji_stock_prices" / "data"
+    main_data = repo / "stock-data-downloader" / "data"
     # Read-set: what this repo's loader/universe/dashboard actually open.
     (main_data / "price_daily.parquet").write_text("parquet stand-in\n", encoding="utf-8")
     (main_data / "2330_day.csv").write_text("daily bars\n", encoding="utf-8")
@@ -205,7 +205,7 @@ def test_hook_copies_only_the_read_set_and_never_links(main_repo_with_submodule:
     2026-08-13. The invariant is therefore inverted from that design — a
     write through the worktree's data/ must NOT reach the main checkout.
     """
-    main_data = main_repo_with_submodule / "shioaji_stock_prices" / "data"
+    main_data = main_repo_with_submodule / "stock-data-downloader" / "data"
     source_before = {path.relative_to(main_data): path.read_bytes() for path in main_data.rglob("*") if path.is_file()}
     source_mtimes = {path.relative_to(main_data): path.stat().st_mtime_ns for path in main_data.rglob("*") if path.is_file()}
     worktree = tmp_path / "wt"
@@ -215,7 +215,7 @@ def test_hook_copies_only_the_read_set_and_never_links(main_repo_with_submodule:
 
     assert result.returncode == 0, result.stdout + result.stderr
     assert "input snapshot incomplete" not in result.stdout + result.stderr
-    worktree_data = worktree / "shioaji_stock_prices" / "data"
+    worktree_data = worktree / "stock-data-downloader" / "data"
     summaries = [json.loads(line) for line in result.stdout.splitlines() if line.startswith("{")]
     assert len(summaries) == 1, result.stdout + result.stderr
     summary = summaries[0]

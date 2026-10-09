@@ -18,7 +18,7 @@ research_lab
 StockProject/analytics
 StockProject/data
 StockProject/strategies/candidates
-shioaji_stock_prices
+stock-data-downloader
 
 *.parquet
 *.csv

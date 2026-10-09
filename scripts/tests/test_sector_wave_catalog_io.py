@@ -26,7 +26,7 @@ from StockProject.engine.data_loader import DataLoader
 
 def _repo(tmp_path: Path) -> Path:
     root = tmp_path / "repo"
-    data = root / "shioaji_stock_prices" / "data"
+    data = root / "stock-data-downloader" / "data"
     data.mkdir(parents=True)
     (root / "tasks" / "20261002-sector-wave-catalog").mkdir(parents=True)
     (root / "research_core").mkdir()
@@ -111,8 +111,8 @@ def test_bundle_filters_future_row_retains_no_bars_and_checks_integrity(tmp_path
     assert next(row for row in rows if row["code"] == "C")["price_coverage_status"] == "no_bars"
     assert next(row for row in rows if row["code"] == "B")["coverage_status"] == "source_missing"
     assert manifest["coverage"]["excluded"] == 1
-    assert _load_prices(root / "shioaji_stock_prices" / "data" / "price_daily.parquet")["Date"].max() == pd.Timestamp("2019-01-06")
-    assert len(_actions(root / "shioaji_stock_prices" / "data" / "corporate_actions.sqlite", "A")) == 1
+    assert _load_prices(root / "stock-data-downloader" / "data" / "price_daily.parquet")["Date"].max() == pd.Timestamp("2019-01-06")
+    assert len(_actions(root / "stock-data-downloader" / "data" / "corporate_actions.sqlite", "A")) == 1
     with gzip.open(next((output / "chunks").glob("episodes-*.json.gz")), "rt", encoding="utf-8") as handle:
         episodes = json.load(handle)
     assert episodes[0]["adjusted_start_close"] == 50
@@ -295,7 +295,7 @@ def _read_table(output: Path, manifest: dict, table: str) -> list[dict]:
 
 
 def _add_window_issue_prices(root: Path) -> None:
-    data = root / "shioaji_stock_prices" / "data"
+    data = root / "stock-data-downloader" / "data"
     prices = pd.read_parquet(data / "price_daily.parquet")
     extra = pd.DataFrame({
         "Code": ["A", "A", "A", "C", "C", "C", "C", "C", "C", "C"],
@@ -350,7 +350,7 @@ def test_bundle_window_quality_finding_quarantines_peer_without_backdating_outsi
 def test_validator_rejects_quality_peer_tampering_after_hash_and_receipt_refresh(tmp_path: Path, case: str, expected_error: str) -> None:
     root = _repo(tmp_path)
     if case == "unavailable_missing_flag":
-        data = root / "shioaji_stock_prices" / "data"
+        data = root / "stock-data-downloader" / "data"
         prices = pd.read_parquet(data / "price_daily.parquet")
         invalid_c = pd.DataFrame({
             "Code": ["C"],

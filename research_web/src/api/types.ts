@@ -152,7 +152,7 @@ export interface TradesResponse {
     trades: TradeListRow[];
 }
 
-/** Mirrors shioaji_stock_prices's check_data_integrity.py report schema (v3).
+/** Mirrors stock-data-downloader's check_data_integrity.py report schema (v3).
  *
  * v3 changed the subject from the Shioaji day CSVs to price_daily.parquet, the
  * artifact research actually reads. `symbols` now lists only symbols with a

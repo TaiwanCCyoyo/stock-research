@@ -33,7 +33,7 @@ dev = [
 ignore_missing_imports = true
 check_untyped_defs = true
 explicit_package_bases = true
-exclude = ["^tasks/", "^shioaji_stock_prices/"]
+exclude = ["^tasks/", "^stock-data-downloader/"]
 
 [tool.pyright]
 extraPaths = ["StockProject"]

@@ -11,9 +11,9 @@ coverage, or metric semantics.
 1. Read [references/cache-contract.md](references/cache-contract.md) completely before
    querying cache artifacts, building a universe, calculating liquidity, or interpreting
    a backtest summary.
-2. Treat `shioaji_stock_prices/data/` as read-only unless the user has explicitly placed a
+2. Treat `stock-data-downloader/data/` as read-only unless the user has explicitly placed a
    data-shape change in scope. Source acquisition/normalization belong in the
-   `shioaji_stock_prices` submodule; research price policies, indicators, patterns and
+   `stock-data-downloader` submodule; research price policies, indicators, patterns and
    immutable derived caches belong in Stock under `docs/en/research-derived-data.md`.
 3. Before any authorized data-shape change, follow `AGENTS.md`'s data-safety
    boundary and read `docs/en/price-cache-backup.md`. Prefer additive artifacts; never

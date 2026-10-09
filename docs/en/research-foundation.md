@@ -19,7 +19,7 @@ sensitivities, never represented as observed evidence or used to invent entitlem
 The parent owns the hypothesis, statistical design, exposure review, acceptance
 policy and final interpretation. Under the owner's 2026-09-09 authorization, Codex
 may handle research-required acquisition/backfill and downloader fixes directly;
-Claude assistance is optional. Pipeline code remains in `shioaji_stock_prices` and
+Claude assistance is optional. Pipeline code remains in `stock-data-downloader` and
 the owner contract's data-protection boundaries still apply. A bounded
 research worker executes one approved packet, returns evidence, and stops.
 Long-running deterministic code does not require continuous model reasoning.

@@ -1,11 +1,11 @@
 ---
 name: market-data-acquisition
-description: How to add or extend a market-data source in the shioaji_stock_prices pipeline without shipping a silently wrong artifact - probing an endpoint for its observed values before writing a parser, measuring whether two feeds actually agree, and the seam that appears whenever a daily bulk fetch and a historical backfill write the same rows. Use this whenever work involves writing or changing a fetcher, backfiller, or normalizer for TWSE/TPEx data, wiring a new step into run_daily.py, backfilling history for any source, or explaining why two sources disagree about the same day - including when the request is just "add the institutional data", "backfill X further back", "why is the volume different", or "the endpoint changed shape again". The failures this prevents do not raise exceptions; they produce plausible numbers.
+description: How to add or extend a market-data source in the stock-data-downloader pipeline without shipping a silently wrong artifact - probing an endpoint for its observed values before writing a parser, measuring whether two feeds actually agree, and the seam that appears whenever a daily bulk fetch and a historical backfill write the same rows. Use this whenever work involves writing or changing a fetcher, backfiller, or normalizer for TWSE/TPEx data, wiring a new step into run_daily.py, backfilling history for any source, or explaining why two sources disagree about the same day - including when the request is just "add the institutional data", "backfill X further back", "why is the volume different", or "the endpoint changed shape again". The failures this prevents do not raise exceptions; they produce plausible numbers.
 ---
 
 # Market data acquisition
 
-This skill is about _writing_ into `shioaji_stock_prices/data/`. For _reading_ those
+This skill is about _writing_ into `stock-data-downloader/data/`. For _reading_ those
 artifacts correctly, use `market-data-cache` instead.
 
 Every failure catalogued here was found in production, and none of them raised an
@@ -165,5 +165,5 @@ Measure, and say the number. The pattern that has repeatedly caught real problem
 
 - `.claude/rules/common/data-structures.md` — the hard constraints and the download schedule
 - `skill: market-data-cache` — reading the artifacts this produces
-- `shioaji_stock_prices/AGENTS.md` — the pipeline's own entry points and invariants
-- `shioaji_stock_prices/docs/tpex-history-sources.md` — probe evidence for the TPEx endpoints
+- `stock-data-downloader/AGENTS.md` — the pipeline's own entry points and invariants
+- `stock-data-downloader/docs/tpex-history-sources.md` — probe evidence for the TPEx endpoints

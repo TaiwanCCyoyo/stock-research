@@ -5,7 +5,6 @@ import argparse
 import importlib.util
 import inspect
 import json
-import os
 import sys
 from datetime import date, datetime
 from pathlib import Path
@@ -423,7 +422,7 @@ def compute_partial_data_symbols(engine: Any, code_list: list[str], threshold: i
 
     Complements `missing_symbols` (data entirely absent) with data that is present but
     partially incomplete. Computed from `engine.data_cache` -- the window-trimmed frames
-    the engine already loaded -- independent of the shioaji_stock_prices submodule's
+    the engine already loaded -- independent of the stock-data-downloader submodule's
     report file, since only the engine knows the requested backtest window.
     """
     calendar: set[Any] = set()
@@ -439,7 +438,7 @@ def compute_partial_data_symbols(engine: Any, code_list: list[str], threshold: i
         dates_in_file = set(df["Date"].tolist())
         # Clamp to this symbol's own trading span so a late listing or early delisting
         # within the window isn't mistaken for missing data (mirrors
-        # check_data_integrity.py's _check_symbol in the shioaji_stock_prices submodule).
+        # check_data_integrity.py's _check_symbol in the stock-data-downloader submodule).
         min_date, max_date = df["Date"].min(), df["Date"].max()
         expected_days = {d for d in calendar if min_date <= d <= max_date}
         gap_count = len(expected_days - dates_in_file)
@@ -726,7 +725,7 @@ def main():
     parser.add_argument("--params-file", default=None, help="Path to a strategy params JSON file")
 
     args = parser.parse_args()
-    if args.data_path is None and "STOCK_PRODUCER_DATA_ROOT" in os.environ:
+    if args.data_path is None:
         try:
             args.data_path = str(producer_data_root())
         except (ValueError, FileNotFoundError) as e:
