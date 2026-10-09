@@ -821,3 +821,192 @@
 .fh-section-heading h2 {
     overflow-wrap: anywhere;
 }
+
+/* Map-first stage: the title is one line, then the map and its time bar fill
+   the rest of the first screen. Settings and comparisons sit below. */
+.fh-page {
+    gap: 14px;
+}
+.fh-page .fh-hero {
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: flex-start;
+    gap: 6px 20px;
+    padding: 12px 18px;
+}
+.fh-hero-title {
+    display: flex;
+    align-items: baseline;
+    gap: 6px 14px;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+.studio .fh-page .fh-hero h1 {
+    font-size: clamp(22px, 2.2vw, 28px);
+    line-height: 1.3;
+    margin: 0;
+}
+.fh-page .fh-hero-title p {
+    margin: 0;
+    font-size: 13px;
+}
+.fh-page .fh-hero-date {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    min-width: 0;
+    margin: 0 0 0 auto;
+    text-align: left;
+}
+.fh-page .fh-hero-date > strong {
+    display: inline;
+    font-size: clamp(20px, 2vw, 26px);
+}
+.fh-hero-date > span {
+    color: var(--muted);
+    font-size: 13px;
+}
+.fh-page .fh-hero-date small {
+    display: inline;
+    margin-left: 8px;
+}
+.fh-page .fh-market {
+    height: clamp(540px, calc(100svh - 64px - 92px), 1180px);
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 14px;
+}
+.fh-map-column {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+    min-height: 0;
+}
+.fh-map-column .fh-map {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 12px 14px;
+}
+.fh-map .fh-section-heading {
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+}
+.fh-page .fh-map .fh-section-heading h2 {
+    font-size: 16px;
+    margin: 0;
+}
+.fh-page .fh-map .fh-section-heading p {
+    margin: 2px 0 0;
+    font-size: 12px;
+}
+.fh-threshold {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 13px;
+}
+.fh-map .fh-phase-legend {
+    margin: 8px 0 6px;
+}
+.fh-map-frame {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+.fh-map-frame > * {
+    flex: 1;
+    min-height: 0;
+}
+.fh-page .fh-datebar {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 6px 14px;
+    padding: 10px 14px;
+}
+.fh-timebar-track {
+    min-width: 0;
+}
+.fh-timebar-tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+}
+.fh-page .fh-datebar .fh-speed {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 0;
+    color: var(--muted);
+    font-size: 13px;
+}
+.fh-page .fh-market > .fh-aside {
+    align-self: stretch;
+    min-height: 0;
+    overflow-y: auto;
+}
+.fh-page .fh-market > .fh-aside .fh-ranking-list {
+    max-height: none;
+}
+.fh-options .fh-compare-toggle {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+}
+.fh-options .fh-growth-rule {
+    margin-top: 12px;
+    padding-top: 12px;
+}
+@media (max-width: 1120px) {
+    .fh-page .fh-market {
+        height: auto;
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .fh-map-column .fh-map {
+        flex: none;
+        height: min(76svh, 780px);
+        min-height: 460px;
+    }
+    .fh-page .fh-market > .fh-aside {
+        max-height: 560px;
+    }
+}
+@media (max-width: 600px) {
+    .fh-page .fh-hero {
+        display: flex;
+        padding: 8px 12px;
+    }
+    .fh-page .fh-hero-title p,
+    .fh-page .fh-hero .fh-preview-badge,
+    .fh-page .fh-map .fh-section-heading p {
+        display: none;
+    }
+    .fh-page .fh-hero-date {
+        margin-left: 0;
+    }
+    .fh-map-column .fh-map {
+        height: max(380px, calc(100svh - 330px));
+        min-height: 0;
+        padding: 10px;
+    }
+    .fh-map .fh-phase-legend {
+        gap: 4px 10px;
+        margin: 6px 0 4px;
+    }
+    .fh-page .fh-datebar {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+    .fh-timebar-tools {
+        grid-column: 1 / -1;
+        justify-content: flex-start;
+    }
+}

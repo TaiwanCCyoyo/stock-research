@@ -4,7 +4,8 @@ import {
     DEFAULT_CAMERA,
     fitBoundsCamera,
     gestureCamera,
-    initialOverview,
+    frameFor,
+    stepZoom,
     isDefaultCamera,
     wheelZoomFactor,
     zoomCameraAt,
@@ -232,24 +233,49 @@ test("overview handles vertical spans, empty bounds, and interaction zoom limits
     );
 });
 
-test("initial overview waits for positive area once and never resets later dates", () => {
-    const untouched = { camera: { x: 8, y: 9, zoom: 1 }, initialized: false };
-    const bounds = { minX: -2000, minY: -1000, maxX: 2000, maxY: 1000 };
+test("step zoom keeps its level while the map fills 60% to all of the frame", () => {
+    const level = stepZoom(0.3, null);
+    assert.equal(level, 1.25 ** -6, "the largest level that shows everything");
+    assert.ok(level <= 0.3);
+    assert.equal(stepZoom(0.4, level), level, "a quieter day keeps the level");
+    assert.equal(stepZoom(0.43, level), level);
     assert.equal(
-        initialOverview(
-            untouched,
-            { minX: 0, minY: 0, maxX: 0, maxY: 0 },
-            false,
-        ),
-        untouched,
+        stepZoom(0.45, level),
+        1.25 ** -4,
+        "a much quieter day zooms in",
     );
-    const initialized = initialOverview(untouched, bounds, true);
-    assert.equal(initialized.initialized, true);
-    assert.deepEqual(initialized.camera, fitBoundsCamera(bounds));
-    const later = initialOverview(
-        { ...initialized, camera: { x: 400, y: -300, zoom: 1.4 } },
-        { minX: 100000, minY: -50000, maxX: 200000, maxY: 50000 },
-        true,
+    assert.equal(
+        stepZoom(0.25, level),
+        1.25 ** -7,
+        "an overflowing day zooms out",
     );
-    assert.deepEqual(later.camera, { x: 400, y: -300, zoom: 1.4 });
+    assert.equal(stepZoom(0.3, null, 1.5, 0.5), 1.5 ** -3);
+    assert.equal(stepZoom(Number.NaN, level), level);
+    assert.equal(stepZoom(0, null), 1);
+});
+
+test("a container-shaped frame removes letterboxing from pan, zoom and fit", () => {
+    const wide = { width: 1200, height: 600 };
+    const frame = frameFor(wide);
+    close(frame.width, 1000);
+    close(frame.height, 500);
+    const moved = gestureCamera(
+        DEFAULT_CAMERA,
+        [{ x: 100, y: 100 }],
+        [{ x: 220, y: 160 }],
+        wide,
+        frame,
+    );
+    close(moved.x, -100);
+    close(moved.y, -50);
+    const fit = fitBoundsCamera(
+        { minX: -1000, maxX: 1000, minY: -250, maxY: 250 },
+        frame,
+        1,
+    );
+    close(fit.zoom, 0.5);
+    assert.deepEqual(frameFor({ width: 0, height: 10 }), {
+        width: 1000,
+        height: 620,
+    });
 });
