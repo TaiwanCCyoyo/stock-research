@@ -4,21 +4,6 @@ import type {
     OpportunityWave,
 } from "../../domain/opportunities/types.ts";
 import type { PackedNode, PreviousPackingPosition } from "./packing.ts";
-import type { Camera } from "./camera.ts";
-
-export interface OverviewIndustryLabel {
-    id: string;
-    label: string;
-    maxGain: number | null;
-    displayMetric?: IndustryDisplayMetric;
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    anchorX: number;
-    anchorY: number;
-    side: "left" | "right";
-}
 
 export interface DisplayMetric {
     gain: number | null;
@@ -37,24 +22,148 @@ export function metricLabel(metric: DisplayMetric): string {
     return `${basis} ${value}`;
 }
 
-export function industryMetricLabel(
+/** Short label drawn on top of an industry's territory: name, size, best stock. */
+export function territoryLabelText(
     industry: Pick<
         MapView["industries"][number],
         "label" | "maxGain" | "displayMetric"
     >,
+    count: number,
 ): string {
-    if (industry.displayMetric !== undefined) {
-        const { displayMetric } = industry;
-        const leader = displayMetric.leaderName
-            ? ` · ${displayMetric.leaderName}`
-            : "";
-        return `${industry.label}　最高：${metricLabel(displayMetric)}${leader}`;
+    // Keep the leader's basis: one industry can mix actual and annualized values.
+    const best =
+        industry.displayMetric !== undefined
+            ? metricLabel(industry.displayMetric)
+            : industry.maxGain === null
+              ? "不知道"
+              : `${industry.maxGain >= 0 ? "+" : ""}${industry.maxGain.toFixed(0)}%`;
+    return `${industry.label} ${count} 檔 · 最高 ${best}`;
+}
+
+/** Width of a label in font-size units: full-width (CJK) letters 1, others 0.6. */
+export function labelWidth(text: string, fontSize: number): number {
+    return (
+        [...text].reduce(
+            (sum, letter) => sum + (letter.charCodeAt(0) <= 255 ? 0.6 : 1),
+            0,
+        ) * fontSize
+    );
+}
+
+/** Share shown on a comparison line: a percentage, or 無法計算 when unknown. */
+export function shareLabel(value: number | null): string {
+    return value === null ? "無法計算" : `${(value * 100).toFixed(0)}%`;
+}
+
+/** The text of one comparison line under a territory label, without its name. */
+export function comparisonShareLine(
+    average: number | null,
+    partial: boolean,
+): string {
+    return `持股日上漲占比平均 ${shareLabel(average)}${partial ? "（部分無法計算）" : ""}`;
+}
+
+/** Every comparison line that can be drawn; label space is planned for the widest. */
+export const COMPARISON_LINE_VARIANTS: readonly string[] = [null, 0, 1].flatMap(
+    (share) =>
+        [false, true].map((partial) => comparisonShareLine(share, partial)),
+);
+
+export interface TerritoryLabelGroup {
+    id: string;
+    /** Territory centre x and top edge y, in world units. */
+    x: number;
+    top: number;
+    weight: number;
+    /** First line: industry, count and best gain. */
+    text: string;
+}
+export interface TerritoryLabelSpot {
+    x: number;
+    y: number;
+    /** Name shown before each comparison line; shortened with "…" or empty. */
+    prefixes: string[];
+}
+
+/**
+ * Place the largest territories' labels so every drawn line stays inside the
+ * visible view. Portfolio names are shortened to fit; a label whose own lines
+ * cannot fit is left out (stock names, the ranking and the comparison panel
+ * still show the full text).
+ */
+export function planTerritoryLabels(input: {
+    groups: readonly TerritoryLabelGroup[];
+    comparisonNames: readonly string[];
+    view: { x0: number; x1: number; y0: number; y1: number };
+    fontSize: number;
+    limit: number;
+}): Map<string, TerritoryLabelSpot> {
+    const { groups, comparisonNames, view, fontSize: font, limit } = input;
+    const plan = new Map<string, TerritoryLabelSpot>();
+    const margin = font * 0.5;
+    const available = view.x1 - view.x0 - 2 * margin;
+    const tailText = COMPARISON_LINE_VARIANTS.reduce((widest, text) =>
+        labelWidth(text, font) > labelWidth(widest, font) ? text : widest,
+    );
+    const tail = labelWidth(tailText, font);
+    const prefixes = comparisonNames.map((name) => {
+        if (comparisonNames.length < 2) return "";
+        const budget = available - tail - font * 0.6;
+        if (labelWidth(`${name} `, font) <= budget) return `${name} `;
+        let shortened = "";
+        for (const letter of name) {
+            if (labelWidth(`${shortened}${letter}… `, font) > budget) break;
+            shortened += letter;
+        }
+        // Colour still tells the lines apart when no name fits.
+        return shortened ? `${shortened}… ` : "";
+    });
+    const lines = comparisonNames.length + 1;
+    const placed: { x0: number; x1: number; y0: number; y1: number }[] = [];
+    for (const group of [...groups].sort(
+        (a, b) => b.weight - a.weight || (a.id < b.id ? -1 : 1),
+    )) {
+        if (plan.size >= limit) break;
+        const width = Math.max(
+            labelWidth(group.text, font),
+            ...prefixes.map((prefix) =>
+                labelWidth(`${prefix}${tailText}`, font),
+            ),
+        );
+        if (width > available) continue;
+        const x = Math.max(
+            view.x0 + margin + width / 2,
+            Math.min(view.x1 - margin - width / 2, group.x),
+        );
+        const block = font * 1.3 * (lines - 1);
+        const y = Math.max(
+            view.y0 + font * 1.2,
+            Math.min(
+                view.y1 - font * 0.5 - block,
+                group.top - font * 0.45 - block,
+            ),
+        );
+        const box = {
+            x0: x - width / 2,
+            x1: x + width / 2,
+            y0: y - font,
+            y1: y + block + font * 0.3,
+        };
+        if (
+            box.y1 > view.y1 + 1e-9 ||
+            placed.some(
+                (other) =>
+                    box.x0 < other.x1 &&
+                    other.x0 < box.x1 &&
+                    box.y0 < other.y1 &&
+                    other.y0 < box.y1,
+            )
+        )
+            continue;
+        placed.push(box);
+        plan.set(group.id, { x, y, prefixes });
     }
-    const value =
-        industry.maxGain === null
-            ? "不知道"
-            : `${industry.maxGain >= 0 ? "+" : ""}${industry.maxGain.toFixed(0)}%`;
-    return `${industry.label}　漲 ${value}`;
+    return plan;
 }
 
 /** Raw peak gain cannot define an equivalent radius for duration-normalized cells. */
@@ -64,83 +173,13 @@ export function showPeakAreaReference(
     return row.displayMetric === undefined;
 }
 
-/** The ten largest visible territories keep readable labels outside the world geometry. */
-export function overviewIndustryLabels(
-    groups: readonly { id: string; x: number; y: number; weight: number }[],
-    industries: ReadonlyMap<
-        string,
-        {
-            label: string;
-            maxGain: number | null;
-            displayMetric?: IndustryDisplayMetric;
-        }
-    >,
-    camera: Camera,
-    fontSize: number,
-): OverviewIndustryLabel[] {
-    const ranked = groups
-        .filter((group) => group.weight > 0 && industries.has(group.id))
-        .slice()
-        .sort((a, b) => b.weight - a.weight || a.id.localeCompare(b.id))
-        .slice(0, 10)
-        .sort((a, b) => a.x - b.x || a.id.localeCompare(b.id));
-    const screenFont = fontSize * camera.zoom;
-    const longestLabel = Math.max(
-        0,
-        ...ranked.map((group) => {
-            const label = industryMetricLabel(industries.get(group.id)!);
-            return [...label].reduce(
-                (sum, letter) => sum + (letter.charCodeAt(0) <= 255 ? 0.6 : 1),
-                0,
-            );
-        }),
-    );
-    const width = Math.min(340, Math.max(180, (longestLabel + 4) * screenFont));
-    const height = screenFont * 2.5;
-    const gap = screenFont * 0.5;
-    const middle = Math.ceil(ranked.length / 2);
-    return [ranked.slice(0, middle), ranked.slice(middle)].flatMap(
-        (column, index) => {
-            const side = index === 0 ? "left" : "right";
-            const ordered = column
-                .slice()
-                .sort((a, b) => a.y - b.y || a.id.localeCompare(b.id));
-            const available = 620 - 54 - 18 - height;
-            const step =
-                ordered.length > 1 ? available / (ordered.length - 1) : 0;
-            return ordered.map((group, position) => ({
-                id: group.id,
-                ...industries.get(group.id)!,
-                x: side === "left" ? 14 : 1000 - 14 - width,
-                y:
-                    ordered.length === 1
-                        ? Math.max(
-                              54,
-                              Math.min(
-                                  620 - 18 - height,
-                                  310 +
-                                      (group.y - camera.y) * camera.zoom -
-                                      height / 2,
-                              ),
-                          )
-                        : 54 + position * Math.max(height + gap, step),
-                width,
-                height,
-                anchorX: 500 + (group.x - camera.x) * camera.zoom,
-                anchorY: 310 + (group.y - camera.y) * camera.zoom,
-                side: side as "left" | "right",
-            }));
-        },
-    );
-}
-
 /** Zero-area nodes have no visible location to preserve in the next packing. */
 export function visiblePackingPositions(
     nodes: readonly Pick<PackedNode, "id" | "x" | "y" | "r">[],
 ): PreviousPackingPosition[] {
     return nodes
         .filter((node) => node.r > 0)
-        .map(({ id, x, y }) => ({ id, x, y }));
+        .map(({ id, x, y, r }) => ({ id, x, y, r }));
 }
 
 /** Display-only inputs: the map never needs price history or full wave phases. */
@@ -182,26 +221,6 @@ export function gainColorBand(
 ): "strong" | "medium" | "light" | "unknown" {
     if (gain === null || !Number.isFinite(gain) || gain < 0) return "unknown";
     return gain >= 100 ? "strong" : gain >= 60 ? "medium" : "light";
-}
-
-/** Font and radius use world units, so zoom-dependent screen size stays comparable. */
-export function groupLabelFits(
-    label: string,
-    radius: number,
-    fontSize: number,
-    lines = 1,
-): boolean {
-    const width =
-        [...label].reduce(
-            (sum, letter) => sum + (letter.charCodeAt(0) <= 255 ? 0.6 : 1),
-            0,
-        ) * fontSize;
-    return (
-        Number.isFinite(radius) &&
-        radius > 0 &&
-        radius * 2 >= width * 1.1 &&
-        radius >= fontSize * lines
-    );
 }
 
 /** API catalog identity survives new JSON objects; preview retains object identity. */

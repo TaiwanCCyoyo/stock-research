@@ -17,14 +17,37 @@ export const WORLD_WIDTH = 1000;
 export const WORLD_HEIGHT = 620;
 const MIN_ZOOM = 0.01;
 const MAX_ZOOM = 8;
+/** World-unit size of what the SVG shows at zoom 1. */
+export interface WorldFrame {
+    width: number;
+    height: number;
+}
+export const WORLD_FRAME: Readonly<WorldFrame> = {
+    width: WORLD_WIDTH,
+    height: WORLD_HEIGHT,
+};
+
+/** A frame with the container's own proportions, so the SVG never letterboxes. */
+export function frameFor(viewport: Viewport): WorldFrame {
+    return viewport.width > 0 && viewport.height > 0
+        ? {
+              width: WORLD_WIDTH,
+              height: (WORLD_WIDTH * viewport.height) / viewport.width,
+          }
+        : { ...WORLD_FRAME };
+}
 
 /** Explicit overview action; fitting changes the camera, never world geometry. */
-export function fitBoundsCamera(bounds: {
-    minX: number;
-    minY: number;
-    maxX: number;
-    maxY: number;
-}): Camera {
+export function fitBoundsCamera(
+    bounds: {
+        minX: number;
+        minY: number;
+        maxX: number;
+        maxY: number;
+    },
+    frame: WorldFrame = WORLD_FRAME,
+    fill = 0.9,
+): Camera {
     const width = bounds.maxX - bounds.minX;
     const height = bounds.maxY - bounds.minY;
     if (
@@ -41,25 +64,35 @@ export function fitBoundsCamera(bounds: {
             MIN_ZOOM,
             Math.min(
                 MAX_ZOOM,
-                Math.min(WORLD_WIDTH / width, WORLD_HEIGHT / height) * 0.9,
+                Math.min(frame.width / width, frame.height / height) * fill,
             ),
         ),
     };
 }
 
-export interface OverviewState {
-    camera: Camera;
-    initialized: boolean;
-}
-
-/** Empty/zero-area dates do not consume the one initial overview. Later dates never refit. */
-export function initialOverview(
-    state: OverviewState,
-    bounds: Parameters<typeof fitBoundsCamera>[0],
-    hasPositiveArea: boolean,
-): OverviewState {
-    if (state.initialized || !hasPositiveArea) return state;
-    return { camera: fitBoundsCamera(bounds), initialized: true };
+/**
+ * Step zoom: levels are powers of `ratio`. Keep the current level while the
+ * map fills between `minFill` and all of the frame; otherwise jump to the
+ * largest level that still shows everything. Quiet days zoom in, busy days
+ * zoom out, and small daily changes never move the camera.
+ */
+export function stepZoom(
+    fitZoom: number,
+    currentZoom: number | null,
+    ratio = 1.25,
+    minFill = 0.6,
+): number {
+    if (!Number.isFinite(fitZoom) || fitZoom <= 0)
+        return currentZoom ?? DEFAULT_CAMERA.zoom;
+    const tolerance = 1 + 1e-9;
+    if (
+        currentZoom !== null &&
+        currentZoom <= fitZoom * tolerance &&
+        currentZoom * tolerance >= fitZoom * minFill
+    )
+        return currentZoom;
+    const level = Math.floor(Math.log(fitZoom) / Math.log(ratio) + 1e-9);
+    return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, ratio ** level));
 }
 
 export function isDefaultCamera(
@@ -79,11 +112,12 @@ function transformCamera(
     after: ScreenPoint,
     factor: number,
     viewport: Viewport,
+    frame: WorldFrame,
 ): Camera {
-    // SVG uses xMidYMid meet; narrow/mobile viewports can include letterboxing.
+    // SVG uses xMidYMid meet; a frame that differs from the viewport letterboxes.
     const scale = Math.min(
-        viewport.width / WORLD_WIDTH,
-        viewport.height / WORLD_HEIGHT,
+        viewport.width / frame.width,
+        viewport.height / frame.height,
     );
     if (
         !Number.isFinite(scale) ||
@@ -112,8 +146,9 @@ export function zoomCameraAt(
     factor: number,
     viewport: Viewport,
     anchor: ScreenPoint = { x: viewport.width / 2, y: viewport.height / 2 },
+    frame: WorldFrame = WORLD_FRAME,
 ): Camera {
-    return transformCamera(camera, anchor, anchor, factor, viewport);
+    return transformCamera(camera, anchor, anchor, factor, viewport, frame);
 }
 
 /** One pointer pans; two pointers preserve the world point under their midpoint. */
@@ -122,11 +157,19 @@ export function gestureCamera(
     previous: readonly ScreenPoint[],
     current: readonly ScreenPoint[],
     viewport: Viewport,
+    frame: WorldFrame = WORLD_FRAME,
 ): Camera {
     const count = Math.min(2, previous.length, current.length);
     if (!count) return camera;
     if (count === 1)
-        return transformCamera(camera, previous[0], current[0], 1, viewport);
+        return transformCamera(
+            camera,
+            previous[0],
+            current[0],
+            1,
+            viewport,
+            frame,
+        );
     const midpoint = (points: readonly ScreenPoint[]) => ({
         x: (points[0].x + points[1].x) / 2,
         y: (points[0].y + points[1].y) / 2,
@@ -145,6 +188,7 @@ export function gestureCamera(
         midpoint(current),
         factor,
         viewport,
+        frame,
     );
 }
 

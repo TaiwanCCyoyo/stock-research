@@ -10,12 +10,13 @@ import {
 import {
     endedBurst,
     gainColorBand,
-    groupLabelFits,
-    industryMetricLabel,
+    territoryLabelText,
+    planTerritoryLabels,
+    labelWidth,
+    comparisonShareLine,
     hasMapIndustry,
     mapGroupId,
     mapIndustries,
-    overviewIndustryLabels,
     sameSource,
     showPeakAreaReference,
     visiblePackingPositions,
@@ -61,7 +62,7 @@ test("zero-area previous nodes do not disperse a jump from 14 stocks to 722 stoc
     const positive = jumped.nodes.slice(0, 2);
     assert.deepEqual(
         visiblePackingPositions([...zero.nodes, ...positive]),
-        positive.map(({ id, x, y }) => ({ id, x, y })),
+        positive.map(({ id, x, y, r }) => ({ id, x, y, r })),
     );
 });
 
@@ -170,8 +171,8 @@ test("full-history industry leader uses the highest selected metric across bases
         leaderCode: "long",
     });
     assert.equal(
-        industryMetricLabel(groups[0]),
-        "半導體　最高：年化 +145% · 長波段領先者",
+        territoryLabelText(groups[0], 2),
+        "半導體 2 檔 · 最高 年化 +145%",
     );
 
     const unknown = row("unknown");
@@ -179,14 +180,14 @@ test("full-history industry leader uses the highest selected metric across bases
     unknown.displayMetric = { gain: null, basis: "unknown" };
     const unknownGroup = mapIndustries(view([unknown]), "snapshot")[0];
     assert.equal(unknownGroup.displayMetric?.gain, null);
-    assert.match(industryMetricLabel(unknownGroup), /最高：尺度未知/);
-    assert.doesNotMatch(industryMetricLabel(unknownGroup), /9999/);
+    assert.match(territoryLabelText(unknownGroup, 1), /最高 尺度未知/);
+    assert.doesNotMatch(territoryLabelText(unknownGroup, 1), /9999/);
 
     const legacy = row("legacy");
     assert.equal(legacy.displayMetric, undefined);
     assert.match(
-        industryMetricLabel(mapIndustries(view([legacy]), "snapshot")[0]),
-        /漲 \+30%/,
+        territoryLabelText(mapIndustries(view([legacy]), "snapshot")[0], 1),
+        /最高 \+30%/,
     );
 });
 
@@ -304,91 +305,89 @@ test("gain color thresholds distinguish observed gains without inferring phases 
     assert.deepEqual(input, before);
 });
 
-test("industry label detail reappears when zoom makes a territory large enough for its text", () => {
-    const label = "半導體（現有分類）　漲 +100%";
-    const radius = 240;
-    // 1000px map: 12px text corresponds to 12/zoom world units.
-    assert.equal(groupLabelFits(label, radius, 12 / 0.058), false);
-    assert.equal(groupLabelFits(label, radius, 12), true);
-    assert.equal(groupLabelFits(label.repeat(3), radius, 12), false);
-    assert.equal(groupLabelFits("短", 24, 12, 3), false);
-    assert.equal(groupLabelFits(label, 0, 12), false);
-});
-
-test("overview labels keep the ten largest known industries readable with gain and anchors", () => {
-    const groups = Array.from({ length: 12 }, (_, index) => ({
-        id: `industry-${index}`,
-        x: index * 100,
-        y: 80 + index * 35,
-        weight: 12 - index,
-    }));
-    const industries = new Map(
-        groups.map((group, index) => [
-            group.id,
-            { label: `產業${index}`, maxGain: index === 0 ? null : index * 20 },
-        ]),
-    );
-    const originalGroups = structuredClone(groups);
-    const labels = overviewIndustryLabels(
-        groups,
-        industries,
-        { x: 0, y: 0, zoom: 0.05 },
-        240,
-    );
-    assert.equal(labels.length, 10);
-    assert.deepEqual(
-        labels.map((label) => label.id).sort(),
-        groups
-            .slice(0, 10)
-            .map((group) => group.id)
-            .sort(),
-    );
-    assert.equal(
-        labels.find((label) => label.id === "industry-0")?.maxGain,
-        null,
-    );
-    for (const label of labels) {
-        assert.ok(label.x >= 0 && label.x + label.width <= 1000);
-        assert.ok(label.y >= 0 && label.y + label.height <= 620);
-        assert.ok(label.anchorX >= 0 && label.anchorX <= 1000);
-        assert.ok(label.anchorY >= 0 && label.anchorY <= 620);
-    }
-    for (const side of ["left", "right"] as const) {
-        const column = labels
-            .filter((label) => label.side === side)
-            .sort((a, b) => a.y - b.y);
-        for (let index = 1; index < column.length; index++)
-            assert.ok(
-                column[index].y >=
-                    column[index - 1].y + column[index - 1].height,
-            );
-    }
-    assert.deepEqual(groups, originalGroups);
-});
-
-test("overview industry callout preserves the metric leader identity", () => {
-    const groups = [{ id: "chips", x: 20, y: 30, weight: 2 }];
-    const industries = new Map([
-        [
-            "chips",
+test("territory labels keep every drawn line inside a 320px map with 2-4 long comparison names", () => {
+    // A 320px-wide map at zoom 1: 1000 world units across, 12px text.
+    const view = { x0: -500, x1: 500, y0: -400, y1: 400 };
+    const fontSize = (12 * 1000) / 320;
+    const longName = "台灣高股息低波動動能精選加碼重試策略第二版";
+    const groups = Array.from({ length: 8 }, (_, i) => ({
+        id: `industry-${i}`,
+        x: -450 + i * 130,
+        top: -300 + (i % 3) * 200,
+        weight: 10 - i,
+        text: territoryLabelText(
             {
-                label: "半導體（現有分類）",
-                maxGain: 500,
-                displayMetric: {
-                    gain: 112.5,
-                    basis: "annualized" as const,
-                    leaderName: "領先公司",
-                    leaderCode: "2330",
-                },
+                label: "電腦及週邊設備業",
+                maxGain: null,
+                displayMetric: { gain: 588, basis: "annualized" },
             },
-        ],
-    ]);
-    const [label] = overviewIndustryLabels(
+            32,
+        ),
+    }));
+    for (const count of [2, 3, 4]) {
+        const names = Array.from(
+            { length: count },
+            (_, i) => `${longName}${i}`,
+        );
+        const plan = planTerritoryLabels({
+            groups,
+            comparisonNames: names,
+            view,
+            fontSize,
+            limit: 5,
+        });
+        assert.ok(plan.size > 0, `${count} comparisons: some label is placed`);
+        // The texts the map really draws, including the longest unknown share.
+        const shares = [
+            comparisonShareLine(1, false),
+            comparisonShareLine(1, true),
+            comparisonShareLine(null, false),
+            comparisonShareLine(null, true),
+        ];
+        assert.ok(shares.some((text) => text.includes("100%")));
+        assert.ok(
+            shares.some((text) => text.includes("無法計算（部分無法計算）")),
+        );
+        for (const [id, spot] of plan) {
+            const group = groups.find((item) => item.id === id)!;
+            const rows = [
+                group.text,
+                ...spot.prefixes.flatMap((prefix) =>
+                    shares.map((share) => `${prefix}${share}`),
+                ),
+            ];
+            rows.forEach((row, index) => {
+                const line =
+                    index === 0
+                        ? 0
+                        : 1 + Math.floor((index - 1) / shares.length);
+                const half = labelWidth(row, fontSize) / 2;
+                assert.ok(
+                    spot.x - half >= view.x0 - 1e-9 &&
+                        spot.x + half <= view.x1 + 1e-9,
+                    `${count} comparisons: "${row}" leaves the map horizontally`,
+                );
+                const baseline = spot.y + fontSize * 1.3 * line;
+                assert.ok(
+                    baseline - fontSize >= view.y0 - 1e-9 &&
+                        baseline + fontSize * 0.3 <= view.y1 + 1e-9,
+                    `${count} comparisons: line ${line} leaves the map vertically`,
+                );
+            });
+            for (const prefix of spot.prefixes)
+                assert.ok(prefix === "" || prefix.endsWith("… "));
+        }
+    }
+    const roomy = planTerritoryLabels({
         groups,
-        industries,
-        { x: 0, y: 0, zoom: 0.05 },
-        240,
+        comparisonNames: ["0050", "動能策略"],
+        view: { x0: -2000, x1: 2000, y0: -1500, y1: 1500 },
+        fontSize: 12,
+        limit: 10,
+    });
+    assert.deepEqual(
+        [...roomy.values()][0].prefixes,
+        ["0050 ", "動能策略 "],
+        "names that fit are shown in full",
     );
-    assert.equal(label.displayMetric?.leaderName, "領先公司");
-    assert.equal(label.maxGain, 500);
 });

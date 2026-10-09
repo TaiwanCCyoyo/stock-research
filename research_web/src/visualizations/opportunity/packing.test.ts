@@ -546,3 +546,141 @@ test("250-node synthetic layouts cover wide weights, arrivals, departures and on
         `Synthetic geometry only, 250 nodes: initial ${firstMs.toFixed(2)} ms; arrivals/departures/changed weights ${changedMs.toFixed(2)} ms; one group ${crowdedMs.toFixed(2)} ms. Excludes worker transport, rendering and browser FPS.`,
     );
 });
+
+test("long playback with departures stays as tight as a fresh layout and spreads to the frame shape", () => {
+    // Rolling membership: each stock lives 60 days, so holes open every day.
+    const dayNodes = (day: number): PackingNode[] =>
+        Array.from({ length: 80 }, (_, k) => day + k)
+            .filter((i) => i % 3 !== 0)
+            .map((i) => ({
+                id: `roll-${String(i).padStart(4, "0")}`,
+                groupId: `industry-${i % 7}`,
+                weight: (1 + ((i * 13) % 9) / 3) ** 2,
+            }));
+    const options = {
+        globalRadiusScale: 30,
+        gap: 2,
+        groupGap: 12,
+        outlinePadding: 8,
+        aspect: 1.7,
+    };
+    let previous: PackingLayout["nodes"] = [];
+    let worst = 0;
+    for (let day = 0; day < 240; day++) {
+        const nodes = dayNodes(day);
+        const warm = computePacking({
+            ...options,
+            nodes,
+            previous: previous.map(({ id, x, y, r }) => ({ id, x, y, r })),
+        });
+        previous = warm.nodes;
+        if (day % 40 !== 39) continue;
+        const cold = computePacking({ ...options, nodes });
+        // The zoom a 1.7-wide frame needs to show everything.
+        const span = (layout: PackingLayout) =>
+            Math.max(layout.bounds.width / 1.7, layout.bounds.height);
+        worst = Math.max(worst, span(warm) / span(cold));
+        verify(warm, 30, 2);
+        assert.ok(
+            cold.bounds.width > cold.bounds.height,
+            "a wide frame produces a wide composition",
+        );
+    }
+    assert.ok(
+        worst <= 1.15,
+        `playback spread to ${worst.toFixed(2)}× a fresh layout`,
+    );
+});
+
+test("extreme frame shapes stay finite and compact instead of diverging", () => {
+    const nodes = synthetic(60, 12);
+    const cold = computePacking({
+        nodes,
+        globalRadiusScale: 30,
+        gap: 2,
+        groupGap: 12,
+        outlinePadding: 8,
+    });
+    for (const aspect of [8, 1 / 8, 3]) {
+        const layout = computePacking({
+            nodes,
+            globalRadiusScale: 30,
+            gap: 2,
+            groupGap: 12,
+            outlinePadding: 8,
+            aspect,
+        });
+        verify(layout, 30, 2);
+        const area = layout.bounds.width * layout.bounds.height;
+        assert.ok(
+            area <= cold.bounds.width * cold.bounds.height * 4,
+            `aspect ${aspect} spread to ${area.toExponential(2)}`,
+        );
+    }
+});
+
+test("a zero-area stock does not make an unchanged day re-compact", () => {
+    const nodes = [
+        ...synthetic(30, 5),
+        { id: "flat", groupId: "industry-00", weight: 0 },
+    ];
+    const options = {
+        globalRadiusScale: 30,
+        gap: 2,
+        groupGap: 12,
+        outlinePadding: 8,
+    };
+    const first = computePacking({ ...options, nodes });
+    const visible = first.nodes
+        .filter((node) => node.r > 0)
+        .map(({ id, x, y, r }) => ({ id, x, y, r }));
+    const again = computePacking({ ...options, nodes, previous: visible });
+    for (const node of again.nodes.filter((item) => item.r > 0)) {
+        const old = first.nodes.find((item) => item.id === node.id)!;
+        assert.ok(
+            Math.hypot(node.x - old.x, node.y - old.y) < 1e-7,
+            `${node.id} moved although nothing visible changed`,
+        );
+    }
+    const grown = computePacking({
+        ...options,
+        nodes: nodes.map((node) =>
+            node.id === "flat" ? { ...node, weight: 1 } : node,
+        ),
+        previous: visible,
+    });
+    verify(grown, 30, 2);
+});
+
+test("a new frame shape re-tightens an unchanged layout toward that shape", () => {
+    const nodes = synthetic(60, 12);
+    const options = {
+        globalRadiusScale: 30,
+        gap: 2,
+        groupGap: 12,
+        outlinePadding: 8,
+    };
+    const square = computePacking({ ...options, nodes, aspect: 1 });
+    const previous = square.nodes
+        .filter((node) => node.r > 0)
+        .map(({ id, x, y, r }) => ({ id, x, y, r }));
+    const kept = computePacking({ ...options, nodes, previous, aspect: 2.5 });
+    assert.ok(
+        Math.abs(kept.bounds.width - square.bounds.width) < 1e-6 &&
+            Math.abs(kept.bounds.height - square.bounds.height) < 1e-6,
+        "without reshape an unchanged layout keeps its shape",
+    );
+    const wide = computePacking({
+        ...options,
+        nodes,
+        previous,
+        aspect: 2.5,
+        reshape: true,
+    });
+    verify(wide, 30, 2);
+    assert.ok(
+        wide.bounds.width / wide.bounds.height >
+            square.bounds.width / square.bounds.height,
+        "reshaping spreads the layout toward the wider frame",
+    );
+});
