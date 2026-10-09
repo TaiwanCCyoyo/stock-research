@@ -1,38 +1,36 @@
-"""build_price_parquet output parity and DataLoader parquet staleness fallback.
+"""Stock's side of the price_daily.parquet contract, without running producer code.
 
-build_price_parquet.py lives in the stock-data-downloader submodule (generic
-data-processing scripts are owned there, not by the main repo) and is loaded
-here by file path since it isn't an importable package from this repo.
+stock-data-downloader produces price_daily.parquet; Stock only consumes it. These tests
+read a small parquet the pinned producer generated from rows.json
+(tests/fixtures/price_daily/, see its README) and check that DataLoader reads it
+identically to the same rows as day CSVs, and handles stale CSVs correctly. Whether the
+producer builds that parquet correctly is tested in the producer's own repository.
 """
 
 from __future__ import annotations
 
-import importlib.util
+import json
 import os
-import sys
+import shutil
 from pathlib import Path
 
 from pandas.testing import assert_frame_equal
 
 from StockProject.engine.data_loader import DataLoader
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-_SUBMODULE_ROOT = REPO_ROOT / "stock-data-downloader"
+FIXTURE = Path(__file__).resolve().parent / "fixtures" / "price_daily"
+ROWS = json.loads((FIXTURE / "rows.json").read_text(encoding="utf-8"))
 
-# The script resolves its default data path through the submodule's own
-# `config` package, so that root has to be importable before the module is
-# executed. Loading it by file path alone is not enough.
-if str(_SUBMODULE_ROOT) not in sys.path:
-    sys.path.insert(0, str(_SUBMODULE_ROOT))
 
-_SPEC = importlib.util.spec_from_file_location(
-    "shioaji_build_price_parquet",
-    _SUBMODULE_ROOT / "scripts" / "build_price_parquet.py",
-)
-assert _SPEC and _SPEC.loader
-_MODULE = importlib.util.module_from_spec(_SPEC)
-_SPEC.loader.exec_module(_MODULE)
-build_price_parquet = _MODULE.build_price_parquet
+def build_price_parquet(data_root: Path) -> Path:
+    """Stand-in for the producer build: install the producer-generated fixture parquet.
+
+    The copy gets a fresh modification time, so it is newer than the CSVs written before
+    it, exactly like a parquet built after them.
+    """
+    target = data_root / "price_daily.parquet"
+    shutil.copyfile(FIXTURE / "price_daily.parquet", target)
+    return target
 
 
 def write_day_csv(data_root: Path, code: str, rows: list[tuple[str, float, float, float, float, int]]) -> Path:
@@ -47,22 +45,24 @@ def write_day_csv(data_root: Path, code: str, rows: list[tuple[str, float, float
 def make_data_root(tmp_path: Path, name: str) -> Path:
     root = tmp_path / name
     root.mkdir()
-    write_day_csv(
-        root,
-        "2330",
-        [
-            ("2025-01-02", 100.0, 102.0, 99.0, 100.0, 1000),
-            ("2025-01-03", 96.0, 97.0, 94.0, 95.0, 1200),
-        ],
-    )
-    write_day_csv(
-        root,
-        "2454",
-        [
-            ("2025-01-02", 50.0, 52.0, 49.0, 51.0, 500),
-        ],
-    )
+    for code, bars in ROWS.items():
+        write_day_csv(root, code, [tuple(bar) for bar in bars])
     return root
+
+
+def test_fixture_parquet_holds_exactly_the_fixture_rows() -> None:
+    """Guards against a fixture regenerated from different rows than the CSVs use."""
+    import pandas as pd
+
+    df = pd.read_parquet(FIXTURE / "price_daily.parquet")
+    dates = pd.to_datetime(df["Date"]).dt.strftime("%Y-%m-%d").tolist()
+    columns = [df[name].tolist() for name in ("Open", "High", "Low", "Close")]
+    actual = sorted(
+        (str(code), date, float(o), float(h), float(low), float(c), int(v))
+        for code, date, o, h, low, c, v in zip(df["Code"].tolist(), dates, *columns, df["Volume"].tolist(), strict=True)
+    )
+    expected = sorted((code, *bar) for code, bars in ROWS.items() for bar in bars)
+    assert actual == [tuple(row) for row in expected]
 
 
 def test_build_price_parquet_matches_csv_load_all(tmp_path: Path) -> None:
