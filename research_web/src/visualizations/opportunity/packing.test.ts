@@ -618,3 +618,36 @@ test("extreme frame shapes stay finite and compact instead of diverging", () => 
         );
     }
 });
+
+test("a zero-area stock does not make an unchanged day re-compact", () => {
+    const nodes = [
+        ...synthetic(30, 5),
+        { id: "flat", groupId: "industry-00", weight: 0 },
+    ];
+    const options = {
+        globalRadiusScale: 30,
+        gap: 2,
+        groupGap: 12,
+        outlinePadding: 8,
+    };
+    const first = computePacking({ ...options, nodes });
+    const visible = first.nodes
+        .filter((node) => node.r > 0)
+        .map(({ id, x, y, r }) => ({ id, x, y, r }));
+    const again = computePacking({ ...options, nodes, previous: visible });
+    for (const node of again.nodes.filter((item) => item.r > 0)) {
+        const old = first.nodes.find((item) => item.id === node.id)!;
+        assert.ok(
+            Math.hypot(node.x - old.x, node.y - old.y) < 1e-7,
+            `${node.id} moved although nothing visible changed`,
+        );
+    }
+    const grown = computePacking({
+        ...options,
+        nodes: nodes.map((node) =>
+            node.id === "flat" ? { ...node, weight: 1 } : node,
+        ),
+        previous: visible,
+    });
+    verify(grown, 30, 2);
+});

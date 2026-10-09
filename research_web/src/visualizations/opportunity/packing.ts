@@ -501,10 +501,14 @@ function localGroup(
         node.y -= anchorY;
     }
     if (tighten) compact(nodes, gap, 1, 1, STOCK_COMPACTION_STEPS);
-    // A deterministic node centroid can be reconstructed from next day's previous positions.
+    // A deterministic node centroid can be reconstructed from next day's previous
+    // positions, which only carry nodes with area, so zero-area nodes are left out.
+    const sized = nodes.some((node) => node.r > 0)
+        ? nodes.filter((node) => node.r > 0)
+        : nodes;
     const center = point(
-        nodes.reduce((s, p) => s + p.x / nodes.length, 0),
-        nodes.reduce((s, p) => s + p.y / nodes.length, 0),
+        sized.reduce((s, p) => s + p.x / sized.length, 0),
+        sized.reduce((s, p) => s + p.y / sized.length, 0),
     );
     for (const node of nodes) {
         node.x -= center.x;
@@ -567,8 +571,10 @@ export function computePacking(input: PackingInput): PackingLayout {
         [...previous.keys()].some((id) => !ids.has(id)) ||
         input.nodes.some((node) => {
             const old = previous.get(node.id);
-            if (!old) return true;
             const r = Math.sqrt(node.weight) * scale;
+            // Zero-area nodes are never carried as previous positions, so a
+            // missing entry only counts as an arrival once the node has area.
+            if (!old) return r > 0;
             return (
                 old.r !== undefined &&
                 Math.abs(old.r - r) > 1e-9 * Math.max(1, r)
