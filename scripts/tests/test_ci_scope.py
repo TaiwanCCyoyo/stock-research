@@ -118,6 +118,12 @@ def test_ci_only_exception_does_not_cover_other_workflows_or_mixed_changes() -> 
     assert mixed["full"]
 
 
+def test_new_file_is_routed_only_when_a_domain_names_its_exact_path() -> None:
+    named = ci_scope.make_plan([("A", "scripts/ci_test_domains.json")])
+    assert not named["full"] and "scripts/tests/test_ci_scope.py" in named["python_tests"]
+    assert ci_scope.make_plan([("A", "research_core/new_module.py")])["full"]  # wildcard owner only
+
+
 def test_new_path_and_union_fail_safe() -> None:
     assert ci_scope.make_plan([("M", "research_web/src/app/App.tsx"), ("A", "docs/new.md")])["full"]
     plan = ci_scope.make_plan([("M", "research_core/hhhl_transition.py"), ("M", ".codex/skills/new/SKILL.md")])
