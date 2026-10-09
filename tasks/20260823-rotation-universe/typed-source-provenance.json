@@ -1,0 +1,56 @@
+{
+    "schema": "retained-rotation-typed-source.v1",
+    "originalArchive": "original-source.zip",
+    "archiveDigest": "sha256:f3a3ad0c024a03fc4fa0bc50d25e048f1a08ba519547b9e8df6c5b1ddb52b5ae",
+    "files": [
+        {
+            "path": "build_rotation_universe.py",
+            "originalDigest": "sha256:00807ca331347a7e02e5d837a3b5364d50695da44c22458c3f5647bb940190cb",
+            "originalBytes": 6932,
+            "typedDigest": "sha256:19025d5da347cb2fa0c4ca14eb5b9c0fa1bf457ad91a397dbb57d3330609bcfd",
+            "typedBytes": 6930,
+            "change": "type narrowing only; producer data root resolved through research_core.producer_data instead of a fixed submodule path; no scientific result rewrite"
+        },
+        {
+            "path": "eligibility.py",
+            "originalDigest": "sha256:f735e5750e9d309473a2b9d5cecf2b335a19e6f91d215635dc3733069ad2902f",
+            "originalBytes": 3798,
+            "typedDigest": "sha256:77390dace059963be6b18c530ddff97bf36149ecbff2e4fb053efd9b276b69ff",
+            "typedBytes": 3757,
+            "change": "type narrowing only; no scientific result rewrite"
+        },
+        {
+            "path": "features.py",
+            "originalDigest": "sha256:8ba090718fb1fbab83b29fce43f9dd176efebfed7d4fbda814f876f2adeb91c3",
+            "originalBytes": 10689,
+            "typedDigest": "sha256:4938765767d909b1661b2b3805c7e2cbf5496b4656aee3820974b42d0daa1ffb",
+            "typedBytes": 10682,
+            "change": "type narrowing only; producer data root resolved through research_core.producer_data instead of a fixed submodule path; no scientific result rewrite"
+        },
+        {
+            "path": "candidates/rotation_ranker.py",
+            "originalDigest": "sha256:b619b4d337fd1f31f0d321eb66bce57b298383f3089c33c428866119a1929360",
+            "originalBytes": 7634,
+            "typedDigest": "sha256:baf42823de281a2b77ea1326da6028fcb60bde99241f65b5a813e273b23a7427",
+            "typedBytes": 7514,
+            "change": "type narrowing only; no scientific result rewrite"
+        },
+        {
+            "path": "verify_eligibility.py",
+            "originalDigest": "sha256:84991c950c109e9c5d8eeba50e26658d58fdb3c33f28ea47b0448ec90d9d5174",
+            "originalBytes": 5443,
+            "typedDigest": "sha256:374d52c70b3e8e3e5332117b2a815644252be2f5019a2fc842953e56a207a51c",
+            "typedBytes": 5708,
+            "change": "type narrowing only; producer data root resolved through research_core.producer_data instead of a fixed submodule path; no scientific result rewrite"
+        },
+        {
+            "path": "verify_features.py",
+            "originalDigest": "sha256:2ccff14ade3a1e29e175aaef5e3846092f7226200471351e838fdac9bc000389",
+            "originalBytes": 7090,
+            "typedDigest": "sha256:5cf7bb2c6141dde21f6522f3596423891a14f529731620956020bfc1b81c7776",
+            "typedBytes": 7280,
+            "change": "type narrowing only; no scientific result rewrite"
+        }
+    ],
+    "legacyResultsUseOriginalIdentity": true
+}

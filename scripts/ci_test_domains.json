@@ -31,7 +31,7 @@
         "StockProject/*",
         "docker-compose.yml",
         "Dockerfile*",
-        "shioaji_stock_prices",
+        "stock-data-downloader",
         ".gitmodules",
         "research_core/artifact_*",
         "research_core/evidence.py"

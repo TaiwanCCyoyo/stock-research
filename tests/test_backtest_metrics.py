@@ -152,7 +152,7 @@ def test_trade_stats_break_even_trade() -> None:
 
 def test_artifact_path_prefers_relative_paths(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.chdir(tmp_path)
-    data_path = tmp_path / "shioaji_stock_prices" / "data" / "adjusted_prices" / "daily"
+    data_path = tmp_path / "stock-data-downloader" / "data" / "adjusted_prices" / "daily"
 
-    assert artifact_path(data_path) == "shioaji_stock_prices/data/adjusted_prices/daily"
-    assert artifact_path(data_path / "price_daily.parquet") == "shioaji_stock_prices/data/adjusted_prices/daily/price_daily.parquet"
+    assert artifact_path(data_path) == "stock-data-downloader/data/adjusted_prices/daily"
+    assert artifact_path(data_path / "price_daily.parquet") == "stock-data-downloader/data/adjusted_prices/daily/price_daily.parquet"

@@ -70,6 +70,7 @@ def test_instructions_and_prose_keep_contracts_without_market_compute(path: str)
         "research_core/evidence.py",
         "research_core/jobs.py",
         "uv.lock",
+        "stock-data-downloader",
         "research_web/package-lock.json",
         "pyproject.toml",
         "tests/conftest.py",

@@ -59,7 +59,7 @@ Boundaries:
 - Never edit an existing `candidates/*.py` arm unless that exact path and mutation are
   explicitly authorized. Prefer a new named arm when provenance or single-variable identity
   would otherwise be lost.
-- Never write under `shioaji_stock_prices/data/`, modify the submodule, or change shared
+- Never write under `stock-data-downloader/data/`, modify the submodule, or change shared
   engine code unless the parent explicitly expands the file scope after reviewing the risk.
 - Never overwrite a prior iteration's runs, `sweep_results.json`, report, or analyzer output.
   Stop if a task script has a fixed output path and the parent has not supplied a fresh task

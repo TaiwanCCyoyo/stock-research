@@ -8,6 +8,6 @@ Delegate this task to `.claude/skills/check-daily-log/SKILL.md`.
 
 The scheduled data pipeline (Windows Task Scheduler → `run_daily.py` /
 `backfill_official_history.py`) and its logs live entirely in the
-`shioaji_stock_prices` submodule, not this repo. The skill points to the
+`stock-data-downloader` submodule, not this repo. The skill points to the
 submodule's own `.claude/commands/check-daily-log.md`, which holds the
 actual procedure.

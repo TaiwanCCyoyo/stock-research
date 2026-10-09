@@ -104,6 +104,8 @@ def test_retained_features_load_from_isolated_checkout_with_exact_bytes(tmp_path
     core.mkdir()
     (core / "__init__.py").write_text("", encoding="utf-8")
     original_root = LOCATION.parents[2]
+    # the retained rotation generators resolve their producer inputs through this shared helper
+    (core / "producer_data.py").write_bytes((original_root / "research_core/producer_data.py").read_bytes())
     relative_root = Path("tasks/20260823-rotation-universe")
     for name in ("eligibility", "features"):
         relative = relative_root / f"{name}.py"

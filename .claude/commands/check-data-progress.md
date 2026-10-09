@@ -7,6 +7,6 @@ description: Check how far data/official_daily.sqlite has been updated — lates
 Delegate this task to `.claude/skills/check-data-progress/SKILL.md`.
 
 The official-price database (`data/official_daily.sqlite`) and its update
-history live entirely in the `shioaji_stock_prices` submodule, not this repo.
+history live entirely in the `stock-data-downloader` submodule, not this repo.
 The skill points to the submodule's own
 `.claude/commands/check-data-progress.md`, which holds the actual procedure.

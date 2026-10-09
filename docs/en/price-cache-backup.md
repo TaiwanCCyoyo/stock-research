@@ -1,9 +1,9 @@
 # Price Cache Backup
 
-How the `shioaji_stock_prices/data` cache is protected, and why the design
+How the `stock-data-downloader/data` cache is protected, and why the design
 looks the way it does.
 
-The implementation lives in the `shioaji_stock_prices` submodule
+The implementation lives in the `stock-data-downloader` submodule
 (`backup_data.py`, wired into `run_daily.py`), because it backs up that
 repository's own data and needs no knowledge of this one. This page records
 the reasoning and the operating procedure for this checkout; the submodule's
@@ -47,7 +47,7 @@ tier is worth, not what it includes.
 
 ## Tier 1 + 2: local additive mirror with verification
 
-Set the destination once in `shioaji_stock_prices/.env` (gitignored, so the
+Set the destination once in `stock-data-downloader/.env` (gitignored, so the
 machine-specific path is never committed):
 
 ```dotenv
@@ -71,7 +71,7 @@ Tier 1 stores plain files in the same layout as the source:
 
 ```
 D:\StockDataBackup\
-├── data\              <- file-for-file mirror of shioaji_stock_prices\data
+├── data\              <- file-for-file mirror of stock-data-downloader\data
 │   ├── 2330_day.csv
 │   ├── 2330_min.csv
 │   ├── raw\...
@@ -230,7 +230,7 @@ To restore the whole cache, copy back from the backup root — additively, so
 that anything newer in the live cache survives:
 
 ```powershell
-robocopy D:\StockDataBackup\data <repo>\shioaji_stock_prices\data /E /R:1 /W:5
+robocopy D:\StockDataBackup\data <repo>\stock-data-downloader\data /E /R:1 /W:5
 ```
 
 Then rebuild the derived artifacts with the submodule's own pipeline rather

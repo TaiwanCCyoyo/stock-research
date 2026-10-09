@@ -4,7 +4,7 @@ The catalog connects a business cohort to a historical wave, qualifying stock
 ascents and all available peers over a common comparison window. It supports the
 market timeline and later K-line studies without inventing selection decisions.
 The first definition is in `tasks/20261002-sector-wave-catalog/mission.md`.
-Producer market artifacts remain read-only in `shioaji_stock_prices`.
+Producer market artifacts remain read-only in `stock-data-downloader`.
 
 ## Bundle: sector-wave-catalog.v1
 

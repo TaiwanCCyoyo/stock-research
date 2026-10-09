@@ -21,7 +21,7 @@ def valid_spec_dict() -> dict[str, Any]:
         "run": {
             "codes": "2330,2454",
             "cash": 1000000,
-            "data_path": "shioaji_stock_prices/data",
+            "data_path": "stock-data-downloader/data",
         },
         "dimensions": [
             {"name": "ma_fast", "kind": "range", "min": 5, "max": 20, "step": 1},
@@ -59,7 +59,7 @@ def test_load_experiment_spec_reads_and_validates_a_file(tmp_path: Path) -> None
     spec = load_experiment_spec(spec_path)
 
     assert spec.hypothesis
-    assert spec.run.data_path == "shioaji_stock_prices/data"
+    assert spec.run.data_path == "stock-data-downloader/data"
 
 
 def test_missing_hypothesis_is_rejected() -> None:

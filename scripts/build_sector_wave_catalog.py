@@ -95,7 +95,7 @@ def _json(path: Path) -> dict[str, Any]:
 
 
 def _paths(repo_root: Path) -> dict[str, Path]:
-    data = repo_root / "shioaji_stock_prices" / "data"
+    data = repo_root / "stock-data-downloader" / "data"
     task = repo_root / "tasks" / TASK_NAME
     return {
         "price": data / "price_daily.parquet",
