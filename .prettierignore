@@ -1,0 +1,19 @@
+# Generated evidence is byte-addressed; formatting it breaks its manifest.
+# Source code and prose outside these two immutable datasets remain formatted.
+tasks/20261004-feature-discrimination-atlas/publication-v2/**
+tasks/20261005-market-context-handoff/market-context-v2/**
+tasks/20261005-method-environment-interactions/preregistration/**
+tasks/20261005-method-environment-interactions/publication-v1/**
+tasks/20261005-industry-role-comparison/preregistration/**
+tasks/20261005-industry-role-comparison/publication-v1/**
+tasks/20261005-industry-role-comparison/publication-v2/**
+# Producer-owned evidence bytes are bound by verification-receipt.json.
+# Reformatting these four artifacts invalidates their provenance hashes.
+/research_web/fixtures/classification-v1/classification-v1.json
+/research_web/fixtures/classification-v1/sources-v1.json
+/research_web/fixtures/classification-v1/gaps-v1.json
+/research_web/fixtures/classification-v1/verification-receipt.json
+# These producer method bytes are pinned by the frozen catalog identity.
+/tasks/20261004-sector-wave-full-history-preview/method-snapshot/
+/tasks/20261004-sector-wave-full-history-preview/params.json
+/scripts/opportunity_history_methods.mjs

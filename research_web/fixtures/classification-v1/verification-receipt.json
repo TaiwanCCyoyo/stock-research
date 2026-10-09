@@ -1,0 +1,54 @@
+{
+  "schema_version": "opportunity-classification-verification.v1",
+  "checks": [
+    {
+      "check": "exact-eight-identifiers-and-unique-source-identities",
+      "status": "passed"
+    },
+    {
+      "check": "known-broad-labels-retained-independent-of-fine-and-effective-date-gaps",
+      "status": "passed"
+    },
+    {
+      "check": "all-layer-source-bindings-and-null-unverified-effective-periods",
+      "status": "passed"
+    },
+    {
+      "check": "retained-source-raw-hashes-and-observation-digests-recomputed",
+      "status": "passed"
+    },
+    {
+      "check": "yangming-2021-role-and-explicit-sector-mappings-without-2022-extrapolation",
+      "status": "passed"
+    },
+    {
+      "check": "other-category-multiple-htc-roles-and-event-context-distinguished",
+      "status": "passed"
+    }
+  ],
+  "counts": {
+    "securities": 8,
+    "direct_nodes": 48,
+    "catalog_groups": 4,
+    "company_assertions": 11,
+    "primary_source_observations": 8,
+    "catalog_chunk_raw_hashes": 9,
+    "raw_file_sources_recomputed": 13
+  },
+  "files": {
+    "classification-v1.json": {
+      "raw_sha256": "0364d64ed74e9aab6749b0c70b6042ccd28d6262b0437b6812e64c8393f6788f",
+      "canonical_json_sha256": "28182bacad0ba3bc302412d0b379d60d3fb0fc61007635a61620937410c0cc6e"
+    },
+    "sources-v1.json": {
+      "raw_sha256": "b459ce9770a4a9cb19b2a4c7bbd5905b5fb844e2c21d6219d8fd9be4c9fd8d89",
+      "canonical_json_sha256": "04e40cd269e6bf47d7cfa1445aa5f623e7b4c343444d225d970686d011a53d62"
+    },
+    "gaps-v1.json": {
+      "raw_sha256": "c49fb4429b52e7dff1a2276b83d3b4aa7fe934fb2513a46280d915cb9b7e738c",
+      "canonical_json_sha256": "1835f01145faadd5e70e39a3e650ee7f654873223377f204dd5744b1748f21c6"
+    }
+  },
+  "digest_reproduction": "raw: SHA-256 of file bytes; canonical: UTF-8 json.dumps(parsed, ensure_ascii=False, sort_keys=True, separators=(comma, colon)), no trailing newline.",
+  "checks_scope": "Data integrity and retained observations, not independent issuer history reconstruction or strategy validation."
+}

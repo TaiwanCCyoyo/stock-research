@@ -1,0 +1,280 @@
+{
+    "baseline": "lag0",
+    "gates": {
+        "lag1": {
+            "account": true,
+            "capture": true,
+            "pool_share": true,
+            "turnover": false
+        },
+        "lag2": {
+            "account": true,
+            "capture": true,
+            "pool_share": false,
+            "turnover": false
+        },
+        "lag3": {
+            "account": true,
+            "capture": true,
+            "pool_share": false,
+            "turnover": false
+        },
+        "lag5": {
+            "account": true,
+            "capture": true,
+            "pool_share": false,
+            "turnover": false
+        }
+    },
+    "holdout_opened": false,
+    "nominated": false,
+    "plateau": [],
+    "rows": [
+        {
+            "bear_2022_drawdown_pct": -23.672957757856206,
+            "bear_2022_return_pct": -18.616698341134942,
+            "buy_count": 501,
+            "cell": "lag0",
+            "max_drawdown_pct": -34.29755378382938,
+            "mean_slots_used": 9.642563681183237,
+            "named_captured": 0.12474437627811885,
+            "named_entries": 1,
+            "return_pct": 206.58703311026022,
+            "runaway": {
+                "1.0": {
+                    "capture_rate": 0.8738738738738738,
+                    "held": 97,
+                    "participation": 0.12430610697971879,
+                    "participation_n": 97,
+                    "pool_share": 0.12057063058236779,
+                    "population": 111
+                },
+                "1.5": {
+                    "capture_rate": 0.9375,
+                    "held": 60,
+                    "participation": 0.11245059506096651,
+                    "participation_n": 60,
+                    "pool_share": 0.12311266974976076,
+                    "population": 64
+                },
+                "2.0": {
+                    "capture_rate": 0.9512195121951219,
+                    "held": 39,
+                    "participation": 0.1113728742074802,
+                    "participation_n": 39,
+                    "pool_share": 0.12691814927360098,
+                    "population": 41
+                },
+                "3.0": {
+                    "capture_rate": 1.0,
+                    "held": 19,
+                    "participation": 0.186597452713965,
+                    "participation_n": 19,
+                    "pool_share": 0.16752772790447748,
+                    "population": 19
+                }
+            },
+            "share_bars_full": 0.8898931799506984,
+            "signal_lag": 0,
+            "turnover_per_slot_year": 9.797273517855665,
+            "window": "train"
+        },
+        {
+            "bear_2022_drawdown_pct": -19.88569761737914,
+            "bear_2022_return_pct": -12.115146024069013,
+            "buy_count": 504,
+            "cell": "lag1",
+            "max_drawdown_pct": -35.79439089401523,
+            "mean_slots_used": 9.458504519309779,
+            "named_captured": 0.0706860706860708,
+            "named_entries": 1,
+            "return_pct": 189.87204495266997,
+            "runaway": {
+                "1.0": {
+                    "capture_rate": 0.8648648648648649,
+                    "held": 96,
+                    "participation": 0.13691467730839046,
+                    "participation_n": 96,
+                    "pool_share": 0.11967465046189148,
+                    "population": 111
+                },
+                "1.5": {
+                    "capture_rate": 0.90625,
+                    "held": 58,
+                    "participation": 0.12390178232548033,
+                    "participation_n": 58,
+                    "pool_share": 0.11765194372709044,
+                    "population": 64
+                },
+                "2.0": {
+                    "capture_rate": 0.926829268292683,
+                    "held": 38,
+                    "participation": 0.11233676283156016,
+                    "participation_n": 38,
+                    "pool_share": 0.11468773632804129,
+                    "population": 41
+                },
+                "3.0": {
+                    "capture_rate": 1.0,
+                    "held": 19,
+                    "participation": 0.1563739557668126,
+                    "participation_n": 19,
+                    "pool_share": 0.13925333118646818,
+                    "population": 19
+                }
+            },
+            "share_bars_full": 0.8685291700903862,
+            "signal_lag": 1,
+            "turnover_per_slot_year": 9.877342972654603,
+            "window": "train"
+        },
+        {
+            "bear_2022_drawdown_pct": -23.219937884569585,
+            "bear_2022_return_pct": -15.839791269787495,
+            "buy_count": 510,
+            "cell": "lag2",
+            "max_drawdown_pct": -32.55526989805786,
+            "mean_slots_used": 9.504519309778143,
+            "named_captured": 0.1885245901639343,
+            "named_entries": 1,
+            "return_pct": 188.7030528437602,
+            "runaway": {
+                "1.0": {
+                    "capture_rate": 0.8648648648648649,
+                    "held": 96,
+                    "participation": 0.12053609539303911,
+                    "participation_n": 96,
+                    "pool_share": 0.10562931160549396,
+                    "population": 111
+                },
+                "1.5": {
+                    "capture_rate": 0.90625,
+                    "held": 58,
+                    "participation": 0.10334418480765234,
+                    "participation_n": 58,
+                    "pool_share": 0.10206975039678953,
+                    "population": 64
+                },
+                "2.0": {
+                    "capture_rate": 0.926829268292683,
+                    "held": 38,
+                    "participation": 0.1082683704296808,
+                    "participation_n": 38,
+                    "pool_share": 0.10677171947214838,
+                    "population": 41
+                },
+                "3.0": {
+                    "capture_rate": 1.0,
+                    "held": 19,
+                    "participation": 0.14993577050461018,
+                    "participation_n": 19,
+                    "pool_share": 0.12941849413537923,
+                    "population": 19
+                }
+            },
+            "share_bars_full": 0.8882497945768283,
+            "signal_lag": 2,
+            "turnover_per_slot_year": 9.997382524726559,
+            "window": "train"
+        },
+        {
+            "bear_2022_drawdown_pct": -19.85311157767491,
+            "bear_2022_return_pct": -14.940243257219144,
+            "buy_count": 511,
+            "cell": "lag3",
+            "max_drawdown_pct": -35.50759608740616,
+            "mean_slots_used": 9.512736236647493,
+            "named_captured": 0.1885245901639343,
+            "named_entries": 1,
+            "return_pct": 171.68869866930984,
+            "runaway": {
+                "1.0": {
+                    "capture_rate": 0.8378378378378378,
+                    "held": 93,
+                    "participation": 0.12513558564833666,
+                    "participation_n": 93,
+                    "pool_share": 0.10341851304482676,
+                    "population": 111
+                },
+                "1.5": {
+                    "capture_rate": 0.890625,
+                    "held": 57,
+                    "participation": 0.10164295158456249,
+                    "participation_n": 57,
+                    "pool_share": 0.09932346349405106,
+                    "population": 64
+                },
+                "2.0": {
+                    "capture_rate": 0.9024390243902439,
+                    "held": 37,
+                    "participation": 0.102780949942714,
+                    "participation_n": 37,
+                    "pool_share": 0.10233120422449801,
+                    "population": 41
+                },
+                "3.0": {
+                    "capture_rate": 1.0,
+                    "held": 19,
+                    "participation": 0.1542962826267983,
+                    "participation_n": 19,
+                    "pool_share": 0.1303082640260254,
+                    "population": 19
+                }
+            },
+            "share_bars_full": 0.8931799506984388,
+            "signal_lag": 3,
+            "turnover_per_slot_year": 10.017319247423915,
+            "window": "train"
+        },
+        {
+            "bear_2022_drawdown_pct": -19.85924790913166,
+            "bear_2022_return_pct": -9.791304024688618,
+            "buy_count": 504,
+            "cell": "lag5",
+            "max_drawdown_pct": -37.52634928916443,
+            "mean_slots_used": 9.471651602300739,
+            "named_captured": 0.0901639344262295,
+            "named_entries": 1,
+            "return_pct": 204.3717863781398,
+            "runaway": {
+                "1.0": {
+                    "capture_rate": 0.8558558558558559,
+                    "held": 95,
+                    "participation": 0.13108524589510487,
+                    "participation_n": 95,
+                    "pool_share": 0.10624366216148644,
+                    "population": 111
+                },
+                "1.5": {
+                    "capture_rate": 0.921875,
+                    "held": 59,
+                    "participation": 0.1069475296765662,
+                    "participation_n": 59,
+                    "pool_share": 0.09984900685948504,
+                    "population": 64
+                },
+                "2.0": {
+                    "capture_rate": 0.9512195121951219,
+                    "held": 39,
+                    "participation": 0.10258204324487757,
+                    "participation_n": 39,
+                    "pool_share": 0.09924268144237593,
+                    "population": 41
+                },
+                "3.0": {
+                    "capture_rate": 1.0,
+                    "held": 19,
+                    "participation": 0.16033075627299398,
+                    "participation_n": 19,
+                    "pool_share": 0.1236864910178187,
+                    "population": 19
+                }
+            },
+            "share_bars_full": 0.8849630238290879,
+            "signal_lag": 5,
+            "turnover_per_slot_year": 9.877299574386512,
+            "window": "train"
+        }
+    ],
+    "window": "train"
+}

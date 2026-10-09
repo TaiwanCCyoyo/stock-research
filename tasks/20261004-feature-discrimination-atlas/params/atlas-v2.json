@@ -1,0 +1,106 @@
+{
+    "schema_version": "research-job.v1",
+    "job_id": "atlas-v2",
+    "task_id": "20261004-feature-discrimination-atlas",
+    "phase": "exploration",
+    "window": {
+        "start": "2019-01-02",
+        "end": "2026-08-14"
+    },
+    "candidate_id": "daily-close-features-38-forward-63-126.v1",
+    "owner_contract_id": "research-owner-contract-current",
+    "metric_contract_id": "daily-close-features-38-forward-63-126.v1",
+    "execution_contract_id": "descriptive-no-trades.v1",
+    "scenario_id": "daily-and-fixed-grid126",
+    "params": {
+        "features": [
+            "F01",
+            "F02",
+            "F03",
+            "F04",
+            "F05",
+            "F06",
+            "F07",
+            "F08",
+            "F09",
+            "F10",
+            "F11",
+            "F12",
+            "F13",
+            "F14",
+            "F15",
+            "F16",
+            "F17",
+            "F18",
+            "F19",
+            "F20",
+            "F21",
+            "F22",
+            "F23",
+            "F24",
+            "F25",
+            "F26",
+            "F27",
+            "F28",
+            "F29",
+            "F30",
+            "F31",
+            "F32",
+            "F33",
+            "F34",
+            "F35",
+            "F36",
+            "F37",
+            "F38"
+        ],
+        "contexts": ["year", "regime", "industry_ref"],
+        "labels": [63, 126],
+        "sparse_stride": 126,
+        "maximum_industry_groups": 100,
+        "maximum_attempts": 3
+    },
+    "timeout_seconds": 3600,
+    "runtime": {
+        "python": "3.12.11",
+        "platform": "Windows-11-10.0.26300-SP0",
+        "executable_sha256": "553e867886f2a2672e6473d589d322133716a60dbbeb38be06266460b1037d3d",
+        "packages_sha256": "c826bfd8833d0452df634caaefaff0b6f7c291b55104cbca357f862f16373649"
+    },
+    "inputs": {
+        "code": {
+            "scripts/build_feature_discrimination_atlas.py": "08fab76a7a08c0f179b51192b5abd91cb2b8ac25e9f026bc905aeed87b003788",
+            "scripts/run_registered_job.py": "9c3bdd5e1077f6fec81066a579bcf4f3e2ef62b37301627cde006c5a62d944a7",
+            "research_core/__init__.py": "bd77f04325b2505f9000d3c5213d18700f0a129939e4578113176707fa1b1542",
+            "research_core/jobs.py": "ab52326417675deec65c708a2e272003095c62d9640d7d401e4fdc998774b21e",
+            "research_core/evidence.py": "5ff68c951e17fb028dcd208d7a832e0a5415b4dd7f0c15bb55e97b1295d41e5a",
+            "StockProject/engine/data_loader.py": "9e23add68df4d2dfa024f5f0cd96014db751530d00809871d6c5f782d91423b7",
+            "StockProject/engine/__init__.py": "8f78399dc29fea6e80dc74c7c0e0fb9003e34a1aad4573d9e9f53ff4c840c3ca",
+            "research_core/feature_atlas_features.py": "7ab11b1f45b32a874b4e4593cd6d3cc0eb51cffbfc2f347e1e7022839e7ba776",
+            "research_core/feature_atlas_outcomes.py": "a603fed71c7e6f8cadd7c34e89e3b5c8eef4760f064492eaa1d48ccfaa4f80b0",
+            "research_core/feature_atlas_legacy.py": "5cc522e0fc9ced8892cd5150ed3d22338cd1e1724fbd42307f70d5b51bfe00f0",
+            "research_core/feature_atlas_io.py": "ce81d23aefdcc5c522226361d07a700cddaaa4d85140016b75256df7d2c9e773",
+            "research_core/feature_atlas_dataset.py": "d641a5a7be4b9f4a3f76cea6efc20d3631f6e0e62e771370809e916cfe7e3765"
+        },
+        "contracts": {
+            "tasks/20261004-feature-discrimination-atlas/mission.md": "c8a371556ef7b74e99284351ccd158483d780cd38df235e3e80b018b84cae54e",
+            "docs/en/research-owner-contract.md": "8747accb57f13fa3d69a4c05a6c263158e139e8b7027912958bab7aeb72d4ab0",
+            "docs/en/research-registry.json": "2ea65a32ea4d946abdf5c10d148fbd4130d315aefd044170d66c2e9618664d11"
+        },
+        "data": {
+            "shioaji_stock_prices/data/price_daily.parquet": "67ee9e48260d0ffe73180d0628d6a7f60238a3c576afce30b1ff6537c6ac8003",
+            "shioaji_stock_prices/data/symbol_meta.sqlite": "199ca8e65571aa7fc8901e7cfbcbff6761f1201c67dbadc205026a027134bbd7",
+            "shioaji_stock_prices/data/corporate_actions.sqlite": "3d53a4a7b9790ea2c2b5c4818523abcff530e8750b77db63428244eec30bfffc"
+        }
+    },
+    "script": "scripts/build_feature_discrimination_atlas.py",
+    "args": ["--output-dir", "{output_dir}", "--run-id", "atlas-v2"],
+    "outputs": [
+        "summary.json",
+        "manifest.json",
+        "comparisons.json",
+        "continuous.json",
+        "inventory.json",
+        "definitions.json"
+    ],
+    "summary": "summary.json"
+}

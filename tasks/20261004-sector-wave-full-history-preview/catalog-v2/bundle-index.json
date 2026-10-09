@@ -1,0 +1,225 @@
+{
+    "local_only_artifacts_available_from_publication": false,
+    "local_only_patterns": [
+        "chunks/**",
+        "inputs/**",
+        "../inputs/**",
+        "series/**",
+        "native/**",
+        "../runs/native/**"
+    ],
+    "metadata_file_count": 7,
+    "mirror_file_count": 12,
+    "multipart_metadata_count": 1,
+    "primary_manifest": {
+        "decoded_sha256": "c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140",
+        "format": "gzip-multipart-rawbytes",
+        "original_path": "manifest.json",
+        "original_sha256": "c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140",
+        "original_size_bytes": 1560858,
+        "parts": [
+            {
+                "decoded_sha256": "e389b45ff16df51f77eed77525d6374ae63eff8836d70189e1699aaf6b4bde23",
+                "encoding": "gzip-raw-byte-part",
+                "path": "manifest.part-00000.json.gz",
+                "raw_length": 262144,
+                "raw_offset": 0,
+                "sha256": "6e8efe13ffdbca25c0788f0b58859435a7b5d5503fb8e39aeb0da7026fd107d3",
+                "size_bytes": 91165
+            },
+            {
+                "decoded_sha256": "44aaab19ad460cadc903934b273de683558493b5fdb5e63f116e6b0ae722453d",
+                "encoding": "gzip-raw-byte-part",
+                "path": "manifest.part-00001.json.gz",
+                "raw_length": 262144,
+                "raw_offset": 262144,
+                "sha256": "be3d2e5e3500b5af3ba4e25896e52995365fcfebc1b78ad5710c421b199a167b",
+                "size_bytes": 91279
+            },
+            {
+                "decoded_sha256": "71ae4e05c3d6216c6716a4ef966dd6a2b8806a80a3473ff157345afb89edbda9",
+                "encoding": "gzip-raw-byte-part",
+                "path": "manifest.part-00002.json.gz",
+                "raw_length": 262144,
+                "raw_offset": 524288,
+                "sha256": "2d1046b104b1fe9d3566265d469529caf94dcbfd27b1323cc86a3f5d10d93b26",
+                "size_bytes": 105371
+            },
+            {
+                "decoded_sha256": "95a0c7f2770c463fa27d33705fba6659eca417c05a60a471912b843829b5eac8",
+                "encoding": "gzip-raw-byte-part",
+                "path": "manifest.part-00003.json.gz",
+                "raw_length": 262144,
+                "raw_offset": 786432,
+                "sha256": "97fb9f987d7ed66da1fd2787a2b64510c3876a1e9352ac9670192c90a94c6452",
+                "size_bytes": 101272
+            },
+            {
+                "decoded_sha256": "6a3ed66f8fee744842ce5bef53080b714f0a37c0ca5c2b6cbab65acd25b128da",
+                "encoding": "gzip-raw-byte-part",
+                "path": "manifest.part-00004.json.gz",
+                "raw_length": 262144,
+                "raw_offset": 1048576,
+                "sha256": "db8f8b321d0b6e601aca1228335169c0bda7af96714db02497eb53fa4e7b66a7",
+                "size_bytes": 86311
+            },
+            {
+                "decoded_sha256": "b6bac8c510ae57ec3ae1fddab430f9f4879f6f49ea2c94edb44d3319b19285fc",
+                "encoding": "gzip-raw-byte-part",
+                "path": "manifest.part-00005.json.gz",
+                "raw_length": 250138,
+                "raw_offset": 1310720,
+                "sha256": "4d8d1b6d96a900608b7ed8ca7aefee9b215feb1d06470a892441bd351031cc69",
+                "size_bytes": 80452
+            }
+        ],
+        "restore_required": true,
+        "schema_version": "opportunity-local-history-preview.v1"
+    },
+    "publications": [
+        {
+            "decoded_sha256": "79665dc66cf10528290b50b3214b24e0ee7882968f0a08c079fdde3f62f94b3e",
+            "format": "gzip-json",
+            "original_path": "classifications.json",
+            "original_sha256": "79665dc66cf10528290b50b3214b24e0ee7882968f0a08c079fdde3f62f94b3e",
+            "original_size_bytes": 4468466,
+            "path": "classifications.json.gz",
+            "restore_required": false,
+            "schema_version": "opportunity-classifications.v1",
+            "sha256": "e393546a7136c07b94b71b7c7038ecd6e4ccb30684fbf369159ed9191d402f7c",
+            "size_bytes": 181628
+        },
+        {
+            "decoded_sha256": "537d43d9f6a610a7a858b44b206617e57c7ad9b008b424221eb142dd3ff28b52",
+            "format": "gzip-json",
+            "original_path": "gaps.json",
+            "original_sha256": "537d43d9f6a610a7a858b44b206617e57c7ad9b008b424221eb142dd3ff28b52",
+            "original_size_bytes": 648181,
+            "path": "gaps.json.gz",
+            "restore_required": false,
+            "schema_version": "opportunity-gaps.v1",
+            "sha256": "12eec7aa94968f419f551e896a0c8ea330380542be0b08d883ab54d469ba63b2",
+            "size_bytes": 15182
+        },
+        {
+            "decoded_sha256": "9cdba68ccafbaa2a9ddaa8b216d3589760f564bac038103a8e780138224fba89",
+            "format": "gzip-json",
+            "original_path": "groups.json",
+            "original_sha256": "9cdba68ccafbaa2a9ddaa8b216d3589760f564bac038103a8e780138224fba89",
+            "original_size_bytes": 113954,
+            "path": "groups.json.gz",
+            "restore_required": false,
+            "schema_version": "opportunity-groups.v1",
+            "sha256": "991c4aaf8098715f3f5d4428ab4c4b354a31b4c6ce7e9e7e6d8f521cf028f0de",
+            "size_bytes": 14848
+        },
+        {
+            "decoded_sha256": "c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140",
+            "format": "gzip-multipart-rawbytes",
+            "original_path": "manifest.json",
+            "original_sha256": "c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140",
+            "original_size_bytes": 1560858,
+            "parts": [
+                {
+                    "decoded_sha256": "e389b45ff16df51f77eed77525d6374ae63eff8836d70189e1699aaf6b4bde23",
+                    "encoding": "gzip-raw-byte-part",
+                    "path": "manifest.part-00000.json.gz",
+                    "raw_length": 262144,
+                    "raw_offset": 0,
+                    "sha256": "6e8efe13ffdbca25c0788f0b58859435a7b5d5503fb8e39aeb0da7026fd107d3",
+                    "size_bytes": 91165
+                },
+                {
+                    "decoded_sha256": "44aaab19ad460cadc903934b273de683558493b5fdb5e63f116e6b0ae722453d",
+                    "encoding": "gzip-raw-byte-part",
+                    "path": "manifest.part-00001.json.gz",
+                    "raw_length": 262144,
+                    "raw_offset": 262144,
+                    "sha256": "be3d2e5e3500b5af3ba4e25896e52995365fcfebc1b78ad5710c421b199a167b",
+                    "size_bytes": 91279
+                },
+                {
+                    "decoded_sha256": "71ae4e05c3d6216c6716a4ef966dd6a2b8806a80a3473ff157345afb89edbda9",
+                    "encoding": "gzip-raw-byte-part",
+                    "path": "manifest.part-00002.json.gz",
+                    "raw_length": 262144,
+                    "raw_offset": 524288,
+                    "sha256": "2d1046b104b1fe9d3566265d469529caf94dcbfd27b1323cc86a3f5d10d93b26",
+                    "size_bytes": 105371
+                },
+                {
+                    "decoded_sha256": "95a0c7f2770c463fa27d33705fba6659eca417c05a60a471912b843829b5eac8",
+                    "encoding": "gzip-raw-byte-part",
+                    "path": "manifest.part-00003.json.gz",
+                    "raw_length": 262144,
+                    "raw_offset": 786432,
+                    "sha256": "97fb9f987d7ed66da1fd2787a2b64510c3876a1e9352ac9670192c90a94c6452",
+                    "size_bytes": 101272
+                },
+                {
+                    "decoded_sha256": "6a3ed66f8fee744842ce5bef53080b714f0a37c0ca5c2b6cbab65acd25b128da",
+                    "encoding": "gzip-raw-byte-part",
+                    "path": "manifest.part-00004.json.gz",
+                    "raw_length": 262144,
+                    "raw_offset": 1048576,
+                    "sha256": "db8f8b321d0b6e601aca1228335169c0bda7af96714db02497eb53fa4e7b66a7",
+                    "size_bytes": 86311
+                },
+                {
+                    "decoded_sha256": "b6bac8c510ae57ec3ae1fddab430f9f4879f6f49ea2c94edb44d3319b19285fc",
+                    "encoding": "gzip-raw-byte-part",
+                    "path": "manifest.part-00005.json.gz",
+                    "raw_length": 250138,
+                    "raw_offset": 1310720,
+                    "sha256": "4d8d1b6d96a900608b7ed8ca7aefee9b215feb1d06470a892441bd351031cc69",
+                    "size_bytes": 80452
+                }
+            ],
+            "restore_required": true,
+            "schema_version": "opportunity-local-history-preview.v1"
+        },
+        {
+            "decoded_sha256": "92f778dd7e52a63263b1997a5175cbc8182c964f2b7e7270525622ea8fa8cd21",
+            "format": "gzip-json",
+            "original_path": "series-manifest.json",
+            "original_sha256": "92f778dd7e52a63263b1997a5175cbc8182c964f2b7e7270525622ea8fa8cd21",
+            "original_size_bytes": 1019705,
+            "path": "series-manifest.json.gz",
+            "restore_required": false,
+            "schema_version": "opportunity-series-manifest.v1",
+            "sha256": "8592f6570728aa742841467946ab19a38e2fd70eaf16be9f9b44f24899cc2ca0",
+            "size_bytes": 240614
+        },
+        {
+            "decoded_sha256": "d45da887f276bf43504d8b1fb30046d19e19e5c82e891aeabbd2084507b35527",
+            "format": "gzip-json",
+            "original_path": "sources.json",
+            "original_sha256": "d45da887f276bf43504d8b1fb30046d19e19e5c82e891aeabbd2084507b35527",
+            "original_size_bytes": 21824,
+            "path": "sources.json.gz",
+            "restore_required": false,
+            "schema_version": "opportunity-sources.v1",
+            "sha256": "8d0a4f8367dbecf07fc8afa874f1c8a668ec221e65646f903872732a7ca6e4e5",
+            "size_bytes": 5006
+        },
+        {
+            "decoded_sha256": "44b5fbf4a14c41950cb73a9c059dbeadd0ae6023abb6ea63fdf4bca319550127",
+            "format": "gzip-json",
+            "original_path": "taxonomy_nodes.json",
+            "original_sha256": "44b5fbf4a14c41950cb73a9c059dbeadd0ae6023abb6ea63fdf4bca319550127",
+            "original_size_bytes": 330136,
+            "path": "taxonomy_nodes.json.gz",
+            "restore_required": false,
+            "schema_version": "opportunity-taxonomy-nodes.v1",
+            "sha256": "c5eea559cc4693111ce78f25bb0c6e658c1d2b15913a96bcf688d0da5e84f4bc",
+            "size_bytes": 39367
+        }
+    ],
+    "recovery_gaps": [
+        "Publication mirrors restore root JSON metadata only; schemas and original relative references are unchanged.",
+        "Local physical inputs, aligned price/calendar series and dense native results are excluded; Git publication cannot recover them.",
+        "Full compact event tables remain local only; restoring root metadata does not restore chunks, prices or fits. A complete query requires separately retained hash-matching tables, series and calendar artifacts.",
+        "Historical identity and first availability gaps remain unknown; publication does not reconstruct unavailable data."
+    ],
+    "schema_version": "opportunity-publication-index.v2"
+}

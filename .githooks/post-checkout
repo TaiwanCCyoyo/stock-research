@@ -1,0 +1,65 @@
+#!/bin/sh
+# Fires on every checkout, including `git worktree add` (which reports
+# prev=<all-zero sha>, branch_checkout=1). Newly created linked worktrees
+# don't inherit gitignored submodule checkouts (e.g. shioaji_stock_prices),
+# so this hook initializes the submodule and then seeds the part of its
+# price cache that this repo actually reads. Nothing here creates a link:
+# see the copy block below for why that matters.
+set -e
+
+prev_head="$1"
+common_dir=$(git rev-parse --path-format=absolute --git-common-dir)
+git_dir=$(git rev-parse --path-format=absolute --git-dir)
+
+# Only act inside a linked worktree (git-dir != git-common-dir), never the
+# main checkout, and only on a fresh checkout (prev is the all-zero sha) —
+# not on every branch switch inside an already-set-up worktree.
+[ "$common_dir" = "$git_dir" ] && exit 0
+case "$prev_head" in
+    0000000000000000000000000000000000000000) ;;
+    *) exit 0 ;;
+esac
+
+if git submodule status 2>/dev/null | grep -q '^-'; then
+    echo "post-checkout: initializing submodules for new worktree..."
+    # git gives each worktree its own submodule clone rather than reusing the
+    # main checkout's .git/modules/<name>, so it fetches the pinned commit
+    # from the configured URL. When the superproject pins a submodule commit
+    # that exists only locally -- routine while the submodule is developed
+    # alongside this repo -- that fetch fails and the worktree is unusable,
+    # even though the object is sitting in the main checkout. Retry against
+    # the main checkout's module store, which has it.
+    if ! git submodule update --init --recursive; then
+        echo "post-checkout: remote lacks the pinned commit; retrying from the main checkout..."
+        git submodule status | awk '{print $2}' | while read -r sub_path; do
+            # The wanted commit is the superproject's pin, which must be read
+            # from the index -- `git submodule status` reports whichever
+            # commit is currently checked out, which after a partial clone is
+            # the wrong one (and already present, so fetching it is a no-op).
+            want=$(git rev-parse "HEAD:$sub_path" 2>/dev/null) || continue
+            local_store="$common_dir/modules/$sub_path"
+            [ -d "$local_store" ] || continue
+            [ -e "$sub_path/.git" ] || continue
+            git -C "$sub_path" fetch --quiet "$local_store" "$want" 2>/dev/null || true
+        done
+        git submodule update --recursive \
+            || echo "post-checkout: submodule init failed (non-fatal); run 'git submodule update --init' by hand"
+    fi
+fi
+
+# The submodule checkout above materializes shioaji_stock_prices/data as a
+# real directory, but mutable producer input snapshots are ignored.
+# Python owns the explicit read-set, verified copies and consistent SQLite
+# backup logic. Existing snapshots stay untouched. Minute/raw stores and
+# new derived caches are excluded; retained legacy adjusted daily inputs are
+# explicit physical snapshots. Immutable research_cache versions are read
+# explicitly from the primary root, never copied, linked or refreshed here.
+data_dir="shioaji_stock_prices/data"
+main_root=$(dirname "$common_dir")
+main_data="$main_root/$data_dir"
+if [ -d "$main_data" ] && [ -d "$data_dir" ]; then
+    echo "post-checkout: seeding explicit producer input snapshots..."
+    uv run --no-project python -m scripts.seed_worktree_inputs \
+        --primary "$main_root" --worktree "$(pwd)" \
+        || echo "post-checkout: input snapshot incomplete (non-fatal); inspect .tmp/worktree-seed-* before research" >&2
+fi

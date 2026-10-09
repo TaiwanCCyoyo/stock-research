@@ -1,0 +1,1488 @@
+{
+    "schema": "stock-research-omitted-legacy-code.v1",
+    "sourceCommit": "git:02ba5e2c2cd097acd8c1e4c7eb5b44dac2c3a9d1",
+    "legacyRepository": "https://github.com/TaiwanCCyoyo/Stock-legacy",
+    "privateSourceArchive": "D:\\Project\\Stock\\StockProject\\data\\private-presentation\\stock-research-bootstrap-20261009\\source-tree-02ba5e2c2cd097acd8c1e4c7eb5b44dac2c3a9d1.tar",
+    "sourceArchiveDigest": "sha256:f97c1792a368abf80a39fc05ed70974d7bb6e4ae80c40cf1190d727897e35798",
+    "selection": "Only task-local Python files in task names before 20260921, excluding the four retained tasks listed below. Reports, results, downloaded data and original source archives are not removed.",
+    "retainedEarlyTasks": [
+        "20260510-two-b-template-smoke",
+        "20260812-loop-explore-v2",
+        "20260814-2b-false-break-structure",
+        "20260823-rotation-universe"
+    ],
+    "taskCount": 32,
+    "fileCount": 163,
+    "totalBytes": 1234695,
+    "files": [
+        {
+            "path": "tasks/20260816-kline-strategy-category-fit/analyze_sweep.py",
+            "bytes": 9864,
+            "digest": "sha256:f3395588fd572cd44719a001c419c2bf5c8a18521f5b9530f5ccb6abd42ca7c5",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:63c1bdfba67b1dd85e1635248d464f503a9f8d53b66c20eda95f9e28e82e6bdc",
+            "publishedGitBlobBytes": 9675,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260816-kline-strategy-category-fit/benchmark_drawdown.py",
+            "bytes": 3076,
+            "digest": "sha256:3939eacc5345a9ed7db142b1ec45ceb555875f9ec9788814c54516c0e7bedd25",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:4d2c7ddcdb9aa83736adf2f7f392290e47509961686d4df4c53ba191f03d731f",
+            "publishedGitBlobBytes": 2994,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260816-kline-strategy-category-fit/build_universes.py",
+            "bytes": 4658,
+            "digest": "sha256:491314a1022e7649b9eede0fef0afe9142212661c01370206ff3d0949ed376ba",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:e6fab88681cb0579b365b91b8a54b2e7294e20c71859815bbeed0279f79ac7cb",
+            "publishedGitBlobBytes": 4544,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260816-kline-strategy-category-fit/candidates/donchian_breakout.py",
+            "bytes": 5849,
+            "digest": "sha256:b7c1b17b70abf421636b7826bcca0710fe1d1f22def65ea652e2570e61356fe2",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:0556ca49b1041b62c49a1ffd77e22493c4cd56b67a4a221dcabc292ecd2aa588",
+            "publishedGitBlobBytes": 5716,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260816-kline-strategy-category-fit/candidates/kline_reversal_pullback.py",
+            "bytes": 7318,
+            "digest": "sha256:c1f69f8050cb0bb840b235f0e74979bd311b464c971e88065eaaf148d1d935af",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:123b8306c0635a968c510785c974581a42860e2b31337dd667b8c0fb9ccb8729",
+            "publishedGitBlobBytes": 7155,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260816-kline-strategy-category-fit/candidates/tw_momentum_breakout.py",
+            "bytes": 6848,
+            "digest": "sha256:5689b037b78826e78f66ae42b5ba023025c3a3ae323eff20df4e61007d787773",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:cf46e151276f6de9cea3a23c6e2a11ac77df73f9c12608b56d0fbaf67ad1107c",
+            "publishedGitBlobBytes": 6692,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260816-kline-strategy-category-fit/run_sweep.py",
+            "bytes": 4710,
+            "digest": "sha256:bc594c84755aeda00a89b9d85347c08bc705e89173e1517ac66f4ded169ef931",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:92f5ccf22ee8787deb90e46ead2dd5fafd738edfecbec1267f9fc1304649306d",
+            "publishedGitBlobBytes": 4569,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260816-kline-strategy-category-fit/verify_patterns.py",
+            "bytes": 3903,
+            "digest": "sha256:cf10f678f7ecfc5f5fbbcb0446eebb6f111d894fa61041d5c139dec67d1a0ba2",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:c7d4481e918e45f881bfcfcdc04d4ce42a0eef697f1d06d00af305c0cdaa1eb7",
+            "publishedGitBlobBytes": 3823,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260820-kline-archetype-extension/analyze_sweep.py",
+            "bytes": 17899,
+            "digest": "sha256:b9d44cf7cc0dd58cef2a8e95c6b930b9a5cc0e1051cccda0c31a07b861435c20",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:fccb97e9000706920b20a8f7bc91a2dfeac2d60c6e60d80f2237fdbdf0f2aeb4",
+            "publishedGitBlobBytes": 17540,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260820-kline-archetype-extension/benchmark_drawdown.py",
+            "bytes": 3076,
+            "digest": "sha256:3939eacc5345a9ed7db142b1ec45ceb555875f9ec9788814c54516c0e7bedd25",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:4d2c7ddcdb9aa83736adf2f7f392290e47509961686d4df4c53ba191f03d731f",
+            "publishedGitBlobBytes": 2994,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260820-kline-archetype-extension/candidates/darvas_box_breakout.py",
+            "bytes": 8392,
+            "digest": "sha256:6f1db0641f6ba5fbdc987c5f270e9fe636b7593b382456b566cd75b233645787",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:f99e7fa456af1cad48077d21196043304e305bfaa3ce642189652d603995b450",
+            "publishedGitBlobBytes": 8208,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260820-kline-archetype-extension/candidates/rsi2_mean_reversion.py",
+            "bytes": 7981,
+            "digest": "sha256:4c79244077b075a543e3e8255270d446ded732a4a368ee9f19b05c3f2bb8625c",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:ea38636ea75b38facefda2ca5b7c3ca97dd8624b987c3938f57fd63c892ee9fe",
+            "publishedGitBlobBytes": 7804,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260820-kline-archetype-extension/candidates/vcp_contraction_breakout.py",
+            "bytes": 10614,
+            "digest": "sha256:66b237176f062ea98528718f193885c1603f3f8f01eb0ff6c1017fb56c87f9e2",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:5660e087ecfb23d8c1d4d45537747432588d8966e7f3d31ef382b430def0444a",
+            "publishedGitBlobBytes": 10375,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260820-kline-archetype-extension/compare_tasks.py",
+            "bytes": 8797,
+            "digest": "sha256:ca162dcd8afbf84050ae783e5806a84089b2ed51b377d121b95fbc328e5f384c",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:1172c05f0ee42aed96724247d5baffaee024d2a75c7ad9bf37238edf51af0569",
+            "publishedGitBlobBytes": 8615,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260820-kline-archetype-extension/refresh_prior_arms.py",
+            "bytes": 4356,
+            "digest": "sha256:35cceafe3bc57bdb0826f369056192d208b0429e171dd5ead6f7d6f1400f943e",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:cbe1b430bf7e297a2546b4afe6a601a3586dc56d476f09a9e17761da09e8ecc9",
+            "publishedGitBlobBytes": 4242,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260820-kline-archetype-extension/run_sweep.py",
+            "bytes": 5327,
+            "digest": "sha256:aed35727584ce6c7274c74473e416a115524a018600e57e24a5425df9086968c",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:0037926443d7ad3de57050edc52ad7f8537efdef1b63fecf735ff48cc9d6a469",
+            "publishedGitBlobBytes": 5174,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260820-kline-archetype-extension/verify_patterns.py",
+            "bytes": 11150,
+            "digest": "sha256:adc28bd8932488da8db29a74c929cc4e31a532d32bd0769031d24869d98b591b",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:634f0859524942c707a4812e99ca9d48254d52876b46cdef487d2d0e7464538a",
+            "publishedGitBlobBytes": 10923,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260821-2b-entry-decomposition/analyze_decomposition.py",
+            "bytes": 19095,
+            "digest": "sha256:8ebc3ccef052e8695bce79186fabfd8d02114ab32c982c7bcf295e7749f978cb",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:bb6bd23db1cdf9205ef319138cb8a2b9796b3dcb12382f8641714d58b8e74046",
+            "publishedGitBlobBytes": 18691,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260821-2b-entry-decomposition/candidates/arm_a_price_strength.py",
+            "bytes": 9930,
+            "digest": "sha256:288b47e58f03d349d8c4c98d6276d38e06cc9683ec46f6e7f5f8178c66b1a484",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:0e7b9d5ecf42497183fc15b2389ec89fc268b844e491a16d77325a1caa7caf27",
+            "publishedGitBlobBytes": 9721,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260821-2b-entry-decomposition/candidates/arm_b_two_b_only.py",
+            "bytes": 10137,
+            "digest": "sha256:60b2943b5f12b2ce97fe72f7bc6fe09797a7d11f11d9848f87b3a7e1e605aa83",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:e625ecc8cb74892d5a792ad5ef891f8503a68254666faaf92eb38839270d92c7",
+            "publishedGitBlobBytes": 9924,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260821-2b-entry-decomposition/candidates/arm_r_both_branches.py",
+            "bytes": 11085,
+            "digest": "sha256:b61e737154ff931dbeee97613c7f041e815765df21d22d965e33e7717516099c",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:fbac856d33d685ef63ebb75d8f0e655a7010bc3fee731b175b1503077a990f4c",
+            "publishedGitBlobBytes": 10858,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260821-2b-entry-decomposition/mae_analysis.py",
+            "bytes": 11629,
+            "digest": "sha256:c1587e685e3d9e9b52d899ebdff2593121596ee22b11bfa62518ea146118aff5",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:586103a70b4ef9dbb862a4045c380488f3aefa48ece08236032e0cf81640a5f9",
+            "publishedGitBlobBytes": 11329,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260821-2b-entry-decomposition/run_sweep.py",
+            "bytes": 6651,
+            "digest": "sha256:e0b12ec6fd01039c703fb65215623f4bb78a5d8728f3c93da414a4c690971671",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:e693145636c2adf36def6c9a8541c640b5509f3c9cfe50e264580ea1a2af74b5",
+            "publishedGitBlobBytes": 6463,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260821-2b-entry-decomposition/verify_isolation.py",
+            "bytes": 7274,
+            "digest": "sha256:4bbca96fd59b8157acd119f507f1a4fc9b6c425c6390e660d0fa33832a304dad",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:ec543364f56d67809e59398dabe652adf1dc9e22887114568df192113194405d",
+            "publishedGitBlobBytes": 7103,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260821-2b-entry-decomposition/verify_pattern.py",
+            "bytes": 6397,
+            "digest": "sha256:228249e06ae4ba49f41365d4e3b3425335d684aecfbc037c0aea4462755bc3cb",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:00104754547cd65411d3859924b941bf9f3516845eab4d93bbb6aa9aa05adca3",
+            "publishedGitBlobBytes": 6256,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260821-stop-mechanism-isolation/analyze_isolation.py",
+            "bytes": 12387,
+            "digest": "sha256:700f09a75014ef6af9f3bda21cd2acd107b47fe1b5e26b2123559bf43b85755c",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:7563e4cb1ed19e505a5fae4c91b2e4437824fc9017de474ce3fcca734492d937",
+            "publishedGitBlobBytes": 12125,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260821-stop-mechanism-isolation/candidates/donchian_atr_baseline.py",
+            "bytes": 5849,
+            "digest": "sha256:b7c1b17b70abf421636b7826bcca0710fe1d1f22def65ea652e2570e61356fe2",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:0556ca49b1041b62c49a1ffd77e22493c4cd56b67a4a221dcabc292ecd2aa588",
+            "publishedGitBlobBytes": 5716,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260821-stop-mechanism-isolation/candidates/donchian_box_ratchet.py",
+            "bytes": 8958,
+            "digest": "sha256:e16c8aa46ce3e19eef746d87ce45316e72b1e878ebdf47bcbe039330d55c0374",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:fb57a967ff1beaec84a4c1fdb385f9c3d2c5dc0d13572347bba3cc4bababb3cb",
+            "publishedGitBlobBytes": 8768,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260821-stop-mechanism-isolation/fallback_exposure.py",
+            "bytes": 6098,
+            "digest": "sha256:99d940896c2ca1149d629f8498946235b51b8a520a91850af2f23742abc837d5",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:4e331567814052fc1d5216efeaa3207402a3f7944ffc9cc0404457c76080e681",
+            "publishedGitBlobBytes": 5940,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260821-stop-mechanism-isolation/run_sweep.py",
+            "bytes": 5386,
+            "digest": "sha256:114f709aa1523657a5058edd6b485b2f177220a4184dab92aaf43b2d2621baef",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:8bd95e57631711e32235ae7609b8d3303d2135445554e2fcb2dbc2bdd8b37f17",
+            "publishedGitBlobBytes": 5232,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260821-stop-mechanism-isolation/verify_isolation.py",
+            "bytes": 4224,
+            "digest": "sha256:9000fcb3a9ed7684e25a02c2031206ef4ef822ac8fb97a56424e735e3e4f6663",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:4cfb44c153f657ea6f7c4d7478f02b7bca935a2a0bc86f27e002d17915e5152f",
+            "publishedGitBlobBytes": 4119,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260822-ratchet-generalization/analyze_ratchet.py",
+            "bytes": 17843,
+            "digest": "sha256:05f8134d7e41222cead521699a537f72383dce97113fbe14e0db52e5625acec4",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:8d5d14f26c202c02bcdbefad530ceb14bf8a600b7fb3776f88e77d7d0010e252",
+            "publishedGitBlobBytes": 17434,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260822-ratchet-generalization/candidates/s1_atr_channel.py",
+            "bytes": 6625,
+            "digest": "sha256:a73b908b12ca8ab16736c83e1866c487b0aa42f23685be39ff27ea5eccad86fe",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:6bff00320865fca25183ac4937eafc9d21930060cb7c05cf5fddddc46649bfe5",
+            "publishedGitBlobBytes": 6475,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260822-ratchet-generalization/candidates/s1_box_ratchet.py",
+            "bytes": 8814,
+            "digest": "sha256:3efda67f67ddabeb376efca1d94106a5b195254a66015303e6d72430fe83b8df",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:c2ae460cb0205fe8cb5b2d157990e6bb1ed6c83ffa5862d6aaccc4cfd4e3a2b9",
+            "publishedGitBlobBytes": 8611,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260822-ratchet-generalization/candidates/s1_chandelier.py",
+            "bytes": 6729,
+            "digest": "sha256:09d021af4569d9df1488e047b0d9c88ee564f8e8765333e640952de3014d805c",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:53132fd330f8376ec4a29a3d5a8f3fb0defb753116634a82b50f2e7d73271fda",
+            "publishedGitBlobBytes": 6575,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260822-ratchet-generalization/candidates/s2_atr_channel.py",
+            "bytes": 7626,
+            "digest": "sha256:e2ac494f3eb2cd9eee35e87e61a3fea24ae73feac606bd15c229538914e0aa57",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:1bc010a8f1774941ea2a2f5c077fddf929033f732a876ff339a9460591f0dfd1",
+            "publishedGitBlobBytes": 7454,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260822-ratchet-generalization/candidates/s2_box_ratchet.py",
+            "bytes": 10093,
+            "digest": "sha256:222f805289d1c7c824c0ecb68d1c07d4065a48424dd00bff27950ab6743e9f69",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:e8fd6caab1eb3156c436e5f3e5bf277ba2cb76d7203e0e9296e9074a30dfc3f8",
+            "publishedGitBlobBytes": 9864,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260822-ratchet-generalization/candidates/s2_chandelier.py",
+            "bytes": 8282,
+            "digest": "sha256:0046fb0f33fc37ee47c43f59891f86d21a62daee4357902a657fac8a62834860",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:173d6361cb771331d71c5cdcf90ab43ed90e39209ea6daa08b93a7f86b11fa9c",
+            "publishedGitBlobBytes": 8098,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260822-ratchet-generalization/candidates/s3_atr_channel.py",
+            "bytes": 7821,
+            "digest": "sha256:4b0e1542ef6b0821fac3f9c0ccebcfe403ccf5a43a2432df0e168ac96618f72c",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:e118087b34e331a693041bfcc4adf1c3f51f89f791b64e9fcb59d55f9ccb02b7",
+            "publishedGitBlobBytes": 7642,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260822-ratchet-generalization/candidates/s3_box_ratchet.py",
+            "bytes": 10288,
+            "digest": "sha256:f962fb024c3da2c11a548ec2088476ceab47d518e1a51ea543b09dde1073faa9",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:49f4944881d92dcaa5446f1d2ee330ef04f88a85bb7711cef1c39229663dfe5f",
+            "publishedGitBlobBytes": 10052,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260822-ratchet-generalization/candidates/s3_chandelier.py",
+            "bytes": 8203,
+            "digest": "sha256:5b3081a4d42c823720937a38bddd5f67d45feee891ca51065a020ef17141a816",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:be7b5a536d7f43eb549ab2721b7d6d6bf18eacad1d201725cd3ff97273ce95fd",
+            "publishedGitBlobBytes": 8016,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260822-ratchet-generalization/compose_arms.py",
+            "bytes": 14948,
+            "digest": "sha256:c53aabc9be52cd523a21b73cf9910d48170501b3edb600eb660093ddb2c91e37",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:88c61c3ad52476ca295f0381dc65526296fbc193bc851b6faa14ed1ad38a6771",
+            "publishedGitBlobBytes": 14603,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260822-ratchet-generalization/run_sweep.py",
+            "bytes": 7058,
+            "digest": "sha256:38b65728a02cc464cea6c8169f6569de362cdaa092a38083ffaf05a5c3c5f231",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:302fdd539e668e98030478bb87df604167ba8dfc11a1d76ee33e967403b96e20",
+            "publishedGitBlobBytes": 6879,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260822-ratchet-generalization/verify_isolation.py",
+            "bytes": 9370,
+            "digest": "sha256:88da5f0b7e8b776b81ea1b4cb309b9f2ddf84d58c65cfcef46ae91865336dea8",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:efe345183e48793a482c492e901e586c3ff82944f52a781b51e9ae5cd438f9d2",
+            "publishedGitBlobBytes": 9166,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260823-rank-profile/rank_profile.py",
+            "bytes": 11653,
+            "digest": "sha256:2e1b3865ab354325398d61e5a75728196e622979fcf1fba4b2a749fb2f4a4f97",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:caddc432c3bc2180250155ee3d5e0ea2f7f79d1792fc24c5cd9bc7ca0836bb28",
+            "publishedGitBlobBytes": 11393,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260823-regime-overlay/analyze.py",
+            "bytes": 26155,
+            "digest": "sha256:031d200e75898609a682bc11fa1d048a008f7a9276a5b16f7281fead03eec021",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:0c7062ed0e6b13ac66bca40f4089b58deaeb89d168a2d33a331475dff14e3194",
+            "publishedGitBlobBytes": 25631,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260823-regime-overlay/anchor_arms_v3.py",
+            "bytes": 7470,
+            "digest": "sha256:ac974c7f24fa021e4446dd322ae8eb033719cfdbcba7f676a49b02d2adaea1de",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:a17eda01b46dad4702c15c9dcb04efed9b061e7bb558942548630b9980d2c8da",
+            "publishedGitBlobBytes": 7286,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260823-regime-overlay/blend_probe.py",
+            "bytes": 6305,
+            "digest": "sha256:7b762ab2413e28af3d5005b360fe3d9e089de36f515e8045d666417659204809",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:2d9ca93eb5dfd2f3ca503185925a6bed0fb0fa3aa5703d97ea99bd98090e654c",
+            "publishedGitBlobBytes": 6173,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260823-regime-overlay/candidates/rotation_ranker_v3.py",
+            "bytes": 19422,
+            "digest": "sha256:047b908f6387bcea53c188615d40899ab7b10ca95cffa5aa67b67e90b6204ebd",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:f986587d45ce8376cdc29ac316ba6e24785ae2fa89c36793f5f0e51b7914964b",
+            "publishedGitBlobBytes": 19030,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260823-regime-overlay/config.py",
+            "bytes": 8681,
+            "digest": "sha256:3060cf7980312f9d320038d40a7ee7645e2d0f6853a2af439a1c07936397dab8",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:5d99a9e0bdddbca84e315cb5cde1c6150c455ccde2855eaa044536a029a0c6aa",
+            "publishedGitBlobBytes": 8480,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260823-regime-overlay/detector.py",
+            "bytes": 19949,
+            "digest": "sha256:73fd01facdb2573b58a8bca8ec8e9ca37ab8f63d3301fe6e063d0536ffeec424",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:0769e7744d558b31f7b0591ac0932664bd5033e80cab263f2ef2f3af68ccef6a",
+            "publishedGitBlobBytes": 19520,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260823-regime-overlay/run_grid.py",
+            "bytes": 4899,
+            "digest": "sha256:9dbfd316901dcd5732f8e258ce8c9b52d4c33db91663787952f97ceccaccf43c",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:8a8fd76f5cd0dc987fe3e85d51bf79b9a47074cc67b2c3a9e0d8152c5cef040a",
+            "publishedGitBlobBytes": 4769,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260823-regime-overlay/verify_defence_symbol.py",
+            "bytes": 8876,
+            "digest": "sha256:31c21bbd51a8b3e8d28e225f2d9252632b07b2f71f61648cc92423983806aef8",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:f83189c12447954d5c972ff0d9a155fcf1327da7bb96d4238318543e44338f9c",
+            "publishedGitBlobBytes": 8682,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260823-regime-overlay/verify_detector.py",
+            "bytes": 8392,
+            "digest": "sha256:666c241a1731df379811ef25441adcdadaa57cebffbc1f96e94a5c41c6eabcc1",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:83f87033e962b9472877536b4450a345a5ee04a1311d70b919e1cc339be142bc",
+            "publishedGitBlobBytes": 8206,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260823-regime-overlay/verify_overlay.py",
+            "bytes": 17736,
+            "digest": "sha256:1c2b99e4904849bdf6b94f06af4b899e732c5594de9f84a0bf21b101913da18c",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:671f4be78028c83929c0b870d6f5fd060bdbd37ea53f8756bd8ca93195273a43",
+            "publishedGitBlobBytes": 17359,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260823-regime-overlay/verify_rules.py",
+            "bytes": 8579,
+            "digest": "sha256:e2a9a6ba4af4391d0d521a9b8671d536a9e6c4fe1c3b318ec9a5a6ec363bd448",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:3984f185ec00968cd029e164be276aa5d9f40eec267778e8a8075d00f5bdc89d",
+            "publishedGitBlobBytes": 8396,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260823-selection-vs-random/analyze_grid.py",
+            "bytes": 8941,
+            "digest": "sha256:12a6ba002355562c315cc8ff9ee3b310a750c34bc22ca144639f6a412a0f765c",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:64e493e22f799f186a7ea71253f3cc3d2e7345d99b210d496e0c7b882321ce46",
+            "publishedGitBlobBytes": 8745,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260823-selection-vs-random/anchor_engine.py",
+            "bytes": 8746,
+            "digest": "sha256:36c8d57ebba5324197ab20abe329f1dc8fb679e7e4674f29bbd03c8af10e3e1c",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:3991aa9cbc9a4da5b7f8b512d615797bc79595441320f3efbe1d28524bf43a90",
+            "publishedGitBlobBytes": 8540,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260823-selection-vs-random/arms.py",
+            "bytes": 2220,
+            "digest": "sha256:c9b140b2e25cb2c60add163c8f7714a834c797ff191c7188e8b98b4ebd08e219",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:74bbf1cc936b497ea6831e0151f1d3a285ade4826f51b013bfd98924955ee842",
+            "publishedGitBlobBytes": 2169,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260823-selection-vs-random/book.py",
+            "bytes": 11362,
+            "digest": "sha256:d11d5424d4526b12989c0032444f922219588e72ea87df7eaba4a90a42d0b618",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:1a21ea7f0a8490318188e6efaa7569ed33c5bdc9ab9816efb913ecfcf11a76a3",
+            "publishedGitBlobBytes": 11135,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260823-selection-vs-random/null_draw.py",
+            "bytes": 7972,
+            "digest": "sha256:21f912dc83bfddd837bb3db86190b7ffdc988a4101056f969a4876b832caf671",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:af330e662687b14006cfdef6ead26145c64e630ef8c360ba6cd0130be969fae7",
+            "publishedGitBlobBytes": 7796,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260823-selection-vs-random/ranking.py",
+            "bytes": 2877,
+            "digest": "sha256:fab96fecd843550cf0a83596b6e16ac25659b29159cb53a1d18475abd2e4190f",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:c31ee48f268f5ec94dd6542a7bb4ad3e86426c32576ff05da6354c6fbb6380ac",
+            "publishedGitBlobBytes": 2807,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260823-selection-vs-random/rule2_fixed_horizon.py",
+            "bytes": 8047,
+            "digest": "sha256:704c8d7392dccaf7174e9d7f16f8c1ae5522e75b56b0eb1bc217056497bd55b0",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:f5fe64adb09417bf7c9b0181c2f793f7a4248ca9a3222603271ae56f199769c0",
+            "publishedGitBlobBytes": 7864,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260823-selection-vs-random/run_grid.py",
+            "bytes": 4725,
+            "digest": "sha256:b2c918f43c0fa6f012b9b2a1b3a808f19eb848006a845c54b3dab0c3c701de11",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:072e6ba1b104291ddaa5fd09cd99e50653e7fe0b4c7a9ec6bf40e02f18195fc2",
+            "publishedGitBlobBytes": 4596,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260823-selection-vs-random/verify_dividend_neutrality.py",
+            "bytes": 4945,
+            "digest": "sha256:1be560575960d6d01787175e1b6e0f639894f6980557eab7a2f37f604558dbda",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:e4051ec44f99c6075402d6d4ecb15ec96df2c7ab691b9bfdf5214ac211143203",
+            "publishedGitBlobBytes": 4839,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260823-selection-vs-random/verify_null.py",
+            "bytes": 12551,
+            "digest": "sha256:342a5ebcff49d220edea938ee5e18d3125b0737f128b7dfb9c486ed78b2ad411",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:676b9bdb8dfcabd6e67613fff52a7f95d6f7eefb5250e584d859c03c1410fced",
+            "publishedGitBlobBytes": 12300,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260823-selection-vs-random/verify_ranking.py",
+            "bytes": 3441,
+            "digest": "sha256:4f76516eefbe9bdeeebbd072f21fb8d2b48bce453ba2fa2f9a4c6f2eb0492103",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:5845e1e56fc2af93033bd44fcdf857bbbe4e244d08217fc03638cc0f0fc41298",
+            "publishedGitBlobBytes": 3351,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260823-turnover-mechanism/analyze.py",
+            "bytes": 10860,
+            "digest": "sha256:47d67f64abe2f522a571acaf2bc3421d29497fa6f7337471f337c1c01233d003",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:47b6abeae5d6544b85b239f0f0d86e3725f0d9afd2ca25648a17aabee0166ad1",
+            "publishedGitBlobBytes": 10654,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260823-turnover-mechanism/anchor_arms.py",
+            "bytes": 6613,
+            "digest": "sha256:6ccd1cc347d661633d65c4ddab620327784985a3a2b621d210c4720219c90bad",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:4e3f54a5bf95aaf0fe1f14042ce62fabb372fcf4dd02645e16f6f9ea9fdb82ac",
+            "publishedGitBlobBytes": 6455,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260823-turnover-mechanism/candidates/rotation_ranker_v2.py",
+            "bytes": 9380,
+            "digest": "sha256:d4c24e6ce3083c1ce4c819de948b770b6311f99a28c95c8823e8375557668d42",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:11fd31048e5e9030af52dded9d62738d9c5eb85bb5cdb3686e734595dec96ef1",
+            "publishedGitBlobBytes": 9178,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260823-turnover-mechanism/config.py",
+            "bytes": 4354,
+            "digest": "sha256:4848284323407de4b6c9e91d0df254688f889a522678c4418a872134f30c452d",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:eeefba855a86f828a47d35f8525ca1369ac8867f20523611b1d19157968dd0c0",
+            "publishedGitBlobBytes": 4248,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260823-turnover-mechanism/rule4_unconditioned.py",
+            "bytes": 3721,
+            "digest": "sha256:7160ccb59dd73a0a61ad88e7b2810608c6fa42b46ded43991a6f0f4c2b027025",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:dd3bddaf90b499daec9f7ebbe369a94220b2898b44880025ca971ef7aaaf209e",
+            "publishedGitBlobBytes": 3640,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260823-turnover-mechanism/run_grid.py",
+            "bytes": 3730,
+            "digest": "sha256:679bd6f88fc7d3a7ec4f8c5d7aadcbf8d81c3f9196fa6c2cd39cc06470546c43",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:4056b9f43bb215fd91703e1a4452f0a8b49b540c48a625beba7eb4bb78e2e19d",
+            "publishedGitBlobBytes": 3625,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260823-turnover-mechanism/smoothed_ranking.py",
+            "bytes": 2428,
+            "digest": "sha256:a8aa92b84738835f3c41bc917c5f38e3f02dfa599061cf2c283b5ea7b6d95b7f",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:eba78ec695f22b16d3d6920cc578a03d1bb3940aa423fa062b4e0f9025ecb8ed",
+            "publishedGitBlobBytes": 2379,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260823-turnover-mechanism/verify_min_hold.py",
+            "bytes": 7687,
+            "digest": "sha256:91fb69fb591dce16d92a8260c0c6e97c9c23fca50c56a975118d72583ddc607a",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:5f587fba2107ec25a0e083bd4954e7a4aa6f4573da356dd3a20c7b71c26ed8de",
+            "publishedGitBlobBytes": 7499,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260823-turnover-mechanism/verify_smoothed_ranking.py",
+            "bytes": 3918,
+            "digest": "sha256:97ee2683d216ddf1e7494ee6f8443b1ff87cfa95ba6814c5a5c0f1b125ccb1fa",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:ce93ee3bb2d3d988f51169dca34950e0258abd72b0c3ff25bc66989407189c77",
+            "publishedGitBlobBytes": 3823,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260824-ranking-horizon/analyze.py",
+            "bytes": 15367,
+            "digest": "sha256:9c0ee9cf1a9d99e473c8ac73fa465527942b203b2e1b7fdc2885df014fcbe5ca",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:a5b8da8f12e23a3bb5308d0b5a8fb3c3935046f94fd67803f4c2e85401f14271",
+            "publishedGitBlobBytes": 15030,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260824-ranking-horizon/anchor_horizon.py",
+            "bytes": 7047,
+            "digest": "sha256:feffe4856933626ce967e53925dca7d0847dd856f7b4bda2cad939ced5965785",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:3d784b2e4d053011830f76cd62ff76ce62e3a0344791cf243eac363f5ee31c02",
+            "publishedGitBlobBytes": 6877,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260824-ranking-horizon/candidates/rotation_ranker_v4.py",
+            "bytes": 8334,
+            "digest": "sha256:ed00bd56e262dcb2dd1bcac7d8f3c133aa0f3c07246652b19fc9926fdd1f0283",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:c738208a3a7c663ae4aaafe522684aaa5f302264856f3b3ad09612cdbecee87a",
+            "publishedGitBlobBytes": 8162,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260824-ranking-horizon/config.py",
+            "bytes": 3928,
+            "digest": "sha256:e27c507a6c81e29dd31339c8179aa04e4db6b6d57ed40e6f57e8e6c9d625a8ec",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:9d6625b5ad2b7816d993c84efb5e4e2ea917c4c4f0af69fd706ebb83ac24937a",
+            "publishedGitBlobBytes": 3818,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260824-ranking-horizon/features_v2.py",
+            "bytes": 7183,
+            "digest": "sha256:9b47a3ac66f3d6eb7457176c0d7e8ab0fe5aa7c50d8f8c52f6a3dd8682788e45",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:3f4fcbd3cff84e1555b5f09d12527f5d2cd52bae8665073cc1d885b7e879eb06",
+            "publishedGitBlobBytes": 7044,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260824-ranking-horizon/run_grid.py",
+            "bytes": 4302,
+            "digest": "sha256:5efa9077d37220c7b270dd4621f60979eb61fc4c378d08bd15f91af92a7c8bc0",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:3e88df12f2cc1c3f95eb3cc12769bcde1af04b81ee07f6e5b3d18a3e9c661305",
+            "publishedGitBlobBytes": 4187,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260824-ranking-horizon/verify_features_v2.py",
+            "bytes": 6376,
+            "digest": "sha256:3b42ad6f632fd92c470dfd2360ac7ee3de14c189b15995fea3cf02dc440e8c45",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:a2303f8487906c5005961eca20c7cc414d745f21d38fa4c705f8c57452f2863e",
+            "publishedGitBlobBytes": 6238,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260824-ranking-horizon/verify_rules.py",
+            "bytes": 7536,
+            "digest": "sha256:b1053916ecf99d9b70608c9b4afb1b7e91f1b507ef54982e6ca7e7855a9af4e7",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:4d4abeb092f73b783df7d3d10b028f7b0614225ed4dce35d3c9ca02f86e92cde",
+            "publishedGitBlobBytes": 7365,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260824-value-chain-ignition/ignition.py",
+            "bytes": 10398,
+            "digest": "sha256:e3de1b95633a31e1a1a7816727046fcbd05ad9f7c025219b2bbeaf48be78dc19",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:dfb14cf5cfcac2e1889354377ba182c9544c55ddb920e1c13b0b4ba69606145b",
+            "publishedGitBlobBytes": 10175,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260826-runner-retention/analyze.py",
+            "bytes": 17802,
+            "digest": "sha256:86c2e5c36fd09ca26ccf4fdd12b37dab002c286949cb9017953ff0a3dba2f54d",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:f5a8d22099eeebc4302a3fe51db9662825887ae1b80177bcc24b052c7241d15c",
+            "publishedGitBlobBytes": 17413,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260826-runner-retention/anchor_retention.py",
+            "bytes": 4046,
+            "digest": "sha256:e9fc1e3337102fcf9518186a059df22a590f57e1674b3273cd627c4ffdda8a0a",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:18e27a6d460157be625efa6ce9eb252e4c4a2e4cd8fa4ce7d0c9961a94683a55",
+            "publishedGitBlobBytes": 3951,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260826-runner-retention/candidates/rotation_ranker_v5.py",
+            "bytes": 12076,
+            "digest": "sha256:61608f53a35116b32f0bf7e7e3a1e85285a3cc6532f18c59d93ddd8dfe7c9d91",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:9ec4d5e7e54ec6bc2613a1e9372a1ff3c482fc13f07201fd1e40f86e04575add",
+            "publishedGitBlobBytes": 11832,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260826-runner-retention/cash_path.py",
+            "bytes": 3948,
+            "digest": "sha256:f94e66f13e037f25297ff0523c0106a0d0d7f912a678f8d58a88792858cb5db4",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:ab2588f5b33a34d493079ce32978e16977ad70e0c20b110e34281069412dd36f",
+            "publishedGitBlobBytes": 3855,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260826-runner-retention/config.py",
+            "bytes": 4418,
+            "digest": "sha256:97dc62637cfbd99b8c9799b308a5f4008b671678a7c9f5d158b93089f5a259d0",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:de6c65e85e7364d35db083c54fb694924832229b3337ed9fcc25f5d705f82d6b",
+            "publishedGitBlobBytes": 4284,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260826-runner-retention/retention_features.py",
+            "bytes": 5645,
+            "digest": "sha256:8ef270c636902eb5456e487cfcf9744c4d25aff510ab1651675a390140cfa983",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:f9d802615d20acf326f88ebcc89f8682534ef929c1e22d62ca83a2f28ac94676",
+            "publishedGitBlobBytes": 5526,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260826-runner-retention/retention_rules.py",
+            "bytes": 8975,
+            "digest": "sha256:ce157dc4a8363de79297e1df8153c86fe7a9e75f6252820d6367e0bf9e90f641",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:9680aec732398fb4bda02a6c9b43a8ea44b67b8576cc915a462038f5ccc82f2f",
+            "publishedGitBlobBytes": 8784,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260826-runner-retention/run_grid.py",
+            "bytes": 4129,
+            "digest": "sha256:7688dbc2f42fd24049a0b31bdc24ca3ccbdc48ee84d27a68fb18487c17f09c7c",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:fd8566fae3a0f9a90f75580576ddb3d53f2ec1e007d7d239139173651dc3538f",
+            "publishedGitBlobBytes": 4017,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260826-runner-retention/verify_retention_features.py",
+            "bytes": 5464,
+            "digest": "sha256:8be6fe986f97ac137707aa612311fe55abde67a0043c76d6a9e34b6cc811f412",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:db5cc46356e98780934675b4adb1289fef42a406aa533040be13c5a712fca715",
+            "publishedGitBlobBytes": 5353,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260826-runner-retention/verify_rules.py",
+            "bytes": 7498,
+            "digest": "sha256:d85828f7514734fec0d1a06603c63d4f8c6cb9ac88d0fb65c2721bdd500c6c7a",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:61f9eb7a442aaf6250deadbe9f04cd4d0689fb365ce1e50807d007bc019e3186",
+            "publishedGitBlobBytes": 7371,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260826-tail-selection/rules.py",
+            "bytes": 7798,
+            "digest": "sha256:3a4bcdfed0deef6e62c6467c63b8107ac0b23ddebb17f689c1b42998f980ebac",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:7e50f0103ad393ab646a89e06d70ed00a34c1c6bfc672ccd77cba17a815a827c",
+            "publishedGitBlobBytes": 7618,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260826-tail-selection/tail_features.py",
+            "bytes": 9166,
+            "digest": "sha256:982c02dcf57f2d3100f62b572b02f0b45cc252f239c36d5f67b932a1ff6f675e",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:8db0490c949ce4726d922a3b9f08b1971cb589004a7f6402723ace50442a5e44",
+            "publishedGitBlobBytes": 8968,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260826-tail-selection/tail_stats.py",
+            "bytes": 18761,
+            "digest": "sha256:d86a9d36baafb6076be8a43dab07cdc279b8103ae954281ee168b1f77f9f31b6",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:dabb4eda343671218c97e9a9fdd229c9740fa2fc6411d5c26755a411b9d7ca63",
+            "publishedGitBlobBytes": 18378,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260826-tail-selection/verify_rules.py",
+            "bytes": 8330,
+            "digest": "sha256:92e425c6bbe65640eacc290d203dd628842ce606548efca4dbf8b0823d44e0b3",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:e5dfbf8ae7da3bb0186c1efa8a60412af64dee3b778bf3d70c563dba039de884",
+            "publishedGitBlobBytes": 8184,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260826-tail-selection/verify_tail_features.py",
+            "bytes": 5174,
+            "digest": "sha256:2b6222881741228b64b7514ec02ffbac1e8124d8f05b421a06f08bcbff6c8f3f",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:e9a633e8cb784a0f03668dd84d24fed08d12bbda1c684b38f4c02a16256184bb",
+            "publishedGitBlobBytes": 5050,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260903-entry-window/measure.py",
+            "bytes": 7550,
+            "digest": "sha256:535a514194390d4d48b3e1bd89a45d49aed82de55402d0383a67ca14a38b2d3f",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:3f54a77ccdc97a78ae588d8e17a8042fbb2240cb882c33efc40872df83693384",
+            "publishedGitBlobBytes": 7379,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260903-entry-window/verify_rules.py",
+            "bytes": 8010,
+            "digest": "sha256:44be8aa6964cf5a0fb8226992a178278d6d6b2e3567520e1241880c86aa4d2fa",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:5f9458a7d1b10e2d5b5d00bba49a4e664c3b040b408c7b13d65073b5c422ed6c",
+            "publishedGitBlobBytes": 7829,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260903-entry-window/window_rules.py",
+            "bytes": 4894,
+            "digest": "sha256:5025e1d2b182cdb44311410a85a2797f7394ea988f5ee1b9d43443e1c6208901",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:1f2443bccb8452269f962a4975da7597c3073588ec60198a5e03da78e6aa9a76",
+            "publishedGitBlobBytes": 4783,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260904-book-size/analyze.py",
+            "bytes": 9170,
+            "digest": "sha256:965f497b53e7287fc702b2d29587f3dd5cbf5162a630942d92ffc87430fc2990",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:62758718f5edb4afb53cc8d3190fa08394ae1d02857d2c2c56e10e9a56aa2505",
+            "publishedGitBlobBytes": 8967,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260904-book-size/config.py",
+            "bytes": 2349,
+            "digest": "sha256:a9d3eed466973834efe86c45bc8b3172d2040cdd732edff83775acaaf98a3d95",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:f599cf923e6c08dca979242db9fe24fce8c40301ed98eff14dfb58d39322d77a",
+            "publishedGitBlobBytes": 2260,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260904-book-size/run_grid.py",
+            "bytes": 4004,
+            "digest": "sha256:d719d8c2bf65ab933f0c996a7ec7067e1b571d1ff6b90b68f9ec220430f891b7",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:1a8823e2d53b235ba864d706e3912d874567078962e0b12612b45662b3588658",
+            "publishedGitBlobBytes": 3894,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260904-book-size/verify_book.py",
+            "bytes": 3570,
+            "digest": "sha256:da118637072e2ae886d65e0900106d306a8cb3542bb20cfba6a2a6e4dc803a4b",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:6bdf26af3b747dc4cde1dab9968973153bdf867f7eae4a5581283943376805cf",
+            "publishedGitBlobBytes": 3486,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260904-execution-delay/analyze.py",
+            "bytes": 9694,
+            "digest": "sha256:56d0331271d940921d7a0b143a1b46c51672bf7c5e3996265cbcbf36a9e21548",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:c1f5041fd78cf7f1cd1ce5b28abfabadedc4a5b780391919036eb057a4808158",
+            "publishedGitBlobBytes": 9474,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260904-execution-delay/candidates/rotation_ranker_v6.py",
+            "bytes": 4608,
+            "digest": "sha256:c3afe8a159f71f9b4cb4d489a796890d58b09f0803237a57ae28f1225bd6ce44",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:28c03527e58ca80f2ae23465c55530cb9a940098a3eb8e97f1e664b13a766215",
+            "publishedGitBlobBytes": 4522,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260904-execution-delay/config.py",
+            "bytes": 2839,
+            "digest": "sha256:5490eec99dabff335c8fdbafaf127d488a0dda41bb2d296b601c6b75d0cfdae4",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:15d369cd84fc052d928e8ed99fef4cbedb9d8a1fd0e29cf946c2879ed661eec4",
+            "publishedGitBlobBytes": 2735,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260904-execution-delay/mechanism.py",
+            "bytes": 2509,
+            "digest": "sha256:468eda98b986a1d6072f711cb89663e966f56044ca54ca8ef6bd80a67bb93a06",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:e51d3c5f5a7750c314d78e20633b796c5e8c4b3378f25c8cec470a1d4efec5b6",
+            "publishedGitBlobBytes": 2447,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260904-execution-delay/run_grid.py",
+            "bytes": 4025,
+            "digest": "sha256:fbb94be68041dbb180a376a0ce0a317b239d684832c3fb58ef3ef453067db782",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:85194391ed689b9a7828db0240a6a731e80c2eba71eed3e733308c9e28748fee",
+            "publishedGitBlobBytes": 3914,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260904-execution-delay/verify_delay.py",
+            "bytes": 6700,
+            "digest": "sha256:5f519f48c4ca339a94cfe48a44cda57daf0ee91ddec22f8b55f5fb5119775d0b",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:d7172da035e9ca12f65f193943bba2ebed43d61a5261d7398d7a237ae738c1c5",
+            "publishedGitBlobBytes": 6545,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260904-slot-accounting/analyze.py",
+            "bytes": 8905,
+            "digest": "sha256:8dd9ad24af38fe762534ce2ebce1a4bfe45e782f7af1b31de91d35b59df0cbf7",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:0ea185c90da5a0dfa67cc0e7740317bb0404a5f8a72644c4856fbb65590b2ac3",
+            "publishedGitBlobBytes": 8699,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260904-slot-accounting/candidates/rotation_ranker_v8.py",
+            "bytes": 4077,
+            "digest": "sha256:167ea874948bf26947b854deb4d6e6d8074e3c86c49988a7f83303ce759bf287",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:14a4a4ec7920dd026d68ca7808c7c78c63593912db93af927c40728b9504921c",
+            "publishedGitBlobBytes": 3978,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260904-slot-accounting/config.py",
+            "bytes": 2176,
+            "digest": "sha256:a2ce9d547067a86a5b8a46a9ed188b076fdc84ce66c051e606ffe3666d6c81f9",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:32c7d13a38a4195bc3e8dada785fbd9177fbe438286ce8eb55cff3ee2cfee222",
+            "publishedGitBlobBytes": 2089,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260904-slot-accounting/run_grid.py",
+            "bytes": 4015,
+            "digest": "sha256:56b8aca8bff963355957f8658080fbf483d3edcf4022162634ea8760d3e7cc3c",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:d438ff3ad71468b8345d2468cba147406e06accc60a13559abc9a6a6b6ae1518",
+            "publishedGitBlobBytes": 3905,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260904-swap-rule/analyze.py",
+            "bytes": 11960,
+            "digest": "sha256:0d52c72a17e9a44301b164fe3f7787db5f03fa8597575039522c96151da66170",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:c311d0d28091a4f88e92843b4597678d66f0b5725e97cc9161c43fe574e50e02",
+            "publishedGitBlobBytes": 11695,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260904-swap-rule/candidates/rotation_ranker_v7.py",
+            "bytes": 8056,
+            "digest": "sha256:9ea46024e1e5445f1a1a5f9eb22d180cfafc06300b317d727f78c9598615281d",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:77c6a2a161cda861ea7c47e37ad45abbdd5af6a47636d83f436ad831e74f360d",
+            "publishedGitBlobBytes": 7888,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260904-swap-rule/config.py",
+            "bytes": 3516,
+            "digest": "sha256:9447d5423021c8691e08783d8ea98e594c07f147883294f28e4f039de62f9c18",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:a7379f7b45ba4092c7555c7eeefb15d4cab9f03d498a82ce07eda576f194797d",
+            "publishedGitBlobBytes": 3404,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260904-swap-rule/run_grid.py",
+            "bytes": 3991,
+            "digest": "sha256:ddd212b2838dcde14cb3dbaacfbeb5d9a1bf02915b49f473fd426163c3b71044",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:e5b76486fb877436746e46f7ed47aedf9c691e86c99fbae27e22880bddcbd0fe",
+            "publishedGitBlobBytes": 3881,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260904-swap-rule/verify_swap.py",
+            "bytes": 6373,
+            "digest": "sha256:a253ca6d80fe642ba1f1c6524040ac67df522d1fc007295a679465220f2e88c0",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:b833588da4e416ce6231e663fe7365b1059a8ff48bd2d423e7b07fb1b6e69ace",
+            "publishedGitBlobBytes": 6205,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260905-add-trigger/config.py",
+            "bytes": 1790,
+            "digest": "sha256:e611577d27e7db0effa4c7afce992e9e6691c0eaeddd17484dbcb64fab5988b0",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:cacb8795531de314e78405b6888aeaf66f00a0fc994cd2a1ff43084edbac3dd8",
+            "publishedGitBlobBytes": 1733,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260905-add-trigger/measure.py",
+            "bytes": 13920,
+            "digest": "sha256:2bab9ab753425d1b26bf33ffa4860e872ba8a8dcb396679616aee8e3f8ab4b8c",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:08b93e856d95b6ca9fc06d7ab950e15bb30af8d1a0dea800ed8c4401a1ce378b",
+            "publishedGitBlobBytes": 13609,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260905-min-hold/analyze.py",
+            "bytes": 12071,
+            "digest": "sha256:38dc5d59f9975cfdc8ac8555d8bf269eaf6cca221bcba20d2fec0be8e0190533",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:57c064d6071fa0960f9ac1983b7788d678840663415856381a76c63dea4b9cff",
+            "publishedGitBlobBytes": 11799,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260905-min-hold/concentration.py",
+            "bytes": 4957,
+            "digest": "sha256:9816d8d05fde6df9287c9bd6a4d1d4cc55283e9addb95e791583e0f6168f4ea9",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:8378feb51b66d73100a2bd41e3906865dab0f97dc47b08bb538cf53db3cdd955",
+            "publishedGitBlobBytes": 4844,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260905-min-hold/config.py",
+            "bytes": 2884,
+            "digest": "sha256:22bdd2e81d12bf29eb2088a7eade9e056b2e90e18b7831d9c4c61c93f7d759f5",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:3281a80e61d057dffa733601387de83cfaad0597638dfb6c11d6c597335c340e",
+            "publishedGitBlobBytes": 2793,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260905-min-hold/run_grid.py",
+            "bytes": 4014,
+            "digest": "sha256:c20696b67bddd408572b4b198ec19be2af7274b6ac5c6c91cbac47b1b15504a8",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:710f01e53a51db5ebdb9f8d7180b9e492d94ccf5aeb74d2a8b009b4cfd51c82e",
+            "publishedGitBlobBytes": 3904,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260905-weekly-structure/becoming.py",
+            "bytes": 7461,
+            "digest": "sha256:df640ca1299dbf3d55282a2a104339a6eb788861a5b45d3144f2e6adab3cadff",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:9223dd5534fdf609d5b12817ae632d6c5270c3001b372b814ce6605434b12077",
+            "publishedGitBlobBytes": 7308,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260905-weekly-structure/collinearity.py",
+            "bytes": 4461,
+            "digest": "sha256:6232f850ed3f6659a8da72a7a0e8b427d2a077fc55c916bc5d7e74fa77e16e90",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:05c81574c2e12f6d5f25a60f513c7f77c93342199715905908a0addf6e3317ca",
+            "publishedGitBlobBytes": 4364,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260905-weekly-structure/weekly_features.py",
+            "bytes": 5623,
+            "digest": "sha256:b6c283544624f40ee42e65cf3a1f7630f9dc7e7f1532dac8fc474f1d9eff95bd",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:f2519cfc0e9def95a76fdb33cf79f6c9b0dd8998d83f00847f0cc9d3ef306184",
+            "publishedGitBlobBytes": 5505,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260905-wide-giveback/analyze.py",
+            "bytes": 9440,
+            "digest": "sha256:d193affa04f6809e1265a67d0464e7fdca4aa8554bc433a1e01da239ace47373",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:d44d189423493bc53b2bdd60e4ccf9d9bb6cd1fb54551186bf03a41a6f0143b3",
+            "publishedGitBlobBytes": 9228,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260905-wide-giveback/concentration.py",
+            "bytes": 5149,
+            "digest": "sha256:d42d6421d78ff8843e526125932b9deacb680db8703717fa87e6e441461bb54f",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:738d98120cdfafbe696d94d48ca1d3bd181446f851bc48d80f165ad1b591aef4",
+            "publishedGitBlobBytes": 5032,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260905-wide-giveback/config.py",
+            "bytes": 2825,
+            "digest": "sha256:a082077506e8def5b41253c318d868f54adf6a02110cafa03fb67e714fdfd077",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:01e5c29341ff9adc31c0f11cfd9160444e405189577c7a286406d822472f336c",
+            "publishedGitBlobBytes": 2731,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260905-wide-giveback/run_grid.py",
+            "bytes": 4051,
+            "digest": "sha256:54403e46ccc290cf5e06884d01dc8e03ca98d517f2738cdcf5110318aa7ce9de",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:f54a749d9618146826ef7b397b219b042851610b10346a83edf6df5221d54e6a",
+            "publishedGitBlobBytes": 3941,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260906-absolute-entry-bar/analyze.py",
+            "bytes": 7938,
+            "digest": "sha256:8bd278917b748920f4828148952c0fed769dcadfbef08f5008b8216a438576bd",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:235bc114a0d7c016bc613f0ed9114790fe6774e2fac35533588cf06c4bccff4e",
+            "publishedGitBlobBytes": 7778,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260906-absolute-entry-bar/candidates/rotation_ranker_v12.py",
+            "bytes": 6098,
+            "digest": "sha256:8f94de1b123f9dfcddc35e6f63af309167f86f7bb66eb192eab7ca0034d145e4",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:b6c94fb9969bfc475ff8c8a4c2b2b00d27bf1b3d6a4ecc8b1ace7caa6a065792",
+            "publishedGitBlobBytes": 5963,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260906-absolute-entry-bar/run_grid.py",
+            "bytes": 4202,
+            "digest": "sha256:ed96d9ea1a3cf12daedae0fdd5e890e750641ff5b26db39bba82b1f7ddb30850",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:294c8ae272868ff56151c9ad2d908d9b826d98ccb7f7fd6dfe28daa6d7f0906e",
+            "publishedGitBlobBytes": 4099,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260906-equal-risk-sizing/analyze.py",
+            "bytes": 8314,
+            "digest": "sha256:177083793adc3d0e60304a78b2d68b5aeefd99eb1e68af6ce82c9c9d28fa441a",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:6a40507cc447e59720fecd6953f3d433008288916b89ef86ef68a2f90dbde329",
+            "publishedGitBlobBytes": 8147,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260906-equal-risk-sizing/candidates/rotation_ranker_v13.py",
+            "bytes": 6023,
+            "digest": "sha256:f103984d97535b5362191925a6d4672c1e72c4f2730e36792dd620c3e42a7e59",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:8040d8009ee68b5a31df89181da198882aa2b6b5ed93cf2fcb1daa603d169d72",
+            "publishedGitBlobBytes": 5898,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260906-equal-risk-sizing/run_grid.py",
+            "bytes": 3752,
+            "digest": "sha256:15c1d3b9516117d11bb8f1630c023daf231c3237e194abd668dec7d56d530231",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:09359bc5c0cb21b918e274fd71db4441733521c317e09fae636f5353ef97debb",
+            "publishedGitBlobBytes": 3654,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260906-exchange-rate/compare.py",
+            "bytes": 8667,
+            "digest": "sha256:6042e1fc2323e6b0789a84ac37475e3fef6212e5521c0d870b6c664bb6bdea8e",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:ed30dae4d15de07dedcb246dfade02f22f3c99eaabe3de3f1b16c555c162432c",
+            "publishedGitBlobBytes": 8489,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260906-exchange-rate/config.py",
+            "bytes": 2736,
+            "digest": "sha256:eaae8c6a8b22516e457fb6a52bfc2974ae16abe72de43cda1cdfdef2c345e8e7",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:b2202e7bc8783c197db96f235b03d0fe703418b64204bb8fb87c314329559352",
+            "publishedGitBlobBytes": 2642,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260906-exchange-rate/run_grid.py",
+            "bytes": 4051,
+            "digest": "sha256:2c83fe32d97f2dfc2935cc1a9b863a33c314bd49ad3210bbc8950989db4a988c",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:0396c48c834e52462e75bf78179ea95697cb81430d212e1e53c25c2ffad5d1b8",
+            "publishedGitBlobBytes": 3941,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260906-execution-reality/analyze.py",
+            "bytes": 9737,
+            "digest": "sha256:6fa434649efdb2f44c35272e10d12a9740b133256f7a68da2b5449cdff8eeb47",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:203f344736dbd35b9cfc14800a68eaa7497783fac7d549543265d30750eb42f8",
+            "publishedGitBlobBytes": 9524,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260906-execution-reality/candidates/rotation_ranker_v9.py",
+            "bytes": 3849,
+            "digest": "sha256:f1b17bfd67f945c2775a809d18c2d292a988d6a22c0db25cd29b92c830151256",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:8b7951629b761cd9aafeedfd9bc2322b473158141005080e536cde7ef86ed742",
+            "publishedGitBlobBytes": 3764,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260906-execution-reality/run_grid.py",
+            "bytes": 3378,
+            "digest": "sha256:86fbf6a0a5def5a8319b60c77a914474993b26ab6d12f3cfec7171cc241541c5",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:8251a89c27da5c5eb588bdedde54a5cb5cbbfdb0c9c5df429e8efd0956b11aba",
+            "publishedGitBlobBytes": 3287,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260906-execution-reality/verify_arm.py",
+            "bytes": 3102,
+            "digest": "sha256:e61cbf6a870c78a9fc7f557ceebaa72dde44f0b748ee641b4047e258affa3af5",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:1b4a94ad5542ff5adc0fa458c4feaf04e5f0495ed95938937c4739d3087aece5",
+            "publishedGitBlobBytes": 3032,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260906-five-slot-baseline/candidates/rotation_ranker_v10.py",
+            "bytes": 1620,
+            "digest": "sha256:adb443ecc8d3179aba210df0f254bef330dd37aff7d2137a6f21d58bbde14604",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:9790221b168b1c2d9980b572ac88fa75741d84f9f470ea6df8768f7de6deb99a",
+            "publishedGitBlobBytes": 1582,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260906-five-slot-baseline/run_grid.py",
+            "bytes": 4326,
+            "digest": "sha256:a760b2313f0080c9f462ed13f1557280d7b414e89f4835b7a0a95e42194a5205",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:fb7e92e412a725b49fe3ef8108eb46ba2473407460e316a3f19b53f4e6d28243",
+            "publishedGitBlobBytes": 4212,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260906-five-slot-confirmation/analyze.py",
+            "bytes": 12318,
+            "digest": "sha256:95ad3e124c9d9536948425d794b9c6a16bfeb9a3fb3d22d5a6e73b6cb523ba1c",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:c15a05159db2e47c212ec2982c9fce4ef5318597ee8175c3f557e75ca9343672",
+            "publishedGitBlobBytes": 12075,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260906-five-slot-confirmation/candidates/rotation_ranker_v11.py",
+            "bytes": 2692,
+            "digest": "sha256:1e0f420d733f97577e6c12b8308840c43c019053c404195f8c8589b4fa41de6f",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:a06a2e2d4a039a2a48a579624de67bfaae9acaa89c29896741e6c3e9aa1be775",
+            "publishedGitBlobBytes": 2636,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260906-five-slot-confirmation/run_grid.py",
+            "bytes": 5723,
+            "digest": "sha256:e7d6721536bda6b792e28374cad2863f863af089f6fefecc1570e6acbcae46e2",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:6a222b753e785440ae44711f812da3df1ecbab800693f5fa3145e3dd64297b57",
+            "publishedGitBlobBytes": 5554,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260906-loss-anatomy/anatomy.py",
+            "bytes": 8925,
+            "digest": "sha256:4e1a9ab318c5a2bcd4f98c323a15f698703d03dd3ec0e2f01f486c7e6e0e3039",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:e79233604bc0f184974cbe420857294cc7f4e6b1648ba2bb65c333c2904fea45",
+            "publishedGitBlobBytes": 8750,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260906-three-slot-equal-risk/analyze.py",
+            "bytes": 9211,
+            "digest": "sha256:42f0f135919f493d89fc5e3fd0cbc0ee79624b94584d1a94f90acea31da62cc2",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:d91859eeb467ecc8a48916d22eb74eeb7d7c6e0166a42e61ef69e23376a7632e",
+            "publishedGitBlobBytes": 9030,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260906-three-slot-equal-risk/run_grid.py",
+            "bytes": 3862,
+            "digest": "sha256:d59e4224c557471a75c9049e560e235ecaa22914d92e83723ab60001320deb00",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:5a63c1c6c278250d98926e7ce7bc464f82e74a6a75a2b2a6e0d7c5dec06bca03",
+            "publishedGitBlobBytes": 3763,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260907-streak-correction/streak.py",
+            "bytes": 25407,
+            "digest": "sha256:1a27e8bd79ec9d73f32e8914faad2f0cf5df7fcea2791d8e85c282780b3874eb",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:db47cc935a1192cf11c8908430d09321e065786b9e747771855da4c1da995937",
+            "publishedGitBlobBytes": 24935,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260908-executable-fills/analyze.py",
+            "bytes": 10987,
+            "digest": "sha256:c829b795600c31a90fb7ee032fb851e9a2d7143d93753ea2a39765dc8a93c83b",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:47bb8f97c0a43b18cf021049dea4234ffeb41b13597cca465097626a9fd83a3e",
+            "publishedGitBlobBytes": 10771,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260908-executable-fills/candidates/execution_model.py",
+            "bytes": 4533,
+            "digest": "sha256:dafc6254c16a821509c22c5071c7be8479eca99624a3df9720cbdcb35c666baa",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:b7f51fc3965168256c46b6d8c5612ad0f821c3e073496c45e4ada0b135b0ce6d",
+            "publishedGitBlobBytes": 4420,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260908-executable-fills/candidates/rotation_ranker_v14.py",
+            "bytes": 10664,
+            "digest": "sha256:bfd6e33597e26c99a6be885450c619b20c0de5a2bcc6a99c1c2dd7d1eb6e181a",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:3194e0189816f6a8b544414832617cb79868947e14ddeb3659aa211e7ed0f44b",
+            "publishedGitBlobBytes": 10429,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260908-executable-fills/run_fills.py",
+            "bytes": 6251,
+            "digest": "sha256:be80b1d8227263efb08490b9a27b485ea253a0df7471439cb6d8dd340bf8ed4a",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:2dc23270934259ab17c76a425f67ebe86d93eb1d95745b3d02ea267965c28857",
+            "publishedGitBlobBytes": 6090,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260908-executable-fills/tests/test_execution_model.py",
+            "bytes": 4321,
+            "digest": "sha256:45d3168b05d8bb3063cf8c63bd1d12b888845ce78788a5ce7624caa47de45160",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:169ac0b37a91d75637e762ac93e49a9109c4ec253d9c9cfebc23fbf3d342d065",
+            "publishedGitBlobBytes": 4220,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        },
+        {
+            "path": "tasks/20260908-executable-fills/tests/test_v14_settlement_integration.py",
+            "bytes": 7417,
+            "digest": "sha256:39dceb018572a3820398046130df1da9c5465ff2b9a2b2de416b874a3a42336e",
+            "purpose": "legacy study execution; not current H05/HHHL/UI closure",
+            "publishedGitBlobDigest": "sha256:8c76d515cae13338b3c9ea69e13931821319149fd8b8aa9c5b48c7f1649a0c28",
+            "publishedGitBlobBytes": 7281,
+            "restoreWorkingBytes": "LF-to-CRLF"
+        }
+    ],
+    "legacyPublishedBase": "git:7f79585da2730fd01075839fbcc973d0090e1ae2",
+    "publishedBaseContentVerified": true
+}

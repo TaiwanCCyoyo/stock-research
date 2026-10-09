@@ -1,0 +1,196 @@
+{
+    "all_backup_unchanged": true,
+    "all_logical_match": true,
+    "all_source_unchanged": true,
+    "created_at": "2026-10-04T16:06:27.998767+00:00",
+    "digest_method": "sqlite-iterdump-statements-length-prefixed-utf8-sha256",
+    "files": [
+        {
+            "backup_after": {
+                "sha256": "d9caf63f41a7dd5cd558b275b29d9af9235c54f7cfe087a74757e176f87e255f",
+                "stat": {
+                    "dev": 2491710590474873589,
+                    "ino": 281474977647279,
+                    "mtime_ns": 1791121837854230500,
+                    "size_bytes": 32686080
+                }
+            },
+            "backup_before": {
+                "sha256": "d9caf63f41a7dd5cd558b275b29d9af9235c54f7cfe087a74757e176f87e255f",
+                "stat": {
+                    "dev": 2491710590474873589,
+                    "ino": 281474977647279,
+                    "mtime_ns": 1791121837854230500,
+                    "size_bytes": 32686080
+                }
+            },
+            "backup_unchanged": true,
+            "clones": [
+                {
+                    "clone_sha256": "3d53a4a7b9790ea2c2b5c4818523abcff530e8750b77db63428244eec30bfffc",
+                    "clone_stat": {
+                        "dev": 2491710590474873589,
+                        "ino": 2251799814652634,
+                        "mtime_ns": 1791129988081578900,
+                        "size_bytes": 32686080
+                    },
+                    "dump_statement_count": 33082,
+                    "label": "source-main",
+                    "logical_sha256": "66b2ba25cb96518a355399132a64f0c55a21fee2cd5cc4e8b195e3452b69c66d",
+                    "schema_object_count": 8,
+                    "schema_sha256": "dbc6ecfa647c55051110bcb5b06c5d4b95a78217bd7ea72f2125dcab93f9240d",
+                    "table_row_counts": {
+                        "corporate_action_raw_ranges": 251,
+                        "corporate_actions": 32823
+                    }
+                },
+                {
+                    "clone_sha256": "d9caf63f41a7dd5cd558b275b29d9af9235c54f7cfe087a74757e176f87e255f",
+                    "clone_stat": {
+                        "dev": 2491710590474873589,
+                        "ino": 1407374884520667,
+                        "mtime_ns": 1791129988640680400,
+                        "size_bytes": 32686080
+                    },
+                    "dump_statement_count": 33082,
+                    "label": "frozen-backup",
+                    "logical_sha256": "66b2ba25cb96518a355399132a64f0c55a21fee2cd5cc4e8b195e3452b69c66d",
+                    "schema_object_count": 8,
+                    "schema_sha256": "dbc6ecfa647c55051110bcb5b06c5d4b95a78217bd7ea72f2125dcab93f9240d",
+                    "table_row_counts": {
+                        "corporate_action_raw_ranges": 251,
+                        "corporate_actions": 32823
+                    }
+                }
+            ],
+            "logical_match": true,
+            "name": "corporate_actions.sqlite",
+            "source_after": {
+                "sha256": "3d53a4a7b9790ea2c2b5c4818523abcff530e8750b77db63428244eec30bfffc",
+                "stat": {
+                    "dev": 2491710590474873589,
+                    "ino": 281474977583356,
+                    "mtime_ns": 1790935800254063900,
+                    "size_bytes": 32686080
+                },
+                "wal": {
+                    "exists": false,
+                    "sha256": null,
+                    "stat": null
+                }
+            },
+            "source_before": {
+                "sha256": "3d53a4a7b9790ea2c2b5c4818523abcff530e8750b77db63428244eec30bfffc",
+                "stat": {
+                    "dev": 2491710590474873589,
+                    "ino": 281474977583356,
+                    "mtime_ns": 1790935800254063900,
+                    "size_bytes": 32686080
+                },
+                "wal": {
+                    "exists": false,
+                    "sha256": null,
+                    "stat": null
+                }
+            },
+            "source_unchanged": true
+        },
+        {
+            "backup_after": {
+                "sha256": "8337cded20f569ee95e0059b8868d5eab1e58914dd251f145e90fee88213f929",
+                "stat": {
+                    "dev": 2491710590474873589,
+                    "ino": 281474977647285,
+                    "mtime_ns": 1791121838528373400,
+                    "size_bytes": 360448
+                }
+            },
+            "backup_before": {
+                "sha256": "8337cded20f569ee95e0059b8868d5eab1e58914dd251f145e90fee88213f929",
+                "stat": {
+                    "dev": 2491710590474873589,
+                    "ino": 281474977647285,
+                    "mtime_ns": 1791121838528373400,
+                    "size_bytes": 360448
+                }
+            },
+            "backup_unchanged": true,
+            "clones": [
+                {
+                    "clone_sha256": "199ca8e65571aa7fc8901e7cfbcbff6761f1201c67dbadc205026a027134bbd7",
+                    "clone_stat": {
+                        "dev": 2491710590474873589,
+                        "ino": 1125899907810012,
+                        "mtime_ns": 1791129989204283700,
+                        "size_bytes": 360448
+                    },
+                    "dump_statement_count": 2328,
+                    "label": "source-main",
+                    "logical_sha256": "a7a898d3ae7235f1848322d621101960bf9d40b8da94b6010f5d945c48a5d3bd",
+                    "schema_object_count": 5,
+                    "schema_sha256": "a27ea183a18ef9a1e1a5e380d2f765a1ee3e4dd84636928e08860d40701d5df0",
+                    "table_row_counts": {
+                        "symbol_meta": 2321,
+                        "symbol_meta_fetch_log": 2
+                    }
+                },
+                {
+                    "clone_sha256": "8337cded20f569ee95e0059b8868d5eab1e58914dd251f145e90fee88213f929",
+                    "clone_stat": {
+                        "dev": 2491710590474873589,
+                        "ino": 562949954388701,
+                        "mtime_ns": 1791129989213287000,
+                        "size_bytes": 360448
+                    },
+                    "dump_statement_count": 2328,
+                    "label": "frozen-backup",
+                    "logical_sha256": "a7a898d3ae7235f1848322d621101960bf9d40b8da94b6010f5d945c48a5d3bd",
+                    "schema_object_count": 5,
+                    "schema_sha256": "a27ea183a18ef9a1e1a5e380d2f765a1ee3e4dd84636928e08860d40701d5df0",
+                    "table_row_counts": {
+                        "symbol_meta": 2321,
+                        "symbol_meta_fetch_log": 2
+                    }
+                }
+            ],
+            "logical_match": true,
+            "name": "symbol_meta.sqlite",
+            "source_after": {
+                "sha256": "199ca8e65571aa7fc8901e7cfbcbff6761f1201c67dbadc205026a027134bbd7",
+                "stat": {
+                    "dev": 2491710590474873589,
+                    "ino": 281474977583363,
+                    "mtime_ns": 1783965298818304000,
+                    "size_bytes": 360448
+                },
+                "wal": {
+                    "exists": false,
+                    "sha256": null,
+                    "stat": null
+                }
+            },
+            "source_before": {
+                "sha256": "199ca8e65571aa7fc8901e7cfbcbff6761f1201c67dbadc205026a027134bbd7",
+                "stat": {
+                    "dev": 2491710590474873589,
+                    "ino": 281474977583363,
+                    "mtime_ns": 1783965298818304000,
+                    "size_bytes": 360448
+                },
+                "wal": {
+                    "exists": false,
+                    "sha256": null,
+                    "stat": null
+                }
+            },
+            "source_unchanged": true
+        }
+    ],
+    "limitations": [
+        "Current WAL state does not prove WAL absence at snapshot creation time.",
+        "Logical equality certifies that the saved backup contains no extra logical contents beyond its pinned source main bytes."
+    ],
+    "manifest_sha256": "c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140",
+    "schema_version": "sqlite-pinned-main-logical-audit.v1",
+    "source_connections_opened": 0
+}

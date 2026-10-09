@@ -1,0 +1,117 @@
+{
+    "$schema": "https://json.schemastore.org/claude-code-settings.json",
+    "env": {
+        "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "0"
+    },
+    "permissions": {
+        "allow": [
+            "Read(**)",
+            "Bash(ls *)",
+            "Bash(ls)",
+            "Bash(ll *)",
+            "Bash(ll)",
+            "Bash(cat *)",
+            "Bash(head *)",
+            "Bash(tail *)",
+            "Bash(echo *)",
+            "Bash(type *)",
+            "Bash(test *)",
+            "Bash(pwd)",
+            "Bash(cd *)",
+            "Bash(grep *)",
+            "Bash(rg *)",
+            "Bash(fd *)",
+            "Bash(wc *)",
+            "Bash(sort *)",
+            "Bash(uniq *)",
+            "Bash(diff *)",
+            "Bash(which *)",
+            "Bash(env)",
+            "Bash(date)",
+            "Bash(date *)",
+            "Bash(whoami)",
+            "Bash(id)",
+            "Bash(uname *)",
+            "Bash(git status *)",
+            "Bash(git status)",
+            "Bash(git diff *)",
+            "Bash(git diff)",
+            "Bash(git log *)",
+            "Bash(git log)",
+            "Bash(git show *)",
+            "Bash(git show)",
+            "Bash(git fetch *)",
+            "Bash(git fetch)",
+            "Bash(git blame *)",
+            "Bash(git shortlog *)",
+            "Bash(git describe *)",
+            "Bash(git rev-parse *)",
+            "Bash(git ls-files *)",
+            "Bash(git ls-files)",
+            "Bash(git config --list)",
+            "Bash(git config --get *)",
+            "Bash(mypy *)",
+            "Bash(cat .git/COMMIT_EDITMSG)",
+            "Bash(cat .git/HEAD)"
+        ],
+        "deny": [
+            "Bash(rm -rf .git *)",
+            "Bash(rm -rf .git)",
+            "Bash(rm -r .git *)",
+            "Bash(rm -r .git)"
+        ],
+        "defaultMode": "auto"
+    },
+    "model": "opusplan",
+    "hooks": {
+        "PostToolUse": [
+            {
+                "matcher": "Edit|Write",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "uv",
+                        "args": [
+                            "run",
+                            "--no-sync",
+                            "--project",
+                            "${CLAUDE_PROJECT_DIR}",
+                            "python",
+                            "${CLAUDE_PROJECT_DIR}/.claude/hooks/claude_post_tool_use_hygiene.py"
+                        ],
+                        "timeout": 30,
+                        "statusMessage": "Checking Python diagnostics"
+                    }
+                ]
+            }
+        ]
+    },
+    "worktree": {
+        "baseRef": "head",
+        "bgIsolation": "none"
+    },
+    "enabledPlugins": {
+        "superpowers@claude-plugins-official": false,
+        "github@claude-plugins-official": true,
+        "ponytail@ponytail": false,
+        "skill-creator@claude-plugins-official": true,
+        "andrej-karpathy-skills@karpathy-skills": false,
+        "pyright-lsp@claude-plugins-official": true,
+        "playwright@claude-plugins-official": true
+    },
+    "extraKnownMarketplaces": {
+        "karpathy-skills": {
+            "source": {
+                "source": "github",
+                "repo": "multica-ai/andrej-karpathy-skills"
+            }
+        }
+    },
+    "advisorModel": "opus",
+    "teammateMode": "tmux",
+    "includeCoAuthoredBy": false,
+    "attribution": {
+        "commit": "",
+        "pr": ""
+    }
+}

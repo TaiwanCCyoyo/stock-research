@@ -1,0 +1,76 @@
+{
+    "holdout": {
+        "cooldown_blocked_share": {
+            "1": 0.009776536312849162,
+            "3": 0.030726256983240222,
+            "5": 0.04189944134078212,
+            "10": 0.09078212290502793,
+            "20": 0.1270949720670391
+        },
+        "entry_paths": {
+            "fast losers": {
+                "already_top30": 0.7615658362989324,
+                "already_top5": 0.28113879003558717,
+                "median_rank_1_day_before": 11.0,
+                "median_rank_3_days_before": 48.0,
+                "n": 281
+            },
+            "slow winners": {
+                "already_top30": 0.8333333333333334,
+                "already_top5": 0.16666666666666666,
+                "median_rank_1_day_before": 14.5,
+                "median_rank_3_days_before": 34.0,
+                "n": 30
+            }
+        },
+        "fast_losers": {
+            "n": 299,
+            "pnl": -6655330.73
+        },
+        "slow_winners": {
+            "n": 32,
+            "pnl": 2828786.1
+        },
+        "streak_distinct_codes": 20,
+        "streak_losses": 20,
+        "streak_median_bars": 2.5,
+        "trips": 716
+    },
+    "train": {
+        "cooldown_blocked_share": {
+            "1": 0.008287292817679558,
+            "3": 0.0285451197053407,
+            "5": 0.04604051565377532,
+            "10": 0.0856353591160221,
+            "20": 0.1261510128913444
+        },
+        "entry_paths": {
+            "fast losers": {
+                "already_top30": 0.7585365853658537,
+                "already_top5": 0.24390243902439024,
+                "median_rank_1_day_before": 12.0,
+                "median_rank_3_days_before": 44.0,
+                "n": 410
+            },
+            "slow winners": {
+                "already_top30": 0.8375,
+                "already_top5": 0.3375,
+                "median_rank_1_day_before": 8.5,
+                "median_rank_3_days_before": 46.5,
+                "n": 80
+            }
+        },
+        "fast_losers": {
+            "n": 428,
+            "pnl": -8723715.59
+        },
+        "slow_winners": {
+            "n": 86,
+            "pnl": 7154052.281280001
+        },
+        "streak_distinct_codes": 20,
+        "streak_losses": 20,
+        "streak_median_bars": 2.5,
+        "trips": 1086
+    }
+}

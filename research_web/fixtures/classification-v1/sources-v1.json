@@ -1,0 +1,372 @@
+{
+  "schema_version": "opportunity-classification-sources.v1",
+  "sources": [
+    {
+      "source_id": "catalog:securities-0001.json.gz",
+      "source_type": "preserved-catalog-chunk",
+      "local_path": "D:\\Project\\Stock\\.worktrees\\sector-wave-catalog\\tasks\\20261002-sector-wave-catalog\\catalog-v1\\chunks\\securities-0001.json.gz",
+      "repository_commit": "9913d4eb891454a69b05cf4fa4d1541a0d60af11",
+      "repository_path": "tasks/20261002-sector-wave-catalog/catalog-v1/chunks/securities-0001.json.gz",
+      "content_digest": {
+        "algorithm": "sha256",
+        "basis": "raw-file-bytes",
+        "value": "f693be1c312215f62f812ef695a593e22b7b3219dbea81d6e2872c81a96ae3d3"
+      },
+      "manifest_digest_matches": true
+    },
+    {
+      "source_id": "catalog:securities-0002.json.gz",
+      "source_type": "preserved-catalog-chunk",
+      "local_path": "D:\\Project\\Stock\\.worktrees\\sector-wave-catalog\\tasks\\20261002-sector-wave-catalog\\catalog-v1\\chunks\\securities-0002.json.gz",
+      "repository_commit": "9913d4eb891454a69b05cf4fa4d1541a0d60af11",
+      "repository_path": "tasks/20261002-sector-wave-catalog/catalog-v1/chunks/securities-0002.json.gz",
+      "content_digest": {
+        "algorithm": "sha256",
+        "basis": "raw-file-bytes",
+        "value": "4d8adb64e14c02a52efdd029f43108fc690e6dc925539c44bb616ce3dd200f8c"
+      },
+      "manifest_digest_matches": true
+    },
+    {
+      "source_id": "catalog:securities-0003.json.gz",
+      "source_type": "preserved-catalog-chunk",
+      "local_path": "D:\\Project\\Stock\\.worktrees\\sector-wave-catalog\\tasks\\20261002-sector-wave-catalog\\catalog-v1\\chunks\\securities-0003.json.gz",
+      "repository_commit": "9913d4eb891454a69b05cf4fa4d1541a0d60af11",
+      "repository_path": "tasks/20261002-sector-wave-catalog/catalog-v1/chunks/securities-0003.json.gz",
+      "content_digest": {
+        "algorithm": "sha256",
+        "basis": "raw-file-bytes",
+        "value": "66396b4335910a074ad95ae8fde26ce388efc889ecc40615ecb8e1a19a1ab8a6"
+      },
+      "manifest_digest_matches": true
+    },
+    {
+      "source_id": "catalog:securities-0005.json.gz",
+      "source_type": "preserved-catalog-chunk",
+      "local_path": "D:\\Project\\Stock\\.worktrees\\sector-wave-catalog\\tasks\\20261002-sector-wave-catalog\\catalog-v1\\chunks\\securities-0005.json.gz",
+      "repository_commit": "9913d4eb891454a69b05cf4fa4d1541a0d60af11",
+      "repository_path": "tasks/20261002-sector-wave-catalog/catalog-v1/chunks/securities-0005.json.gz",
+      "content_digest": {
+        "algorithm": "sha256",
+        "basis": "raw-file-bytes",
+        "value": "04087fe177d22d9bb0b333dbf4b501b7da4aef35c86f764999e59897aefa0d7c"
+      },
+      "manifest_digest_matches": true
+    },
+    {
+      "source_id": "catalog:securities-0008.json.gz",
+      "source_type": "preserved-catalog-chunk",
+      "local_path": "D:\\Project\\Stock\\.worktrees\\sector-wave-catalog\\tasks\\20261002-sector-wave-catalog\\catalog-v1\\chunks\\securities-0008.json.gz",
+      "repository_commit": "9913d4eb891454a69b05cf4fa4d1541a0d60af11",
+      "repository_path": "tasks/20261002-sector-wave-catalog/catalog-v1/chunks/securities-0008.json.gz",
+      "content_digest": {
+        "algorithm": "sha256",
+        "basis": "raw-file-bytes",
+        "value": "8458b79b53588d122cc36981ac4a8c0553bfad37253e8a577b6bb6aa121c217c"
+      },
+      "manifest_digest_matches": true
+    },
+    {
+      "source_id": "catalog:groups-0001.json.gz",
+      "source_type": "preserved-catalog-chunk",
+      "local_path": "D:\\Project\\Stock\\.worktrees\\sector-wave-catalog\\tasks\\20261002-sector-wave-catalog\\catalog-v1\\chunks\\groups-0001.json.gz",
+      "repository_commit": "9913d4eb891454a69b05cf4fa4d1541a0d60af11",
+      "repository_path": "tasks/20261002-sector-wave-catalog/catalog-v1/chunks/groups-0001.json.gz",
+      "content_digest": {
+        "algorithm": "sha256",
+        "basis": "raw-file-bytes",
+        "value": "f13e220f8ddb2edabf278496ac9c2be3df6791a9231b49e03e6f77f0c5e66fbc"
+      },
+      "manifest_digest_matches": true
+    },
+    {
+      "source_id": "catalog:taxonomy_nodes-0001.json.gz",
+      "source_type": "preserved-catalog-chunk",
+      "local_path": "D:\\Project\\Stock\\.worktrees\\sector-wave-catalog\\tasks\\20261002-sector-wave-catalog\\catalog-v1\\chunks\\taxonomy_nodes-0001.json.gz",
+      "repository_commit": "9913d4eb891454a69b05cf4fa4d1541a0d60af11",
+      "repository_path": "tasks/20261002-sector-wave-catalog/catalog-v1/chunks/taxonomy_nodes-0001.json.gz",
+      "content_digest": {
+        "algorithm": "sha256",
+        "basis": "raw-file-bytes",
+        "value": "02f2d872b0db46633c63a2b3e98be2903410edc4f28bd6af72546c2563fd5445"
+      },
+      "manifest_digest_matches": true
+    },
+    {
+      "source_id": "catalog:taxonomy_nodes-0002.json.gz",
+      "source_type": "preserved-catalog-chunk",
+      "local_path": "D:\\Project\\Stock\\.worktrees\\sector-wave-catalog\\tasks\\20261002-sector-wave-catalog\\catalog-v1\\chunks\\taxonomy_nodes-0002.json.gz",
+      "repository_commit": "9913d4eb891454a69b05cf4fa4d1541a0d60af11",
+      "repository_path": "tasks/20261002-sector-wave-catalog/catalog-v1/chunks/taxonomy_nodes-0002.json.gz",
+      "content_digest": {
+        "algorithm": "sha256",
+        "basis": "raw-file-bytes",
+        "value": "3e0b310861ec77bbab4c90b7689278e0a49f98858c7f2885f52e569802dbc474"
+      },
+      "manifest_digest_matches": true
+    },
+    {
+      "source_id": "catalog:taxonomy_nodes-0003.json.gz",
+      "source_type": "preserved-catalog-chunk",
+      "local_path": "D:\\Project\\Stock\\.worktrees\\sector-wave-catalog\\tasks\\20261002-sector-wave-catalog\\catalog-v1\\chunks\\taxonomy_nodes-0003.json.gz",
+      "repository_commit": "9913d4eb891454a69b05cf4fa4d1541a0d60af11",
+      "repository_path": "tasks/20261002-sector-wave-catalog/catalog-v1/chunks/taxonomy_nodes-0003.json.gz",
+      "content_digest": {
+        "algorithm": "sha256",
+        "basis": "raw-file-bytes",
+        "value": "3f999a03bdc92e980719c59ba9e6864f0afdd1896f8f12e6c32d7c1036f41740"
+      },
+      "manifest_digest_matches": true
+    },
+    {
+      "source_id": "catalog:manifest",
+      "source_type": "preserved-research-artifact",
+      "local_path": "D:\\Project\\Stock\\.worktrees\\sector-wave-catalog\\tasks\\20261002-sector-wave-catalog\\catalog-v1\\manifest.json",
+      "repository_commit": "9913d4eb891454a69b05cf4fa4d1541a0d60af11",
+      "repository_path": "tasks/20261002-sector-wave-catalog/catalog-v1/manifest.json",
+      "content_digest": {
+        "algorithm": "sha256",
+        "basis": "raw-file-bytes",
+        "value": "a38d6e66f8a1f92d958db1c38258e32eb3d83f44df56d6758960d2aae8fa0e56"
+      }
+    },
+    {
+      "source_id": "preview:classification-snapshot",
+      "source_type": "preserved-research-artifact",
+      "local_path": "D:\\Project\\Stock\\.worktrees\\sector-wave-web-contract-20261004\\tasks\\20261004-sector-wave-web-contract\\classification-snapshot.json",
+      "repository_commit": "fac041c88a96ff9ee5bceb36602422635756d066",
+      "repository_path": "tasks/20261004-sector-wave-web-contract/classification-snapshot.json",
+      "content_digest": {
+        "algorithm": "sha256",
+        "basis": "raw-file-bytes",
+        "value": "ef85765dcf64ad41c99c5755bb5cf3cb1a007b66e46e5b67541281def0cc13e7"
+      }
+    },
+    {
+      "source_id": "role-evidence:packet",
+      "source_type": "preserved-research-artifact",
+      "local_path": "D:\\Project\\Stock\\.worktrees\\sector-role-evidence\\tasks\\20261002-sector-role-evidence\\evidence-v1.json",
+      "repository_commit": "284a73b2e518bc7512e1b6095cf42b47f8cc773b",
+      "repository_path": "tasks/20261002-sector-role-evidence/evidence-v1.json",
+      "content_digest": {
+        "algorithm": "sha256",
+        "basis": "raw-file-bytes",
+        "value": "46a1d729011d59b7429c59b9000b0b6e7be5c71a4e8673be0232f46ed66e729b"
+      }
+    },
+    {
+      "source_id": "primary:2002:company-observation",
+      "url": "https://www.csc.com.tw/csc/pd/pd.html",
+      "title": "中鋼公司-CSC｜產品製造",
+      "source_type": "Company product/manufacturing page",
+      "locator": "產品製造頁，製造流程及煉鐵、煉鋼說明（opened page lines 53-56）",
+      "paraphrase": "公司說明鋼胚經煉鐵、煉鋼及軋鋼等流程製成鋼品，支持鋼鐵製造/軋延細類。",
+      "retained_excerpt": "煉鐵、煉鋼及軋鋼",
+      "document_covered_period": null,
+      "published_at": null,
+      "first_available_at": null,
+      "observed_at": null,
+      "observed_on": "2026-10-04",
+      "observation_basis": "primary-source-opened-by-bounded-inventory",
+      "raw_source_digest": null,
+      "raw_source_digest_unknown_reason": "Raw source bytes not retained by this observation.",
+      "content_digest": {
+        "algorithm": "sha256",
+        "basis": "canonical-retained-observation-json",
+        "value": "a3f591292cd78a0829a033ad27a1f8a1fc3bccbfd518b3168c414ddf9af99686"
+      }
+    },
+    {
+      "source_id": "primary:2330:company-observation",
+      "url": "https://investor.tsmc.com/static/annualReports/2021/english/index.html",
+      "title": "TSMC 2021 Annual Report Website",
+      "source_type": "Company annual report",
+      "locator": "About TSMC section, lines 98-101",
+      "paraphrase": "年報稱台積電開創純晶圓代工模式，專注製造客戶產品，並稱其為全球領先晶圓代工廠。",
+      "retained_excerpt": "the world’s leading semiconductor foundry",
+      "document_covered_period": {
+        "from": "2021-01-01",
+        "until_exclusive": "2022-01-01",
+        "precision": "fiscal-year"
+      },
+      "published_at": null,
+      "first_available_at": null,
+      "observed_at": null,
+      "observed_on": "2026-10-04",
+      "observation_basis": "primary-source-opened-by-bounded-inventory",
+      "raw_source_digest": null,
+      "raw_source_digest_unknown_reason": "Raw source bytes not retained by this observation.",
+      "content_digest": {
+        "algorithm": "sha256",
+        "basis": "canonical-retained-observation-json",
+        "value": "9ce202b7525f69e9fbec2242759ae8d56df934e7a7b26d21c1ce31b6d7e67f5c"
+      }
+    },
+    {
+      "source_id": "primary:2498:company-observation",
+      "url": "https://investors.htc.com/documents/1016/HTC2021_EN_Final.pdf",
+      "title": "HTC 2021 Annual Report",
+      "source_type": "Company annual report",
+      "locator": "PDF page 80, section 5.2.3 Key Functionalities and Manufacturing Processes for Primary Product Lines; PDF page 82 product production/sales tables",
+      "paraphrase": "年報列智慧型手機、連網裝置及虛擬實境系統為主要產品線；表格並按2020與2021分列相關產品產銷。",
+      "retained_excerpt": "smartphones and connected devices and virtual reality systems",
+      "document_covered_period": {
+        "from": "2021-01-01",
+        "until_exclusive": "2022-01-01",
+        "precision": "fiscal-year"
+      },
+      "published_at": null,
+      "first_available_at": null,
+      "observed_at": null,
+      "observed_on": "2026-10-04",
+      "observation_basis": "primary-source-opened-by-bounded-inventory",
+      "raw_source_digest": null,
+      "raw_source_digest_unknown_reason": "Raw source bytes not retained by this observation.",
+      "content_digest": {
+        "algorithm": "sha256",
+        "basis": "canonical-retained-observation-json",
+        "value": "8d9aae88be1aab08b97b65422f9bc2d8fdee161e5d025b10e9c02c8e81f8378e"
+      }
+    },
+    {
+      "source_id": "primary:3481:company-observation",
+      "url": "https://hrrecruit.innolux.com/globalweb_s/en/about.html",
+      "title": "About Innolux｜Company Overview",
+      "source_type": "Company recruitment/about page",
+      "locator": "Company Overview, lines 42-52; LCD TV Application, lines 392-394",
+      "paraphrase": "群創自述供應完整系列LCD面板及觸控螢幕，並介紹LCD TV面板產品；能支持面板細類，但不能證明其在特定歷史案例日的分類。",
+      "retained_excerpt": "full range LCD panels and touch-control screens",
+      "document_covered_period": null,
+      "published_at": null,
+      "first_available_at": null,
+      "observed_at": null,
+      "observed_on": "2026-10-04",
+      "observation_basis": "primary-source-opened-by-bounded-inventory",
+      "raw_source_digest": null,
+      "raw_source_digest_unknown_reason": "Raw source bytes not retained by this observation.",
+      "content_digest": {
+        "algorithm": "sha256",
+        "basis": "canonical-retained-observation-json",
+        "value": "f42c2a1f6892309ea3cc56caebcb45ef78a91bfd6298fec4e15dbb9056814df7"
+      }
+    },
+    {
+      "source_id": "primary:4743:company-observation",
+      "url": "https://onenessbio.com/about/company-history/",
+      "title": "成立沿革｜合一生技股份有限公司",
+      "source_type": "Company history page",
+      "locator": "2021 timeline, lines 294-302",
+      "paraphrase": "2021年沿革記錄研發中新藥進入二期臨床及另一候選新藥取得新藥許可；同年亦記錄南州廠取得GMP/GDP認證，故宜標示新藥研發/臨床開發與製造資格進展，不能概括成成熟通路或量產業務。",
+      "retained_excerpt": "研發中全人單株抗體新藥 FB704A",
+      "document_covered_period": {
+        "from": "2021-01-01",
+        "until_exclusive": "2022-01-01",
+        "precision": "event-year"
+      },
+      "published_at": null,
+      "first_available_at": null,
+      "observed_at": null,
+      "observed_on": "2026-10-04",
+      "observation_basis": "primary-source-opened-by-bounded-inventory",
+      "raw_source_digest": null,
+      "raw_source_digest_unknown_reason": "Raw source bytes not retained by this observation.",
+      "content_digest": {
+        "algorithm": "sha256",
+        "basis": "canonical-retained-observation-json",
+        "value": "81eab3c594f9b69e428c47ce85c7ad9e2e96a7176b9ea17c9923cb69893ff264"
+      }
+    },
+    {
+      "source_id": "primary:9919:company-observation",
+      "url": "https://wwwc.twse.com.tw/pdf/ch/9919_ch.pdf",
+      "title": "TWSE 臺灣證券交易所｜康那香個股資訊",
+      "source_type": "Official exchange company profile (primary listing record)",
+      "locator": "PDF page 1 (zero-based page 0), lines 34-45; profile lists industry and principal businesses",
+      "paraphrase": "證交所資料同頁將產業類別列為「其他」，並列紙製品、衛生用品及各種不織布製品的製造/銷售等主要業務；細類標籤須保留「其他」。",
+      "retained_excerpt": "產業類別 其他",
+      "document_covered_period": {
+        "from": "2026-08-20",
+        "until_exclusive": "2026-08-21",
+        "precision": "document-production-day"
+      },
+      "published_at": null,
+      "first_available_at": null,
+      "observed_at": null,
+      "observed_on": "2026-10-04",
+      "observation_basis": "primary-source-opened-by-bounded-inventory",
+      "raw_source_digest": null,
+      "raw_source_digest_unknown_reason": "Raw source bytes not retained by this observation.",
+      "content_digest": {
+        "algorithm": "sha256",
+        "basis": "canonical-retained-observation-json",
+        "value": "36e60026ffa2f4c097f5456be3bb23e33effbf20a861be5217df0bbf48bcb14b"
+      }
+    },
+    {
+      "source_id": "primary:3017:retained-company-profile",
+      "source_type": "retained-company-profile-observation",
+      "url": "https://www.avc.co/zh-tw/About-AVC/CompanyProfile",
+      "title": "奇鋐科技－公司介紹",
+      "locator": "關於奇鋐／第一段",
+      "retained_excerpt": "整體散熱解決方案的專業供應商",
+      "observed_at": "2026-10-02T07:54:27+00:00",
+      "document_covered_period": null,
+      "published_at": null,
+      "first_available_at": null,
+      "source_refs": [
+        {
+          "source_id": "role-evidence:packet",
+          "locator": "sources[evidence_id=issuer-3017-1]"
+        }
+      ]
+    },
+    {
+      "source_id": "primary:2609:2021-annual-report",
+      "source_type": "company-annual-report",
+      "title": "陽明海運2021年度年報（110年度）",
+      "url": "https://e-solution.yangming.com/files/Investor_Relations/110Annual.pdf",
+      "local_path": "D:\\Project\\Stock\\.worktrees\\sector-classification-eight-case-20261004\\.tmp\\classification-sources\\yangming-2021-annual.pdf",
+      "content_digest": {
+        "algorithm": "sha256",
+        "basis": "raw-file-bytes",
+        "value": "16c3968f0e92fd9bfaefcfc818e0d3a0acc59fe524e721720174540160385bd9"
+      },
+      "physical_pdf_pages_one_based": [
+        91,
+        101
+      ],
+      "printed_pages": [
+        85,
+        95
+      ],
+      "document_covered_period": {
+        "from": "2021-01-01",
+        "until_exclusive": "2022-01-01",
+        "precision": "fiscal-year"
+      },
+      "observed_at": null,
+      "observed_on": "2026-10-04",
+      "published_at": null,
+      "first_available_at": null,
+      "publication_unknown_reason": "PDF metadata creation/modification date is not a verified publication timestamp.",
+      "retained_excerpt": "本公司110年度經營業務，主要係以全貨櫃輪",
+      "paraphrase": "The report describes container-line operations in fiscal 2021 and tabulates 2021/2020 freight and TEU figures.",
+      "verification": "Raw PDF acquired; complete physical pages 91 and 101 extracted and visually inspected."
+    }
+  ],
+  "retrieval_gaps": [
+    {
+      "url": "https://www.yangming.com/files/Investor_Relations/2021Annual_report.pdf",
+      "result": "404 on direct retrieval after site migration"
+    },
+    {
+      "url": "https://esg.yangming.com/upload/investors_finance_files_stock_year_en/enL_investors_finance_23H14_t4jAi3wZiL.pdf",
+      "result": "403 on direct retrieval"
+    },
+    {
+      "url": "https://o-www.yangming.com/files/Investor_Relations/110Annual.pdf",
+      "result": "403 on direct retrieval"
+    }
+  ],
+  "alternative_used": "primary:2609:2021-annual-report"
+}

@@ -1,0 +1,1485 @@
+{
+  "schema_version": "opportunity-classification-evidence.v1",
+  "status": "ready-for-consumer-integration",
+  "built_at": "2026-10-04T08:52:01.708745+00:00",
+  "source_registry": "sources-v1.json",
+  "security_ids": [
+    "TW:2002",
+    "TW:2330",
+    "TW:2498",
+    "TW:2609",
+    "TW:3017",
+    "TW:3481",
+    "TW:4743",
+    "TW:9919"
+  ],
+  "catalog_identity": "sector-wave-catalog:sha256:384ee53d22b70dc1650bf84e1887e8515565189c975c29c77ef5e6273c5138c9",
+  "securities": [
+    {
+      "security_id": "TW:2002",
+      "symbol": "2002",
+      "name": "中鋼",
+      "official_industry_snapshot": {
+        "status": "known",
+        "label": "鋼鐵工業",
+        "code": null,
+        "code_unknown_reason": "Official exchange industry code not retained in original metadata.",
+        "metadata_fetched_at": "2026-07-13T17:54:57+00:00",
+        "effective_interval": null,
+        "historical_status": "effective-interval-unverified",
+        "source_refs": [
+          {
+            "source_id": "catalog:securities-0001.json.gz",
+            "locator": "rows[security_id=TW:2002].official_industry"
+          }
+        ]
+      },
+      "official_value_chain_snapshot": {
+        "snapshot_recorded_at": "2026-10-01T16:10:49Z",
+        "snapshot_timestamp_scope": "catalog-wide classification artifact; individual source fetch times unknown",
+        "memberships": [
+          {
+            "node_id": "official:Q000:Q200",
+            "chain_code": "Q000",
+            "node_code": "Q200",
+            "label": "鋼胚",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0001.json.gz",
+                "locator": "rows[security_id=TW:2002]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0002.json.gz",
+                "locator": "rows[node_id=official:Q000:Q200]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:Q000:Q500",
+            "chain_code": "Q000",
+            "node_code": "Q500",
+            "label": "冷熱軋鋼板捲",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0001.json.gz",
+                "locator": "rows[security_id=TW:2002]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0002.json.gz",
+                "locator": "rows[node_id=official:Q000:Q500]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:Q000:Q700",
+            "chain_code": "Q000",
+            "node_code": "Q700",
+            "label": "線材盤元",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0001.json.gz",
+                "locator": "rows[security_id=TW:2002]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0002.json.gz",
+                "locator": "rows[node_id=official:Q000:Q700]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:Q000:Q800",
+            "chain_code": "Q000",
+            "node_code": "Q800",
+            "label": "棒鋼盤元(捲狀條鋼)",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0001.json.gz",
+                "locator": "rows[security_id=TW:2002]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0002.json.gz",
+                "locator": "rows[node_id=official:Q000:Q800]"
+              }
+            ]
+          }
+        ],
+        "effective_interval": null,
+        "historical_status": "effective-interval-unverified"
+      },
+      "research_group_snapshot": {
+        "groups": [],
+        "effective_interval": null,
+        "historical_status": "effective-interval-unverified"
+      },
+      "company_business_assertions": [
+        {
+          "assertion_id": "2002:steel-manufacturer:source-observation",
+          "layer": "business_role",
+          "classification_id": "steel-manufacturer",
+          "label": "鋼鐵製造與鋼品軋延",
+          "basis": "primary-company-disclosure",
+          "derivation": "direct-role-description",
+          "document_covered_period": null,
+          "temporal_scope": "undated-reference",
+          "effective_interval": null,
+          "effective_interval_unknown_reason": "Source coverage does not establish continuous role onset/cessation.",
+          "published_at": null,
+          "first_available_at": null,
+          "source_refs": [
+            {
+              "source_id": "primary:2002:company-observation",
+              "locator": "產品製造頁，製造流程及煉鐵、煉鋼說明（opened page lines 53-56）"
+            }
+          ],
+          "business_importance": null,
+          "revenue_share": null
+        }
+      ]
+    },
+    {
+      "security_id": "TW:2330",
+      "symbol": "2330",
+      "name": "台積電",
+      "official_industry_snapshot": {
+        "status": "known",
+        "label": "半導體業",
+        "code": null,
+        "code_unknown_reason": "Official exchange industry code not retained in original metadata.",
+        "metadata_fetched_at": "2026-07-13T17:54:57+00:00",
+        "effective_interval": null,
+        "historical_status": "effective-interval-unverified",
+        "source_refs": [
+          {
+            "source_id": "catalog:securities-0002.json.gz",
+            "locator": "rows[security_id=TW:2330].official_industry"
+          }
+        ]
+      },
+      "official_value_chain_snapshot": {
+        "snapshot_recorded_at": "2026-10-01T16:10:49Z",
+        "snapshot_timestamp_scope": "catalog-wide classification artifact; individual source fetch times unknown",
+        "memberships": [
+          {
+            "node_id": "official:D000:D310",
+            "chain_code": "D000",
+            "node_code": "D310",
+            "label": "晶圓製造",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0002.json.gz",
+                "locator": "rows[security_id=TW:2330]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0002.json.gz",
+                "locator": "rows[node_id=official:D000:D310]"
+              }
+            ]
+          }
+        ],
+        "effective_interval": null,
+        "historical_status": "effective-interval-unverified"
+      },
+      "research_group_snapshot": {
+        "groups": [],
+        "effective_interval": null,
+        "historical_status": "effective-interval-unverified"
+      },
+      "company_business_assertions": [
+        {
+          "assertion_id": "2330:semiconductor-foundry:source-observation",
+          "layer": "business_role",
+          "classification_id": "semiconductor-foundry",
+          "label": "晶圓代工",
+          "basis": "primary-company-disclosure",
+          "derivation": "direct-role-description",
+          "document_covered_period": {
+            "from": "2021-01-01",
+            "until_exclusive": "2022-01-01",
+            "precision": "fiscal-year"
+          },
+          "temporal_scope": "retrospective-period-summary",
+          "effective_interval": null,
+          "effective_interval_unknown_reason": "Source coverage does not establish continuous role onset/cessation.",
+          "published_at": null,
+          "first_available_at": null,
+          "source_refs": [
+            {
+              "source_id": "primary:2330:company-observation",
+              "locator": "About TSMC section, lines 98-101"
+            }
+          ],
+          "business_importance": null,
+          "revenue_share": null
+        }
+      ]
+    },
+    {
+      "security_id": "TW:2498",
+      "symbol": "2498",
+      "name": "宏達電",
+      "official_industry_snapshot": {
+        "status": "known",
+        "label": "通信網路業",
+        "code": null,
+        "code_unknown_reason": "Official exchange industry code not retained in original metadata.",
+        "metadata_fetched_at": "2026-07-13T17:54:57+00:00",
+        "effective_interval": null,
+        "historical_status": "effective-interval-unverified",
+        "source_refs": [
+          {
+            "source_id": "catalog:securities-0002.json.gz",
+            "locator": "rows[security_id=TW:2498].official_industry"
+          }
+        ]
+      },
+      "official_value_chain_snapshot": {
+        "snapshot_recorded_at": "2026-10-01T16:10:49Z",
+        "snapshot_timestamp_scope": "catalog-wide classification artifact; individual source fetch times unknown",
+        "memberships": [
+          {
+            "node_id": "official:5100:5120",
+            "chain_code": "5100",
+            "node_code": "5120",
+            "label": "商業應用",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0002.json.gz",
+                "locator": "rows[security_id=TW:2498]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0001.json.gz",
+                "locator": "rows[node_id=official:5100:5120]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:5100:5180",
+            "chain_code": "5100",
+            "node_code": "5180",
+            "label": "開發工具",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0002.json.gz",
+                "locator": "rows[security_id=TW:2498]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0001.json.gz",
+                "locator": "rows[node_id=official:5100:5180]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:5300:5330",
+            "chain_code": "5300",
+            "node_code": "5330",
+            "label": "領域解決方案",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0002.json.gz",
+                "locator": "rows[security_id=TW:2498]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0001.json.gz",
+                "locator": "rows[node_id=official:5300:5330]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:5300:5350",
+            "chain_code": "5300",
+            "node_code": "5350",
+            "label": "機器學習",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0002.json.gz",
+                "locator": "rows[security_id=TW:2498]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0001.json.gz",
+                "locator": "rows[node_id=official:5300:5350]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:5300:53A0",
+            "chain_code": "5300",
+            "node_code": "53A0",
+            "label": "雲端平台",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0002.json.gz",
+                "locator": "rows[security_id=TW:2498]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0001.json.gz",
+                "locator": "rows[node_id=official:5300:53A0]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:5300:53B0",
+            "chain_code": "5300",
+            "node_code": "53B0",
+            "label": "資料處理",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0002.json.gz",
+                "locator": "rows[security_id=TW:2498]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0001.json.gz",
+                "locator": "rows[node_id=official:5300:53B0]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:5700:5750",
+            "chain_code": "5700",
+            "node_code": "5750",
+            "label": "頭顯裝置品牌廠",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0002.json.gz",
+                "locator": "rows[security_id=TW:2498]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0001.json.gz",
+                "locator": "rows[node_id=official:5700:5750]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:5700:5751",
+            "chain_code": "5700",
+            "node_code": "5751",
+            "label": "VR Headset",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0002.json.gz",
+                "locator": "rows[security_id=TW:2498]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0001.json.gz",
+                "locator": "rows[node_id=official:5700:5751]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:5700:5752",
+            "chain_code": "5700",
+            "node_code": "5752",
+            "label": "AR Smart Glasses",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0002.json.gz",
+                "locator": "rows[security_id=TW:2498]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0001.json.gz",
+                "locator": "rows[node_id=official:5700:5752]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:5700:5753",
+            "chain_code": "5700",
+            "node_code": "5753",
+            "label": "MR Headset & SG",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0002.json.gz",
+                "locator": "rows[security_id=TW:2498]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0001.json.gz",
+                "locator": "rows[node_id=official:5700:5753]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:5700:5760",
+            "chain_code": "5700",
+            "node_code": "5760",
+            "label": "硬體開發工具",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0002.json.gz",
+                "locator": "rows[security_id=TW:2498]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0001.json.gz",
+                "locator": "rows[node_id=official:5700:5760]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:5700:5761",
+            "chain_code": "5700",
+            "node_code": "5761",
+            "label": "Qualcomm XR Platform",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0002.json.gz",
+                "locator": "rows[security_id=TW:2498]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0001.json.gz",
+                "locator": "rows[node_id=official:5700:5761]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:5700:5770",
+            "chain_code": "5700",
+            "node_code": "5770",
+            "label": "軟體開發工具",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0002.json.gz",
+                "locator": "rows[security_id=TW:2498]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0001.json.gz",
+                "locator": "rows[node_id=official:5700:5770]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:5700:5771",
+            "chain_code": "5700",
+            "node_code": "5771",
+            "label": "工作流程創建",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0002.json.gz",
+                "locator": "rows[security_id=TW:2498]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0001.json.gz",
+                "locator": "rows[node_id=official:5700:5771]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:5700:5772",
+            "chain_code": "5700",
+            "node_code": "5772",
+            "label": "內容管理與創建",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0002.json.gz",
+                "locator": "rows[security_id=TW:2498]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0001.json.gz",
+                "locator": "rows[node_id=official:5700:5772]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:5700:5773",
+            "chain_code": "5700",
+            "node_code": "5773",
+            "label": "3D工具",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0002.json.gz",
+                "locator": "rows[security_id=TW:2498]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0001.json.gz",
+                "locator": "rows[node_id=official:5700:5773]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:5700:5790",
+            "chain_code": "5700",
+            "node_code": "5790",
+            "label": "技術標準/聯盟",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0002.json.gz",
+                "locator": "rows[security_id=TW:2498]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0001.json.gz",
+                "locator": "rows[node_id=official:5700:5790]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:5700:57B1",
+            "chain_code": "5700",
+            "node_code": "57B1",
+            "label": "培訓",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0002.json.gz",
+                "locator": "rows[security_id=TW:2498]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0001.json.gz",
+                "locator": "rows[node_id=official:5700:57B1]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:5700:57B2",
+            "chain_code": "5700",
+            "node_code": "57B2",
+            "label": "會議",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0002.json.gz",
+                "locator": "rows[security_id=TW:2498]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0001.json.gz",
+                "locator": "rows[node_id=official:5700:57B2]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:5700:57B3",
+            "chain_code": "5700",
+            "node_code": "57B3",
+            "label": "工作流程引導",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0002.json.gz",
+                "locator": "rows[security_id=TW:2498]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0001.json.gz",
+                "locator": "rows[node_id=official:5700:57B3]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:5700:57B4",
+            "chain_code": "5700",
+            "node_code": "57B4",
+            "label": "地圖",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0002.json.gz",
+                "locator": "rows[security_id=TW:2498]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0001.json.gz",
+                "locator": "rows[node_id=official:5700:57B4]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:5700:57B5",
+            "chain_code": "5700",
+            "node_code": "57B5",
+            "label": "遊戲",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0002.json.gz",
+                "locator": "rows[security_id=TW:2498]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0001.json.gz",
+                "locator": "rows[node_id=official:5700:57B5]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:5700:57B6",
+            "chain_code": "5700",
+            "node_code": "57B6",
+            "label": "其他",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0002.json.gz",
+                "locator": "rows[security_id=TW:2498]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0001.json.gz",
+                "locator": "rows[node_id=official:5700:57B6]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:5800:5870",
+            "chain_code": "5800",
+            "node_code": "5870",
+            "label": "穿戴式裝置",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0002.json.gz",
+                "locator": "rows[security_id=TW:2498]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0001.json.gz",
+                "locator": "rows[node_id=official:5800:5870]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:5800:5890",
+            "chain_code": "5800",
+            "node_code": "5890",
+            "label": "數位內容",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0002.json.gz",
+                "locator": "rows[security_id=TW:2498]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0001.json.gz",
+                "locator": "rows[node_id=official:5800:5890]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:I000:IB00",
+            "chain_code": "I000",
+            "node_code": "IB00",
+            "label": "無線通訊設備(如行動電話、衛星定位系統、衛星/微波通訊設備、數位機上盒)",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0002.json.gz",
+                "locator": "rows[security_id=TW:2498]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0002.json.gz",
+                "locator": "rows[node_id=official:I000:IB00]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:Y000:Y200",
+            "chain_code": "Y000",
+            "node_code": "Y200",
+            "label": "廣播電視/電影產業",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0002.json.gz",
+                "locator": "rows[security_id=TW:2498]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0003.json.gz",
+                "locator": "rows[node_id=official:Y000:Y200]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:Y000:Y400",
+            "chain_code": "Y000",
+            "node_code": "Y400",
+            "label": "數位內容產業",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0002.json.gz",
+                "locator": "rows[security_id=TW:2498]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0003.json.gz",
+                "locator": "rows[node_id=official:Y000:Y400]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:Y000:Y600",
+            "chain_code": "Y000",
+            "node_code": "Y600",
+            "label": "流行音樂及文化內容產業",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0002.json.gz",
+                "locator": "rows[security_id=TW:2498]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0003.json.gz",
+                "locator": "rows[node_id=official:Y000:Y600]"
+              }
+            ]
+          }
+        ],
+        "effective_interval": null,
+        "historical_status": "effective-interval-unverified"
+      },
+      "research_group_snapshot": {
+        "groups": [],
+        "effective_interval": null,
+        "historical_status": "effective-interval-unverified"
+      },
+      "company_business_assertions": [
+        {
+          "assertion_id": "2498:smartphone-device-supplier:source-observation",
+          "layer": "business_role",
+          "classification_id": "smartphone-device-supplier",
+          "label": "智慧手機與連網裝置供應商",
+          "basis": "primary-company-disclosure",
+          "derivation": "direct-role-description",
+          "document_covered_period": {
+            "from": "2021-01-01",
+            "until_exclusive": "2022-01-01",
+            "precision": "fiscal-year"
+          },
+          "temporal_scope": "retrospective-period-summary",
+          "effective_interval": null,
+          "effective_interval_unknown_reason": "Source coverage does not establish continuous role onset/cessation.",
+          "published_at": null,
+          "first_available_at": null,
+          "source_refs": [
+            {
+              "source_id": "primary:2498:company-observation",
+              "locator": "PDF page 80, section 5.2.3 Key Functionalities and Manufacturing Processes for Primary Product Lines; PDF page 82 product production/sales tables"
+            }
+          ],
+          "business_importance": null,
+          "revenue_share": null
+        },
+        {
+          "assertion_id": "2498:virtual-reality-device-supplier:source-observation",
+          "layer": "business_role",
+          "classification_id": "virtual-reality-device-supplier",
+          "label": "虛擬實境設備供應商",
+          "basis": "primary-company-disclosure",
+          "derivation": "direct-role-description",
+          "document_covered_period": {
+            "from": "2021-01-01",
+            "until_exclusive": "2022-01-01",
+            "precision": "fiscal-year"
+          },
+          "temporal_scope": "retrospective-period-summary",
+          "effective_interval": null,
+          "effective_interval_unknown_reason": "Source coverage does not establish continuous role onset/cessation.",
+          "published_at": null,
+          "first_available_at": null,
+          "source_refs": [
+            {
+              "source_id": "primary:2498:company-observation",
+              "locator": "PDF page 80, section 5.2.3 Key Functionalities and Manufacturing Processes for Primary Product Lines; PDF page 82 product production/sales tables"
+            }
+          ],
+          "business_importance": null,
+          "revenue_share": null
+        }
+      ]
+    },
+    {
+      "security_id": "TW:2609",
+      "symbol": "2609",
+      "name": "陽明",
+      "official_industry_snapshot": {
+        "status": "known",
+        "label": "航運業",
+        "code": null,
+        "code_unknown_reason": "Official exchange industry code not retained in original metadata.",
+        "metadata_fetched_at": "2026-07-13T17:54:57+00:00",
+        "effective_interval": null,
+        "historical_status": "effective-interval-unverified",
+        "source_refs": [
+          {
+            "source_id": "catalog:securities-0002.json.gz",
+            "locator": "rows[security_id=TW:2609].official_industry"
+          }
+        ]
+      },
+      "official_value_chain_snapshot": {
+        "snapshot_recorded_at": "2026-10-01T16:10:49Z",
+        "snapshot_timestamp_scope": "catalog-wide classification artifact; individual source fetch times unknown",
+        "memberships": [
+          {
+            "node_id": "official:T000:T100",
+            "chain_code": "T000",
+            "node_code": "T100",
+            "label": "貨櫃航運",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0002.json.gz",
+                "locator": "rows[security_id=TW:2609]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0003.json.gz",
+                "locator": "rows[node_id=official:T000:T100]"
+              }
+            ]
+          }
+        ],
+        "effective_interval": null,
+        "historical_status": "effective-interval-unverified"
+      },
+      "research_group_snapshot": {
+        "groups": [
+          {
+            "group_id": "shipping.container",
+            "label": "貨櫃航運",
+            "source_selectors": [
+              {
+                "chain_code": "T000",
+                "node_code": "T100"
+              }
+            ],
+            "basis": "catalog-analyst-mapping",
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0002.json.gz",
+                "locator": "rows[security_id=TW:2609]"
+              },
+              {
+                "source_id": "catalog:groups-0001.json.gz",
+                "locator": "rows[group_id=shipping.container]"
+              }
+            ]
+          }
+        ],
+        "effective_interval": null,
+        "historical_status": "effective-interval-unverified"
+      },
+      "company_business_assertions": [
+        {
+          "assertion_id": "2609:container-line-operator:2021-annual",
+          "layer": "business_role",
+          "classification_id": "container-line-operator",
+          "label": "貨櫃航運業者",
+          "basis": "company-document-period",
+          "derivation": "direct-role-description",
+          "document_covered_period": {
+            "from": "2021-01-01",
+            "until_exclusive": "2022-01-01",
+            "precision": "fiscal-year"
+          },
+          "temporal_scope": "retrospective-period-summary",
+          "effective_interval": null,
+          "effective_interval_unknown_reason": "Fiscal-year business description is not an exchange membership interval or proof of daily continuity.",
+          "published_at": null,
+          "first_available_at": null,
+          "source_refs": [
+            {
+              "source_id": "primary:2609:2021-annual-report",
+              "locator": "Physical PDF page 91 / printed page 85: 本公司現有船隊及經營業務; corroboration physical page 101 / printed page 95."
+            }
+          ],
+          "business_importance": "principal-business-described-by-report",
+          "revenue_share": null
+        },
+        {
+          "assertion_id": "2609:shipping.container:2021-annual",
+          "layer": "business_group",
+          "classification_id": "shipping.container",
+          "label": "貨櫃航運",
+          "basis": "company-document-period",
+          "derivation": "analyst-taxonomy-mapping-from-container-line-operator",
+          "document_covered_period": {
+            "from": "2021-01-01",
+            "until_exclusive": "2022-01-01",
+            "precision": "fiscal-year"
+          },
+          "temporal_scope": "retrospective-period-summary",
+          "effective_interval": null,
+          "effective_interval_unknown_reason": "Fiscal-year business description is not an exchange membership interval or proof of daily continuity.",
+          "published_at": null,
+          "first_available_at": null,
+          "source_refs": [
+            {
+              "source_id": "primary:2609:2021-annual-report",
+              "locator": "Physical PDF page 91 / printed page 85: 本公司現有船隊及經營業務; corroboration physical page 101 / printed page 95."
+            }
+          ],
+          "business_importance": null,
+          "revenue_share": null
+        },
+        {
+          "assertion_id": "2609:shipping:2021-annual",
+          "layer": "business_sector",
+          "classification_id": "shipping",
+          "label": "航運",
+          "basis": "company-document-period",
+          "derivation": "analyst-taxonomy-mapping-from-container-line-operator",
+          "document_covered_period": {
+            "from": "2021-01-01",
+            "until_exclusive": "2022-01-01",
+            "precision": "fiscal-year"
+          },
+          "temporal_scope": "retrospective-period-summary",
+          "effective_interval": null,
+          "effective_interval_unknown_reason": "Fiscal-year business description is not an exchange membership interval or proof of daily continuity.",
+          "published_at": null,
+          "first_available_at": null,
+          "source_refs": [
+            {
+              "source_id": "primary:2609:2021-annual-report",
+              "locator": "Physical PDF page 91 / printed page 85: 本公司現有船隊及經營業務; corroboration physical page 101 / printed page 95."
+            }
+          ],
+          "business_importance": null,
+          "revenue_share": null
+        }
+      ]
+    },
+    {
+      "security_id": "TW:3017",
+      "symbol": "3017",
+      "name": "奇鋐",
+      "official_industry_snapshot": {
+        "status": "known",
+        "label": "電腦及週邊設備業",
+        "code": null,
+        "code_unknown_reason": "Official exchange industry code not retained in original metadata.",
+        "metadata_fetched_at": "2026-07-13T17:54:57+00:00",
+        "effective_interval": null,
+        "historical_status": "effective-interval-unverified",
+        "source_refs": [
+          {
+            "source_id": "catalog:securities-0003.json.gz",
+            "locator": "rows[security_id=TW:3017].official_industry"
+          }
+        ]
+      },
+      "official_value_chain_snapshot": {
+        "snapshot_recorded_at": "2026-10-01T16:10:49Z",
+        "snapshot_timestamp_scope": "catalog-wide classification artifact; individual source fetch times unknown",
+        "memberships": [
+          {
+            "node_id": "official:F000:FB00",
+            "chain_code": "F000",
+            "node_code": "FB00",
+            "label": "散熱片、風扇馬達、散熱模組",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0003.json.gz",
+                "locator": "rows[security_id=TW:3017]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0002.json.gz",
+                "locator": "rows[node_id=official:F000:FB00]"
+              }
+            ]
+          }
+        ],
+        "effective_interval": null,
+        "historical_status": "effective-interval-unverified"
+      },
+      "research_group_snapshot": {
+        "groups": [
+          {
+            "group_id": "cooling",
+            "label": "散熱／冷卻設備",
+            "source_selectors": [
+              {
+                "chain_code": "F000",
+                "node_code": "FB00"
+              },
+              {
+                "chain_code": "5400",
+                "node_code": "5430"
+              },
+              {
+                "chain_code": "5700",
+                "node_code": "5744"
+              }
+            ],
+            "basis": "catalog-analyst-mapping",
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0003.json.gz",
+                "locator": "rows[security_id=TW:3017]"
+              },
+              {
+                "source_id": "catalog:groups-0001.json.gz",
+                "locator": "rows[group_id=cooling]"
+              }
+            ]
+          }
+        ],
+        "effective_interval": null,
+        "historical_status": "effective-interval-unverified"
+      },
+      "company_business_assertions": [
+        {
+          "assertion_id": "3017:thermal-solution-supplier:retained",
+          "layer": "business_role",
+          "classification_id": "thermal-solution-supplier",
+          "label": "散熱解決方案供應商",
+          "basis": "primary-company-disclosure",
+          "derivation": "direct-role-description",
+          "document_covered_period": null,
+          "temporal_scope": "undated-reference",
+          "effective_interval": null,
+          "effective_interval_unknown_reason": "Undated company page does not establish historical role coverage.",
+          "published_at": null,
+          "first_available_at": null,
+          "source_refs": [
+            {
+              "source_id": "primary:3017:retained-company-profile",
+              "locator": "關於奇鋐／第一段"
+            }
+          ],
+          "business_importance": null,
+          "revenue_share": null
+        }
+      ]
+    },
+    {
+      "security_id": "TW:3481",
+      "symbol": "3481",
+      "name": "群創",
+      "official_industry_snapshot": {
+        "status": "known",
+        "label": "光電業",
+        "code": null,
+        "code_unknown_reason": "Official exchange industry code not retained in original metadata.",
+        "metadata_fetched_at": "2026-07-13T17:54:57+00:00",
+        "effective_interval": null,
+        "historical_status": "effective-interval-unverified",
+        "source_refs": [
+          {
+            "source_id": "catalog:securities-0003.json.gz",
+            "locator": "rows[security_id=TW:3481].official_industry"
+          }
+        ]
+      },
+      "official_value_chain_snapshot": {
+        "snapshot_recorded_at": "2026-10-01T16:10:49Z",
+        "snapshot_timestamp_scope": "catalog-wide classification artifact; individual source fetch times unknown",
+        "memberships": [
+          {
+            "node_id": "official:5800:5870",
+            "chain_code": "5800",
+            "node_code": "5870",
+            "label": "穿戴式裝置",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0003.json.gz",
+                "locator": "rows[security_id=TW:3481]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0001.json.gz",
+                "locator": "rows[node_id=official:5800:5870]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:G000:GB00",
+            "chain_code": "G000",
+            "node_code": "GB00",
+            "label": "面板",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0003.json.gz",
+                "locator": "rows[security_id=TW:3481]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0002.json.gz",
+                "locator": "rows[node_id=official:G000:GB00]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:H000:HA00",
+            "chain_code": "H000",
+            "node_code": "HA00",
+            "label": "觸控面板",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0003.json.gz",
+                "locator": "rows[security_id=TW:3481]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0002.json.gz",
+                "locator": "rows[node_id=official:H000:HA00]"
+              }
+            ]
+          }
+        ],
+        "effective_interval": null,
+        "historical_status": "effective-interval-unverified"
+      },
+      "research_group_snapshot": {
+        "groups": [
+          {
+            "group_id": "display-panel",
+            "label": "面板",
+            "source_selectors": [
+              {
+                "chain_code": "G000",
+                "node_code": "GB00"
+              }
+            ],
+            "basis": "catalog-analyst-mapping",
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0003.json.gz",
+                "locator": "rows[security_id=TW:3481]"
+              },
+              {
+                "source_id": "catalog:groups-0001.json.gz",
+                "locator": "rows[group_id=display-panel]"
+              }
+            ]
+          }
+        ],
+        "effective_interval": null,
+        "historical_status": "effective-interval-unverified"
+      },
+      "company_business_assertions": [
+        {
+          "assertion_id": "3481:display-panel-supplier:source-observation",
+          "layer": "business_role",
+          "classification_id": "display-panel-supplier",
+          "label": "顯示面板與觸控螢幕供應商",
+          "basis": "primary-company-disclosure",
+          "derivation": "direct-role-description",
+          "document_covered_period": null,
+          "temporal_scope": "undated-reference",
+          "effective_interval": null,
+          "effective_interval_unknown_reason": "Source coverage does not establish continuous role onset/cessation.",
+          "published_at": null,
+          "first_available_at": null,
+          "source_refs": [
+            {
+              "source_id": "primary:3481:company-observation",
+              "locator": "Company Overview, lines 42-52; LCD TV Application, lines 392-394"
+            }
+          ],
+          "business_importance": null,
+          "revenue_share": null
+        }
+      ]
+    },
+    {
+      "security_id": "TW:4743",
+      "symbol": "4743",
+      "name": "合一",
+      "official_industry_snapshot": {
+        "status": "known",
+        "label": "生技醫療業",
+        "code": null,
+        "code_unknown_reason": "Official exchange industry code not retained in original metadata.",
+        "metadata_fetched_at": "2026-07-13T17:54:58+00:00",
+        "effective_interval": null,
+        "historical_status": "effective-interval-unverified",
+        "source_refs": [
+          {
+            "source_id": "catalog:securities-0005.json.gz",
+            "locator": "rows[security_id=TW:4743].official_industry"
+          }
+        ]
+      },
+      "official_value_chain_snapshot": {
+        "snapshot_recorded_at": "2026-10-01T16:10:49Z",
+        "snapshot_timestamp_scope": "catalog-wide classification artifact; individual source fetch times unknown",
+        "memberships": [
+          {
+            "node_id": "official:C100:C120",
+            "chain_code": "C100",
+            "node_code": "C120",
+            "label": "中藥材、西藥原料藥",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0005.json.gz",
+                "locator": "rows[security_id=TW:4743]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0002.json.gz",
+                "locator": "rows[node_id=official:C100:C120]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:C100:C130",
+            "chain_code": "C100",
+            "node_code": "C130",
+            "label": "中、西藥製劑",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0005.json.gz",
+                "locator": "rows[security_id=TW:4743]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0002.json.gz",
+                "locator": "rows[node_id=official:C100:C130]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:C100:C140",
+            "chain_code": "C100",
+            "node_code": "C140",
+            "label": "藥品代理銷售及通路",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0005.json.gz",
+                "locator": "rows[security_id=TW:4743]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0002.json.gz",
+                "locator": "rows[node_id=official:C100:C140]"
+              }
+            ]
+          }
+        ],
+        "effective_interval": null,
+        "historical_status": "effective-interval-unverified"
+      },
+      "research_group_snapshot": {
+        "groups": [
+          {
+            "group_id": "pharma",
+            "label": "製藥",
+            "source_selectors": [
+              {
+                "chain_code": "C100",
+                "node_code": null
+              }
+            ],
+            "basis": "catalog-analyst-mapping",
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0005.json.gz",
+                "locator": "rows[security_id=TW:4743]"
+              },
+              {
+                "source_id": "catalog:groups-0001.json.gz",
+                "locator": "rows[group_id=pharma]"
+              }
+            ]
+          }
+        ],
+        "effective_interval": null,
+        "historical_status": "effective-interval-unverified"
+      },
+      "company_business_assertions": [
+        {
+          "assertion_id": "4743:drug-research-and-clinical-development:source-observation",
+          "layer": "business_role",
+          "classification_id": "drug-research-and-clinical-development",
+          "label": "新藥研發與臨床開發",
+          "basis": "primary-company-disclosure",
+          "derivation": "direct-role-description",
+          "document_covered_period": {
+            "from": "2021-01-01",
+            "until_exclusive": "2022-01-01",
+            "precision": "event-year"
+          },
+          "temporal_scope": "retrospective-event-context",
+          "effective_interval": null,
+          "effective_interval_unknown_reason": "Source coverage does not establish continuous role onset/cessation.",
+          "published_at": null,
+          "first_available_at": null,
+          "source_refs": [
+            {
+              "source_id": "primary:4743:company-observation",
+              "locator": "2021 timeline, lines 294-302"
+            }
+          ],
+          "business_importance": null,
+          "revenue_share": null
+        }
+      ]
+    },
+    {
+      "security_id": "TW:9919",
+      "symbol": "9919",
+      "name": "康那香",
+      "official_industry_snapshot": {
+        "status": "known",
+        "label": "其他業",
+        "code": null,
+        "code_unknown_reason": "Official exchange industry code not retained in original metadata.",
+        "metadata_fetched_at": "2026-07-13T17:54:57+00:00",
+        "effective_interval": null,
+        "historical_status": "effective-interval-unverified",
+        "source_refs": [
+          {
+            "source_id": "catalog:securities-0008.json.gz",
+            "locator": "rows[security_id=TW:9919].official_industry"
+          }
+        ]
+      },
+      "official_value_chain_snapshot": {
+        "snapshot_recorded_at": "2026-10-01T16:10:49Z",
+        "snapshot_timestamp_scope": "catalog-wide classification artifact; individual source fetch times unknown",
+        "memberships": [
+          {
+            "node_id": "official:C200:C224",
+            "chain_code": "C200",
+            "node_code": "C224",
+            "label": "衛生用品",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0008.json.gz",
+                "locator": "rows[security_id=TW:9919]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0002.json.gz",
+                "locator": "rows[node_id=official:C200:C224]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:C200:C225",
+            "chain_code": "C200",
+            "node_code": "C225",
+            "label": "醫療耗材",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0008.json.gz",
+                "locator": "rows[security_id=TW:9919]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0002.json.gz",
+                "locator": "rows[node_id=official:C200:C225]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:N000:N500",
+            "chain_code": "N000",
+            "node_code": "N500",
+            "label": "清潔用品",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0008.json.gz",
+                "locator": "rows[security_id=TW:9919]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0002.json.gz",
+                "locator": "rows[node_id=official:N000:N500]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:N000:NB00",
+            "chain_code": "N000",
+            "node_code": "NB00",
+            "label": "化妝品",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0008.json.gz",
+                "locator": "rows[security_id=TW:9919]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0002.json.gz",
+                "locator": "rows[node_id=official:N000:NB00]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:O000:O800",
+            "chain_code": "O000",
+            "node_code": "O800",
+            "label": "成衣及其它家居紡織類品",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0008.json.gz",
+                "locator": "rows[security_id=TW:9919]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0002.json.gz",
+                "locator": "rows[node_id=official:O000:O800]"
+              }
+            ]
+          },
+          {
+            "node_id": "official:X000:X400",
+            "chain_code": "X000",
+            "node_code": "X400",
+            "label": "其他",
+            "source_fetched_at": null,
+            "source_refs": [
+              {
+                "source_id": "catalog:securities-0008.json.gz",
+                "locator": "rows[security_id=TW:9919]"
+              },
+              {
+                "source_id": "catalog:taxonomy_nodes-0003.json.gz",
+                "locator": "rows[node_id=official:X000:X400]"
+              }
+            ]
+          }
+        ],
+        "effective_interval": null,
+        "historical_status": "effective-interval-unverified"
+      },
+      "research_group_snapshot": {
+        "groups": [],
+        "effective_interval": null,
+        "historical_status": "effective-interval-unverified"
+      },
+      "company_business_assertions": [
+        {
+          "assertion_id": "9919:nonwoven-and-hygiene-products:source-observation",
+          "layer": "business_role",
+          "classification_id": "nonwoven-and-hygiene-products",
+          "label": "不織布與衛生用品製造／銷售",
+          "basis": "primary-company-disclosure",
+          "derivation": "direct-role-description",
+          "document_covered_period": {
+            "from": "2026-08-20",
+            "until_exclusive": "2026-08-21",
+            "precision": "document-production-day"
+          },
+          "temporal_scope": "dated-profile-reference",
+          "effective_interval": null,
+          "effective_interval_unknown_reason": "Source coverage does not establish continuous role onset/cessation.",
+          "published_at": null,
+          "first_available_at": null,
+          "source_refs": [
+            {
+              "source_id": "primary:9919:company-observation",
+              "locator": "PDF page 1 (zero-based page 0), lines 34-45; profile lists industry and principal businesses"
+            }
+          ],
+          "business_importance": null,
+          "revenue_share": null
+        }
+      ]
+    }
+  ]
+}

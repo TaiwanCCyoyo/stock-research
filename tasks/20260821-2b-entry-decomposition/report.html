@@ -1,0 +1,1586 @@
+<title>2B 進場拆解</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap"
+/>
+
+<style>
+    :root {
+        --ground: #f6f7f8;
+        --panel: #ffffff;
+        --ink: #14181c;
+        --ink-soft: #4a545e;
+        --ink-faint: #79838d;
+        --rule: #dfe3e7;
+        --rule-soft: #eceff1;
+        /* Structural, not decorative: A is the momentum branch, B the false break.
+       Every chart, chip and table cell that names a branch uses its own colour. */
+        --branch-a: #3d5f86;
+        --branch-b: #b93e2c;
+        --branch-a-wash: #e4ebf3;
+        --branch-b-wash: #f7e4e0;
+        --good: #2c6b4f;
+        --warn: #93701c;
+        --shadow:
+            0 1px 2px rgba(20, 24, 28, 0.05),
+            0 8px 24px -16px rgba(20, 24, 28, 0.25);
+
+        --display: "Newsreader", Georgia, "Songti TC", serif;
+        --body:
+            "Source Sans 3", -apple-system, "Segoe UI", "Noto Sans TC",
+            sans-serif;
+        --mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", monospace;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+            --ground: #0e1114;
+            --panel: #161a1e;
+            --ink: #e8ebee;
+            --ink-soft: #a9b3bc;
+            --ink-faint: #78828b;
+            --rule: #2a3138;
+            --rule-soft: #1f252b;
+            --branch-a: #7ea3cd;
+            --branch-b: #e0755f;
+            --branch-a-wash: #1c2733;
+            --branch-b-wash: #2e1e1a;
+            --good: #6fbf95;
+            --warn: #d0ab55;
+            --shadow:
+                0 1px 2px rgba(0, 0, 0, 0.4),
+                0 8px 24px -16px rgba(0, 0, 0, 0.8);
+        }
+    }
+
+    :root[data-theme="dark"] {
+        --ground: #0e1114;
+        --panel: #161a1e;
+        --ink: #e8ebee;
+        --ink-soft: #a9b3bc;
+        --ink-faint: #78828b;
+        --rule: #2a3138;
+        --rule-soft: #1f252b;
+        --branch-a: #7ea3cd;
+        --branch-b: #e0755f;
+        --branch-a-wash: #1c2733;
+        --branch-b-wash: #2e1e1a;
+        --good: #6fbf95;
+        --warn: #d0ab55;
+        --shadow:
+            0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -16px rgba(0, 0, 0, 0.8);
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        background: var(--ground);
+        color: var(--ink);
+        font-family: var(--body);
+        font-size: 17px;
+        line-height: 1.68;
+        margin: 0;
+        padding: 0 20px 96px;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    .wrap {
+        max-width: 820px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 34px;
+    }
+
+    /* --- masthead --- */
+    header.masthead {
+        padding: 64px 0 0;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+    .eyebrow {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+    }
+    h1 {
+        font-family: var(--display);
+        font-weight: 600;
+        font-size: clamp(2.1rem, 5.2vw, 3.1rem);
+        line-height: 1.12;
+        letter-spacing: -0.015em;
+        margin: 0;
+        text-wrap: balance;
+    }
+    h1 em {
+        font-style: italic;
+        color: var(--branch-b);
+    }
+    .standfirst {
+        font-size: 1.06rem;
+        color: var(--ink-soft);
+        margin: 0;
+        max-width: 62ch;
+    }
+    .runmeta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 28px;
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--ink-faint);
+        border-top: 1px solid var(--rule);
+        padding-top: 16px;
+    }
+    .runmeta b {
+        color: var(--ink-soft);
+        font-weight: 400;
+    }
+
+    /* --- sections --- */
+    section {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+    h2 {
+        font-family: var(--display);
+        font-weight: 600;
+        font-size: 1.62rem;
+        line-height: 1.25;
+        margin: 26px 0 0;
+        letter-spacing: -0.01em;
+        text-wrap: balance;
+        display: flex;
+        align-items: baseline;
+        gap: 14px;
+    }
+    h2 .num {
+        font-family: var(--mono);
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--ink-faint);
+        letter-spacing: 0.08em;
+        flex: none;
+        transform: translateY(-2px);
+    }
+    h3 {
+        font-family: var(--body);
+        font-weight: 600;
+        font-size: 1.06rem;
+        margin: 18px 0 0;
+        color: var(--ink);
+    }
+    p {
+        margin: 0;
+        max-width: 68ch;
+    }
+    .lead {
+        font-size: 1.04rem;
+    }
+    strong {
+        font-weight: 600;
+    }
+    code {
+        font-family: var(--mono);
+        font-size: 0.86em;
+        background: var(--rule-soft);
+        padding: 0.12em 0.38em;
+        border-radius: 3px;
+    }
+    a {
+        color: var(--branch-a);
+    }
+
+    /* --- the thesis diagram --- */
+    figure {
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    .figbox {
+        background: var(--panel);
+        border: 1px solid var(--rule);
+        border-radius: 6px;
+        padding: 26px 24px;
+        box-shadow: var(--shadow);
+        overflow-x: auto;
+    }
+    figcaption {
+        font-size: 0.86rem;
+        color: var(--ink-faint);
+        max-width: 66ch;
+    }
+    .setrow {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        margin-bottom: 22px;
+    }
+    .setrow:last-child {
+        margin-bottom: 0;
+    }
+    .setlabel {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        color: var(--ink-soft);
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+    }
+    .setbar {
+        display: flex;
+        height: 30px;
+        border-radius: 3px;
+        overflow: hidden;
+        min-width: 320px;
+    }
+    .seg {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 700;
+        color: #fff;
+    }
+    .seg.a {
+        background: var(--branch-a);
+    }
+    .seg.b {
+        background: var(--branch-b);
+    }
+    .seg.ghost {
+        background: repeating-linear-gradient(
+            -45deg,
+            var(--branch-b-wash),
+            var(--branch-b-wash) 5px,
+            transparent 5px,
+            transparent 10px
+        );
+        border: 1px dashed var(--branch-b);
+        color: var(--branch-b);
+    }
+    .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 20px;
+        font-size: 0.82rem;
+        color: var(--ink-soft);
+    }
+    .legend span {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+    }
+    .swatch {
+        width: 11px;
+        height: 11px;
+        border-radius: 2px;
+        flex: none;
+    }
+
+    /* --- key findings --- */
+    .findings {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+    .finding {
+        background: var(--panel);
+        border: 1px solid var(--rule);
+        padding: 20px 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .finding:first-child {
+        border-radius: 6px 6px 0 0;
+    }
+    .finding:last-child {
+        border-radius: 0 0 6px 6px;
+    }
+    .finding h4 {
+        margin: 0;
+        font-family: var(--body);
+        font-weight: 600;
+        font-size: 1.02rem;
+        display: flex;
+        gap: 11px;
+        align-items: baseline;
+    }
+    .finding h4 .idx {
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--ink-faint);
+        flex: none;
+    }
+    .finding p {
+        font-size: 0.96rem;
+        color: var(--ink-soft);
+    }
+
+    /* --- tables --- */
+    .tablebox {
+        overflow-x: auto;
+        border: 1px solid var(--rule);
+        border-radius: 6px;
+        background: var(--panel);
+        box-shadow: var(--shadow);
+    }
+    table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 0.88rem;
+        min-width: 460px;
+    }
+    caption {
+        text-align: left;
+        padding: 15px 18px 0;
+        font-size: 0.85rem;
+        color: var(--ink-faint);
+        caption-side: top;
+    }
+    th,
+    td {
+        padding: 9px 14px;
+        text-align: left;
+        border-bottom: 1px solid var(--rule-soft);
+    }
+    thead th {
+        font-family: var(--mono);
+        font-size: 10.5px;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+        font-weight: 400;
+        border-bottom: 1px solid var(--rule);
+        white-space: nowrap;
+    }
+    tbody tr:last-child td {
+        border-bottom: none;
+    }
+    td.n,
+    th.n {
+        text-align: right;
+        font-family: var(--mono);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+    td.hi {
+        font-weight: 700;
+        color: var(--ink);
+    }
+    tr.armA td:first-child {
+        box-shadow: inset 3px 0 0 var(--branch-a);
+    }
+    tr.armB td:first-child {
+        box-shadow: inset 3px 0 0 var(--branch-b);
+    }
+
+    .chip {
+        display: inline-block;
+        font-family: var(--mono);
+        font-size: 10.5px;
+        letter-spacing: 0.04em;
+        padding: 2px 8px;
+        border-radius: 99px;
+        white-space: nowrap;
+        border: 1px solid currentColor;
+    }
+    .chip.pass {
+        color: var(--good);
+    }
+    .chip.soft {
+        color: var(--warn);
+    }
+    .chip.no {
+        color: var(--ink-faint);
+    }
+
+    /* --- callout --- */
+    .callout {
+        background: var(--panel);
+        border: 1px solid var(--rule);
+        border-left: 3px solid var(--branch-b);
+        border-radius: 0 6px 6px 0;
+        padding: 18px 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+    }
+    .callout.calm {
+        border-left-color: var(--branch-a);
+    }
+    .callout h4 {
+        margin: 0;
+        font-size: 0.98rem;
+        font-weight: 600;
+    }
+    .callout p {
+        font-size: 0.94rem;
+        color: var(--ink-soft);
+    }
+
+    ol,
+    ul {
+        margin: 0;
+        padding-left: 1.35em;
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+        max-width: 68ch;
+    }
+    li {
+        padding-left: 0.15em;
+    }
+
+    footer {
+        border-top: 1px solid var(--rule);
+        padding-top: 22px;
+        margin-top: 14px;
+        font-size: 0.86rem;
+        color: var(--ink-faint);
+    }
+    footer code {
+        font-size: 0.82em;
+    }
+
+    :focus-visible {
+        outline: 2px solid var(--branch-a);
+        outline-offset: 3px;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        * {
+            animation: none !important;
+            transition: none !important;
+        }
+    }
+    @media (max-width: 620px) {
+        body {
+            font-size: 16px;
+            padding: 0 15px 72px;
+        }
+        header.masthead {
+            padding-top: 44px;
+        }
+    }
+</style>
+
+<div class="wrap">
+    <header class="masthead">
+        <div class="eyebrow">研究報告 · 20260821-2b-entry-decomposition</div>
+        <h1>你回測的那支 2B，<em>98% 不是 2B</em></h1>
+        <p class="standfirst">
+            一個
+            <code>or</code>
+            讓假突破變成備胎，部位占用又讓備胎大部分時候上不了場。
+            把兩支條件拆開分別回測之後，真正在拖累績效的東西也跟著現形了 ——
+            不是進場，是那條看起來很保守的減碼規則。
+        </p>
+        <div class="runmeta">
+            <span><b>訓練</b> 2019-01-02 → 2023-12-31</span>
+            <span><b>驗證</b> 2024-01-01 → 2026-08-14</span>
+            <span><b>網格</b> 3 臂 × 2 減碼 × 5 族群 × 4 跑法 = 120 cell</span>
+            <span><b>前作</b> 20260814-2b-false-break-structure</span>
+        </div>
+    </header>
+
+    <section>
+        <h2><span class="num">01</span>先講結論</h2>
+
+        <figure>
+            <div class="figbox">
+                <div class="setrow">
+                    <div class="setlabel">
+                        <span>原版策略在驗證期實際做的進場</span
+                        ><span>1,215 筆</span>
+                    </div>
+                    <div class="setbar">
+                        <div class="seg a" style="flex: 1204">
+                            動能分支 1,204
+                        </div>
+                        <div
+                            class="seg b"
+                            style="flex: 11"
+                            title="2B 獨有 11 筆"
+                        ></div>
+                    </div>
+                </div>
+                <div class="setrow">
+                    <div class="setlabel">
+                        <span>2B 單獨跑會做的進場</span><span>114 筆</span>
+                    </div>
+                    <div class="setbar" style="width: 9.4%; min-width: 0">
+                        <div
+                            class="seg b"
+                            style="flex: 36"
+                            title="R 也做到的 36 筆"
+                        ></div>
+                        <div
+                            class="seg ghost"
+                            style="flex: 78"
+                            title="被部位占用擋掉的 78 筆"
+                        ></div>
+                    </div>
+                </div>
+                <div class="legend">
+                    <span
+                        ><i
+                            class="swatch"
+                            style="background: var(--branch-a)"
+                        ></i
+                        >動能分支（price_strength）</span
+                    >
+                    <span
+                        ><i
+                            class="swatch"
+                            style="background: var(--branch-b)"
+                        ></i
+                        >2B 假突破（bottom_2b）</span
+                    >
+                    <span
+                        ><i
+                            class="swatch"
+                            style="
+                                background: transparent;
+                                border: 1px dashed var(--branch-b);
+                            "
+                        ></i
+                        >2B 訊號成立，但原版做不到</span
+                    >
+                </div>
+            </div>
+            <figcaption>
+                兩條軸同比例（114 / 1,215 =
+                9.4%）。上排右端那條幾乎看不見的紅線就是驗證期全部的 2B
+                進場：<strong>11 筆</strong>，而且原版為了抱住它們又錯過了 10
+                筆動能進場 —— 淨貢獻 <strong>+1 筆</strong>。下排顯示 2B
+                單獨跑時會做 114 筆，其中
+                <strong>78 筆（68%）</strong>原版根本碰不到 ——
+                訊號成立的當下，動能分支早就買進、部位還開著。
+            </figcaption>
+        </figure>
+
+        <div class="findings">
+            <div class="finding">
+                <h4>
+                    <span class="idx">01</span>那支策略的進場，98~99%
+                    由動能那一支提供
+                </h4>
+                <p>
+                    原始進場是
+                    <code
+                        >converged and trend_ready and (bottom_2b or
+                        price_strength)</code
+                    >。逐筆比對股票與日期，並把差集再跟 B 自己的進場集合取交集
+                    —— 因為兩臂一旦分歧，部位狀態會漂移，R
+                    可能只是剛好空手、然後用同一個動能訊號進場。
+                    結果是<strong>零漂移</strong>，歸因精確：
+                </p>
+                <div class="tablebox">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>窗口</th>
+                                <th class="n">R 原版</th>
+                                <th class="n">A 動能</th>
+                                <th class="n">R 有 A 沒有</th>
+                                <th class="n">其中 B 也會做</th>
+                                <th class="n">占用漂移</th>
+                                <th class="n">A 有 R 沒有</th>
+                                <th class="n">2B 淨貢獻</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>訓練</td>
+                                <td class="n">2,197</td>
+                                <td class="n">2,190</td>
+                                <td class="n">34</td>
+                                <td class="n hi">34</td>
+                                <td class="n">0</td>
+                                <td class="n">27</td>
+                                <td class="n hi">+7</td>
+                            </tr>
+                            <tr>
+                                <td>驗證</td>
+                                <td class="n">1,215</td>
+                                <td class="n">1,214</td>
+                                <td class="n">11</td>
+                                <td class="n hi">11</td>
+                                <td class="n">0</td>
+                                <td class="n">10</td>
+                                <td class="n hi">+1</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p>
+                    反方向更值得看：<strong
+                        >A 有 27 筆（驗證期 10 筆）進場是 R 做不到的</strong
+                    >
+                    —— R 因為抱著 2B 買進的部位，錯過了動能訊號。那個
+                    <code>or</code>
+                    不只帶進很少的進場，帶進來的還把差不多同樣多的動能進場擠掉了。
+                </p>
+            </div>
+            <div class="finding">
+                <h4>
+                    <span class="idx">02</span
+                    >不只是「很少觸發」，是被自己的部位擋住
+                </h4>
+                <p>
+                    <code>or</code> 讓 2B
+                    變成備胎，占用又讓備胎上不了場。兩層加起來，才是「2B
+                    從來沒被測過」的完整機制。
+                </p>
+            </div>
+            <div class="finding">
+                <h4>
+                    <span class="idx">03</span>單獨跑的 2B
+                    通過了預先登記門檻，但「贏過動能」樣本撐不住
+                </h4>
+                <p>
+                    關掉減碼後訓練期 +19,864/進場、驗證期 +33,464/進場，114
+                    個部位 ≥ 30 門檻，規則 1 通過，驗證期獲利因子 2.07。但 B 對
+                    A 的差距
+                    <strong>t = 1.73、95% 區間 [−2,556, +41,940] 含 0</strong
+                    >。看得出方向，證明不了差異。
+                </p>
+            </div>
+            <div class="finding">
+                <h4>
+                    <span class="idx">04</span>最硬的發現不是
+                    2B，是減碼規則吃掉了大約八成報酬
+                </h4>
+                <p>
+                    R 原版驗證期：開著減碼每次進場 2,743 元，關掉是 13,421 元 ——
+                    開著只留下 20%（訓練期 21%）。六組配對檢定全正、t =
+                    2.25~5.66、信賴區間全部不含 0。
+                </p>
+            </div>
+        </div>
+
+        <div class="callout">
+            <h4>一句話</h4>
+            <p>
+                你的 2B 策略沒有被 2B 拖累，因為它從來沒跑過
+                2B；真正在拖累它的是那條看起來很保守的減碼規則 ——
+                它確實有壓低帳戶回撤，但價錢是八成的報酬。
+            </p>
+        </div>
+    </section>
+
+    <section>
+        <h2><span class="num">02</span>單一變數是用程式證明的</h2>
+        <p>
+            三個臂只差 <code>should_enter</code> 一個方法。A 與 B 兩個檔案是從 R
+            <strong>程式產生</strong>的 —— 只替換模組 docstring、類別名稱與
+            <code>should_enter</code>，其餘位元組完全相同。<code
+                >verify_isolation.py</code
+            >
+            在掃描前再驗一次：
+        </p>
+
+        <div class="tablebox">
+            <table>
+                <caption>
+                    24/24 通過。docstring
+                    刻意排除：說明文字可以不同，程式碼不行。
+                </caption>
+                <thead>
+                    <tr>
+                        <th>檢查</th>
+                        <th class="n">項數</th>
+                        <th>結果</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <code>on_bar</code> / <code>detect</code> /
+                            <code>exit_plan</code> / 兩個偵測器 /
+                            <code>warmup</code> / <code>average</code> /
+                            <code>partial_quantity</code> / 部位大小，三臂 AST
+                            相同
+                        </td>
+                        <td class="n">9</td>
+                        <td><span class="chip pass">PASS</span></td>
+                    </tr>
+                    <tr>
+                        <td><code>should_enter</code> 三臂兩兩互異</td>
+                        <td class="n">3</td>
+                        <td><span class="chip pass">PASS</span></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <code>entry_break_pct</code> 只被
+                            <code>detect_bottom_2b</code> 讀取
+                        </td>
+                        <td class="n">3</td>
+                        <td><span class="chip pass">PASS</span></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <code>exit_break_pct</code> 只被
+                            <code>detect_top_2b</code> 讀取
+                        </td>
+                        <td class="n">3</td>
+                        <td><span class="chip pass">PASS</span></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <code>partial_exit</code> 只被
+                            <code>exit_plan</code> 讀取
+                        </td>
+                        <td class="n">3</td>
+                        <td><span class="chip pass">PASS</span></td>
+                    </tr>
+                    <tr>
+                        <td>三臂 <code>warmup()</code> 相等（都是 21）</td>
+                        <td class="n">1</td>
+                        <td><span class="chip pass">PASS</span></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <code>R(s) == A(s) or B(s)</code> 於全部 16
+                            種訊號組合
+                        </td>
+                        <td class="n">2</td>
+                        <td><span class="chip pass">PASS</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="callout calm">
+            <h4>第 3~5 列修的是前作的實際缺陷</h4>
+            <p>
+                <code>20260814</code> 的 <code>two_b_break_pct</code> 同時被
+                <code>detect_bottom_2b</code>（進場）與
+                <code>detect_top_2b</code>（出場）讀取。所以那次把它從 0 調到
+                1.5、宣稱「出場固定所以變化可歸因於進場」的推論不成立 —— 頂部 2B
+                出場從 145 次掉到 45 次、持有中位從 14 天拉到 30
+                天，<strong>進場數下降是抱更久的結果，不是原因</strong>。這次拆成兩個參數並用
+                AST 證明各自只被一邊讀取。
+            </p>
+        </div>
+
+        <p>
+            最後一列是設計的核心：R 恰好在 A 或 B
+            觸發時觸發，所以三臂是同一個訊號集合的<strong>分割</strong>，(A, B)
+            才有資格回答「是哪一支在撐」。另外
+            <code>verify_pattern.py</code> 用手工 K 棒序列驗偵測器本身
+            <strong>13/13</strong>：同一根既破底又收高不算、超過 reclaim window
+            才收回不算、穿破幅度小於門檻不算。這條檢查是必要的 —— 2B
+            臂觸發次數比事前估算高出許多，「偵測器太鬆」必須被排除，而不是被辯解掉。
+        </p>
+    </section>
+
+    <section>
+        <h2><span class="num">03</span>主要結果</h2>
+
+        <h3>3.1　合併五族群的交易形狀（unconstrained）</h3>
+        <div class="tablebox">
+            <table>
+                <caption>
+                    所有數字都是<strong>每部位</strong>，不是每次賣出。
+                </caption>
+                <thead>
+                    <tr>
+                        <th>窗口</th>
+                        <th>進場臂</th>
+                        <th>減碼</th>
+                        <th class="n">進場數</th>
+                        <th class="n">每次進場損益</th>
+                        <th class="n">勝率%</th>
+                        <th class="n">賺賠比</th>
+                        <th class="n">獲利因子</th>
+                        <th class="n">持有中位</th>
+                        <th class="n">賣出/部位</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>訓練</td>
+                        <td>R 原版</td>
+                        <td>開</td>
+                        <td class="n">2,197</td>
+                        <td class="n">3,440</td>
+                        <td class="n">36.8</td>
+                        <td class="n">1.93</td>
+                        <td class="n">1.12</td>
+                        <td class="n">20</td>
+                        <td class="n">6.9</td>
+                    </tr>
+                    <tr>
+                        <td>訓練</td>
+                        <td>R 原版</td>
+                        <td>關</td>
+                        <td class="n">2,197</td>
+                        <td class="n hi">16,286</td>
+                        <td class="n">55.4</td>
+                        <td class="n">1.09</td>
+                        <td class="n">1.36</td>
+                        <td class="n">20</td>
+                        <td class="n">1.0</td>
+                    </tr>
+                    <tr class="armA">
+                        <td>訓練</td>
+                        <td>A 動能</td>
+                        <td>開</td>
+                        <td class="n">2,190</td>
+                        <td class="n">3,519</td>
+                        <td class="n">37.1</td>
+                        <td class="n">1.92</td>
+                        <td class="n">1.13</td>
+                        <td class="n">20</td>
+                        <td class="n">6.9</td>
+                    </tr>
+                    <tr class="armA">
+                        <td>訓練</td>
+                        <td>A 動能</td>
+                        <td>關</td>
+                        <td class="n">2,190</td>
+                        <td class="n hi">16,282</td>
+                        <td class="n">55.4</td>
+                        <td class="n">1.09</td>
+                        <td class="n">1.36</td>
+                        <td class="n">20</td>
+                        <td class="n">1.0</td>
+                    </tr>
+                    <tr class="armB">
+                        <td>訓練</td>
+                        <td>B 2B</td>
+                        <td>開</td>
+                        <td class="n">172</td>
+                        <td class="n">−3,489</td>
+                        <td class="n">26.1</td>
+                        <td class="n">1.90</td>
+                        <td class="n">0.67</td>
+                        <td class="n">28</td>
+                        <td class="n">9.4</td>
+                    </tr>
+                    <tr class="armB">
+                        <td>訓練</td>
+                        <td>B 2B</td>
+                        <td>關</td>
+                        <td class="n">172</td>
+                        <td class="n hi">19,864</td>
+                        <td class="n">53.4</td>
+                        <td class="n">1.15</td>
+                        <td class="n">1.32</td>
+                        <td class="n">28</td>
+                        <td class="n">0.9</td>
+                    </tr>
+                    <tr>
+                        <td>驗證</td>
+                        <td>R 原版</td>
+                        <td>開</td>
+                        <td class="n">1,215</td>
+                        <td class="n">2,743</td>
+                        <td class="n">36.3</td>
+                        <td class="n">1.94</td>
+                        <td class="n">1.11</td>
+                        <td class="n">18</td>
+                        <td class="n">6.3</td>
+                    </tr>
+                    <tr>
+                        <td>驗證</td>
+                        <td>R 原版</td>
+                        <td>關</td>
+                        <td class="n">1,215</td>
+                        <td class="n hi">13,421</td>
+                        <td class="n">54.4</td>
+                        <td class="n">1.10</td>
+                        <td class="n">1.31</td>
+                        <td class="n">18</td>
+                        <td class="n">1.0</td>
+                    </tr>
+                    <tr class="armA">
+                        <td>驗證</td>
+                        <td>A 動能</td>
+                        <td>開</td>
+                        <td class="n">1,214</td>
+                        <td class="n">2,799</td>
+                        <td class="n">36.6</td>
+                        <td class="n">1.92</td>
+                        <td class="n">1.11</td>
+                        <td class="n">18</td>
+                        <td class="n">6.2</td>
+                    </tr>
+                    <tr class="armA">
+                        <td>驗證</td>
+                        <td>A 動能</td>
+                        <td>關</td>
+                        <td class="n">1,214</td>
+                        <td class="n hi">12,906</td>
+                        <td class="n">54.3</td>
+                        <td class="n">1.08</td>
+                        <td class="n">1.29</td>
+                        <td class="n">18</td>
+                        <td class="n">1.0</td>
+                    </tr>
+                    <tr class="armB">
+                        <td>驗證</td>
+                        <td>B 2B</td>
+                        <td>開</td>
+                        <td class="n">114</td>
+                        <td class="n">10,541</td>
+                        <td class="n">42.2</td>
+                        <td class="n">2.38</td>
+                        <td class="n">1.74</td>
+                        <td class="n">21</td>
+                        <td class="n">8.0</td>
+                    </tr>
+                    <tr class="armB">
+                        <td>驗證</td>
+                        <td>B 2B</td>
+                        <td>關</td>
+                        <td class="n">114</td>
+                        <td class="n hi">33,464</td>
+                        <td class="n">61.5</td>
+                        <td class="n">1.30</td>
+                        <td class="n hi">2.07</td>
+                        <td class="n">21</td>
+                        <td class="n">1.0</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p>
+            「賣出/部位」那一欄是這次能看清楚一切的原因。減碼開著時，一個部位平均被拆成
+            6~9 次賣出 —— 而引擎的 <code>closed_trade_count</code> 每一次 SELL
+            都加一，所以原始研究看到的「124 筆交易」其實是
+            <strong>28 個部位</strong>。用每部位的口徑，才能跟 S1~S6
+            並排（那六支都是一次賣光）。
+        </p>
+
+        <h3>3.2　規則 1 判定（兩期皆正 且 驗證期部位數 ≥ 30）</h3>
+        <div class="tablebox">
+            <table>
+                <thead>
+                    <tr>
+                        <th>進場臂</th>
+                        <th>減碼</th>
+                        <th class="n">訓練期/進場</th>
+                        <th class="n">驗證期/進場</th>
+                        <th class="n">驗證期部位數</th>
+                        <th>判定</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>R 原版</td>
+                        <td>開</td>
+                        <td class="n">3,440</td>
+                        <td class="n">2,743</td>
+                        <td class="n">1,215</td>
+                        <td><span class="chip pass">通過</span></td>
+                    </tr>
+                    <tr>
+                        <td>R 原版</td>
+                        <td>關</td>
+                        <td class="n">16,286</td>
+                        <td class="n">13,421</td>
+                        <td class="n">1,215</td>
+                        <td><span class="chip pass">通過</span></td>
+                    </tr>
+                    <tr class="armA">
+                        <td>A 動能</td>
+                        <td>開</td>
+                        <td class="n">3,519</td>
+                        <td class="n">2,799</td>
+                        <td class="n">1,214</td>
+                        <td><span class="chip pass">通過</span></td>
+                    </tr>
+                    <tr class="armA">
+                        <td>A 動能</td>
+                        <td>關</td>
+                        <td class="n">16,282</td>
+                        <td class="n">12,906</td>
+                        <td class="n">1,214</td>
+                        <td><span class="chip pass">通過</span></td>
+                    </tr>
+                    <tr class="armB">
+                        <td>B 2B</td>
+                        <td>開</td>
+                        <td class="n">−3,489</td>
+                        <td class="n">10,541</td>
+                        <td class="n">114</td>
+                        <td><span class="chip no">非結論</span></td>
+                    </tr>
+                    <tr class="armB">
+                        <td>B 2B</td>
+                        <td>關</td>
+                        <td class="n">19,864</td>
+                        <td class="n">33,464</td>
+                        <td class="n">114</td>
+                        <td><span class="chip pass">通過</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p>
+            六格通過五格。這跟前兩份研究 0/15、0/30 的全滅很不一樣 ——
+            原因不是這支策略特別強，而是<strong
+                >規則 3（打敗買進持有）在這份研究裡已降級為參考值</strong
+            >，理由在第 6 節。
+        </p>
+
+        <h3>3.3　C1 — 2B 對動能</h3>
+        <div class="tablebox">
+            <table>
+                <thead>
+                    <tr>
+                        <th>減碼</th>
+                        <th>窗口</th>
+                        <th class="n">B/進場</th>
+                        <th class="n">A/進場</th>
+                        <th class="n">差異</th>
+                        <th class="n">B MAE p90</th>
+                        <th class="n">A MAE p90</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>開</td>
+                        <td>訓練</td>
+                        <td class="n">−3,489</td>
+                        <td class="n">3,519</td>
+                        <td class="n">−7,008</td>
+                        <td class="n">−11.3</td>
+                        <td class="n">−10.5</td>
+                    </tr>
+                    <tr>
+                        <td>開</td>
+                        <td>驗證</td>
+                        <td class="n">10,541</td>
+                        <td class="n">2,799</td>
+                        <td class="n">+7,742</td>
+                        <td class="n">−9.9</td>
+                        <td class="n">−10.6</td>
+                    </tr>
+                    <tr>
+                        <td>關</td>
+                        <td>訓練</td>
+                        <td class="n">19,864</td>
+                        <td class="n">16,282</td>
+                        <td class="n hi">+3,582</td>
+                        <td class="n">−11.3</td>
+                        <td class="n">−10.5</td>
+                    </tr>
+                    <tr>
+                        <td>關</td>
+                        <td>驗證</td>
+                        <td class="n">33,464</td>
+                        <td class="n">12,906</td>
+                        <td class="n hi">+20,558</td>
+                        <td class="n">−9.9</td>
+                        <td class="n">−10.6</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p>
+            關掉減碼後兩期都是正的，方向一致。但風險面<strong
+                >規則 2 未通過</strong
+            >
+            —— 2B 臂在訓練期的 MAE p90 比動能臂深（−11.3 對
+            −10.5），只在驗證期較淺，不符合「兩期都不更差」的預先登記標準。
+        </p>
+
+        <div class="tablebox">
+            <table>
+                <caption>
+                    <strong>非預先登記</strong
+                    >的事後穩健性檢查，加在看到結果之後，而且它讓結論變弱不是變強。
+                </caption>
+                <thead>
+                    <tr>
+                        <th>減碼</th>
+                        <th>窗口</th>
+                        <th class="n">B 部位</th>
+                        <th class="n">A 部位</th>
+                        <th class="n">均值差</th>
+                        <th class="n">t</th>
+                        <th>95% 區間</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>開</td>
+                        <td>訓練</td>
+                        <td class="n">161</td>
+                        <td class="n">2,132</td>
+                        <td class="n">−8,018</td>
+                        <td class="n">−2.21</td>
+                        <td class="n">[−15,143, −893]</td>
+                    </tr>
+                    <tr>
+                        <td>開</td>
+                        <td>驗證</td>
+                        <td class="n">109</td>
+                        <td class="n">1,185</td>
+                        <td class="n">+7,045</td>
+                        <td class="n">1.03</td>
+                        <td class="n">[−6,305, +20,395]</td>
+                    </tr>
+                    <tr>
+                        <td>關</td>
+                        <td>訓練</td>
+                        <td class="n">161</td>
+                        <td class="n">2,132</td>
+                        <td class="n">+639</td>
+                        <td class="n">0.07</td>
+                        <td class="n">[−17,452, +18,731]</td>
+                    </tr>
+                    <tr>
+                        <td>關</td>
+                        <td>驗證</td>
+                        <td class="n">109</td>
+                        <td class="n">1,185</td>
+                        <td class="n hi">+19,692</td>
+                        <td class="n">1.73</td>
+                        <td class="n">[−2,556, +41,940]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p>
+            驗證期那個 +19,692 的區間含 0。規則 1
+            是以正負號當門檻、不是以顯著性，所以「B 通過規則
+            1」照預先登記成立；但「B 比 A 好」這句話，109 個部位撐不起來。
+        </p>
+
+        <h3>3.4　C3 — 減碼規則（本研究最強的結果）</h3>
+        <div class="tablebox">
+            <table>
+                <caption>
+                    配對檢定，同一批部位，關減碼 − 開減碼。
+                </caption>
+                <thead>
+                    <tr>
+                        <th>進場臂</th>
+                        <th>窗口</th>
+                        <th class="n">配對數</th>
+                        <th class="n">每部位平均差</th>
+                        <th class="n">t</th>
+                        <th>95% 區間</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>R 原版</td>
+                        <td>訓練</td>
+                        <td class="n">2,139</td>
+                        <td class="n hi">+9,656</td>
+                        <td class="n hi">5.66</td>
+                        <td class="n">[+6,315, +12,998]</td>
+                    </tr>
+                    <tr>
+                        <td>R 原版</td>
+                        <td>驗證</td>
+                        <td class="n">1,186</td>
+                        <td class="n hi">+8,271</td>
+                        <td class="n hi">3.66</td>
+                        <td class="n">[+3,846, +12,695]</td>
+                    </tr>
+                    <tr class="armA">
+                        <td>A 動能</td>
+                        <td>訓練</td>
+                        <td class="n">2,132</td>
+                        <td class="n hi">+9,564</td>
+                        <td class="n hi">5.63</td>
+                        <td class="n">[+6,234, +12,893]</td>
+                    </tr>
+                    <tr class="armA">
+                        <td>A 動能</td>
+                        <td>驗證</td>
+                        <td class="n">1,185</td>
+                        <td class="n hi">+7,683</td>
+                        <td class="n hi">3.44</td>
+                        <td class="n">[+3,308, +12,059]</td>
+                    </tr>
+                    <tr class="armB">
+                        <td>B 2B</td>
+                        <td>訓練</td>
+                        <td class="n">161</td>
+                        <td class="n hi">+18,221</td>
+                        <td class="n hi">2.35</td>
+                        <td class="n">[+2,998, +33,444]</td>
+                    </tr>
+                    <tr class="armB">
+                        <td>B 2B</td>
+                        <td>驗證</td>
+                        <td class="n">109</td>
+                        <td class="n hi">+20,330</td>
+                        <td class="n hi">2.25</td>
+                        <td class="n">[+2,622, +38,039]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="callout calm">
+            <h4>為什麼可以配對</h4>
+            <p>
+                減碼不平倉 —— <code>partial_quantity</code> 取
+                <code>int(部位 × 0.5)</code
+                >，永遠不會歸零。所以兩臂的進場日、出場日、持有天數<strong>完全一樣</strong>，只有中途持有的股數不同。<code
+                    >mission.md</code
+                >
+                事前擔心「關掉減碼會拉長持有、透過占用改變進場數，不能誤讀成進場效應」——
+                實際上進場數兩邊完全相同（2,197 / 2,190 /
+                172），這個顧慮沒有發生。事前登記、事後回報，兩邊都照做。
+            </p>
+        </div>
+        <p>
+            機制很單純：減碼發生在跌破均線時，也就是價格在成本之下的時候賣。原始研究裡
+            223 次減碼的勝率只有 14.8%。賣掉之後如果價格漲回去吃到頂部 2B
+            出場，等於把回升的部位便宜賣了。
+        </p>
+
+        <h3>3.5　C4 — 保留兩支 vs 只留動能</h3>
+        <div class="tablebox">
+            <table>
+                <thead>
+                    <tr>
+                        <th>減碼</th>
+                        <th>窗口</th>
+                        <th class="n">R/進場</th>
+                        <th class="n">A/進場</th>
+                        <th class="n">差異</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>開</td>
+                        <td>訓練</td>
+                        <td class="n">3,440</td>
+                        <td class="n">3,519</td>
+                        <td class="n">−79</td>
+                    </tr>
+                    <tr>
+                        <td>開</td>
+                        <td>驗證</td>
+                        <td class="n">2,743</td>
+                        <td class="n">2,799</td>
+                        <td class="n">−56</td>
+                    </tr>
+                    <tr>
+                        <td>關</td>
+                        <td>訓練</td>
+                        <td class="n">16,286</td>
+                        <td class="n">16,282</td>
+                        <td class="n">+4</td>
+                    </tr>
+                    <tr>
+                        <td>關</td>
+                        <td>驗證</td>
+                        <td class="n">13,421</td>
+                        <td class="n">12,906</td>
+                        <td class="n">+516</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p>
+            四格差異全部小到看不見。這是第 1 節那張圖的另一種說法：把 2B
+            那一支從原始策略裡整個刪掉，結果幾乎不動。
+        </p>
+    </section>
+
+    <section>
+        <h2>
+            <span class="num">04</span>風險估計量換掉了，順手修好了前一份研究
+        </h2>
+        <p>
+            前三份研究都用 <code>shared</code> 模式的
+            <code>max_drawdown_rate</code> 談風險 ——
+            每個族群一條權益曲線，五個族群就是<strong>五個觀察值</strong>，於是結論都長成「3/5」「4/5」這種計票。同一份報告的報酬結論卻站在
+            900+ 筆交易上，兩者並排呈現，可信度差了兩個數量級。<code
+                >20260821</code
+            >
+            自己在限制裡寫了這件事，然後就停在那裡。
+        </p>
+        <p>
+            <code>mae_analysis.py</code>
+            換掉的是估計量，不是實驗：對每一個部位問「從進場到出場之間，最深跌到哪裡」，得到一個<strong>分布</strong>而不是一個數。不需要重跑任何回測
+            —— 只讀 <code>trades</code> 加上重播 K 棒。
+        </p>
+
+        <div class="tablebox">
+            <table>
+                <caption>
+                    回頭套用在
+                    <code>20260821</code>
+                    棘輪研究的 20 個 cell。
+                </caption>
+                <thead>
+                    <tr>
+                        <th>臂</th>
+                        <th class="n">部位數</th>
+                        <th class="n">MAE 中位</th>
+                        <th class="n">MAE p75</th>
+                        <th class="n">MAE p90</th>
+                        <th class="n">持有中位</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>ATR 停損</td>
+                        <td class="n">3,143</td>
+                        <td class="n">−4.3%</td>
+                        <td class="n">−6.8%</td>
+                        <td class="n hi">−9.1%</td>
+                        <td class="n">24 天</td>
+                    </tr>
+                    <tr>
+                        <td>箱底棘輪</td>
+                        <td class="n">2,891</td>
+                        <td class="n">−4.4%</td>
+                        <td class="n">−7.4%</td>
+                        <td class="n hi">−10.4%</td>
+                        <td class="n">29 天</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p>
+            <strong>棘輪在 10/10 個 cell 的 MAE p90 都更深。</strong>
+            那份報告原本只能說「規則 3 只過
+            3/5、風險面沒有證據支持棘輪、信心低於報酬結論」。現在同一個結論有
+            6,034
+            個部位撐著，而且方向比計票顯示的更明確：棘輪確實會讓每個部位更痛，這不再是懸而未決。
+        </p>
+
+        <div class="callout">
+            <h4>MAE 有一個盲點，這次剛好撞到</h4>
+            <p>
+                C3（減碼開/關）兩邊的 MAE <strong>完全相同</strong> ——
+                減碼不改變進場日也不改變出場日，只改變中途的部位大小，而 MAE
+                量的是價格從進場價走到多低。這個對照對 MAE
+                是<strong>不可鑑別</strong>的，分析程式現在會明講「同（此對照
+                MAE 不可鑑別）」，而不是讓
+                <code>&gt;=</code> 隨便判一邊贏。換句話說：MAE
+                適合比較<strong>進場</strong>的風險，不適合比較<strong>部位管理</strong>的風險
+                —— 後者要看帳戶層級，也就是第 6 節。
+            </p>
+        </div>
+    </section>
+
+    <section>
+        <h2><span class="num">05</span>關於「2B 到底好不好」的最終回答</h2>
+        <p>分層講，因為每層的證據強度差很多。</p>
+        <div class="tablebox">
+            <table>
+                <thead>
+                    <tr>
+                        <th>主張</th>
+                        <th>證據</th>
+                        <th>強度</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>你回測的那支不是 2B，是雙均線動能</td>
+                        <td>
+                            驗證期 1,215 筆進場只有 11 筆來自 2B；刪掉 2B
+                            那一支結果幾乎不變
+                        </td>
+                        <td><span class="chip pass">確定</span></td>
+                    </tr>
+                    <tr>
+                        <td>真正的 2B 訊號有六到七成被自己的部位擋住</td>
+                        <td>驗證期 114 個 2B 進場裡 78 個原版做不到</td>
+                        <td><span class="chip pass">確定</span></td>
+                    </tr>
+                    <tr>
+                        <td>減碼規則在吃掉大部分報酬</td>
+                        <td>6/6 配對檢定全正、t = 2.25~5.66、區間皆不含 0</td>
+                        <td><span class="chip pass">確定</span></td>
+                    </tr>
+                    <tr>
+                        <td>但它不是純拖累，是定價過高的保險</td>
+                        <td>
+                            關掉之後帳戶回撤確實變深（−14.9% →
+                            −20.1%），只是報酬/回撤仍偏向關掉：訓練 15/15、驗證
+                            11/15
+                        </td>
+                        <td><span class="chip soft">驗證期較弱</span></td>
+                    </tr>
+                    <tr>
+                        <td>單獨跑的 2B 通過預先登記門檻</td>
+                        <td>兩期皆正、驗證期 114 部位、獲利因子 2.07</td>
+                        <td><span class="chip pass">依規則成立</span></td>
+                    </tr>
+                    <tr>
+                        <td>2B 比雙均線動能好</td>
+                        <td>
+                            驗證期 +19,692/部位，但 t = 1.73、區間含
+                            0；訓練期只有 +639
+                        </td>
+                        <td><span class="chip no">未證明</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p>
+            所以你當初的直覺「回測起來好像都還好」是對的 ——
+            但原因跟你以為的完全不同。不是 2B
+            這個型態沒用，是它幾乎沒有被執行；而看起來「還好」的那部分，主要是被減碼規則壓下去的。
+        </p>
+    </section>
+
+    <section>
+        <h2><span class="num">06</span>參考值：帳戶層級（規則 3 已降級）</h2>
+        <p>
+            <code>mission.md</code>
+            事前把「報酬/回撤要贏買進持有」從門檻降為參考值：它在三份研究裡 0 勝
+            17 敗，而且有結構性解釋 ——
+            兩個窗口都是台股電子大多頭，一個會空手的純多頭策略在滿倉基準面前結構上就贏不了。這次再次印證：訓練期半導體買進持有
+            <strong>+542.4%</strong>、驗證期
+            <strong>+232.2%</strong>，本研究最好的一格是
+            119.2%。<strong>這個決定是我做的，不是你交代的</strong>，所以特別標出來。
+        </p>
+        <p>
+            但這一節不是廢話 —— 它正好補上 MAE 看不見的那一半。C3
+            的風險面要在這裡讀：
+        </p>
+        <div class="tablebox">
+            <table>
+                <caption>
+                    帳戶層級報酬/回撤，關減碼較優的族群數。
+                </caption>
+                <thead>
+                    <tr>
+                        <th>進場臂</th>
+                        <th>訓練期</th>
+                        <th>驗證期</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>R 原版</td>
+                        <td><strong>5/5</strong></td>
+                        <td>4/5</td>
+                    </tr>
+                    <tr class="armA">
+                        <td>A 動能</td>
+                        <td><strong>5/5</strong></td>
+                        <td>3/5</td>
+                    </tr>
+                    <tr class="armB">
+                        <td>B 2B</td>
+                        <td><strong>5/5</strong></td>
+                        <td>4/5</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p>
+            訓練期 15/15 全部支持關掉減碼，幅度很大（R 半導體 2.91 →
+            5.92、電腦週邊 2.84 → 6.39）；驗證期
+            11/15，較弱。所以減碼規則確實在做風險工作 ——
+            關掉它帳戶回撤是會變深的（R 訓練期半導體 −14.9% → −20.1%、電子零組件
+            −13.4% →
+            −28.6%）。只是它換到的報酬多更多。這比「減碼純粹是拖累」精確：<strong>它是一個定價過高的保險</strong>。
+        </p>
+        <div class="callout">
+            <h4>arm B 的帳戶數字不要直接讀</h4>
+            <p>
+                它在驗證期只有 114 個部位分散在五個籃子、2.6
+                年，帳戶大部分時間空手，所以報酬（0.0%~12.9%）與回撤（−1.2%~−6.8%）都被低部位佔用壓小了。這正是
+                <code>20260510</code> 那份 smoke 踩過的坑（1M × 18% 買不起 2330
+                一張，22 檔裡 8 檔零成交）。B 的證據要看 3.1
+                的每部位數字，不是這一節。
+            </p>
+        </div>
+    </section>
+
+    <section>
+        <h2><span class="num">07</span>限制</h2>
+        <ol>
+            <li>
+                <strong>2B 臂樣本仍然偏小。</strong> 驗證期 114
+                個部位，而且它對動能臂的優勢落在雜訊裡。要下「2B
+                值得做」的結論需要更多標的 ——
+                <code>20260820</code> 已查明五個族群通過存活篩選共 512
+                檔，但等大小籃子最多只能到 28 檔（航運封頂）。
+            </li>
+            <li>
+                <strong>本研究不重現 <code>20260814</code> 的絕對數字。</strong>
+                標的、窗口、部位大小全部換掉了（理由在
+                <code>mission.md</code>）。回到原本結果的橋是 A 對 B
+                的<strong>方向</strong>，不是數值。原始研究還跑在除權息回補之前，數字被低估。
+            </li>
+            <li>
+                <strong><code>exit_break_pct</code> 固定在 1.5</strong>，是
+                <code>20260814</code>
+                自己在訓練期接受的值。任何固定值都能服務進場比較，但本研究測到的是「這個出場設定下的
+                2B」。
+            </li>
+            <li>
+                <strong>交易形狀不符合本專案的哲學。</strong> 關掉減碼後勝率
+                54~62%、賺賠比 1.08~1.30 —— 高勝率小賺，跟 S1 唐奇安（32.5% /
+                3.37）和 Darvas（45.2% / 3.91）的「大賺小賠」相反。即使 2B
+                臂驗證期獲利因子 2.07 好看，它的形狀跟你要的東西不是同一類。
+            </li>
+            <li><strong>MAE 對部位管理不可鑑別</strong>（第 4 節）。</li>
+            <li>
+                <strong>沿用既有限制</strong
+                >：倖存者偏誤、收盤價成交、除手續費與 0.3%
+                證交稅外無滑價模型、兩個窗口都是多頭。
+            </li>
+        </ol>
+    </section>
+
+    <section>
+        <h2><span class="num">08</span>下一步</h2>
+        <ol>
+            <li>
+                <strong>把減碼規則的結論套回你實際在用的設定。</strong>
+                這是本研究唯一「確定 + 可直接行動」的發現，而且跟 2B 無關 ——
+                任何用「跌破均線減碼一半」的策略都該重測這一刀。
+            </li>
+            <li>
+                <strong>2B 要繼續就得先解決樣本。</strong>
+                放棄等大小籃子、改用各族群全部存活標的（512 檔），才可能把 114
+                個部位推到能下結論的量。
+            </li>
+            <li>
+                <strong>棘輪泛化到 S2/S3 仍然排隊中</strong> ——
+                上一輪排序的第三項，這次沒有做。
+            </li>
+            <li><strong>規則 3 要不要重新定義</strong>，等你決定。</li>
+        </ol>
+    </section>
+
+    <footer>
+        <p>
+            三個進場臂
+            <code
+                >tasks/20260821-2b-entry-decomposition/candidates/arm_{r,a,b}_*.py</code
+            >
+            · 設計與預先登記規則 <code>mission.md</code> · 單一變數 gate
+            <code>verify_isolation.py</code>（24 項） · 偵測器驗證
+            <code>verify_pattern.py</code>（13 項） · 重跑掃描
+            <code>run_sweep.py [unconstrained|shared]</code> · 重新產生所有表格
+            <code>analyze_decomposition.py</code> · MAE
+            風險估計量（可用於任何一份研究）<code
+                >mae_analysis.py &lt;run.json 或目錄&gt;</code
+            >
+            · 120 個 cell 的 summary <code>runs/</code>
+        </p>
+    </footer>
+</div>

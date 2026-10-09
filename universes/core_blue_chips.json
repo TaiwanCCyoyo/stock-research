@@ -1,0 +1,5 @@
+{
+    "name": "core_blue_chips",
+    "description": "Manually curated large-cap reference set (explicit code list)",
+    "codes": ["2330", "2317", "2454", "0050"]
+}

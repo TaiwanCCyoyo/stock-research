@@ -1,0 +1,874 @@
+{
+    "schema": "approved-evidence-formatting.v1",
+    "authorization": "Owner approved formatting, recomputing hashes and synchronizing affected current references on 2026-10-09. No new formatter exemption.",
+    "sourceArchiveSha256": "f97c1792a368abf80a39fc05ed70974d7bb6e4ae80c40cf1190d727897e35798",
+    "privateOriginalBackup": "D:\\Project\\stock-research\\StockProject\\data\\format-originals-20261009",
+    "files": [
+        {
+            "path": "research_core/sector_groups.v1.json",
+            "originalSha256": "a154ea1bd5e8af239d557fb99b23ab16a500d349dc97e3fb50e6c6c3f5c86beb",
+            "originalBytes": 15111,
+            "formattedSha256": "7e7d6d5c168dcbea3a422671fb3fa8565bc75a093a7069022eff78098cbb5442",
+            "formattedBytes": 14594,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "835bf6d72e15f496be09c2dd7e3ce9fd9016fe3d61075732cde067eed40f7a98",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "835bf6d72e15f496be09c2dd7e3ce9fd9016fe3d61075732cde067eed40f7a98"
+        },
+        {
+            "path": "research_web/public/data/research-evidence-v2-classified/export-receipt.json",
+            "originalSha256": "c4063269fa0815d8e40b9bdf235d1bc5953f7c4e1dd103b20ef8537dd0221938",
+            "originalBytes": 1476,
+            "formattedSha256": "3e58f98f0f9e0fdca7911b16e96f5a454a58828762306c8559340781fe88ccee",
+            "formattedBytes": 1444,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "6aea02d2ed989d3d36f1b3ea08fbe572db6b3edac9660d0aabeefd3529911190",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "6aea02d2ed989d3d36f1b3ea08fbe572db6b3edac9660d0aabeefd3529911190"
+        },
+        {
+            "path": "tasks/20260510-two-b-template-smoke/params/manual_params.json",
+            "originalSha256": "3c29ac4bcb24c99ba71d93d965b47474620444b468c7358754ddd479db5ad6f8",
+            "originalBytes": 270,
+            "formattedSha256": "5aa1a7a88cf71eb1212dc422c4401f9518d85a8425e4c30fe6bdb86cb0e6b2b6",
+            "formattedBytes": 352,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "c1c9ece557580406b0400abfc026a0ca5d0284c751f0a8a22443fda1fb81bd4e",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "c1c9ece557580406b0400abfc026a0ca5d0284c751f0a8a22443fda1fb81bd4e"
+        },
+        {
+            "path": "tasks/20260510-two-b-template-smoke/params/two_b_ma_convergence_sweep.json",
+            "originalSha256": "325c807b4fe5920ab67f269511836b695611b90bcb2a4a7f6edc0ee4a3a07523",
+            "originalBytes": 1278,
+            "formattedSha256": "1724ac4663f05766ad8f72d05990aeb23a8d661aaece9b608ed9f46441b616bc",
+            "formattedBytes": 1229,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "98f72240536ab3adf8eb7524c6e64d3ebb672dc9640b9d6b57082b4361c4d792",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "98f72240536ab3adf8eb7524c6e64d3ebb672dc9640b9d6b57082b4361c4d792"
+        },
+        {
+            "path": "tasks/20260510-two-b-template-smoke/research_dashboard/data_snapshot.json",
+            "originalSha256": "f13e881b02639feacde407fe6ff30eca7494f6928886749505e775ea47fb654c",
+            "originalBytes": 72,
+            "formattedSha256": "015300c3b26ae22f632d730ad97ccb0ee6a0fce1f955ba697f115e55f8340188",
+            "formattedBytes": 72,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "8e934e3c00ac9b6cc46b2274cb2f7ec641fc12c69d127a69d029eb3fe081d40c",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "8e934e3c00ac9b6cc46b2274cb2f7ec641fc12c69d127a69d029eb3fe081d40c"
+        },
+        {
+            "path": "tasks/20260809-loop-dryrun/research_dashboard/title.txt",
+            "originalSha256": "e57ca9214d83f3539f97e176267de169c9fd79238695f0044e6659d7d02c4147",
+            "originalBytes": 23,
+            "formattedSha256": "04560190b8d1ec552bd54089bf53519abb72bce14e18ccac0e555a19fa5db761",
+            "formattedBytes": 24,
+            "semanticProof": "exact stripped visible title equality"
+        },
+        {
+            "path": "tasks/20260812-loop-explore-v2/experiment.json",
+            "originalSha256": "ea31f271bcf41bf1c9277543d02091fdb95402133e7bfc55433e2e3e5c6b5ffb",
+            "originalBytes": 838,
+            "formattedSha256": "356118d7d5ec908e321c59b90e7c764e429cafe7ae7570d3c13b4ba993db40c2",
+            "formattedBytes": 1023,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "abe18e4a810a98d8a2891b93d0c8f9ea3ad066803b06b800f9c742cc520820fb",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "abe18e4a810a98d8a2891b93d0c8f9ea3ad066803b06b800f9c742cc520820fb"
+        },
+        {
+            "path": "tasks/20260812-loop-explore-v2/research_dashboard/title.txt",
+            "originalSha256": "f5c2e6276bf86f62fe7a871e8968f5233ac8fa6eb7529b92715ea0dd446c7ec1",
+            "originalBytes": 41,
+            "formattedSha256": "36f92cac99881ab250ff30afaa9a17563946ca0cd4a941f0ae2be013adfc11d8",
+            "formattedBytes": 42,
+            "semanticProof": "exact stripped visible title equality"
+        },
+        {
+            "path": "tasks/20260814-2b-false-break-structure/experiment.json",
+            "originalSha256": "788d7c363ffae2e248a594c0fe51c365ee74f9f06ff5528e84cb1a30fcc25146",
+            "originalBytes": 1578,
+            "formattedSha256": "d34a478db1fee37de468deb4db824efbe81506cc7c1537aeb999d4eaad5928b1",
+            "formattedBytes": 1751,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "0edca302f116a565e01868e60a6116d57eeb0b886eaffac5d9795960a9e850f6",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "0edca302f116a565e01868e60a6116d57eeb0b886eaffac5d9795960a9e850f6"
+        },
+        {
+            "path": "tasks/20260816-kline-strategy-category-fit/benchmark_drawdown.json",
+            "originalSha256": "8a63dee69e8c03f562894aa6455176e09b0946c01f962e89456af22dca11e129",
+            "originalBytes": 932,
+            "formattedSha256": "c44691fd86981d12830a0377908afcd4a7d6ab9c47a76d3bd602ae12a6fca847",
+            "formattedBytes": 900,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "09d17044ac3bed5047c65743b525b4ed643adc8a1e868f6c6e61438e41830f3a",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "09d17044ac3bed5047c65743b525b4ed643adc8a1e868f6c6e61438e41830f3a"
+        },
+        {
+            "path": "tasks/20260816-kline-strategy-category-fit/benchmark_drawdown_2019-01-02_2023-12-31.json",
+            "originalSha256": "7e81d59c62ac116cf89a3906b5ef28e6620a00dbd2d3e8aebdfa9289d17b9a85",
+            "originalBytes": 933,
+            "formattedSha256": "61d7bd8916acca0fdf788297d9437b65306bffe457d7ce865c89fb4f17938252",
+            "formattedBytes": 901,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "e49747e456d0daae56b4893893a301c44834d2efcc166e9e8bc233ba8c390e7e",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "e49747e456d0daae56b4893893a301c44834d2efcc166e9e8bc233ba8c390e7e"
+        },
+        {
+            "path": "tasks/20260816-kline-strategy-category-fit/report.html",
+            "originalSha256": "66b403e155137484c4e2e990dcc2228ab144510def5ee93b21ac27c0aac94e66",
+            "originalBytes": 33464,
+            "formattedSha256": "4005f8070874f651faf04deb4cead7cdbc7d5f4b809f5453c664e05c534bbcf0",
+            "formattedBytes": 51064,
+            "semanticProof": "HTML DOM, visible text, pre literal content equivalent; CSS and embedded JavaScript parsed AST equivalent"
+        },
+        {
+            "path": "tasks/20260816-kline-strategy-category-fit/sweep_results.json",
+            "originalSha256": "610d803040f2c6a0a26ff36c3be02baf7bd6ed0c866128597b9e84410f29f94e",
+            "originalBytes": 35829,
+            "formattedSha256": "98f4763b53d2a06ba3600452dff1e1963460c2252950d037102624e94a9515e0",
+            "formattedBytes": 34882,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "89a324e386851c1c3c9506c2847fe21ef6391bc5a41bc9e36a043c37b9a246f1",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "89a324e386851c1c3c9506c2847fe21ef6391bc5a41bc9e36a043c37b9a246f1"
+        },
+        {
+            "path": "tasks/20260816-kline-strategy-category-fit/universe_build_report.json",
+            "originalSha256": "a0fb66e5c3fcaafc58e631e4d1f5f95d085513b0bf1090699a16985fc8a9240c",
+            "originalBytes": 1206,
+            "formattedSha256": "9cfd8cac2ae7661de7f9c3e1eb66550dd8b00e7c79ed6681e56df18e52084bc1",
+            "formattedBytes": 1164,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "dfd16f24d7bac14ddf304629857aaa785b92649116cc4666cf50b9c4721bddad",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "dfd16f24d7bac14ddf304629857aaa785b92649116cc4666cf50b9c4721bddad"
+        },
+        {
+            "path": "tasks/20260820-kline-archetype-extension/buy_and_hold_holdout.json",
+            "originalSha256": "8a63dee69e8c03f562894aa6455176e09b0946c01f962e89456af22dca11e129",
+            "originalBytes": 932,
+            "formattedSha256": "c44691fd86981d12830a0377908afcd4a7d6ab9c47a76d3bd602ae12a6fca847",
+            "formattedBytes": 900,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "09d17044ac3bed5047c65743b525b4ed643adc8a1e868f6c6e61438e41830f3a",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "09d17044ac3bed5047c65743b525b4ed643adc8a1e868f6c6e61438e41830f3a"
+        },
+        {
+            "path": "tasks/20260820-kline-archetype-extension/buy_and_hold_train.json",
+            "originalSha256": "7e81d59c62ac116cf89a3906b5ef28e6620a00dbd2d3e8aebdfa9289d17b9a85",
+            "originalBytes": 933,
+            "formattedSha256": "61d7bd8916acca0fdf788297d9437b65306bffe457d7ce865c89fb4f17938252",
+            "formattedBytes": 901,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "e49747e456d0daae56b4893893a301c44834d2efcc166e9e8bc233ba8c390e7e",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "e49747e456d0daae56b4893893a301c44834d2efcc166e9e8bc233ba8c390e7e"
+        },
+        {
+            "path": "tasks/20260820-kline-archetype-extension/report.html",
+            "originalSha256": "20a45a2b0a57366f475eef00de9182f2f4fa457ed7a678d4a07308d1f8f95f38",
+            "originalBytes": 39923,
+            "formattedSha256": "1f1850872d2840a0f12cf693a159ebfb509ba9fb499b2bf5eb079ed0e102543b",
+            "formattedBytes": 54842,
+            "semanticProof": "HTML DOM, visible text, pre literal content equivalent; CSS and embedded JavaScript parsed AST equivalent"
+        },
+        {
+            "path": "tasks/20260820-kline-archetype-extension/sweep_results.json",
+            "originalSha256": "14a9d3b0b2f13380f753cf8aa3d4561ed38d269ef6a11e8ee0fdeecb53652cf4",
+            "originalBytes": 48089,
+            "formattedSha256": "a6bcf647db72df37fdf981e6f48131d441e3f1658e1d237875972874ec473a47",
+            "formattedBytes": 46827,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "e84157bab711e8143c11e4debdb8102fea119a8800fde7c45f79b6d049c25aa1",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "e84157bab711e8143c11e4debdb8102fea119a8800fde7c45f79b6d049c25aa1"
+        },
+        {
+            "path": "tasks/20260821-2b-entry-decomposition/report.html",
+            "originalSha256": "6251c41f9d7d28df32fdba7ef158c8e52eb93a752ba91415ce358da5213b1551",
+            "originalBytes": 62345,
+            "formattedSha256": "d36d990bc4997df6c28067144703098077b98c532c0369470d0ae06e9e2924e9",
+            "formattedBytes": 60759,
+            "semanticProof": "HTML DOM, visible text, pre literal content equivalent; CSS and embedded JavaScript parsed AST equivalent"
+        },
+        {
+            "path": "tasks/20260821-2b-entry-decomposition/sweep_results.json",
+            "originalSha256": "7c44c05951faf44fe252ecfbba43809457909868e6a0145be3127c74129565c8",
+            "originalBytes": 109397,
+            "formattedSha256": "4e4dad31cb12a93692557cb8a4518cb88bcf2c27ed35543d640f24a44291a735",
+            "formattedBytes": 106515,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "f7a940416febbd350a2b043679a0eed19deb4e29d656355352c542c958957b14",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "f7a940416febbd350a2b043679a0eed19deb4e29d656355352c542c958957b14"
+        },
+        {
+            "path": "tasks/20260821-stop-mechanism-isolation/report.html",
+            "originalSha256": "3da5a0a61c7a504e18d3370801bc43351fa9323ec3800ee460cb536dad32a726",
+            "originalBytes": 28372,
+            "formattedSha256": "e089ff838be97de4c354ace8b5e08ce1aadb9708e08dd9f01cddadc863a937e1",
+            "formattedBytes": 38914,
+            "semanticProof": "HTML DOM, visible text, pre literal content equivalent; CSS and embedded JavaScript parsed AST equivalent"
+        },
+        {
+            "path": "tasks/20260821-stop-mechanism-isolation/sweep_results.json",
+            "originalSha256": "c3bf739e8bbcf9fa095994632569a8ac7e9b2fda959f55b8565502612be7cc88",
+            "originalBytes": 32331,
+            "formattedSha256": "e3d2dbc8bfdf9c0a93ca3cbd7f94e8c1891c886b0ed33b2f43c9e4afed53b68e",
+            "formattedBytes": 31489,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "b4148870370fe773621f6b2030d8053b569868a9cad871c05cf96ab47fc50050",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "b4148870370fe773621f6b2030d8053b569868a9cad871c05cf96ab47fc50050"
+        },
+        {
+            "path": "tasks/20260822-ratchet-generalization/report.html",
+            "originalSha256": "b1fe30b788dfeab94c2f01309f785edc547531860f3638f428cd09848c49a24f",
+            "originalBytes": 39152,
+            "formattedSha256": "7b4b86210faebfc87a74cf19d0e9f3c4182679a9513fe0c9e13f46367722815f",
+            "formattedBytes": 38081,
+            "semanticProof": "HTML DOM, visible text, pre literal content equivalent; CSS and embedded JavaScript parsed AST equivalent"
+        },
+        {
+            "path": "tasks/20260822-ratchet-generalization/sweep_results.json",
+            "originalSha256": "2e020c79ab0442ed3e8713f9efb822d157a97306618f19fa6f26f198d6c08124",
+            "originalBytes": 160579,
+            "formattedSha256": "de33719e30296cf6f7f49c9de5fc9ac53ed661a8ef2abeb8403e4199c243417a",
+            "formattedBytes": 156257,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "6dfece930cd5ff58e19731cd8b077ca4dde28569bf5e2559b45133b2f55a70ed",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "6dfece930cd5ff58e19731cd8b077ca4dde28569bf5e2559b45133b2f55a70ed"
+        },
+        {
+            "path": "tasks/20260823-rank-profile/sweep_results.json",
+            "originalSha256": "508a72d08ff04028657c3feab3cea81bb1b73b7e952368f421d007534ae54a1b",
+            "originalBytes": 55229,
+            "formattedSha256": "5dd5f708607c2a05b9e11bd18f323ed4ba411fecf71aeca06aed790c8353794d",
+            "formattedBytes": 64913,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "2b2f74416a8025694981b71950753bae7a27cfa776f44529d2b28c9f6a561146",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "2b2f74416a8025694981b71950753bae7a27cfa776f44529d2b28c9f6a561146"
+        },
+        {
+            "path": "tasks/20260823-regime-overlay/sweep_results.json",
+            "originalSha256": "7c18b473ee19245dc4a1f074b80ac38cca7b5a0a1d60b63211b312919cbe2464",
+            "originalBytes": 165168,
+            "formattedSha256": "9e4415173377f8c8cb0e38c991ffd3da0992016f686ac6709b673d942409ffb8",
+            "formattedBytes": 194907,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "9ae2cd843976ca96fba21ab35b08797daa1763c31e472a96496101b2c6c154de",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "9ae2cd843976ca96fba21ab35b08797daa1763c31e472a96496101b2c6c154de"
+        },
+        {
+            "path": "tasks/20260823-rotation-universe/universe_build_report.json",
+            "originalSha256": "175eec6b6344744d9001655c9b0ccd385ae52ef56665f0025944464aee441e6f",
+            "originalBytes": 30022,
+            "formattedSha256": "011d4f4f7b43bbd56ae08b07591e4f609516edbb617febcbe0fc332204de4b92",
+            "formattedBytes": 28659,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "921b564c1541d42aaaec14323bf6a9bb7305b22d5c2141babda7688a51337fa4",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "921b564c1541d42aaaec14323bf6a9bb7305b22d5c2141babda7688a51337fa4"
+        },
+        {
+            "path": "tasks/20260823-selection-vs-random/sweep_results.json",
+            "originalSha256": "be8e35d7eaf446aee03f10d0f4b4eac7a3a65a5cecce2525e1b82c15596e2b67",
+            "originalBytes": 58018,
+            "formattedSha256": "d61858911e4cea0f99ec0a4cae2aae290dc5cfa3af8d5129e7deb78126bbf64f",
+            "formattedBytes": 67088,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "24a9b5411fb87700be6a91f5844bde50a6963412f28116474f1a857b3e8069cf",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "24a9b5411fb87700be6a91f5844bde50a6963412f28116474f1a857b3e8069cf"
+        },
+        {
+            "path": "tasks/20260823-turnover-mechanism/sweep_results.json",
+            "originalSha256": "bc67bcd360a3d09f7b5c2823174bf3b8550d81cf6c069690329364eea7f5c87e",
+            "originalBytes": 59637,
+            "formattedSha256": "c9ffbd455ef71275e13127d7e655dac76874dfa879baaf0b45bf40bbee101587",
+            "formattedBytes": 68437,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "2c04dde0de915bfce78e33fa0e6c361dae1cbfabde915f69b39dbefa920a2c17",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "2c04dde0de915bfce78e33fa0e6c361dae1cbfabde915f69b39dbefa920a2c17"
+        },
+        {
+            "path": "tasks/20260824-ranking-horizon/sweep_results.json",
+            "originalSha256": "93fead03c930dc195dba4985da7831fc58b04d2a618541a256ecd73fb4bb4bef",
+            "originalBytes": 23681,
+            "formattedSha256": "e1544f95ddd3e5137be0ff4cb73eeaf150ccc01bb4ffb263d009297a0f055bc5",
+            "formattedBytes": 23101,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "8617661f4a147ecf77bd80aeaa22451eaaafa38a9109002a7cc6fa6ebd99734f",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "8617661f4a147ecf77bd80aeaa22451eaaafa38a9109002a7cc6fa6ebd99734f"
+        },
+        {
+            "path": "tasks/20260824-value-chain-ignition/sweep_results.json",
+            "originalSha256": "bf0e2fb40ca14dd39b2af710cc88bd6c242a1eb84933a8aa1e742581c048ed75",
+            "originalBytes": 3403,
+            "formattedSha256": "cf379e1645839ebacd7c4eaa61b68e6b39d61ea58a718383196b24fa16892b7d",
+            "formattedBytes": 3931,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "6a06bfdaf99988aec08791b86f075d2d01675948f43e5a94710dcd59b686b86a",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "6a06bfdaf99988aec08791b86f075d2d01675948f43e5a94710dcd59b686b86a"
+        },
+        {
+            "path": "tasks/20260826-runner-retention/sweep_results.json",
+            "originalSha256": "95c2d6bb2d0300c48aee4a94895ba63f0187503c433af4c4d56678af0bb40af1",
+            "originalBytes": 43404,
+            "formattedSha256": "0cdb089939c770aa9c8ce493661be291d2938621e1ffb0708d7645052830be1b",
+            "formattedBytes": 53184,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "620f27573331bfef85e43e37c26e3d6717ea89f40603a4e38e8cbe8f2ac62c7c",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "620f27573331bfef85e43e37c26e3d6717ea89f40603a4e38e8cbe8f2ac62c7c"
+        },
+        {
+            "path": "tasks/20260826-tail-selection/sweep_results.json",
+            "originalSha256": "29c0962c82976e176077df40317327308119152b254bd893fd726f5fde72f1a4",
+            "originalBytes": 492966,
+            "formattedSha256": "b139c1f76bc9262093b365a298497fa8f729914e3dfbeae668fee3ef1e55bbb9",
+            "formattedBytes": 481518,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "0c419c1e946f7bf7cf2596ac97cc6062f5bee24d9071dc511537a01f3425104c",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "0c419c1e946f7bf7cf2596ac97cc6062f5bee24d9071dc511537a01f3425104c"
+        },
+        {
+            "path": "tasks/20260903-entry-window/window_results.json",
+            "originalSha256": "2244cc9a5f2f841c192a4c9505ae314f4b2580eac69aeb469cc16bb1f52608f9",
+            "originalBytes": 69073,
+            "formattedSha256": "60ee78c976b9da695a582fbf95dc9b91624ce0348cc364bfd55e2aa773c89011",
+            "formattedBytes": 67435,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "e8d73c5b7f22d4ca38440e5c6288226ef53709ac123fa463fcbfc32f6f7c7db4",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "e8d73c5b7f22d4ca38440e5c6288226ef53709ac123fa463fcbfc32f6f7c7db4"
+        },
+        {
+            "path": "tasks/20260904-book-size/sweep_results.json",
+            "originalSha256": "d29cfecf92810f9f4a248ef34a3ff35eb95791f44d6687132c8b4da5510043d3",
+            "originalBytes": 9859,
+            "formattedSha256": "1dde04086bab159522c76a903c9af60ca2c4bf2a8ca6651d05a6c9556f35ae17",
+            "formattedBytes": 9600,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "0b10247b6aff7c7d2ee851a43280cd74a5bfa1454311cf24545dd1c51429c62a",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "0b10247b6aff7c7d2ee851a43280cd74a5bfa1454311cf24545dd1c51429c62a"
+        },
+        {
+            "path": "tasks/20260904-execution-delay/sweep_results.json",
+            "originalSha256": "e0bd5cf7d27da2d819ff898bb4d5a78e2125cbba534e6cf988e423d141d0b8d8",
+            "originalBytes": 10556,
+            "formattedSha256": "de76546710b41bb541543b8eeecf6eaf0d58afd6ef0b0c7930fbd27781991341",
+            "formattedBytes": 10276,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "07364e2085ee0367a3856e87d46527014604bb8084f0109f9af971b35827c09e",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "07364e2085ee0367a3856e87d46527014604bb8084f0109f9af971b35827c09e"
+        },
+        {
+            "path": "tasks/20260904-slot-accounting/sweep_results.json",
+            "originalSha256": "aed4b65a9ebd94b91b19e2f92404aa19e01c73e36e21a3716a66a6e85ab86660",
+            "originalBytes": 8499,
+            "formattedSha256": "191f56705ebd758f2a27133263f417fbf500687677f734c27c94cae7d5b335d5",
+            "formattedBytes": 12219,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "b9d71fa3694229b41d67f548416d9fb73c5156fd96eb2d59b3d05a4d5b85b07b",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "b9d71fa3694229b41d67f548416d9fb73c5156fd96eb2d59b3d05a4d5b85b07b"
+        },
+        {
+            "path": "tasks/20260904-swap-rule/sweep_results.json",
+            "originalSha256": "59314426c57133894771369e00c36299c7025f34305c2e8acaf9a9d42ad4472d",
+            "originalBytes": 28170,
+            "formattedSha256": "acab7cb0e9751d8d8ffa455148042781af28e0993686cbaab58164c713e1e74d",
+            "formattedBytes": 27422,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "515db22d76968490641a6937bc528da5d504b7a3c525e722814aed06d6f03ae2",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "515db22d76968490641a6937bc528da5d504b7a3c525e722814aed06d6f03ae2"
+        },
+        {
+            "path": "tasks/20260905-add-trigger/add_trigger_results.json",
+            "originalSha256": "8183a503ffa47f601d5946033899105db667a28c6419e76c75306c80ac1c3eb8",
+            "originalBytes": 15704,
+            "formattedSha256": "7d36c05421cf0048547db54180c107ab57d7904db11800403fc444840da9301f",
+            "formattedBytes": 26052,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "298a432744bb46ca9e605255eb4906f452c4e23f93aa5994610d152dbc7166bc",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "298a432744bb46ca9e605255eb4906f452c4e23f93aa5994610d152dbc7166bc"
+        },
+        {
+            "path": "tasks/20260905-min-hold/concentration.json",
+            "originalSha256": "5d3c3ecf3a4c981b7f0e96d0a736e8cc680b44fefd3fbea5c104c35d1d8b2ad8",
+            "originalBytes": 8945,
+            "formattedSha256": "2502db65ba2e82a675f8549a2f0ba34c5496ad029bb8909266641d87f040f277",
+            "formattedBytes": 8601,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "30020ab75be3e4ab732ff502d30cd6c9eb58a39da73a9d95eab4a141f49dac67",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "30020ab75be3e4ab732ff502d30cd6c9eb58a39da73a9d95eab4a141f49dac67"
+        },
+        {
+            "path": "tasks/20260905-min-hold/sweep_results.json",
+            "originalSha256": "688ec7a193bfbd81cab2f6a523f0e9dda308236bf87795cfc1a9cd0964c4b193",
+            "originalBytes": 18730,
+            "formattedSha256": "00fcdcc1e2f4ebf6a48548bca55327978354b441edb1945ea4c642930e02bebd",
+            "formattedBytes": 28618,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "8f1dfa22eac7ce1c8053e9be059ede0a7a6d24a21fbca12befa5ed29072fda9a",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "8f1dfa22eac7ce1c8053e9be059ede0a7a6d24a21fbca12befa5ed29072fda9a"
+        },
+        {
+            "path": "tasks/20260905-wide-giveback/concentration.json",
+            "originalSha256": "d9a770b8c6fa9323299d9e8442391a6f47ea94d8daeffd6ff2d88443d858a836",
+            "originalBytes": 5962,
+            "formattedSha256": "2a2f82bb978e0ab8da618beb793afbadeb9a20f0a4d3d6958cdef59d18e6ecfc",
+            "formattedBytes": 5732,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "0fbe59a251e88b787f24a7431f4d6cb92745dd6721d285b38d99a7a19c772727",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "0fbe59a251e88b787f24a7431f4d6cb92745dd6721d285b38d99a7a19c772727"
+        },
+        {
+            "path": "tasks/20260905-wide-giveback/sweep_results.json",
+            "originalSha256": "6728a296105dce170ab6c6bd1b2280c06d9e5900e7fa5263eecc96e296338a15",
+            "originalBytes": 8417,
+            "formattedSha256": "9e293e291930f3c0288958fcde1516f10f0b57c61269a7ae525a443c696b3dba",
+            "formattedBytes": 12780,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "711c01c2e012820ae4add2cef371eb77ad19c00792b52226b16e1f2565ba39bf",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "711c01c2e012820ae4add2cef371eb77ad19c00792b52226b16e1f2565ba39bf"
+        },
+        {
+            "path": "tasks/20260906-absolute-entry-bar/absolute_bar_results.json",
+            "originalSha256": "065f7792fd243225a28836bf38dac89df59aeba7f4c9b5ce24383a908d39e331",
+            "originalBytes": 4062,
+            "formattedSha256": "d197a5fee90b51d8544fd5fedbaa03c6a06ca2a83d34557d4f8527e2e222017c",
+            "formattedBytes": 6047,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "067a04f1d092c2a560ac379c1198284349e63e55e2028390d68284f1b7518244",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "067a04f1d092c2a560ac379c1198284349e63e55e2028390d68284f1b7518244"
+        },
+        {
+            "path": "tasks/20260906-equal-risk-sizing/equal_risk_results.json",
+            "originalSha256": "eb9b718910717c43f664eeeb3e96843e40b0c79ab0833d1a57cf9300e62c5c83",
+            "originalBytes": 6866,
+            "formattedSha256": "557012b5796677f3122da4fced191de802ff4f652824e1399e1619ff064c4b54",
+            "formattedBytes": 6679,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "7b5fb8b1f6d95e6cad042d17c5fc3d9ca669d7f5e63e98632520d4997bdc4ff2",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "7b5fb8b1f6d95e6cad042d17c5fc3d9ca669d7f5e63e98632520d4997bdc4ff2"
+        },
+        {
+            "path": "tasks/20260906-exchange-rate/exchange_rate_results.json",
+            "originalSha256": "c9a3e36207937e9032492ee347f8d17717a388b94daf44aaf71a0d4eafa7a0bc",
+            "originalBytes": 4766,
+            "formattedSha256": "4d2f135a0c026467241680ffa9d548dceb6a88af715cdf7adde2158141e8e63d",
+            "formattedBytes": 4633,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "c9c384f594923864975f26a394cf851eea3777df9c2a2cdec58aa26724a0860d",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "c9c384f594923864975f26a394cf851eea3777df9c2a2cdec58aa26724a0860d"
+        },
+        {
+            "path": "tasks/20260906-execution-reality/execution_reality_results.json",
+            "originalSha256": "466d2528ab8a593ca1ab2e36c3b8990fd3c7e325a72b406a3a4cb91c07ecfbfb",
+            "originalBytes": 2833,
+            "formattedSha256": "e50610444d828a4c1da12feea1993d3ad0c50ba637f18ae725175c562d0b0c57",
+            "formattedBytes": 3635,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "bd2491a1784179ce94ca231f18e65996b8428f491f7362edad554b0c989305b2",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "bd2491a1784179ce94ca231f18e65996b8428f491f7362edad554b0c989305b2"
+        },
+        {
+            "path": "tasks/20260906-five-slot-confirmation/confirmation_results.json",
+            "originalSha256": "2122c972995f5b9eb4456c6b528a03902c5420e96dddaf8e1de6f50d2fd96bc1",
+            "originalBytes": 3456,
+            "formattedSha256": "572f990319691db2e3a46a03c43ff822f95fd7a4f1b7981a497553b37ac211e5",
+            "formattedBytes": 3351,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "24d67630a462a98775e30d55504beefcc8b17ceafc7771eda13c14b23c8b9609",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "24d67630a462a98775e30d55504beefcc8b17ceafc7771eda13c14b23c8b9609"
+        },
+        {
+            "path": "tasks/20260906-loss-anatomy/loss_anatomy_results.json",
+            "originalSha256": "59a2742dbb2e1c90199e3f79c6db6b30657ecb732a70129eaa091fedd5f87c2d",
+            "originalBytes": 1721,
+            "formattedSha256": "4d335721511368b00b5f4b0231f292557b6bb5188a49dddbdffa1999ae6e7044",
+            "formattedBytes": 2277,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "a24e19c334ff105953ee3aefb1757d560c7c53f80596a76853beb2fe96ee1b47",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "a24e19c334ff105953ee3aefb1757d560c7c53f80596a76853beb2fe96ee1b47"
+        },
+        {
+            "path": "tasks/20260906-three-slot-equal-risk/equal_risk_results.json",
+            "originalSha256": "58dc1079ac1a939073f4515a0151d45b43b4b61807730355575295237b80a26a",
+            "originalBytes": 7275,
+            "formattedSha256": "ea988bf423087eff7ca67e6f504954f08bb8ab9283eadc228d86b2bdda5a9938",
+            "formattedBytes": 7077,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "5e00f33712f376065e56425aa4a26564a23896925ff2109bfbab8cbf00d3dc70",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "5e00f33712f376065e56425aa4a26564a23896925ff2109bfbab8cbf00d3dc70"
+        },
+        {
+            "path": "tasks/20260907-streak-correction/streak_correction_results.json",
+            "originalSha256": "3a0be7b43e10b762ab17e1aa485a8dc94effeca3be41f9387fcdaea9fd219a87",
+            "originalBytes": 40057,
+            "formattedSha256": "8357c0cca5dc0ec7973214919f75024a49fb3858e2da75f4936979d4860ec7e2",
+            "formattedBytes": 38987,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "14dface37b4c829efaf41806165e278b4497a2582288aa609fc28619f9bb976f",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "14dface37b4c829efaf41806165e278b4497a2582288aa609fc28619f9bb976f"
+        },
+        {
+            "path": "tasks/20260908-executable-fills/executable_fills_results.json",
+            "originalSha256": "efe1d66dbbbffe1acc35287bd58882f85ab094315ad8e169101fc18dad51322b",
+            "originalBytes": 16535,
+            "formattedSha256": "313f617ef06c53d99e426b16f452fb9c56e0db71167fae52b334140bb7ce8267",
+            "formattedBytes": 22227,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "407c72c52a84d8a5683eceb65e4b5b8163cf5b00254082cbbd3a71096f6a53c9",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "407c72c52a84d8a5683eceb65e4b5b8163cf5b00254082cbbd3a71096f6a53c9"
+        },
+        {
+            "path": "tasks/20260908-executable-fills/research_result.json",
+            "originalSha256": "30087c7f91665bebb2e328841d23ef9e6af599adda9b6abdfbbfaf88c2fd83b3",
+            "originalBytes": 1885,
+            "formattedSha256": "eaf8cab1af7257a18ad2aff5a9283ede9ecf7e539109b17707b499e81d6b9b66",
+            "formattedBytes": 2124,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "59c67140e4ceac7e56770abe5eccc1dc08800a1815fc2142283ce2d9a62531d2",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "59c67140e4ceac7e56770abe5eccc1dc08800a1815fc2142283ce2d9a62531d2"
+        },
+        {
+            "path": "tasks/20261002-sector-role-evidence/completion-receipt.json",
+            "originalSha256": "cc14a609f2ea5fae7fb4c41934a73456ac962addccab5f77105b5709b9e206ee",
+            "originalBytes": 379,
+            "formattedSha256": "d68e8ff7fad7782da1b0fb7ef83800f6746d3f6405f65e5fd70e1d7cc9e1f096",
+            "formattedBytes": 368,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "71017d662256a3b3c62c185ca66862f253375e211969174d0fa72109c0c211c4",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "71017d662256a3b3c62c185ca66862f253375e211969174d0fa72109c0c211c4"
+        },
+        {
+            "path": "tasks/20261002-sector-role-evidence/evidence-v1.json",
+            "originalSha256": "a22ea78e792e8b454c6e34e9690f694237a1174eabd4d8d36485e40604763f12",
+            "originalBytes": 162120,
+            "formattedSha256": "46a1d729011d59b7429c59b9000b0b6e7be5c71a4e8673be0232f46ed66e729b",
+            "formattedBytes": 158371,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "a57f081300b1bdd1ff600e0501fb7e7fc511041ba557ac57bf3f5a3fdef944e8",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "a57f081300b1bdd1ff600e0501fb7e7fc511041ba557ac57bf3f5a3fdef944e8"
+        },
+        {
+            "path": "tasks/20261002-sector-wave-catalog/catalog-v1/completion-receipt.json",
+            "originalSha256": "28c8bc65afcbce4fa69e08d21b14e751e64dbcbc32362f620ac032915684b195",
+            "originalBytes": 367,
+            "formattedSha256": "78f8cd199c66183e381027ce29dc7083feb57423e6196bbea244ca201f92c324",
+            "formattedBytes": 354,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "5394ee433ec4bfcf8f346d76e0cb3c7a6fc9f57031bf33088d4c840a016d0bd4",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "5394ee433ec4bfcf8f346d76e0cb3c7a6fc9f57031bf33088d4c840a016d0bd4"
+        },
+        {
+            "path": "tasks/20261002-sector-wave-catalog/catalog-v1/manifest.json",
+            "originalSha256": "376cf5d1699b75bd1d3117359407976b5668429af2b809c8940b5f6433b19312",
+            "originalBytes": 87467,
+            "formattedSha256": "a38d6e66f8a1f92d958db1c38258e32eb3d83f44df56d6758960d2aae8fa0e56",
+            "formattedBytes": 85188,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "e92e3edebed27dcd8d699c87f6ca7e87ee95aed3fd3e2b6cb6f3472c3de9b268",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "e92e3edebed27dcd8d699c87f6ca7e87ee95aed3fd3e2b6cb6f3472c3de9b268"
+        },
+        {
+            "path": "tasks/20261002-sector-wave-catalog/mission.md",
+            "originalSha256": "01b89eb5fae091ed7a07cd9f3804bf132cd393f18973c6d95712251c73b8f8ef",
+            "originalBytes": 5789,
+            "formattedSha256": "92168f627bfe92125277f00c1dba4246e01d3a71c11c519bfe408aab34d616ce",
+            "formattedBytes": 5696,
+            "semanticProof": "Markdown parsed AST equivalent, excluding source positions and soft-wrap text whitespace"
+        },
+        {
+            "path": "tasks/20261004-feature-discrimination-atlas/mission.md",
+            "originalSha256": "35e1bc41c7aea7dcc8efde280d785023a8730a70c507f8eb896359526e6e0d60",
+            "originalBytes": 10418,
+            "formattedSha256": "c8a371556ef7b74e99284351ccd158483d780cd38df235e3e80b018b84cae54e",
+            "formattedBytes": 10266,
+            "semanticProof": "Markdown parsed AST equivalent, excluding source positions and soft-wrap text whitespace"
+        },
+        {
+            "path": "tasks/20261004-feature-discrimination-atlas/params/atlas-v1.json",
+            "originalSha256": "436f1148d3173e7f8ed934c9e557e86f645957c21fdefed3f97a290d152d7616",
+            "originalBytes": 4546,
+            "formattedSha256": "81b456e33bffc3a4b45e1cb705f0186e2610a4c96d235b66370bf0bd703b78a3",
+            "formattedBytes": 4440,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "ba28040aeea01b03890613c7d032399fa095c7523d874eaf5b32be0becd47ee3",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "ba28040aeea01b03890613c7d032399fa095c7523d874eaf5b32be0becd47ee3"
+        },
+        {
+            "path": "tasks/20261004-feature-discrimination-atlas/params/atlas-v2.json",
+            "originalSha256": "7d4b7074f23c0557ad85f9c33013abb1a29f35a7ce9c18389ae530ee481e21d7",
+            "originalBytes": 4546,
+            "formattedSha256": "3e88066ffa7dca5b807f16ad755e826a321459b9be286e9be2508d84d90c8054",
+            "formattedBytes": 4440,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "585f845530e9e1311cb356e15bc9bd9b1f356d0028f70ebc631e602639523d02",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "585f845530e9e1311cb356e15bc9bd9b1f356d0028f70ebc631e602639523d02"
+        },
+        {
+            "path": "tasks/20261004-feature-discrimination-atlas/research_result.json",
+            "originalSha256": "83b7e9ec36ba731c20351bb18cfc27301853442f52ab873103f5e89ca81ca0dd",
+            "originalBytes": 2524,
+            "formattedSha256": "bb2201c03eb4f6dcc5daa634100797ef68d838554e1f099020b87dc5ae4c8bc5",
+            "formattedBytes": 2460,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "dca43d3abb0a952391a5476b15eb5c824696b862cfd4de10574419a90db2153a",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "dca43d3abb0a952391a5476b15eb5c824696b862cfd4de10574419a90db2153a"
+        },
+        {
+            "path": "tasks/20261004-feature-discrimination-atlas/sweep_results.json",
+            "originalSha256": "7736913aa521c5eb12fedc78548ad2c4dbc22adf9ecfb68069a4283e7a77e605",
+            "originalBytes": 161925,
+            "formattedSha256": "66d31344d6fdd6bb631ca2a3293721ef632ba434967e2d7bc51e9dfa3fd15642",
+            "formattedBytes": 157645,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "2ffbfe06745854e0bd48f3b7601f8bd85f1d81f67c6972a6d875d7f62bb057f3",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "2ffbfe06745854e0bd48f3b7601f8bd85f1d81f67c6972a6d875d7f62bb057f3"
+        },
+        {
+            "path": "tasks/20261004-feature-discrimination-atlas/universe_build_report.json",
+            "originalSha256": "d6a7e76b10b523d16af42a6d4b3e9b9037f7fe94542c17846147590bfe97b03b",
+            "originalBytes": 1096,
+            "formattedSha256": "088e536eb0ca5d933d3bfee7038826146146ce74872cda392a774451f84cb955",
+            "formattedBytes": 1062,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "02674b9c6849dcf254a6aa6f51ba91a3de8e4618e7036d9d4a092f6d0ee32249",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "02674b9c6849dcf254a6aa6f51ba91a3de8e4618e7036d9d4a092f6d0ee32249"
+        },
+        {
+            "path": "tasks/20261004-opportunity-explorer/export-receipt.json",
+            "originalSha256": "d594c7e8958756b96052665843a8742ab0a121c37a3401fd109afbafeb9759cf",
+            "originalBytes": 1476,
+            "formattedSha256": "51d4dabf5bc5a9862d0dc884417a975653e17c2f0370c8dc81352a68d2ff2007",
+            "formattedBytes": 1444,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "5e8b767388a22411329ba361e02400b3e1480893cb7ba826587a00562105a548",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "5e8b767388a22411329ba361e02400b3e1480893cb7ba826587a00562105a548"
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/contract.md",
+            "originalSha256": "9644a38fc2d3a92b2a14d004af4774be174c3e3b33dd0840808b92364200c2cc",
+            "originalBytes": 9850,
+            "formattedSha256": "715678e2e457cc45e72acbbf1387538913eff0147abb5db6b42bbda82d4abb6f",
+            "formattedBytes": 9699,
+            "semanticProof": "Markdown parsed AST equivalent, excluding source positions and soft-wrap text whitespace"
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/mission.md",
+            "originalSha256": "db624a63829b9e694868721c738c12b1de446b4f8407e937143101dd35c18d6a",
+            "originalBytes": 4467,
+            "formattedSha256": "ee23f744278fc4758f6bc6595921d7adfbceda438c5721af05d376510d4b24db",
+            "formattedBytes": 4398,
+            "semanticProof": "Markdown parsed AST equivalent, excluding source positions and soft-wrap text whitespace"
+        },
+        {
+            "path": "tasks/20261005-market-context-handoff/mission.md",
+            "originalSha256": "a61002763a916611eaaab1237825a1e9d40ecdb2300f0dd51c7b944e7815508d",
+            "originalBytes": 5523,
+            "formattedSha256": "cf80f44e5fb3cb78a04d3cb4912846a680951c60e35c5c7c62c2b83672ca698c",
+            "formattedBytes": 5437,
+            "semanticProof": "Markdown parsed AST equivalent, excluding source positions and soft-wrap text whitespace"
+        },
+        {
+            "path": "tasks/20261005-market-full-history-web/presentation-manifest.json",
+            "originalSha256": "eaa9d437bd1b0c69c74439c8482ffaaf127863af68ea93ea6b64235ecca3b04c",
+            "originalBytes": 1322,
+            "formattedSha256": "eedcc37b9d1ff88f01bd631d26cb5767bf42190262ea164290c487d6b12bd78e",
+            "formattedBytes": 1297,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "714f8089d47ed53b8d09d26fbec87afbd7348acc37a7b581f8a38ae86b32d20c",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "714f8089d47ed53b8d09d26fbec87afbd7348acc37a7b581f8a38ae86b32d20c"
+        },
+        {
+            "path": "tasks/20261009-hhhl-pattern-probability/mission.md",
+            "originalSha256": "a56b90a483e521c20b7b3128c026ab80682ee93af9dd596bbdfad4e21ce9de37",
+            "originalBytes": 12159,
+            "formattedSha256": "63561d104ff8ad0af2fea3d17e0e7f9598cb96b0019af6fb92f7c645f61fa126",
+            "formattedBytes": 12004,
+            "semanticProof": "Markdown parsed AST equivalent, excluding source positions and soft-wrap text whitespace"
+        },
+        {
+            "path": "tasks/20261009-hhhl-pattern-probability/publication-v1/manifest.json",
+            "originalSha256": "b2bae23396ed7377205163c531ebea5208b590d1261aba2035b78e034658b8c3",
+            "originalBytes": 4383,
+            "formattedSha256": "c048804299549150b455587934cde7fb9703933fa0be6c04e222ba7c60f27fa0",
+            "formattedBytes": 4312,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "fd76776c87f788d5f0ba2e8aa7daa0dc38dffaf4cf80f47cc2b3f32c7b356f11",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "fd76776c87f788d5f0ba2e8aa7daa0dc38dffaf4cf80f47cc2b3f32c7b356f11"
+        },
+        {
+            "path": "tasks/20261009-hhhl-pattern-probability/sources/validation-cases.json",
+            "originalSha256": "8e207bff15609bf4d30d671a78a257188a5bf2014fb04bbf820f6f5a5ecb1cb9",
+            "originalBytes": 7265,
+            "formattedSha256": "450e60b6509b4c8d5a155012d03f751b938d21e0429195059d6cd07b48853da8",
+            "formattedBytes": 6975,
+            "semanticProof": "exact JSON object/value equality; Decimal numeric comparison",
+            "originalSemanticSha256": "2726a7383e5bf074ea6d97c75c4ba1ac1fa75ef45bc71c9b073587e3dd0ad33c",
+            "formattedSemanticSha256ExcludingRecordedHashUpdates": "2726a7383e5bf074ea6d97c75c4ba1ac1fa75ef45bc71c9b073587e3dd0ad33c"
+        }
+    ],
+    "currentReferenceUpdates": [
+        {
+            "reference": "tasks/20261004-feature-discrimination-atlas/params/atlas-v1.json",
+            "pointer": "/inputs/contracts/tasks/20261004-feature-discrimination-atlas/mission.md",
+            "oldSha256": "c8a371556ef7b74e99284351ccd158483d780cd38df235e3e80b018b84cae54e",
+            "newSha256": "c8a371556ef7b74e99284351ccd158483d780cd38df235e3e80b018b84cae54e",
+            "reason": "explicit current-checkout input path consumed by research_core.jobs.verify_inputs; all other values unchanged"
+        },
+        {
+            "reference": "tasks/20261004-feature-discrimination-atlas/params/atlas-v2.json",
+            "pointer": "/inputs/contracts/tasks/20261004-feature-discrimination-atlas/mission.md",
+            "oldSha256": "c8a371556ef7b74e99284351ccd158483d780cd38df235e3e80b018b84cae54e",
+            "newSha256": "c8a371556ef7b74e99284351ccd158483d780cd38df235e3e80b018b84cae54e",
+            "reason": "explicit current-checkout input path consumed by research_core.jobs.verify_inputs; all other values unchanged"
+        }
+    ],
+    "preservedReferenceReasons": [
+        {
+            "path": "tasks/20261002-sector-wave-catalog/catalog-v1/manifest.json",
+            "reason": "Original preregistered input identities and LF-normalized original Git-source identities, explicitly registered by its identity_annotations. Canonical JSON hash is unchanged by formatting; catalog completion receipt and role-packet base hash remain valid. Current working-file raw identities are recorded separately in this migration."
+        },
+        {
+            "path": "research_web/fixtures/classification-v1/sources-v1.json",
+            "reason": "repository_commit and local_path name preserved legacy source copies; their raw SHA still identifies those unchanged originals, not this checkout."
+        },
+        {
+            "path": "tasks/20261004-feature-discrimination-atlas/publication-v2/source-manifest.json",
+            "reason": "Archived evaluated-run provenance, sealed by unchanged publication manifest. It identifies the original run mission/source, not current editable inputs."
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/preregistration-receipt.json",
+            "reason": "Dated original preregistration receipt bound to original code_commit and preserved mission/contract copies; not a live-checkout verification configuration."
+        },
+        {
+            "path": "tasks/20261005-market-context-handoff/market-context-v2/manifest.json",
+            "reason": "retained_byte_hashes identifies decompressed bytes of producer/mission.md.gz, which has not changed."
+        },
+        {
+            "path": "tasks/20261009-hhhl-pattern-probability/publication-v1/manifest.json",
+            "reason": "bundle.members identifies inputs/.../mission.md inside unchanged bundle.zip, not the checkout mission."
+        }
+    ],
+    "semanticASTProof": {
+        "schema": "format-semantic-ast-proof.v1",
+        "matched": [
+            {
+                "path": "tasks/20260816-kline-strategy-category-fit/report.html#embedded-0",
+                "parser": "css"
+            },
+            {
+                "path": "tasks/20260816-kline-strategy-category-fit/report.html#embedded-1",
+                "parser": "babel"
+            },
+            {
+                "path": "tasks/20260820-kline-archetype-extension/report.html#embedded-0",
+                "parser": "css"
+            },
+            {
+                "path": "tasks/20260820-kline-archetype-extension/report.html#embedded-1",
+                "parser": "css"
+            },
+            {
+                "path": "tasks/20260820-kline-archetype-extension/report.html#embedded-2",
+                "parser": "css"
+            },
+            {
+                "path": "tasks/20260820-kline-archetype-extension/report.html#embedded-3",
+                "parser": "css"
+            },
+            {
+                "path": "tasks/20260820-kline-archetype-extension/report.html#embedded-4",
+                "parser": "css"
+            },
+            {
+                "path": "tasks/20260820-kline-archetype-extension/report.html#embedded-5",
+                "parser": "css"
+            },
+            {
+                "path": "tasks/20260821-2b-entry-decomposition/report.html#embedded-0",
+                "parser": "css"
+            },
+            {
+                "path": "tasks/20260821-2b-entry-decomposition/report.html#embedded-1",
+                "parser": "css"
+            },
+            {
+                "path": "tasks/20260821-2b-entry-decomposition/report.html#embedded-2",
+                "parser": "css"
+            },
+            {
+                "path": "tasks/20260821-2b-entry-decomposition/report.html#embedded-3",
+                "parser": "css"
+            },
+            {
+                "path": "tasks/20260821-2b-entry-decomposition/report.html#embedded-4",
+                "parser": "css"
+            },
+            {
+                "path": "tasks/20260821-2b-entry-decomposition/report.html#embedded-5",
+                "parser": "css"
+            },
+            {
+                "path": "tasks/20260821-2b-entry-decomposition/report.html#embedded-6",
+                "parser": "css"
+            },
+            {
+                "path": "tasks/20260821-2b-entry-decomposition/report.html#embedded-7",
+                "parser": "css"
+            },
+            {
+                "path": "tasks/20260821-2b-entry-decomposition/report.html#embedded-8",
+                "parser": "css"
+            },
+            {
+                "path": "tasks/20260821-stop-mechanism-isolation/report.html#embedded-0",
+                "parser": "css"
+            },
+            {
+                "path": "tasks/20260821-stop-mechanism-isolation/report.html#embedded-1",
+                "parser": "css"
+            },
+            {
+                "path": "tasks/20260821-stop-mechanism-isolation/report.html#embedded-2",
+                "parser": "css"
+            },
+            {
+                "path": "tasks/20260821-stop-mechanism-isolation/report.html#embedded-3",
+                "parser": "css"
+            },
+            {
+                "path": "tasks/20260821-stop-mechanism-isolation/report.html#embedded-4",
+                "parser": "css"
+            },
+            {
+                "path": "tasks/20260821-stop-mechanism-isolation/report.html#embedded-5",
+                "parser": "css"
+            },
+            {
+                "path": "tasks/20260822-ratchet-generalization/report.html#embedded-0",
+                "parser": "css"
+            },
+            {
+                "path": "tasks/20261002-sector-wave-catalog/mission.md",
+                "parser": "markdown"
+            },
+            {
+                "path": "tasks/20261004-feature-discrimination-atlas/mission.md",
+                "parser": "markdown"
+            },
+            {
+                "path": "tasks/20261004-sector-wave-full-history-preview/contract.md",
+                "parser": "markdown"
+            },
+            {
+                "path": "tasks/20261004-sector-wave-full-history-preview/mission.md",
+                "parser": "markdown"
+            },
+            {
+                "path": "tasks/20261005-market-context-handoff/mission.md",
+                "parser": "markdown"
+            },
+            {
+                "path": "tasks/20261009-hhhl-pattern-probability/mission.md",
+                "parser": "markdown"
+            }
+        ],
+        "HTMLDOMTextAndLiteralEquivalent": 5
+    },
+    "gitSourceSnapshot": "02ba5e2c2cd097acd8c1e4c7eb5b44dac2c3a9d1",
+    "policy": "Normal formatting, no new formatting exemption. Scientific results, values and evidence payloads are unchanged. Two current input contract hashes are updated explicitly; preserved original Git, ZIP, gzip and evaluated-run provenance keeps its original identities. Old and new raw hashes and semantic proofs are recorded for every formatted path.",
+    "formattedIdentityCommit": "bootstrap/stock-research@b0d3ecb",
+    "identityScope": "These hashes identify the format-stage snapshot. Subsequent public-export availability notes intentionally update current prose without changing original receipts or scientific evidence."
+}

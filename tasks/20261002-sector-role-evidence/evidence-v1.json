@@ -1,0 +1,3749 @@
+{
+    "schema_version": "sector-classification-evidence.v1",
+    "packet_id": "sector-role-evidence-20261002-batch01",
+    "created_at": "2026-10-02T08:18:49+00:00",
+    "base_catalog": {
+        "schema_version": "sector-wave-catalog.v1",
+        "manifest_canonical_sha256": "384ee53d22b70dc1650bf84e1887e8515565189c975c29c77ef5e6273c5138c9"
+    },
+    "scope_profile_id": "sector-role-review-20261002.v1",
+    "role_taxonomy": {
+        "schema_version": "sector-roles.v1",
+        "roles": [
+            {
+                "role_id": "memory-chip-manufacturer",
+                "label": "記憶體晶片製造"
+            },
+            {
+                "role_id": "memory-ic-designer",
+                "label": "記憶體 IC 設計"
+            },
+            {
+                "role_id": "memory-controller-designer",
+                "label": "記憶體控制 IC 設計"
+            },
+            {
+                "role_id": "memory-controller-supplier",
+                "label": "記憶體控制 IC 供應"
+            },
+            {
+                "role_id": "memory-module-supplier",
+                "label": "記憶體模組／儲存產品供應"
+            },
+            {
+                "role_id": "thermal-solution-supplier",
+                "label": "散熱解決方案供應"
+            },
+            {
+                "role_id": "fan-manufacturer",
+                "label": "風扇製造"
+            },
+            {
+                "role_id": "ic-substrate-manufacturer",
+                "label": "IC 載板製造"
+            },
+            {
+                "role_id": "pcb-manufacturer",
+                "label": "PCB 製造"
+            },
+            {
+                "role_id": "copper-clad-laminate-manufacturer",
+                "label": "銅箔基板製造"
+            },
+            {
+                "role_id": "electronic-material-supplier",
+                "label": "電子材料供應"
+            },
+            {
+                "role_id": "retail-ecommerce-operator",
+                "label": "零售／電子商務營運"
+            },
+            {
+                "role_id": "bulk-shipping-operator",
+                "label": "散裝航運營運"
+            },
+            {
+                "role_id": "port-warehouse-operator",
+                "label": "港埠倉儲／裝卸營運"
+            },
+            {
+                "role_id": "transformer-manufacturer",
+                "label": "配電變壓器製造"
+            }
+        ],
+        "product_tags": [
+            {
+                "tag_id": "dram",
+                "label": "DRAM"
+            },
+            {
+                "tag_id": "nor-flash",
+                "label": "NOR Flash"
+            },
+            {
+                "tag_id": "nand-flash",
+                "label": "NAND Flash"
+            },
+            {
+                "tag_id": "memory-module",
+                "label": "記憶體模組"
+            },
+            {
+                "tag_id": "ssd",
+                "label": "SSD"
+            },
+            {
+                "tag_id": "flash-controller",
+                "label": "快閃記憶體控制 IC"
+            },
+            {
+                "tag_id": "air-cooling",
+                "label": "氣冷散熱"
+            },
+            {
+                "tag_id": "liquid-cooling",
+                "label": "液冷散熱"
+            },
+            {
+                "tag_id": "fan",
+                "label": "風扇"
+            },
+            {
+                "tag_id": "abf-substrate",
+                "label": "ABF 載板"
+            },
+            {
+                "tag_id": "bt-substrate",
+                "label": "BT 載板"
+            },
+            {
+                "tag_id": "pcb",
+                "label": "PCB"
+            },
+            {
+                "tag_id": "copper-clad-laminate",
+                "label": "銅箔基板"
+            },
+            {
+                "tag_id": "prepreg",
+                "label": "半固化片"
+            },
+            {
+                "tag_id": "electronic-chemicals",
+                "label": "電子化學材料"
+            },
+            {
+                "tag_id": "fashion-ecommerce",
+                "label": "服飾電子商務"
+            },
+            {
+                "tag_id": "retail",
+                "label": "零售"
+            },
+            {
+                "tag_id": "dry-bulk-shipping",
+                "label": "乾散貨航運"
+            },
+            {
+                "tag_id": "pcb-drilling-materials",
+                "label": "PCB 鑽孔材料"
+            },
+            {
+                "tag_id": "distribution-transformer",
+                "label": "配電變壓器"
+            },
+            {
+                "tag_id": "grain-warehousing",
+                "label": "穀物倉儲"
+            }
+        ]
+    },
+    "scope": [
+        {
+            "security_id": "TW:1256",
+            "official_industry": "食品工業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:1303",
+            "official_industry": "塑膠工業",
+            "group_ids": [
+                "official:L000",
+                "official:N000",
+                "official:O000",
+                "official:P000",
+                "pcb",
+                "pcb-materials"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:1337",
+            "official_industry": "塑膠工業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:1528",
+            "official_industry": "電機機械",
+            "group_ids": [
+                "official:L000",
+                "official:P000",
+                "official:V000",
+                "pcb"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:1590",
+            "official_industry": "電機機械",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:1591",
+            "official_industry": "電機機械",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:1595",
+            "official_industry": "半導體業",
+            "group_ids": [
+                "official:D000",
+                "official:G000",
+                "official:L000",
+                "pcb",
+                "semiconductor-equipment"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:1626",
+            "official_industry": "電器電纜",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:1717",
+            "official_industry": "化學工業",
+            "group_ids": [
+                "official:A100",
+                "official:D000",
+                "official:G000",
+                "official:H000",
+                "official:L000",
+                "official:N000",
+                "pcb",
+                "pcb-materials",
+                "solar"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:1785",
+            "official_industry": "其他電子業",
+            "group_ids": [
+                "official:3000",
+                "official:A100",
+                "official:D000",
+                "official:F000",
+                "official:G000",
+                "official:H000",
+                "official:J000",
+                "official:L000",
+                "official:X000",
+                "passive",
+                "pcb",
+                "solar"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:1802",
+            "official_industry": "玻璃陶瓷",
+            "group_ids": [
+                "construction",
+                "official:L000",
+                "official:S000",
+                "pcb"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:1815",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:2236",
+            "official_industry": "汽車工業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:2239",
+            "official_industry": "汽車工業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:2243",
+            "official_industry": "汽車工業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:2301",
+            "official_industry": "電腦及週邊設備業",
+            "group_ids": [
+                "cooling",
+                "grid",
+                "network-equipment",
+                "official:3000",
+                "official:5400",
+                "official:5700",
+                "official:A200",
+                "official:A300",
+                "official:AD10",
+                "official:C200",
+                "official:F000",
+                "official:I000",
+                "official:X000",
+                "power-supply",
+                "servers"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:2308",
+            "official_industry": "電子零組件業",
+            "group_ids": [
+                "construction",
+                "cooling",
+                "grid",
+                "ic-design",
+                "network-equipment",
+                "official:3000",
+                "official:4100",
+                "official:5300",
+                "official:5400",
+                "official:5600",
+                "official:5700",
+                "official:A100",
+                "official:A200",
+                "official:A300",
+                "official:AB20",
+                "official:AD10",
+                "official:B000",
+                "official:C200",
+                "official:D000",
+                "official:E000",
+                "official:F000",
+                "official:G000",
+                "official:I000",
+                "official:J000",
+                "official:P000",
+                "official:R000",
+                "official:S000",
+                "official:X000",
+                "optical-communications",
+                "passive",
+                "passive.capacitors",
+                "passive.resistors",
+                "power-equipment",
+                "power-supply",
+                "satellite",
+                "semiconductor-equipment",
+                "servers",
+                "software",
+                "solar",
+                "wind"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:2313",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb", "pcb-manufacturing"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:2316",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb", "pcb-manufacturing"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:2328",
+            "official_industry": "電子零組件業",
+            "group_ids": [
+                "official:F000",
+                "official:L000",
+                "pcb",
+                "pcb-manufacturing",
+                "pcb-materials"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:2337",
+            "official_industry": "半導體業",
+            "group_ids": [
+                "ic-design",
+                "memory",
+                "memory.ic",
+                "official:D000",
+                "semiconductor-packaging"
+            ],
+            "scope_reasons": [
+                "focused_memory_cooling_pcb",
+                "registered_issuer_seed"
+            ],
+            "review_status": "source_verified",
+            "unknown_reason": null
+        },
+        {
+            "security_id": "TW:2344",
+            "official_industry": "半導體業",
+            "group_ids": [
+                "ic-design",
+                "memory",
+                "memory.dram",
+                "memory.ic",
+                "official:D000",
+                "official:F000",
+                "official:I000"
+            ],
+            "scope_reasons": [
+                "focused_memory_cooling_pcb",
+                "registered_issuer_seed"
+            ],
+            "review_status": "source_verified",
+            "unknown_reason": null
+        },
+        {
+            "security_id": "TW:2354",
+            "official_industry": "其他電子業",
+            "group_ids": ["cooling", "official:F000", "official:X000"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:2355",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb", "pcb-manufacturing"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:2363",
+            "official_industry": "半導體業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:2367",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb", "pcb-manufacturing"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:2368",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb", "pcb-manufacturing"],
+            "scope_reasons": [
+                "focused_memory_cooling_pcb",
+                "registered_issuer_seed"
+            ],
+            "review_status": "source_verified",
+            "unknown_reason": null
+        },
+        {
+            "security_id": "TW:2376",
+            "official_industry": "電腦及週邊設備業",
+            "group_ids": [
+                "cooling",
+                "ipc",
+                "official:A300",
+                "official:F000",
+                "power-supply",
+                "servers"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:2383",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb", "pcb-materials"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:2390",
+            "official_industry": "其他電子業",
+            "group_ids": [
+                "cooling",
+                "official:5400",
+                "official:5600",
+                "official:A200",
+                "official:X000",
+                "servers"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:2402",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb", "pcb-manufacturing"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:2408",
+            "official_industry": "半導體業",
+            "group_ids": [
+                "ic-design",
+                "memory",
+                "memory.dram",
+                "memory.ic",
+                "official:D000",
+                "official:F000",
+                "official:I000"
+            ],
+            "scope_reasons": [
+                "focused_memory_cooling_pcb",
+                "registered_issuer_seed"
+            ],
+            "review_status": "source_verified",
+            "unknown_reason": null
+        },
+        {
+            "security_id": "TW:2421",
+            "official_industry": "電子零組件業",
+            "group_ids": [
+                "cooling",
+                "official:5400",
+                "official:5700",
+                "official:A300",
+                "official:F000",
+                "official:P000"
+            ],
+            "scope_reasons": [
+                "focused_memory_cooling_pcb",
+                "registered_issuer_seed"
+            ],
+            "review_status": "source_verified",
+            "unknown_reason": null
+        },
+        {
+            "security_id": "TW:2451",
+            "official_industry": "半導體業",
+            "group_ids": [
+                "memory",
+                "memory.components",
+                "official:D000",
+                "official:F000"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:2459",
+            "official_industry": "其他電子業",
+            "group_ids": [
+                "connectors",
+                "cooling",
+                "display-panel",
+                "grid",
+                "official:3000",
+                "official:5400",
+                "official:5700",
+                "official:5800",
+                "official:A200",
+                "official:A300",
+                "official:AD10",
+                "official:C200",
+                "official:D000",
+                "official:E000",
+                "official:F000",
+                "official:G000",
+                "official:H000",
+                "official:I000",
+                "official:J000",
+                "official:K000",
+                "official:P000",
+                "official:X000",
+                "passive",
+                "power-equipment"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:2467",
+            "official_industry": "電子零組件業",
+            "group_ids": [
+                "official:D000",
+                "official:G000",
+                "official:L000",
+                "pcb",
+                "semiconductor-equipment"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:2493",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:D000", "official:L000", "pcb"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:2614",
+            "official_industry": "其他業",
+            "group_ids": ["official:T000", "official:V000", "shipping.bulk"],
+            "scope_reasons": ["registered_issuer_seed"],
+            "review_status": "source_verified",
+            "unknown_reason": null
+        },
+        {
+            "security_id": "TW:2637",
+            "official_industry": "航運業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:2723",
+            "official_industry": "觀光餐旅",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:2724",
+            "official_industry": "其他業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:2923",
+            "official_industry": "建材營造業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:2924",
+            "official_industry": "居家生活",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:2929",
+            "official_industry": "貿易百貨業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:2939",
+            "official_industry": "貿易百貨業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:3006",
+            "official_industry": "半導體業",
+            "group_ids": ["ic-design", "memory", "memory.ic", "official:D000"],
+            "scope_reasons": [
+                "focused_memory_cooling_pcb",
+                "registered_issuer_seed"
+            ],
+            "review_status": "source_verified",
+            "unknown_reason": null
+        },
+        {
+            "security_id": "TW:3010",
+            "official_industry": "電子通路業",
+            "group_ids": [
+                "official:A100",
+                "official:A300",
+                "official:C200",
+                "official:D000",
+                "official:E000",
+                "official:F000",
+                "official:G000",
+                "official:K000",
+                "official:L000",
+                "pcb",
+                "pcb-materials",
+                "solar"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:3017",
+            "official_industry": "電腦及週邊設備業",
+            "group_ids": ["cooling", "official:F000"],
+            "scope_reasons": [
+                "focused_memory_cooling_pcb",
+                "registered_issuer_seed"
+            ],
+            "review_status": "source_verified",
+            "unknown_reason": null
+        },
+        {
+            "security_id": "TW:3030",
+            "official_industry": "其他電子業",
+            "group_ids": [
+                "official:D000",
+                "official:L000",
+                "pcb",
+                "semiconductor-equipment"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:3037",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb", "pcb-manufacturing"],
+            "scope_reasons": [
+                "focused_memory_cooling_pcb",
+                "registered_issuer_seed"
+            ],
+            "review_status": "source_verified",
+            "unknown_reason": null
+        },
+        {
+            "security_id": "TW:3044",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb", "pcb-manufacturing"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:3071",
+            "official_industry": "電腦及週邊設備業",
+            "group_ids": ["cooling", "official:F000"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:3093",
+            "official_industry": "其他電子業",
+            "group_ids": [
+                "official:D000",
+                "official:L000",
+                "pcb",
+                "semiconductor-equipment"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:3114",
+            "official_industry": "電子零組件業",
+            "group_ids": [
+                "connectors",
+                "official:A200",
+                "official:D000",
+                "official:F000",
+                "official:K000",
+                "official:L000",
+                "pcb",
+                "pcb-manufacturing",
+                "semiconductor-equipment"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:3115",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb", "pcb-manufacturing"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:3135",
+            "official_industry": "半導體業",
+            "group_ids": [
+                "memory",
+                "memory.components",
+                "official:5600",
+                "official:D000",
+                "official:F000"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:3189",
+            "official_industry": "半導體業",
+            "group_ids": ["official:D000"],
+            "scope_reasons": ["registered_issuer_seed"],
+            "review_status": "source_verified",
+            "unknown_reason": null
+        },
+        {
+            "security_id": "TW:3229",
+            "official_industry": "電子零組件業",
+            "group_ids": [
+                "official:L000",
+                "official:V000",
+                "pcb",
+                "pcb-manufacturing"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:3259",
+            "official_industry": "半導體業",
+            "group_ids": [
+                "ic-design",
+                "memory",
+                "memory.controller",
+                "official:D000"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:3260",
+            "official_industry": "半導體業",
+            "group_ids": [
+                "memory",
+                "memory.components",
+                "official:A200",
+                "official:D000",
+                "official:F000",
+                "official:I000"
+            ],
+            "scope_reasons": [
+                "focused_memory_cooling_pcb",
+                "registered_issuer_seed"
+            ],
+            "review_status": "source_verified",
+            "unknown_reason": null
+        },
+        {
+            "security_id": "TW:3276",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb", "pcb-manufacturing"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:3321",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb", "pcb-manufacturing"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:3324",
+            "official_industry": "其他電子業",
+            "group_ids": ["cooling", "official:F000"],
+            "scope_reasons": [
+                "focused_memory_cooling_pcb",
+                "registered_issuer_seed"
+            ],
+            "review_status": "source_verified",
+            "unknown_reason": null
+        },
+        {
+            "security_id": "TW:3338",
+            "official_industry": "電子零組件業",
+            "group_ids": ["cooling", "official:F000"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:3354",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb", "pcb-materials"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:3388",
+            "official_industry": "電子零組件業",
+            "group_ids": [
+                "construction",
+                "official:A200",
+                "official:C300",
+                "official:E000",
+                "official:G000",
+                "official:H000",
+                "official:I000",
+                "official:L000",
+                "official:M000",
+                "official:S000",
+                "pcb"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:3390",
+            "official_industry": "電子零組件業",
+            "group_ids": [
+                "official:H000",
+                "official:L000",
+                "pcb",
+                "pcb-manufacturing"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:3455",
+            "official_industry": "光電業",
+            "group_ids": [
+                "official:5300",
+                "official:D000",
+                "official:G000",
+                "official:L000",
+                "pcb",
+                "semiconductor-equipment"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:3483",
+            "official_industry": "電腦及週邊設備業",
+            "group_ids": ["cooling", "official:A200", "official:F000"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:3485",
+            "official_industry": "電子零組件業",
+            "group_ids": [
+                "official:D000",
+                "official:G000",
+                "official:L000",
+                "pcb",
+                "semiconductor-equipment"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:3498",
+            "official_industry": "其他電子業",
+            "group_ids": [
+                "official:G000",
+                "official:H000",
+                "official:L000",
+                "official:P000",
+                "pcb"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:3512",
+            "official_industry": "建材營造業",
+            "group_ids": [
+                "construction",
+                "cooling",
+                "official:F000",
+                "official:S000"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:3520",
+            "official_industry": "電子零組件業",
+            "group_ids": [
+                "connectors",
+                "official:A100",
+                "official:K000",
+                "official:L000",
+                "pcb",
+                "solar"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:3535",
+            "official_industry": "光電業",
+            "group_ids": [
+                "official:D000",
+                "official:G000",
+                "official:L000",
+                "pcb",
+                "semiconductor-equipment"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:3563",
+            "official_industry": "光電業",
+            "group_ids": ["official:L000", "pcb"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:3645",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:3661",
+            "official_industry": "半導體業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:3664",
+            "official_industry": "通信網路業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:3665",
+            "official_industry": "其他電子業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:3673",
+            "official_industry": "光電業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:3707",
+            "official_industry": "半導體業",
+            "group_ids": ["memory", "memory.dram", "official:D000"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:3709",
+            "official_industry": "電腦及週邊設備業",
+            "group_ids": [
+                "cooling",
+                "ipc",
+                "memory",
+                "memory.components",
+                "official:F000",
+                "power-supply",
+                "servers"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:3715",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb", "pcb-manufacturing"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:4139",
+            "official_industry": "生技醫療業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:4148",
+            "official_industry": "生技醫療業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:4154",
+            "official_industry": "其他業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:4157",
+            "official_industry": "生技醫療業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:4442",
+            "official_industry": "紡織纖維",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:4542",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:H000", "official:L000", "pcb"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:4569",
+            "official_industry": "汽車工業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:4571",
+            "official_industry": "電機機械",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:4577",
+            "official_industry": "其他電子業",
+            "group_ids": ["official:L000", "official:X000", "pcb"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:4581",
+            "official_industry": "汽車工業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:4763",
+            "official_industry": "化學工業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:4764",
+            "official_industry": "化學工業",
+            "group_ids": [
+                "official:C100",
+                "official:D000",
+                "official:H000",
+                "official:L000",
+                "official:N000",
+                "official:O000",
+                "official:X000",
+                "pcb",
+                "pharma"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:4804",
+            "official_industry": "觀光餐旅",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:4807",
+            "official_industry": "貿易百貨業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:4909",
+            "official_industry": "通信網路業",
+            "group_ids": [
+                "network-equipment",
+                "official:4100",
+                "official:I000",
+                "official:L000",
+                "pcb",
+                "pcb-manufacturing",
+                "satellite"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:4912",
+            "official_industry": "電子零組件業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:4924",
+            "official_industry": "綠能環保",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:4927",
+            "official_industry": "電子零組件業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:4935",
+            "official_industry": "光電業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:4939",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb", "pcb-materials"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:4943",
+            "official_industry": "電子零組件業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:4958",
+            "official_industry": "電子零組件業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:4966",
+            "official_industry": "半導體業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:4967",
+            "official_industry": "半導體業",
+            "group_ids": ["memory", "memory.components", "official:F000"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:4971",
+            "official_industry": "半導體業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:4973",
+            "official_industry": "半導體業",
+            "group_ids": [
+                "memory",
+                "memory.components",
+                "official:D000",
+                "official:F000",
+                "official:I000"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:4977",
+            "official_industry": "通信網路業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:4989",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:4991",
+            "official_industry": "半導體業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:5215",
+            "official_industry": "電腦及週邊設備業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:5223",
+            "official_industry": "電腦及週邊設備業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:5225",
+            "official_industry": "其他電子業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:5227",
+            "official_industry": "電子零組件業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:5230",
+            "official_industry": "光電業",
+            "group_ids": [
+                "cooling",
+                "official:3000",
+                "official:A200",
+                "official:F000"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:5243",
+            "official_industry": "光電業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:5276",
+            "official_industry": "其他業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:5284",
+            "official_industry": "其他業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:5291",
+            "official_industry": "電子零組件業",
+            "group_ids": [
+                "official:A200",
+                "official:L000",
+                "pcb",
+                "pcb-manufacturing"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:5321",
+            "official_industry": "數位雲端",
+            "group_ids": [
+                "official:L000",
+                "official:R300",
+                "pcb",
+                "pcb-manufacturing"
+            ],
+            "scope_reasons": [
+                "focused_memory_cooling_pcb",
+                "registered_issuer_seed"
+            ],
+            "review_status": "source_verified",
+            "unknown_reason": null
+        },
+        {
+            "security_id": "TW:5340",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:5351",
+            "official_industry": "半導體業",
+            "group_ids": [
+                "ic-design",
+                "memory",
+                "memory.ic",
+                "official:5300",
+                "official:5700",
+                "official:D000"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:5355",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb", "pcb-manufacturing"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:5381",
+            "official_industry": "電機機械",
+            "group_ids": [
+                "grid",
+                "official:AD10",
+                "official:L000",
+                "official:P000",
+                "pcb",
+                "pcb-manufacturing",
+                "pcb-materials",
+                "power-equipment"
+            ],
+            "scope_reasons": [
+                "focused_memory_cooling_pcb",
+                "registered_issuer_seed"
+            ],
+            "review_status": "source_verified",
+            "unknown_reason": null
+        },
+        {
+            "security_id": "TW:5386",
+            "official_industry": "電腦及週邊設備業",
+            "group_ids": [
+                "memory",
+                "memory.components",
+                "official:F000",
+                "official:G000",
+                "official:H000"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:5439",
+            "official_industry": "電子零組件業",
+            "group_ids": [
+                "official:A300",
+                "official:I000",
+                "official:L000",
+                "pcb",
+                "pcb-manufacturing"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:5457",
+            "official_industry": "電子零組件業",
+            "group_ids": [
+                "connectors",
+                "cooling",
+                "grid",
+                "network-equipment",
+                "official:4100",
+                "official:5800",
+                "official:A300",
+                "official:AD10",
+                "official:C200",
+                "official:F000",
+                "official:I000",
+                "official:K000",
+                "satellite"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:5464",
+            "official_industry": "電子零組件業",
+            "group_ids": [
+                "official:B000",
+                "official:L000",
+                "pcb",
+                "pcb-manufacturing"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:5469",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb", "pcb-manufacturing"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:5475",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:5498",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb", "pcb-materials"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:5536",
+            "official_industry": "其他電子業",
+            "group_ids": [
+                "construction",
+                "cooling",
+                "official:5400",
+                "official:A100",
+                "official:A200",
+                "official:D000",
+                "official:G000",
+                "official:L000",
+                "official:P000",
+                "official:S000",
+                "official:X000",
+                "pcb",
+                "semiconductor-equipment",
+                "solar"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:5543",
+            "official_industry": "建材營造業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:5906",
+            "official_industry": "貿易百貨業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6108",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb", "pcb-manufacturing"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6124",
+            "official_industry": "電子零組件業",
+            "group_ids": ["cooling", "official:A200", "official:F000"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6141",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb", "pcb-manufacturing"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6153",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb", "pcb-manufacturing"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6156",
+            "official_industry": "電子零組件業",
+            "group_ids": [
+                "official:J000",
+                "official:L000",
+                "passive",
+                "pcb",
+                "pcb-manufacturing"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6191",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb", "pcb-manufacturing"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6194",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb", "pcb-manufacturing"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6207",
+            "official_industry": "電子零組件業",
+            "group_ids": [
+                "official:A200",
+                "official:D000",
+                "official:J000",
+                "official:L000",
+                "passive",
+                "passive.capacitors",
+                "passive.resistors",
+                "pcb",
+                "pcb-manufacturing",
+                "semiconductor-equipment",
+                "semiconductor-packaging"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6210",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb", "pcb-manufacturing"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6213",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb", "pcb-materials"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6224",
+            "official_industry": "電子零組件業",
+            "group_ids": [
+                "official:A200",
+                "official:F000",
+                "official:G000",
+                "official:J000",
+                "official:L000",
+                "passive",
+                "passive.resistors",
+                "pcb",
+                "pcb-materials"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6230",
+            "official_industry": "電腦及週邊設備業",
+            "group_ids": ["cooling", "official:F000"],
+            "scope_reasons": [
+                "focused_memory_cooling_pcb",
+                "registered_issuer_seed"
+            ],
+            "review_status": "source_verified",
+            "unknown_reason": null
+        },
+        {
+            "security_id": "TW:6266",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6269",
+            "official_industry": "電子零組件業",
+            "group_ids": [
+                "official:L000",
+                "pcb",
+                "pcb-manufacturing",
+                "pcb-materials"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6271",
+            "official_industry": "半導體業",
+            "group_ids": [
+                "official:4100",
+                "official:5700",
+                "official:A200",
+                "official:D000",
+                "official:L000",
+                "pcb",
+                "pcb-manufacturing",
+                "satellite",
+                "semiconductor-packaging"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6274",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb", "pcb-materials"],
+            "scope_reasons": [
+                "focused_memory_cooling_pcb",
+                "registered_issuer_seed"
+            ],
+            "review_status": "source_verified",
+            "unknown_reason": null
+        },
+        {
+            "security_id": "TW:6275",
+            "official_industry": "電子零組件業",
+            "group_ids": [
+                "cooling",
+                "official:A300",
+                "official:C200",
+                "official:F000",
+                "official:I000",
+                "official:P000"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6276",
+            "official_industry": "電腦及週邊設備業",
+            "group_ids": [
+                "cooling",
+                "memory",
+                "memory.components",
+                "official:F000",
+                "power-supply"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6415",
+            "official_industry": "半導體業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6431",
+            "official_industry": "生技醫療業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6438",
+            "official_industry": "其他電子業",
+            "group_ids": [
+                "official:D000",
+                "official:G000",
+                "official:L000",
+                "pcb",
+                "semiconductor-equipment"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6451",
+            "official_industry": "半導體業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6456",
+            "official_industry": "光電業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6470",
+            "official_industry": "通信網路業",
+            "group_ids": [
+                "memory",
+                "memory.components",
+                "network-equipment",
+                "official:I000",
+                "optical-communications"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6485",
+            "official_industry": "半導體業",
+            "group_ids": [
+                "ic-design",
+                "memory",
+                "memory.controller",
+                "official:D000"
+            ],
+            "scope_reasons": [
+                "focused_memory_cooling_pcb",
+                "registered_issuer_seed"
+            ],
+            "review_status": "source_verified",
+            "unknown_reason": null
+        },
+        {
+            "security_id": "TW:6509",
+            "official_industry": "化學工業",
+            "group_ids": [
+                "official:2000",
+                "official:A300",
+                "official:C100",
+                "official:E000",
+                "official:L000",
+                "official:N000",
+                "pcb",
+                "pcb-materials",
+                "pharma"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6525",
+            "official_industry": "半導體業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6531",
+            "official_industry": "半導體業",
+            "group_ids": ["ic-design", "memory", "memory.ic", "official:D000"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6541",
+            "official_industry": "生技醫療業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6550",
+            "official_industry": "生技醫療業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6573",
+            "official_industry": "半導體業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6591",
+            "official_industry": "電腦及週邊設備業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6597",
+            "official_industry": "電子零組件業",
+            "group_ids": [
+                "official:A200",
+                "official:I000",
+                "official:L000",
+                "pcb",
+                "pcb-manufacturing"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6616",
+            "official_industry": "居家生活",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6629",
+            "official_industry": "居家生活",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6658",
+            "official_industry": "其他電子業",
+            "group_ids": [
+                "official:5300",
+                "official:5600",
+                "official:D000",
+                "official:L000",
+                "pcb",
+                "semiconductor-equipment"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6664",
+            "official_industry": "電子零組件業",
+            "group_ids": [
+                "official:5300",
+                "official:6000",
+                "official:D000",
+                "official:G000",
+                "official:H000",
+                "official:L000",
+                "pcb",
+                "semiconductor-equipment"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6672",
+            "official_industry": "電子零組件業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6706",
+            "official_industry": "光電業",
+            "group_ids": [
+                "official:A200",
+                "official:D000",
+                "official:L000",
+                "official:X000",
+                "pcb",
+                "semiconductor-equipment"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6715",
+            "official_industry": "電子零組件業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6727",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6741",
+            "official_industry": "數位雲端",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6752",
+            "official_industry": "資訊服務業",
+            "group_ids": [
+                "cooling",
+                "official:5300",
+                "official:5400",
+                "official:5500",
+                "official:R000",
+                "servers",
+                "software"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6770",
+            "official_industry": "半導體業",
+            "group_ids": ["memory", "memory.dram", "official:D000"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6781",
+            "official_industry": "電子零組件業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6807",
+            "official_industry": "居家生活",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6831",
+            "official_industry": "電腦及週邊設備業",
+            "group_ids": ["cooling", "official:F000"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6835",
+            "official_industry": "電子零組件業",
+            "group_ids": [
+                "connectors",
+                "official:K000",
+                "official:L000",
+                "pcb",
+                "pcb-manufacturing"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6863",
+            "official_industry": "通信網路業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6877",
+            "official_industry": "其他電子業",
+            "group_ids": [
+                "official:5300",
+                "official:D000",
+                "official:G000",
+                "official:L000",
+                "official:X000",
+                "pcb",
+                "semiconductor-equipment"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6890",
+            "official_industry": "運動休閒",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6902",
+            "official_industry": "數位雲端",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6907",
+            "official_industry": "半導體業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:6933",
+            "official_industry": "電腦及週邊設備業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:7717",
+            "official_industry": "通信網路業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:7795",
+            "official_industry": "電子零組件業",
+            "group_ids": [
+                "official:A200",
+                "official:D000",
+                "official:L000",
+                "pcb",
+                "semiconductor-equipment"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:8039",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb", "pcb-materials"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:8046",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb", "pcb-manufacturing"],
+            "scope_reasons": [
+                "focused_memory_cooling_pcb",
+                "registered_issuer_seed"
+            ],
+            "review_status": "source_verified",
+            "unknown_reason": null
+        },
+        {
+            "security_id": "TW:8074",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb", "pcb-manufacturing"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:8084",
+            "official_industry": "電子通路業",
+            "group_ids": [
+                "memory",
+                "memory.components",
+                "official:D000",
+                "official:I000"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:8088",
+            "official_industry": "半導體業",
+            "group_ids": [
+                "memory",
+                "memory.components",
+                "official:D000",
+                "official:F000",
+                "official:I000"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:8096",
+            "official_industry": "電子通路業",
+            "group_ids": [
+                "memory",
+                "memory.components",
+                "official:D000",
+                "official:F000",
+                "official:I000"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:8155",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb", "pcb-manufacturing"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:8183",
+            "official_industry": "其他電子業",
+            "group_ids": [
+                "official:A300",
+                "official:C200",
+                "official:L000",
+                "pcb"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:8213",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb", "pcb-manufacturing"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:8240",
+            "official_industry": "光電業",
+            "group_ids": [
+                "cooling",
+                "official:3000",
+                "official:D000",
+                "official:F000",
+                "official:G000",
+                "official:I000",
+                "official:K000",
+                "official:X000",
+                "semiconductor-equipment"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:8271",
+            "official_industry": "半導體業",
+            "group_ids": [
+                "memory",
+                "memory.components",
+                "official:D000",
+                "official:F000"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:8277",
+            "official_industry": "半導體業",
+            "group_ids": [
+                "memory",
+                "memory.components",
+                "official:5400",
+                "official:5500",
+                "official:D000",
+                "official:F000",
+                "servers"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:8291",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:L000", "pcb", "pcb-materials"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:8299",
+            "official_industry": "半導體業",
+            "group_ids": [
+                "ic-design",
+                "memory",
+                "memory.controller",
+                "official:D000",
+                "official:F000"
+            ],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:8358",
+            "official_industry": "電子零組件業",
+            "group_ids": ["official:A300", "official:L000", "pcb"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:8404",
+            "official_industry": "其他業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:8426",
+            "official_industry": "其他業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:8429",
+            "official_industry": "貿易百貨業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:8438",
+            "official_industry": "綠能環保",
+            "group_ids": ["official:L000", "official:X000", "pcb"],
+            "scope_reasons": ["focused_memory_cooling_pcb"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:8444",
+            "official_industry": "其他業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:8455",
+            "official_industry": "其他電子業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:8467",
+            "official_industry": "運動休閒",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:8482",
+            "official_industry": "居家生活",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:8499",
+            "official_industry": "其他電子業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:8931",
+            "official_industry": "油電燃氣業",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        },
+        {
+            "security_id": "TW:9802",
+            "official_industry": "運動休閒",
+            "group_ids": [],
+            "scope_reasons": ["source_missing_with_episode"],
+            "review_status": "pending",
+            "unknown_reason": "issuer_role_source_not_reviewed_in_first_batch"
+        }
+    ],
+    "sources": [
+        {
+            "evidence_id": "issuer-2408-1",
+            "security_id": "TW:2408",
+            "url": "https://www.nanya.com/tw/About",
+            "title": "南亞科技－公司簡介",
+            "source_kind": "issuer_page",
+            "locator": "公司簡介／關於南亞科技",
+            "retained_excerpt": "DRAM (動態隨機存取記憶體)的研發、設計、製造與銷售",
+            "retained_excerpt_sha256": "53212e865ff5aa289c05ef5cbfdde47d06c230c603645a1541858e5fd36b79b8",
+            "retrieved_at": "2026-10-02T07:54:27+00:00",
+            "inspection_method": "web_extracted_text",
+            "published_at": null,
+            "published_on": null,
+            "available_at": null,
+            "covered_period": null,
+            "unknown_reasons": {
+                "published_at": "Publication timestamp/timezone not established; printed day, if known, is separate.",
+                "available_at": "First public availability not independently reconstructed.",
+                "covered_period": "Undated company page; retrieval does not establish historical coverage."
+            },
+            "supported_role_ids": ["memory-chip-manufacturer"],
+            "supported_tag_ids": ["dram"],
+            "supported_products_by_role": {
+                "memory-chip-manufacturer": ["dram"]
+            },
+            "verification_status": "manually_verified"
+        },
+        {
+            "evidence_id": "issuer-2344-1",
+            "security_id": "TW:2344",
+            "url": "https://www.winbond.com.tw/hq/about-winbond/company-profile/overview/?__locale=zh_TW",
+            "title": "華邦電子－簡介",
+            "source_kind": "issuer_page",
+            "locator": "簡介／第二段",
+            "retained_excerpt": "從產品設計、技術研發、晶圓製造到自有品牌行銷全球",
+            "retained_excerpt_sha256": "0115f4e4dc7a84cce8a9e4f7aaaba4079f18365fc409677efd5717713248c454",
+            "retrieved_at": "2026-10-02T07:54:27+00:00",
+            "inspection_method": "web_extracted_text",
+            "published_at": null,
+            "published_on": null,
+            "available_at": null,
+            "covered_period": null,
+            "unknown_reasons": {
+                "published_at": "Publication timestamp/timezone not established; printed day, if known, is separate.",
+                "available_at": "First public availability not independently reconstructed.",
+                "covered_period": "Undated company page; retrieval does not establish historical coverage."
+            },
+            "supported_role_ids": ["memory-chip-manufacturer"],
+            "supported_tag_ids": [],
+            "supported_products_by_role": {
+                "memory-chip-manufacturer": []
+            },
+            "verification_status": "manually_verified"
+        },
+        {
+            "evidence_id": "issuer-2344-2",
+            "security_id": "TW:2344",
+            "url": "https://www.winbond.com.tw/export/sites/winbond/product-selection-guide/file/2022-Winbond-Product-Brochure-CHT.pdf",
+            "title": "2022 華邦電子產品型錄",
+            "source_kind": "issuer_report",
+            "locator": "PDF pages 4, 10 (1-based); DRAM and Flash product overview",
+            "retained_excerpt": "提供高效能和低功耗的 DRAM 廣泛應用產品組合…1.2V SPI NOR…NOR+NAND",
+            "retained_excerpt_sha256": "32a2a48115282f80b86b2c45dbb232fd088e7c2de998b912c2e7918c679d81ea",
+            "retrieved_at": "2026-10-02T07:54:27+00:00",
+            "inspection_method": "direct_https_pdf_text; normal TLS validation",
+            "published_at": null,
+            "published_on": null,
+            "available_at": null,
+            "covered_period": {
+                "start": "2022-01-01",
+                "end": "2022-12-31",
+                "basis": "report_year; not role-effective interval"
+            },
+            "unknown_reasons": {
+                "published_at": "Publication timestamp/timezone not established; printed day, if known, is separate.",
+                "available_at": "First public availability not independently reconstructed."
+            },
+            "supported_role_ids": [],
+            "supported_tag_ids": ["dram", "nor-flash", "nand-flash"],
+            "supported_products_by_role": {
+                "memory-chip-manufacturer": ["dram", "nand-flash", "nor-flash"]
+            },
+            "verification_status": "manually_verified"
+        },
+        {
+            "evidence_id": "issuer-2337-1",
+            "security_id": "TW:2337",
+            "url": "https://www.macronix.com/zh-tw/about/Pages/company-overview.aspx",
+            "title": "旺宏電子－公司簡介",
+            "source_kind": "issuer_page",
+            "locator": "公司簡介／產品及晶圓廠段落",
+            "retained_excerpt": "NOR型快閃記憶體以及NAND型快閃記憶體…生產製造",
+            "retained_excerpt_sha256": "cea542e2b7a17c6e81cd0b08a8411837495942d06c04a3fb3887bf0a657d6e91",
+            "retrieved_at": "2026-10-02T07:54:27+00:00",
+            "inspection_method": "web_extracted_text",
+            "published_at": null,
+            "published_on": null,
+            "available_at": null,
+            "covered_period": null,
+            "unknown_reasons": {
+                "published_at": "Publication timestamp/timezone not established; printed day, if known, is separate.",
+                "available_at": "First public availability not independently reconstructed.",
+                "covered_period": "Undated company page; retrieval does not establish historical coverage."
+            },
+            "supported_role_ids": ["memory-chip-manufacturer"],
+            "supported_tag_ids": ["nor-flash", "nand-flash"],
+            "supported_products_by_role": {
+                "memory-chip-manufacturer": ["nand-flash", "nor-flash"]
+            },
+            "verification_status": "manually_verified"
+        },
+        {
+            "evidence_id": "issuer-3006-1",
+            "security_id": "TW:3006",
+            "url": "https://www.esmt.com.tw/tw/about/introduction",
+            "title": "晶豪科技－晶豪簡介",
+            "source_kind": "issuer_page",
+            "locator": "概況／創立",
+            "retained_excerpt": "IC 設計…DRAM 產品線…NOR Flash 及 NAND Flash 的開發",
+            "retained_excerpt_sha256": "f38e5c0889dc1b1eaba64dec7c887f2ce48367c2553562f022cbdb93e024e5d4",
+            "retrieved_at": "2026-10-02T07:54:27+00:00",
+            "inspection_method": "web_extracted_text",
+            "published_at": null,
+            "published_on": null,
+            "available_at": null,
+            "covered_period": null,
+            "unknown_reasons": {
+                "published_at": "Publication timestamp/timezone not established; printed day, if known, is separate.",
+                "available_at": "First public availability not independently reconstructed.",
+                "covered_period": "Undated company page; retrieval does not establish historical coverage."
+            },
+            "supported_role_ids": ["memory-ic-designer"],
+            "supported_tag_ids": ["dram", "nor-flash", "nand-flash"],
+            "supported_products_by_role": {
+                "memory-ic-designer": ["dram", "nand-flash", "nor-flash"]
+            },
+            "verification_status": "manually_verified"
+        },
+        {
+            "evidence_id": "issuer-6485-1",
+            "security_id": "TW:6485",
+            "url": "https://asolid-tek.com/%E9%97%9C%E6%96%BC%E9%BB%9E%E5%BA%8F/",
+            "title": "點序科技－關於點序",
+            "source_kind": "issuer_page",
+            "locator": "關於點序／第一段",
+            "retained_excerpt": "為快閃記憶體控制晶片供應商。…SSD 控制晶片等。",
+            "retained_excerpt_sha256": "84f4b6b70657de450a293219a90d5021a87cfa761ccea96ce04834f4bf1c6df6",
+            "retrieved_at": "2026-10-02T07:54:27+00:00",
+            "inspection_method": "web_extracted_text",
+            "published_at": null,
+            "published_on": null,
+            "available_at": null,
+            "covered_period": null,
+            "unknown_reasons": {
+                "published_at": "Publication timestamp/timezone not established; printed day, if known, is separate.",
+                "available_at": "First public availability not independently reconstructed.",
+                "covered_period": "Undated company page; retrieval does not establish historical coverage."
+            },
+            "supported_role_ids": ["memory-controller-supplier"],
+            "supported_tag_ids": ["flash-controller"],
+            "supported_products_by_role": {
+                "memory-controller-supplier": ["flash-controller"]
+            },
+            "verification_status": "manually_verified"
+        },
+        {
+            "evidence_id": "issuer-3260-1",
+            "security_id": "TW:3260",
+            "url": "https://webapi3.adata.com/storage/ir/adata_2023_annual_report_cn.pdf",
+            "title": "威剛科技112年度年報",
+            "source_kind": "issuer_report",
+            "locator": "PDF page 81 (1-based); 營運概況／業務內容",
+            "retained_excerpt": "記憶體模組、快閃記憶體相關產品之製造及買賣。…DRAM 產品…固態硬碟",
+            "retained_excerpt_sha256": "d461dbd79203c0a48b41b91274833953dc412e2d9f2023ad4898327272a55438",
+            "retrieved_at": "2026-10-02T07:54:27+00:00",
+            "inspection_method": "web_extracted_text",
+            "published_at": null,
+            "published_on": null,
+            "available_at": null,
+            "covered_period": {
+                "start": "2023-01-01",
+                "end": "2023-12-31",
+                "basis": "report_year; not role-effective interval"
+            },
+            "unknown_reasons": {
+                "published_at": "Publication timestamp/timezone not established; printed day, if known, is separate.",
+                "available_at": "First public availability not independently reconstructed."
+            },
+            "supported_role_ids": ["memory-module-supplier"],
+            "supported_tag_ids": ["memory-module", "dram", "ssd"],
+            "supported_products_by_role": {
+                "memory-module-supplier": ["dram", "memory-module", "ssd"]
+            },
+            "verification_status": "manually_verified"
+        },
+        {
+            "evidence_id": "issuer-3324-1",
+            "security_id": "TW:3324",
+            "url": "https://www.auras.com.tw/CMSFS/Shareholders/FinancialAnnualChinese/ed4475a3-db60-455c-9ce9-93699a2fe601.pdf",
+            "title": "雙鴻科技113年度年報",
+            "source_kind": "issuer_report",
+            "locator": "PDF page 78 (1-based); 液冷方案／PDF page 65 product table",
+            "retained_excerpt": "氣冷模組…液冷技術整機櫃系統供應商",
+            "retained_excerpt_sha256": "6d759865420ec0261f645b6b539343c403b69c822c09c5f9f053eed921d41b9a",
+            "retrieved_at": "2026-10-02T07:54:27+00:00",
+            "inspection_method": "direct_https_pdf_text; normal TLS validation",
+            "published_at": null,
+            "published_on": "2025-03-18",
+            "available_at": null,
+            "covered_period": {
+                "start": "2024-01-01",
+                "end": "2024-12-31",
+                "basis": "report_year; not role-effective interval"
+            },
+            "unknown_reasons": {
+                "published_at": "Publication timestamp/timezone not established; printed day, if known, is separate.",
+                "available_at": "First public availability not independently reconstructed."
+            },
+            "supported_role_ids": ["thermal-solution-supplier"],
+            "supported_tag_ids": ["air-cooling", "liquid-cooling"],
+            "supported_products_by_role": {
+                "thermal-solution-supplier": ["air-cooling", "liquid-cooling"]
+            },
+            "verification_status": "manually_verified"
+        },
+        {
+            "evidence_id": "issuer-3017-1",
+            "security_id": "TW:3017",
+            "url": "https://www.avc.co/zh-tw/About-AVC/CompanyProfile",
+            "title": "奇鋐科技－公司介紹",
+            "source_kind": "issuer_page",
+            "locator": "關於奇鋐／第一段",
+            "retained_excerpt": "整體散熱解決方案的專業供應商",
+            "retained_excerpt_sha256": "fdb65e66f302a814ffb18fd167947957d7d423a22e3f8555c3f2cc90212756c9",
+            "retrieved_at": "2026-10-02T07:54:27+00:00",
+            "inspection_method": "web_extracted_text",
+            "published_at": null,
+            "published_on": null,
+            "available_at": null,
+            "covered_period": null,
+            "unknown_reasons": {
+                "published_at": "Publication timestamp/timezone not established; printed day, if known, is separate.",
+                "available_at": "First public availability not independently reconstructed.",
+                "covered_period": "Undated company page; retrieval does not establish historical coverage."
+            },
+            "supported_role_ids": ["thermal-solution-supplier"],
+            "supported_tag_ids": [],
+            "supported_products_by_role": {
+                "thermal-solution-supplier": []
+            },
+            "verification_status": "manually_verified"
+        },
+        {
+            "evidence_id": "issuer-6230-1",
+            "security_id": "TW:6230",
+            "url": "https://www.ccic.com.tw/about/1",
+            "title": "尼得科超眾－關於我們",
+            "source_kind": "issuer_page",
+            "locator": "關於尼得科超眾／第一段",
+            "retained_excerpt": "散傳熱產品的專業供應商…散熱片、熱管、熱板、散熱模組",
+            "retained_excerpt_sha256": "a922aeb395eb6432d938e567fa489595a6d48e50ed26fe05bb86fc8cb284ef0b",
+            "retrieved_at": "2026-10-02T07:54:27+00:00",
+            "inspection_method": "web_extracted_text",
+            "published_at": null,
+            "published_on": null,
+            "available_at": null,
+            "covered_period": null,
+            "unknown_reasons": {
+                "published_at": "Publication timestamp/timezone not established; printed day, if known, is separate.",
+                "available_at": "First public availability not independently reconstructed.",
+                "covered_period": "Undated company page; retrieval does not establish historical coverage."
+            },
+            "supported_role_ids": ["thermal-solution-supplier"],
+            "supported_tag_ids": [],
+            "supported_products_by_role": {
+                "thermal-solution-supplier": []
+            },
+            "verification_status": "manually_verified"
+        },
+        {
+            "evidence_id": "issuer-6230-2",
+            "security_id": "TW:6230",
+            "url": "https://www.ccic.com.tw/products/28/1",
+            "title": "尼得科超眾－Liquid Cooling System",
+            "source_kind": "issuer_page",
+            "locator": "Product category heading and listed rack/server solutions",
+            "retained_excerpt": "Liquid Cooling System…Server level, Rack level.",
+            "retained_excerpt_sha256": "9171b1e54b0999b1c7619239661f8d76ffaa04aeb7ee889d722c990d1d38e790",
+            "retrieved_at": "2026-10-02T07:54:27+00:00",
+            "inspection_method": "web_extracted_text",
+            "published_at": null,
+            "published_on": null,
+            "available_at": null,
+            "covered_period": null,
+            "unknown_reasons": {
+                "published_at": "Publication timestamp/timezone not established; printed day, if known, is separate.",
+                "available_at": "First public availability not independently reconstructed.",
+                "covered_period": "Undated company page; retrieval does not establish historical coverage."
+            },
+            "supported_role_ids": [],
+            "supported_tag_ids": ["liquid-cooling"],
+            "supported_products_by_role": {
+                "thermal-solution-supplier": ["liquid-cooling"]
+            },
+            "verification_status": "manually_verified"
+        },
+        {
+            "evidence_id": "issuer-2421-1",
+            "security_id": "TW:2421",
+            "url": "https://www.sunon.com/about.aspx",
+            "title": "建準－關於我們",
+            "source_kind": "issuer_page",
+            "locator": "生產實力／產業實力",
+            "retained_excerpt": "生產全系列風扇…散熱模組及液冷系統",
+            "retained_excerpt_sha256": "3517ef1ebd67ce926575c2614eac9a3d68ae47b5f42d9ead3c7f36e0c82b99d0",
+            "retrieved_at": "2026-10-02T07:54:27+00:00",
+            "inspection_method": "web_extracted_text",
+            "published_at": null,
+            "published_on": null,
+            "available_at": null,
+            "covered_period": null,
+            "unknown_reasons": {
+                "published_at": "Publication timestamp/timezone not established; printed day, if known, is separate.",
+                "available_at": "First public availability not independently reconstructed.",
+                "covered_period": "Undated company page; retrieval does not establish historical coverage."
+            },
+            "supported_role_ids": [
+                "fan-manufacturer",
+                "thermal-solution-supplier"
+            ],
+            "supported_tag_ids": ["fan", "liquid-cooling"],
+            "supported_products_by_role": {
+                "fan-manufacturer": ["fan"],
+                "thermal-solution-supplier": ["fan", "liquid-cooling"]
+            },
+            "verification_status": "manually_verified"
+        },
+        {
+            "evidence_id": "issuer-8046-1",
+            "security_id": "TW:8046",
+            "url": "https://www.nanyapcb.com.tw/nypcb/chinese/AboutNanYaPCB/CompanyProfile/Vision",
+            "title": "南亞電路板－經營理念及願景",
+            "source_kind": "issuer_page",
+            "locator": "第一段; page footer provided date 2022/08/12 (not proven first availability)",
+            "retained_excerpt": "印刷電路板…IC載板…生產、製造及研發工作",
+            "retained_excerpt_sha256": "07b2a6241509a89dd60511c68cbdb27271a437c53b350fe762f30bfe82306f4f",
+            "retrieved_at": "2026-10-02T07:54:27+00:00",
+            "inspection_method": "web_extracted_text",
+            "published_at": null,
+            "published_on": "2022-08-12",
+            "available_at": null,
+            "covered_period": null,
+            "unknown_reasons": {
+                "published_at": "Publication timestamp/timezone not established; printed day, if known, is separate.",
+                "available_at": "First public availability not independently reconstructed.",
+                "covered_period": "Undated company page; retrieval does not establish historical coverage."
+            },
+            "supported_role_ids": [
+                "pcb-manufacturer",
+                "ic-substrate-manufacturer"
+            ],
+            "supported_tag_ids": ["pcb"],
+            "supported_products_by_role": {
+                "pcb-manufacturer": ["pcb"],
+                "ic-substrate-manufacturer": []
+            },
+            "verification_status": "manually_verified"
+        },
+        {
+            "evidence_id": "issuer-3189-1",
+            "security_id": "TW:3189",
+            "url": "https://www.kinsus.com.tw/en/html/message_from_the_chairman/index",
+            "title": "Kinsus－Message from the Chairman",
+            "source_kind": "issuer_page",
+            "locator": "Strategic Resilience / Green Intelligent Manufacturing",
+            "retained_excerpt": "large-area high-layer-count ABF substrates…the substrate manufacturing process’s high dependence on energy and water resources",
+            "retained_excerpt_sha256": "9c386ddd99fc2a1435e65e9b79ea926cae1bb6273b1f9da48bb91a38c01a6df6",
+            "retrieved_at": "2026-10-02T07:54:27+00:00",
+            "inspection_method": "web_extracted_text",
+            "published_at": null,
+            "published_on": null,
+            "available_at": null,
+            "covered_period": {
+                "start": "2025-01-01",
+                "end": "2025-12-31",
+                "basis": "Body explicitly reviews year 2025 with a 2026 outlook; context year, not role-effective interval."
+            },
+            "unknown_reasons": {
+                "published_at": "Publication timestamp/timezone not established; printed day, if known, is separate.",
+                "available_at": "First public availability not independently reconstructed."
+            },
+            "supported_role_ids": ["ic-substrate-manufacturer"],
+            "supported_tag_ids": ["abf-substrate"],
+            "supported_products_by_role": {
+                "ic-substrate-manufacturer": ["abf-substrate"]
+            },
+            "verification_status": "manually_verified"
+        },
+        {
+            "evidence_id": "issuer-3037-1",
+            "security_id": "TW:3037",
+            "url": "https://www.unimicron.com/about04.html",
+            "title": "欣興電子－全球生產基地",
+            "source_kind": "issuer_page",
+            "locator": "台灣：蘆竹二廠／楊梅廠",
+            "retained_excerpt": "蘆竹二廠： 主力產品：(PCB/HDI)…楊 梅 廠： 主力產品：(CARRIER)",
+            "retained_excerpt_sha256": "1890f1aa06a3377a386917800d3be0a8d5ba53e0b83224664a0ab070a6cba4da",
+            "retrieved_at": "2026-10-02T07:54:27+00:00",
+            "inspection_method": "direct_https_html; Windows normal TLS validation",
+            "published_at": null,
+            "published_on": null,
+            "available_at": null,
+            "covered_period": null,
+            "unknown_reasons": {
+                "published_at": "Publication timestamp/timezone not established; printed day, if known, is separate.",
+                "available_at": "First public availability not independently reconstructed.",
+                "covered_period": "Undated company page; retrieval does not establish historical coverage."
+            },
+            "supported_role_ids": ["pcb-manufacturer"],
+            "supported_tag_ids": ["pcb"],
+            "supported_products_by_role": {
+                "pcb-manufacturer": ["pcb"]
+            },
+            "verification_status": "manually_verified"
+        },
+        {
+            "evidence_id": "issuer-3037-2",
+            "security_id": "TW:3037",
+            "url": "https://www.unimicron.com/files/money/Shareholders_Meeting/115年股東會年報.pdf",
+            "title": "欣興電子114年度年報",
+            "source_kind": "issuer_report",
+            "locator": "PDF page 67 (1-based); 營運概況／業務範圍／所營業務之主要內容",
+            "retained_excerpt": "印刷電路板…載板(IC Carrier)之開發、製造、加工與銷售",
+            "retained_excerpt_sha256": "762e360fc2f81158a017b92bf3ca2828f45c9f4ae8b84b9cd9ff37b6600f90ee",
+            "retrieved_at": "2026-10-02T08:18:49+00:00",
+            "inspection_method": "direct_https_pdf_text; Windows normal TLS download validation",
+            "published_at": null,
+            "published_on": "2026-02-24",
+            "available_at": null,
+            "covered_period": {
+                "start": "2025-01-01",
+                "end": "2025-12-31",
+                "basis": "report_year; not role-effective interval"
+            },
+            "unknown_reasons": {
+                "published_at": "Publication timestamp/timezone not established; printed day, if known, is separate.",
+                "available_at": "First public availability not independently reconstructed."
+            },
+            "supported_role_ids": [
+                "pcb-manufacturer",
+                "ic-substrate-manufacturer"
+            ],
+            "supported_tag_ids": ["pcb"],
+            "supported_products_by_role": {
+                "pcb-manufacturer": ["pcb"],
+                "ic-substrate-manufacturer": []
+            },
+            "verification_status": "manually_verified"
+        },
+        {
+            "evidence_id": "issuer-6274-1",
+            "security_id": "TW:6274",
+            "url": "https://www.tuc.com.tw/zh-tw/about",
+            "title": "台燿科技－關於台燿",
+            "source_kind": "issuer_page",
+            "locator": "關於台燿／第一段",
+            "retained_excerpt": "銅箔基板…黏合片(Prepreg)之生產製造領域",
+            "retained_excerpt_sha256": "ba52478caa59d7ac83728507c5b71a929dba95bb4de8aea39a4fc6c4b439fd09",
+            "retrieved_at": "2026-10-02T07:54:27+00:00",
+            "inspection_method": "web_extracted_text",
+            "published_at": null,
+            "published_on": null,
+            "available_at": null,
+            "covered_period": null,
+            "unknown_reasons": {
+                "published_at": "Publication timestamp/timezone not established; printed day, if known, is separate.",
+                "available_at": "First public availability not independently reconstructed.",
+                "covered_period": "Undated company page; retrieval does not establish historical coverage."
+            },
+            "supported_role_ids": [
+                "copper-clad-laminate-manufacturer",
+                "electronic-material-supplier"
+            ],
+            "supported_tag_ids": ["copper-clad-laminate", "prepreg"],
+            "supported_products_by_role": {
+                "copper-clad-laminate-manufacturer": [
+                    "copper-clad-laminate",
+                    "prepreg"
+                ],
+                "electronic-material-supplier": [
+                    "copper-clad-laminate",
+                    "prepreg"
+                ]
+            },
+            "verification_status": "manually_verified"
+        },
+        {
+            "evidence_id": "issuer-2368-1",
+            "security_id": "TW:2368",
+            "url": "https://www.gce.com.tw/environment.html",
+            "title": "金像電子－環境政策",
+            "source_kind": "issuer_page",
+            "locator": "公司業務介紹／第一段",
+            "retained_excerpt": "多層印刷電路板專業製造廠商",
+            "retained_excerpt_sha256": "7d34226373c368e12cbed1aec8c84955d1917dc2d57c6b180718dc170d581645",
+            "retrieved_at": "2026-10-02T07:54:27+00:00",
+            "inspection_method": "web_extracted_text",
+            "published_at": null,
+            "published_on": null,
+            "available_at": null,
+            "covered_period": null,
+            "unknown_reasons": {
+                "published_at": "Publication timestamp/timezone not established; printed day, if known, is separate.",
+                "available_at": "First public availability not independently reconstructed.",
+                "covered_period": "Undated company page; retrieval does not establish historical coverage."
+            },
+            "supported_role_ids": ["pcb-manufacturer"],
+            "supported_tag_ids": ["pcb"],
+            "supported_products_by_role": {
+                "pcb-manufacturer": ["pcb"]
+            },
+            "verification_status": "manually_verified"
+        },
+        {
+            "evidence_id": "issuer-5381-1",
+            "security_id": "TW:5381",
+            "url": "https://spe-group.com.tw/tw/about/company-overview",
+            "title": "光譜電工－公司概要",
+            "source_kind": "issuer_page",
+            "locator": "公司簡介／第一段",
+            "retained_excerpt": "配電級變壓器及PCB鑽孔材料…研發、製造",
+            "retained_excerpt_sha256": "a7812d76f8d85b21437049470aa54750a4b973b44544c61d3bcaaf9267da5e1e",
+            "retrieved_at": "2026-10-02T07:54:27+00:00",
+            "inspection_method": "web_extracted_text",
+            "published_at": null,
+            "published_on": null,
+            "available_at": null,
+            "covered_period": null,
+            "unknown_reasons": {
+                "published_at": "Publication timestamp/timezone not established; printed day, if known, is separate.",
+                "available_at": "First public availability not independently reconstructed.",
+                "covered_period": "Undated company page; retrieval does not establish historical coverage."
+            },
+            "supported_role_ids": [
+                "electronic-material-supplier",
+                "transformer-manufacturer"
+            ],
+            "supported_tag_ids": [
+                "pcb-drilling-materials",
+                "distribution-transformer"
+            ],
+            "supported_products_by_role": {
+                "electronic-material-supplier": ["pcb-drilling-materials"],
+                "transformer-manufacturer": ["distribution-transformer"]
+            },
+            "verification_status": "manually_verified"
+        },
+        {
+            "evidence_id": "issuer-5321-1",
+            "security_id": "TW:5321",
+            "url": "https://www.unitedrecommendation.com/overview",
+            "title": "美而快國際－集團概述",
+            "source_kind": "issuer_page",
+            "locator": "集團背景／第一段; listed-entity transformation narrative",
+            "retained_excerpt": "服飾電商…企業轉型，發展電商業務",
+            "retained_excerpt_sha256": "17526b09d7bf27010ae8984e25fc4eb6621d7443a12111ad37388c18d18cf4ab",
+            "retrieved_at": "2026-10-02T07:54:27+00:00",
+            "inspection_method": "web_extracted_text",
+            "published_at": null,
+            "published_on": null,
+            "available_at": null,
+            "covered_period": null,
+            "unknown_reasons": {
+                "published_at": "Publication timestamp/timezone not established; printed day, if known, is separate.",
+                "available_at": "First public availability not independently reconstructed.",
+                "covered_period": "Undated company page; retrieval does not establish historical coverage."
+            },
+            "supported_role_ids": ["retail-ecommerce-operator"],
+            "supported_tag_ids": ["fashion-ecommerce"],
+            "supported_products_by_role": {
+                "retail-ecommerce-operator": ["fashion-ecommerce"]
+            },
+            "verification_status": "manually_verified"
+        },
+        {
+            "evidence_id": "issuer-2614-1",
+            "security_id": "TW:2614",
+            "url": "https://eng.emic.com.tw/warehousing.php",
+            "title": "EMI－Warehousing & Grain Trade",
+            "source_kind": "issuer_page",
+            "locator": "Warehousing & Grain Trade／first paragraph (undated, potentially stale)",
+            "retained_excerpt": "EMI leveraged its expertise in professional portside warehousing and handling to set up a grain trading office.",
+            "retained_excerpt_sha256": "63ccb38fbd7c801069a18a0d9df42a8fd5d5f5394f738f54ef276f8b356cd61a",
+            "retrieved_at": "2026-10-02T07:54:27+00:00",
+            "inspection_method": "web_extracted_text",
+            "published_at": null,
+            "published_on": null,
+            "available_at": null,
+            "covered_period": null,
+            "unknown_reasons": {
+                "published_at": "Publication timestamp/timezone not established; printed day, if known, is separate.",
+                "available_at": "First public availability not independently reconstructed.",
+                "covered_period": "Undated company page; retrieval does not establish historical coverage."
+            },
+            "supported_role_ids": ["port-warehouse-operator"],
+            "supported_tag_ids": [],
+            "supported_products_by_role": {
+                "port-warehouse-operator": []
+            },
+            "verification_status": "manually_verified"
+        }
+    ],
+    "assertions": [
+        {
+            "assertion_id": "role-2337-memory-chip-manufacturer",
+            "security_id": "TW:2337",
+            "role_id": "memory-chip-manufacturer",
+            "product_tag_ids": ["nand-flash", "nor-flash"],
+            "evidence_refs": ["issuer-2337-1"],
+            "assertion_status": "source_verified",
+            "effective_from": null,
+            "effective_to": null,
+            "unknown_reasons": {
+                "effective_from": "Role onset/continuous historical validity not established by retained evidence.",
+                "effective_to": "Role end/continuous historical validity not established by retained evidence.",
+                "business_relevance": "No role-specific core/secondary assessment or revenue allocation in this packet.",
+                "exposure_path": "No separate direct/indirect economic exposure assessment in this packet."
+            },
+            "business_relevance": null,
+            "business_relevance_evidence_refs": [],
+            "business_relevance_basis": null,
+            "exposure_path": null,
+            "exposure_path_evidence_refs": [],
+            "exposure_path_basis": null,
+            "label_kind": "retrospective_annotation",
+            "role_taxonomy_version": "sector-roles.v1"
+        },
+        {
+            "assertion_id": "role-2344-memory-chip-manufacturer",
+            "security_id": "TW:2344",
+            "role_id": "memory-chip-manufacturer",
+            "product_tag_ids": ["dram", "nand-flash", "nor-flash"],
+            "evidence_refs": ["issuer-2344-1", "issuer-2344-2"],
+            "assertion_status": "source_verified",
+            "effective_from": null,
+            "effective_to": null,
+            "unknown_reasons": {
+                "effective_from": "Role onset/continuous historical validity not established by retained evidence.",
+                "effective_to": "Role end/continuous historical validity not established by retained evidence.",
+                "business_relevance": "No role-specific core/secondary assessment or revenue allocation in this packet.",
+                "exposure_path": "No separate direct/indirect economic exposure assessment in this packet."
+            },
+            "business_relevance": null,
+            "business_relevance_evidence_refs": [],
+            "business_relevance_basis": null,
+            "exposure_path": null,
+            "exposure_path_evidence_refs": [],
+            "exposure_path_basis": null,
+            "label_kind": "retrospective_annotation",
+            "role_taxonomy_version": "sector-roles.v1"
+        },
+        {
+            "assertion_id": "role-2368-pcb-manufacturer",
+            "security_id": "TW:2368",
+            "role_id": "pcb-manufacturer",
+            "product_tag_ids": ["pcb"],
+            "evidence_refs": ["issuer-2368-1"],
+            "assertion_status": "source_verified",
+            "effective_from": null,
+            "effective_to": null,
+            "unknown_reasons": {
+                "effective_from": "Role onset/continuous historical validity not established by retained evidence.",
+                "effective_to": "Role end/continuous historical validity not established by retained evidence.",
+                "business_relevance": "No role-specific core/secondary assessment or revenue allocation in this packet.",
+                "exposure_path": "No separate direct/indirect economic exposure assessment in this packet."
+            },
+            "business_relevance": null,
+            "business_relevance_evidence_refs": [],
+            "business_relevance_basis": null,
+            "exposure_path": null,
+            "exposure_path_evidence_refs": [],
+            "exposure_path_basis": null,
+            "label_kind": "retrospective_annotation",
+            "role_taxonomy_version": "sector-roles.v1"
+        },
+        {
+            "assertion_id": "role-2408-memory-chip-manufacturer",
+            "security_id": "TW:2408",
+            "role_id": "memory-chip-manufacturer",
+            "product_tag_ids": ["dram"],
+            "evidence_refs": ["issuer-2408-1"],
+            "assertion_status": "source_verified",
+            "effective_from": null,
+            "effective_to": null,
+            "unknown_reasons": {
+                "effective_from": "Role onset/continuous historical validity not established by retained evidence.",
+                "effective_to": "Role end/continuous historical validity not established by retained evidence.",
+                "business_relevance": "No role-specific core/secondary assessment or revenue allocation in this packet.",
+                "exposure_path": "No separate direct/indirect economic exposure assessment in this packet."
+            },
+            "business_relevance": null,
+            "business_relevance_evidence_refs": [],
+            "business_relevance_basis": null,
+            "exposure_path": null,
+            "exposure_path_evidence_refs": [],
+            "exposure_path_basis": null,
+            "label_kind": "retrospective_annotation",
+            "role_taxonomy_version": "sector-roles.v1"
+        },
+        {
+            "assertion_id": "role-2421-fan-manufacturer",
+            "security_id": "TW:2421",
+            "role_id": "fan-manufacturer",
+            "product_tag_ids": ["fan"],
+            "evidence_refs": ["issuer-2421-1"],
+            "assertion_status": "source_verified",
+            "effective_from": null,
+            "effective_to": null,
+            "unknown_reasons": {
+                "effective_from": "Role onset/continuous historical validity not established by retained evidence.",
+                "effective_to": "Role end/continuous historical validity not established by retained evidence.",
+                "business_relevance": "No role-specific core/secondary assessment or revenue allocation in this packet.",
+                "exposure_path": "No separate direct/indirect economic exposure assessment in this packet."
+            },
+            "business_relevance": null,
+            "business_relevance_evidence_refs": [],
+            "business_relevance_basis": null,
+            "exposure_path": null,
+            "exposure_path_evidence_refs": [],
+            "exposure_path_basis": null,
+            "label_kind": "retrospective_annotation",
+            "role_taxonomy_version": "sector-roles.v1"
+        },
+        {
+            "assertion_id": "role-2421-thermal-solution-supplier",
+            "security_id": "TW:2421",
+            "role_id": "thermal-solution-supplier",
+            "product_tag_ids": ["fan", "liquid-cooling"],
+            "evidence_refs": ["issuer-2421-1"],
+            "assertion_status": "source_verified",
+            "effective_from": null,
+            "effective_to": null,
+            "unknown_reasons": {
+                "effective_from": "Role onset/continuous historical validity not established by retained evidence.",
+                "effective_to": "Role end/continuous historical validity not established by retained evidence.",
+                "business_relevance": "No role-specific core/secondary assessment or revenue allocation in this packet.",
+                "exposure_path": "No separate direct/indirect economic exposure assessment in this packet."
+            },
+            "business_relevance": null,
+            "business_relevance_evidence_refs": [],
+            "business_relevance_basis": null,
+            "exposure_path": null,
+            "exposure_path_evidence_refs": [],
+            "exposure_path_basis": null,
+            "label_kind": "retrospective_annotation",
+            "role_taxonomy_version": "sector-roles.v1"
+        },
+        {
+            "assertion_id": "role-2614-port-warehouse-operator",
+            "security_id": "TW:2614",
+            "role_id": "port-warehouse-operator",
+            "product_tag_ids": [],
+            "evidence_refs": ["issuer-2614-1"],
+            "assertion_status": "source_verified",
+            "effective_from": null,
+            "effective_to": null,
+            "unknown_reasons": {
+                "effective_from": "Role onset/continuous historical validity not established by retained evidence.",
+                "effective_to": "Role end/continuous historical validity not established by retained evidence.",
+                "business_relevance": "No role-specific core/secondary assessment or revenue allocation in this packet.",
+                "exposure_path": "No separate direct/indirect economic exposure assessment in this packet."
+            },
+            "business_relevance": null,
+            "business_relevance_evidence_refs": [],
+            "business_relevance_basis": null,
+            "exposure_path": null,
+            "exposure_path_evidence_refs": [],
+            "exposure_path_basis": null,
+            "label_kind": "retrospective_annotation",
+            "role_taxonomy_version": "sector-roles.v1"
+        },
+        {
+            "assertion_id": "role-3006-memory-ic-designer",
+            "security_id": "TW:3006",
+            "role_id": "memory-ic-designer",
+            "product_tag_ids": ["dram", "nand-flash", "nor-flash"],
+            "evidence_refs": ["issuer-3006-1"],
+            "assertion_status": "source_verified",
+            "effective_from": null,
+            "effective_to": null,
+            "unknown_reasons": {
+                "effective_from": "Role onset/continuous historical validity not established by retained evidence.",
+                "effective_to": "Role end/continuous historical validity not established by retained evidence.",
+                "business_relevance": "No role-specific core/secondary assessment or revenue allocation in this packet.",
+                "exposure_path": "No separate direct/indirect economic exposure assessment in this packet."
+            },
+            "business_relevance": null,
+            "business_relevance_evidence_refs": [],
+            "business_relevance_basis": null,
+            "exposure_path": null,
+            "exposure_path_evidence_refs": [],
+            "exposure_path_basis": null,
+            "label_kind": "retrospective_annotation",
+            "role_taxonomy_version": "sector-roles.v1"
+        },
+        {
+            "assertion_id": "role-3017-thermal-solution-supplier",
+            "security_id": "TW:3017",
+            "role_id": "thermal-solution-supplier",
+            "product_tag_ids": [],
+            "evidence_refs": ["issuer-3017-1"],
+            "assertion_status": "source_verified",
+            "effective_from": null,
+            "effective_to": null,
+            "unknown_reasons": {
+                "effective_from": "Role onset/continuous historical validity not established by retained evidence.",
+                "effective_to": "Role end/continuous historical validity not established by retained evidence.",
+                "business_relevance": "No role-specific core/secondary assessment or revenue allocation in this packet.",
+                "exposure_path": "No separate direct/indirect economic exposure assessment in this packet."
+            },
+            "business_relevance": null,
+            "business_relevance_evidence_refs": [],
+            "business_relevance_basis": null,
+            "exposure_path": null,
+            "exposure_path_evidence_refs": [],
+            "exposure_path_basis": null,
+            "label_kind": "retrospective_annotation",
+            "role_taxonomy_version": "sector-roles.v1"
+        },
+        {
+            "assertion_id": "role-3037-ic-substrate-manufacturer",
+            "security_id": "TW:3037",
+            "role_id": "ic-substrate-manufacturer",
+            "product_tag_ids": [],
+            "evidence_refs": ["issuer-3037-2"],
+            "assertion_status": "source_verified",
+            "effective_from": null,
+            "effective_to": null,
+            "unknown_reasons": {
+                "effective_from": "Role onset/continuous historical validity not established by retained evidence.",
+                "effective_to": "Role end/continuous historical validity not established by retained evidence.",
+                "business_relevance": "No role-specific core/secondary assessment or revenue allocation in this packet.",
+                "exposure_path": "No separate direct/indirect economic exposure assessment in this packet."
+            },
+            "business_relevance": null,
+            "business_relevance_evidence_refs": [],
+            "business_relevance_basis": null,
+            "exposure_path": null,
+            "exposure_path_evidence_refs": [],
+            "exposure_path_basis": null,
+            "label_kind": "retrospective_annotation",
+            "role_taxonomy_version": "sector-roles.v1"
+        },
+        {
+            "assertion_id": "role-3037-pcb-manufacturer",
+            "security_id": "TW:3037",
+            "role_id": "pcb-manufacturer",
+            "product_tag_ids": ["pcb"],
+            "evidence_refs": ["issuer-3037-1", "issuer-3037-2"],
+            "assertion_status": "source_verified",
+            "effective_from": null,
+            "effective_to": null,
+            "unknown_reasons": {
+                "effective_from": "Role onset/continuous historical validity not established by retained evidence.",
+                "effective_to": "Role end/continuous historical validity not established by retained evidence.",
+                "business_relevance": "No role-specific core/secondary assessment or revenue allocation in this packet.",
+                "exposure_path": "No separate direct/indirect economic exposure assessment in this packet."
+            },
+            "business_relevance": null,
+            "business_relevance_evidence_refs": [],
+            "business_relevance_basis": null,
+            "exposure_path": null,
+            "exposure_path_evidence_refs": [],
+            "exposure_path_basis": null,
+            "label_kind": "retrospective_annotation",
+            "role_taxonomy_version": "sector-roles.v1"
+        },
+        {
+            "assertion_id": "role-3189-ic-substrate-manufacturer",
+            "security_id": "TW:3189",
+            "role_id": "ic-substrate-manufacturer",
+            "product_tag_ids": ["abf-substrate"],
+            "evidence_refs": ["issuer-3189-1"],
+            "assertion_status": "source_verified",
+            "effective_from": null,
+            "effective_to": null,
+            "unknown_reasons": {
+                "effective_from": "Role onset/continuous historical validity not established by retained evidence.",
+                "effective_to": "Role end/continuous historical validity not established by retained evidence.",
+                "business_relevance": "No role-specific core/secondary assessment or revenue allocation in this packet.",
+                "exposure_path": "No separate direct/indirect economic exposure assessment in this packet."
+            },
+            "business_relevance": null,
+            "business_relevance_evidence_refs": [],
+            "business_relevance_basis": null,
+            "exposure_path": null,
+            "exposure_path_evidence_refs": [],
+            "exposure_path_basis": null,
+            "label_kind": "retrospective_annotation",
+            "role_taxonomy_version": "sector-roles.v1"
+        },
+        {
+            "assertion_id": "role-3260-memory-module-supplier",
+            "security_id": "TW:3260",
+            "role_id": "memory-module-supplier",
+            "product_tag_ids": ["dram", "memory-module", "ssd"],
+            "evidence_refs": ["issuer-3260-1"],
+            "assertion_status": "source_verified",
+            "effective_from": null,
+            "effective_to": null,
+            "unknown_reasons": {
+                "effective_from": "Role onset/continuous historical validity not established by retained evidence.",
+                "effective_to": "Role end/continuous historical validity not established by retained evidence.",
+                "business_relevance": "No role-specific core/secondary assessment or revenue allocation in this packet.",
+                "exposure_path": "No separate direct/indirect economic exposure assessment in this packet."
+            },
+            "business_relevance": null,
+            "business_relevance_evidence_refs": [],
+            "business_relevance_basis": null,
+            "exposure_path": null,
+            "exposure_path_evidence_refs": [],
+            "exposure_path_basis": null,
+            "label_kind": "retrospective_annotation",
+            "role_taxonomy_version": "sector-roles.v1"
+        },
+        {
+            "assertion_id": "role-3324-thermal-solution-supplier",
+            "security_id": "TW:3324",
+            "role_id": "thermal-solution-supplier",
+            "product_tag_ids": ["air-cooling", "liquid-cooling"],
+            "evidence_refs": ["issuer-3324-1"],
+            "assertion_status": "source_verified",
+            "effective_from": null,
+            "effective_to": null,
+            "unknown_reasons": {
+                "effective_from": "Role onset/continuous historical validity not established by retained evidence.",
+                "effective_to": "Role end/continuous historical validity not established by retained evidence.",
+                "business_relevance": "No role-specific core/secondary assessment or revenue allocation in this packet.",
+                "exposure_path": "No separate direct/indirect economic exposure assessment in this packet."
+            },
+            "business_relevance": null,
+            "business_relevance_evidence_refs": [],
+            "business_relevance_basis": null,
+            "exposure_path": null,
+            "exposure_path_evidence_refs": [],
+            "exposure_path_basis": null,
+            "label_kind": "retrospective_annotation",
+            "role_taxonomy_version": "sector-roles.v1"
+        },
+        {
+            "assertion_id": "role-5321-retail-ecommerce-operator",
+            "security_id": "TW:5321",
+            "role_id": "retail-ecommerce-operator",
+            "product_tag_ids": ["fashion-ecommerce"],
+            "evidence_refs": ["issuer-5321-1"],
+            "assertion_status": "source_verified",
+            "effective_from": null,
+            "effective_to": null,
+            "unknown_reasons": {
+                "effective_from": "Role onset/continuous historical validity not established by retained evidence.",
+                "effective_to": "Role end/continuous historical validity not established by retained evidence.",
+                "business_relevance": "No role-specific core/secondary assessment or revenue allocation in this packet.",
+                "exposure_path": "No separate direct/indirect economic exposure assessment in this packet."
+            },
+            "business_relevance": null,
+            "business_relevance_evidence_refs": [],
+            "business_relevance_basis": null,
+            "exposure_path": null,
+            "exposure_path_evidence_refs": [],
+            "exposure_path_basis": null,
+            "label_kind": "retrospective_annotation",
+            "role_taxonomy_version": "sector-roles.v1"
+        },
+        {
+            "assertion_id": "role-5381-electronic-material-supplier",
+            "security_id": "TW:5381",
+            "role_id": "electronic-material-supplier",
+            "product_tag_ids": ["pcb-drilling-materials"],
+            "evidence_refs": ["issuer-5381-1"],
+            "assertion_status": "source_verified",
+            "effective_from": null,
+            "effective_to": null,
+            "unknown_reasons": {
+                "effective_from": "Role onset/continuous historical validity not established by retained evidence.",
+                "effective_to": "Role end/continuous historical validity not established by retained evidence.",
+                "business_relevance": "No role-specific core/secondary assessment or revenue allocation in this packet.",
+                "exposure_path": "No separate direct/indirect economic exposure assessment in this packet."
+            },
+            "business_relevance": null,
+            "business_relevance_evidence_refs": [],
+            "business_relevance_basis": null,
+            "exposure_path": null,
+            "exposure_path_evidence_refs": [],
+            "exposure_path_basis": null,
+            "label_kind": "retrospective_annotation",
+            "role_taxonomy_version": "sector-roles.v1"
+        },
+        {
+            "assertion_id": "role-5381-transformer-manufacturer",
+            "security_id": "TW:5381",
+            "role_id": "transformer-manufacturer",
+            "product_tag_ids": ["distribution-transformer"],
+            "evidence_refs": ["issuer-5381-1"],
+            "assertion_status": "source_verified",
+            "effective_from": null,
+            "effective_to": null,
+            "unknown_reasons": {
+                "effective_from": "Role onset/continuous historical validity not established by retained evidence.",
+                "effective_to": "Role end/continuous historical validity not established by retained evidence.",
+                "business_relevance": "No role-specific core/secondary assessment or revenue allocation in this packet.",
+                "exposure_path": "No separate direct/indirect economic exposure assessment in this packet."
+            },
+            "business_relevance": null,
+            "business_relevance_evidence_refs": [],
+            "business_relevance_basis": null,
+            "exposure_path": null,
+            "exposure_path_evidence_refs": [],
+            "exposure_path_basis": null,
+            "label_kind": "retrospective_annotation",
+            "role_taxonomy_version": "sector-roles.v1"
+        },
+        {
+            "assertion_id": "role-6230-thermal-solution-supplier",
+            "security_id": "TW:6230",
+            "role_id": "thermal-solution-supplier",
+            "product_tag_ids": ["liquid-cooling"],
+            "evidence_refs": ["issuer-6230-1", "issuer-6230-2"],
+            "assertion_status": "source_verified",
+            "effective_from": null,
+            "effective_to": null,
+            "unknown_reasons": {
+                "effective_from": "Role onset/continuous historical validity not established by retained evidence.",
+                "effective_to": "Role end/continuous historical validity not established by retained evidence.",
+                "business_relevance": "No role-specific core/secondary assessment or revenue allocation in this packet.",
+                "exposure_path": "No separate direct/indirect economic exposure assessment in this packet."
+            },
+            "business_relevance": null,
+            "business_relevance_evidence_refs": [],
+            "business_relevance_basis": null,
+            "exposure_path": null,
+            "exposure_path_evidence_refs": [],
+            "exposure_path_basis": null,
+            "label_kind": "retrospective_annotation",
+            "role_taxonomy_version": "sector-roles.v1"
+        },
+        {
+            "assertion_id": "role-6274-copper-clad-laminate-manufacturer",
+            "security_id": "TW:6274",
+            "role_id": "copper-clad-laminate-manufacturer",
+            "product_tag_ids": ["copper-clad-laminate", "prepreg"],
+            "evidence_refs": ["issuer-6274-1"],
+            "assertion_status": "source_verified",
+            "effective_from": null,
+            "effective_to": null,
+            "unknown_reasons": {
+                "effective_from": "Role onset/continuous historical validity not established by retained evidence.",
+                "effective_to": "Role end/continuous historical validity not established by retained evidence.",
+                "business_relevance": "No role-specific core/secondary assessment or revenue allocation in this packet.",
+                "exposure_path": "No separate direct/indirect economic exposure assessment in this packet."
+            },
+            "business_relevance": null,
+            "business_relevance_evidence_refs": [],
+            "business_relevance_basis": null,
+            "exposure_path": null,
+            "exposure_path_evidence_refs": [],
+            "exposure_path_basis": null,
+            "label_kind": "retrospective_annotation",
+            "role_taxonomy_version": "sector-roles.v1"
+        },
+        {
+            "assertion_id": "role-6274-electronic-material-supplier",
+            "security_id": "TW:6274",
+            "role_id": "electronic-material-supplier",
+            "product_tag_ids": ["copper-clad-laminate", "prepreg"],
+            "evidence_refs": ["issuer-6274-1"],
+            "assertion_status": "source_verified",
+            "effective_from": null,
+            "effective_to": null,
+            "unknown_reasons": {
+                "effective_from": "Role onset/continuous historical validity not established by retained evidence.",
+                "effective_to": "Role end/continuous historical validity not established by retained evidence.",
+                "business_relevance": "No role-specific core/secondary assessment or revenue allocation in this packet.",
+                "exposure_path": "No separate direct/indirect economic exposure assessment in this packet."
+            },
+            "business_relevance": null,
+            "business_relevance_evidence_refs": [],
+            "business_relevance_basis": null,
+            "exposure_path": null,
+            "exposure_path_evidence_refs": [],
+            "exposure_path_basis": null,
+            "label_kind": "retrospective_annotation",
+            "role_taxonomy_version": "sector-roles.v1"
+        },
+        {
+            "assertion_id": "role-6485-memory-controller-supplier",
+            "security_id": "TW:6485",
+            "role_id": "memory-controller-supplier",
+            "product_tag_ids": ["flash-controller"],
+            "evidence_refs": ["issuer-6485-1"],
+            "assertion_status": "source_verified",
+            "effective_from": null,
+            "effective_to": null,
+            "unknown_reasons": {
+                "effective_from": "Role onset/continuous historical validity not established by retained evidence.",
+                "effective_to": "Role end/continuous historical validity not established by retained evidence.",
+                "business_relevance": "No role-specific core/secondary assessment or revenue allocation in this packet.",
+                "exposure_path": "No separate direct/indirect economic exposure assessment in this packet."
+            },
+            "business_relevance": null,
+            "business_relevance_evidence_refs": [],
+            "business_relevance_basis": null,
+            "exposure_path": null,
+            "exposure_path_evidence_refs": [],
+            "exposure_path_basis": null,
+            "label_kind": "retrospective_annotation",
+            "role_taxonomy_version": "sector-roles.v1"
+        },
+        {
+            "assertion_id": "role-8046-ic-substrate-manufacturer",
+            "security_id": "TW:8046",
+            "role_id": "ic-substrate-manufacturer",
+            "product_tag_ids": [],
+            "evidence_refs": ["issuer-8046-1"],
+            "assertion_status": "source_verified",
+            "effective_from": null,
+            "effective_to": null,
+            "unknown_reasons": {
+                "effective_from": "Role onset/continuous historical validity not established by retained evidence.",
+                "effective_to": "Role end/continuous historical validity not established by retained evidence.",
+                "business_relevance": "No role-specific core/secondary assessment or revenue allocation in this packet.",
+                "exposure_path": "No separate direct/indirect economic exposure assessment in this packet."
+            },
+            "business_relevance": null,
+            "business_relevance_evidence_refs": [],
+            "business_relevance_basis": null,
+            "exposure_path": null,
+            "exposure_path_evidence_refs": [],
+            "exposure_path_basis": null,
+            "label_kind": "retrospective_annotation",
+            "role_taxonomy_version": "sector-roles.v1"
+        },
+        {
+            "assertion_id": "role-8046-pcb-manufacturer",
+            "security_id": "TW:8046",
+            "role_id": "pcb-manufacturer",
+            "product_tag_ids": ["pcb"],
+            "evidence_refs": ["issuer-8046-1"],
+            "assertion_status": "source_verified",
+            "effective_from": null,
+            "effective_to": null,
+            "unknown_reasons": {
+                "effective_from": "Role onset/continuous historical validity not established by retained evidence.",
+                "effective_to": "Role end/continuous historical validity not established by retained evidence.",
+                "business_relevance": "No role-specific core/secondary assessment or revenue allocation in this packet.",
+                "exposure_path": "No separate direct/indirect economic exposure assessment in this packet."
+            },
+            "business_relevance": null,
+            "business_relevance_evidence_refs": [],
+            "business_relevance_basis": null,
+            "exposure_path": null,
+            "exposure_path_evidence_refs": [],
+            "exposure_path_basis": null,
+            "label_kind": "retrospective_annotation",
+            "role_taxonomy_version": "sector-roles.v1"
+        }
+    ],
+    "membership_reviews": [
+        {
+            "security_id": "TW:5321",
+            "group_id": "pcb-manufacturing",
+            "review_status": "needs_role_review",
+            "reason": "Issuer describes listed-company transformation to fashion ecommerce. Original PCB membership needs dated business-history review; this is not exclusion proof.",
+            "evidence_refs": ["issuer-5321-1"]
+        },
+        {
+            "security_id": "TW:5381",
+            "group_id": "pcb-manufacturing",
+            "review_status": "needs_role_review",
+            "reason": "Issuer explicitly describes PCB drilling materials and distribution transformers. Distinguish electronic materials from PCB board manufacturing; keep historical scope unresolved.",
+            "evidence_refs": ["issuer-5381-1"]
+        },
+        {
+            "security_id": "TW:2614",
+            "group_id": "shipping.bulk",
+            "review_status": "needs_role_review",
+            "reason": "Undated issuer text supports portside warehousing/handling and grain trading. It does not establish pure bulk-vessel operation or an effective historical interval; page may be stale.",
+            "evidence_refs": ["issuer-2614-1"]
+        }
+    ],
+    "limitations": [
+        "Current/undated issuer pages are source observations, not verified current-business freshness or continuous historical roles.",
+        "Report-year coverage is not a role-effective interval; every assertion has unknown effective dates.",
+        "Roles/product labels are neither investment scores nor explanations of an episode's price movement.",
+        "Original catalog memberships, wave winners, prices, and return measurements are unchanged."
+    ]
+}

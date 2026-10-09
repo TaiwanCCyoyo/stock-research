@@ -1,0 +1,33 @@
+{
+    "analyzed_security_count": 1970,
+    "calendar_count": 4105,
+    "cohorts": {
+        "benchmark": 1,
+        "innovation_board": 28,
+        "metadata_stock": 1942,
+        "unresolved_identity": 104
+    },
+    "coverage_caveat_count": 12450,
+    "manifest_sha256": "c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140",
+    "method_failures": 0,
+    "native_dense_policy": "hash_verified_without_parsing_fit_arrays",
+    "native_wave_count": 106376,
+    "nonconverged_methods": 3,
+    "phase_cross_run_count": 0,
+    "schema_version": "opportunity-verification-receipt.v1",
+    "security_count": 2075,
+    "shared_wave_count": 53188,
+    "status": "verified",
+    "table_counts": {
+        "baseline_waves": 53188,
+        "candidates": 790250,
+        "methods": 11820,
+        "relations": 4328518,
+        "representative_intervals": 7875,
+        "securities": 2075,
+        "source_phases": 2579106,
+        "support_records": 790250,
+        "transitions": 14528
+    },
+    "unresolved_parent_relations": 0
+}

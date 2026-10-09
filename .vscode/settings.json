@@ -1,0 +1,57 @@
+{
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
+    "files.trimTrailingWhitespace": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "[python]": {
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.fixAll.ruff": "explicit",
+            "source.organizeImports.ruff": "explicit"
+        }
+    },
+    "files.exclude": {
+        "**/__pycache__/**": true,
+        "**/*.pyc": true,
+        ".venv/**": true,
+        ".uv/**": true,
+        ".ruff_cache/**": true,
+        ".pytest_cache/**": true,
+        ".mypy_cache/**": true,
+        ".coverage*": true
+    },
+    "search.exclude": {
+        ".worktrees/**": true,
+        ".claude/worktrees/**": true,
+        ".references/**": true,
+        ".tmp/**": true
+    },
+    "files.watcherExclude": {
+        ".worktrees/**": true,
+        ".claude/worktrees/**": true,
+        ".references/**": true,
+        ".tmp/**": true,
+        ".venv/**": true,
+        ".uv/**": true,
+        ".ruff_cache/**": true,
+        ".pytest_cache/**": true,
+        ".mypy_cache/**": true,
+        "**/__pycache__/**": true
+    },
+    "workbench.localHistory.exclude": {
+        ".worktrees/**": true,
+        ".claude/worktrees/**": true,
+        ".tmp/**": true,
+        ".references/**": true
+    },
+    "[toml]": {
+        "editor.defaultFormatter": "tamasfe.even-better-toml",
+        "editor.formatOnSave": true
+    },
+    "prettier.tabWidth": 4,
+    "prettier.useTabs": false
+}

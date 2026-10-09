@@ -1,0 +1,517 @@
+{
+    "schema_version": "sector-groups.v1",
+    "classification_mode": "retrospective",
+    "notes": [
+        "Official current business memberships are descriptive, not historical membership availability or earnings exposure.",
+        "Qualified chain/node selectors expand descendants; memberships deduplicate by security.",
+        "NAND/NOR, ABF, probe cards and historical theme attribution require more specific source evidence."
+    ],
+    "groups": [
+        {
+            "group_id": "memory",
+            "label": "記憶體",
+            "kind": "family",
+            "parent_id": null,
+            "selectors": [
+                {
+                    "chain_code": "D000",
+                    "node_code": "D150"
+                },
+                {
+                    "chain_code": "D000",
+                    "node_code": "D160"
+                },
+                {
+                    "chain_code": "D000",
+                    "node_code": "D320"
+                },
+                {
+                    "chain_code": "F000",
+                    "node_code": "F500"
+                },
+                {
+                    "chain_code": "I000",
+                    "node_code": "I300"
+                },
+                {
+                    "chain_code": "5700",
+                    "node_code": "5743"
+                }
+            ],
+            "exclude_selectors": []
+        },
+        {
+            "group_id": "memory.dram",
+            "label": "DRAM製造",
+            "kind": "business",
+            "parent_id": "memory",
+            "selectors": [
+                {
+                    "chain_code": "D000",
+                    "node_code": "D320"
+                }
+            ],
+            "exclude_selectors": []
+        },
+        {
+            "group_id": "memory.ic",
+            "label": "記憶體IC（未分NAND／NOR）",
+            "kind": "business",
+            "parent_id": "memory",
+            "selectors": [
+                {
+                    "chain_code": "D000",
+                    "node_code": "D150"
+                }
+            ],
+            "exclude_selectors": []
+        },
+        {
+            "group_id": "memory.controller",
+            "label": "記憶體控制IC",
+            "kind": "business",
+            "parent_id": "memory",
+            "selectors": [
+                {
+                    "chain_code": "D000",
+                    "node_code": "D160"
+                }
+            ],
+            "exclude_selectors": []
+        },
+        {
+            "group_id": "memory.components",
+            "label": "其他記憶體相關（廣義）",
+            "kind": "business",
+            "parent_id": "memory",
+            "selectors": [
+                {
+                    "chain_code": "F000",
+                    "node_code": "F500"
+                },
+                {
+                    "chain_code": "I000",
+                    "node_code": "I300"
+                },
+                {
+                    "chain_code": "5700",
+                    "node_code": "5743"
+                }
+            ],
+            "exclude_selectors": [
+                {
+                    "chain_code": "D000",
+                    "node_code": "D150"
+                },
+                {
+                    "chain_code": "D000",
+                    "node_code": "D160"
+                },
+                {
+                    "chain_code": "D000",
+                    "node_code": "D320"
+                }
+            ]
+        },
+        {
+            "group_id": "cooling",
+            "label": "散熱／冷卻設備",
+            "kind": "business",
+            "parent_id": null,
+            "selectors": [
+                {
+                    "chain_code": "F000",
+                    "node_code": "FB00"
+                },
+                {
+                    "chain_code": "5400",
+                    "node_code": "5430"
+                },
+                {
+                    "chain_code": "5700",
+                    "node_code": "5744"
+                }
+            ],
+            "exclude_selectors": []
+        },
+        {
+            "group_id": "servers",
+            "label": "伺服器",
+            "kind": "business",
+            "parent_id": null,
+            "selectors": [
+                {
+                    "chain_code": "F000",
+                    "node_code": "FM00"
+                },
+                {
+                    "chain_code": "5400",
+                    "node_code": "5411"
+                },
+                {
+                    "chain_code": "5700",
+                    "node_code": "5746"
+                }
+            ],
+            "exclude_selectors": []
+        },
+        {
+            "group_id": "power-supply",
+            "label": "電源供應器",
+            "kind": "business",
+            "parent_id": null,
+            "selectors": [
+                {
+                    "chain_code": "F000",
+                    "node_code": "F800"
+                }
+            ],
+            "exclude_selectors": []
+        },
+        {
+            "group_id": "power-equipment",
+            "label": "電力設備／變壓器",
+            "kind": "business",
+            "parent_id": null,
+            "selectors": [
+                {
+                    "chain_code": "AB10",
+                    "node_code": "AB13"
+                },
+                {
+                    "chain_code": "AD10",
+                    "node_code": "AD11"
+                }
+            ],
+            "exclude_selectors": []
+        },
+        {
+            "group_id": "grid",
+            "label": "智慧電網",
+            "kind": "theme",
+            "parent_id": null,
+            "selectors": [
+                {
+                    "chain_code": "AD10",
+                    "node_code": null
+                }
+            ],
+            "exclude_selectors": []
+        },
+        {
+            "group_id": "semiconductor-equipment",
+            "label": "半導體製程／檢測設備",
+            "kind": "business",
+            "parent_id": null,
+            "selectors": [
+                {
+                    "chain_code": "D000",
+                    "node_code": "D400"
+                },
+                {
+                    "chain_code": "D000",
+                    "node_code": "D600"
+                }
+            ],
+            "exclude_selectors": []
+        },
+        {
+            "group_id": "semiconductor-packaging",
+            "label": "IC封裝測試",
+            "kind": "business",
+            "parent_id": null,
+            "selectors": [
+                {
+                    "chain_code": "D000",
+                    "node_code": "D900"
+                }
+            ],
+            "exclude_selectors": []
+        },
+        {
+            "group_id": "ic-design",
+            "label": "IC設計",
+            "kind": "business",
+            "parent_id": null,
+            "selectors": [
+                {
+                    "chain_code": "D000",
+                    "node_code": "D100"
+                }
+            ],
+            "exclude_selectors": []
+        },
+        {
+            "group_id": "pcb",
+            "label": "PCB產業鏈",
+            "kind": "family",
+            "parent_id": null,
+            "selectors": [
+                {
+                    "chain_code": "L000",
+                    "node_code": null
+                }
+            ],
+            "exclude_selectors": []
+        },
+        {
+            "group_id": "pcb-manufacturing",
+            "label": "硬板／軟板／IC載板製造",
+            "kind": "business",
+            "parent_id": "pcb",
+            "selectors": [
+                {
+                    "chain_code": "L000",
+                    "node_code": "L610"
+                }
+            ],
+            "exclude_selectors": []
+        },
+        {
+            "group_id": "pcb-materials",
+            "label": "銅箔基板",
+            "kind": "business",
+            "parent_id": "pcb",
+            "selectors": [
+                {
+                    "chain_code": "L000",
+                    "node_code": "L630"
+                }
+            ],
+            "exclude_selectors": []
+        },
+        {
+            "group_id": "passive",
+            "label": "被動元件產業鏈",
+            "kind": "family",
+            "parent_id": null,
+            "selectors": [
+                {
+                    "chain_code": "J000",
+                    "node_code": null
+                }
+            ],
+            "exclude_selectors": []
+        },
+        {
+            "group_id": "passive.resistors",
+            "label": "電阻器",
+            "kind": "business",
+            "parent_id": "passive",
+            "selectors": [
+                {
+                    "chain_code": "J000",
+                    "node_code": "J500"
+                }
+            ],
+            "exclude_selectors": []
+        },
+        {
+            "group_id": "passive.capacitors",
+            "label": "電容器",
+            "kind": "business",
+            "parent_id": "passive",
+            "selectors": [
+                {
+                    "chain_code": "J000",
+                    "node_code": "J600"
+                }
+            ],
+            "exclude_selectors": []
+        },
+        {
+            "group_id": "connectors",
+            "label": "連接器",
+            "kind": "business",
+            "parent_id": null,
+            "selectors": [
+                {
+                    "chain_code": "K000",
+                    "node_code": "K500"
+                }
+            ],
+            "exclude_selectors": []
+        },
+        {
+            "group_id": "optical-communications",
+            "label": "光通訊IC／設備",
+            "kind": "business",
+            "parent_id": null,
+            "selectors": [
+                {
+                    "chain_code": "D000",
+                    "node_code": "D120"
+                },
+                {
+                    "chain_code": "I000",
+                    "node_code": "IA00"
+                }
+            ],
+            "exclude_selectors": []
+        },
+        {
+            "group_id": "network-equipment",
+            "label": "網路設備",
+            "kind": "business",
+            "parent_id": null,
+            "selectors": [
+                {
+                    "chain_code": "I000",
+                    "node_code": "I900"
+                }
+            ],
+            "exclude_selectors": []
+        },
+        {
+            "group_id": "ipc",
+            "label": "工業電腦",
+            "kind": "business",
+            "parent_id": null,
+            "selectors": [
+                {
+                    "chain_code": "F000",
+                    "node_code": "FK00"
+                }
+            ],
+            "exclude_selectors": []
+        },
+        {
+            "group_id": "satellite",
+            "label": "太空衛星科技",
+            "kind": "theme",
+            "parent_id": null,
+            "selectors": [
+                {
+                    "chain_code": "4100",
+                    "node_code": null
+                }
+            ],
+            "exclude_selectors": []
+        },
+        {
+            "group_id": "robots",
+            "label": "機器人",
+            "kind": "business",
+            "parent_id": null,
+            "selectors": [
+                {
+                    "chain_code": "6000",
+                    "node_code": "6310"
+                },
+                {
+                    "chain_code": "6000",
+                    "node_code": "6320"
+                },
+                {
+                    "chain_code": "6000",
+                    "node_code": "6330"
+                }
+            ],
+            "exclude_selectors": []
+        },
+        {
+            "group_id": "shipping.container",
+            "label": "貨櫃航運",
+            "kind": "business",
+            "parent_id": null,
+            "selectors": [
+                {
+                    "chain_code": "T000",
+                    "node_code": "T100"
+                }
+            ],
+            "exclude_selectors": []
+        },
+        {
+            "group_id": "shipping.bulk",
+            "label": "散裝航運",
+            "kind": "business",
+            "parent_id": null,
+            "selectors": [
+                {
+                    "chain_code": "T000",
+                    "node_code": "T200"
+                }
+            ],
+            "exclude_selectors": []
+        },
+        {
+            "group_id": "solar",
+            "label": "太陽能產業",
+            "kind": "theme",
+            "parent_id": null,
+            "selectors": [
+                {
+                    "chain_code": "A100",
+                    "node_code": null
+                }
+            ],
+            "exclude_selectors": []
+        },
+        {
+            "group_id": "wind",
+            "label": "風力發電",
+            "kind": "theme",
+            "parent_id": null,
+            "selectors": [
+                {
+                    "chain_code": "AB20",
+                    "node_code": null
+                }
+            ],
+            "exclude_selectors": []
+        },
+        {
+            "group_id": "display-panel",
+            "label": "面板",
+            "kind": "business",
+            "parent_id": null,
+            "selectors": [
+                {
+                    "chain_code": "G000",
+                    "node_code": "GB00"
+                }
+            ],
+            "exclude_selectors": []
+        },
+        {
+            "group_id": "construction",
+            "label": "建材營造",
+            "kind": "family",
+            "parent_id": null,
+            "selectors": [
+                {
+                    "chain_code": "S000",
+                    "node_code": null
+                }
+            ],
+            "exclude_selectors": []
+        },
+        {
+            "group_id": "pharma",
+            "label": "製藥",
+            "kind": "family",
+            "parent_id": null,
+            "selectors": [
+                {
+                    "chain_code": "C100",
+                    "node_code": null
+                }
+            ],
+            "exclude_selectors": []
+        },
+        {
+            "group_id": "software",
+            "label": "軟體服務",
+            "kind": "family",
+            "parent_id": null,
+            "selectors": [
+                {
+                    "chain_code": "R000",
+                    "node_code": null
+                }
+            ],
+            "exclude_selectors": []
+        }
+    ]
+}

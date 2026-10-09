@@ -1,0 +1,30 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+public/data/market-atlas.json
+public/data/wave-lab-cases*.json
+public/data/opportunity-explorer.json
+public/data/saved-research-runs.json
+public/data/research-evidence-v2-classified/*.json
+!public/data/research-evidence-v2-classified/export-receipt.json
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

@@ -1,0 +1,68 @@
+{
+    "descriptor_checks": {
+        "calendar_descriptors_equal": true,
+        "code_identity_equal": true,
+        "input_descriptor_count": 9,
+        "input_descriptors_equal": true,
+        "interval_rows_equal": true,
+        "native_descriptor_count": 1970,
+        "native_descriptor_digest_v1": "7f44fef096c8efd8c472886d85e305aa58bbe4c6b69c9112bc42377750ceece5",
+        "native_descriptor_digest_v2": "7f44fef096c8efd8c472886d85e305aa58bbe4c6b69c9112bc42377750ceece5",
+        "native_descriptors_equal": true,
+        "native_keys_equal": true,
+        "native_resolved_path_equal_count": 1970,
+        "representative_intervals_descriptors_equal": true,
+        "series_descriptor_count": 2075,
+        "series_descriptor_digest_v1": "43f2a529768713c4ced618df3bff6bc80ddb785ce220a8e62cfaaa325a9d54c3",
+        "series_descriptor_digest_v2": "43f2a529768713c4ced618df3bff6bc80ddb785ce220a8e62cfaaa325a9d54c3",
+        "series_descriptors_equal": true,
+        "series_keys_equal": true,
+        "series_manifest_descriptor_equal": true,
+        "series_resolved_path_equal_count": 0,
+        "transitions_descriptors_equal": true
+    },
+    "descriptor_mismatches": [],
+    "elapsed_seconds": 16.051752600003965,
+    "io_sizes": {
+        "files_read": 3966,
+        "native_prefix_uncompressed_bytes": 35495936,
+        "referenced_compressed_or_json_file_bytes": 577220653,
+        "size_note": "Sum of compressed/JSON file sizes for examined descriptors; native gzip was only read through its source_run_indices prefix, so this is not measured physical bytes read."
+    },
+    "manifests": [
+        {
+            "path": "D:\\Project\\Stock\\.worktrees\\sector-wave-full-history-preview-20261004\\tasks\\20261004-sector-wave-full-history-preview\\catalog-v1\\manifest.json",
+            "sha256": "a3286f672527a69120b7802b6fda8aa3d56226845bfd3806b248cd9367c1535a"
+        },
+        {
+            "path": "D:\\Project\\Stock\\.worktrees\\sector-wave-full-history-preview-20261004\\tasks\\20261004-sector-wave-full-history-preview\\catalog-v2\\manifest.json",
+            "sha256": "c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140"
+        }
+    ],
+    "method": {
+        "actual_file_sha_recheck": "Descriptor SHA equality audited; immutable shared native paths resolve identically. Parent full verifier owns actual file SHA verification.",
+        "daily_base_recomputation": false,
+        "edge_predicate": "saved JS run[i]==run[i-1]!=null AND abs(Python log(adjusted[i]/adjusted[i-1]))>log(1.35)",
+        "huge_tables_loaded": false,
+        "native_arrays": "only source_run_indices parsed from gzip JSON prefix; no saved phases/fits decoded",
+        "node_analysis_rerun": false,
+        "range_formula": "first such edge > base in same native run; affected [max(interval.start,edge), min(interval.end_exclusive,run.end+1,first_action_barrier_after_base))"
+    },
+    "read_only_canonical": true,
+    "representative_daily_gain": {
+        "affected_ranges": [],
+        "daily_queries_examined_by_range": 3899751,
+        "edges": [],
+        "gain_difference_count": 0,
+        "interval_count": 7875,
+        "native_series_examined": 1970,
+        "same_exact_js_run_old_ratio_block_edge_count": 0
+    },
+    "schema_version": "opportunity-v2-gain-diff-audit.v1",
+    "transitions": {
+        "differences": [],
+        "gain_or_reason_difference_count": 0,
+        "v1_count": 14528,
+        "v2_count": 14528
+    }
+}

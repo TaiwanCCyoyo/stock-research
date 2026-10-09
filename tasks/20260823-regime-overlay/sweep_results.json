@@ -1,0 +1,4801 @@
+{
+    "episodes": [
+        {
+            "peak_date": "2015-04-27",
+            "trough_date": "2016-01-21",
+            "recovery_date": "2016-10-25",
+            "depth_pct": -23.298969072164965,
+            "peak_to_trough_days": 186,
+            "length_days": 368,
+            "recovered": true
+        },
+        {
+            "peak_date": "2018-01-23",
+            "trough_date": "2019-01-04",
+            "recovery_date": "2019-10-22",
+            "depth_pct": -18.233295583238963,
+            "peak_to_trough_days": 234,
+            "length_days": 423,
+            "recovered": true
+        },
+        {
+            "peak_date": "2020-01-14",
+            "trough_date": "2020-03-19",
+            "recovery_date": "2020-07-21",
+            "depth_pct": -30.476673427991884,
+            "peak_to_trough_days": 39,
+            "length_days": 122,
+            "recovered": true
+        },
+        {
+            "peak_date": "2021-01-21",
+            "trough_date": "2021-05-17",
+            "recovery_date": "2021-12-24",
+            "depth_pct": -11.538461538461531,
+            "peak_to_trough_days": 71,
+            "length_days": 226,
+            "recovered": true
+        },
+        {
+            "peak_date": "2022-01-17",
+            "trough_date": "2022-10-25",
+            "recovery_date": "2024-03-07",
+            "depth_pct": -36.38157894736841,
+            "peak_to_trough_days": 187,
+            "length_days": 514,
+            "recovered": true
+        },
+        {
+            "peak_date": "2024-07-11",
+            "trough_date": "2024-08-05",
+            "recovery_date": "2025-01-07",
+            "depth_pct": -21.701602959309497,
+            "peak_to_trough_days": 15,
+            "length_days": 120,
+            "recovered": true
+        },
+        {
+            "peak_date": "2025-01-07",
+            "trough_date": "2025-04-09",
+            "recovery_date": "2025-07-18",
+            "depth_pct": -28.473581213307252,
+            "peak_to_trough_days": 56,
+            "length_days": 121,
+            "recovered": true
+        },
+        {
+            "peak_date": "2026-02-26",
+            "trough_date": "2026-03-31",
+            "recovery_date": "2026-04-14",
+            "depth_pct": -10.844115834873701,
+            "peak_to_trough_days": 22,
+            "length_days": 30,
+            "recovered": true
+        },
+        {
+            "peak_date": "2026-06-22",
+            "trough_date": "2026-07-30",
+            "recovery_date": null,
+            "depth_pct": -15.879442195231675,
+            "peak_to_trough_days": 27,
+            "length_days": 39,
+            "recovered": false
+        }
+    ],
+    "detectors": [
+        {
+            "detector": "d1_ma100",
+            "first_measurable": "2013-12-23",
+            "measurable_days": 3081,
+            "flagged_days": 917,
+            "false_pct": 8.82882882882883,
+            "episodes": [
+                {
+                    "peak_date": "2015-04-27",
+                    "measurable": true,
+                    "covered_pct": 79.67914438502673,
+                    "first_flag": "2015-06-04",
+                    "flag_at_pct_of_decline": 14.516129032258066
+                },
+                {
+                    "peak_date": "2018-01-23",
+                    "measurable": true,
+                    "covered_pct": 61.27659574468085,
+                    "first_flag": "2018-02-06",
+                    "flag_at_pct_of_decline": 4.273504273504273
+                },
+                {
+                    "peak_date": "2020-01-14",
+                    "measurable": true,
+                    "covered_pct": 67.5,
+                    "first_flag": "2020-01-31",
+                    "flag_at_pct_of_decline": 15.384615384615385
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "measurable": true,
+                    "covered_pct": 5.555555555555555,
+                    "first_flag": "2021-05-12",
+                    "flag_at_pct_of_decline": 95.77464788732394
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "measurable": true,
+                    "covered_pct": 88.82978723404256,
+                    "first_flag": "2022-02-24",
+                    "flag_at_pct_of_decline": 11.229946524064172
+                },
+                {
+                    "peak_date": "2024-07-11",
+                    "measurable": true,
+                    "covered_pct": 6.25,
+                    "first_flag": "2024-08-05",
+                    "flag_at_pct_of_decline": 100.0
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "measurable": true,
+                    "covered_pct": 49.122807017543856,
+                    "first_flag": "2025-02-25",
+                    "flag_at_pct_of_decline": 50.0
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "measurable": true,
+                    "covered_pct": 0.0,
+                    "first_flag": null,
+                    "flag_at_pct_of_decline": NaN
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "measurable": true,
+                    "covered_pct": 3.571428571428571,
+                    "first_flag": "2026-07-30",
+                    "flag_at_pct_of_decline": 100.0
+                }
+            ]
+        },
+        {
+            "detector": "d1_ma150",
+            "first_measurable": "2014-03-13",
+            "measurable_days": 3031,
+            "flagged_days": 817,
+            "false_pct": 4.622641509433962,
+            "episodes": [
+                {
+                    "peak_date": "2015-04-27",
+                    "measurable": true,
+                    "covered_pct": 73.79679144385027,
+                    "first_flag": "2015-06-16",
+                    "flag_at_pct_of_decline": 18.817204301075268
+                },
+                {
+                    "peak_date": "2018-01-23",
+                    "measurable": true,
+                    "covered_pct": 63.40425531914894,
+                    "first_flag": "2018-02-06",
+                    "flag_at_pct_of_decline": 4.273504273504273
+                },
+                {
+                    "peak_date": "2020-01-14",
+                    "measurable": true,
+                    "covered_pct": 32.5,
+                    "first_flag": "2020-02-27",
+                    "flag_at_pct_of_decline": 64.1025641025641
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "measurable": true,
+                    "covered_pct": 0.0,
+                    "first_flag": null,
+                    "flag_at_pct_of_decline": NaN
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "measurable": true,
+                    "covered_pct": 88.29787234042553,
+                    "first_flag": "2022-02-24",
+                    "flag_at_pct_of_decline": 11.229946524064172
+                },
+                {
+                    "peak_date": "2024-07-11",
+                    "measurable": true,
+                    "covered_pct": 6.25,
+                    "first_flag": "2024-08-05",
+                    "flag_at_pct_of_decline": 100.0
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "measurable": true,
+                    "covered_pct": 45.614035087719294,
+                    "first_flag": "2025-03-03",
+                    "flag_at_pct_of_decline": 55.35714285714286
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "measurable": true,
+                    "covered_pct": 0.0,
+                    "first_flag": null,
+                    "flag_at_pct_of_decline": NaN
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "measurable": true,
+                    "covered_pct": 0.0,
+                    "first_flag": null,
+                    "flag_at_pct_of_decline": NaN
+                }
+            ]
+        },
+        {
+            "detector": "d1_ma200",
+            "first_measurable": "2014-05-26",
+            "measurable_days": 2981,
+            "flagged_days": 768,
+            "false_pct": 0.594059405940594,
+            "episodes": [
+                {
+                    "peak_date": "2015-04-27",
+                    "measurable": true,
+                    "covered_pct": 69.5187165775401,
+                    "first_flag": "2015-07-08",
+                    "flag_at_pct_of_decline": 26.881720430107524
+                },
+                {
+                    "peak_date": "2018-01-23",
+                    "measurable": true,
+                    "covered_pct": 60.42553191489362,
+                    "first_flag": "2018-02-06",
+                    "flag_at_pct_of_decline": 4.273504273504273
+                },
+                {
+                    "peak_date": "2020-01-14",
+                    "measurable": true,
+                    "covered_pct": 22.5,
+                    "first_flag": "2020-03-09",
+                    "flag_at_pct_of_decline": 79.48717948717949
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "measurable": true,
+                    "covered_pct": 0.0,
+                    "first_flag": null,
+                    "flag_at_pct_of_decline": NaN
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "measurable": true,
+                    "covered_pct": 87.2340425531915,
+                    "first_flag": "2022-02-24",
+                    "flag_at_pct_of_decline": 11.229946524064172
+                },
+                {
+                    "peak_date": "2024-07-11",
+                    "measurable": true,
+                    "covered_pct": 0.0,
+                    "first_flag": null,
+                    "flag_at_pct_of_decline": NaN
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "measurable": true,
+                    "covered_pct": 38.59649122807017,
+                    "first_flag": "2025-03-07",
+                    "flag_at_pct_of_decline": 62.5
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "measurable": true,
+                    "covered_pct": 0.0,
+                    "first_flag": null,
+                    "flag_at_pct_of_decline": NaN
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "measurable": true,
+                    "covered_pct": 0.0,
+                    "first_flag": null,
+                    "flag_at_pct_of_decline": NaN
+                }
+            ]
+        },
+        {
+            "detector": "d1_ma250",
+            "first_measurable": "2014-08-06",
+            "measurable_days": 2931,
+            "flagged_days": 756,
+            "false_pct": 0.0,
+            "episodes": [
+                {
+                    "peak_date": "2015-04-27",
+                    "measurable": true,
+                    "covered_pct": 69.5187165775401,
+                    "first_flag": "2015-07-08",
+                    "flag_at_pct_of_decline": 26.881720430107524
+                },
+                {
+                    "peak_date": "2018-01-23",
+                    "measurable": true,
+                    "covered_pct": 48.08510638297872,
+                    "first_flag": "2018-02-06",
+                    "flag_at_pct_of_decline": 4.273504273504273
+                },
+                {
+                    "peak_date": "2020-01-14",
+                    "measurable": true,
+                    "covered_pct": 17.5,
+                    "first_flag": "2020-03-11",
+                    "flag_at_pct_of_decline": 84.61538461538461
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "measurable": true,
+                    "covered_pct": 0.0,
+                    "first_flag": null,
+                    "flag_at_pct_of_decline": NaN
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "measurable": true,
+                    "covered_pct": 86.70212765957447,
+                    "first_flag": "2022-02-25",
+                    "flag_at_pct_of_decline": 11.76470588235294
+                },
+                {
+                    "peak_date": "2024-07-11",
+                    "measurable": true,
+                    "covered_pct": 0.0,
+                    "first_flag": null,
+                    "flag_at_pct_of_decline": NaN
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "measurable": true,
+                    "covered_pct": 19.298245614035086,
+                    "first_flag": "2025-03-13",
+                    "flag_at_pct_of_decline": 69.64285714285714
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "measurable": true,
+                    "covered_pct": 0.0,
+                    "first_flag": null,
+                    "flag_at_pct_of_decline": NaN
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "measurable": true,
+                    "covered_pct": 0.0,
+                    "first_flag": null,
+                    "flag_at_pct_of_decline": NaN
+                }
+            ]
+        },
+        {
+            "detector": "d2_br35",
+            "first_measurable": "2019-06-19",
+            "measurable_days": 1738,
+            "flagged_days": 289,
+            "false_pct": 1.6842105263157894,
+            "episodes": [
+                {
+                    "peak_date": "2015-04-27",
+                    "measurable": false,
+                    "covered_pct": NaN,
+                    "first_flag": null,
+                    "flag_at_pct_of_decline": NaN
+                },
+                {
+                    "peak_date": "2018-01-23",
+                    "measurable": false,
+                    "covered_pct": NaN,
+                    "first_flag": null,
+                    "flag_at_pct_of_decline": NaN
+                },
+                {
+                    "peak_date": "2020-01-14",
+                    "measurable": true,
+                    "covered_pct": 55.00000000000001,
+                    "first_flag": "2020-01-30",
+                    "flag_at_pct_of_decline": 12.82051282051282
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "measurable": true,
+                    "covered_pct": 5.555555555555555,
+                    "first_flag": "2021-05-12",
+                    "flag_at_pct_of_decline": 95.77464788732394
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "measurable": true,
+                    "covered_pct": 48.93617021276596,
+                    "first_flag": "2022-01-24",
+                    "flag_at_pct_of_decline": 2.6737967914438503
+                },
+                {
+                    "peak_date": "2024-07-11",
+                    "measurable": true,
+                    "covered_pct": 18.75,
+                    "first_flag": "2024-07-29",
+                    "flag_at_pct_of_decline": 66.66666666666666
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "measurable": true,
+                    "covered_pct": 17.543859649122805,
+                    "first_flag": "2025-01-13",
+                    "flag_at_pct_of_decline": 7.142857142857142
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "measurable": true,
+                    "covered_pct": 0.0,
+                    "first_flag": null,
+                    "flag_at_pct_of_decline": NaN
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "measurable": true,
+                    "covered_pct": 35.714285714285715,
+                    "first_flag": "2026-07-17",
+                    "flag_at_pct_of_decline": 66.66666666666666
+                }
+            ]
+        },
+        {
+            "detector": "d2_br45",
+            "first_measurable": "2019-06-19",
+            "measurable_days": 1738,
+            "flagged_days": 527,
+            "false_pct": 7.578947368421053,
+            "episodes": [
+                {
+                    "peak_date": "2015-04-27",
+                    "measurable": false,
+                    "covered_pct": NaN,
+                    "first_flag": null,
+                    "flag_at_pct_of_decline": NaN
+                },
+                {
+                    "peak_date": "2018-01-23",
+                    "measurable": false,
+                    "covered_pct": NaN,
+                    "first_flag": null,
+                    "flag_at_pct_of_decline": NaN
+                },
+                {
+                    "peak_date": "2020-01-14",
+                    "measurable": true,
+                    "covered_pct": 77.5,
+                    "first_flag": "2020-01-30",
+                    "flag_at_pct_of_decline": 12.82051282051282
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "measurable": true,
+                    "covered_pct": 9.722222222222223,
+                    "first_flag": "2021-01-29",
+                    "flag_at_pct_of_decline": 8.450704225352112
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "measurable": true,
+                    "covered_pct": 73.40425531914893,
+                    "first_flag": "2022-01-21",
+                    "flag_at_pct_of_decline": 2.13903743315508
+                },
+                {
+                    "peak_date": "2024-07-11",
+                    "measurable": true,
+                    "covered_pct": 50.0,
+                    "first_flag": "2024-07-22",
+                    "flag_at_pct_of_decline": 46.666666666666664
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "measurable": true,
+                    "covered_pct": 40.35087719298245,
+                    "first_flag": "2025-01-09",
+                    "flag_at_pct_of_decline": 3.571428571428571
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "measurable": true,
+                    "covered_pct": 8.695652173913043,
+                    "first_flag": "2026-03-09",
+                    "flag_at_pct_of_decline": 27.27272727272727
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "measurable": true,
+                    "covered_pct": 42.857142857142854,
+                    "first_flag": "2026-07-14",
+                    "flag_at_pct_of_decline": 55.55555555555556
+                }
+            ]
+        },
+        {
+            "detector": "d2_br55",
+            "first_measurable": "2019-06-19",
+            "measurable_days": 1738,
+            "flagged_days": 820,
+            "false_pct": 25.473684210526315,
+            "episodes": [
+                {
+                    "peak_date": "2015-04-27",
+                    "measurable": false,
+                    "covered_pct": NaN,
+                    "first_flag": null,
+                    "flag_at_pct_of_decline": NaN
+                },
+                {
+                    "peak_date": "2018-01-23",
+                    "measurable": false,
+                    "covered_pct": NaN,
+                    "first_flag": null,
+                    "flag_at_pct_of_decline": NaN
+                },
+                {
+                    "peak_date": "2020-01-14",
+                    "measurable": true,
+                    "covered_pct": 87.5,
+                    "first_flag": "2020-01-30",
+                    "flag_at_pct_of_decline": 12.82051282051282
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "measurable": true,
+                    "covered_pct": 18.055555555555554,
+                    "first_flag": "2021-01-21",
+                    "flag_at_pct_of_decline": 0.0
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "measurable": true,
+                    "covered_pct": 97.3404255319149,
+                    "first_flag": "2022-01-17",
+                    "flag_at_pct_of_decline": 0.0
+                },
+                {
+                    "peak_date": "2024-07-11",
+                    "measurable": true,
+                    "covered_pct": 62.5,
+                    "first_flag": "2024-07-19",
+                    "flag_at_pct_of_decline": 40.0
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "measurable": true,
+                    "covered_pct": 71.9298245614035,
+                    "first_flag": "2025-01-07",
+                    "flag_at_pct_of_decline": 0.0
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "measurable": true,
+                    "covered_pct": 34.78260869565217,
+                    "first_flag": "2026-03-04",
+                    "flag_at_pct_of_decline": 13.636363636363635
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "measurable": true,
+                    "covered_pct": 57.14285714285714,
+                    "first_flag": "2026-06-26",
+                    "flag_at_pct_of_decline": 14.814814814814813
+                }
+            ]
+        },
+        {
+            "detector": "d3_ad42",
+            "first_measurable": "2013-08-30",
+            "measurable_days": 3160,
+            "flagged_days": 900,
+            "false_pct": 25.399495374264085,
+            "episodes": [
+                {
+                    "peak_date": "2015-04-27",
+                    "measurable": true,
+                    "covered_pct": 60.962566844919785,
+                    "first_flag": "2015-05-07",
+                    "flag_at_pct_of_decline": 3.763440860215054
+                },
+                {
+                    "peak_date": "2018-01-23",
+                    "measurable": true,
+                    "covered_pct": 44.25531914893617,
+                    "first_flag": "2018-02-01",
+                    "flag_at_pct_of_decline": 2.9914529914529915
+                },
+                {
+                    "peak_date": "2020-01-14",
+                    "measurable": true,
+                    "covered_pct": 32.5,
+                    "first_flag": "2020-02-03",
+                    "flag_at_pct_of_decline": 17.94871794871795
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "measurable": true,
+                    "covered_pct": 11.11111111111111,
+                    "first_flag": "2021-01-28",
+                    "flag_at_pct_of_decline": 7.042253521126761
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "measurable": true,
+                    "covered_pct": 34.57446808510639,
+                    "first_flag": "2022-01-19",
+                    "flag_at_pct_of_decline": 1.06951871657754
+                },
+                {
+                    "peak_date": "2024-07-11",
+                    "measurable": true,
+                    "covered_pct": 6.25,
+                    "first_flag": "2024-08-05",
+                    "flag_at_pct_of_decline": 100.0
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "measurable": true,
+                    "covered_pct": 36.84210526315789,
+                    "first_flag": "2025-01-07",
+                    "flag_at_pct_of_decline": 0.0
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "measurable": true,
+                    "covered_pct": 0.0,
+                    "first_flag": null,
+                    "flag_at_pct_of_decline": NaN
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "measurable": true,
+                    "covered_pct": 10.714285714285714,
+                    "first_flag": "2026-07-20",
+                    "flag_at_pct_of_decline": 70.37037037037037
+                }
+            ]
+        },
+        {
+            "detector": "d3_ad46",
+            "first_measurable": "2013-08-30",
+            "measurable_days": 3160,
+            "flagged_days": 2131,
+            "false_pct": 75.35744322960471,
+            "episodes": [
+                {
+                    "peak_date": "2015-04-27",
+                    "measurable": true,
+                    "covered_pct": 78.07486631016043,
+                    "first_flag": "2015-04-27",
+                    "flag_at_pct_of_decline": 0.0
+                },
+                {
+                    "peak_date": "2018-01-23",
+                    "measurable": true,
+                    "covered_pct": 83.40425531914893,
+                    "first_flag": "2018-01-26",
+                    "flag_at_pct_of_decline": 1.282051282051282
+                },
+                {
+                    "peak_date": "2020-01-14",
+                    "measurable": true,
+                    "covered_pct": 80.0,
+                    "first_flag": "2020-01-14",
+                    "flag_at_pct_of_decline": 0.0
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "measurable": true,
+                    "covered_pct": 30.555555555555557,
+                    "first_flag": "2021-01-21",
+                    "flag_at_pct_of_decline": 0.0
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "measurable": true,
+                    "covered_pct": 67.02127659574468,
+                    "first_flag": "2022-01-17",
+                    "flag_at_pct_of_decline": 0.0
+                },
+                {
+                    "peak_date": "2024-07-11",
+                    "measurable": true,
+                    "covered_pct": 75.0,
+                    "first_flag": "2024-07-16",
+                    "flag_at_pct_of_decline": 20.0
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "measurable": true,
+                    "covered_pct": 64.91228070175438,
+                    "first_flag": "2025-01-07",
+                    "flag_at_pct_of_decline": 0.0
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "measurable": true,
+                    "covered_pct": 56.52173913043478,
+                    "first_flag": "2026-03-03",
+                    "flag_at_pct_of_decline": 9.090909090909092
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "measurable": true,
+                    "covered_pct": 50.0,
+                    "first_flag": "2026-07-02",
+                    "flag_at_pct_of_decline": 29.629629629629626
+                }
+            ]
+        },
+        {
+            "detector": "d3_ad50",
+            "first_measurable": "2013-08-30",
+            "measurable_days": 3160,
+            "flagged_days": 2901,
+            "false_pct": 98.82253994953743,
+            "episodes": [
+                {
+                    "peak_date": "2015-04-27",
+                    "measurable": true,
+                    "covered_pct": 91.97860962566845,
+                    "first_flag": "2015-04-27",
+                    "flag_at_pct_of_decline": 0.0
+                },
+                {
+                    "peak_date": "2018-01-23",
+                    "measurable": true,
+                    "covered_pct": 97.44680851063829,
+                    "first_flag": "2018-01-23",
+                    "flag_at_pct_of_decline": 0.0
+                },
+                {
+                    "peak_date": "2020-01-14",
+                    "measurable": true,
+                    "covered_pct": 100.0,
+                    "first_flag": "2020-01-14",
+                    "flag_at_pct_of_decline": 0.0
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "measurable": true,
+                    "covered_pct": 68.05555555555556,
+                    "first_flag": "2021-01-21",
+                    "flag_at_pct_of_decline": 0.0
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "measurable": true,
+                    "covered_pct": 92.5531914893617,
+                    "first_flag": "2022-01-17",
+                    "flag_at_pct_of_decline": 0.0
+                },
+                {
+                    "peak_date": "2024-07-11",
+                    "measurable": true,
+                    "covered_pct": 100.0,
+                    "first_flag": "2024-07-11",
+                    "flag_at_pct_of_decline": 0.0
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "measurable": true,
+                    "covered_pct": 82.45614035087719,
+                    "first_flag": "2025-01-07",
+                    "flag_at_pct_of_decline": 0.0
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "measurable": true,
+                    "covered_pct": 95.65217391304348,
+                    "first_flag": "2026-02-26",
+                    "flag_at_pct_of_decline": 0.0
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "measurable": true,
+                    "covered_pct": 100.0,
+                    "first_flag": "2026-06-22",
+                    "flag_at_pct_of_decline": 0.0
+                }
+            ]
+        }
+    ],
+    "cells": [
+        {
+            "cell": "base",
+            "kind": "baseline",
+            "window": "train",
+            "regime_column": "",
+            "regime_response": null,
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 206.58703311026022,
+            "engine_return_rate": 206.58703311026022,
+            "max_drawdown_pct": -34.29755378382938,
+            "engine_max_drawdown": -34.29755378382938,
+            "defence_trades": 0,
+            "buy_count": 501,
+            "cash_blocked_entry_count": 212,
+            "turnover_per_slot_year": 9.797273517855665,
+            "unweighted_turnover_per_slot_year": 9.812088815789473,
+            "completed_round_trips": 490.0,
+            "realised_friction_twd": 2980894.0,
+            "years": 4.993839835728953,
+            "deployed_mean_pct": 43.50323989594773,
+            "deployed_end_pct": 35.822643210256636,
+            "benchmark_0050_return_pct": 82.65681961506449,
+            "implied_cost_drag_pct_per_year": 4.898636758927832,
+            "realised_cost_pct_per_year": 2.694900443539731,
+            "episodes": [
+                {
+                    "peak_date": "2020-01-14",
+                    "depth_pct": -30.476673427991884,
+                    "decline_return_pct": -31.56343868972954
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "depth_pct": -11.538461538461531,
+                    "decline_return_pct": 12.876964058952467
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "depth_pct": -36.38157894736841,
+                    "decline_return_pct": -20.51331771931626
+                }
+            ],
+            "yearly_return_pct": {
+                "2019": 25.073814375200023,
+                "2020": 80.31963261201957,
+                "2021": 34.7964267888863,
+                "2022": -18.9385469927942,
+                "2023": 24.408945804544068
+            },
+            "train_drawdown_improvement_pp": 0.0,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 0.0,
+            "worst_episode_return_pct": -31.56343868972954,
+            "return_retained": 1.0,
+            "train_return_retained": 1.0,
+            "rule2_pass": true,
+            "rule3_pass": true,
+            "family": null,
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "no ordered parameter family; rule 4 cannot be satisfied by design",
+            "verdict": "baseline"
+        },
+        {
+            "cell": "cash__d1_ma100",
+            "kind": "overlay_cash",
+            "window": "train",
+            "regime_column": "d1_ma100",
+            "regime_response": "cash",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 122.56443428261,
+            "engine_return_rate": 122.56443428260997,
+            "max_drawdown_pct": -35.47647619605825,
+            "engine_max_drawdown": -35.47647619605825,
+            "defence_trades": 0,
+            "buy_count": 548,
+            "cash_blocked_entry_count": 66,
+            "turnover_per_slot_year": 10.737021207083465,
+            "unweighted_turnover_per_slot_year": 10.753248355263159,
+            "completed_round_trips": 537.0,
+            "realised_friction_twd": 3222164.0,
+            "years": 4.993839835728953,
+            "deployed_mean_pct": 38.68211758459369,
+            "deployed_end_pct": 49.351266456404396,
+            "benchmark_0050_return_pct": 82.65681961506449,
+            "implied_cost_drag_pct_per_year": 5.368510603541733,
+            "realised_cost_pct_per_year": 4.068795804790294,
+            "episodes": [
+                {
+                    "peak_date": "2020-01-14",
+                    "depth_pct": -30.476673427991884,
+                    "decline_return_pct": -11.742317937569736
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "depth_pct": -11.538461538461531,
+                    "decline_return_pct": 32.148126167687565
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "depth_pct": -36.38157894736841,
+                    "decline_return_pct": -5.87376901786646
+                }
+            ],
+            "yearly_return_pct": {
+                "2019": 15.471994275200007,
+                "2020": 21.256205060859124,
+                "2021": 35.74318489372177,
+                "2022": -8.654786883807331,
+                "2023": 28.195062643863157
+            },
+            "train_drawdown_improvement_pp": -1.1789224122288715,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 17.988717906566308,
+            "worst_episode_return_pct": -11.742317937569736,
+            "return_retained": 0.5932823199856622,
+            "train_return_retained": 0.5932823199856622,
+            "rule2_pass": false,
+            "rule3_pass": true,
+            "family": "cash:d1",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "cash__d1_ma150",
+            "kind": "overlay_cash",
+            "window": "train",
+            "regime_column": "d1_ma150",
+            "regime_response": "cash",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 122.05891828412989,
+            "engine_return_rate": 122.05891828412992,
+            "max_drawdown_pct": -30.584278666081655,
+            "engine_max_drawdown": -30.584278666081655,
+            "defence_trades": 0,
+            "buy_count": 499,
+            "cash_blocked_entry_count": 68,
+            "turnover_per_slot_year": 9.777216598071549,
+            "unweighted_turnover_per_slot_year": 9.792064144736841,
+            "completed_round_trips": 489.0,
+            "realised_friction_twd": 2935277.0,
+            "years": 4.993839835728953,
+            "deployed_mean_pct": 41.242494511072785,
+            "deployed_end_pct": 44.964486574793774,
+            "benchmark_0050_return_pct": 82.65681961506449,
+            "implied_cost_drag_pct_per_year": 4.888608299035774,
+            "realised_cost_pct_per_year": 3.686222510512913,
+            "episodes": [
+                {
+                    "peak_date": "2020-01-14",
+                    "depth_pct": -30.476673427991884,
+                    "decline_return_pct": -7.277058025649263
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "depth_pct": -11.538461538461531,
+                    "decline_return_pct": 16.236960325808614
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "depth_pct": -36.38157894736841,
+                    "decline_return_pct": -5.438686189192032
+                }
+            ],
+            "yearly_return_pct": {
+                "2019": 25.073814375200023,
+                "2020": 11.363181310969983,
+                "2021": 37.64612558018734,
+                "2022": -9.800870121880646,
+                "2023": 28.408524796513834
+            },
+            "train_drawdown_improvement_pp": 3.713275117747724,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 15.62735209090679,
+            "worst_episode_return_pct": -7.277058025649263,
+            "return_retained": 0.59083533194934,
+            "train_return_retained": 0.59083533194934,
+            "rule2_pass": false,
+            "rule3_pass": true,
+            "family": "cash:d1",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "cash__d1_ma200",
+            "kind": "overlay_cash",
+            "window": "train",
+            "regime_column": "d1_ma200",
+            "regime_response": "cash",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 154.92779898141995,
+            "engine_return_rate": 154.92779898141995,
+            "max_drawdown_pct": -29.774206432624617,
+            "engine_max_drawdown": -29.774206432624617,
+            "defence_trades": 0,
+            "buy_count": 434,
+            "cash_blocked_entry_count": 68,
+            "turnover_per_slot_year": 8.47758433041941,
+            "unweighted_turnover_per_slot_year": 8.490460526315788,
+            "completed_round_trips": 424.0,
+            "realised_friction_twd": 2568520.0,
+            "years": 4.993839835728953,
+            "deployed_mean_pct": 40.64795256939448,
+            "deployed_end_pct": 39.16744325214891,
+            "benchmark_0050_return_pct": 82.65681961506449,
+            "implied_cost_drag_pct_per_year": 4.238792165209705,
+            "realised_cost_pct_per_year": 3.0257597834628087,
+            "episodes": [
+                {
+                    "peak_date": "2020-01-14",
+                    "depth_pct": -30.476673427991884,
+                    "decline_return_pct": -9.794954712724536
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "depth_pct": -11.538461538461531,
+                    "decline_return_pct": 15.972165609924204
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "depth_pct": -36.38157894736841,
+                    "decline_return_pct": -4.582653071318599
+                }
+            ],
+            "yearly_return_pct": {
+                "2019": 25.073814375200023,
+                "2020": 13.079709035597876,
+                "2021": 49.97043278603754,
+                "2022": -9.096066170266258,
+                "2023": 32.21410728415848
+            },
+            "train_drawdown_improvement_pp": 4.523347351204762,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 18.92369391446075,
+            "worst_episode_return_pct": -9.794954712724536,
+            "return_retained": 0.7499396097078922,
+            "train_return_retained": 0.7499396097078922,
+            "rule2_pass": true,
+            "rule3_pass": true,
+            "family": "cash:d1",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "cash__d1_ma250",
+            "kind": "overlay_cash",
+            "window": "train",
+            "regime_column": "d1_ma250",
+            "regime_response": "cash",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 85.62726702505994,
+            "engine_return_rate": 85.62726702505995,
+            "max_drawdown_pct": -37.58411336917125,
+            "engine_max_drawdown": -37.58411336917125,
+            "defence_trades": 0,
+            "buy_count": 467,
+            "cash_blocked_entry_count": 547,
+            "turnover_per_slot_year": 9.11748626042064,
+            "unweighted_turnover_per_slot_year": 9.13125,
+            "completed_round_trips": 456.0,
+            "realised_friction_twd": 2729230.0,
+            "years": 4.993839835728953,
+            "deployed_mean_pct": 47.18982483058668,
+            "deployed_end_pct": 59.165004021296696,
+            "benchmark_0050_return_pct": 82.65681961506449,
+            "implied_cost_drag_pct_per_year": 4.55874313021032,
+            "realised_cost_pct_per_year": 3.8712388679763983,
+            "episodes": [
+                {
+                    "peak_date": "2020-01-14",
+                    "depth_pct": -30.476673427991884,
+                    "decline_return_pct": -9.228433279284543
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "depth_pct": -11.538461538461531,
+                    "decline_return_pct": 4.866178086923512
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "depth_pct": -36.38157894736841,
+                    "decline_return_pct": -5.383294524916704
+                }
+            ],
+            "yearly_return_pct": {
+                "2019": 3.0713215752000256,
+                "2020": 16.38288462099524,
+                "2021": 52.038453825739836,
+                "2022": -12.51668744951947,
+                "2023": 16.341898177229886
+            },
+            "train_drawdown_improvement_pp": -3.2865595853418696,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 10.940198441388084,
+            "worst_episode_return_pct": -9.228433279284543,
+            "return_retained": 0.41448519655809524,
+            "train_return_retained": 0.41448519655809524,
+            "rule2_pass": false,
+            "rule3_pass": true,
+            "family": "cash:d1",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "cash__d2_br35",
+            "kind": "overlay_cash",
+            "window": "train",
+            "regime_column": "d2_br35",
+            "regime_response": "cash",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 191.68116024504016,
+            "engine_return_rate": 191.68116024504016,
+            "max_drawdown_pct": -22.714330339671672,
+            "engine_max_drawdown": -22.714330339671672,
+            "defence_trades": 0,
+            "buy_count": 556,
+            "cash_blocked_entry_count": 64,
+            "turnover_per_slot_year": 10.89696196054646,
+            "unweighted_turnover_per_slot_year": 10.91344572368421,
+            "completed_round_trips": 545.0,
+            "realised_friction_twd": 3296817.0,
+            "years": 4.993839835728953,
+            "deployed_mean_pct": 36.45413235930563,
+            "deployed_end_pct": 37.65153083858366,
+            "benchmark_0050_return_pct": 82.65681961506449,
+            "implied_cost_drag_pct_per_year": 5.44848098027323,
+            "realised_cost_pct_per_year": 3.0734406687138196,
+            "episodes": [
+                {
+                    "peak_date": "2020-01-14",
+                    "depth_pct": -30.476673427991884,
+                    "decline_return_pct": -11.953587411298617
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "depth_pct": -11.538461538461531,
+                    "decline_return_pct": 16.726493541651344
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "depth_pct": -36.38157894736841,
+                    "decline_return_pct": -10.103968704050159
+                }
+            ],
+            "yearly_return_pct": {
+                "2019": 25.073814375200023,
+                "2020": 70.05633772161819,
+                "2021": 33.39074324297866,
+                "2022": -9.130493179055566,
+                "2023": 13.137166755213858
+            },
+            "train_drawdown_improvement_pp": 11.583223444157706,
+            "rule1_pass": true,
+            "holdout_drawdown_improvement_pp": -1.7988932431154296,
+            "worst_episode_return_pct": -11.953587411298617,
+            "return_retained": 0.9278470064611245,
+            "train_return_retained": 0.9278470064611245,
+            "rule2_pass": true,
+            "rule3_pass": true,
+            "family": "cash:d2",
+            "plateau_run": 1,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "isolated winner, no plateau"
+        },
+        {
+            "cell": "cash__d2_br45",
+            "kind": "overlay_cash",
+            "window": "train",
+            "regime_column": "d2_br45",
+            "regime_response": "cash",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 166.5318853004402,
+            "engine_return_rate": 166.5318853004402,
+            "max_drawdown_pct": -27.66246581328966,
+            "engine_max_drawdown": -27.66246581328966,
+            "defence_trades": 0,
+            "buy_count": 547,
+            "cash_blocked_entry_count": 219,
+            "turnover_per_slot_year": 10.737019908283298,
+            "unweighted_turnover_per_slot_year": 10.753248355263159,
+            "completed_round_trips": 537.0,
+            "realised_friction_twd": 3236385.0,
+            "years": 4.993839835728953,
+            "deployed_mean_pct": 35.46798621024312,
+            "deployed_end_pct": 37.46180401172251,
+            "benchmark_0050_return_pct": 82.65681961506449,
+            "implied_cost_drag_pct_per_year": 5.368509954141649,
+            "realised_cost_pct_per_year": 3.4535324404957497,
+            "episodes": [
+                {
+                    "peak_date": "2020-01-14",
+                    "depth_pct": -30.476673427991884,
+                    "decline_return_pct": -8.85530985417262
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "depth_pct": -11.538461538461531,
+                    "decline_return_pct": 22.2904356116143
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "depth_pct": -36.38157894736841,
+                    "decline_return_pct": -9.452788408854351
+                }
+            ],
+            "yearly_return_pct": {
+                "2019": 12.393711875200019,
+                "2020": 53.66416741087161,
+                "2021": 43.092688366540074,
+                "2022": -8.368190602320125,
+                "2023": 17.698477296570438
+            },
+            "train_drawdown_improvement_pp": 6.635087970539718,
+            "rule1_pass": true,
+            "holdout_drawdown_improvement_pp": 0.46858127931995597,
+            "worst_episode_return_pct": -9.452788408854351,
+            "return_retained": 0.8061100582801745,
+            "train_return_retained": 0.8061100582801745,
+            "rule2_pass": true,
+            "rule3_pass": true,
+            "family": "cash:d2",
+            "plateau_run": 1,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "isolated winner, no plateau"
+        },
+        {
+            "cell": "cash__d2_br55",
+            "kind": "overlay_cash",
+            "window": "train",
+            "regime_column": "d2_br55",
+            "regime_response": "cash",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 179.46467918650987,
+            "engine_return_rate": 179.46467918650987,
+            "max_drawdown_pct": -26.71695259015908,
+            "engine_max_drawdown": -26.716952590159078,
+            "defence_trades": 0,
+            "buy_count": 437,
+            "cash_blocked_entry_count": 342,
+            "turnover_per_slot_year": 8.517548594505758,
+            "unweighted_turnover_per_slot_year": 8.530509868421053,
+            "completed_round_trips": 426.0,
+            "realised_friction_twd": 2596391.0,
+            "years": 4.993839835728953,
+            "deployed_mean_pct": 27.37521096820346,
+            "deployed_end_pct": 39.301917086523154,
+            "benchmark_0050_return_pct": 82.65681961506449,
+            "implied_cost_drag_pct_per_year": 4.258774297252879,
+            "realised_cost_pct_per_year": 2.833453255976988,
+            "episodes": [
+                {
+                    "peak_date": "2020-01-14",
+                    "depth_pct": -30.476673427991884,
+                    "decline_return_pct": -6.311870849467349
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "depth_pct": -11.538461538461531,
+                    "decline_return_pct": 14.01808043167263
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "depth_pct": -36.38157894736841,
+                    "decline_return_pct": -2.2772077227520393
+                }
+            ],
+            "yearly_return_pct": {
+                "2019": 6.374931010069962,
+                "2020": 67.05425716633144,
+                "2021": 27.555244175510694,
+                "2022": -6.196700943193578,
+                "2023": 31.43579493670947
+            },
+            "train_drawdown_improvement_pp": 7.580601193670297,
+            "rule1_pass": true,
+            "holdout_drawdown_improvement_pp": 40.49306191441612,
+            "worst_episode_return_pct": -6.311870849467349,
+            "return_retained": 0.8687122153050403,
+            "train_return_retained": 0.8687122153050403,
+            "rule2_pass": true,
+            "rule3_pass": true,
+            "family": "cash:d2",
+            "plateau_run": 1,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "isolated winner, no plateau"
+        },
+        {
+            "cell": "cash__d3_ad42",
+            "kind": "overlay_cash",
+            "window": "train",
+            "regime_column": "d3_ad42",
+            "regime_response": "cash",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 175.67118477140005,
+            "engine_return_rate": 175.67118477140005,
+            "max_drawdown_pct": -24.13820273300258,
+            "engine_max_drawdown": -24.138202733002583,
+            "defence_trades": 0,
+            "buy_count": 676,
+            "cash_blocked_entry_count": 245,
+            "turnover_per_slot_year": 13.316348030071131,
+            "unweighted_turnover_per_slot_year": 13.33643092105263,
+            "completed_round_trips": 666.0,
+            "realised_friction_twd": 3997286.0,
+            "years": 4.993839835728953,
+            "deployed_mean_pct": 35.98421319540147,
+            "deployed_end_pct": 36.22021688004837,
+            "benchmark_0050_return_pct": 82.65681961506449,
+            "implied_cost_drag_pct_per_year": 6.6581740150355655,
+            "realised_cost_pct_per_year": 3.8837988494876594,
+            "episodes": [
+                {
+                    "peak_date": "2020-01-14",
+                    "depth_pct": -30.476673427991884,
+                    "decline_return_pct": -15.712655137185704
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "depth_pct": -11.538461538461531,
+                    "decline_return_pct": 4.083355285961066
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "depth_pct": -36.38157894736841,
+                    "decline_return_pct": -2.136461172494708
+                }
+            ],
+            "yearly_return_pct": {
+                "2019": 9.823686675199994,
+                "2020": 92.68327769039044,
+                "2021": 23.801196416030336,
+                "2022": -6.411639738039366,
+                "2023": 12.435808974772232
+            },
+            "train_drawdown_improvement_pp": 10.1593510508268,
+            "rule1_pass": true,
+            "holdout_drawdown_improvement_pp": -5.121364339426108,
+            "worst_episode_return_pct": -15.712655137185704,
+            "return_retained": 0.8503495215870607,
+            "train_return_retained": 0.8503495215870607,
+            "rule2_pass": true,
+            "rule3_pass": false,
+            "family": "cash:d3",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "helps but too much turnover"
+        },
+        {
+            "cell": "cash__d3_ad46",
+            "kind": "overlay_cash",
+            "window": "train",
+            "regime_column": "d3_ad46",
+            "regime_response": "cash",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 233.51157234636005,
+            "engine_return_rate": 233.51157234636005,
+            "max_drawdown_pct": -24.312321638827918,
+            "engine_max_drawdown": -24.312321638827918,
+            "defence_trades": 0,
+            "buy_count": 544,
+            "cash_blocked_entry_count": 224,
+            "turnover_per_slot_year": 10.876876661398034,
+            "unweighted_turnover_per_slot_year": 10.893421052631577,
+            "completed_round_trips": 544.0,
+            "realised_friction_twd": 3294483.0,
+            "years": 4.993839835728953,
+            "deployed_mean_pct": 17.968691948844906,
+            "deployed_end_pct": 1.6754847240771786e-14,
+            "benchmark_0050_return_pct": 82.65681961506449,
+            "implied_cost_drag_pct_per_year": 5.438438330699017,
+            "realised_cost_pct_per_year": 2.7437747942456863,
+            "episodes": [
+                {
+                    "peak_date": "2020-01-14",
+                    "depth_pct": -30.476673427991884,
+                    "decline_return_pct": -0.8273036817374013
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "depth_pct": -11.538461538461531,
+                    "decline_return_pct": 6.059428523743349
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "depth_pct": -36.38157894736841,
+                    "decline_return_pct": -0.14848477715814212
+                }
+            ],
+            "yearly_return_pct": {
+                "2019": -4.351270842959998,
+                "2020": 144.99730202614228,
+                "2021": 36.292075710839455,
+                "2022": -2.4245934189268126,
+                "2023": 7.0186397216732255
+            },
+            "train_drawdown_improvement_pp": 9.985232145001461,
+            "rule1_pass": true,
+            "holdout_drawdown_improvement_pp": 29.537908509225705,
+            "worst_episode_return_pct": -0.8273036817374013,
+            "return_retained": 1.130330247889903,
+            "train_return_retained": 1.130330247889903,
+            "rule2_pass": true,
+            "rule3_pass": true,
+            "family": "cash:d3",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "isolated winner, no plateau"
+        },
+        {
+            "cell": "cash__d3_ad50",
+            "kind": "overlay_cash",
+            "window": "train",
+            "regime_column": "d3_ad50",
+            "regime_response": "cash",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 136.92582049999996,
+            "engine_return_rate": 136.92582049999993,
+            "max_drawdown_pct": -20.897909746068745,
+            "engine_max_drawdown": -20.89790974606874,
+            "defence_trades": 0,
+            "buy_count": 342,
+            "cash_blocked_entry_count": 0,
+            "turnover_per_slot_year": 6.838144081770554,
+            "unweighted_turnover_per_slot_year": 6.8484375,
+            "completed_round_trips": 342.0,
+            "realised_friction_twd": 2067463.0,
+            "years": 4.993839835728953,
+            "deployed_mean_pct": 7.834365157538463,
+            "deployed_end_pct": -7.861722902552774e-15,
+            "benchmark_0050_return_pct": 82.65681961506449,
+            "implied_cost_drag_pct_per_year": 3.419072040885277,
+            "realised_cost_pct_per_year": 2.247064425748786,
+            "episodes": [
+                {
+                    "peak_date": "2020-01-14",
+                    "depth_pct": -30.476673427991884,
+                    "decline_return_pct": 0.0
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "depth_pct": -11.538461538461531,
+                    "decline_return_pct": 5.552348535951412
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "depth_pct": -36.38157894736841,
+                    "decline_return_pct": 0.7155107269959604
+                }
+            ],
+            "yearly_return_pct": {
+                "2019": 0.0,
+                "2020": 87.09046149999995,
+                "2021": 18.648283413422394,
+                "2022": 6.197767812208332,
+                "2023": 0.5041278928998194
+            },
+            "train_drawdown_improvement_pp": 13.399644037760634,
+            "rule1_pass": true,
+            "holdout_drawdown_improvement_pp": 28.809090722593066,
+            "worst_episode_return_pct": 0.0,
+            "return_retained": 0.6627996851424819,
+            "train_return_retained": 0.6627996851424819,
+            "rule2_pass": false,
+            "rule3_pass": true,
+            "family": "cash:d3",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "helps but gives back too much return"
+        },
+        {
+            "cell": "defence__d1_ma100",
+            "kind": "overlay_defence",
+            "window": "train",
+            "regime_column": "d1_ma100",
+            "regime_response": "defence",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 121.64303502144551,
+            "engine_return_rate": 121.32763698261,
+            "max_drawdown_pct": -41.30146655658996,
+            "engine_max_drawdown": -41.30146655658996,
+            "defence_trades": 62,
+            "buy_count": 580,
+            "cash_blocked_entry_count": 7,
+            "turnover_per_slot_year": 16.377829037454738,
+            "unweighted_turnover_per_slot_year": 11.353988486842105,
+            "completed_round_trips": 567.0,
+            "realised_friction_twd": 4995765.0,
+            "years": 4.993839835728953,
+            "deployed_mean_pct": 52.30810688008909,
+            "deployed_end_pct": 49.62704545055528,
+            "benchmark_0050_return_pct": 82.65681961506449,
+            "implied_cost_drag_pct_per_year": 8.188914518727369,
+            "realised_cost_pct_per_year": 6.055939680391422,
+            "episodes": [
+                {
+                    "peak_date": "2020-01-14",
+                    "depth_pct": -30.476673427991884,
+                    "decline_return_pct": -26.738412826903012
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "depth_pct": -11.538461538461531,
+                    "decline_return_pct": 19.730699845149637
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "depth_pct": -36.38157894736841,
+                    "decline_return_pct": -19.909807114896903
+                }
+            ],
+            "yearly_return_pct": {
+                "2019": 33.711895602642564,
+                "2020": 17.82659216811755,
+                "2021": 27.548471982627554,
+                "2022": -15.25938059405696,
+                "2023": 30.15888854148805
+            },
+            "train_drawdown_improvement_pp": -7.003912772760579,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 18.531096784866804,
+            "worst_episode_return_pct": -26.738412826903012,
+            "return_retained": 0.5888222178810315,
+            "train_return_retained": 0.5888222178810315,
+            "rule2_pass": false,
+            "rule3_pass": false,
+            "family": "defence:d1",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "defence__d1_ma150",
+            "kind": "overlay_defence",
+            "window": "train",
+            "regime_column": "d1_ma150",
+            "regime_response": "defence",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 129.18394423677898,
+            "engine_return_rate": 128.85781548413004,
+            "max_drawdown_pct": -37.633502614626266,
+            "engine_max_drawdown": -37.633502614626266,
+            "defence_trades": 40,
+            "buy_count": 519,
+            "cash_blocked_entry_count": 2,
+            "turnover_per_slot_year": 13.149913212908306,
+            "unweighted_turnover_per_slot_year": 10.15250822368421,
+            "completed_round_trips": 507.0,
+            "realised_friction_twd": 4044213.0,
+            "years": 4.993839835728953,
+            "deployed_mean_pct": 50.791995707074356,
+            "deployed_end_pct": 43.6286837260857,
+            "benchmark_0050_return_pct": 82.65681961506449,
+            "implied_cost_drag_pct_per_year": 6.574956606454153,
+            "realised_cost_pct_per_year": 4.771266239441848,
+            "episodes": [
+                {
+                    "peak_date": "2020-01-14",
+                    "depth_pct": -30.476673427991884,
+                    "decline_return_pct": -20.89151806239927
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "depth_pct": -11.538461538461531,
+                    "decline_return_pct": 19.76137675965881
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "depth_pct": -36.38157894736841,
+                    "decline_return_pct": -19.788067173283096
+                }
+            ],
+            "yearly_return_pct": {
+                "2019": 42.6106533348956,
+                "2020": 5.300579621753521,
+                "2021": 38.868897089150046,
+                "2022": -17.22282538114557,
+                "2023": 32.7656949123825
+            },
+            "train_drawdown_improvement_pp": -3.3359488307968874,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 12.507490682675439,
+            "worst_episode_return_pct": -20.89151806239927,
+            "return_retained": 0.6253245534913634,
+            "train_return_retained": 0.6253245534913634,
+            "rule2_pass": false,
+            "rule3_pass": false,
+            "family": "defence:d1",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "defence__d1_ma200",
+            "kind": "overlay_defence",
+            "window": "train",
+            "regime_column": "d1_ma200",
+            "regime_response": "defence",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 158.83377864843683,
+            "engine_return_rate": 158.46545818142013,
+            "max_drawdown_pct": -31.276240726730975,
+            "engine_max_drawdown": -31.27624072673097,
+            "defence_trades": 26,
+            "buy_count": 451,
+            "cash_blocked_entry_count": 0,
+            "turnover_per_slot_year": 11.007272877620474,
+            "unweighted_turnover_per_slot_year": 8.830879934210525,
+            "completed_round_trips": 441.0,
+            "realised_friction_twd": 3310411.0,
+            "years": 4.993839835728953,
+            "deployed_mean_pct": 46.59938440255719,
+            "deployed_end_pct": 38.63135201993406,
+            "benchmark_0050_return_pct": 82.65681961506449,
+            "implied_cost_drag_pct_per_year": 5.503636438810237,
+            "realised_cost_pct_per_year": 3.6721933854635824,
+            "episodes": [
+                {
+                    "peak_date": "2020-01-14",
+                    "depth_pct": -30.476673427991884,
+                    "decline_return_pct": -20.932627854655017
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "depth_pct": -11.538461538461531,
+                    "decline_return_pct": 18.991513029630646
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "depth_pct": -36.38157894736841,
+                    "decline_return_pct": -17.565455462834844
+                }
+            ],
+            "yearly_return_pct": {
+                "2019": 42.6106533348956,
+                "2020": 9.295578463748,
+                "2021": 46.037625703595,
+                "2022": -16.845120211568144,
+                "2023": 36.74576540863188
+            },
+            "train_drawdown_improvement_pp": 3.0213130570984035,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 9.562789311688597,
+            "worst_episode_return_pct": -20.932627854655017,
+            "return_retained": 0.7688467967089861,
+            "train_return_retained": 0.7688467967089861,
+            "rule2_pass": true,
+            "rule3_pass": true,
+            "family": "defence:d1",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "defence__d1_ma250",
+            "kind": "overlay_defence",
+            "window": "train",
+            "regime_column": "d1_ma250",
+            "regime_response": "defence",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 131.03726132740888,
+            "engine_return_rate": 130.70849530453998,
+            "max_drawdown_pct": -34.581978538727434,
+            "engine_max_drawdown": -34.581978538727434,
+            "defence_trades": 33,
+            "buy_count": 483,
+            "cash_blocked_entry_count": 9,
+            "turnover_per_slot_year": 12.119305865196143,
+            "unweighted_turnover_per_slot_year": 9.451644736842105,
+            "completed_round_trips": 472.0,
+            "realised_friction_twd": 3627284.0,
+            "years": 4.993839835728953,
+            "deployed_mean_pct": 50.798924531875635,
+            "deployed_end_pct": 47.60396007742446,
+            "benchmark_0050_return_pct": 82.65681961506449,
+            "implied_cost_drag_pct_per_year": 6.0596529325980715,
+            "realised_cost_pct_per_year": 4.253291184055144,
+            "episodes": [
+                {
+                    "peak_date": "2020-01-14",
+                    "depth_pct": -30.476673427991884,
+                    "decline_return_pct": -26.7066197829532
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "depth_pct": -11.538461538461531,
+                    "decline_return_pct": 21.25974138775595
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "depth_pct": -36.38157894736841,
+                    "decline_return_pct": -16.267965106649907
+                }
+            ],
+            "yearly_return_pct": {
+                "2019": 17.86635489822015,
+                "2020": 22.628817980035087,
+                "2021": 60.37199143779019,
+                "2022": -16.608697414394737,
+                "2023": 19.52268840812812
+            },
+            "train_drawdown_improvement_pp": -0.28442475489805474,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 8.2894332393289,
+            "worst_episode_return_pct": -26.7066197829532,
+            "return_retained": 0.6342956736179628,
+            "train_return_retained": 0.6342956736179628,
+            "rule2_pass": false,
+            "rule3_pass": false,
+            "family": "defence:d1",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "defence__d2_br35",
+            "kind": "overlay_defence",
+            "window": "train",
+            "regime_column": "d2_br35",
+            "regime_response": "defence",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 185.63593474504026,
+            "engine_return_rate": 185.63593474504023,
+            "max_drawdown_pct": -31.83969909191052,
+            "engine_max_drawdown": -31.83969909191052,
+            "defence_trades": 50,
+            "buy_count": 581,
+            "cash_blocked_entry_count": 64,
+            "turnover_per_slot_year": 15.022481335957634,
+            "unweighted_turnover_per_slot_year": 11.374013157894735,
+            "completed_round_trips": 568.0,
+            "realised_friction_twd": 4617535.0,
+            "years": 4.993839835728953,
+            "deployed_mean_pct": 45.11393410608975,
+            "deployed_end_pct": 38.4483913405461,
+            "benchmark_0050_return_pct": 82.65681961506449,
+            "implied_cost_drag_pct_per_year": 7.511240667978817,
+            "realised_cost_pct_per_year": 4.375935089033461,
+            "episodes": [
+                {
+                    "peak_date": "2020-01-14",
+                    "depth_pct": -30.476673427991884,
+                    "decline_return_pct": -29.003303824098904
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "depth_pct": -11.538461538461531,
+                    "decline_return_pct": 15.884868488939752
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "depth_pct": -36.38157894736841,
+                    "decline_return_pct": -14.711176563262507
+                }
+            ],
+            "yearly_return_pct": {
+                "2019": 25.073814375200023,
+                "2020": 67.82386123247576,
+                "2021": 33.431322735339506,
+                "2022": -9.638784364402508,
+                "2023": 12.863336160739314
+            },
+            "train_drawdown_improvement_pp": 2.4578546919188575,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 1.6964105314068618,
+            "worst_episode_return_pct": -29.003303824098904,
+            "return_retained": 0.8985846398498889,
+            "train_return_retained": 0.8985846398498889,
+            "rule2_pass": true,
+            "rule3_pass": false,
+            "family": "defence:d2",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "defence__d2_br45",
+            "kind": "overlay_defence",
+            "window": "train",
+            "regime_column": "d2_br45",
+            "regime_response": "defence",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 158.40310680044016,
+            "engine_return_rate": 158.40310680044018,
+            "max_drawdown_pct": -32.82759237339873,
+            "engine_max_drawdown": -32.82759237339872,
+            "defence_trades": 62,
+            "buy_count": 581,
+            "cash_blocked_entry_count": 174,
+            "turnover_per_slot_year": 16.250425584214625,
+            "unweighted_turnover_per_slot_year": 11.394037828947367,
+            "completed_round_trips": 569.0,
+            "realised_friction_twd": 4955258.0,
+            "years": 4.993839835728953,
+            "deployed_mean_pct": 50.37241249542441,
+            "deployed_end_pct": 38.64026781114143,
+            "benchmark_0050_return_pct": 82.65681961506449,
+            "implied_cost_drag_pct_per_year": 8.125212792107313,
+            "realised_cost_pct_per_year": 5.3285180712718345,
+            "episodes": [
+                {
+                    "peak_date": "2020-01-14",
+                    "depth_pct": -30.476673427991884,
+                    "decline_return_pct": -27.822471173812392
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "depth_pct": -11.538461538461531,
+                    "decline_return_pct": 21.88994384578926
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "depth_pct": -36.38157894736841,
+                    "decline_return_pct": -19.75779893335381
+                }
+            ],
+            "yearly_return_pct": {
+                "2019": 10.598536375200007,
+                "2020": 56.6381072960078,
+                "2021": 46.344296932007836,
+                "2022": -13.073639001620629,
+                "2023": 17.252908070739537
+            },
+            "train_drawdown_improvement_pp": 1.469961410430649,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 6.8652141477324236,
+            "worst_episode_return_pct": -27.822471173812392,
+            "return_retained": 0.7667620973863195,
+            "train_return_retained": 0.7667620973863195,
+            "rule2_pass": true,
+            "rule3_pass": false,
+            "family": "defence:d2",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "defence__d2_br55",
+            "kind": "overlay_defence",
+            "window": "train",
+            "regime_column": "d2_br55",
+            "regime_response": "defence",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 169.03719918650984,
+            "engine_return_rate": 169.03719918650987,
+            "max_drawdown_pct": -29.537334762571987,
+            "engine_max_drawdown": -29.537334762571994,
+            "defence_trades": 59,
+            "buy_count": 466,
+            "cash_blocked_entry_count": 253,
+            "turnover_per_slot_year": 13.811812280305505,
+            "unweighted_turnover_per_slot_year": 9.091200657894737,
+            "completed_round_trips": 454.0,
+            "realised_friction_twd": 4199963.0,
+            "years": 4.993839835728953,
+            "deployed_mean_pct": 42.75778267311321,
+            "deployed_end_pct": 40.8252006905026,
+            "benchmark_0050_return_pct": 82.65681961506449,
+            "implied_cost_drag_pct_per_year": 6.905906140152752,
+            "realised_cost_pct_per_year": 4.669627756824759,
+            "episodes": [
+                {
+                    "peak_date": "2020-01-14",
+                    "depth_pct": -30.476673427991884,
+                    "decline_return_pct": -25.53841438270713
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "depth_pct": -11.538461538461531,
+                    "decline_return_pct": 14.02831092460357
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "depth_pct": -36.38157894736841,
+                    "decline_return_pct": -16.968186368946757
+                }
+            ],
+            "yearly_return_pct": {
+                "2019": 9.643465010070006,
+                "2020": 60.385568163063,
+                "2021": 31.694854888685022,
+                "2022": -13.081070944998919,
+                "2023": 33.653741076283275
+            },
+            "train_drawdown_improvement_pp": 4.760219021257392,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 36.57971884126249,
+            "worst_episode_return_pct": -25.53841438270713,
+            "return_retained": 0.8182372177071289,
+            "train_return_retained": 0.8182372177071289,
+            "rule2_pass": true,
+            "rule3_pass": false,
+            "family": "defence:d2",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "defence__d3_ad42",
+            "kind": "overlay_defence",
+            "window": "train",
+            "regime_column": "d3_ad42",
+            "regime_response": "defence",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 188.11150634492927,
+            "engine_return_rate": 187.70152367140042,
+            "max_drawdown_pct": -28.56540336334933,
+            "engine_max_drawdown": -28.565403363349333,
+            "defence_trades": 88,
+            "buy_count": 727,
+            "cash_blocked_entry_count": 0,
+            "turnover_per_slot_year": 21.400501109463402,
+            "unweighted_turnover_per_slot_year": 14.317639802631579,
+            "completed_round_trips": 715.0,
+            "realised_friction_twd": 6493688.0,
+            "years": 4.993839835728953,
+            "deployed_mean_pct": 43.360394453692614,
+            "deployed_end_pct": 34.70565596101692,
+            "benchmark_0050_return_pct": 82.65681961506449,
+            "implied_cost_drag_pct_per_year": 10.700250554731701,
+            "realised_cost_pct_per_year": 5.743306251246226,
+            "episodes": [
+                {
+                    "peak_date": "2020-01-14",
+                    "depth_pct": -30.476673427991884,
+                    "decline_return_pct": -27.91669138362167
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "depth_pct": -11.538461538461531,
+                    "decline_return_pct": 6.775925441222408
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "depth_pct": -36.38157894736841,
+                    "decline_return_pct": -9.571074111718946
+                }
+            ],
+            "yearly_return_pct": {
+                "2019": 30.35565467179797,
+                "2020": 79.79168622660669,
+                "2021": 26.55684761573991,
+                "2022": -12.38453520549665,
+                "2023": 10.865062126188851
+            },
+            "train_drawdown_improvement_pp": 5.73215042048005,
+            "rule1_pass": true,
+            "holdout_drawdown_improvement_pp": 4.026416989938383,
+            "worst_episode_return_pct": -27.91669138362167,
+            "return_retained": 0.9105678295139166,
+            "train_return_retained": 0.9105678295139166,
+            "rule2_pass": true,
+            "rule3_pass": false,
+            "family": "defence:d3",
+            "plateau_run": 1,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "helps but too much turnover"
+        },
+        {
+            "cell": "defence__d3_ad46",
+            "kind": "overlay_defence",
+            "window": "train",
+            "regime_column": "d3_ad46",
+            "regime_response": "defence",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 267.43261565844176,
+            "engine_return_rate": 266.90975904635985,
+            "max_drawdown_pct": -26.600814315257292,
+            "engine_max_drawdown": -26.600814315257292,
+            "defence_trades": 101,
+            "buy_count": 600,
+            "cash_blocked_entry_count": 0,
+            "turnover_per_slot_year": 19.851865704965853,
+            "unweighted_turnover_per_slot_year": 11.954728618421052,
+            "completed_round_trips": 597.0,
+            "realised_friction_twd": 6078083.0,
+            "years": 4.993839835728953,
+            "deployed_mean_pct": 36.022674580518974,
+            "deployed_end_pct": 25.58419602792282,
+            "benchmark_0050_return_pct": 82.65681961506449,
+            "implied_cost_drag_pct_per_year": 9.925932852482926,
+            "realised_cost_pct_per_year": 4.5554723463742635,
+            "episodes": [
+                {
+                    "peak_date": "2020-01-14",
+                    "depth_pct": -30.476673427991884,
+                    "decline_return_pct": -25.591581187555178
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "depth_pct": -11.538461538461531,
+                    "decline_return_pct": 3.0516279882851105
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "depth_pct": -36.38157894736841,
+                    "decline_return_pct": -9.37610137547541
+                }
+            ],
+            "yearly_return_pct": {
+                "2019": 20.391866783472846,
+                "2020": 121.88915616130251,
+                "2021": 37.6508414740353,
+                "2022": -10.14710743687688,
+                "2023": 11.207363349828348
+            },
+            "train_drawdown_improvement_pp": 7.696739468572087,
+            "rule1_pass": true,
+            "holdout_drawdown_improvement_pp": 29.16030079547841,
+            "worst_episode_return_pct": -25.591581187555178,
+            "return_retained": 1.2945275975559747,
+            "train_return_retained": 1.2945275975559747,
+            "rule2_pass": true,
+            "rule3_pass": false,
+            "family": "defence:d3",
+            "plateau_run": 1,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "helps but too much turnover"
+        },
+        {
+            "cell": "defence__d3_ad50",
+            "kind": "overlay_defence",
+            "window": "train",
+            "regime_column": "d3_ad50",
+            "regime_response": "defence",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 185.3510540499133,
+            "engine_return_rate": 184.94499950000025,
+            "max_drawdown_pct": -26.722336695314375,
+            "engine_max_drawdown": -26.722336695314375,
+            "defence_trades": 76,
+            "buy_count": 376,
+            "cash_blocked_entry_count": 0,
+            "turnover_per_slot_year": 13.547954077130333,
+            "unweighted_turnover_per_slot_year": 7.48922697368421,
+            "completed_round_trips": 374.0,
+            "realised_friction_twd": 4133113.0,
+            "years": 4.993839835728953,
+            "deployed_mean_pct": 22.100822796968647,
+            "deployed_end_pct": 34.956584665385506,
+            "benchmark_0050_return_pct": 82.65681961506449,
+            "implied_cost_drag_pct_per_year": 6.7739770385651665,
+            "realised_cost_pct_per_year": 3.7404145110801803,
+            "episodes": [
+                {
+                    "peak_date": "2020-01-14",
+                    "depth_pct": -30.476673427991884,
+                    "decline_return_pct": -26.722336695314375
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "depth_pct": -11.538461538461531,
+                    "decline_return_pct": 0.01579229855879216
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "depth_pct": -36.38157894736841,
+                    "decline_return_pct": -11.548426885774
+                }
+            ],
+            "yearly_return_pct": {
+                "2019": 34.976180104288424,
+                "2020": 69.3502243650994,
+                "2021": 23.574425745035967,
+                "2022": -5.642788611391747,
+                "2023": 7.0613889148458675
+            },
+            "train_drawdown_improvement_pp": 7.575217088515004,
+            "rule1_pass": true,
+            "holdout_drawdown_improvement_pp": 29.08883470134652,
+            "worst_episode_return_pct": -26.722336695314375,
+            "return_retained": 0.8972056535174074,
+            "train_return_retained": 0.8972056535174074,
+            "rule2_pass": true,
+            "rule3_pass": false,
+            "family": "defence:d3",
+            "plateau_run": 1,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "helps but too much turnover"
+        },
+        {
+            "cell": "entry+5",
+            "kind": "entry_filter",
+            "window": "train",
+            "regime_column": "",
+            "regime_response": null,
+            "entry_ma60_min": 0.05,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 181.0266928051799,
+            "engine_return_rate": 181.0266928051799,
+            "max_drawdown_pct": -34.286733446113104,
+            "engine_max_drawdown": -34.2867334461131,
+            "defence_trades": 0,
+            "buy_count": 500,
+            "cash_blocked_entry_count": 193,
+            "turnover_per_slot_year": 9.77734484807977,
+            "unweighted_turnover_per_slot_year": 9.792064144736841,
+            "completed_round_trips": 489.0,
+            "realised_friction_twd": 2964608.0,
+            "years": 4.993839835728953,
+            "deployed_mean_pct": 43.92515789621299,
+            "deployed_end_pct": 39.08001154756343,
+            "benchmark_0050_return_pct": 82.65681961506449,
+            "implied_cost_drag_pct_per_year": 4.888672424039885,
+            "realised_cost_pct_per_year": 2.727966855656951,
+            "episodes": [
+                {
+                    "peak_date": "2020-01-14",
+                    "depth_pct": -30.476673427991884,
+                    "decline_return_pct": -31.5521680788442
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "depth_pct": -11.538461538461531,
+                    "decline_return_pct": 12.927083592652778
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "depth_pct": -36.38157894736841,
+                    "decline_return_pct": -20.86736260579647
+                }
+            ],
+            "yearly_return_pct": {
+                "2019": 25.073814375200023,
+                "2020": 79.65934412227817,
+                "2021": 34.64452287964406,
+                "2022": -20.55077690247674,
+                "2023": 16.91036635631027
+            },
+            "train_drawdown_improvement_pp": 0.010820337716275219,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 0.0,
+            "worst_episode_return_pct": -31.5521680788442,
+            "return_retained": 0.8762732591670543,
+            "train_return_retained": 0.8762732591670543,
+            "rule2_pass": true,
+            "rule3_pass": true,
+            "family": "entry_filter",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "entry+0",
+            "kind": "entry_filter",
+            "window": "train",
+            "regime_column": "",
+            "regime_response": null,
+            "entry_ma60_min": 0.0,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 200.2486921102601,
+            "engine_return_rate": 200.2486921102601,
+            "max_drawdown_pct": -34.29755378382938,
+            "engine_max_drawdown": -34.29755378382938,
+            "defence_trades": 0,
+            "buy_count": 499,
+            "cash_blocked_entry_count": 204,
+            "turnover_per_slot_year": 9.757283226502869,
+            "unweighted_turnover_per_slot_year": 9.77203947368421,
+            "completed_round_trips": 488.0,
+            "realised_friction_twd": 2966180.0,
+            "years": 4.993839835728953,
+            "deployed_mean_pct": 43.58454510506872,
+            "deployed_end_pct": 36.5788700786973,
+            "benchmark_0050_return_pct": 82.65681961506449,
+            "implied_cost_drag_pct_per_year": 4.8786416132514345,
+            "realised_cost_pct_per_year": 2.7032733993543743,
+            "episodes": [
+                {
+                    "peak_date": "2020-01-14",
+                    "depth_pct": -30.476673427991884,
+                    "decline_return_pct": -31.56343868972954
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "depth_pct": -11.538461538461531,
+                    "decline_return_pct": 12.876964058952467
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "depth_pct": -36.38157894736841,
+                    "decline_return_pct": -20.877345345342125
+                }
+            ],
+            "yearly_return_pct": {
+                "2019": 25.073814375200023,
+                "2020": 80.31963261201957,
+                "2021": 34.517662707190055,
+                "2022": -20.85979446787253,
+                "2023": 25.053320872413032
+            },
+            "train_drawdown_improvement_pp": 0.0,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 0.0,
+            "worst_episode_return_pct": -31.56343868972954,
+            "return_retained": 0.9693187858667915,
+            "train_return_retained": 0.9693187858667915,
+            "rule2_pass": true,
+            "rule3_pass": true,
+            "family": "entry_filter",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "entry-3",
+            "kind": "entry_filter",
+            "window": "train",
+            "regime_column": "",
+            "regime_response": null,
+            "entry_ma60_min": -0.03,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 201.11023711026016,
+            "engine_return_rate": 201.11023711026016,
+            "max_drawdown_pct": -34.29755378382938,
+            "engine_max_drawdown": -34.29755378382938,
+            "defence_trades": 0,
+            "buy_count": 501,
+            "cash_blocked_entry_count": 211,
+            "turnover_per_slot_year": 9.797273806210926,
+            "unweighted_turnover_per_slot_year": 9.812088815789473,
+            "completed_round_trips": 490.0,
+            "realised_friction_twd": 2978461.0,
+            "years": 4.993839835728953,
+            "deployed_mean_pct": 43.66872543394823,
+            "deployed_end_pct": 36.47420959646197,
+            "benchmark_0050_return_pct": 82.65681961506449,
+            "implied_cost_drag_pct_per_year": 4.898636903105463,
+            "realised_cost_pct_per_year": 2.708249333429261,
+            "episodes": [
+                {
+                    "peak_date": "2020-01-14",
+                    "depth_pct": -30.476673427991884,
+                    "decline_return_pct": -31.56343868972954
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "depth_pct": -11.538461538461531,
+                    "decline_return_pct": 12.876964058952467
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "depth_pct": -36.38157894736841,
+                    "decline_return_pct": -20.856188630417183
+                }
+            ],
+            "yearly_return_pct": {
+                "2019": 25.073814375200023,
+                "2020": 80.31963261201957,
+                "2021": 34.7964267888863,
+                "2022": -20.740065699102693,
+                "2023": 24.963742788114818
+            },
+            "train_drawdown_improvement_pp": 0.0,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 0.0,
+            "worst_episode_return_pct": -31.56343868972954,
+            "return_retained": 0.97348915893924,
+            "train_return_retained": 0.97348915893924,
+            "rule2_pass": true,
+            "rule3_pass": true,
+            "family": "entry_filter",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "entry-6",
+            "kind": "entry_filter",
+            "window": "train",
+            "regime_column": "",
+            "regime_response": null,
+            "entry_ma60_min": -0.06,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 201.11023711026016,
+            "engine_return_rate": 201.11023711026016,
+            "max_drawdown_pct": -34.29755378382938,
+            "engine_max_drawdown": -34.29755378382938,
+            "defence_trades": 0,
+            "buy_count": 501,
+            "cash_blocked_entry_count": 212,
+            "turnover_per_slot_year": 9.797273806210926,
+            "unweighted_turnover_per_slot_year": 9.812088815789473,
+            "completed_round_trips": 490.0,
+            "realised_friction_twd": 2978461.0,
+            "years": 4.993839835728953,
+            "deployed_mean_pct": 43.66872543394823,
+            "deployed_end_pct": 36.47420959646197,
+            "benchmark_0050_return_pct": 82.65681961506449,
+            "implied_cost_drag_pct_per_year": 4.898636903105463,
+            "realised_cost_pct_per_year": 2.708249333429261,
+            "episodes": [
+                {
+                    "peak_date": "2020-01-14",
+                    "depth_pct": -30.476673427991884,
+                    "decline_return_pct": -31.56343868972954
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "depth_pct": -11.538461538461531,
+                    "decline_return_pct": 12.876964058952467
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "depth_pct": -36.38157894736841,
+                    "decline_return_pct": -20.856188630417183
+                }
+            ],
+            "yearly_return_pct": {
+                "2019": 25.073814375200023,
+                "2020": 80.31963261201957,
+                "2021": 34.7964267888863,
+                "2022": -20.740065699102693,
+                "2023": 24.963742788114818
+            },
+            "train_drawdown_improvement_pp": 0.0,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 0.0,
+            "worst_episode_return_pct": -31.56343868972954,
+            "return_retained": 0.97348915893924,
+            "train_return_retained": 0.97348915893924,
+            "rule2_pass": true,
+            "rule3_pass": true,
+            "family": "entry_filter",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "entry-10",
+            "kind": "entry_filter",
+            "window": "train",
+            "regime_column": "",
+            "regime_response": null,
+            "entry_ma60_min": -0.1,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 201.11023711026016,
+            "engine_return_rate": 201.11023711026016,
+            "max_drawdown_pct": -34.29755378382938,
+            "engine_max_drawdown": -34.29755378382938,
+            "defence_trades": 0,
+            "buy_count": 501,
+            "cash_blocked_entry_count": 212,
+            "turnover_per_slot_year": 9.797273806210926,
+            "unweighted_turnover_per_slot_year": 9.812088815789473,
+            "completed_round_trips": 490.0,
+            "realised_friction_twd": 2978461.0,
+            "years": 4.993839835728953,
+            "deployed_mean_pct": 43.66872543394823,
+            "deployed_end_pct": 36.47420959646197,
+            "benchmark_0050_return_pct": 82.65681961506449,
+            "implied_cost_drag_pct_per_year": 4.898636903105463,
+            "realised_cost_pct_per_year": 2.708249333429261,
+            "episodes": [
+                {
+                    "peak_date": "2020-01-14",
+                    "depth_pct": -30.476673427991884,
+                    "decline_return_pct": -31.56343868972954
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "depth_pct": -11.538461538461531,
+                    "decline_return_pct": 12.876964058952467
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "depth_pct": -36.38157894736841,
+                    "decline_return_pct": -20.856188630417183
+                }
+            ],
+            "yearly_return_pct": {
+                "2019": 25.073814375200023,
+                "2020": 80.31963261201957,
+                "2021": 34.7964267888863,
+                "2022": -20.740065699102693,
+                "2023": 24.963742788114818
+            },
+            "train_drawdown_improvement_pp": 0.0,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 0.0,
+            "worst_episode_return_pct": -31.56343868972954,
+            "return_retained": 0.97348915893924,
+            "train_return_retained": 0.97348915893924,
+            "rule2_pass": true,
+            "rule3_pass": true,
+            "family": "entry_filter",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "exit+0_hard",
+            "kind": "exit_filter",
+            "window": "train",
+            "regime_column": "",
+            "regime_response": null,
+            "entry_ma60_min": null,
+            "exit_ma60_max": 0.0,
+            "exit_ma60_overrides_hold": true,
+            "return_pct": 222.56231718768024,
+            "engine_return_rate": 222.56231718768024,
+            "max_drawdown_pct": -33.268805974975976,
+            "engine_max_drawdown": -33.268805974975976,
+            "defence_trades": 0,
+            "buy_count": 545,
+            "cash_blocked_entry_count": 229,
+            "turnover_per_slot_year": 10.677124990777118,
+            "unweighted_turnover_per_slot_year": 10.693174342105262,
+            "completed_round_trips": 534.0,
+            "realised_friction_twd": 3246523.0,
+            "years": 4.993839835728953,
+            "deployed_mean_pct": 40.63580516262605,
+            "deployed_end_pct": 34.04856678782399,
+            "benchmark_0050_return_pct": 82.65681961506449,
+            "implied_cost_drag_pct_per_year": 5.338562495388559,
+            "realised_cost_pct_per_year": 2.7185106613969405,
+            "episodes": [
+                {
+                    "peak_date": "2020-01-14",
+                    "depth_pct": -30.476673427991884,
+                    "decline_return_pct": -30.49664126540369
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "depth_pct": -11.538461538461531,
+                    "decline_return_pct": 7.346055710338306
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "depth_pct": -36.38157894736841,
+                    "decline_return_pct": -14.104518371766506
+                }
+            ],
+            "yearly_return_pct": {
+                "2019": 25.30226937519999,
+                "2020": 101.26147860903222,
+                "2021": 27.807819046878436,
+                "2022": -12.456069012530735,
+                "2023": 14.316933659635023
+            },
+            "train_drawdown_improvement_pp": 1.028747808853403,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": -2.4856640243579236,
+            "worst_episode_return_pct": -30.49664126540369,
+            "return_retained": 1.0773295585734737,
+            "train_return_retained": 1.0773295585734737,
+            "rule2_pass": true,
+            "rule3_pass": true,
+            "family": "exit_filter",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "exit-5_hard",
+            "kind": "exit_filter",
+            "window": "train",
+            "regime_column": "",
+            "regime_response": null,
+            "entry_ma60_min": null,
+            "exit_ma60_max": -0.05,
+            "exit_ma60_overrides_hold": true,
+            "return_pct": 182.91323610518,
+            "engine_return_rate": 182.91323610518,
+            "max_drawdown_pct": -34.366453025617204,
+            "engine_max_drawdown": -34.36645302561721,
+            "defence_trades": 0,
+            "buy_count": 520,
+            "cash_blocked_entry_count": 207,
+            "turnover_per_slot_year": 10.177263121531658,
+            "unweighted_turnover_per_slot_year": 10.192557565789473,
+            "completed_round_trips": 509.0,
+            "realised_friction_twd": 3082413.0,
+            "years": 4.993839835728953,
+            "deployed_mean_pct": 45.44304870131335,
+            "deployed_end_pct": 38.820327925261424,
+            "benchmark_0050_return_pct": 82.65681961506449,
+            "implied_cost_drag_pct_per_year": 5.088631560765829,
+            "realised_cost_pct_per_year": 2.9425603456097558,
+            "episodes": [
+                {
+                    "peak_date": "2020-01-14",
+                    "depth_pct": -30.476673427991884,
+                    "decline_return_pct": -31.635205076772888
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "depth_pct": -11.538461538461531,
+                    "decline_return_pct": 6.853843794433745
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "depth_pct": -36.38157894736841,
+                    "decline_return_pct": -18.501207708240763
+                }
+            ],
+            "yearly_return_pct": {
+                "2019": 25.073814375200023,
+                "2020": 76.43004451214259,
+                "2021": 26.84855947119724,
+                "2022": -17.230073455190887,
+                "2023": 22.111402299002393
+            },
+            "train_drawdown_improvement_pp": -0.06889924178782536,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 7.605245055070895,
+            "worst_episode_return_pct": -31.635205076772888,
+            "return_retained": 0.8854052132476051,
+            "train_return_retained": 0.8854052132476051,
+            "rule2_pass": true,
+            "rule3_pass": true,
+            "family": "exit_filter",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "exit-10_hard",
+            "kind": "exit_filter",
+            "window": "train",
+            "regime_column": "",
+            "regime_response": null,
+            "entry_ma60_min": null,
+            "exit_ma60_max": -0.1,
+            "exit_ma60_overrides_hold": true,
+            "return_pct": 193.00827375628003,
+            "engine_return_rate": 193.00827375628003,
+            "max_drawdown_pct": -34.99442649474509,
+            "engine_max_drawdown": -34.994426494745085,
+            "defence_trades": 0,
+            "buy_count": 509,
+            "cash_blocked_entry_count": 208,
+            "turnover_per_slot_year": 9.95728519349711,
+            "unweighted_turnover_per_slot_year": 9.972286184210525,
+            "completed_round_trips": 498.0,
+            "realised_friction_twd": 3021655.0,
+            "years": 4.993839835728953,
+            "deployed_mean_pct": 44.25914233626266,
+            "deployed_end_pct": 37.48275691742169,
+            "benchmark_0050_return_pct": 82.65681961506449,
+            "implied_cost_drag_pct_per_year": 4.978642596748555,
+            "realised_cost_pct_per_year": 2.8096804254715124,
+            "episodes": [
+                {
+                    "peak_date": "2020-01-14",
+                    "depth_pct": -30.476673427991884,
+                    "decline_return_pct": -32.2893107805361
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "depth_pct": -11.538461538461531,
+                    "decline_return_pct": 8.142148443902464
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "depth_pct": -36.38157894736841,
+                    "decline_return_pct": -19.20363814328614
+                }
+            ],
+            "yearly_return_pct": {
+                "2019": 25.073814375200023,
+                "2020": 85.52642616231789,
+                "2021": 22.80052606783629,
+                "2022": -15.803815850257074,
+                "2023": 22.127951832280466
+            },
+            "train_drawdown_improvement_pp": -0.6968727109157129,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": -1.8445709215408215,
+            "worst_episode_return_pct": -32.2893107805361,
+            "return_retained": 0.9342709987672223,
+            "train_return_retained": 0.9342709987672223,
+            "rule2_pass": true,
+            "rule3_pass": true,
+            "family": "exit_filter",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "exit+0_soft",
+            "kind": "exit_filter",
+            "window": "train",
+            "regime_column": "",
+            "regime_response": null,
+            "entry_ma60_min": null,
+            "exit_ma60_max": 0.0,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 211.3958819102601,
+            "engine_return_rate": 211.3958819102601,
+            "max_drawdown_pct": -34.33600704373669,
+            "engine_max_drawdown": -34.33600704373669,
+            "defence_trades": 0,
+            "buy_count": 503,
+            "cash_blocked_entry_count": 216,
+            "turnover_per_slot_year": 9.837283311235595,
+            "unweighted_turnover_per_slot_year": 9.852138157894737,
+            "completed_round_trips": 492.0,
+            "realised_friction_twd": 2994695.0,
+            "years": 4.993839835728953,
+            "deployed_mean_pct": 43.23726970011082,
+            "deployed_end_pct": 35.26943848013077,
+            "benchmark_0050_return_pct": 82.65681961506449,
+            "implied_cost_drag_pct_per_year": 4.918641655617797,
+            "realised_cost_pct_per_year": 2.676649141255117,
+            "episodes": [
+                {
+                    "peak_date": "2020-01-14",
+                    "depth_pct": -30.476673427991884,
+                    "decline_return_pct": -31.603492128083545
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "depth_pct": -11.538461538461531,
+                    "decline_return_pct": 14.695655074574688
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "depth_pct": -36.38157894736841,
+                    "decline_return_pct": -20.180105415743764
+                }
+            ],
+            "yearly_return_pct": {
+                "2019": 25.073814375200023,
+                "2020": 80.34019470979237,
+                "2021": 36.91303293756096,
+                "2022": -18.64364068763953,
+                "2023": 23.94175431880661
+            },
+            "train_drawdown_improvement_pp": -0.038453259907313964,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 0.0,
+            "worst_episode_return_pct": -31.603492128083545,
+            "return_retained": 1.023277592632996,
+            "train_return_retained": 1.023277592632996,
+            "rule2_pass": true,
+            "rule3_pass": true,
+            "family": null,
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "no ordered parameter family; rule 4 cannot be satisfied by design",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "base",
+            "kind": "baseline",
+            "window": "holdout",
+            "regime_column": "",
+            "regime_response": null,
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 81.78298205519452,
+            "engine_return_rate": 81.52430487172998,
+            "max_drawdown_pct": -53.29666978911275,
+            "engine_max_drawdown": -53.29666978911275,
+            "defence_trades": 0,
+            "buy_count": 243,
+            "cash_blocked_entry_count": 2878,
+            "turnover_per_slot_year": 8.887829702949793,
+            "unweighted_turnover_per_slot_year": 8.90201359832636,
+            "completed_round_trips": 233.0,
+            "realised_friction_twd": 1415039.0,
+            "years": 2.617385352498289,
+            "deployed_mean_pct": 82.75866000359645,
+            "deployed_end_pct": 54.95745490968491,
+            "benchmark_0050_return_pct": 215.06083571859946,
+            "implied_cost_drag_pct_per_year": 4.443914851474896,
+            "realised_cost_pct_per_year": 5.300423857528665,
+            "episodes": [
+                {
+                    "peak_date": "2024-07-11",
+                    "depth_pct": -21.701602959309497,
+                    "decline_return_pct": -18.308168096577337
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "depth_pct": -28.473581213307252,
+                    "decline_return_pct": -33.59744789599335
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "depth_pct": -10.844115834873701,
+                    "decline_return_pct": -0.6899832096197267
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "depth_pct": -15.879442195231675,
+                    "decline_return_pct": -29.65555835908653
+                }
+            ],
+            "yearly_return_pct": {
+                "2024": -20.933603118637812,
+                "2025": 14.15584329346784,
+                "2026": 101.40169849391785
+            },
+            "train_drawdown_improvement_pp": 0.0,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 0.0,
+            "worst_episode_return_pct": -33.59744789599335,
+            "return_retained": 1.0,
+            "train_return_retained": 1.0,
+            "rule2_pass": true,
+            "rule3_pass": true,
+            "family": null,
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "no ordered parameter family; rule 4 cannot be satisfied by design",
+            "verdict": "baseline"
+        },
+        {
+            "cell": "cash__d1_ma100",
+            "kind": "overlay_cash",
+            "window": "holdout",
+            "regime_column": "d1_ma100",
+            "regime_response": "cash",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 96.65996798142761,
+            "engine_return_rate": 96.38012084699005,
+            "max_drawdown_pct": -35.30795188254644,
+            "engine_max_drawdown": -35.30795188254644,
+            "defence_trades": 0,
+            "buy_count": 286,
+            "cash_blocked_entry_count": 589,
+            "turnover_per_slot_year": 10.527730669730659,
+            "unweighted_turnover_per_slot_year": 10.544874476987449,
+            "completed_round_trips": 276.0,
+            "realised_friction_twd": 1673981.0,
+            "years": 2.617385352498289,
+            "deployed_mean_pct": 67.57984316388503,
+            "deployed_end_pct": 45.75780843419173,
+            "benchmark_0050_return_pct": 215.06083571859946,
+            "implied_cost_drag_pct_per_year": 5.263865334865329,
+            "realised_cost_pct_per_year": 4.925756163459761,
+            "episodes": [
+                {
+                    "peak_date": "2024-07-11",
+                    "depth_pct": -21.701602959309497,
+                    "decline_return_pct": -17.348084533352647
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "depth_pct": -28.473581213307252,
+                    "decline_return_pct": -0.759941342356274
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "depth_pct": -10.844115834873701,
+                    "decline_return_pct": -1.3921687894933865
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "depth_pct": -15.879442195231675,
+                    "decline_return_pct": -26.463293095845398
+                }
+            ],
+            "yearly_return_pct": {
+                "2024": 14.221288393383812,
+                "2025": -5.3636078966373795,
+                "2026": 81.93268732350604
+            },
+            "train_drawdown_improvement_pp": -1.1789224122288715,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 17.988717906566308,
+            "worst_episode_return_pct": -26.463293095845398,
+            "return_retained": 1.1819080883623534,
+            "train_return_retained": 0.5932823199856622,
+            "rule2_pass": false,
+            "rule3_pass": true,
+            "family": "cash:d1",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "cash__d1_ma150",
+            "kind": "overlay_cash",
+            "window": "holdout",
+            "regime_column": "d1_ma150",
+            "regime_response": "cash",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 67.41504387097845,
+            "engine_return_rate": 67.17681226355005,
+            "max_drawdown_pct": -37.66931769820596,
+            "engine_max_drawdown": -37.66931769820596,
+            "defence_trades": 0,
+            "buy_count": 271,
+            "cash_blocked_entry_count": 689,
+            "turnover_per_slot_year": 9.955826028875528,
+            "unweighted_turnover_per_slot_year": 9.971783472803347,
+            "completed_round_trips": 261.0,
+            "realised_friction_twd": 1574268.0,
+            "years": 2.617385352498289,
+            "deployed_mean_pct": 70.1439892463511,
+            "deployed_end_pct": 59.6756432002811,
+            "benchmark_0050_return_pct": 215.06083571859946,
+            "implied_cost_drag_pct_per_year": 4.977913014437764,
+            "realised_cost_pct_per_year": 4.85481467380996,
+            "episodes": [
+                {
+                    "peak_date": "2024-07-11",
+                    "depth_pct": -21.701602959309497,
+                    "decline_return_pct": -17.348084533352647
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "depth_pct": -28.473581213307252,
+                    "decline_return_pct": -2.1182696955560187
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "depth_pct": -10.844115834873701,
+                    "decline_return_pct": 0.8711589256848118
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "depth_pct": -15.879442195231675,
+                    "decline_return_pct": -29.69730607003286
+                }
+            ],
+            "yearly_return_pct": {
+                "2024": 10.850800188668508,
+                "2025": -5.478221183054355,
+                "2026": 59.780495068034575
+            },
+            "train_drawdown_improvement_pp": 3.713275117747724,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 15.62735209090679,
+            "worst_episode_return_pct": -29.69730607003286,
+            "return_retained": 0.824316284107624,
+            "train_return_retained": 0.59083533194934,
+            "rule2_pass": false,
+            "rule3_pass": true,
+            "family": "cash:d1",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "cash__d1_ma200",
+            "kind": "overlay_cash",
+            "window": "holdout",
+            "regime_column": "d1_ma200",
+            "regime_response": "cash",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 44.82138899869514,
+            "engine_return_rate": 44.615308162149994,
+            "max_drawdown_pct": -34.372975874652,
+            "engine_max_drawdown": -34.37297587465199,
+            "defence_trades": 0,
+            "buy_count": 228,
+            "cash_blocked_entry_count": 2701,
+            "turnover_per_slot_year": 8.315676107541845,
+            "unweighted_turnover_per_slot_year": 8.32892259414226,
+            "completed_round_trips": 218.0,
+            "realised_friction_twd": 1310858.0,
+            "years": 2.617385352498289,
+            "deployed_mean_pct": 75.31432752103171,
+            "deployed_end_pct": 68.98552391710837,
+            "benchmark_0050_return_pct": 215.06083571859946,
+            "implied_cost_drag_pct_per_year": 4.157838053770923,
+            "realised_cost_pct_per_year": 5.144130202774577,
+            "episodes": [
+                {
+                    "peak_date": "2024-07-11",
+                    "depth_pct": -21.701602959309497,
+                    "decline_return_pct": -18.308168096577337
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "depth_pct": -28.473581213307252,
+                    "decline_return_pct": 2.113659345294905
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "depth_pct": -10.844115834873701,
+                    "decline_return_pct": -0.8369050394738564
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "depth_pct": -15.879442195231675,
+                    "decline_return_pct": -32.990589592213226
+                }
+            ],
+            "yearly_return_pct": {
+                "2024": -20.933603118637812,
+                "2025": 4.644528698982842,
+                "2026": 75.03473206076094
+            },
+            "train_drawdown_improvement_pp": 4.523347351204762,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 18.92369391446075,
+            "worst_episode_return_pct": -32.990589592213226,
+            "return_retained": 0.5480527595392111,
+            "train_return_retained": 0.7499396097078922,
+            "rule2_pass": false,
+            "rule3_pass": true,
+            "family": "cash:d1",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "cash__d1_ma250",
+            "kind": "overlay_cash",
+            "window": "holdout",
+            "regime_column": "d1_ma250",
+            "regime_response": "cash",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 3.670803715837634,
+            "engine_return_rate": 3.5232801621500034,
+            "max_drawdown_pct": -42.356471347724664,
+            "engine_max_drawdown": -42.35647134772467,
+            "defence_trades": 0,
+            "buy_count": 237,
+            "cash_blocked_entry_count": 2961,
+            "turnover_per_slot_year": 8.659308826408214,
+            "unweighted_turnover_per_slot_year": 8.672777196652719,
+            "completed_round_trips": 227.0,
+            "realised_friction_twd": 1345864.0,
+            "years": 2.617385352498289,
+            "deployed_mean_pct": 79.41177407244379,
+            "deployed_end_pct": 86.72245301673158,
+            "benchmark_0050_return_pct": 215.06083571859946,
+            "implied_cost_drag_pct_per_year": 4.329654413204107,
+            "realised_cost_pct_per_year": 5.83336244760205,
+            "episodes": [
+                {
+                    "peak_date": "2024-07-11",
+                    "depth_pct": -21.701602959309497,
+                    "decline_return_pct": -18.308168096577337
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "depth_pct": -28.473581213307252,
+                    "decline_return_pct": -4.585169244302756
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "depth_pct": -10.844115834873701,
+                    "decline_return_pct": -3.6884895706489784
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "depth_pct": -15.879442195231675,
+                    "decline_return_pct": -41.61662395088549
+                }
+            ],
+            "yearly_return_pct": {
+                "2024": -20.933603118637812,
+                "2025": -10.046174540563712,
+                "2026": 45.76218843618962
+            },
+            "train_drawdown_improvement_pp": -3.2865595853418696,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 10.940198441388084,
+            "worst_episode_return_pct": -41.61662395088549,
+            "return_retained": 0.04488468900975321,
+            "train_return_retained": 0.41448519655809524,
+            "rule2_pass": false,
+            "rule3_pass": true,
+            "family": "cash:d1",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "cash__d2_br35",
+            "kind": "overlay_cash",
+            "window": "holdout",
+            "regime_column": "d2_br35",
+            "regime_response": "cash",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 9.006799471497985,
+            "engine_return_rate": 8.851682795850039,
+            "max_drawdown_pct": -55.09556303222818,
+            "engine_max_drawdown": -55.09556303222817,
+            "defence_trades": 0,
+            "buy_count": 246,
+            "cash_blocked_entry_count": 3452,
+            "turnover_per_slot_year": 9.001836526482744,
+            "unweighted_turnover_per_slot_year": 9.01663179916318,
+            "completed_round_trips": 236.0,
+            "realised_friction_twd": 1401642.0,
+            "years": 2.617385352498289,
+            "deployed_mean_pct": 75.8022696623226,
+            "deployed_end_pct": 91.6288195443521,
+            "benchmark_0050_return_pct": 215.06083571859946,
+            "implied_cost_drag_pct_per_year": 4.500918263241372,
+            "realised_cost_pct_per_year": 7.069407398298388,
+            "episodes": [
+                {
+                    "peak_date": "2024-07-11",
+                    "depth_pct": -21.701602959309497,
+                    "decline_return_pct": -16.278162607985713
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "depth_pct": -28.473581213307252,
+                    "decline_return_pct": -8.900662660953895
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "depth_pct": -10.844115834873701,
+                    "decline_return_pct": 0.5294836240084644
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "depth_pct": -15.879442195231675,
+                    "decline_return_pct": -18.92361817835486
+                }
+            ],
+            "yearly_return_pct": {
+                "2024": -34.59820835188471,
+                "2025": -11.336305388743984,
+                "2026": 87.98280187991384
+            },
+            "train_drawdown_improvement_pp": 11.583223444157706,
+            "rule1_pass": true,
+            "holdout_drawdown_improvement_pp": -1.7988932431154296,
+            "worst_episode_return_pct": -18.92361817835486,
+            "return_retained": 0.11013048491456799,
+            "train_return_retained": 0.9278470064611245,
+            "rule2_pass": false,
+            "rule3_pass": true,
+            "family": "cash:d2",
+            "plateau_run": 1,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "helps but gives back too much return"
+        },
+        {
+            "cell": "cash__d2_br45",
+            "kind": "overlay_cash",
+            "window": "holdout",
+            "regime_column": "d2_br45",
+            "regime_response": "cash",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 70.5626412966551,
+            "engine_return_rate": 70.31993065808997,
+            "max_drawdown_pct": -52.82808850979279,
+            "engine_max_drawdown": -52.82808850979278,
+            "defence_trades": 0,
+            "buy_count": 350,
+            "cash_blocked_entry_count": 2088,
+            "turnover_per_slot_year": 13.35026585659127,
+            "unweighted_turnover_per_slot_year": 13.372123430962343,
+            "completed_round_trips": 350.0,
+            "realised_friction_twd": 2084096.0,
+            "years": 2.617385352498289,
+            "deployed_mean_pct": 60.643128286032045,
+            "deployed_end_pct": -1.0936154929337882e-14,
+            "benchmark_0050_return_pct": 215.06083571859946,
+            "implied_cost_drag_pct_per_year": 6.675132928295635,
+            "realised_cost_pct_per_year": 8.326826419840652,
+            "episodes": [
+                {
+                    "peak_date": "2024-07-11",
+                    "depth_pct": -21.701602959309497,
+                    "decline_return_pct": -8.430159020025297
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "depth_pct": -28.473581213307252,
+                    "decline_return_pct": -30.860830934757054
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "depth_pct": -10.844115834873701,
+                    "decline_return_pct": -8.428291950277156
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "depth_pct": -15.879442195231675,
+                    "decline_return_pct": -12.483626947957816
+                }
+            ],
+            "yearly_return_pct": {
+                "2024": -16.27473233527311,
+                "2025": 7.4672147284238655,
+                "2026": 89.56204050171908
+            },
+            "train_drawdown_improvement_pp": 6.635087970539718,
+            "rule1_pass": true,
+            "holdout_drawdown_improvement_pp": 0.46858127931995597,
+            "worst_episode_return_pct": -30.860830934757054,
+            "return_retained": 0.8628034772446066,
+            "train_return_retained": 0.8061100582801745,
+            "rule2_pass": true,
+            "rule3_pass": false,
+            "family": "cash:d2",
+            "plateau_run": 1,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "helps but too much turnover"
+        },
+        {
+            "cell": "cash__d2_br55",
+            "kind": "overlay_cash",
+            "window": "holdout",
+            "regime_column": "d2_br55",
+            "regime_response": "cash",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 120.94866468315404,
+            "engine_return_rate": 120.63425473330993,
+            "max_drawdown_pct": -12.803607874696631,
+            "engine_max_drawdown": -12.80360787469663,
+            "defence_trades": 0,
+            "buy_count": 294,
+            "cash_blocked_entry_count": 134,
+            "turnover_per_slot_year": 11.21453263730648,
+            "unweighted_turnover_per_slot_year": 11.232583682008368,
+            "completed_round_trips": 294.0,
+            "realised_friction_twd": 1777735.0,
+            "years": 2.617385352498289,
+            "deployed_mean_pct": 35.60809197649079,
+            "deployed_end_pct": -1.6884460225656402e-14,
+            "benchmark_0050_return_pct": 215.06083571859946,
+            "implied_cost_drag_pct_per_year": 5.60726631865324,
+            "realised_cost_pct_per_year": 4.383079555276925,
+            "episodes": [
+                {
+                    "peak_date": "2024-07-11",
+                    "depth_pct": -21.701602959309497,
+                    "decline_return_pct": -2.035839349730806
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "depth_pct": -28.473581213307252,
+                    "decline_return_pct": -1.5525171035454033
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "depth_pct": -10.844115834873701,
+                    "decline_return_pct": -4.644720143348047
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "depth_pct": -15.879442195231675,
+                    "decline_return_pct": -6.898043911107699
+                }
+            ],
+            "yearly_return_pct": {
+                "2024": 46.26088413672655,
+                "2025": 15.3825969474783,
+                "2026": 30.925088858787998
+            },
+            "train_drawdown_improvement_pp": 7.580601193670297,
+            "rule1_pass": true,
+            "holdout_drawdown_improvement_pp": 40.49306191441612,
+            "worst_episode_return_pct": -6.898043911107699,
+            "return_retained": 1.4788977076126544,
+            "train_return_retained": 0.8687122153050403,
+            "rule2_pass": true,
+            "rule3_pass": true,
+            "family": "cash:d2",
+            "plateau_run": 1,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "isolated winner, no plateau"
+        },
+        {
+            "cell": "cash__d3_ad42",
+            "kind": "overlay_cash",
+            "window": "holdout",
+            "regime_column": "d3_ad42",
+            "regime_response": "cash",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": -3.402710624588834,
+            "engine_return_rate": -3.540168567370046,
+            "max_drawdown_pct": -58.41803412853886,
+            "engine_max_drawdown": -58.41803412853886,
+            "defence_trades": 0,
+            "buy_count": 303,
+            "cash_blocked_entry_count": 2897,
+            "turnover_per_slot_year": 11.214571129918943,
+            "unweighted_turnover_per_slot_year": 11.232583682008368,
+            "completed_round_trips": 294.0,
+            "realised_friction_twd": 1735002.0,
+            "years": 2.617385352498289,
+            "deployed_mean_pct": 70.3721671028978,
+            "deployed_end_pct": 93.04814622518445,
+            "benchmark_0050_return_pct": 215.06083571859946,
+            "implied_cost_drag_pct_per_year": 5.607285564959471,
+            "realised_cost_pct_per_year": 7.855597083959998,
+            "episodes": [
+                {
+                    "peak_date": "2024-07-11",
+                    "depth_pct": -21.701602959309497,
+                    "decline_return_pct": -22.762582674130794
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "depth_pct": -28.473581213307252,
+                    "decline_return_pct": -16.437813037212468
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "depth_pct": -10.844115834873701,
+                    "decline_return_pct": 0.4582734472378558
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "depth_pct": -15.879442195231675,
+                    "decline_return_pct": -40.706814101578956
+                }
+            ],
+            "yearly_return_pct": {
+                "2024": -26.96943591050066,
+                "2025": 3.50936026896691,
+                "2026": 27.785230353529222
+            },
+            "train_drawdown_improvement_pp": 10.1593510508268,
+            "rule1_pass": true,
+            "holdout_drawdown_improvement_pp": -5.121364339426108,
+            "worst_episode_return_pct": -40.706814101578956,
+            "return_retained": -0.041606585368730846,
+            "train_return_retained": 0.8503495215870607,
+            "rule2_pass": false,
+            "rule3_pass": true,
+            "family": "cash:d3",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "helps but gives back too much return"
+        },
+        {
+            "cell": "cash__d3_ad46",
+            "kind": "overlay_cash",
+            "window": "holdout",
+            "regime_column": "d3_ad46",
+            "regime_response": "cash",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 49.45659189859997,
+            "engine_return_rate": 49.45659189859995,
+            "max_drawdown_pct": -23.758761279887043,
+            "engine_max_drawdown": -23.75876127988704,
+            "defence_trades": 0,
+            "buy_count": 445,
+            "cash_blocked_entry_count": 272,
+            "turnover_per_slot_year": 16.973790669606444,
+            "unweighted_turnover_per_slot_year": 17.00169979079498,
+            "completed_round_trips": 445.0,
+            "realised_friction_twd": 2632033.0,
+            "years": 2.617385352498289,
+            "deployed_mean_pct": 34.85483286788572,
+            "deployed_end_pct": -4.985113404685914e-14,
+            "benchmark_0050_return_pct": 215.06083571859946,
+            "implied_cost_drag_pct_per_year": 8.486895334803222,
+            "realised_cost_pct_per_year": 8.789538621367488,
+            "episodes": [
+                {
+                    "peak_date": "2024-07-11",
+                    "depth_pct": -21.701602959309497,
+                    "decline_return_pct": -2.1755599172793127
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "depth_pct": -28.473581213307252,
+                    "decline_return_pct": -1.2140372315437298
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "depth_pct": -10.844115834873701,
+                    "decline_return_pct": 7.1573750771875
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "depth_pct": -15.879442195231675,
+                    "decline_return_pct": -9.247738618811397
+                }
+            ],
+            "yearly_return_pct": {
+                "2024": 7.893890398599979,
+                "2025": 11.502377895682026,
+                "2026": 24.232176067300436
+            },
+            "train_drawdown_improvement_pp": 9.985232145001461,
+            "rule1_pass": true,
+            "holdout_drawdown_improvement_pp": 29.537908509225705,
+            "worst_episode_return_pct": -9.247738618811397,
+            "return_retained": 0.6047296229088615,
+            "train_return_retained": 1.130330247889903,
+            "rule2_pass": false,
+            "rule3_pass": false,
+            "family": "cash:d3",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "helps but gives back too much return"
+        },
+        {
+            "cell": "cash__d3_ad50",
+            "kind": "overlay_cash",
+            "window": "holdout",
+            "regime_column": "d3_ad50",
+            "regime_response": "cash",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 2.551460999999988,
+            "engine_return_rate": 2.551460999999996,
+            "max_drawdown_pct": -24.487579066519682,
+            "engine_max_drawdown": -24.48757906651969,
+            "defence_trades": 0,
+            "buy_count": 119,
+            "cash_blocked_entry_count": 183,
+            "turnover_per_slot_year": 4.539259757322175,
+            "unweighted_turnover_per_slot_year": 4.546521966527197,
+            "completed_round_trips": 119.0,
+            "realised_friction_twd": 699275.0,
+            "years": 2.617385352498289,
+            "deployed_mean_pct": 7.121631003123485,
+            "deployed_end_pct": 0.0,
+            "benchmark_0050_return_pct": 215.06083571859946,
+            "implied_cost_drag_pct_per_year": 2.2696298786610876,
+            "realised_cost_pct_per_year": 2.8543563760428863,
+            "episodes": [
+                {
+                    "peak_date": "2024-07-11",
+                    "depth_pct": -21.701602959309497,
+                    "decline_return_pct": 0.0
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "depth_pct": -28.473581213307252,
+                    "decline_return_pct": -6.8646717635375225
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "depth_pct": -10.844115834873701,
+                    "decline_return_pct": 4.656156475332329
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "depth_pct": -15.879442195231675,
+                    "decline_return_pct": 0.0
+                }
+            ],
+            "yearly_return_pct": {
+                "2024": -0.45892600000001504,
+                "2025": -15.518166902639596,
+                "2026": 21.948426503616346
+            },
+            "train_drawdown_improvement_pp": 13.399644037760634,
+            "rule1_pass": true,
+            "holdout_drawdown_improvement_pp": 28.809090722593066,
+            "worst_episode_return_pct": -6.8646717635375225,
+            "return_retained": 0.031197945292310722,
+            "train_return_retained": 0.6627996851424819,
+            "rule2_pass": false,
+            "rule3_pass": true,
+            "family": "cash:d3",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "helps but gives back too much return"
+        },
+        {
+            "cell": "defence__d1_ma100",
+            "kind": "overlay_defence",
+            "window": "holdout",
+            "regime_column": "d1_ma100",
+            "regime_response": "defence",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 108.12921835746275,
+            "engine_return_rate": 107.83305047974005,
+            "max_drawdown_pct": -34.765573004245944,
+            "engine_max_drawdown": -34.76557300424595,
+            "defence_trades": 14,
+            "buy_count": 298,
+            "cash_blocked_entry_count": 173,
+            "turnover_per_slot_year": 13.270512227726213,
+            "unweighted_turnover_per_slot_year": 11.003347280334728,
+            "completed_round_trips": 288.0,
+            "realised_friction_twd": 2100919.0,
+            "years": 2.617385352498289,
+            "deployed_mean_pct": 75.09351969649134,
+            "deployed_end_pct": 43.2362606874019,
+            "benchmark_0050_return_pct": 215.06083571859946,
+            "implied_cost_drag_pct_per_year": 6.6352561138631065,
+            "realised_cost_pct_per_year": 5.850146130965374,
+            "episodes": [
+                {
+                    "peak_date": "2024-07-11",
+                    "depth_pct": -21.701602959309497,
+                    "decline_return_pct": -17.43416989072948
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "depth_pct": -28.473581213307252,
+                    "decline_return_pct": -20.79463434829397
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "depth_pct": -10.844115834873701,
+                    "decline_return_pct": 0.24344681991392836
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "depth_pct": -15.879442195231675,
+                    "decline_return_pct": -24.793986664357714
+                }
+            ],
+            "yearly_return_pct": {
+                "2024": 23.934051154793302,
+                "2025": -0.6046025779262165,
+                "2026": 68.95697780284573
+            },
+            "train_drawdown_improvement_pp": -7.003912772760579,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 18.531096784866804,
+            "worst_episode_return_pct": -24.793986664357714,
+            "return_retained": 1.3221481491649132,
+            "train_return_retained": 0.5888222178810315,
+            "rule2_pass": false,
+            "rule3_pass": false,
+            "family": "defence:d1",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "defence__d1_ma150",
+            "kind": "overlay_defence",
+            "window": "holdout",
+            "regime_column": "d1_ma150",
+            "regime_response": "defence",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 121.01795300843108,
+            "engine_return_rate": 120.70344446130008,
+            "max_drawdown_pct": -40.78917910643731,
+            "engine_max_drawdown": -40.78917910643731,
+            "defence_trades": 6,
+            "buy_count": 278,
+            "cash_blocked_entry_count": 117,
+            "turnover_per_slot_year": 11.23471012280727,
+            "unweighted_turnover_per_slot_year": 10.239225941422594,
+            "completed_round_trips": 268.0,
+            "realised_friction_twd": 1793679.0,
+            "years": 2.617385352498289,
+            "deployed_mean_pct": 77.56084531485897,
+            "deployed_end_pct": 45.20256955821695,
+            "benchmark_0050_return_pct": 215.06083571859946,
+            "implied_cost_drag_pct_per_year": 5.617355061403635,
+            "realised_cost_pct_per_year": 5.098758257846411,
+            "episodes": [
+                {
+                    "peak_date": "2024-07-11",
+                    "depth_pct": -21.701602959309497,
+                    "decline_return_pct": -17.43416989072948
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "depth_pct": -28.473581213307252,
+                    "decline_return_pct": -22.058537746130135
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "depth_pct": -10.844115834873701,
+                    "decline_return_pct": 0.23764526481173665
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "depth_pct": -15.879442195231675,
+                    "decline_return_pct": -25.180567422726476
+                }
+            ],
+            "yearly_return_pct": {
+                "2024": 16.119532594882546,
+                "2025": 0.38997724771636655,
+                "2026": 89.59719918948798
+            },
+            "train_drawdown_improvement_pp": -3.3359488307968874,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 12.507490682675439,
+            "worst_episode_return_pct": -25.180567422726476,
+            "return_retained": 1.4797449294127873,
+            "train_return_retained": 0.6253245534913634,
+            "rule2_pass": false,
+            "rule3_pass": true,
+            "family": "defence:d1",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "defence__d1_ma200",
+            "kind": "overlay_defence",
+            "window": "holdout",
+            "regime_column": "d1_ma200",
+            "regime_response": "defence",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 40.04278254170688,
+            "engine_return_rate": 39.843501662150025,
+            "max_drawdown_pct": -43.73388047742415,
+            "engine_max_drawdown": -43.733880477424144,
+            "defence_trades": 2,
+            "buy_count": 231,
+            "cash_blocked_entry_count": 2727,
+            "turnover_per_slot_year": 8.688275856397752,
+            "unweighted_turnover_per_slot_year": 8.44354079497908,
+            "completed_round_trips": 221.0,
+            "realised_friction_twd": 1366456.0,
+            "years": 2.617385352498289,
+            "deployed_mean_pct": 86.07944743708501,
+            "deployed_end_pct": 64.19885581590755,
+            "benchmark_0050_return_pct": 215.06083571859946,
+            "implied_cost_drag_pct_per_year": 4.344137928198876,
+            "realised_cost_pct_per_year": 5.398230062628943,
+            "episodes": [
+                {
+                    "peak_date": "2024-07-11",
+                    "depth_pct": -21.701602959309497,
+                    "decline_return_pct": -18.308168096577337
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "depth_pct": -28.473581213307252,
+                    "decline_return_pct": -20.001123765321104
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "depth_pct": -10.844115834873701,
+                    "decline_return_pct": -1.9768040487520344
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "depth_pct": -15.879442195231675,
+                    "decline_return_pct": -33.956654289361765
+                }
+            ],
+            "yearly_return_pct": {
+                "2024": -20.933603118637812,
+                "2025": 7.220285407766758,
+                "2026": 65.19306997048815
+            },
+            "train_drawdown_improvement_pp": 3.0213130570984035,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 9.562789311688597,
+            "worst_episode_return_pct": -33.956654289361765,
+            "return_retained": 0.4896224316531085,
+            "train_return_retained": 0.7688467967089861,
+            "rule2_pass": false,
+            "rule3_pass": true,
+            "family": "defence:d1",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "defence__d1_ma250",
+            "kind": "overlay_defence",
+            "window": "holdout",
+            "regime_column": "d1_ma250",
+            "regime_response": "defence",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 46.85105070730646,
+            "engine_return_rate": 46.64208166214997,
+            "max_drawdown_pct": -45.00723654978385,
+            "engine_max_drawdown": -45.00723654978385,
+            "defence_trades": 6,
+            "buy_count": 246,
+            "cash_blocked_entry_count": 2738,
+            "turnover_per_slot_year": 9.751405871756019,
+            "unweighted_turnover_per_slot_year": 9.01663179916318,
+            "completed_round_trips": 236.0,
+            "realised_friction_twd": 1532967.0,
+            "years": 2.617385352498289,
+            "deployed_mean_pct": 85.24466591353804,
+            "deployed_end_pct": 61.22362488473397,
+            "benchmark_0050_return_pct": 215.06083571859946,
+            "implied_cost_drag_pct_per_year": 4.875702935878009,
+            "realised_cost_pct_per_year": 6.01521367072268,
+            "episodes": [
+                {
+                    "peak_date": "2024-07-11",
+                    "depth_pct": -21.701602959309497,
+                    "decline_return_pct": -18.308168096577337
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "depth_pct": -28.473581213307252,
+                    "decline_return_pct": -21.8115748093905
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "depth_pct": -10.844115834873701,
+                    "decline_return_pct": -0.30055365272588785
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "depth_pct": -15.879442195231675,
+                    "decline_return_pct": -31.726075501002025
+                }
+            ],
+            "yearly_return_pct": {
+                "2024": -20.933603118637812,
+                "2025": 12.072227754441833,
+                "2026": 65.72464800132896
+            },
+            "train_drawdown_improvement_pp": -0.28442475489805474,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 8.2894332393289,
+            "worst_episode_return_pct": -31.726075501002025,
+            "return_retained": 0.572870413011929,
+            "train_return_retained": 0.6342956736179628,
+            "rule2_pass": false,
+            "rule3_pass": true,
+            "family": "defence:d1",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "defence__d2_br35",
+            "kind": "overlay_defence",
+            "window": "holdout",
+            "regime_column": "d2_br35",
+            "regime_response": "defence",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 23.16158372949708,
+            "engine_return_rate": 22.986324795850013,
+            "max_drawdown_pct": -51.600259257705886,
+            "engine_max_drawdown": -51.600259257705886,
+            "defence_trades": 29,
+            "buy_count": 278,
+            "cash_blocked_entry_count": 3235,
+            "turnover_per_slot_year": 13.892561330448485,
+            "unweighted_turnover_per_slot_year": 10.239225941422594,
+            "completed_round_trips": 268.0,
+            "realised_friction_twd": 2159797.0,
+            "years": 2.617385352498289,
+            "deployed_mean_pct": 86.61484272692033,
+            "deployed_end_pct": 81.09805066991119,
+            "benchmark_0050_return_pct": 215.06083571859946,
+            "implied_cost_drag_pct_per_year": 6.946280665224243,
+            "realised_cost_pct_per_year": 10.096922348633623,
+            "episodes": [
+                {
+                    "peak_date": "2024-07-11",
+                    "depth_pct": -21.701602959309497,
+                    "decline_return_pct": -24.495504170216485
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "depth_pct": -28.473581213307252,
+                    "decline_return_pct": -28.651209859491743
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "depth_pct": -10.844115834873701,
+                    "decline_return_pct": -0.3596061919199811
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "depth_pct": -15.879442195231675,
+                    "decline_return_pct": -25.469666812069125
+                }
+            ],
+            "yearly_return_pct": {
+                "2024": -22.876934479163825,
+                "2025": -15.9596165909756,
+                "2026": 90.0215936252376
+            },
+            "train_drawdown_improvement_pp": 2.4578546919188575,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 1.6964105314068618,
+            "worst_episode_return_pct": -28.651209859491743,
+            "return_retained": 0.28320786485708677,
+            "train_return_retained": 0.8985846398498889,
+            "rule2_pass": false,
+            "rule3_pass": false,
+            "family": "defence:d2",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "defence__d2_br45",
+            "kind": "overlay_defence",
+            "window": "holdout",
+            "regime_column": "d2_br45",
+            "regime_response": "defence",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 104.99612314132011,
+            "engine_return_rate": 104.70441365809,
+            "max_drawdown_pct": -46.431455641380325,
+            "engine_max_drawdown": -46.431455641380325,
+            "defence_trades": 58,
+            "buy_count": 418,
+            "cash_blocked_entry_count": 1674,
+            "turnover_per_slot_year": 24.439354017528753,
+            "unweighted_turnover_per_slot_year": 15.893723849372385,
+            "completed_round_trips": 416.0,
+            "realised_friction_twd": 3862952.0,
+            "years": 2.617385352498289,
+            "deployed_mean_pct": 84.54604611809614,
+            "deployed_end_pct": 49.9947090398045,
+            "benchmark_0050_return_pct": 215.06083571859946,
+            "implied_cost_drag_pct_per_year": 12.219677008764377,
+            "realised_cost_pct_per_year": 13.500441867580909,
+            "episodes": [
+                {
+                    "peak_date": "2024-07-11",
+                    "depth_pct": -21.701602959309497,
+                    "decline_return_pct": -16.090038392891493
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "depth_pct": -28.473581213307252,
+                    "decline_return_pct": -36.80056183216227
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "depth_pct": -10.844115834873701,
+                    "decline_return_pct": -0.858004606966023
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "depth_pct": -15.879442195231675,
+                    "decline_return_pct": -14.762853593858871
+                }
+            ],
+            "yearly_return_pct": {
+                "2024": -3.484086746600379,
+                "2025": 6.670400303756208,
+                "2026": 99.11445918074904
+            },
+            "train_drawdown_improvement_pp": 1.469961410430649,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 6.8652141477324236,
+            "worst_episode_return_pct": -36.80056183216227,
+            "return_retained": 1.2838382815444327,
+            "train_return_retained": 0.7667620973863195,
+            "rule2_pass": true,
+            "rule3_pass": false,
+            "family": "defence:d2",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "defence__d2_br55",
+            "kind": "overlay_defence",
+            "window": "holdout",
+            "regime_column": "d2_br55",
+            "regime_response": "defence",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 164.78383362856354,
+            "engine_return_rate": 164.4070462333101,
+            "max_drawdown_pct": -16.71695094785026,
+            "engine_max_drawdown": -16.716950947850265,
+            "defence_trades": 42,
+            "buy_count": 316,
+            "cash_blocked_entry_count": 14,
+            "turnover_per_slot_year": 18.35689002734702,
+            "unweighted_turnover_per_slot_year": 11.996705020920501,
+            "completed_round_trips": 314.0,
+            "realised_friction_twd": 2970256.0,
+            "years": 2.617385352498289,
+            "deployed_mean_pct": 58.9235056692318,
+            "deployed_end_pct": 38.70599420776972,
+            "benchmark_0050_return_pct": 215.06083571859946,
+            "implied_cost_drag_pct_per_year": 9.17844501367351,
+            "realised_cost_pct_per_year": 6.35513758037933,
+            "episodes": [
+                {
+                    "peak_date": "2024-07-11",
+                    "depth_pct": -21.701602959309497,
+                    "decline_return_pct": -13.005411105918496
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "depth_pct": -28.473581213307252,
+                    "decline_return_pct": -14.938914308724593
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "depth_pct": -10.844115834873701,
+                    "decline_return_pct": -1.3522043546991047
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "depth_pct": -15.879442195231675,
+                    "decline_return_pct": -9.534068351207859
+                }
+            ],
+            "yearly_return_pct": {
+                "2024": 72.19527527531682,
+                "2025": 15.06601061215549,
+                "2026": 33.63591097726737
+            },
+            "train_drawdown_improvement_pp": 4.760219021257392,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 36.57971884126249,
+            "worst_episode_return_pct": -14.938914308724593,
+            "return_retained": 2.0148914784906298,
+            "train_return_retained": 0.8182372177071289,
+            "rule2_pass": true,
+            "rule3_pass": false,
+            "family": "defence:d2",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "defence__d3_ad42",
+            "kind": "overlay_defence",
+            "window": "holdout",
+            "regime_column": "d3_ad42",
+            "regime_response": "defence",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 63.05184656180738,
+            "engine_return_rate": 62.81982378414992,
+            "max_drawdown_pct": -49.270252799174365,
+            "engine_max_drawdown": -49.27025279917436,
+            "defence_trades": 50,
+            "buy_count": 378,
+            "cash_blocked_entry_count": 2010,
+            "turnover_per_slot_year": 20.605637470814592,
+            "unweighted_turnover_per_slot_year": 14.021626569037657,
+            "completed_round_trips": 367.0,
+            "realised_friction_twd": 3257549.0,
+            "years": 2.617385352498289,
+            "deployed_mean_pct": 83.39869382123628,
+            "deployed_end_pct": 55.124789423053855,
+            "benchmark_0050_return_pct": 215.06083571859946,
+            "implied_cost_drag_pct_per_year": 10.302818735407296,
+            "realised_cost_pct_per_year": 11.730675644019566,
+            "episodes": [
+                {
+                    "peak_date": "2024-07-11",
+                    "depth_pct": -21.701602959309497,
+                    "decline_return_pct": -24.220373037105535
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "depth_pct": -28.473581213307252,
+                    "decline_return_pct": -30.446225683629248
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "depth_pct": -10.844115834873701,
+                    "decline_return_pct": 0.688620731653744
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "depth_pct": -15.879442195231675,
+                    "decline_return_pct": -29.01399840815415
+                }
+            ],
+            "yearly_return_pct": {
+                "2024": -7.389658887797356,
+                "2025": 3.2459293225969965,
+                "2026": 70.5270581845459
+            },
+            "train_drawdown_improvement_pp": 5.73215042048005,
+            "rule1_pass": true,
+            "holdout_drawdown_improvement_pp": 4.026416989938383,
+            "worst_episode_return_pct": -30.446225683629248,
+            "return_retained": 0.7709653643988467,
+            "train_return_retained": 0.9105678295139166,
+            "rule2_pass": true,
+            "rule3_pass": false,
+            "family": "defence:d3",
+            "plateau_run": 1,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "helps but too much turnover"
+        },
+        {
+            "cell": "defence__d3_ad46",
+            "kind": "overlay_defence",
+            "window": "holdout",
+            "regime_column": "d3_ad46",
+            "regime_response": "defence",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 129.24417856469742,
+            "engine_return_rate": 128.91796409859987,
+            "max_drawdown_pct": -24.13636899363434,
+            "engine_max_drawdown": -24.13636899363434,
+            "defence_trades": 92,
+            "buy_count": 492,
+            "cash_blocked_entry_count": 50,
+            "turnover_per_slot_year": 33.77470664861061,
+            "unweighted_turnover_per_slot_year": 18.75917887029289,
+            "completed_round_trips": 491.0,
+            "realised_friction_twd": 5262081.0,
+            "years": 2.617385352498289,
+            "deployed_mean_pct": 68.48113749549604,
+            "deployed_end_pct": 44.70657268117208,
+            "benchmark_0050_return_pct": 215.06083571859946,
+            "implied_cost_drag_pct_per_year": 16.887353324305305,
+            "realised_cost_pct_per_year": 13.980655789878826,
+            "episodes": [
+                {
+                    "peak_date": "2024-07-11",
+                    "depth_pct": -21.701602959309497,
+                    "decline_return_pct": -15.188138452446742
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "depth_pct": -28.473581213307252,
+                    "decline_return_pct": -19.051581795239226
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "depth_pct": -10.844115834873701,
+                    "decline_return_pct": 2.61220706906371
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "depth_pct": -15.879442195231675,
+                    "decline_return_pct": -10.14793879103032
+                }
+            ],
+            "yearly_return_pct": {
+                "2024": 28.824673408860768,
+                "2025": 24.121081423036884,
+                "2026": 43.368491299279334
+            },
+            "train_drawdown_improvement_pp": 7.696739468572087,
+            "rule1_pass": true,
+            "holdout_drawdown_improvement_pp": 29.16030079547841,
+            "worst_episode_return_pct": -19.051581795239226,
+            "return_retained": 1.5803309602659366,
+            "train_return_retained": 1.2945275975559747,
+            "rule2_pass": true,
+            "rule3_pass": false,
+            "family": "defence:d3",
+            "plateau_run": 1,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "helps but too much turnover"
+        },
+        {
+            "cell": "defence__d3_ad50",
+            "kind": "overlay_defence",
+            "window": "holdout",
+            "regime_column": "d3_ad50",
+            "regime_response": "defence",
+            "entry_ma60_min": null,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 159.44574809954565,
+            "engine_return_rate": 159.0765568,
+            "max_drawdown_pct": -24.207835087766227,
+            "engine_max_drawdown": -24.207835087766227,
+            "defence_trades": 33,
+            "buy_count": 136,
+            "cash_blocked_entry_count": 40,
+            "turnover_per_slot_year": 8.988275850380488,
+            "unweighted_turnover_per_slot_year": 5.119612970711297,
+            "completed_round_trips": 134.0,
+            "realised_friction_twd": 1515452.0,
+            "years": 2.617385352498289,
+            "deployed_mean_pct": 34.61568062253112,
+            "deployed_end_pct": 39.502368436602595,
+            "benchmark_0050_return_pct": 215.06083571859946,
+            "implied_cost_drag_pct_per_year": 4.494137925190244,
+            "realised_cost_pct_per_year": 3.7057204415780762,
+            "episodes": [
+                {
+                    "peak_date": "2024-07-11",
+                    "depth_pct": -21.701602959309497,
+                    "decline_return_pct": -17.674806698986423
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "depth_pct": -28.473581213307252,
+                    "decline_return_pct": -21.93802945273712
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "depth_pct": -10.844115834873701,
+                    "decline_return_pct": -4.6348999905386545
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "depth_pct": -15.879442195231675,
+                    "decline_return_pct": -6.908413615828401
+                }
+            ],
+            "yearly_return_pct": {
+                "2024": 47.59799094110919,
+                "2025": 15.06669299898511,
+                "2026": 52.762402508875006
+            },
+            "train_drawdown_improvement_pp": 7.575217088515004,
+            "rule1_pass": true,
+            "holdout_drawdown_improvement_pp": 29.08883470134652,
+            "worst_episode_return_pct": -21.93802945273712,
+            "return_retained": 1.9496201299181937,
+            "train_return_retained": 0.8972056535174074,
+            "rule2_pass": true,
+            "rule3_pass": true,
+            "family": "defence:d3",
+            "plateau_run": 1,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "isolated winner, no plateau"
+        },
+        {
+            "cell": "entry+5",
+            "kind": "entry_filter",
+            "window": "holdout",
+            "regime_column": "",
+            "regime_response": null,
+            "entry_ma60_min": 0.05,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 81.78298205519452,
+            "engine_return_rate": 81.52430487172998,
+            "max_drawdown_pct": -53.29666978911275,
+            "engine_max_drawdown": -53.29666978911275,
+            "defence_trades": 0,
+            "buy_count": 243,
+            "cash_blocked_entry_count": 2836,
+            "turnover_per_slot_year": 8.887829702949793,
+            "unweighted_turnover_per_slot_year": 8.90201359832636,
+            "completed_round_trips": 233.0,
+            "realised_friction_twd": 1415039.0,
+            "years": 2.617385352498289,
+            "deployed_mean_pct": 82.75866000359645,
+            "deployed_end_pct": 54.95745490968491,
+            "benchmark_0050_return_pct": 215.06083571859946,
+            "implied_cost_drag_pct_per_year": 4.443914851474896,
+            "realised_cost_pct_per_year": 5.300423857528665,
+            "episodes": [
+                {
+                    "peak_date": "2024-07-11",
+                    "depth_pct": -21.701602959309497,
+                    "decline_return_pct": -18.308168096577337
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "depth_pct": -28.473581213307252,
+                    "decline_return_pct": -33.59744789599335
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "depth_pct": -10.844115834873701,
+                    "decline_return_pct": -0.6899832096197267
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "depth_pct": -15.879442195231675,
+                    "decline_return_pct": -29.65555835908653
+                }
+            ],
+            "yearly_return_pct": {
+                "2024": -20.933603118637812,
+                "2025": 14.15584329346784,
+                "2026": 101.40169849391785
+            },
+            "train_drawdown_improvement_pp": 0.010820337716275219,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 0.0,
+            "worst_episode_return_pct": -33.59744789599335,
+            "return_retained": 1.0,
+            "train_return_retained": 0.8762732591670543,
+            "rule2_pass": true,
+            "rule3_pass": true,
+            "family": "entry_filter",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "entry+0",
+            "kind": "entry_filter",
+            "window": "holdout",
+            "regime_column": "",
+            "regime_response": null,
+            "entry_ma60_min": 0.0,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 81.78298205519452,
+            "engine_return_rate": 81.52430487172998,
+            "max_drawdown_pct": -53.29666978911275,
+            "engine_max_drawdown": -53.29666978911275,
+            "defence_trades": 0,
+            "buy_count": 243,
+            "cash_blocked_entry_count": 2872,
+            "turnover_per_slot_year": 8.887829702949793,
+            "unweighted_turnover_per_slot_year": 8.90201359832636,
+            "completed_round_trips": 233.0,
+            "realised_friction_twd": 1415039.0,
+            "years": 2.617385352498289,
+            "deployed_mean_pct": 82.75866000359645,
+            "deployed_end_pct": 54.95745490968491,
+            "benchmark_0050_return_pct": 215.06083571859946,
+            "implied_cost_drag_pct_per_year": 4.443914851474896,
+            "realised_cost_pct_per_year": 5.300423857528665,
+            "episodes": [
+                {
+                    "peak_date": "2024-07-11",
+                    "depth_pct": -21.701602959309497,
+                    "decline_return_pct": -18.308168096577337
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "depth_pct": -28.473581213307252,
+                    "decline_return_pct": -33.59744789599335
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "depth_pct": -10.844115834873701,
+                    "decline_return_pct": -0.6899832096197267
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "depth_pct": -15.879442195231675,
+                    "decline_return_pct": -29.65555835908653
+                }
+            ],
+            "yearly_return_pct": {
+                "2024": -20.933603118637812,
+                "2025": 14.15584329346784,
+                "2026": 101.40169849391785
+            },
+            "train_drawdown_improvement_pp": 0.0,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 0.0,
+            "worst_episode_return_pct": -33.59744789599335,
+            "return_retained": 1.0,
+            "train_return_retained": 0.9693187858667915,
+            "rule2_pass": true,
+            "rule3_pass": true,
+            "family": "entry_filter",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "entry-3",
+            "kind": "entry_filter",
+            "window": "holdout",
+            "regime_column": "",
+            "regime_response": null,
+            "entry_ma60_min": -0.03,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 81.78298205519452,
+            "engine_return_rate": 81.52430487172998,
+            "max_drawdown_pct": -53.29666978911275,
+            "engine_max_drawdown": -53.29666978911275,
+            "defence_trades": 0,
+            "buy_count": 243,
+            "cash_blocked_entry_count": 2877,
+            "turnover_per_slot_year": 8.887829702949793,
+            "unweighted_turnover_per_slot_year": 8.90201359832636,
+            "completed_round_trips": 233.0,
+            "realised_friction_twd": 1415039.0,
+            "years": 2.617385352498289,
+            "deployed_mean_pct": 82.75866000359645,
+            "deployed_end_pct": 54.95745490968491,
+            "benchmark_0050_return_pct": 215.06083571859946,
+            "implied_cost_drag_pct_per_year": 4.443914851474896,
+            "realised_cost_pct_per_year": 5.300423857528665,
+            "episodes": [
+                {
+                    "peak_date": "2024-07-11",
+                    "depth_pct": -21.701602959309497,
+                    "decline_return_pct": -18.308168096577337
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "depth_pct": -28.473581213307252,
+                    "decline_return_pct": -33.59744789599335
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "depth_pct": -10.844115834873701,
+                    "decline_return_pct": -0.6899832096197267
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "depth_pct": -15.879442195231675,
+                    "decline_return_pct": -29.65555835908653
+                }
+            ],
+            "yearly_return_pct": {
+                "2024": -20.933603118637812,
+                "2025": 14.15584329346784,
+                "2026": 101.40169849391785
+            },
+            "train_drawdown_improvement_pp": 0.0,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 0.0,
+            "worst_episode_return_pct": -33.59744789599335,
+            "return_retained": 1.0,
+            "train_return_retained": 0.97348915893924,
+            "rule2_pass": true,
+            "rule3_pass": true,
+            "family": "entry_filter",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "entry-6",
+            "kind": "entry_filter",
+            "window": "holdout",
+            "regime_column": "",
+            "regime_response": null,
+            "entry_ma60_min": -0.06,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 81.78298205519452,
+            "engine_return_rate": 81.52430487172998,
+            "max_drawdown_pct": -53.29666978911275,
+            "engine_max_drawdown": -53.29666978911275,
+            "defence_trades": 0,
+            "buy_count": 243,
+            "cash_blocked_entry_count": 2878,
+            "turnover_per_slot_year": 8.887829702949793,
+            "unweighted_turnover_per_slot_year": 8.90201359832636,
+            "completed_round_trips": 233.0,
+            "realised_friction_twd": 1415039.0,
+            "years": 2.617385352498289,
+            "deployed_mean_pct": 82.75866000359645,
+            "deployed_end_pct": 54.95745490968491,
+            "benchmark_0050_return_pct": 215.06083571859946,
+            "implied_cost_drag_pct_per_year": 4.443914851474896,
+            "realised_cost_pct_per_year": 5.300423857528665,
+            "episodes": [
+                {
+                    "peak_date": "2024-07-11",
+                    "depth_pct": -21.701602959309497,
+                    "decline_return_pct": -18.308168096577337
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "depth_pct": -28.473581213307252,
+                    "decline_return_pct": -33.59744789599335
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "depth_pct": -10.844115834873701,
+                    "decline_return_pct": -0.6899832096197267
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "depth_pct": -15.879442195231675,
+                    "decline_return_pct": -29.65555835908653
+                }
+            ],
+            "yearly_return_pct": {
+                "2024": -20.933603118637812,
+                "2025": 14.15584329346784,
+                "2026": 101.40169849391785
+            },
+            "train_drawdown_improvement_pp": 0.0,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 0.0,
+            "worst_episode_return_pct": -33.59744789599335,
+            "return_retained": 1.0,
+            "train_return_retained": 0.97348915893924,
+            "rule2_pass": true,
+            "rule3_pass": true,
+            "family": "entry_filter",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "entry-10",
+            "kind": "entry_filter",
+            "window": "holdout",
+            "regime_column": "",
+            "regime_response": null,
+            "entry_ma60_min": -0.1,
+            "exit_ma60_max": null,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 81.78298205519452,
+            "engine_return_rate": 81.52430487172998,
+            "max_drawdown_pct": -53.29666978911275,
+            "engine_max_drawdown": -53.29666978911275,
+            "defence_trades": 0,
+            "buy_count": 243,
+            "cash_blocked_entry_count": 2878,
+            "turnover_per_slot_year": 8.887829702949793,
+            "unweighted_turnover_per_slot_year": 8.90201359832636,
+            "completed_round_trips": 233.0,
+            "realised_friction_twd": 1415039.0,
+            "years": 2.617385352498289,
+            "deployed_mean_pct": 82.75866000359645,
+            "deployed_end_pct": 54.95745490968491,
+            "benchmark_0050_return_pct": 215.06083571859946,
+            "implied_cost_drag_pct_per_year": 4.443914851474896,
+            "realised_cost_pct_per_year": 5.300423857528665,
+            "episodes": [
+                {
+                    "peak_date": "2024-07-11",
+                    "depth_pct": -21.701602959309497,
+                    "decline_return_pct": -18.308168096577337
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "depth_pct": -28.473581213307252,
+                    "decline_return_pct": -33.59744789599335
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "depth_pct": -10.844115834873701,
+                    "decline_return_pct": -0.6899832096197267
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "depth_pct": -15.879442195231675,
+                    "decline_return_pct": -29.65555835908653
+                }
+            ],
+            "yearly_return_pct": {
+                "2024": -20.933603118637812,
+                "2025": 14.15584329346784,
+                "2026": 101.40169849391785
+            },
+            "train_drawdown_improvement_pp": 0.0,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 0.0,
+            "worst_episode_return_pct": -33.59744789599335,
+            "return_retained": 1.0,
+            "train_return_retained": 0.97348915893924,
+            "rule2_pass": true,
+            "rule3_pass": true,
+            "family": "entry_filter",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "exit+0_hard",
+            "kind": "exit_filter",
+            "window": "holdout",
+            "regime_column": "",
+            "regime_response": null,
+            "entry_ma60_min": null,
+            "exit_ma60_max": 0.0,
+            "exit_ma60_overrides_hold": true,
+            "return_pct": 14.970881891822074,
+            "engine_return_rate": 14.807278326890023,
+            "max_drawdown_pct": -55.78233381347067,
+            "engine_max_drawdown": -55.78233381347067,
+            "defence_trades": 0,
+            "buy_count": 233,
+            "cash_blocked_entry_count": 3224,
+            "turnover_per_slot_year": 8.506132596695867,
+            "unweighted_turnover_per_slot_year": 8.519952928870293,
+            "completed_round_trips": 223.0,
+            "realised_friction_twd": 1324666.0,
+            "years": 2.617385352498289,
+            "deployed_mean_pct": 85.28450740012418,
+            "deployed_end_pct": 78.27318294588672,
+            "benchmark_0050_return_pct": 215.06083571859946,
+            "implied_cost_drag_pct_per_year": 4.2530662983479335,
+            "realised_cost_pct_per_year": 5.820324836709277,
+            "episodes": [
+                {
+                    "peak_date": "2024-07-11",
+                    "depth_pct": -21.701602959309497,
+                    "decline_return_pct": -19.720112738944962
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "depth_pct": -28.473581213307252,
+                    "decline_return_pct": -36.02527665640737
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "depth_pct": -10.844115834873701,
+                    "decline_return_pct": 3.4630572764756895
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "depth_pct": -15.879442195231675,
+                    "decline_return_pct": -36.5967315477623
+                }
+            ],
+            "yearly_return_pct": {
+                "2024": -22.242831650839136,
+                "2025": -6.035505741699687,
+                "2026": 57.35612250408646
+            },
+            "train_drawdown_improvement_pp": 1.028747808853403,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": -2.4856640243579236,
+            "worst_episode_return_pct": -36.5967315477623,
+            "return_retained": 0.18305619965921974,
+            "train_return_retained": 1.0773295585734737,
+            "rule2_pass": false,
+            "rule3_pass": true,
+            "family": "exit_filter",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "exit-5_hard",
+            "kind": "exit_filter",
+            "window": "holdout",
+            "regime_column": "",
+            "regime_response": null,
+            "entry_ma60_min": null,
+            "exit_ma60_max": -0.05,
+            "exit_ma60_overrides_hold": true,
+            "return_pct": 67.17901468574784,
+            "engine_return_rate": 66.94111894785004,
+            "max_drawdown_pct": -45.69142473404185,
+            "engine_max_drawdown": -45.69142473404185,
+            "defence_trades": 0,
+            "buy_count": 255,
+            "cash_blocked_entry_count": 2655,
+            "turnover_per_slot_year": 9.345434388043936,
+            "unweighted_turnover_per_slot_year": 9.36048640167364,
+            "completed_round_trips": 245.0,
+            "realised_friction_twd": 1477246.0,
+            "years": 2.617385352498289,
+            "deployed_mean_pct": 83.47411313459507,
+            "deployed_end_pct": 53.79493474465931,
+            "benchmark_0050_return_pct": 215.06083571859946,
+            "implied_cost_drag_pct_per_year": 4.672717194021968,
+            "realised_cost_pct_per_year": 5.448907850253624,
+            "episodes": [
+                {
+                    "peak_date": "2024-07-11",
+                    "depth_pct": -21.701602959309497,
+                    "decline_return_pct": -19.277000185550676
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "depth_pct": -28.473581213307252,
+                    "decline_return_pct": -24.901529000973166
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "depth_pct": -10.844115834873701,
+                    "decline_return_pct": -0.5636647701569242
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "depth_pct": -15.879442195231675,
+                    "decline_return_pct": -30.612953519062145
+                }
+            ],
+            "yearly_return_pct": {
+                "2024": -16.505282117853703,
+                "2025": 8.680498890899013,
+                "2026": 84.23457476832806
+            },
+            "train_drawdown_improvement_pp": -0.06889924178782536,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 7.605245055070895,
+            "worst_episode_return_pct": -30.612953519062145,
+            "return_retained": 0.8214302413234259,
+            "train_return_retained": 0.8854052132476051,
+            "rule2_pass": true,
+            "rule3_pass": true,
+            "family": "exit_filter",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "exit-10_hard",
+            "kind": "exit_filter",
+            "window": "holdout",
+            "regime_column": "",
+            "regime_response": null,
+            "entry_ma60_min": null,
+            "exit_ma60_max": -0.1,
+            "exit_ma60_overrides_hold": true,
+            "return_pct": 20.744373376995483,
+            "engine_return_rate": 20.572554133680015,
+            "max_drawdown_pct": -55.14124071065357,
+            "engine_max_drawdown": -55.14124071065357,
+            "defence_trades": 0,
+            "buy_count": 233,
+            "cash_blocked_entry_count": 3093,
+            "turnover_per_slot_year": 8.50627760782296,
+            "unweighted_turnover_per_slot_year": 8.519952928870293,
+            "completed_round_trips": 223.0,
+            "realised_friction_twd": 1330108.0,
+            "years": 2.617385352498289,
+            "deployed_mean_pct": 83.82159666707996,
+            "deployed_end_pct": 74.48417688857245,
+            "benchmark_0050_return_pct": 215.06083571859946,
+            "implied_cost_drag_pct_per_year": 4.25313880391148,
+            "realised_cost_pct_per_year": 5.535599749290573,
+            "episodes": [
+                {
+                    "peak_date": "2024-07-11",
+                    "depth_pct": -21.701602959309497,
+                    "decline_return_pct": -18.308168096577337
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "depth_pct": -28.473581213307252,
+                    "decline_return_pct": -35.04134797809242
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "depth_pct": -10.844115834873701,
+                    "decline_return_pct": -4.31523229302403
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "depth_pct": -15.879442195231675,
+                    "decline_return_pct": -37.07801046986054
+                }
+            ],
+            "yearly_return_pct": {
+                "2024": -21.696234342869893,
+                "2025": 5.24422777489304,
+                "2026": 46.516308567693244
+            },
+            "train_drawdown_improvement_pp": -0.6968727109157129,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": -1.8445709215408215,
+            "worst_episode_return_pct": -37.07801046986054,
+            "return_retained": 0.25365146703742486,
+            "train_return_retained": 0.9342709987672223,
+            "rule2_pass": false,
+            "rule3_pass": true,
+            "family": "exit_filter",
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "",
+            "verdict": "no drawdown benefit"
+        },
+        {
+            "cell": "exit+0_soft",
+            "kind": "exit_filter",
+            "window": "holdout",
+            "regime_column": "",
+            "regime_response": null,
+            "entry_ma60_min": null,
+            "exit_ma60_max": 0.0,
+            "exit_ma60_overrides_hold": false,
+            "return_pct": 81.78298205519452,
+            "engine_return_rate": 81.52430487172998,
+            "max_drawdown_pct": -53.29666978911275,
+            "engine_max_drawdown": -53.29666978911275,
+            "defence_trades": 0,
+            "buy_count": 243,
+            "cash_blocked_entry_count": 2878,
+            "turnover_per_slot_year": 8.887829702949793,
+            "unweighted_turnover_per_slot_year": 8.90201359832636,
+            "completed_round_trips": 233.0,
+            "realised_friction_twd": 1415039.0,
+            "years": 2.617385352498289,
+            "deployed_mean_pct": 82.75866000359645,
+            "deployed_end_pct": 54.95745490968491,
+            "benchmark_0050_return_pct": 215.06083571859946,
+            "implied_cost_drag_pct_per_year": 4.443914851474896,
+            "realised_cost_pct_per_year": 5.300423857528665,
+            "episodes": [
+                {
+                    "peak_date": "2024-07-11",
+                    "depth_pct": -21.701602959309497,
+                    "decline_return_pct": -18.308168096577337
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "depth_pct": -28.473581213307252,
+                    "decline_return_pct": -33.59744789599335
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "depth_pct": -10.844115834873701,
+                    "decline_return_pct": -0.6899832096197267
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "depth_pct": -15.879442195231675,
+                    "decline_return_pct": -29.65555835908653
+                }
+            ],
+            "yearly_return_pct": {
+                "2024": -20.933603118637812,
+                "2025": 14.15584329346784,
+                "2026": 101.40169849391785
+            },
+            "train_drawdown_improvement_pp": -0.038453259907313964,
+            "rule1_pass": false,
+            "holdout_drawdown_improvement_pp": 0.0,
+            "worst_episode_return_pct": -33.59744789599335,
+            "return_retained": 1.0,
+            "train_return_retained": 1.023277592632996,
+            "rule2_pass": true,
+            "rule3_pass": true,
+            "family": null,
+            "plateau_run": 0,
+            "rule4_pass": false,
+            "rule4_note": "no ordered parameter family; rule 4 cannot be satisfied by design",
+            "verdict": "no drawdown benefit"
+        }
+    ],
+    "defence_benchmark": [
+        {
+            "window": "train",
+            "bars": 1216,
+            "price_return_pct": 82.91694800810264,
+            "price_max_drawdown_pct": -36.38157894736841,
+            "total_return_pct": 118.23024110281666,
+            "total_max_drawdown_pct": -33.95700541458191,
+            "yearly_return_pct": {
+                "2019": 36.13567141143243,
+                "2020": 31.139036915266892,
+                "2021": 21.923260965899804,
+                "2022": -21.37467162026695,
+                "2023": 27.51520190388237
+            },
+            "episodes": [
+                {
+                    "peak_date": "2020-01-14",
+                    "decline_return_pct": -28.21765217243084
+                },
+                {
+                    "peak_date": "2021-01-21",
+                    "decline_return_pct": -9.610575205430505
+                },
+                {
+                    "peak_date": "2022-01-17",
+                    "decline_return_pct": -33.95700541458191
+                }
+            ]
+        },
+        {
+            "window": "holdout",
+            "bars": 625,
+            "price_return_pct": 215.50968235195742,
+            "price_max_drawdown_pct": -28.473581213307252,
+            "total_return_pct": 238.04139189240968,
+            "total_max_drawdown_pct": -27.48498980954952,
+            "yearly_return_pct": {
+                "2024": 49.25003038433751,
+                "2025": 36.86613061516122,
+                "2026": 65.48531603489882
+            },
+            "episodes": [
+                {
+                    "peak_date": "2024-07-11",
+                    "decline_return_pct": -21.30150895296974
+                },
+                {
+                    "peak_date": "2025-01-07",
+                    "decline_return_pct": -27.48498980954952
+                },
+                {
+                    "peak_date": "2026-02-26",
+                    "decline_return_pct": -10.84411583487369
+                },
+                {
+                    "peak_date": "2026-06-22",
+                    "decline_return_pct": -15.367552391145868
+                }
+            ]
+        }
+    ]
+}

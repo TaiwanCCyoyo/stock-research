@@ -1,0 +1,32 @@
+{
+    "schema_version": "sector-role-review-scopes.v1",
+    "profiles": [
+        {
+            "profile_id": "sector-role-review-20261002.v1",
+            "base_manifest_canonical_sha256": "384ee53d22b70dc1650bf84e1887e8515565189c975c29c77ef5e6273c5138c9",
+            "included_group_ids": ["memory", "cooling", "pcb"],
+            "included_group_reason": "focused_memory_cooling_pcb",
+            "include_source_missing_with_episode": true,
+            "seed_security_ids": [
+                "TW:2408",
+                "TW:2344",
+                "TW:2337",
+                "TW:3006",
+                "TW:6485",
+                "TW:3260",
+                "TW:3324",
+                "TW:3017",
+                "TW:6230",
+                "TW:2421",
+                "TW:8046",
+                "TW:3189",
+                "TW:3037",
+                "TW:6274",
+                "TW:2368",
+                "TW:5381",
+                "TW:5321",
+                "TW:2614"
+            ]
+        }
+    ]
+}

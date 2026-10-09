@@ -1,0 +1,27 @@
+{
+  "schema_version": "method-environment-publication.v1",
+  "packet_sha256": "0e298709150dd19665049912dcb31a4c34a512377cc96ac1bf8557a8a523d48b",
+  "files": {
+    "input-audit.json.gz": "19c9765b75eb68148d6462b304f5b98e24064edf970e9b7875ebc6c00686421f",
+    "packet.json.gz": "ad9fd93439d411f0748b7cb88925968c3b6d4f33e4ad82721c8490b06d128cc8",
+    "receipt.json.gz": "2b05cbd52b5f76947ab707d13b0e44d1e3fc1d3fde9ff84132d70ffabdc41e93",
+    "results.json.gz": "3703ae6bb5270244446b6db8dccf8f23bf8779a0909db1e2eff2fab7e35bfbf6",
+    "source-inputs.zip": "c2d1000ce0b48b07f705194cacb0f016342a13580cac4fbfe32f8c74d58995b3",
+    "summary.json.gz": "d78e0174f06566cb60dc921248115c883cae877acd92bb41b5e79e7489be2dd5"
+  },
+  "source_datasets": {
+    "atlas": {
+      "dataset_id": "fda-86245f2e223fc45c9f84afb0dcf77c1fff7ab22d0a1b0b4a4c8800972ce9327e",
+      "manifest_sha256": "87f0fd48e620a270b5ea5e6da82f1bcb18e6319dfe6a1a5b4388848869fb41ef",
+      "path": "tasks/20261004-feature-discrimination-atlas/runs/registered/atlas-v2"
+    },
+    "context": {
+      "dataset_id": "sha256:df2879f7f91e687dfb85f839e7ca8919af6b363b8038825d15d3f5f4796c8ed2",
+      "manifest_sha256": "b1b664e7ae676d19700e95cb2e046fa1964d9eec350520ae10463d38440bdee0",
+      "path": "tasks/20261005-market-context-handoff/market-context-v2",
+      "layer": "past_only"
+    }
+  },
+  "bulk_limitation": "Bulk source data remains local at the recorded source paths; this package permits compact evidence reading, not full recomputation.",
+  "artifact_id": "method-environment-publication.v1-b4e57eed5cc5aaf35fbda34e73d1ee7b34c230d53d71b78c66c44a20d64f4a7d"
+}

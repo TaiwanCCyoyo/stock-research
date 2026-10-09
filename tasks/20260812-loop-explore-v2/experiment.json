@@ -1,0 +1,35 @@
+{
+    "schema_version": "1.0",
+    "hypothesis": "Tightening stop_loss_pct and loosening convergence_pct raises 2B's expectancy on 2330/2454 by cutting losing trades faster while allowing more valid entries.",
+    "strategy": { "path": "two_b_ma_convergence.py" },
+    "run": {
+        "codes": "2330,2454",
+        "cash": 10000000,
+        "data_path": "shioaji_stock_prices/data"
+    },
+    "dimensions": [
+        {
+            "name": "stop_loss_pct",
+            "kind": "range",
+            "min": 4.0,
+            "max": 12.0,
+            "step": 0.5
+        },
+        {
+            "name": "convergence_pct",
+            "kind": "range",
+            "min": 1.0,
+            "max": 4.0,
+            "step": 0.5
+        }
+    ],
+    "windows": {
+        "train": { "start": "2022-01-01", "end": "2023-12-31" },
+        "holdout": { "start": "2024-01-01", "end": "2024-06-30" }
+    },
+    "stop_conditions": {
+        "max_iterations": 8,
+        "no_improvement_rounds": 4,
+        "wall_clock_minutes": 90
+    }
+}

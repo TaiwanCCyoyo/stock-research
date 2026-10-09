@@ -1,0 +1,7 @@
+{
+    "name": "semiconductor",
+    "description": "半導體業 (semiconductor industry) via TWSE/TPEx classification",
+    "rule": {
+        "industry": "半導體業"
+    }
+}

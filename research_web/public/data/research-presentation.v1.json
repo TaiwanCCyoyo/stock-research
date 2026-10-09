@@ -1,0 +1,360 @@
+{
+    "schema": "research-presentation.v1",
+    "sourceSha256": "7d0960fda82c50e56c61b1a6768edc7fdb5fb26e3480118db9ff0d9855056cf7",
+    "studies": {
+        "20261008-strategy-studio": {
+            "category": "infrastructure",
+            "sourceNote": "依本輪 mission 分類：網站呈現工作，並非股票方法研究。"
+        },
+        "20260510-two-b-template-smoke": {
+            "category": "infrastructure",
+            "sourceNote": "tasks/20260510-two-b-template-smoke/mission.md:34：目標為 2B 模板 smoke test，屬工具驗證。"
+        },
+        "20260809-loop-dryrun": {
+            "category": "infrastructure",
+            "sourceNote": "tasks/20260809-loop-dryrun/mission.md:34：merged tooling 的兩輪 smoke test，屬工具驗證。"
+        },
+        "20261004-opportunity-explorer": {
+            "category": "infrastructure",
+            "sourceNote": "tasks/20261004-opportunity-explorer/mission.md:5：明定為 application/data-adapter 工作。"
+        },
+        "20261004-opportunity-reader-ux": {
+            "category": "infrastructure",
+            "sourceNote": "tasks/20261004-opportunity-reader-ux/mission.md:3：歷史機會網站 review 的讀者介面修正。"
+        },
+        "20261004-opportunity-classification-fix": {
+            "category": "infrastructure",
+            "sourceNote": "tasks/20261004-opportunity-classification-fix/mission.md:10：只擁有分類 consumer projection 與網站，分類研究由另一工作流負責。"
+        },
+        "20261005-market-full-history-web": {
+            "category": "infrastructure",
+            "sourceNote": "tasks/20261005-market-full-history-web/mission.md:3：使用既有 preview，沒有辨識新波段或評估策略。"
+        },
+        "20261005-opportunity-growth-display": {
+            "category": "infrastructure",
+            "sourceNote": "tasks/20261005-opportunity-growth-display/mission.md:19：網站、API、CLI 的共享呈現公式，保留原研究方法及目錄。"
+        },
+        "20261005-market-context-handoff": {
+            "category": "infrastructure",
+            "sourceNote": "tasks/20261005-market-context-handoff/report.md:7：既有圖譜的可攜發布與背景資料交接，沒有新選股實驗或帳戶回測。"
+        },
+        "20260816-kline-strategy-category-fit": {
+            "plainTitle": "三種 K 線買法，放到不同產業有沒有比較好？",
+            "plainConclusion": "這次研究的摘要：大多贏不了直接買進抱著；15 種組合裡只有「動能突破 × 航運」在兩段期間都贏。",
+            "reviewConfirmed": false,
+            "sourceNote": "Claude 示範改寫，研究端尚未核對；適用原報告設定，不代表整類方法的結論。",
+            "status": "結果不一",
+            "reportPath": "tasks/20260816-kline-strategy-category-fit/report.md"
+        },
+        "20260821-2b-entry-decomposition": {
+            "plainTitle": "「2B」策略真正靠的是什麼？",
+            "plainConclusion": "這次研究的摘要：幾乎所有買進其實來自動能條件，不是 2B；拿掉「跌破均線先賣一半」反而每筆都更好。",
+            "reviewConfirmed": false,
+            "sourceNote": "Claude 示範改寫，研究端尚未核對；適用原報告設定，不代表整類方法的結論。",
+            "status": "結果不一",
+            "reportPath": "tasks/20260821-2b-entry-decomposition/report.md"
+        },
+        "20260821-stop-mechanism-isolation": {
+            "plainTitle": "箱底停損比 ATR 停損好嗎？",
+            "plainConclusion": "這次研究的摘要：箱底停損讓每筆賺更多，但沒有讓虧損變小：它是加分工具，不是保護工具。",
+            "reviewConfirmed": false,
+            "sourceNote": "Claude 示範改寫，研究端尚未核對；適用原報告設定，不代表整類方法的結論。",
+            "status": "結果不一",
+            "reportPath": "tasks/20260821-stop-mechanism-isolation/report.md"
+        },
+        "20260822-ratchet-generalization": {
+            "plainTitle": "箱底停損能搬到別的買法上用嗎？",
+            "plainConclusion": "這次研究的摘要：換到別的買法上表現不穩定，判定不能通用。",
+            "reviewConfirmed": false,
+            "sourceNote": "Claude 示範改寫，研究端尚未核對；適用原報告設定，不代表整類方法的結論。",
+            "status": "行不通",
+            "reportPath": "tasks/20260822-ratchet-generalization/report.md"
+        },
+        "20260823-selection-vs-random": {
+            "plainTitle": "排名選股贏得過隨便選嗎？",
+            "plainConclusion": "這次研究的摘要：多半贏，但扣掉頻繁換股的成本後，只剩少數幾種做法還贏。",
+            "reviewConfirmed": false,
+            "sourceNote": "Claude 示範改寫，研究端尚未核對；適用原報告設定，不代表整類方法的結論。",
+            "status": "結果不一",
+            "reportPath": "tasks/20260823-selection-vs-random/report.md"
+        },
+        "20260823-regime-overlay": {
+            "plainTitle": "大盤不好時先退場，能少賠嗎？",
+            "plainConclusion": "這次研究的摘要：29 種做法沒有一種通過；看似有效的，其實等於一直抱 0050。",
+            "reviewConfirmed": false,
+            "sourceNote": "Claude 示範改寫，研究端尚未核對；適用原報告設定，不代表整類方法的結論。",
+            "status": "行不通",
+            "reportPath": "tasks/20260823-regime-overlay/report.md"
+        },
+        "20260824-value-chain-ignition": {
+            "plainTitle": "同一產業鏈一起發動，能預測接下來的漲跌嗎？",
+            "plainConclusion": "這次研究的摘要：不能。先前看到的效果是統計方法造成的假象。",
+            "reviewConfirmed": false,
+            "sourceNote": "Claude 示範改寫，研究端尚未核對；適用原報告設定，不代表整類方法的結論。",
+            "status": "行不通",
+            "reportPath": "tasks/20260824-value-chain-ignition/report.md"
+        },
+        "20260826-runner-retention": {
+            "plainTitle": "換賣出規則，能抱住飆股更久嗎？",
+            "plainConclusion": "這次研究的摘要：試了 13 種賣出規則，沒有一種做到；最好的也只拿到飆股漲幅的一小部分。",
+            "reviewConfirmed": false,
+            "sourceNote": "Claude 示範改寫，研究端尚未核對；適用原報告設定，不代表整類方法的結論。",
+            "status": "行不通",
+            "reportPath": "tasks/20260826-runner-retention/report.md"
+        },
+        "20260904-execution-delay": {
+            "plainTitle": "訊號出來晚 3 天才買，會差多少？",
+            "plainConclusion": "這次研究的摘要：會少掉約兩成的飆股報酬，超過事先定好可接受的範圍。",
+            "reviewConfirmed": false,
+            "sourceNote": "Claude 示範改寫，研究端尚未核對；適用原報告設定，不代表整類方法的結論。",
+            "status": "行不通",
+            "reportPath": "tasks/20260904-execution-delay/report.md"
+        },
+        "20260906-five-slot-baseline": {
+            "plainTitle": "只抱 5 檔，會比抱 30 檔好嗎？",
+            "plainConclusion": "這次研究的摘要：在驗證期間，5 檔版本報酬較高（+154% 對 +119%）、跌幅也小很多，值得再確認。",
+            "reviewConfirmed": false,
+            "sourceNote": "Claude 示範改寫，研究端尚未核對；適用原報告設定，不代表整類方法的結論。",
+            "status": "結果不一",
+            "reportPath": "tasks/20260906-five-slot-baseline/report.md"
+        },
+        "20260906-five-slot-confirmation": {
+            "plainTitle": "5 檔版本禁得起嚴格檢查嗎？",
+            "plainConclusion": "這次研究的摘要：7 道事先定好的穩健檢查只過 2 道；例如晚一天買，效果就只剩六成。",
+            "reviewConfirmed": false,
+            "sourceNote": "Claude 示範改寫，研究端尚未核對；適用原報告設定，不代表整類方法的結論。",
+            "status": "行不通",
+            "reportPath": "tasks/20260906-five-slot-confirmation/report.md"
+        },
+        "20260906-loss-anatomy": {
+            "plainTitle": "賣掉後先冷卻幾天，能擋住連續虧損嗎？",
+            "plainConclusion": "這次研究的摘要：不能。連續虧損來自很多不同股票的快速小賠，這是這類策略本身的代價。",
+            "reviewConfirmed": false,
+            "sourceNote": "Claude 示範改寫，研究端尚未核對；適用原報告設定，不代表整類方法的結論。",
+            "status": "已結案",
+            "reportPath": "tasks/20260906-loss-anatomy/report.md"
+        },
+        "20260907-streak-correction": {
+            "plainTitle": "「連續賠錢會賠多少」算對了嗎？",
+            "plainConclusion": "這次研究的摘要：原本的算法有兩處錯誤，更正後數字改變了，但各研究的結論都沒有翻轉。",
+            "reviewConfirmed": false,
+            "sourceNote": "Claude 示範改寫，研究端尚未核對；適用原報告設定，不代表整類方法的結論。",
+            "status": "結果不一",
+            "reportPath": "tasks/20260907-streak-correction/report.md"
+        },
+        "20260908-executable-fills": {
+            "plainTitle": "用真的買得到的價格重算，還賺得到嗎？",
+            "plainConclusion": "這次研究的摘要：快速換股的版本報酬幾乎全沒了；抱至少 20 天的版本保住約八成，但仍輸給同期放著 0050。",
+            "reviewConfirmed": false,
+            "sourceNote": "Claude 示範改寫，研究端尚未核對；適用原報告設定，不代表整類方法的結論。",
+            "status": "結果不一",
+            "reportPath": "tasks/20260908-executable-fills/report.md"
+        },
+        "20261004-feature-discrimination-atlas": {
+            "plainTitle": "哪些股票特徵和「之後翻倍」有關？",
+            "plainConclusion": "這次研究的摘要：最明顯的是「近 60 天漲幅排在前段」，但符合的股票裡仍有約九成沒有翻倍。",
+            "reviewConfirmed": false,
+            "sourceNote": "Claude 示範改寫，研究端尚未核對；適用原報告設定，不代表整類方法的結論。",
+            "status": "研究中",
+            "reportPath": "tasks/20261004-feature-discrimination-atlas/report.md"
+        },
+        "20261005-method-environment-interactions": {
+            "plainTitle": "突破、拉回、2B 這些買法，搭配強勢股會更好嗎？",
+            "plainConclusion": "這次研究的摘要：都沒有比單看「近期相對強勢」更好；不代表這些買法完全無效。",
+            "reviewConfirmed": false,
+            "sourceNote": "Claude 示範改寫，研究端尚未核對；適用原報告設定，不代表整類方法的結論。",
+            "status": "行不通",
+            "reportPath": "tasks/20261005-method-environment-interactions/report.md"
+        },
+        "20261005-industry-role-comparison": {
+            "plainTitle": "產業走強時，買領頭的還是買補漲的？",
+            "plainConclusion": "這次研究的摘要：三種選法都沒通過；領頭股之後翻倍的比例最高，但差距不夠大。",
+            "reviewConfirmed": false,
+            "sourceNote": "Claude 示範改寫，研究端尚未核對；適用原報告設定，不代表整類方法的結論。",
+            "status": "行不通",
+            "reportPath": "tasks/20261005-industry-role-comparison/report.md"
+        },
+        "20261005-relative-strength-holding": {
+            "plainTitle": "強勢股跌破 20 日線賣，還是 60 日線賣？",
+            "plainConclusion": "這次研究的摘要：比較的工具已經準備好，還沒有實際測試績效。",
+            "reviewConfirmed": false,
+            "sourceNote": "Claude 示範改寫，研究端尚未核對；適用原報告設定，不代表整類方法的結論。",
+            "status": "研究中",
+            "reportPath": "tasks/20261005-relative-strength-holding/report.md"
+        },
+        "20261002-add-retry": {
+            "plainTitle": "小量試單、漲了再加碼，行得通嗎？",
+            "plainConclusion": "正常成交的模擬通過初步開發篩選，值得繼續研究；尚未通過最後驗證，也尚未採用。",
+            "reviewConfirmed": false,
+            "sourceNote": "依正式 saved run 結論改寫，研究端尚未核對。"
+        },
+        "20261002-entry-extension-cap": {
+            "plainTitle": "試單策略加上「不追高」，會更好嗎？",
+            "plainConclusion": "這次固定設定沒有通過開發要求；保留原策略約14%的淨獲利，不代表所有不追高方法都無效。",
+            "reviewConfirmed": false,
+            "sourceNote": "依正式 saved run 結論改寫，研究端尚未核對。"
+        },
+        "20261009-hhhl-pattern-probability": {
+            "plainTitle": "頭頭高、底底高之後，有多常翻倍？",
+            "reviewConfirmed": false,
+            "sourceNote": "依 tasks/20261009-hhhl-pattern-probability/report.md 的研究範圍與既有內容改寫標題、摘要，尚待研究端核對；未新增研究結果或正式判定。",
+            "plainConclusion": "固定 v1 型態後翻倍的比例為 7.86%，新高爆量對照為 7.88%，這輪未顯示額外優勢；這是事後機率描述，不是可交易報酬。"
+        },
+        "20261004-sector-wave-full-history-preview": {
+            "plainTitle": "2010 年起，股票與族群出現過哪些上漲波段？",
+            "reviewConfirmed": false,
+            "sourceNote": "依 tasks/20261004-sector-wave-full-history-preview/report.md 的研究範圍與既有內容改寫標題、摘要，尚待研究端核對；未新增研究結果或正式判定。",
+            "section": "market",
+            "plainConclusion": "已用本機資料辨識 2010 年起的股票與族群波段，供歷史查詢與比較；仍是初步事後辨識，規則未定，也未驗證事前選股能力。"
+        },
+        "20261004-method-environment-map": {
+            "plainTitle": "各種買法要在什麼環境下比較？",
+            "reviewConfirmed": false,
+            "sourceNote": "依 tasks/20261004-method-environment-map/report.md 的研究範圍與既有內容改寫標題、摘要，尚待研究端核對；未新增研究結果或正式判定。",
+            "section": "design",
+            "plainConclusion": "已整理各種買法的來源、待測假設與後續研究入口；這份是文獻與設計紀錄，本輪沒有市場成效評估。"
+        },
+        "20261003-wave-lab-preview": {
+            "plainTitle": "用分段與濾波比較上漲波段的起點",
+            "reviewConfirmed": false,
+            "sourceNote": "依 tasks/20261003-wave-lab-preview/report.md 的研究範圍與既有內容改寫標題、摘要，尚待研究端核對；未新增研究結果或正式判定。",
+            "section": "design",
+            "plainConclusion": "已提供分段、濾波與不同尺度的少量案例比較，數值檢查通過；波段標記仍待確認，不能當作方法有效的證據。"
+        },
+        "20261002-sector-wave-catalog": {
+            "plainTitle": "整理台股翻倍與族群上漲的事後清單",
+            "reviewConfirmed": false,
+            "sourceNote": "依 tasks/20261002-sector-wave-catalog/report.md 的研究範圍與既有內容改寫標題、摘要，尚待研究端核對；未新增研究結果或正式判定。",
+            "section": "market",
+            "plainConclusion": "已整理 2019 年起台股翻倍事件與族群上漲的事後清單，也保留未翻倍者作比較；尚未驗證提前選出贏家的能力。"
+        },
+        "20261002-sector-role-evidence": {
+            "plainTitle": "用公司來源補查產業角色與產品分類",
+            "reviewConfirmed": false,
+            "sourceNote": "依 tasks/20261002-sector-role-evidence/report.md 的研究範圍與既有內容改寫標題、摘要，尚待研究端核對；未新增研究結果或正式判定。",
+            "section": "market",
+            "plainConclusion": "第一批完成 18 家公司的來源補查與 23 筆業務角色註記；仍有 200 家待補證，歷史生效期間尚未確認。"
+        },
+        "20260906-three-slot-equal-risk": {
+            "plainTitle": "只抱 3 檔，再拉平每筆風險，會更好嗎？",
+            "reviewConfirmed": false,
+            "sourceNote": "依 tasks/20260906-three-slot-equal-risk/report.md 的研究範圍與既有內容改寫標題、摘要，尚待研究端核對；未新增研究結果或正式判定。",
+            "plainConclusion": "只抱 3 檔並採等風險下單，五種風險預算都未通過預先設定的要求；較小風險能縮短連賠，但也犧牲報酬，驗證期未開啟。"
+        },
+        "20260906-execution-reality": {
+            "plainTitle": "漏做幾天、少買幾檔或資金較少，會差多少？",
+            "reviewConfirmed": false,
+            "sourceNote": "依 tasks/20260906-execution-reality/report.md 的研究範圍與既有內容改寫標題、摘要，尚待研究端核對；未新增研究結果或正式判定。",
+            "plainConclusion": "這份操作量測顯示少買幾檔的影響比隨機漏做少數交易日大；200 萬資金雖可按模型計算，但多數買單是零股，實際成交假設仍待確認。"
+        },
+        "20260906-exchange-rate": {
+            "plainTitle": "少換股要犧牲多少飆股漲幅？",
+            "reviewConfirmed": false,
+            "sourceNote": "依 tasks/20260906-exchange-rate/report.md 的研究範圍與既有內容改寫標題、摘要，尚待研究端核對；未新增研究結果或正式判定。",
+            "plainConclusion": "這份量測顯示，壓低換股次數會犧牲飆股漲幅，時間型與價格型賣法都未同時達到週轉與覆蓋要求；兩種機制的差距比訓練期小。"
+        },
+        "20260906-equal-risk-sizing": {
+            "plainTitle": "每筆承擔相同風險，能減少連賠嗎？",
+            "reviewConfirmed": false,
+            "sourceNote": "依 tasks/20260906-equal-risk-sizing/report.md 的研究範圍與既有內容改寫標題、摘要，尚待研究端核對；未新增研究結果或正式判定。",
+            "plainConclusion": "等風險下單能降低損益波動與連賠，但也降低報酬；只有一種設定通過部分門檻，未形成要求的連續三格，因此未開啟驗證期。"
+        },
+        "20260906-absolute-entry-bar": {
+            "plainTitle": "分數不夠就不買，能避開連續虧損嗎？",
+            "reviewConfirmed": false,
+            "sourceNote": "依 tasks/20260906-absolute-entry-bar/report.md 的研究範圍與既有內容改寫標題、摘要，尚待研究端核對；未新增研究結果或正式判定。",
+            "plainConclusion": "加上分數不夠就不買的門檻，五種設定都未通過要求；買得更少、報酬更低，仍未把連續虧損壓到預定範圍。"
+        },
+        "20260905-wide-giveback": {
+            "plainTitle": "同時抱很多檔，漲幅回吐時賣出會更好嗎？",
+            "reviewConfirmed": false,
+            "sourceNote": "依 tasks/20260905-wide-giveback/report.md 的研究範圍與既有內容改寫標題、摘要，尚待研究端核對；未新增研究結果或正式判定。",
+            "plainConclusion": "多檔持股搭配漲幅回吐停利，未形成預先要求的穩定通過區間；唯一通過部分門檻的設定依賴少數股票，驗證期未開啟。"
+        },
+        "20260905-weekly-structure": {
+            "plainTitle": "週線均線密集，和後續大漲有關嗎？",
+            "reviewConfirmed": false,
+            "sourceNote": "依 tasks/20260905-weekly-structure/report.md 的研究範圍與既有內容改寫標題、摘要，尚待研究端核對；未新增研究結果或正式判定。",
+            "plainConclusion": "訓練期裡，週線均線密集和較長期間的大漲較有關，與短期快漲的關係較弱；這是特徵量測，驗證期未開啟。"
+        },
+        "20260905-min-hold": {
+            "plainTitle": "至少抱一段時間，能少換股又保留漲幅嗎？",
+            "reviewConfirmed": false,
+            "sourceNote": "依 tasks/20260905-min-hold/report.md 的研究範圍與既有內容改寫標題、摘要，尚待研究端核對；未新增研究結果或正式判定。",
+            "plainConclusion": "最低持有期在訓練期看似兼顧少換股與飆股覆蓋，但預先選定的三種設定在驗證期全部未通過；較長持有仍須付出覆蓋率的代價。"
+        },
+        "20260905-add-trigger": {
+            "plainTitle": "哪些訊號適合用來決定加碼？",
+            "reviewConfirmed": false,
+            "sourceNote": "依 tasks/20260905-add-trigger/report.md 的研究範圍與既有內容改寫標題、摘要，尚待研究端核對；未新增研究結果或正式判定。",
+            "plainConclusion": "六種候選加碼訊號都未通過訓練期的預設量測要求，效果也未超出股票代號雜訊對照能製造的範圍；這份沒有帳戶回測，驗證期未讀。"
+        },
+        "20260904-swap-rule": {
+            "plainTitle": "何時把持股換成排名更高的股票？",
+            "reviewConfirmed": false,
+            "sourceNote": "依 tasks/20260904-swap-rule/report.md 的研究範圍與既有內容改寫標題、摘要，尚待研究端核對；未新增研究結果或正式判定。",
+            "plainConclusion": "九種換股設定只有一種通過全部門檻，未形成要求的連續三格；依事前規則不成立，驗證期維持封存。"
+        },
+        "20260904-slot-accounting": {
+            "plainTitle": "停牌持股也要佔名額：修正持股計算",
+            "reviewConfirmed": false,
+            "sourceNote": "依 tasks/20260904-slot-accounting/report.md 的研究範圍與既有內容改寫標題、摘要，尚待研究端核對；未新增研究結果或正式判定。 分類為方法工具：原報告描述停牌槽位計算修正與驗算，並非新的策略效果研究。",
+            "plainConclusion": "已修正停牌持股不佔名額、導致超額買進的錯誤，修正後兩套引擎的結果一致；這是計算修正，不是新的策略成效證明。",
+            "section": "design"
+        },
+        "20260904-book-size": {
+            "plainTitle": "同時抱多少檔，會影響報酬與飆股參與？",
+            "reviewConfirmed": false,
+            "sourceNote": "依 tasks/20260904-book-size/report.md 的研究範圍與既有內容改寫標題、摘要，尚待研究端核對；未新增研究結果或正式判定。",
+            "plainConclusion": "增加持股檔數在訓練期降低報酬，在驗證期卻同時提高報酬與飆股參與，原先取捨發生反轉；報告揭露停牌計算缺陷，另由後續任務修正。"
+        },
+        "20260903-entry-window": {
+            "plainTitle": "錯過幾天沒買，還有機會跟上飆股嗎？",
+            "reviewConfirmed": false,
+            "sourceNote": "依 tasks/20260903-entry-window/report.md 的研究範圍與既有內容改寫標題、摘要，尚待研究端核對；未新增研究結果或正式判定。",
+            "plainConclusion": "訓練期的飆股進場機會並非只剩一天，量測中一個月缺席也沒有漏掉整檔機會；這是進場窗口量測，不能當作實際成交或報酬保證。"
+        },
+        "20260826-tail-selection": {
+            "plainTitle": "分數能挑出更可能大漲的股票嗎？",
+            "reviewConfirmed": false,
+            "sourceNote": "依 tasks/20260826-tail-selection/report.md 的研究範圍與既有內容改寫標題、摘要，尚待研究端核對；未新增研究結果或正式判定。",
+            "plainConclusion": "分數能縮小較可能大漲的股票範圍，但在已篩出的股票裡，十種次要排序都未通過要求；不能把篩選能力當成能排出誰漲最多。"
+        },
+        "20260824-ranking-horizon": {
+            "plainTitle": "用較長期間或風險調整分數選股，會更好嗎？",
+            "reviewConfirmed": false,
+            "sourceNote": "依 tasks/20260824-ranking-horizon/report.md 的研究範圍與既有內容改寫標題、摘要，尚待研究端核對；未新增研究結果或正式判定。",
+            "plainConclusion": "拉長排序期間或做風險調整，確實改變選出的股票，卻沒有任何一種做法通過樣本外要求；不能由選股風格改變推論績效改善。"
+        },
+        "20260823-turnover-mechanism": {
+            "plainTitle": "少換股，會失去多少選股效果？",
+            "reviewConfirmed": false,
+            "sourceNote": "依 tasks/20260823-turnover-mechanism/report.md 的研究範圍與既有內容改寫標題、摘要，尚待研究端核對；未新增研究結果或正式判定。",
+            "plainConclusion": "一種最短持有設定在驗證期比基準報酬更高、換股更少，但放寬排名區間會持續改善的假設未成立；各設定在空頭期仍有明顯虧損。"
+        },
+        "20260823-rank-profile": {
+            "plainTitle": "排名前段和後段的報酬差多少？",
+            "reviewConfirmed": false,
+            "sourceNote": "依 tasks/20260823-rank-profile/report.md 的研究範圍與既有內容改寫標題、摘要，尚待研究端核對；未新增研究結果或正式判定。",
+            "plainConclusion": "這份診斷未量出排名 1–10 與 30、60 名帶的明確報酬差距，也更正了先前超出證據的集中度說法；沒有事前驗收規則，不能當作正式策略判定。"
+        },
+        "20260820-kline-archetype-extension": {
+            "plainTitle": "再比較三種 K 線買法在不同產業的表現",
+            "reviewConfirmed": false,
+            "sourceNote": "依 tasks/20260820-kline-archetype-extension/report.md 的研究範圍與既有內容改寫標題、摘要，尚待研究端核對；未新增研究結果或正式判定。",
+            "plainConclusion": "新增三種 K 線買法與五個產業的 15 種組合都未通過預先規則，原因包括樣本不足及兩段期間表現不一致；低帳戶回撤也不等於每筆交易風險較低。"
+        },
+        "20260814-2b-false-break-structure": {
+            "plainTitle": "2B 假跌破的形狀，會影響策略表現嗎？",
+            "reviewConfirmed": false,
+            "sourceNote": "依 tasks/20260814-2b-false-break-structure/mission.md 的研究範圍與既有內容改寫標題、摘要，尚待研究端核對；未新增研究結果或正式判定。",
+            "plainConclusion": "這筆歷程保存的是比較 2B 假跌破深度、回復速度與回看期間的規劃，固定賣出與部位設定；尚未提供正式結果報告。"
+        },
+        "20260812-loop-explore-v2": {
+            "plainTitle": "調整停損與 2B 條件，能改善台積電與聯發科策略嗎？",
+            "reviewConfirmed": false,
+            "sourceNote": "依 tasks/20260812-loop-explore-v2/mission.md 的研究範圍與既有內容改寫標題、摘要，尚待研究端核對；未新增研究結果或正式判定。",
+            "plainConclusion": "這筆歷程保存的是調整台積電與聯發科的停損、2B 條件的研究規劃；尚未提供正式結果報告，不能由規劃判定方法有效。"
+        }
+    }
+}

@@ -1,0 +1,49 @@
+{
+    "base": {
+        "windows": [5, 10, 20],
+        "exit_window": 10,
+        "slow_exit_window": 20,
+        "swing_lookback": 20,
+        "trend_window": 20,
+        "lot_size": 1000,
+        "initial_allocation_pct": 0.18,
+        "add_allocation_pct": 0.12,
+        "partial_sell_pct": 0.5,
+        "stop_loss_pct": 8.0,
+        "two_b_break_pct": 0.0
+    },
+    "runs": [
+        {
+            "name": "sma_tight_fast_reclaim",
+            "params": {
+                "ma_type": "sma",
+                "convergence_pct": 1.5,
+                "reclaim_window": 3
+            }
+        },
+        {
+            "name": "sma_balanced",
+            "params": {
+                "ma_type": "sma",
+                "convergence_pct": 2.0,
+                "reclaim_window": 5
+            }
+        },
+        {
+            "name": "ema_balanced",
+            "params": {
+                "ma_type": "ema",
+                "convergence_pct": 2.0,
+                "reclaim_window": 5
+            }
+        },
+        {
+            "name": "ema_loose_slow_reclaim",
+            "params": {
+                "ma_type": "ema",
+                "convergence_pct": 3.0,
+                "reclaim_window": 8
+            }
+        }
+    ]
+}

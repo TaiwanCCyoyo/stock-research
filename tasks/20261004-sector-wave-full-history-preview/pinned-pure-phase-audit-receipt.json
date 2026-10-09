@@ -1,0 +1,26 @@
+{
+    "schema_version": "opportunity-pinned-pure-phase-audit.v1",
+    "status": "verified",
+    "manifest_sha256": "c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140",
+    "code_identity": {
+        "source": {
+            "analysis": "550c277df28c7ac0b2d4deb69b67eb137b500c0f8b2c80c78880fda79aef1a25",
+            "types": "9ee6c25365f2acbaf889151fa29727457e70319277aa60cca64bcadd38a675cb"
+        },
+        "method": "wave-lab-exploratory.v1",
+        "wrapper": {
+            "sha256": "28269b769fa8d150e7c4bf86459d06d4a41c33bc8b453384e2d6b8bae9bc9b09"
+        }
+    },
+    "audit_script_sha256": "c637eaeb030ad1469ec37466a03342dc8d3e5a9d6811bfe90d80a4814d4d12ff",
+    "native_security_count": 1970,
+    "method_record_count": 11820,
+    "phase_count": 2579106,
+    "comparison_basis": "deep_exact_original_pinned_phase_function_from_saved_finite_slopes",
+    "curve_fit_recomputed": false,
+    "source_file_modified": false,
+    "prior_receipt": {
+        "path": "query-native-price-semantics-audit-receipt.json",
+        "sha256": "32b0df51c7068088efaf9d06f692d57bd9c696f1eeef8a6b23bdfb0b6923ea89"
+    }
+}

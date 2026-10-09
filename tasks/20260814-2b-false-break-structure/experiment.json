@@ -1,0 +1,57 @@
+{
+    "schema_version": "1.0",
+    "hypothesis": "The 2B setup's edge comes from the shape of the false break itself, not from the exit rules. Requiring price to poke decisively through the prior swing (two_b_break_pct > 0) and then reclaim it quickly should trade less often but with a higher payoff ratio, because a shallow poke at a 0% threshold is indistinguishable from noise. A longer swing_lookback should reinforce this by drawing the reference level from a more significant high/low.",
+    "strategy": {
+        "path": "two_b_ma_convergence.py"
+    },
+    "run": {
+        "codes": "2330,2454,2317,2881,2303,2412,1301,2002",
+        "cash": 10000000,
+        "data_path": "shioaji_stock_prices/data",
+        "benchmark_code": "2330"
+    },
+    "dimensions": [
+        {
+            "name": "two_b_break_pct",
+            "kind": "range",
+            "min": 0.0,
+            "max": 2.0,
+            "step": 0.25
+        },
+        {
+            "name": "swing_lookback",
+            "kind": "range",
+            "min": 10,
+            "max": 40,
+            "step": 5
+        },
+        {
+            "name": "reclaim_window",
+            "kind": "range",
+            "min": 2,
+            "max": 8,
+            "step": 1
+        }
+    ],
+    "gates": {
+        "min_expectancy": 0.0,
+        "min_payoff_ratio": 2.0,
+        "min_profit_factor": 1.0,
+        "min_closed_trades": 5
+    },
+    "windows": {
+        "train": {
+            "start": "2022-01-01",
+            "end": "2024-12-31"
+        },
+        "holdout": {
+            "start": "2025-01-01",
+            "end": "2025-12-31"
+        }
+    },
+    "stop_conditions": {
+        "max_iterations": 12,
+        "no_improvement_rounds": 5,
+        "wall_clock_minutes": 90
+    }
+}

@@ -1,0 +1,71 @@
+{
+    "schema_version": "hhhl-publication.v1",
+    "asset_id": "hhhl-probability.v1",
+    "phase": "descriptive_provisional",
+    "run_id": "hhhl-v1-descriptive-02",
+    "code_commit": "35bd7778cda505f827b056f5666fb22ca178b9bf",
+    "source_dataset_id": "fda-86245f2e223fc45c9f84afb0dcf77c1fff7ab22d0a1b0b4a4c8800972ce9327e",
+    "window": {
+        "start": "2019-01-02",
+        "end": "2026-08-14"
+    },
+    "bundle": {
+        "path": "bundle.zip",
+        "sha256": "c23bc4175c2ebec79ff67e69b437fe59bc47262330b2c6f0f5f1ff38f57cfde8",
+        "bytes": 235338,
+        "members": {
+            "inputs/uv.lock": "471fc417b198229cd238f531fd6d3925824e195ab193bc545638058f3026fc8d",
+            "inputs/research_core/hhhl_probability.py": "68d3ce12652a570e50158c8e20b49684ee8e086a8d53dc89c9f30ec38017f8fd",
+            "inputs/research_core/hhhl_rule_source.py": "42189d14ca9bc395b1fb39b9261e24b678540a6867a73c6e5164c3333830932c",
+            "inputs/research_core/hhhl_transition.py": "93e3451f70659abcca24a76b92d299684378031922e8acd5d245362d41f7f66f",
+            "inputs/scripts/build_hhhl_probability.py": "a62dbaa1f414bcd743f9c5c972e0986081b973a217a38ad76284cdcd768ab511",
+            "inputs/tasks/20261009-hhhl-pattern-probability/data-contract.md": "6f48994fd7a1cbfd9ef2f6efbd0ece2704584e25a1e00a8f88f50e3ae175861e",
+            "inputs/tasks/20261009-hhhl-pattern-probability/mission.md": "63561d104ff8ad0af2fea3d17e0e7f9598cb96b0019af6fb92f7c645f61fa126",
+            "inputs/tasks/20261009-hhhl-pattern-probability/sources/hhhl_rule_v1.zip": "1dcfc9f9942e41cb857351db8631e335ad2d39ed07eadab62ac415d586605ff4",
+            "outputs/audit-sample.parquet": "708657f65b4c03168e28608ac552c8c6b12e8b4cbf681cf1c1333b635160a56d",
+            "outputs/manifest-corrected.json": "416b98ca2899f3be608eb85e8e2ccdeb256167d521ca3b252060310fa35bcaa3",
+            "outputs/manifest.json": "477d798ab3d1fbc61f203ef5801bf1bf3aac07a992543e4b95346d16c9dda5ed",
+            "outputs/summaries.json": "228eca45420c237a40315b05b4df63a7d29b13aa8f3216a4ffb440fb9da0f416"
+        }
+    },
+    "authoritative_completion_metadata": "bundle.zip:outputs/manifest-corrected.json",
+    "comparisons": 558,
+    "canonical_run": "D:/Project/Stock/tasks/20261009-hhhl-pattern-probability/datasets/hhhl-v1-descriptive-02",
+    "artifacts": {
+        "audit-sample.parquet": {
+            "sha256": "708657f65b4c03168e28608ac552c8c6b12e8b4cbf681cf1c1333b635160a56d",
+            "bytes": 6320
+        },
+        "controls.parquet": {
+            "sha256": "d322dc956d0ad0b1499bb18cd57e8074542d5d5b863602b8cd68b7ddf3f1f256",
+            "bytes": 7800606
+        },
+        "events.parquet": {
+            "sha256": "9b4235719f000c05bb90847c2707012ebc3c3265b3421948e4040e6e2c33d14d",
+            "bytes": 9807640
+        },
+        "noise.parquet": {
+            "sha256": "a0686a6f9e236dc2efcffee88504199baa03c3cacc3a39ed1a183553755dd8a3",
+            "bytes": 2328900
+        },
+        "summaries.json": {
+            "sha256": "228eca45420c237a40315b05b4df63a7d29b13aa8f3216a4ffb440fb9da0f416",
+            "bytes": 614982
+        },
+        "transitions.parquet": {
+            "sha256": "3ea69ae148b1466445423033358c3aa7781dc969ef84197d2607401a40654cb1",
+            "bytes": 7106582
+        }
+    },
+    "availability": {
+        "git": "All comparisons, audit sample, both completion records, and eight declared input snapshots in bundle.zip.",
+        "local_only": "Bulk event/control/noise/transition Parquet and upstream atlas-v2 tables. Physical primary files; not a disaster backup.",
+        "recompute": "Requires upstream atlas-v2 and repository code/dependencies at the recorded commit. The eight snapshots are not a complete standalone environment."
+    },
+    "limitations": [
+        "v1 failed owner visual recall; Claude definitions are provisional, not final owner approval.",
+        "Exposed, current-reference survivor cohort with overlapping events and common-market dependence; no independent confirmation or calibrated future probabilities.",
+        "Prices are permanent-action-adjusted, cash dividends remain price drops; no fills, costs or portfolio returns.",
+        "Original manifest self-hash defect is explicitly preserved and additively corrected; all six scientific artifacts unchanged."
+    ]
+}

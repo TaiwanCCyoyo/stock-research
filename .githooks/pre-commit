@@ -1,0 +1,3 @@
+#!/bin/sh
+# Development checks cover optional viewers too; research runs do not need them.
+exec uv run --group dev --group viewer --group static-report python -m pre_commit hook-impl --config=.pre-commit-config.yaml --hook-type=pre-commit --hook-dir="$(dirname "$0")" -- "$@"

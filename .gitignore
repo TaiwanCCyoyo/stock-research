@@ -1,0 +1,227 @@
+# Ignore local reference clones and disposable workspace files
+.references/
+.tmp/
+/research_cache/
+.worktrees/
+.claude/worktrees/
+
+# Local attachments supplied to Codex sessions
+/.codex-remote-attachments/
+
+# Python Environment & Cache
+.uv/
+
+# --- Python Essentials ---
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+/lib/
+/lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# --- Environments ---
+.env
+.env.local
+.venv
+env/
+venv/
+ENV/
+*.bak
+ENVIRONMENT_SETTING.md
+
+# --- IDEs ---
+.vscode/*
+!.vscode/settings.json
+.idea/
+
+# --- Stock Project Specific ---
+# Data (Ignore large binaries and raw CSVs)
+shioaji_stock_prices/data/*/
+StockProject/data/
+*.parquet
+*.csv
+*.key
+
+# AI Research Candidates (Ignore generated strategies, keep the project clean)
+StockProject/strategies/candidates/
+
+# Analytics & Logs
+reports/
+research_lab/site/
+StockProject/analytics/*.log
+StockProject/analytics/STOP
+StockProject/analytics/lab_process.log
+StockProject/analytics/lab_report.md
+
+# --- Research tasks ---
+# Track the method (design, strategy code, harness scripts) and the conclusions
+# (report); leave the run outputs out. Per task the documents and code are ~100KB
+# while `runs/` is 13-30MB of summary JSON that the harness regenerates from
+# scratch -- cost without durability. `sweep_results.json` is the deliberate
+# exception at 32-48KB: it is the compact per-cell aggregate every report table is
+# built from, so it keeps a report checkable without shipping the runs.
+#
+# Git cannot re-include a file whose parent directory is excluded, so the task
+# directories are re-included first and the exclusion is then applied to contents.
+# Editing order matters here: a `!` line only works if every parent above it is
+# already back in.
+tasks/*
+!tasks/*/
+tasks/*/**
+!tasks/*/*.md
+!tasks/*/*.py
+!tasks/*/report.html
+!tasks/*/sweep_results.json
+!tasks/*/window_results.json
+!tasks/*/concentration.json
+!tasks/*/add_trigger_results.json
+!tasks/*/exchange_rate_results.json
+!tasks/*/execution_reality_results.json
+!tasks/20261004-sector-wave-full-history-preview/method-snapshot/
+!tasks/20261004-sector-wave-full-history-preview/method-snapshot/*.ts
+!tasks/20261005-market-full-history-web/presentation-manifest.json
+!tasks/*/confirmation_results.json
+!tasks/*/absolute_bar_results.json
+!tasks/*/loss_anatomy_results.json
+!tasks/*/equal_risk_results.json
+!tasks/*/streak_correction_results.json
+!tasks/*/executable_fills_results.json
+!tasks/*/research_result.json
+!tasks/20261009-hhhl-pattern-probability/sources/
+!tasks/20261009-hhhl-pattern-probability/sources/*.zip
+!tasks/20261009-hhhl-pattern-probability/sources/validation-cases.json
+!tasks/20261009-hhhl-pattern-probability/publication-v1/
+!tasks/20261009-hhhl-pattern-probability/publication-v1/bundle.zip
+!tasks/20261009-hhhl-pattern-probability/publication-v1/manifest.json
+!tasks/20261010-hhhl-v4-probability/sources/
+!tasks/20261010-hhhl-v4-probability/sources/*.zip
+!tasks/20261010-hhhl-v4-probability/preparation-v1/
+!tasks/20261010-hhhl-v4-probability/preparation-v1/bundle.zip
+!tasks/20261010-hhhl-v4-probability/landmark-audit-v1.zip
+!tasks/20261008-research-data-architecture/publication-v1/
+!tasks/20261008-research-data-architecture/publication-v1/bundle.zip
+!tasks/20261008-research-data-architecture/publication-v1/review2.zip
+!tasks/20261008-research-data-architecture/publication-v2/
+!tasks/20261008-research-data-architecture/publication-v2/bundle.zip
+!tasks/20261008-research-data-architecture/publication-v2/review8.zip
+!tasks/20261004-opportunity-explorer/preview-selections.json
+!tasks/20261004-opportunity-explorer/export-receipt.json
+!tasks/*/tests/
+!tasks/*/tests/*.py
+!tasks/*/benchmark_drawdown*.json
+!tasks/*/buy_and_hold_*.json
+!tasks/*/universe_build_report.json
+!tasks/*/experiment.json
+!tasks/*/research_result.json
+!tasks/*/candidates/
+!tasks/*/candidates/*.py
+!tasks/*/params/
+!tasks/*/params/*.json
+!tasks/20261002-sector-wave-catalog/catalog-v1/
+!tasks/20261002-sector-wave-catalog/catalog-v1/*.json
+!tasks/20261002-sector-wave-catalog/catalog-v1/chunks/
+!tasks/20261002-sector-wave-catalog/catalog-v1/chunks/*.json.gz
+!tasks/20261002-sector-role-evidence/evidence-v1.json
+!tasks/20261002-sector-role-evidence/completion-receipt.json
+!research_core/sector_role_review_scopes.v1.json
+!tasks/20261004-feature-discrimination-atlas/publication-v2/
+!tasks/20261004-feature-discrimination-atlas/publication-v2/**
+!tasks/20261005-market-context-handoff/market-context-v2/
+!tasks/20261005-market-context-handoff/market-context-v2/**
+!tasks/20261005-method-environment-interactions/preregistration/
+!tasks/20261005-method-environment-interactions/preregistration/*.json.gz
+!tasks/20261005-method-environment-interactions/publication-v1/
+!tasks/20261005-method-environment-interactions/publication-v1/**
+# The exact plain packet is retained in the committed compressed preregistration.
+tasks/20261005-method-environment-interactions/params/*.json
+!tasks/20261005-industry-role-comparison/preregistration/
+!tasks/20261005-industry-role-comparison/preregistration/*.json.gz
+!tasks/20261005-industry-role-comparison/publication-v2/
+!tasks/20261005-industry-role-comparison/publication-v2/**
+!tasks/20261005-relative-strength-holding/retained_execution/
+!tasks/20261005-relative-strength-holding/retained_execution/**
+!tasks/20261005-relative-strength-holding/execution-source-provenance.json
+tasks/20261005-industry-role-comparison/params/*.json
+!tasks/*/research_dashboard/
+!tasks/*/research_dashboard/*
+!tasks/sample/runs/
+!tasks/sample/runs/.gitkeep
+tasks/**/__pycache__/
+tasks/sample/runs/*
+!tasks/sample/runs/.gitkeep
+tasks/sample/strategies/
+!tasks/sample/
+
+# Logs
+*.log
+shioaji.log
+
+# Tooling Caches
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+.pre-commit-cache/
+.matplotlib-cache/
+
+# Streamlit
+.streamlit/credentials.toml
+.streamlit/secrets.toml
+
+# Playwright verification artifacts
+.playwright-mcp/
+verify-*.png
+*-task-full.png
+.claude/settings.local.json
+
+# Versioned local-history event bundle; large inputs, series and native fits stay local.
+!tasks/20261004-sector-wave-full-history-preview/params.json
+!tasks/20261004-sector-wave-full-history-preview/*receipt.json
+!tasks/20261004-sector-wave-full-history-preview/verification-receipt-v2.json
+!tasks/20261004-sector-wave-full-history-preview/verification-receipt-v3.json
+!tasks/20261004-sector-wave-full-history-preview/method-snapshot/
+!tasks/20261004-sector-wave-full-history-preview/method-snapshot/*.ts
+!tasks/20261004-sector-wave-full-history-preview/method-snapshot/*.json
+!tasks/20261004-sector-wave-full-history-preview/catalog-v1/
+!tasks/20261004-sector-wave-full-history-preview/catalog-v1/bundle-index.json
+!tasks/20261004-sector-wave-full-history-preview/catalog-v1/*.json.gz
+!tasks/20261004-sector-wave-full-history-preview/catalog-v2/
+!tasks/20261004-sector-wave-full-history-preview/catalog-v2/bundle-index.json
+!tasks/20261004-sector-wave-full-history-preview/catalog-v2/*.json.gz
+
+# Private presentation artifacts stay outside Vite public, even in local mode.
+/research_web/public/data/opportunity-explorer.json.gz
+/research_web/public/data/saved-research-runs.json.gz
+/research_web/public/data/research-evidence-v2-classified/opportunity-explorer.json.gz
+/research_web/public/data/research-evidence-v2-classified/saved-research-runs.json.gz
+/research_web/public/data/saved-research-studio.manifest.json
+/research_web/public/data/saved-research-studio.part-00000.bin
+/research_web/public/data/saved-research-studio.part-00001.bin
+/research_web/fixtures/opportunity-catalog.preview.v1.json.gz
+/research_web/fixtures/opportunity-explorer.before-classification.v1.json.gz
+
+# Preserved code-only source snapshot required by synthetic runtime parity.
+!tasks/20260823-rotation-universe/original-source.zip
+
+# Real quote vectors and source-factor packages stay local; public readers fail closed.
+/tasks/20261005-market-context-handoff/market-context-v2/inputs/0050.json.gz
+/tasks/20261009-hhhl-pattern-probability/publication-v1/bundle.zip
+/tasks/20261010-hhhl-v4-probability/preparation-v1/bundle.zip

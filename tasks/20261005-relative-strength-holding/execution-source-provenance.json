@@ -1,0 +1,27 @@
+{
+    "schema_version": "execution-source-provenance.v1",
+    "purpose": "Portable preservation of existing execution adapters, not a new market result or a replacement of source evidence.",
+    "source_boundary": "Original ignored files remain unchanged. Active copies are preserved by Git; only normal formatting and an explicit Mapping collection annotation in providers.py differ from the captured originals. Original hashes below identify the input files, not the reformatted copies. No old runner, account, feature source, or market dataset is included.",
+    "files": [
+        {
+            "path": "retained_execution/prototype/__init__.py",
+            "original_path": "D:/Project/Stock/.tmp/claude-kline/006-artifacts-5fe106d423484ccf959cc4e2e5d6f6d3/prototype/__init__.py",
+            "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+            "path": "retained_execution/prototype/execution_policy.py",
+            "original_path": "D:/Project/Stock/.tmp/claude-kline/006-artifacts-5fe106d423484ccf959cc4e2e5d6f6d3/prototype/execution_policy.py",
+            "original_sha256": "27c65e88d51d74a492b3ec421b9f891d37c80b8332937c42c6b11631af1c8fe8"
+        },
+        {
+            "path": "retained_execution/prototype/providers.py",
+            "original_path": "D:/Project/Stock/.tmp/claude-kline/006-artifacts-5fe106d423484ccf959cc4e2e5d6f6d3/prototype/providers.py",
+            "original_sha256": "4da59f271e28febdbf73c7d073da6f6223d131035ebb95bab8058b5c5e7585ed"
+        },
+        {
+            "path": "retained_execution/modeled_execution.py",
+            "original_path": "D:/Project/Stock/.tmp/claude-kline/008-codex-model-bridge/modeled_execution.py",
+            "original_sha256": "b6f1ae7988507162b145087d9cad65081ea2ab9a1c2660c666f29ead7f867a3e"
+        }
+    ]
+}

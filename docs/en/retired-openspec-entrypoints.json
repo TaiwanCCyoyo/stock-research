@@ -1,0 +1,87 @@
+{
+    "schema": "retired-openspec-entrypoints.v1",
+    "scope": "new stock-research only; old Stock and global settings unchanged",
+    "originalArchiveDigest": "sha256:f97c1792a368abf80a39fc05ed70974d7bb6e4ae80c40cf1190d727897e35798",
+    "files": [
+        {
+            "path": ".codex/skills/openspec-apply-change/SKILL.md",
+            "originalBytes": 5767,
+            "originalDigest": "sha256:417f222788ca306c339596dfbf8a8c0528439fc7c24e4c546f0809a5132212b2"
+        },
+        {
+            "path": ".codex/skills/openspec-archive-change/SKILL.md",
+            "originalBytes": 4949,
+            "originalDigest": "sha256:d86ef164d3c389cae098bdcf81803726bdfb3b54d3a248b48b7a977f422cc2d4"
+        },
+        {
+            "path": ".codex/skills/openspec-explore/SKILL.md",
+            "originalBytes": 11178,
+            "originalDigest": "sha256:ce0fb518eabb3be462c9ecb4eec50f3901a6f56666132b5f8d98483f93ded13b"
+        },
+        {
+            "path": ".codex/skills/openspec-propose/SKILL.md",
+            "originalBytes": 5098,
+            "originalDigest": "sha256:87cbbdac5db85fd5f276c5038f837ae30b173c3d3701344b982ac0632e7f83ed"
+        },
+        {
+            "path": ".codex/skills/openspec-sync-specs/SKILL.md",
+            "originalBytes": 4967,
+            "originalDigest": "sha256:ca5257ffc923af2be083bc1684a18ec895b6139d1b86063110d202e96c933c32"
+        },
+        {
+            "path": ".claude/skills/openspec-apply-change/SKILL.md",
+            "originalBytes": 5446,
+            "originalDigest": "sha256:75529baf340562c1052b7baab916a2eca4fbaad69451fb059a428c9aded499c6"
+        },
+        {
+            "path": ".claude/skills/openspec-archive-change/SKILL.md",
+            "originalBytes": 4928,
+            "originalDigest": "sha256:4788b1dffab058339b8b9edadd6cff134a17dd27de3ec2bacf7950f811bf5442"
+        },
+        {
+            "path": ".claude/skills/openspec-explore/SKILL.md",
+            "originalBytes": 11147,
+            "originalDigest": "sha256:1a136927dc8608c83255a110d4a6dc8f39205debb364aea8be37bb0b3eb138f8"
+        },
+        {
+            "path": ".claude/skills/openspec-propose/SKILL.md",
+            "originalBytes": 5004,
+            "originalDigest": "sha256:690092cd1a3b80c730714a86fa608b05c96fe0f0205327895a722f7e5d8fa201"
+        },
+        {
+            "path": ".claude/skills/openspec-sync-specs/SKILL.md",
+            "originalBytes": 5038,
+            "originalDigest": "sha256:12ae9ffc6e76d1a37cfcae1b9fd7364aa39f6e41c9c756ee62e3c1320723639e"
+        },
+        {
+            "path": ".claude/commands/opsx/apply.md",
+            "originalBytes": 5258,
+            "originalDigest": "sha256:156d168e59bf1d2af958b5db1607c705002ebe6e1586893fce23c69e7f6c5bf6"
+        },
+        {
+            "path": ".claude/commands/opsx/archive.md",
+            "originalBytes": 257,
+            "originalDigest": "sha256:d821f1c716d366ce0d6afa69873c7eb497fcfd78daa737bd765702a970de00f6"
+        },
+        {
+            "path": ".claude/commands/opsx/explore.md",
+            "originalBytes": 7042,
+            "originalDigest": "sha256:c97e55437222497c9adbff1130cb05371af7c2eead6826d506f3e2ec905f20bf"
+        },
+        {
+            "path": ".claude/commands/opsx/propose.md",
+            "originalBytes": 4766,
+            "originalDigest": "sha256:b8a4c84bf2ff7aee931561ef267a57c13a21460981b0326766440e6b3e1ca3d2"
+        },
+        {
+            "path": ".claude/commands/opsx/sync.md",
+            "originalBytes": 250,
+            "originalDigest": "sha256:170d1f13584e1dee46f3d9a111c2897c74ae393e3da03e6b2cebc7256f92a676"
+        },
+        {
+            "path": "openspec/config.yaml",
+            "originalBytes": 2034,
+            "originalDigest": "sha256:407ffc137909bbca205ddc226577d4e1446bb333c2228dc4c94c9c0fc3ce7269"
+        }
+    ]
+}

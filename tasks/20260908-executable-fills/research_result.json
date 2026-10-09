@@ -1,0 +1,54 @@
+{
+    "artifacts": [
+        "tasks/20260908-executable-fills/executable_fills_results.json",
+        "tasks/20260908-executable-fills/mission.md"
+    ],
+    "candidate_id": "rotation_ranker_v14__k5_er30_all",
+    "identities": {
+        "code": "tasks/20260908-executable-fills/candidates/rotation_ranker_v14.py",
+        "data_snapshot": "shioaji_stock_prices/data + tasks/20260824-ranking-horizon/features_v2.parquet",
+        "execution_contract": "tasks/20260908-executable-fills/candidates/execution_model.py",
+        "metric_contract": "tasks/20260908-executable-fills/mission.md#6",
+        "owner_contract": "docs/en/research-owner-contract.md@2026-09-08",
+        "runtime": "python3.12 win32"
+    },
+    "limitations": [
+        "Re-measurement of an already-viewed period; docs/en/research-registry.json records 2019-01-02..2026-08-14 as viewed.",
+        "Odd-lot fills after 2020-10-26 are modelled optimistically at the 09:00 open; the real first intraday odd-lot match is 09:10.",
+        "No intraday path, queue position, partial fill, or borrow is modelled.",
+        "Halt, suspension and delisting are indistinguishable in this data and are counted together as no_row.",
+        "This card measures execution only and cannot approve a strategy."
+    ],
+    "metrics": {
+        "buy_count": {
+            "unit": "count",
+            "value": 754
+        },
+        "max_drawdown": {
+            "unit": "fraction",
+            "value": 0.5938502680630691
+        },
+        "net_return": {
+            "unit": "fraction",
+            "value": 0.033297437500001394
+        },
+        "retention_of_close_fill_baseline": {
+            "unit": "ratio",
+            "value": 0.018458430117196445
+        },
+        "sub_lot_share": {
+            "unit": "fraction",
+            "value": 0.0
+        }
+    },
+    "outcome": "candidate_failed",
+    "phase": "exploration",
+    "run_id": "armA__trainodd__slip25",
+    "schema_version": "research-result.v1",
+    "study_id": "20260908-executable-fills",
+    "supersedes": [],
+    "window": {
+        "end": "2023-12-31",
+        "start": "2020-10-26"
+    }
+}

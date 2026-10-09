@@ -1,0 +1,4 @@
+interface:
+    display_name: "Design Notion Pages"
+    short_description: "Create clean, maintainable Notion dashboards and templates."
+    default_prompt: "Design or improve a Notion page with a clean productivity-dashboard layout, consistent visual system, useful database views, and concrete block-level build instructions."

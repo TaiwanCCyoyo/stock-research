@@ -1,0 +1,42 @@
+[
+    {
+        "universe": "semiconductor_liquid20",
+        "industry": "半導體業",
+        "eligible": 72,
+        "picked": 20,
+        "median_turnover_top": 18234103500.0,
+        "median_turnover_cut": 365310000.0
+    },
+    {
+        "universe": "computer_peripherals_liquid20",
+        "industry": "電腦及週邊設備業",
+        "eligible": 58,
+        "picked": 20,
+        "median_turnover_top": 1806785700.0,
+        "median_turnover_cut": 42957925.0
+    },
+    {
+        "universe": "electronic_parts_liquid20",
+        "industry": "電子零組件業",
+        "eligible": 95,
+        "picked": 20,
+        "median_turnover_top": 3098582500.0,
+        "median_turnover_cut": 103600125.0
+    },
+    {
+        "universe": "financial_liquid20",
+        "industry": "金融保險業",
+        "eligible": 28,
+        "picked": 20,
+        "median_turnover_top": 1017790650.0,
+        "median_turnover_cut": 19217100.0
+    },
+    {
+        "universe": "shipping_liquid20",
+        "industry": "航運業",
+        "eligible": 23,
+        "picked": 20,
+        "median_turnover_top": 3188268000.0,
+        "median_turnover_cut": 7611100.0
+    }
+]

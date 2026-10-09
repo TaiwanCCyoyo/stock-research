@@ -1,0 +1,308 @@
+{
+    "schema_version": "research-registry.v1",
+    "history_complete": false,
+    "events": [
+        {
+            "id": "stock-cache-utf8-and-restore-publication-20261008",
+            "kind": "correction",
+            "recorded_on": "2026-10-08",
+            "source": "tasks/20261008-research-data-architecture/report.md",
+            "supersedes": [
+                "https://github.com/TaiwanCCyoyo/Stock/blob/8fb2d463fb8b1b34dc7431404cf7faac0cab794d/research_core/cache_execution.py#pre-review6-worker-stream-encoding",
+                "tasks/20261008-research-data-architecture/publication-v2/bundle.zip#execution/artifact_backup.py:pre-review6-restore-publication"
+            ],
+            "note": "PR36 review found Windows non-UTF8 pipes could misreport a published cache as failed for Unicode paths, and interrupted restore could strand a partial final destination. Worker bootstrap/main streams now explicitly use UTF8 without global environment changes. Restore completes and verifies in a sibling staging tree before atomic destination publication; failed staging remains diagnostic and retry does not overwrite other writers. Synthetic regressions passed; historical actual restore/cache receipts remain unchanged and are not relabeled as a new execution."
+        },
+        {
+            "id": "stock-cache-execution-and-case-identity-20261008",
+            "kind": "correction",
+            "recorded_on": "2026-10-08",
+            "source": "tasks/20261008-research-data-architecture/report.md",
+            "supersedes": [
+                "tasks/20261008-research-data-architecture/publication-v1/bundle.zip#execution-source/validate_hhhl_cache_compatibility.py:original-case-identity",
+                "tasks/20261008-research-data-architecture/publication-v2/bundle.zip#implementation/derived_cache.py:pre-review5-loaded-execution-identity"
+            ],
+            "note": "PR36 review found the original-25 inventory check could accept replacement dates and that stale imported execution code could be paired with newer source hashes. Original inventory now requires the fixed archived cases SHA256. Public build/recompute/compatibility APIs run fresh source-only child processes, verify loaded source bytes before and after work, and include execution/artifact-store identity. Existing immutable caches and all v1/v2 receipts remain historical/readable; their sealed execution identity is not silently upgraded. No research outcomes or original compatibility results rewritten."
+        },
+        {
+            "id": "stock-price-basis-v2-jump-evidence-20261008",
+            "kind": "correction",
+            "recorded_on": "2026-10-08",
+            "source": "tasks/20261008-research-data-architecture/report.md",
+            "supersedes": [
+                "tasks/20261008-research-data-architecture/publication-v1/bundle.zip#cache-implementation/price_basis.py:v1-event-jump-exemption"
+            ],
+            "note": "PR36 review found event presence alone could incorrectly exempt a raw price jump. Price-basis.v2 requires a consistent single known event factor, event-type and jump-direction agreement, and normalized residual below the existing 40-percent quality threshold. Already-restated actions cannot exempt residual jumps again. Original v1 cache, compatibility, outcomes and receipts remain unchanged and readable; do not label them v2 validation. Input preparation now parses and hashes the same captured cases bytes and checks cases/actions again before completion. No outcome, new period or strategy evaluation authorized by these corrections."
+        },
+        {
+            "id": "stock-price-basis-versioning-boundary-20261008",
+            "kind": "correction",
+            "recorded_on": "2026-10-08",
+            "source": "tasks/20261008-research-data-architecture/report.md",
+            "supersedes": [
+                "tasks/20261008-research-data-architecture/publication-v1/bundle.zip#validation/compatibility.json:unqualified-price-policy-reuse"
+            ],
+            "note": "Versioning/reuse clarification, not replacement of historical results. Original HHHL v1-v4 bytes preserved; 25 original v4 source cases reproduced by the frozen detector. New explicit calendar quality-gap resets change two expected examples (5205/2024-07-22 and 8342/2024-06-03); 121 full event differences retained. Three price bases are not interchangeable or account total returns. No forward labels, probabilities, new periods, portfolio, confirmation or holdout evaluated. Existing viewed/unknown exposure remains. Full owner annotation delivery is pending; cache and backup receipts do not substitute for it."
+        },
+        {
+            "id": "bootstrap-price-exposure-20260908",
+            "kind": "exposure",
+            "scope": "taiwan-price-strategy",
+            "state": "viewed",
+            "window": {
+                "start": "2019-01-02",
+                "end": "2026-08-14"
+            },
+            "recorded_on": "2026-09-08",
+            "source": "tasks/20260906-five-slot-confirmation/mission.md",
+            "note": "Bootstrap from published admission that both price-strategy periods have been inspected; recorded_on is not first exposure time. Does not assert that every institutional raw input has been read. Changing agent/task does not restore statistical independence. Other history remains unknown."
+        },
+        {
+            "id": "streak-definition-correction-20260907",
+            "kind": "correction",
+            "recorded_on": "2026-09-08",
+            "source": "tasks/20260907-streak-correction/report.md",
+            "supersedes": [
+                "tasks/20260906-five-slot-confirmation/report.md#streak-measurement",
+                "tasks/20260906-absolute-entry-bar/report.md#streak-measurement",
+                "tasks/20260906-equal-risk-sizing/report.md#streak-measurement",
+                "tasks/20260906-three-slot-equal-risk/report.md#streak-measurement"
+            ],
+            "note": "Documented measurement correction only, not replacement of whole-card verdicts. Fragment labels identify affected measurements, not HTML anchors. No economics were recomputed by this bootstrap; the corrected synthetic measure is not an actual equity drawdown gate."
+        },
+        {
+            "id": "streak-implementation-defects-20260908",
+            "kind": "correction",
+            "recorded_on": "2026-09-08",
+            "source": "tasks/20260907-streak-correction/report.md#section-10",
+            "supersedes": [
+                "tasks/20260907-streak-correction/report.md#non-hit-filter-exception"
+            ],
+            "note": "Two defects in the 2026-09-07 correction script, both found by checking it against research_core.ledger rather than by re-reading it. (1) Dividends paid after the position closed fell through every branch and were dropped, 2-10 events per book, up to TWD 160570; surfaced because replay_ledger rejects those streams with 'DIVIDEND requires a current holding'. (2) The non-hit filter removed hits and then took contiguous windows of the remainder, splicing across a hit; consecutive_non_hit_effects treats a hit as breaking the window. Both fixed. Neither changes any published figure: all fifteen books keep their 20-consecutive-attempt values and all four re-scored cards keep their verdicts. The only changed number is the k5 holdout non-hit cell at the +30 percent threshold, 10.1 to 8.9 percent, which now equals the all-attempts value. The as_published column deliberately retains the original dividend-dropping pairing so it still reproduces what the four cards printed. This remains a synthetic diagnostic, not an account drawdown gate."
+        },
+        {
+            "id": "data-snapshot-comparability-20260908",
+            "kind": "correction",
+            "recorded_on": "2026-09-09",
+            "source": "tasks/20260908-executable-fills/mission.md#7.1",
+            "supersedes": [
+                "tasks/20260906-five-slot-confirmation/report.md#neighbourhood-returns",
+                "tasks/20260906-five-slot-baseline/report.md#headline-returns"
+            ],
+            "note": "Figures published from the rotation-turnover worktree before 2026-09-08 are slightly understated relative to main's current data. Re-running the k5/er30 train cell gives 230.5334 percent against the 228.0962 percent published 2026-09-06. The trades are bit-identical (1091 buys, same codes, same first date) and the entire 2.4372 point gap is five additional dividend events worth TWD 48744, matching to four decimals. A worktree's shioaji_stock_prices/data is frozen at creation time while corporate-action tables continue to be backfilled. Consequence: never compare a fresh run against a figure published from another checkout; re-run the baseline inside the same card. This corrects comparability, not any card's verdict."
+        },
+        {
+            "id": "executable-fills-reuse-boundary-20260909",
+            "kind": "correction",
+            "recorded_on": "2026-09-09",
+            "source": "docs/en/research-execution-contract.md#legacy-v14-reuse-boundary--synthetic-audit-2026-09-09",
+            "supersedes": [
+                "tasks/20260908-executable-fills/report.md#causal-attribution-and-monotone-correction-claims",
+                "tasks/20260908-executable-fills/report.md#all-order-rounding-rate"
+            ],
+            "note": "Interpretation/reuse correction only; original mission, code, aggregate values and historical candidate_failed outcome remain intact. Synthetic production-V14/Broker probes at parent 9fcb658 found that settlement replaces the full raw-price map (B requested shares 4000 without prior A fill versus 8000 with it for identical B raw close 100/signal close 50) and a rejected sell resets a held position's age from 20 to 1, blocking its hold20 rank exit. Close-mode anchor does not exercise either next-open integration path. Market magnitude is unmeasured; do not extend unchanged V14 to hold20. Few nonfills do not bound adaptive-portfolio return impact, and stricter execution is not a proven monotone return reduction. Arm-A holdout slip00 records 330 rounded-to-zero events among 1687 filled-plus-unfilled orders, about 19.6 percent rather than one third; buy-only rate requires side-specific evidence. Local inventory has all 29 main and 24 diagnostic files, but the promised T+2-expiry fixture and 20-attempt diagnostic are not present in the inspected test/analyzer sources; result identities do not hash consumed inputs. Fragment labels name claims, not literal HTML anchors. No market economics were recomputed and no new period was exposed."
+        },
+        {
+            "id": "capital-return-accounting-clarification-20260918",
+            "kind": "correction",
+            "recorded_on": "2026-09-18",
+            "source": "docs/en/research-development-measurement.md#captured-hit-and-attempts",
+            "supersedes": [
+                "docs/en/research-development-measurement.md#malformed-g-multiplication",
+                ".tmp/claude-kline/013-twse-detail-readset/minimum-corporate-bridge.md#generic-capital-refund-support"
+            ],
+            "note": "Before new candidate evaluation, clarified that principal refunds are separately reported cash distributions, not dividend income, and never reduce the original gross-purchase denominator. Corrected malformed Markdown for quantity times execution price without changing the existing executable formula or provisional 50 percent threshold. The prior planning table overstated generic cash-refund ledger support; explicit capital-return entitlement/payment support and direct consumers were added and synthetically verified in batch 016. No prior market figures or verdicts were recomputed or replaced. Preserved 006 measurement code alone does not support the new public event kinds; use the additive 016 measurement facade. This records no unseen-period certification or strategy acceptance."
+        },
+        {
+            "id": "sector-wave-catalog-exposure-20261002",
+            "kind": "exposure",
+            "scope": "taiwan-price-strategy",
+            "state": "viewed",
+            "window": {
+                "start": "2019-01-02",
+                "end": "2026-08-14"
+            },
+            "recorded_on": "2026-10-02",
+            "source": "tasks/20261002-sector-wave-catalog/report.md",
+            "note": "Retrospective descriptive stock ascents, sector waves and common-window peers were computed under preregistered runaway-126-double-dd25.v1 using current business labels. This overlaps bootstrap-price-exposure-20260908; no later price/action outcomes were read for this catalog. The bundle hashes the registry version before this event. Catalog labels are viewed research material, not a predictive strategy acceptance or a new unseen period."
+        },
+        {
+            "id": "feature-discrimination-atlas-exposure-20261004",
+            "kind": "exposure",
+            "scope": "taiwan-price-strategy",
+            "state": "viewed",
+            "window": {
+                "start": "2019-01-02",
+                "end": "2026-08-14"
+            },
+            "recorded_on": "2026-10-04",
+            "source": "tasks/20261004-feature-discrimination-atlas/report.md",
+            "note": "Completed atlas-v2 descriptive exploration: 38 fixed features, two future-price labels, daily/grid126 panels and 7144 pooled/single-context comparisons over the existing exposed window. One incomplete runtime attempt was retained, followed by a same-definition optimized retry; not independent tests. The current-reference cohort and industry are not historical PIT-complete. No portfolio, new holdout or later price outcomes were evaluated. The original packet and its pre-event registry bytes were archived before this append; do not rewrite that packet to use this newer registry. Full saved comparison recomputation and receipt verification passed before the append."
+        },
+        {
+            "id": "benchmark-context-handoff-exposure-20261005",
+            "kind": "exposure",
+            "scope": "0050-market-context",
+            "state": "viewed",
+            "window": {
+                "start": "2010-01-04",
+                "end": "2026-10-02"
+            },
+            "recorded_on": "2026-10-05",
+            "source": "tasks/20261005-market-context-handoff/report.md",
+            "note": "One fixed provisional trailing/centered descriptive rule was applied to the previously retained catalog-v2 0050 series after mission commit 5702aae and producer commit edb5242. Both output layers and their whole-period summaries are viewed; past-only computation is not historical source-availability certification. No stock outcome join, portfolio or strategy comparison was run. This event records the current task only, not first historical exposure and not proof any other stock/year is unseen; shared history remains incomplete. The prior atlas 2019-2026 results were only repackaged without changing comparisons. Package identity and original source/producer bytes remain in the task manifest."
+        },
+        {
+            "id": "feature-atlas-cash-event-gap-correction-20261005",
+            "kind": "correction",
+            "recorded_on": "2026-10-05",
+            "source": "tasks/20261005-market-context-handoff/execution.md#pr-review-corrections--2026-10-05",
+            "supersedes": [
+                "https://github.com/TaiwanCCyoyo/Stock/blob/edb5242f6899c0ecd0a13141df0587a6ad29db94/research_core/feature_atlas_io.py#L173"
+            ],
+            "note": "PR26 corrects generic jump masking so an exact-calendar known cash-event decline is retained, while unexplained positive jumps and other invalidity remain gaps. No saved values are replaced: atlas-v2 inventory contains exactly two masked jumps, TW:2429 on 2024-07-02 with EX_RIGHT and TW:7810 on 2025-12-24 with no recorded event. Both table hashes matched the saved manifest; neither is a cash event, so this fix has no effect on this atlas under saved inputs. Original packet, inputs and results remain intact; future runs require the corrected code identity. Publication now verifies full packet/receipt binding and rejects nested copy roots. This bounded saved-row audit opened no new period or comparison."
+        },
+        {
+            "id": "method-environment-interactions-exposure-20261005",
+            "kind": "exposure",
+            "scope": "taiwan-price-strategy",
+            "state": "viewed",
+            "window": {
+                "start": "2019-01-02",
+                "end": "2026-08-14"
+            },
+            "recorded_on": "2026-10-05",
+            "source": "tasks/20261005-method-environment-interactions/report.md",
+            "note": "Completed interactions-v1: three saved methods F10/F32/F33, F37, strict common-support arms, daily/original-grid126 and separate past-only 0050/year slices; 624 comparisons from a maximum 672. Code/mission committed at 7183118 and complete packet at 6f59919 before the single 70.531-second run. All six candidate promotions failed the fixed provisional screen; not a strategy rejection for every variant. Existing stock window/cohort/outcomes reused without downloads, new dates or holdout. The 0050 reader verified its already-exposed 2010-2026 package but only same-date past-only rows joined. Full input/receipt reuse verified twice before publication; exact pre-event registry/code/contracts archived in publication-v1/source-inputs.zip before this append. Do not rewrite the packet for this newer registry. Dependence, unknown future labels, current-reference survivor/industry limitations and lack of captured account PnL remain explicit."
+        },
+        {
+            "id": "industry-role-comparison-exposure-20261005",
+            "kind": "exposure",
+            "scope": "taiwan-price-strategy",
+            "state": "viewed",
+            "window": {
+                "start": "2019-01-02",
+                "end": "2026-08-14"
+            },
+            "recorded_on": "2026-10-05",
+            "source": "tasks/20261005-industry-role-comparison/report.md",
+            "note": "H03 industry-roles-v1 completed once in 67.625 seconds: code/mission e516fc5, approved packet 216fb42 before results. Seven common-support arms, three fixed role candidates, daily/original-grid126 and separate year/0050/industry slices; 1316 comparisons of maximum 2184, 3948 path summaries, 2256 actual-intersection pairs. All three candidates failed prospective relative precision/annual consistency rules with adequate controls; no account nomination. Lower nonwinner price deterioration of turning laggards is retained, not treated as captured PnL or a post-hoc gate change. Frozen current-reference industry/stock cohort and saved outcomes are reused; no new stock dates, download, confirmation or holdout. Full live input/receipt reuse verified before and after v1 publication; exact pre-event registry/code/contracts archived before this append. V2 only splits the saved results byte stream for transport; no scientific recalculation or hidden replacement. The revised reader or appended registry must not be substituted into the original packet."
+        },
+        {
+            "id": "hhhl-probability-exposure-20261008",
+            "kind": "exposure",
+            "scope": "taiwan-price-strategy",
+            "state": "viewed",
+            "window": {
+                "start": "2019-01-02",
+                "end": "2026-08-14"
+            },
+            "recorded_on": "2026-10-08",
+            "source": "tasks/20261009-hhhl-pattern-probability/report.md",
+            "note": "Owner task ID 20261009; actual local execution date 2026-10-08. Fixed original HHHL v1 failed visual recall; provisional Claude state definitions and same-day controls committed at b84875c before outcomes. One incomplete single-process attempt retained, then resource-only ordered four-worker retry at 35bd777 completed once in 1001.938 seconds: 46868 events, 93736 transitions, 558 fixed cells including empty cells and first-eligible-per-security unknowns. No post-outcome parameter or control selection, portfolio, new dates, download, confirmation or holdout. Existing exposed atlas-v2 reused with overlapping/current-reference cohort limitations. Eight exact declared inputs preserved in publication-v1/bundle.zip before report/contract updates. Negative and unknown comparisons retained; descriptive differences are not strategy acceptance."
+        },
+        {
+            "id": "hhhl-completion-self-inventory-correction-20261008",
+            "kind": "correction",
+            "recorded_on": "2026-10-08",
+            "source": "tasks/20261009-hhhl-pattern-probability/execution.md",
+            "supersedes": [
+                "tasks/20261009-hhhl-pattern-probability/publication-v1/bundle.zip:outputs/manifest.json"
+            ],
+            "note": "Original run02 manifest inventoried its initial placeholder before overwriting itself; only the manifest self-entry hash mismatched. Original final manifest preserved and bound by SHA-256 477d798ab3d1fbc61f203ef5801bf1bf3aac07a992543e4b95346d16c9dda5ed. Additive manifest-corrected.json removes this entry and records the reason/old entry without changing six scientific artifacts; all six hashes/bytes verified. Both records retained in the Git portable bundle. Future producer separates attempt.json from completion manifest and has artifact-hash regression coverage. No market rerun, replaced values or changed interpretation rules."
+        },
+        {
+            "id": "sector-wave-full-history-preview-exposure-20261004",
+            "kind": "exposure",
+            "scope": "taiwan-price-strategy",
+            "state": "viewed",
+            "window": {
+                "start": "2010-01-04",
+                "end": "2026-10-02"
+            },
+            "recorded_on": "2026-10-04",
+            "source": "tasks/20261004-sector-wave-full-history-preview/report.md",
+            "note": "Descriptive continuous-wave catalog from existing local prices using six pinned native methods. This overlaps existing 2019 exposure and extends the recorded viewed window; recorded_on is not the first exposure time. Current classifications are retrospective snapshots. No strategy acceptance, unseen-period certification or independent validation is claimed; historical missions and results remain unchanged."
+        },
+        {
+            "id": "sector-wave-compact-continuity-correction-20261004",
+            "kind": "correction",
+            "recorded_on": "2026-10-04",
+            "source": "tasks/20261004-sector-wave-full-history-preview/compact-revision.md",
+            "supersedes": [
+                "tasks/20261004-sector-wave-full-history-preview/catalog-v1#gain-policy"
+            ],
+            "note": "Saved-only catalog-v2 aligns derived gains with pinned JavaScript run identities after a synthetic floating-boundary finding. Inputs, six saved method results and catalog-v1 remain unchanged; no analysis was rerun or acceptance rule changed. The measured real-data gain difference is zero across all transitions and 3899751 representative member-date queries. The fragment names the affected policy, not a literal HTML anchor."
+        },
+        {
+            "id": "hhhl-v4-probability-exposure-20261008",
+            "kind": "exposure",
+            "scope": "taiwan-price-strategy",
+            "state": "viewed",
+            "window": { "start": "2019-01-02", "end": "2026-08-14" },
+            "recorded_on": "2026-10-08",
+            "source": "tasks/20261010-hhhl-v4-probability/report.md",
+            "note": "Owner handoff ID 20261010, actual local execution 2026-10-08. Exact v4 source and adjusted reference-factor prices validated on 25 cases without labels; four Claude provisional definitions sealed with 39 synthetic measurement/summary/producer tests at 70a6872037e9ad5a9d2296c282dc583a698523b4 before outcomes. Single ordered four-worker run completed in 522.563 seconds: 1941 securities, 3588909 calendar rows, 67078 events, 54288 true patterns, 162864 landmarks and 1080 fixed descriptive cells. Original t0 target/deadline, fixed L10/20/40 rise bins, unknowns, controls, noise, firsts and all negative results retained. No downloads, portfolio, stops, new window, confirmation, holdout or automation. Atlas original labels preserved separately; new first-decision labels and dividend reference factors have distinct denominators and are not cash total return. Late-2026 informative censoring, overlapping events and current-reference survivor cohort limit interpretation. Publication preserves 19 exact execution inputs and original completion manifest before later report/contract updates; bulk remains local-only. First packaging attempt failed before writes on Windows relative-path parsing, then transport-only fix; no market rerun or changed science. Original v1 evidence and exposure remain intact."
+        },
+        {
+            "id": "hhhl-v4-landmark-reason-detail-correction-20261008",
+            "kind": "correction",
+            "recorded_on": "2026-10-08",
+            "source": "tasks/20261010-hhhl-v4-probability/execution.md",
+            "supersedes": [
+                "tasks/20261010-hhhl-v4-probability/publication-v2#landmark-unknown-reason-detail"
+            ],
+            "note": "Completes omitted portable reason detail, not a replacement of original status totals or scientific cells. PR33 MEDIUM finding accepted: additive diagnostics-supplement-v1.zip is computed only from five columns of the original hash-verified landmarks.parquet, using the unchanged census helper. All 24 legacy event/security totals, source manifest and artifact hashes agree before/after; 30 reason cells cover all 162864 rows. Eligible unknown counts by missing_before_landmark/window_end are L10 112/205, L20 238/292, L40 439/559. Correction code sealed at 671b8cf after nine focused synthetic tests and normal hooks, then supplement generated; original run/publication-v1/v2 bytes and 1080 comparisons remain unchanged. No new data, window, strategy comparison, holdout or automation. Method-index wording now distinguishes M04 spring and F21/F33 2B proxies from owner HHHL; underlying formulas and prior results are unchanged. The target fragment names the omitted detail, not a literal archive anchor."
+        },
+        {
+            "id": "hhhl-v4-noise-first-selection-correction-20261008",
+            "kind": "correction",
+            "recorded_on": "2026-10-08",
+            "source": "tasks/20261010-hhhl-v4-probability/execution.md",
+            "supersedes": [
+                "tasks/20261010-hhhl-v4-probability/publication-v2#noise-first-per-security-four-cells"
+            ],
+            "note": "PR33 MEDIUM accepted: the first noise sample must be the earliest eligible ORIGINAL breakout_date, not the earliest shifted anchor_date. Only the noise-first selector changed, unknown/no-shift firsts retained; no new pattern, threshold, comparison, random seed, shifted date, data acquisition, unseen period or strategy acceptance. Correction code sealed at badc66e after 27 focused synthetic tests plus six targeted checks and normal hooks. Additive noise-first-correction-v1.zip is bound to original run/bundle/cells and hash-verified 51731 saved noise rows; selected 1864 events, four corrected cells, 2074 bytes. Adjusted-reference 63/126 hits-known-unknown are 145/1754/110 and 91/1631/233; atlas-original values 134/1747/117 and 86/1628/236. Original run/publication-v1/v2 remain unchanged; full reader comparison confirms the other 1076 cells are identical. Latest all-cell consumption requires explicit overlay; raw original verifier remains historical evidence, CLI rejects known superseded cells without correction. Major original-event/landmark conclusions remain unchanged and all prior exposure limitations apply. The fragment names affected cells rather than an actual ZIP anchor."
+        },
+        {
+            "id": "hhhl-v4-noise-correction-portable-recompute-20261008",
+            "kind": "correction",
+            "recorded_on": "2026-10-08",
+            "source": "tasks/20261010-hhhl-v4-probability/execution.md",
+            "supersedes": [
+                "tasks/20261010-hhhl-v4-probability/noise-first-correction-v1.zip#current-portable-verification"
+            ],
+            "note": "PR33 MEDIUM accepted: complete standalone correction validation requires the saved selected outcomes, source selection index and code bytes. Additive noise-first-correction-v2.zip (713815 bytes, expanded 973133; SHA256 c91f27a43a2ef98ebc87bc41a7d94e8b8ed1eaa820eb882299ee5464b7615a94) preserves the same four corrected cells, 1864 selected events and all 51731 index rows. Reader verifies exact bounded members/hashes, code identity and selected ID digest, earliest original-event selection/index equality, and recomputes every summary field. Archived code is never executed. Creator code sealed at f1ba001 after 19 synthetic checks/normal hooks; one additional success-path check passed after typing fixes. All four v1 corrected cells and the other 1076 original cells match; original noise/manifest/v1 hashes reverified. v1 bytes remain historical, but current reader explicitly rejects it as insufficient portable proof. No new labels, detector run, random dates, data, comparison or unseen period. Source hash gives provenance, not malicious-forgery authentication; validating the subset against original source independently still requires the hash-verified noise table. Git consumer entry is the noise-first-correction-v2 directory: correction-transport.zip (420 bytes) and two 400000/313815-byte correction parts are all required. Byte-preserving transport sealed at 86369d5 passes two focused tests/normal hooks and the full real packet verification; metadata uses the existing bounded ZIP reader after 417373b and two more passing checks. Plain hash metadata caused a secret false positive and is retained unpublished; scanner/baseline unchanged. Original primary ZIP remains unchanged. The fragment names a superseded verification claim, not a literal archive anchor."
+        },
+        {
+            "id": "hhhl-v4-landmark-portable-recompute-20261008",
+            "kind": "correction",
+            "recorded_on": "2026-10-08",
+            "source": "tasks/20261010-hhhl-v4-probability/execution.md",
+            "supersedes": [
+                "tasks/20261010-hhhl-v4-probability/diagnostics-supplement-v1.zip#current-portable-verification"
+            ],
+            "note": "PR33 MEDIUM accepted: original reason supplement verified legacy totals but could not recompute reason names/allocations or distinct securities. Additive diagnostics-supplement-v2.zip is 57686 bytes (expanded 119096), SHA256 2393f3658848d8792020006e20f243ff6e46789c007979f8dcbe5b7f225f151b. It carries all 162864 saved five-column landmark rows and two code snapshots. Reader verifies bounded members/identity and recomputes all 30 full reason cells plus legacy 24 event/security totals; every reason cell matches v1 exactly and v1 bytes/hash remain unchanged. Creator sealed at 45fd594 after 11 synthetic tests/normal hooks. Original producer/helper identity and supplement helper/script identity are distinct; only noise-first selection changed in the whole helper file, census function/dependencies unchanged. v1 lacks sufficient rows for current full verification and is explicitly rejected. No new prices, labels, patterns, periods, comparisons or independent evidence. Source hashes/projection provide internal recomputability and provenance, not malicious-forgery authentication; independent projection-to-original verification requires the original hash-verified landmark table. Fragment names superseded validation rather than an archive anchor."
+        },
+        {
+            "id": "hhhl-v4-observed-landmark-coordinate-correction-20261008",
+            "kind": "correction",
+            "recorded_on": "2026-10-08",
+            "source": "tasks/20261010-hhhl-v4-probability/data-contract.md",
+            "supersedes": [
+                "tasks/20261010-hhhl-v4-probability/datasets/hhhl-v4-descriptive-01/landmarks.parquet#censored-landmark-index-as-observed-coordinate"
+            ],
+            "note": "The preserved original scanner overwrote nullable observed landmark_index with planned t0+L when landmark_date was null. Coordinate consumption must use the explicit hhhl-v4-observed-landmark-coordinates.v1 view in research_core/hhhl_v4_landmark_view.py; it copies input, nullifies those indices and records view version/count in attrs. The data-contract contains the reader recipe and primary source locator; report.md records the correction and execution.md records verification. Original 162864-row landmarks has 1532 affected indices; source SHA256 d57bb1e0925d1eea096205a992903e66ff4383978005ce5e6dbd6de158bd5957 was unchanged before/after the read-only coordinate audit. No status, reason, outcome, summary cell, source bytes, historical manifest or strategy verdict changes. Future scanner preserves the helper's null. The view is not a replacement persisted dataset and original bulk remains local-only; consumers must obtain the hash-verified original table. Supersedes only the original censored-index-as-observed interpretation, not the whole table or results. The fragment names affected semantics, not a literal Parquet anchor. Implementation sealed at 21d987f after 120 focused tests, 20 follow-up checks and normal hooks; no market rerun, new period or data acquisition."
+        },
+        {
+            "id": "hhhl-v4-original-ten-case-l20-audit-20261009",
+            "kind": "correction",
+            "recorded_on": "2026-10-09",
+            "source": "tasks/20261010-hhhl-v4-probability/data-contract.md",
+            "supersedes": [
+                "tasks/20261010-hhhl-v4-probability/publication-v2#ten-case-audit-landmark-detail"
+            ],
+            "note": "Completes omitted portable L20 audit fields, not a replacement of original events or scientific outcomes. Code sealed at 0210c96 plus 61440b3 with normal hooks after 56 source/builder/coordinate tests and 50 supplement/bounded-reader tests. Git entry landmark-audit-v1.zip losslessly wraps the original primary JSON (55680 bytes, SHA256 f1ab85e00c4b36f372e2bd848579b5eb928833a7030f098dfcdb64fcb5e42f3d), adding ten saved L20 source rows and the same original ten event IDs with 96 joined fields. The existing bounded single-member ZIP reader and deterministic one-to-one join verify original publication/event values and full source descriptors; explicit observed-coordinate view preserves null semantics. Public hashes caused a plain JSON secret false positive and formatter changed its worktree copy; that copy remains unpublished, original primary bytes are unchanged and scanner/baseline are unchanged. Original ten cases happen to be one security, not representative or success-selected. Full source hashes bound before/after; independent projection authenticity still requires original hash-verified landmarks. No new data, prices, labels, candidates, comparisons, windows, holdout, portfolio or strategy verdict. Original packet and 1080 cells remain unchanged. Fragment names omitted detail, not a literal archive anchor."
+        }
+    ]
+}

@@ -1,0 +1,58 @@
+{
+    "schema_version": "sector-roles.v1",
+    "roles": [
+        { "role_id": "memory-chip-manufacturer", "label": "記憶體晶片製造" },
+        { "role_id": "memory-ic-designer", "label": "記憶體 IC 設計" },
+        {
+            "role_id": "memory-controller-designer",
+            "label": "記憶體控制 IC 設計"
+        },
+        {
+            "role_id": "memory-controller-supplier",
+            "label": "記憶體控制 IC 供應"
+        },
+        {
+            "role_id": "memory-module-supplier",
+            "label": "記憶體模組／儲存產品供應"
+        },
+        { "role_id": "thermal-solution-supplier", "label": "散熱解決方案供應" },
+        { "role_id": "fan-manufacturer", "label": "風扇製造" },
+        { "role_id": "ic-substrate-manufacturer", "label": "IC 載板製造" },
+        { "role_id": "pcb-manufacturer", "label": "PCB 製造" },
+        {
+            "role_id": "copper-clad-laminate-manufacturer",
+            "label": "銅箔基板製造"
+        },
+        { "role_id": "electronic-material-supplier", "label": "電子材料供應" },
+        {
+            "role_id": "retail-ecommerce-operator",
+            "label": "零售／電子商務營運"
+        },
+        { "role_id": "bulk-shipping-operator", "label": "散裝航運營運" },
+        { "role_id": "port-warehouse-operator", "label": "港埠倉儲／裝卸營運" },
+        { "role_id": "transformer-manufacturer", "label": "配電變壓器製造" }
+    ],
+    "product_tags": [
+        { "tag_id": "dram", "label": "DRAM" },
+        { "tag_id": "nor-flash", "label": "NOR Flash" },
+        { "tag_id": "nand-flash", "label": "NAND Flash" },
+        { "tag_id": "memory-module", "label": "記憶體模組" },
+        { "tag_id": "ssd", "label": "SSD" },
+        { "tag_id": "flash-controller", "label": "快閃記憶體控制 IC" },
+        { "tag_id": "air-cooling", "label": "氣冷散熱" },
+        { "tag_id": "liquid-cooling", "label": "液冷散熱" },
+        { "tag_id": "fan", "label": "風扇" },
+        { "tag_id": "abf-substrate", "label": "ABF 載板" },
+        { "tag_id": "bt-substrate", "label": "BT 載板" },
+        { "tag_id": "pcb", "label": "PCB" },
+        { "tag_id": "copper-clad-laminate", "label": "銅箔基板" },
+        { "tag_id": "prepreg", "label": "半固化片" },
+        { "tag_id": "electronic-chemicals", "label": "電子化學材料" },
+        { "tag_id": "fashion-ecommerce", "label": "服飾電子商務" },
+        { "tag_id": "retail", "label": "零售" },
+        { "tag_id": "dry-bulk-shipping", "label": "乾散貨航運" },
+        { "tag_id": "pcb-drilling-materials", "label": "PCB 鑽孔材料" },
+        { "tag_id": "distribution-transformer", "label": "配電變壓器" },
+        { "tag_id": "grain-warehousing", "label": "穀物倉儲" }
+    ]
+}

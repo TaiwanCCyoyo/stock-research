@@ -1,0 +1,38 @@
+{
+    "all_nine_tables_reconstruction_repeated": false,
+    "calendar_date_count": 4105,
+    "eligible_exact_js_run_verified_count": 1970,
+    "excluded_frozen_python_run_verified_count": 105,
+    "identity": {
+        "adapter_revision": "aff9b1c452509c662a9738f9209d94133c7a2d7b38d9d479861746166872c5ab",
+        "catalog_revision": "gain-continuity-v2",
+        "declared_gain_policy": "exact_pinned_js_run.preview.v2",
+        "effective_gain_policy": "exact_pinned_js_run.preview.v2",
+        "policy_source": "manifest",
+        "rule": "wave-lab-exploratory.v1",
+        "schema": "opportunity-local-history-preview.v1",
+        "selector": "wave-start-representative.preview.v1",
+        "task": "20261004-sector-wave-full-history-preview"
+    },
+    "manifest_sha256": "c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140",
+    "method_analysis_recomputed": false,
+    "native_support_original_order_verified_count": 1970,
+    "prior_receipts": [
+        {
+            "path": "verification-receipt-v3.json",
+            "sha256": "b07809c560acf955091a0cc3362858bd322dac2f29433d39882febe929ec2d8c"
+        },
+        {
+            "path": "content-identity-v2-audit-receipt.json",
+            "sha256": "93e8109e47a73ee032b153858d5addd3036b498db91a333b6add828e3e577440"
+        }
+    ],
+    "query_series_semantics_verified_count": 2075,
+    "representative_interval_identity_and_bounds_count": 7875,
+    "run_recomputation_basis": "original_pinned_buildLabCase_sourceRunIndices_only",
+    "schema_version": "opportunity-query-native-contract-audit.v1",
+    "source_phase_bounds_verified_count": 2579106,
+    "status": "verified",
+    "support_record_recomputed_count": 790250,
+    "support_tie_break": "nearest_then_original_native_candidate_order"
+}

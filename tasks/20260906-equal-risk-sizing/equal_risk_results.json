@@ -1,0 +1,187 @@
+{
+    "baseline": {
+        "buy_count": 1091,
+        "dispersion": 0.025116232661210984,
+        "max_drawdown_pct": -37.5294994916786,
+        "median_loss_pct_of_start": -0.008187279999999998,
+        "return_pct": 228.09622256399967,
+        "worst_streak": 0.38194365
+    },
+    "rows": {
+        "control": [
+            {
+                "all": false,
+                "buy_count": 1105,
+                "checks": {
+                    "A": false,
+                    "B": false,
+                    "C": true,
+                    "D": false
+                },
+                "dispersion": 0.02535219848700039,
+                "dispersion_drop": -0.009394953015936514,
+                "max_drawdown_pct": -37.77227905014512,
+                "median_loss_pct_of_start": -0.007255129999999998,
+                "return_pct": 207.09677459199992,
+                "risk": 0.005,
+                "worst_streak": 0.4026396250000001
+            },
+            {
+                "all": false,
+                "buy_count": 1085,
+                "checks": {
+                    "A": false,
+                    "B": false,
+                    "C": true,
+                    "D": false
+                },
+                "dispersion": 0.026836798848573883,
+                "dispersion_drop": -0.0685041507048989,
+                "max_drawdown_pct": -41.54222191577925,
+                "median_loss_pct_of_start": -0.008397699999999998,
+                "return_pct": 163.77730007199975,
+                "risk": 0.006,
+                "worst_streak": 0.43213570000000007
+            },
+            {
+                "all": false,
+                "buy_count": 1074,
+                "checks": {
+                    "A": false,
+                    "B": false,
+                    "C": true,
+                    "D": false
+                },
+                "dispersion": 0.030473474764547218,
+                "dispersion_drop": -0.21329799638342473,
+                "max_drawdown_pct": -37.74981702454007,
+                "median_loss_pct_of_start": -0.00944825,
+                "return_pct": 237.83871005200007,
+                "risk": 0.007,
+                "worst_streak": 0.4541445750000001
+            },
+            {
+                "all": false,
+                "buy_count": 1069,
+                "checks": {
+                    "A": false,
+                    "B": false,
+                    "C": true,
+                    "D": true
+                },
+                "dispersion": 0.0319764958083037,
+                "dispersion_drop": -0.27314061147743596,
+                "max_drawdown_pct": -34.84028478585773,
+                "median_loss_pct_of_start": -0.010027700000000011,
+                "return_pct": 280.4818500476498,
+                "risk": 0.008,
+                "worst_streak": 0.47318240000000006
+            },
+            {
+                "all": false,
+                "buy_count": 1052,
+                "checks": {
+                    "A": false,
+                    "B": false,
+                    "C": true,
+                    "D": false
+                },
+                "dispersion": 0.033330574918588575,
+                "dispersion_drop": -0.3270531201147717,
+                "max_drawdown_pct": -43.20251656158129,
+                "median_loss_pct_of_start": -0.010593,
+                "return_pct": 257.6944898736497,
+                "risk": 0.009,
+                "worst_streak": 0.49226510000000007
+            }
+        ],
+        "risk": [
+            {
+                "all": false,
+                "buy_count": 1095,
+                "checks": {
+                    "A": true,
+                    "B": true,
+                    "C": false,
+                    "D": true
+                },
+                "dispersion": 0.015168890012121001,
+                "dispersion_drop": 0.3960523372779734,
+                "max_drawdown_pct": -29.90490895179368,
+                "median_loss_pct_of_start": -0.005314299999999988,
+                "return_pct": 137.14202817599988,
+                "risk": 0.005,
+                "worst_streak": 0.259218505
+            },
+            {
+                "all": true,
+                "buy_count": 1091,
+                "checks": {
+                    "A": true,
+                    "B": true,
+                    "C": true,
+                    "D": true
+                },
+                "dispersion": 0.01799524253714923,
+                "dispersion_drop": 0.28352142696381655,
+                "max_drawdown_pct": -32.43083042429838,
+                "median_loss_pct_of_start": -0.006376299999999988,
+                "return_pct": 166.1690935477499,
+                "risk": 0.006,
+                "worst_streak": 0.29704033
+            },
+            {
+                "all": false,
+                "buy_count": 1079,
+                "checks": {
+                    "A": true,
+                    "B": true,
+                    "C": true,
+                    "D": false
+                },
+                "dispersion": 0.020758352512484764,
+                "dispersion_drop": 0.17350851170671167,
+                "max_drawdown_pct": -39.15060218717908,
+                "median_loss_pct_of_start": -0.00750425,
+                "return_pct": 185.52150020800022,
+                "risk": 0.007,
+                "worst_streak": 0.33071230500000015
+            },
+            {
+                "all": false,
+                "buy_count": 1088,
+                "checks": {
+                    "A": false,
+                    "B": true,
+                    "C": true,
+                    "D": false
+                },
+                "dispersion": 0.023113919584728707,
+                "dispersion_drop": 0.07972187164735933,
+                "max_drawdown_pct": -42.2971317506192,
+                "median_loss_pct_of_start": -0.008498124999999971,
+                "return_pct": 193.32720427299998,
+                "risk": 0.008,
+                "worst_streak": 0.32878323000000004
+            },
+            {
+                "all": false,
+                "buy_count": 1071,
+                "checks": {
+                    "A": false,
+                    "B": false,
+                    "C": true,
+                    "D": false
+                },
+                "dispersion": 0.02588733336070993,
+                "dispersion_drop": -0.030701288282371175,
+                "max_drawdown_pct": -45.52561055434918,
+                "median_loss_pct_of_start": -0.009394549999999988,
+                "return_pct": 217.65019924000012,
+                "risk": 0.009,
+                "worst_streak": 0.38924343499999997
+            }
+        ]
+    },
+    "verdict": "NEGATIVE -- equal-risk sizing does not clear the gates"
+}

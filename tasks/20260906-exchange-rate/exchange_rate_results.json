@@ -1,0 +1,133 @@
+{
+    "conclusion": "THE MECHANISM MATTERS -- time cheaper, consistently",
+    "pairs": [
+        {
+            "pool_ratio": 1.2414039679907356,
+            "price": "give20",
+            "time": "hold40",
+            "turnover_gap": 0.011499256183302907,
+            "verdict": "same"
+        },
+        {
+            "pool_ratio": 1.3008408164166456,
+            "price": "give25",
+            "time": "hold60",
+            "turnover_gap": 0.026068296983687737,
+            "verdict": "time cheaper"
+        },
+        {
+            "pool_ratio": 1.0922140074536255,
+            "price": "give30",
+            "time": "hold80",
+            "turnover_gap": 0.001325277488524844,
+            "verdict": "same"
+        }
+    ],
+    "rows": [
+        {
+            "buy_count": 863,
+            "capital_turnover_per_year": 8.570037854524758,
+            "capture_rate": 1.0,
+            "cell": "hold20",
+            "cost_drag_per_year": 0.04973337025641465,
+            "family": "baseline",
+            "held": 72,
+            "max_drawdown_pct": -41.922147535703736,
+            "participation": 0.19161790786748076,
+            "participation_n": 72,
+            "pool_share": 0.18951194660119072,
+            "population": 72,
+            "return_pct": 120.44623940616009
+        },
+        {
+            "buy_count": 474,
+            "capital_turnover_per_year": 5.0795821280341285,
+            "capture_rate": 0.9722222222222222,
+            "cell": "hold40",
+            "cost_drag_per_year": 0.02892420449682067,
+            "family": "time",
+            "held": 70,
+            "max_drawdown_pct": -44.88428028769652,
+            "participation": 0.14120729458941184,
+            "participation_n": 70,
+            "pool_share": 0.1366152943279678,
+            "population": 72,
+            "return_pct": 76.04874797300994
+        },
+        {
+            "buy_count": 324,
+            "capital_turnover_per_year": 3.4988491911320354,
+            "capture_rate": 0.8055555555555556,
+            "cell": "hold60",
+            "cost_drag_per_year": 0.019602203368655924,
+            "family": "time",
+            "held": 58,
+            "max_drawdown_pct": -41.92103335305174,
+            "participation": 0.15121693646776735,
+            "participation_n": 58,
+            "pool_share": 0.13718687818867217,
+            "population": 72,
+            "return_pct": 65.97724228652
+        },
+        {
+            "buy_count": 249,
+            "capital_turnover_per_year": 2.7242764114602096,
+            "capture_rate": 0.7222222222222222,
+            "cell": "hold80",
+            "cost_drag_per_year": 0.015042507998798272,
+            "family": "time",
+            "held": 52,
+            "max_drawdown_pct": -42.11240405271213,
+            "participation": 0.17892173499461025,
+            "participation_n": 52,
+            "pool_share": 0.12468654693690027,
+            "population": 72,
+            "return_pct": 70.82849627545
+        },
+        {
+            "buy_count": 439,
+            "capital_turnover_per_year": 5.021170711839737,
+            "capture_rate": 0.8472222222222222,
+            "cell": "give20",
+            "cost_drag_per_year": 0.028263372704572454,
+            "family": "price",
+            "held": 61,
+            "max_drawdown_pct": -46.70397738673795,
+            "participation": 0.12321848965529314,
+            "participation_n": 61,
+            "pool_share": 0.11004902340459358,
+            "population": 72,
+            "return_pct": 60.949490630629995
+        },
+        {
+            "buy_count": 301,
+            "capital_turnover_per_year": 3.592499535948912,
+            "capture_rate": 0.6666666666666666,
+            "cell": "give25",
+            "cost_drag_per_year": 0.019587613718664305,
+            "family": "price",
+            "held": 48,
+            "max_drawdown_pct": -45.48579862903895,
+            "participation": 0.11379580258927913,
+            "participation_n": 48,
+            "pool_share": 0.10546015812032505,
+            "population": 72,
+            "return_pct": 31.747823234899997
+        },
+        {
+            "buy_count": 222,
+            "capital_turnover_per_year": 2.720665989259582,
+            "capture_rate": 0.5833333333333334,
+            "cell": "give30",
+            "cost_drag_per_year": 0.0144900005990995,
+            "family": "price",
+            "held": 42,
+            "max_drawdown_pct": -47.894071871663,
+            "participation": 0.1258737702442257,
+            "participation_n": 42,
+            "pool_share": 0.11415944685382033,
+            "population": 72,
+            "return_pct": 33.83179322486002
+        }
+    ]
+}

@@ -1,0 +1,17 @@
+line-length = 160
+exclude = ["legacy"]
+
+[format]
+preview = true
+
+[lint]
+select = ["E", "F", "I", "ANN001", "T201"]
+
+[lint.per-file-ignores]
+# Research scripts under `tasks/` are one-shot CLIs whose stdout *is* the
+# deliverable -- they print the markdown tables that go into a study's report,
+# and a verification gate's PASS/FAIL lines are what the operator reads. Routing
+# that through `logging` would put the product on stderr behind a level filter.
+# Every T201 in this repository comes from that one category, so the ban stays
+# fully in force everywhere it was meant to apply.
+"tasks/**/*.py" = ["T201"]

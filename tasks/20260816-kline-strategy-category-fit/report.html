@@ -1,0 +1,1412 @@
+<title>K線策略族群適配</title>
+<style>
+    :root {
+        --paper: #f5f6f8;
+        --card: #ffffff;
+        --ink: #15181e;
+        --body: #2e343d;
+        --muted: #6b7480;
+        --rule: #dce0e6;
+        --rule-strong: #c2c8d1;
+        --accent: #1f4e5f;
+        --accent-soft: #e3edf0;
+        --up: #c0322c;
+        --up-soft: #faeae8;
+        --down: #17715a;
+        --down-soft: #e4f1ec;
+        --warn: #8a6420;
+        --warn-soft: #f7eedc;
+
+        --sans:
+            "Segoe UI", -apple-system, BlinkMacSystemFont, "PingFang TC",
+            "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+        --mono:
+            ui-monospace, "Cascadia Mono", "SF Mono", Consolas,
+            "Noto Sans Mono", monospace;
+        --serif: Georgia, "Times New Roman", serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+            --paper: #101319;
+            --card: #171b23;
+            --ink: #e9ecf1;
+            --body: #c3c9d4;
+            --muted: #868e9c;
+            --rule: #262c37;
+            --rule-strong: #39414f;
+            --accent: #5fa8bc;
+            --accent-soft: #17303a;
+            --up: #e4635c;
+            --up-soft: #2e1a19;
+            --down: #45a886;
+            --down-soft: #14291f;
+            --warn: #c69b4e;
+            --warn-soft: #2b2314;
+        }
+    }
+
+    :root[data-theme="dark"] {
+        --paper: #101319;
+        --card: #171b23;
+        --ink: #e9ecf1;
+        --body: #c3c9d4;
+        --muted: #868e9c;
+        --rule: #262c37;
+        --rule-strong: #39414f;
+        --accent: #5fa8bc;
+        --accent-soft: #17303a;
+        --up: #e4635c;
+        --up-soft: #2e1a19;
+        --down: #45a886;
+        --down-soft: #14291f;
+        --warn: #c69b4e;
+        --warn-soft: #2b2314;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--body);
+        font-family: var(--sans);
+        font-size: 16px;
+        line-height: 1.75;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    .wrap {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 0 24px 96px;
+    }
+
+    /* ---------- masthead ---------- */
+
+    header.masthead {
+        padding: 72px 0 40px;
+        border-bottom: 2px solid var(--ink);
+    }
+
+    .eyebrow {
+        font-family: var(--mono);
+        font-size: 12px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin: 0 0 20px;
+    }
+
+    h1 {
+        font-size: clamp(32px, 5vw, 46px);
+        line-height: 1.2;
+        letter-spacing: -0.015em;
+        font-weight: 700;
+        color: var(--ink);
+        margin: 0 0 20px;
+        text-wrap: balance;
+    }
+
+    .thesis {
+        font-size: clamp(17px, 2.2vw, 20px);
+        line-height: 1.65;
+        color: var(--body);
+        max-width: 62ch;
+        margin: 0 0 32px;
+    }
+
+    .thesis strong {
+        color: var(--ink);
+        font-weight: 650;
+    }
+
+    .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0 40px;
+        padding-top: 8px;
+    }
+
+    .meta div {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .meta dt {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+    }
+
+    .meta dd {
+        margin: 0;
+        font-family: var(--mono);
+        font-size: 14px;
+        color: var(--ink);
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* ---------- verdict ---------- */
+
+    .verdicts {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 16px;
+        margin: 40px 0 8px;
+    }
+
+    .verdict {
+        background: var(--card);
+        border: 1px solid var(--rule);
+        border-top: 3px solid var(--rule-strong);
+        border-radius: 2px;
+        padding: 22px 22px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .verdict.pass {
+        border-top-color: var(--up);
+    }
+    .verdict.partial {
+        border-top-color: var(--warn);
+    }
+    .verdict.fail {
+        border-top-color: var(--down);
+    }
+
+    .verdict h3 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 650;
+        color: var(--ink);
+        letter-spacing: 0.01em;
+    }
+
+    .verdict .combo {
+        font-family: var(--mono);
+        font-size: 18px;
+        color: var(--ink);
+        line-height: 1.4;
+    }
+
+    .verdict.pass .combo {
+        color: var(--up);
+    }
+    .verdict.fail .combo {
+        color: var(--muted);
+    }
+
+    .verdict p {
+        margin: 0;
+        font-size: 14.5px;
+        line-height: 1.65;
+        color: var(--body);
+    }
+
+    /* ---------- sections ---------- */
+
+    section {
+        padding-top: 56px;
+    }
+
+    h2 {
+        font-size: 13px;
+        font-family: var(--mono);
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin: 0 0 6px;
+        font-weight: 600;
+    }
+
+    h2 + .h2-title {
+        font-size: clamp(22px, 3vw, 27px);
+        font-weight: 680;
+        color: var(--ink);
+        letter-spacing: -0.01em;
+        margin: 0 0 24px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid var(--rule-strong);
+        text-wrap: balance;
+    }
+
+    h3 {
+        font-size: 17px;
+        font-weight: 650;
+        color: var(--ink);
+        margin: 36px 0 12px;
+    }
+
+    p {
+        margin: 0 0 16px;
+        max-width: 72ch;
+    }
+
+    strong {
+        color: var(--ink);
+        font-weight: 650;
+    }
+
+    code {
+        font-family: var(--mono);
+        font-size: 0.88em;
+        background: var(--accent-soft);
+        color: var(--accent);
+        padding: 1px 5px;
+        border-radius: 2px;
+    }
+
+    blockquote {
+        margin: 20px 0;
+        padding: 18px 22px;
+        background: var(--up-soft);
+        border-left: 3px solid var(--up);
+        border-radius: 0 2px 2px 0;
+    }
+
+    blockquote p {
+        margin: 0;
+        font-size: 17px;
+        color: var(--ink);
+    }
+
+    .note {
+        margin: 20px 0;
+        padding: 16px 20px;
+        background: var(--card);
+        border: 1px solid var(--rule);
+        border-left: 3px solid var(--accent);
+        border-radius: 0 2px 2px 0;
+        font-size: 14.5px;
+    }
+
+    .note p:last-child {
+        margin-bottom: 0;
+    }
+
+    ol,
+    ul {
+        max-width: 72ch;
+        padding-left: 22px;
+        margin: 0 0 16px;
+    }
+    li {
+        margin-bottom: 12px;
+    }
+
+    /* ---------- tables ---------- */
+
+    .scroll {
+        overflow-x: auto;
+        margin: 20px 0 28px;
+        border: 1px solid var(--rule);
+        border-radius: 2px;
+        background: var(--card);
+    }
+
+    table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 14px;
+    }
+
+    caption {
+        caption-side: top;
+        text-align: left;
+        font-family: var(--mono);
+        font-size: 11.5px;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        color: var(--muted);
+        padding: 12px 16px 10px;
+        border-bottom: 1px solid var(--rule);
+    }
+
+    th,
+    td {
+        padding: 10px 16px;
+        text-align: left;
+        border-bottom: 1px solid var(--rule);
+        white-space: nowrap;
+    }
+
+    thead th {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        color: var(--muted);
+        background: var(--paper);
+        border-bottom: 1px solid var(--rule-strong);
+    }
+
+    tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    td.num,
+    th.num {
+        text-align: right;
+        font-family: var(--mono);
+        font-variant-numeric: tabular-nums;
+    }
+
+    td.pos {
+        color: var(--up);
+    }
+    td.neg {
+        color: var(--down);
+    }
+
+    tbody th,
+    td:first-child {
+        color: var(--ink);
+        font-weight: 550;
+    }
+
+    tr.bench td,
+    tr.bench th {
+        background: var(--accent-soft);
+    }
+    tr.bench td:first-child {
+        color: var(--accent);
+    }
+
+    tr.star td {
+        background: var(--up-soft);
+    }
+
+    /* ---------- chips ---------- */
+
+    .chip {
+        display: inline-block;
+        font-family: var(--mono);
+        font-size: 11.5px;
+        letter-spacing: 0.04em;
+        padding: 2px 8px;
+        border-radius: 2px;
+        white-space: nowrap;
+    }
+
+    .chip.ok {
+        background: var(--up-soft);
+        color: var(--up);
+    }
+    .chip.bad {
+        background: var(--down-soft);
+        color: var(--down);
+    }
+    .chip.warn {
+        background: var(--warn-soft);
+        color: var(--warn);
+    }
+    .chip.star {
+        background: var(--up);
+        color: #fff;
+        font-weight: 600;
+    }
+
+    :root[data-theme="dark"] .chip.star,
+    :root:not([data-theme="light"]) .chip.star {
+        color: #14171c;
+    }
+
+    @media (prefers-color-scheme: light) {
+        :root:not([data-theme="dark"]) .chip.star {
+            color: #fff;
+        }
+    }
+
+    /* ---------- files ---------- */
+
+    .files td:first-child {
+        white-space: normal;
+    }
+    .files td:last-child {
+        font-family: var(--mono);
+        font-size: 12.5px;
+        color: var(--accent);
+        white-space: normal;
+    }
+
+    footer {
+        margin-top: 72px;
+        padding-top: 24px;
+        border-top: 1px solid var(--rule);
+        font-size: 13px;
+        color: var(--muted);
+    }
+
+    @media (max-width: 640px) {
+        .wrap {
+            padding: 0 16px 64px;
+        }
+        header.masthead {
+            padding-top: 48px;
+        }
+        .meta {
+            gap: 0 24px;
+        }
+    }
+</style>
+
+<div class="wrap">
+    <header class="masthead">
+        <p class="eyebrow">台股波段回測 · 2019–2026</p>
+        <h1>哪個 K 線策略配哪個族群</h1>
+        <p class="thesis">
+            三個從公開文獻取來的 K
+            線進場條件,跑過五個流動性對齊的產業籃子。訊號品質的答案和「值不值得取代買進持有」的答案<strong>不一樣</strong>——而後者只有一個組合站得住。
+        </p>
+        <dl class="meta">
+            <div>
+                <dt>訓練期</dt>
+                <dd>2019-01-02 → 2023-12-31</dd>
+            </div>
+            <div>
+                <dt>驗證期</dt>
+                <dd>2024-01-01 → 2026-08-14</dd>
+            </div>
+            <div>
+                <dt>資金</dt>
+                <dd>1,000 萬 / 單筆 100 萬</dd>
+            </div>
+            <div>
+                <dt>樣本</dt>
+                <dd>5 族群 × 20 檔 × 3 策略 = 48 cells</dd>
+            </div>
+        </dl>
+    </header>
+
+    <section id="conclusion">
+        <h2>一</h2>
+        <p class="h2-title">先講結論</p>
+
+        <div class="verdicts">
+            <div class="verdict pass">
+                <h3>兩期都贏過買進持有的組合</h3>
+                <p class="combo">S3 動能突破 × 航運</p>
+                <p>
+                    訓練期報酬/回撤 3.98 對 2.48、驗證期 0.91 對 0.37。全表 15
+                    個組合裡唯一的一個。
+                </p>
+            </div>
+            <div class="verdict partial">
+                <h3>訊號有效,但打不贏持有</h3>
+                <p class="combo">S1 唐奇安突破<br />× 半導體 / 電子零組件</p>
+                <p>
+                    驗證期每次進場賺 7.99% / 8.38%,賺賠比
+                    4.6–5.2,兩期同號。但風險調整後在訓練期大幅落後買進持有。
+                </p>
+            </div>
+            <div class="verdict fail">
+                <h3>確定不適用</h3>
+                <p class="combo">任何策略 × 金融保險</p>
+                <p>
+                    三個進場條件都是動能型,而金融股波動小、報酬多來自配息。S3
+                    在此兩期皆負。
+                </p>
+            </div>
+        </div>
+
+        <h3>訊號品質層面</h3>
+        <p>
+            <strong>S1 唐奇安突破在半導體與電子零組件最有效。</strong
+            >驗證期每次進場平均賺 7.99% / 8.38%,勝率 34~38% 搭配賺賠比
+            4.6~5.2——十筆有六筆半是賠的,但賺的那筆平均是賠的那筆 5
+            倍,正是本專案要的「大賺小賠」形狀。而且訓練期與驗證期同號,不是單一窗口的僥倖。
+        </p>
+
+        <h3>但換一個對照組,結論就翻了</h3>
+        <p>
+            拿「同期間直接買下整個族群抱著」當基準,在<strong>兩個期間都贏</strong>(以報酬/回撤衡量)的組合,15
+            個裡只有一個,而且是三個策略中最弱的那個:
+        </p>
+
+        <blockquote>
+            <p>
+                <strong>S3 動能突破 × 航運</strong>:訓練期 3.98 對 2.48、驗證期
+                0.91 對 0.37,兩期皆勝。
+            </p>
+        </blockquote>
+
+        <p>
+            原本看起來最漂亮的 S1 × 電子零組件,只在驗證期贏(8.90 對
+            7.79),訓練期是大幅落後(4.17 對 9.75)。<strong
+                >它的風險調整優勢沒有複現,不能當結論。</strong
+            >
+        </p>
+
+        <div class="note">
+            <p>
+                <strong>實務上的意思:</strong>這三個 K
+                線策略的價值不在於「打敗買進持有」,而在於「在沒有長多的族群裡活下來」。航運是五個族群裡唯一沒有長期多頭的——買進持有在訓練期要吃
+                −62.8%
+                回撤——而這正是策略唯一站得住的地方。如果你認為電子族群未來幾年還是單邊向上,買進持有比這三個策略都好;如果你要面對的是
+                2022 那種年份或航運那種循環,策略才開始有意義。
+            </p>
+        </div>
+    </section>
+
+    <section id="strategies">
+        <h2>二</h2>
+        <p class="h2-title">三個策略是什麼</p>
+        <p>
+            三個都只用日 K 可算的資料,進場、出場、停損三者都寫死,沒有主觀判斷。
+        </p>
+
+        <div class="scroll">
+            <table>
+                <caption>
+                    策略定義
+                </caption>
+                <thead>
+                    <tr>
+                        <th>代號</th>
+                        <th>名稱</th>
+                        <th>進場</th>
+                        <th>出場 / 停損</th>
+                        <th>出處</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>S1</td>
+                        <td>唐奇安突破</td>
+                        <td>收盤創 20 日新高,且站上 MA60</td>
+                        <td>跌破 10 日低點,或 2×ATR 停損</td>
+                        <td>海龜 / Donchian 通道突破</td>
+                    </tr>
+                    <tr>
+                        <td>S2</td>
+                        <td>K 線反轉</td>
+                        <td>MA60 之上回檔到 MA10 之下後,出現吞噬或鎚子</td>
+                        <td>移動式 chandelier 停損(波段最高收盤 − 2.5×ATR)</td>
+                        <td>蠟燭圖反轉型態 + 趨勢濾網</td>
+                    </tr>
+                    <tr>
+                        <td>S3</td>
+                        <td>動能突破</td>
+                        <td>
+                            20 日新高 + 量 &gt; 5 日均量×2 + 一紅吃三黑 +
+                            MA5&gt;MA10&gt;MA20
+                        </td>
+                        <td>跌破 MA10,或 2×ATR 停損</td>
+                        <td>台灣券商「短線動能突破飆股選股法」</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p>S2 與 S3 的出場都經過改寫,原因見第六節。</p>
+    </section>
+
+    <section id="universes">
+        <h2>三</h2>
+        <p class="h2-title">族群分組</p>
+
+        <div class="scroll">
+            <table>
+                <caption>
+                    五個籃子
+                </caption>
+                <thead>
+                    <tr>
+                        <th>universe</th>
+                        <th>產業別</th>
+                        <th>特性</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>semiconductor_liquid20</td>
+                        <td>半導體業</td>
+                        <td>權值主流,流動性最高</td>
+                    </tr>
+                    <tr>
+                        <td>computer_peripherals_liquid20</td>
+                        <td>電腦及週邊設備業</td>
+                        <td>AI 伺服器族群</td>
+                    </tr>
+                    <tr>
+                        <td>electronic_parts_liquid20</td>
+                        <td>電子零組件業</td>
+                        <td>中型零組件</td>
+                    </tr>
+                    <tr>
+                        <td>financial_liquid20</td>
+                        <td>金融保險業</td>
+                        <td>低波動、配息為主</td>
+                    </tr>
+                    <tr>
+                        <td>shipping_liquid20</td>
+                        <td>航運業</td>
+                        <td>大起大落的景氣循環</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note">
+            <p>
+                <strong>每個籃子都固定 20 檔,這是刻意的。</strong>半導體業原本有
+                206 檔、金融保險只有 41
+                檔;若直接用全類別,在共用資金下,大籃子會在前幾檔訊號就把現金用光、後面幾百檔根本沒機會進場,最後比出來的是「籃子大小」而不是「訊號好壞」。各籃子取該類別近
+                7 年日均成交值前 20 名。
+            </p>
+        </div>
+    </section>
+
+    <section id="results">
+        <h2>四</h2>
+        <p class="h2-title">主要結果</p>
+
+        <h3>4.1　驗證期每次進場平均損益</h3>
+        <p>
+            主要指標。用
+            <code>unconstrained</code>
+            模式跑,排除資金排擠,純看訊號品質。含股息與未平倉部位。
+        </p>
+        <div class="scroll">
+            <table data-signed>
+                <caption>
+                    單位 %　驗證期 2024-01 → 2026-08
+                </caption>
+                <thead>
+                    <tr>
+                        <th>策略</th>
+                        <th class="num">半導體</th>
+                        <th class="num">電腦週邊</th>
+                        <th class="num">電子零組件</th>
+                        <th class="num">金融保險</th>
+                        <th class="num">航運</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>S1 唐奇安突破</td>
+                        <td class="num">7.99</td>
+                        <td class="num">0.80</td>
+                        <td class="num">8.38</td>
+                        <td class="num">1.54</td>
+                        <td class="num">-0.53</td>
+                    </tr>
+                    <tr>
+                        <td>S2 K線反轉</td>
+                        <td class="num">5.70</td>
+                        <td class="num">3.67</td>
+                        <td class="num">5.56</td>
+                        <td class="num">0.97</td>
+                        <td class="num">-2.12</td>
+                    </tr>
+                    <tr>
+                        <td>S3 動能突破</td>
+                        <td class="num">1.59</td>
+                        <td class="num">-0.29</td>
+                        <td class="num">0.75</td>
+                        <td class="num">-0.17</td>
+                        <td class="num">0.45</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>4.2　交易形狀:大賺小賠成立嗎</h3>
+        <div class="scroll">
+            <table>
+                <caption>
+                    驗證期交易統計(純價差,不含股息)
+                </caption>
+                <thead>
+                    <tr>
+                        <th>策略</th>
+                        <th>族群</th>
+                        <th class="num">勝率</th>
+                        <th class="num">賺賠比</th>
+                        <th class="num">獲利因子</th>
+                        <th class="num">已平倉筆數</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>S1</td>
+                        <td>半導體</td>
+                        <td class="num">34.4%</td>
+                        <td class="num">5.19</td>
+                        <td class="num">2.73</td>
+                        <td class="num">212</td>
+                    </tr>
+                    <tr>
+                        <td>S1</td>
+                        <td>電子零組件</td>
+                        <td class="num">37.7%</td>
+                        <td class="num">4.61</td>
+                        <td class="num">2.79</td>
+                        <td class="num">191</td>
+                    </tr>
+                    <tr>
+                        <td>S2</td>
+                        <td>半導體</td>
+                        <td class="num">42.1%</td>
+                        <td class="num">3.02</td>
+                        <td class="num">2.19</td>
+                        <td class="num">95</td>
+                    </tr>
+                    <tr>
+                        <td>S2</td>
+                        <td>電子零組件</td>
+                        <td class="num">43.2%</td>
+                        <td class="num">2.56</td>
+                        <td class="num">1.94</td>
+                        <td class="num">95</td>
+                    </tr>
+                    <tr>
+                        <td>S3</td>
+                        <td>半導體</td>
+                        <td class="num">39.0%</td>
+                        <td class="num">2.29</td>
+                        <td class="num">1.46</td>
+                        <td class="num">136</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p>
+            S1 的形狀最符合本專案哲學;S2
+            勝率高一些、賺賠比低一些,曲線比較平順但爆發力較低。
+        </p>
+
+        <h3>4.3　風險調整後,策略有沒有贏過買進持有</h3>
+        <p>
+            單一 1,000 萬帳戶(<code>shared</code>
+            模式)對照同期同籃子的等權買進持有。淺底列是基準。
+        </p>
+        <div class="scroll">
+            <table data-signed data-plain-cols="0,1">
+                <caption>
+                    驗證期 2024-01 → 2026-08
+                </caption>
+                <thead>
+                    <tr>
+                        <th>族群</th>
+                        <th>做法</th>
+                        <th class="num">報酬 %</th>
+                        <th class="num">最大回撤 %</th>
+                        <th class="num">報酬/回撤</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="bench">
+                        <td>半導體</td>
+                        <td>等權買進持有</td>
+                        <td class="num">232.5</td>
+                        <td class="num">-39.3</td>
+                        <td class="num">5.91</td>
+                    </tr>
+                    <tr>
+                        <td>半導體</td>
+                        <td>S1 唐奇安突破</td>
+                        <td class="num">142.3</td>
+                        <td class="num">-33.3</td>
+                        <td class="num">4.27</td>
+                    </tr>
+                    <tr>
+                        <td>半導體</td>
+                        <td>S2 K線反轉</td>
+                        <td class="num">55.9</td>
+                        <td class="num">-10.6</td>
+                        <td class="num">5.29</td>
+                    </tr>
+                    <tr>
+                        <td>半導體</td>
+                        <td>S3 動能突破</td>
+                        <td class="num">21.4</td>
+                        <td class="num">-14.7</td>
+                        <td class="num">1.45</td>
+                    </tr>
+                    <tr class="bench">
+                        <td>電腦週邊</td>
+                        <td>等權買進持有</td>
+                        <td class="num">92.3</td>
+                        <td class="num">-39.2</td>
+                        <td class="num">2.35</td>
+                    </tr>
+                    <tr>
+                        <td>電腦週邊</td>
+                        <td>S1 唐奇安突破</td>
+                        <td class="num">25.0</td>
+                        <td class="num">-23.6</td>
+                        <td class="num">1.06</td>
+                    </tr>
+                    <tr>
+                        <td>電腦週邊</td>
+                        <td>S2 K線反轉</td>
+                        <td class="num">34.4</td>
+                        <td class="num">-10.7</td>
+                        <td class="num">3.21</td>
+                    </tr>
+                    <tr>
+                        <td>電腦週邊</td>
+                        <td>S3 動能突破</td>
+                        <td class="num">-1.8</td>
+                        <td class="num">-17.5</td>
+                        <td class="num">-0.10</td>
+                    </tr>
+                    <tr class="bench">
+                        <td>電子零組件</td>
+                        <td>等權買進持有</td>
+                        <td class="num">280.3</td>
+                        <td class="num">-36.0</td>
+                        <td class="num">7.79</td>
+                    </tr>
+                    <tr>
+                        <td>電子零組件</td>
+                        <td>S1 唐奇安突破</td>
+                        <td class="num">166.4</td>
+                        <td class="num">-18.7</td>
+                        <td class="num">8.90</td>
+                    </tr>
+                    <tr>
+                        <td>電子零組件</td>
+                        <td>S2 K線反轉</td>
+                        <td class="num">54.0</td>
+                        <td class="num">-9.3</td>
+                        <td class="num">5.79</td>
+                    </tr>
+                    <tr>
+                        <td>電子零組件</td>
+                        <td>S3 動能突破</td>
+                        <td class="num">11.6</td>
+                        <td class="num">-22.5</td>
+                        <td class="num">0.52</td>
+                    </tr>
+                    <tr class="bench">
+                        <td>金融保險</td>
+                        <td>等權買進持有</td>
+                        <td class="num">75.0</td>
+                        <td class="num">-21.9</td>
+                        <td class="num">3.43</td>
+                    </tr>
+                    <tr>
+                        <td>金融保險</td>
+                        <td>S1 唐奇安突破</td>
+                        <td class="num">22.9</td>
+                        <td class="num">-21.6</td>
+                        <td class="num">1.06</td>
+                    </tr>
+                    <tr>
+                        <td>金融保險</td>
+                        <td>S2 K線反轉</td>
+                        <td class="num">8.2</td>
+                        <td class="num">-12.8</td>
+                        <td class="num">0.64</td>
+                    </tr>
+                    <tr>
+                        <td>金融保險</td>
+                        <td>S3 動能突破</td>
+                        <td class="num">-1.7</td>
+                        <td class="num">-18.4</td>
+                        <td class="num">-0.09</td>
+                    </tr>
+                    <tr class="bench">
+                        <td>航運</td>
+                        <td>等權買進持有</td>
+                        <td class="num">11.3</td>
+                        <td class="num">-30.9</td>
+                        <td class="num">0.37</td>
+                    </tr>
+                    <tr>
+                        <td>航運</td>
+                        <td>S1 唐奇安突破</td>
+                        <td class="num">-13.1</td>
+                        <td class="num">-28.4</td>
+                        <td class="num">-0.46</td>
+                    </tr>
+                    <tr>
+                        <td>航運</td>
+                        <td>S2 K線反轉</td>
+                        <td class="num">-16.4</td>
+                        <td class="num">-21.6</td>
+                        <td class="num">-0.76</td>
+                    </tr>
+                    <tr class="star">
+                        <td>航運</td>
+                        <td>
+                            S3 動能突破　<span class="chip star">兩期皆勝</span>
+                        </td>
+                        <td class="num">10.6</td>
+                        <td class="num">-11.6</td>
+                        <td class="num">0.91</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p>
+            在驗證期單獨看,有三個組合贏過買進持有。把它們拉回訓練期重跑一次,只有一個還在:
+        </p>
+        <div class="scroll">
+            <table data-signed data-plain-cols="0">
+                <caption>
+                    兩期複現檢驗　報酬/回撤
+                </caption>
+                <thead>
+                    <tr>
+                        <th>組合</th>
+                        <th class="num">訓練期 策略</th>
+                        <th class="num">訓練期 持有</th>
+                        <th>訓練期</th>
+                        <th class="num">驗證期 策略</th>
+                        <th class="num">驗證期 持有</th>
+                        <th>驗證期</th>
+                        <th>判定</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>S1 × 電子零組件</td>
+                        <td class="num">4.17</td>
+                        <td class="num">9.75</td>
+                        <td><span class="chip bad">輸</span></td>
+                        <td class="num">8.90</td>
+                        <td class="num">7.79</td>
+                        <td><span class="chip ok">贏</span></td>
+                        <td><span class="chip warn">不成立</span></td>
+                    </tr>
+                    <tr>
+                        <td>S2 × 電腦週邊</td>
+                        <td class="num">5.06</td>
+                        <td class="num">11.34</td>
+                        <td><span class="chip bad">輸</span></td>
+                        <td class="num">3.21</td>
+                        <td class="num">2.35</td>
+                        <td><span class="chip ok">贏</span></td>
+                        <td><span class="chip warn">不成立</span></td>
+                    </tr>
+                    <tr class="star">
+                        <td>S3 × 航運</td>
+                        <td class="num">3.98</td>
+                        <td class="num">2.48</td>
+                        <td><span class="chip ok">贏</span></td>
+                        <td class="num">0.91</td>
+                        <td class="num">0.37</td>
+                        <td><span class="chip ok">贏</span></td>
+                        <td><span class="chip star">成立</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note">
+            <p>
+                <strong>未平倉部位佔比。</strong
+                >這三個組合的驗證期結果都有相當比例來自最後一根 K
+                棒的市值,不是已實現的:S2 × 電腦週邊 <strong>54.1%</strong>、S3 ×
+                航運 <strong>45.3%</strong>、S1 × 電子零組件
+                <strong>28.9%</strong>。數字愈高,結果對回測結束日的位置愈敏感。
+            </p>
+        </div>
+
+        <h3>4.4　訓練期 → 驗證期 訊號一致性</h3>
+        <p>
+            15
+            個組合裡挑最好的一個本來就容易挑到雜訊。下表看同一組合在兩個不重疊期間是否同號。
+        </p>
+        <div class="scroll">
+            <table data-signed data-plain-cols="0,3">
+                <caption>
+                    每次進場平均損益 %
+                </caption>
+                <thead>
+                    <tr>
+                        <th>策略 × 族群</th>
+                        <th class="num">訓練期</th>
+                        <th class="num">驗證期</th>
+                        <th class="num">驗證期筆數</th>
+                        <th>判定</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>S1 × 半導體</td>
+                        <td class="num">4.09</td>
+                        <td class="num">7.99</td>
+                        <td class="num">212</td>
+                        <td><span class="chip ok">兩期皆正</span></td>
+                    </tr>
+                    <tr>
+                        <td>S1 × 電腦週邊</td>
+                        <td class="num">5.29</td>
+                        <td class="num">0.80</td>
+                        <td class="num">213</td>
+                        <td><span class="chip ok">兩期皆正</span></td>
+                    </tr>
+                    <tr>
+                        <td>S1 × 電子零組件</td>
+                        <td class="num">2.47</td>
+                        <td class="num">8.38</td>
+                        <td class="num">191</td>
+                        <td><span class="chip ok">兩期皆正</span></td>
+                    </tr>
+                    <tr>
+                        <td>S1 × 金融保險</td>
+                        <td class="num">0.61</td>
+                        <td class="num">1.54</td>
+                        <td class="num">205</td>
+                        <td><span class="chip ok">兩期皆正</span></td>
+                    </tr>
+                    <tr>
+                        <td>S1 × 航運</td>
+                        <td class="num">3.38</td>
+                        <td class="num">-0.53</td>
+                        <td class="num">213</td>
+                        <td><span class="chip warn">翻號,不成立</span></td>
+                    </tr>
+                    <tr>
+                        <td>S2 × 半導體</td>
+                        <td class="num">3.04</td>
+                        <td class="num">5.70</td>
+                        <td class="num">95</td>
+                        <td><span class="chip ok">兩期皆正</span></td>
+                    </tr>
+                    <tr>
+                        <td>S2 × 電腦週邊</td>
+                        <td class="num">3.61</td>
+                        <td class="num">3.67</td>
+                        <td class="num">88</td>
+                        <td><span class="chip ok">兩期皆正</span></td>
+                    </tr>
+                    <tr>
+                        <td>S2 × 電子零組件</td>
+                        <td class="num">0.88</td>
+                        <td class="num">5.56</td>
+                        <td class="num">95</td>
+                        <td><span class="chip ok">兩期皆正</span></td>
+                    </tr>
+                    <tr>
+                        <td>S2 × 金融保險</td>
+                        <td class="num">0.85</td>
+                        <td class="num">0.97</td>
+                        <td class="num">75</td>
+                        <td><span class="chip ok">兩期皆正</span></td>
+                    </tr>
+                    <tr>
+                        <td>S2 × 航運</td>
+                        <td class="num">3.83</td>
+                        <td class="num">-2.12</td>
+                        <td class="num">70</td>
+                        <td><span class="chip warn">翻號,不成立</span></td>
+                    </tr>
+                    <tr>
+                        <td>S3 × 半導體</td>
+                        <td class="num">0.93</td>
+                        <td class="num">1.59</td>
+                        <td class="num">136</td>
+                        <td><span class="chip ok">兩期皆正</span></td>
+                    </tr>
+                    <tr>
+                        <td>S3 × 電腦週邊</td>
+                        <td class="num">1.25</td>
+                        <td class="num">-0.29</td>
+                        <td class="num">174</td>
+                        <td><span class="chip warn">翻號,不成立</span></td>
+                    </tr>
+                    <tr>
+                        <td>S3 × 電子零組件</td>
+                        <td class="num">0.92</td>
+                        <td class="num">0.75</td>
+                        <td class="num">173</td>
+                        <td><span class="chip ok">兩期皆正</span></td>
+                    </tr>
+                    <tr>
+                        <td>S3 × 金融保險</td>
+                        <td class="num">-0.26</td>
+                        <td class="num">-0.17</td>
+                        <td class="num">161</td>
+                        <td><span class="chip bad">兩期皆負</span></td>
+                    </tr>
+                    <tr>
+                        <td>S3 × 航運</td>
+                        <td class="num">2.09</td>
+                        <td class="num">0.45</td>
+                        <td class="num">166</td>
+                        <td><span class="chip ok">兩期皆正</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p>
+            <strong>航運對 S1 / S2 是最典型的陷阱</strong>:訓練期(含 2021
+            貨櫃三雄狂飆)都很漂亮,驗證期雙雙翻負。那段行情不是策略抓到的,是那幾年剛好有。
+        </p>
+
+        <h3>4.5　排名有沒有被資金排擠扭曲</h3>
+        <div class="scroll">
+            <table>
+                <caption>
+                    驗證期族群排名比對
+                </caption>
+                <thead>
+                    <tr>
+                        <th>策略</th>
+                        <th>unconstrained 排名</th>
+                        <th>shared 排名</th>
+                        <th>比對</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>S1</td>
+                        <td>
+                            電子零組件 › 半導體 › 金融保險 › 電腦週邊 › 航運
+                        </td>
+                        <td>
+                            電子零組件 › 半導體 › 電腦週邊 › 金融保險 › 航運
+                        </td>
+                        <td><span class="chip ok">龍頭一致</span></td>
+                    </tr>
+                    <tr>
+                        <td>S2</td>
+                        <td>
+                            半導體 › 電子零組件 › 電腦週邊 › 金融保險 › 航運
+                        </td>
+                        <td>同左</td>
+                        <td><span class="chip ok">完全一致</span></td>
+                    </tr>
+                    <tr>
+                        <td>S3</td>
+                        <td>
+                            半導體 › 電子零組件 › 航運 › 金融保險 › 電腦週邊
+                        </td>
+                        <td>同左</td>
+                        <td><span class="chip ok">完全一致</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p>
+            族群排名在有無資金限制下都沒有翻轉,<strong>所以「哪個族群適合」不是資金競爭造成的假象。</strong>另外,S1
+            在 <code>shared</code> 模式被現金擋掉了 162~429 次進場(S2 只有 0~2
+            次)——S1 訊號多、部位重疊高,1,000 萬其實不夠它跑滿 20 檔籃子。
+        </p>
+    </section>
+
+    <section id="why">
+        <h2>五</h2>
+        <p class="h2-title">族群怎麼選:為什麼是這個結果</p>
+        <ul>
+            <li>
+                <strong>電子零組件、半導體吃趨勢。</strong
+                >這兩個族群會走出連續數月的單邊行情,正是通道突破需要的環境,S1
+                的賺賠比 4.6~5.2
+                就是靠「抓到一次抱很久」。但同一個環境也讓買進持有很難被打敗。
+            </li>
+            <li>
+                <strong>金融保險不適合任何一個。</strong
+                >三個策略在這裡都接近零或負。金融股波動小、報酬有很大一塊來自配息而非價差,而這三個進場條件全是動能型的——沒有趨勢可跟。要做金融股,該用的是存股或均值回歸,不是突破。
+            </li>
+            <li>
+                <strong>航運是唯一策略打得贏持有的族群</strong
+                >,也是唯一沒有長多的族群。買進持有在訓練期要吃 −62.8% 回撤,而
+                S3「跌破 MA10 就走」的緊出場把回撤壓到
+                −18.6%。代價是它在其他四個族群都太早出場、吃不到大波段。
+            </li>
+            <li>
+                <strong>電腦週邊(AI 伺服器)漲得急也回得急。</strong>S1 等 10
+                日低點才出場,回撤吃滿;S2
+                的移動停損跟得緊,驗證期好得多——但訓練期一樣輸給持有,所以只能說「S2
+                比 S1 適合這個族群」,不能說「值得取代持有」。
+            </li>
+        </ul>
+    </section>
+
+    <section id="limits">
+        <h2>六</h2>
+        <p class="h2-title">你必須知道的限制</p>
+        <ol>
+            <li>
+                <strong>多頭市場偏誤。</strong
+                >兩個期間台股電子都是大多頭,任何「有時空手」的策略在原始報酬上都必輸買進持有。本報告的正面結論只有航運那一個,其餘都受此影響。
+            </li>
+            <li>
+                <strong>兩個策略的出場是我改的。</strong>S2 原始文獻的出場是
+                1~10 天內「收盤高於前一日高點」就跑,那是短打不是波段;S3
+                的原始出場是盤中 tick 級移動停利,日 K
+                算不出來。兩者都換成波段型出場,<strong>進場條件才是照原文的</strong>。所以這份報告驗證的是「這些
+                K 線進場條件值不值得用」,不是「原始文獻完整策略的績效」。
+            </li>
+            <li>
+                <strong>期望值不含股息。</strong>引擎的
+                <code>calculate_trade_stats</code>
+                只配對買賣,股息與未平倉部位不進入「每筆期望值」。4.1
+                已改用完整損益口徑修正,但 4.2
+                的勝率與賺賠比仍是純價差。差距最大的是電腦週邊(85%
+                的損益在已平倉之外)與金融保險(37.9%,主要是股息),這兩處的交易統計要打折看。
+            </li>
+            <li>
+                <strong>未平倉比重高。</strong>4.3 三個重點組合有 28.9%~54.1%
+                的最終權益是未平倉市值,結果對回測結束日的位置敏感。
+            </li>
+            <li>
+                <strong>倖存者偏誤。</strong
+                >籃子只收整段期間都有資料的股票,下市的不在內。這讓五個籃子可比,代價是結果偏樂觀。
+            </li>
+            <li>
+                <strong>成交假設。</strong
+                >進出場都以當日收盤價成交,零股整股計價(每次固定 100
+                萬名目),只計手續費與證交稅,沒有滑價模型。
+            </li>
+            <li>
+                <strong>本地資料有小缺口。</strong>100 檔中有 5
+                檔(2327、2352、2368、2603、2607)各缺 7~16 個交易日,佔比
+                0.4~0.9%,影響可忽略但值得補抓。
+            </li>
+            <li>
+                <strong>0050 沒有本地日 K。</strong>只影響
+                <code>benchmark_return_rate</code> 這個大盤基準欄位(全部
+                null),本報告改用同籃子等權買進持有當基準,對「這個族群該不該用這個策略」反而更直接。
+            </li>
+        </ol>
+    </section>
+
+    <section id="next">
+        <h2>七</h2>
+        <p class="h2-title">建議的下一步</p>
+        <ol>
+            <li>
+                <strong>想清楚要打敗的對象是什麼。</strong
+                >如果目標是打敗買進持有,這三個策略在電子族群都做不到,而且是在兩個期間都做不到——該換的是方向(加入空方、槓桿、或選股
+                alpha),不是調參數。
+            </li>
+            <li>
+                <strong>S3 × 航運值得再往下挖,但要先確認不是航運獨有。</strong
+                >拿它去測其他景氣循環族群(鋼鐵、塑化、水泥);如果「緊出場在循環股有效」這個機制成立,才是真的發現,只在航運成立就仍可能是巧合。
+            </li>
+            <li>
+                <strong
+                    >S1 ×
+                    半導體/電子零組件的訊號品質是真的,可以當選股訊號而不是完整策略。</strong
+                >每次進場 8% 期望值、賺賠比 4.6
+                以上,適合當進場時機的濾網,搭配你自己的部位管理。
+            </li>
+            <li>
+                <strong>金融保險族群換一類策略再測。</strong
+                >突破型已確定無效,值得試均值回歸或除息前後的季節性。
+            </li>
+            <li>
+                <strong>S1 需要更多資金或更少標的。</strong>429
+                次被現金擋掉的進場代表 1,000 萬跑不動 20
+                檔籃子——要嘛降低單筆部位,要嘛把籃子縮到 10 檔。
+            </li>
+        </ol>
+    </section>
+
+    <section id="files">
+        <h2>八</h2>
+        <p class="h2-title">檔案位置</p>
+        <div class="scroll">
+            <table class="files">
+                <caption>
+                    全部產出
+                </caption>
+                <thead>
+                    <tr>
+                        <th>內容</th>
+                        <th>路徑 / 指令</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>策略程式</td>
+                        <td>
+                            tasks/20260816-kline-strategy-category-fit/candidates/*.py
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>設計與方法</td>
+                        <td>
+                            tasks/20260816-kline-strategy-category-fit/mission.md
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>48 個 cell 的完整 summary</td>
+                        <td>
+                            tasks/20260816-kline-strategy-category-fit/runs/{train,holdout,shared,train_shared}/
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>彙總數據</td>
+                        <td>
+                            tasks/20260816-kline-strategy-category-fit/sweep_results.json
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>重跑掃描</td>
+                        <td>
+                            uv run python
+                            tasks/20260816-kline-strategy-category-fit/run_sweep.py
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>重新產生表格</td>
+                        <td>
+                            uv run python
+                            tasks/20260816-kline-strategy-category-fit/analyze_sweep.py
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>買進持有回撤</td>
+                        <td>
+                            uv run python
+                            tasks/20260816-kline-strategy-category-fit/benchmark_drawdown.py
+                            [start] [end]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>型態偵測器驗證(11/11 通過)</td>
+                        <td>
+                            cd StockProject &amp;&amp; uv run python
+                            ../tasks/20260816-kline-strategy-category-fit/verify_patterns.py
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>族群定義 — <strong>唯一進 git 的產出</strong></td>
+                        <td>universes/*_liquid20.json</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <footer>
+        數字顏色依台股慣例:紅為正、綠為負。所有回測以日收盤價成交,含手續費
+        0.1425% 與證交稅 0.3%,無滑價模型。
+    </footer>
+</div>
+
+<script>
+    // Colour signed numbers by Taiwan market convention (red up, green down).
+    // Columns listed in data-plain-cols hold labels or counts and stay neutral.
+    for (const table of document.querySelectorAll("table[data-signed]")) {
+        const plain = new Set(
+            (table.dataset.plainCols || "")
+                .split(",")
+                .filter(Boolean)
+                .map(Number),
+        );
+        for (const row of table.tBodies[0].rows) {
+            [...row.cells].forEach((cell, index) => {
+                if (plain.has(index)) return;
+                const value = Number(cell.textContent.replace(/[,%\s]/g, ""));
+                if (!cell.textContent.trim() || Number.isNaN(value)) return;
+                cell.classList.add(value < 0 ? "neg" : value > 0 ? "pos" : "");
+            });
+        }
+    }
+</script>

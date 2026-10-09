@@ -1,0 +1,259 @@
+{
+    "band_check": {
+        "fill_ok": true,
+        "k10_turnover": 9.797273517855665,
+        "k30_mean_slots": 28.86277732128184,
+        "k30_turnover": 10.021940248849543,
+        "passed": true,
+        "ran": true,
+        "turnover_ok": true
+    },
+    "holdout": [
+        {
+            "bear_2022_return_pct": NaN,
+            "buy_count": 243,
+            "cell": "k10",
+            "max_drawdown_pct": -53.29666978911275,
+            "mean_slots_used": 8.560629921259842,
+            "named_captured": 0.7505490173996288,
+            "named_entries": 2,
+            "return_pct": 81.52430487172998,
+            "runaway": {
+                "1.0": {
+                    "capture_rate": 0.7075471698113207,
+                    "held": 75,
+                    "participation": 0.07170122369713273,
+                    "participation_n": 75,
+                    "pool_share": 0.06425599224922851,
+                    "population": 106
+                },
+                "1.5": {
+                    "capture_rate": 0.7222222222222222,
+                    "held": 52,
+                    "participation": 0.07666304847340824,
+                    "participation_n": 52,
+                    "pool_share": 0.06822318785582926,
+                    "population": 72
+                },
+                "2.0": {
+                    "capture_rate": 0.723404255319149,
+                    "held": 34,
+                    "participation": 0.09191548285650657,
+                    "participation_n": 34,
+                    "pool_share": 0.07718083828779675,
+                    "population": 47
+                },
+                "3.0": {
+                    "capture_rate": 0.6190476190476191,
+                    "held": 13,
+                    "participation": 0.14474150023186375,
+                    "participation_n": 13,
+                    "pool_share": 0.09217293194570127,
+                    "population": 21
+                }
+            },
+            "share_bars_full": 0.30866141732283464,
+            "top_k": 10,
+            "turnover_per_slot_year": 8.887829702949793,
+            "window": "holdout"
+        },
+        {
+            "bear_2022_return_pct": NaN,
+            "buy_count": 864,
+            "cell": "k30",
+            "max_drawdown_pct": -41.57425380715788,
+            "mean_slots_used": 31.056692913385827,
+            "named_captured": 0.8799814549779277,
+            "named_entries": 3,
+            "return_pct": 127.34444219026007,
+            "runaway": {
+                "1.0": {
+                    "capture_rate": 1.0,
+                    "held": 106,
+                    "participation": 0.20338288890833875,
+                    "participation_n": 106,
+                    "pool_share": 0.1959680645849591,
+                    "population": 106
+                },
+                "1.5": {
+                    "capture_rate": 1.0,
+                    "held": 72,
+                    "participation": 0.18892664711842883,
+                    "participation_n": 72,
+                    "pool_share": 0.18796749083072792,
+                    "population": 72
+                },
+                "2.0": {
+                    "capture_rate": 1.0,
+                    "held": 47,
+                    "participation": 0.18194118537060558,
+                    "participation_n": 47,
+                    "pool_share": 0.18433834501058494,
+                    "population": 47
+                },
+                "3.0": {
+                    "capture_rate": 1.0,
+                    "held": 21,
+                    "participation": 0.1879580694117271,
+                    "participation_n": 21,
+                    "pool_share": 0.19090428561648493,
+                    "population": 21
+                }
+            },
+            "share_bars_full": 0.9133858267716536,
+            "top_k": 30,
+            "turnover_per_slot_year": 10.600186211983527,
+            "window": "holdout"
+        }
+    ],
+    "holdout_opened": true,
+    "pool_up": true,
+    "return_up": true,
+    "train": [
+        {
+            "bear_2022_return_pct": -18.616698341134942,
+            "buy_count": 501,
+            "cell": "k10",
+            "max_drawdown_pct": -34.29755378382938,
+            "mean_slots_used": 9.642563681183237,
+            "named_captured": 0.12474437627811885,
+            "named_entries": 1,
+            "return_pct": 206.58703311026022,
+            "runaway": {
+                "1.0": {
+                    "capture_rate": 0.8738738738738738,
+                    "held": 97,
+                    "participation": 0.12430610697971879,
+                    "participation_n": 97,
+                    "pool_share": 0.12057063058236779,
+                    "population": 111
+                },
+                "1.5": {
+                    "capture_rate": 0.9375,
+                    "held": 60,
+                    "participation": 0.11245059506096651,
+                    "participation_n": 60,
+                    "pool_share": 0.12311266974976076,
+                    "population": 64
+                },
+                "2.0": {
+                    "capture_rate": 0.9512195121951219,
+                    "held": 39,
+                    "participation": 0.1113728742074802,
+                    "participation_n": 39,
+                    "pool_share": 0.12691814927360098,
+                    "population": 41
+                },
+                "3.0": {
+                    "capture_rate": 1.0,
+                    "held": 19,
+                    "participation": 0.186597452713965,
+                    "participation_n": 19,
+                    "pool_share": 0.16752772790447748,
+                    "population": 19
+                }
+            },
+            "share_bars_full": 0.8898931799506984,
+            "top_k": 10,
+            "turnover_per_slot_year": 9.797273517855665,
+            "window": "train"
+        },
+        {
+            "bear_2022_return_pct": -15.658309500496904,
+            "buy_count": 1006,
+            "cell": "k20",
+            "max_drawdown_pct": -30.116216620286075,
+            "mean_slots_used": 19.315529991783073,
+            "named_captured": 0.09213051823416496,
+            "named_entries": 1,
+            "return_pct": 193.65307502727978,
+            "runaway": {
+                "1.0": {
+                    "capture_rate": 0.972972972972973,
+                    "held": 108,
+                    "participation": 0.19592303604797862,
+                    "participation_n": 108,
+                    "pool_share": 0.21320489225519607,
+                    "population": 111
+                },
+                "1.5": {
+                    "capture_rate": 1.0,
+                    "held": 64,
+                    "participation": 0.20522435811144993,
+                    "participation_n": 64,
+                    "pool_share": 0.2264001943909826,
+                    "population": 64
+                },
+                "2.0": {
+                    "capture_rate": 1.0,
+                    "held": 41,
+                    "participation": 0.24360415316625975,
+                    "participation_n": 41,
+                    "pool_share": 0.24803989683404284,
+                    "population": 41
+                },
+                "3.0": {
+                    "capture_rate": 1.0,
+                    "held": 19,
+                    "participation": 0.266869490441113,
+                    "participation_n": 19,
+                    "pool_share": 0.25844102778807737,
+                    "population": 19
+                }
+            },
+            "share_bars_full": 0.9030402629416598,
+            "top_k": 20,
+            "turnover_per_slot_year": 9.846428928336357,
+            "window": "train"
+        },
+        {
+            "bear_2022_return_pct": -18.04042190505427,
+            "buy_count": 1534,
+            "cell": "k30",
+            "max_drawdown_pct": -30.83417691950595,
+            "mean_slots_used": 28.86277732128184,
+            "named_captured": 0.6686217008797652,
+            "named_entries": 1,
+            "return_pct": 145.2508838116301,
+            "runaway": {
+                "1.0": {
+                    "capture_rate": 1.0,
+                    "held": 111,
+                    "participation": 0.24781028822802348,
+                    "participation_n": 111,
+                    "pool_share": 0.25536045026371884,
+                    "population": 111
+                },
+                "1.5": {
+                    "capture_rate": 1.0,
+                    "held": 64,
+                    "participation": 0.24544988086756253,
+                    "participation_n": 64,
+                    "pool_share": 0.25882434645237345,
+                    "population": 64
+                },
+                "2.0": {
+                    "capture_rate": 1.0,
+                    "held": 41,
+                    "participation": 0.28829959731006255,
+                    "participation_n": 41,
+                    "pool_share": 0.28085922660599394,
+                    "population": 41
+                },
+                "3.0": {
+                    "capture_rate": 1.0,
+                    "held": 19,
+                    "participation": 0.2997008990445565,
+                    "participation_n": 19,
+                    "pool_share": 0.2794690594630696,
+                    "population": 19
+                }
+            },
+            "share_bars_full": 0.895645028759244,
+            "top_k": 30,
+            "turnover_per_slot_year": 10.021940248849543,
+            "window": "train"
+        }
+    ],
+    "verdict": "INVERSION REAL -- the train return floor was an artifact; the owner belongs above K25"
+}

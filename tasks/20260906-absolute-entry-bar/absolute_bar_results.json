@@ -1,0 +1,186 @@
+{
+    "baseline": {
+        "buy_count": 1091,
+        "final": 6561924.451279993,
+        "max_drawdown_pct": -37.5294994916786,
+        "return_pct": 228.09622256399967,
+        "worst_streak": 0.38194365
+    },
+    "rows": {
+        "contraction": [
+            {
+                "all": false,
+                "buy_count": 694,
+                "checks": {
+                    "A": false,
+                    "B": false,
+                    "C": true,
+                    "D": true
+                },
+                "column": "contraction",
+                "fill": 0.289,
+                "final": 3237063.2115679965,
+                "max_drawdown_pct": -35.1178368730935,
+                "return_pct": 61.85316057839982,
+                "value": 0.8,
+                "worst_streak": 0.30280219999999997
+            },
+            {
+                "all": false,
+                "buy_count": 964,
+                "checks": {
+                    "A": false,
+                    "B": false,
+                    "C": false,
+                    "D": true
+                },
+                "column": "contraction",
+                "fill": 0.496,
+                "final": 4404460.489999995,
+                "max_drawdown_pct": -38.286723145218744,
+                "return_pct": 120.22302449999972,
+                "value": 0.9,
+                "worst_streak": 0.35187602500000004
+            },
+            {
+                "all": false,
+                "buy_count": 1051,
+                "checks": {
+                    "A": false,
+                    "B": false,
+                    "C": true,
+                    "D": false
+                },
+                "column": "contraction",
+                "fill": 0.674,
+                "final": 4914225.7599999895,
+                "max_drawdown_pct": -36.736936645294996,
+                "return_pct": 145.71128799999948,
+                "value": 1.0,
+                "worst_streak": 0.36168982499999996
+            },
+            {
+                "all": false,
+                "buy_count": 1092,
+                "checks": {
+                    "A": false,
+                    "B": true,
+                    "C": false,
+                    "D": false
+                },
+                "column": "contraction",
+                "fill": 0.795,
+                "final": 5590910.279999997,
+                "max_drawdown_pct": -37.95430932419087,
+                "return_pct": 179.54551399999983,
+                "value": 1.1,
+                "worst_streak": 0.390819975
+            },
+            {
+                "all": false,
+                "buy_count": 1086,
+                "checks": {
+                    "A": false,
+                    "B": true,
+                    "C": true,
+                    "D": false
+                },
+                "column": "contraction",
+                "fill": 0.872,
+                "final": 6655912.041279994,
+                "max_drawdown_pct": -35.12189228127552,
+                "return_pct": 232.79560206399972,
+                "value": 1.2,
+                "worst_streak": 0.38194365
+            }
+        ],
+        "vol_ratio": [
+            {
+                "all": false,
+                "buy_count": 672,
+                "checks": {
+                    "A": false,
+                    "B": false,
+                    "C": false,
+                    "D": true
+                },
+                "column": "vol_ratio",
+                "fill": 0.289,
+                "final": 3096784.6312800026,
+                "max_drawdown_pct": -53.98042058293756,
+                "return_pct": 54.83923156400014,
+                "value": 1.483,
+                "worst_streak": 0.319953775
+            },
+            {
+                "all": false,
+                "buy_count": 913,
+                "checks": {
+                    "A": false,
+                    "B": false,
+                    "C": false,
+                    "D": true
+                },
+                "column": "vol_ratio",
+                "fill": 0.496,
+                "final": 3863348.70128,
+                "max_drawdown_pct": -46.05932011339188,
+                "return_pct": 93.167435064,
+                "value": 2.043,
+                "worst_streak": 0.3408125
+            },
+            {
+                "all": false,
+                "buy_count": 1059,
+                "checks": {
+                    "A": false,
+                    "B": false,
+                    "C": true,
+                    "D": false
+                },
+                "column": "vol_ratio",
+                "fill": 0.674,
+                "final": 5068620.281279999,
+                "max_drawdown_pct": -33.714252872686146,
+                "return_pct": 153.43101406399995,
+                "value": 2.739,
+                "worst_streak": 0.36338175
+            },
+            {
+                "all": false,
+                "buy_count": 1074,
+                "checks": {
+                    "A": false,
+                    "B": true,
+                    "C": true,
+                    "D": false
+                },
+                "column": "vol_ratio",
+                "fill": 0.795,
+                "final": 5308257.741279998,
+                "max_drawdown_pct": -34.05449113074732,
+                "return_pct": 165.4128870639999,
+                "value": 3.528,
+                "worst_streak": 0.360683
+            },
+            {
+                "all": false,
+                "buy_count": 1109,
+                "checks": {
+                    "A": false,
+                    "B": true,
+                    "C": true,
+                    "D": false
+                },
+                "column": "vol_ratio",
+                "fill": 0.872,
+                "final": 5403098.550000002,
+                "max_drawdown_pct": -35.14763238763761,
+                "return_pct": 170.15492750000007,
+                "value": 4.411,
+                "worst_streak": 0.36735160000000006
+            }
+        ]
+    },
+    "verdict": "NEGATIVE -- an absolute bar does not fix the losing streak without breaking the return"
+}

@@ -1,0 +1,37 @@
+{
+    "all_nine_tables_reconstruction_repeated": false,
+    "calendar_date_count": 4105,
+    "comparison_basis": "full_canonical_rows_with_multiplicity_for_selected_security_and_all_representative_intervals",
+    "eligible_exact_native_runs_required_and_verified_count": 1970,
+    "excluded_frozen_python_security_rows_reconstructed_count": 105,
+    "identity": {
+        "adapter_revision": "aff9b1c452509c662a9738f9209d94133c7a2d7b38d9d479861746166872c5ab",
+        "catalog_revision": "gain-continuity-v2",
+        "declared_gain_policy": "exact_pinned_js_run.preview.v2",
+        "effective_gain_policy": "exact_pinned_js_run.preview.v2",
+        "policy_source": "manifest",
+        "rule": "wave-lab-exploratory.v1",
+        "schema": "opportunity-local-history-preview.v1",
+        "selector": "wave-start-representative.preview.v1",
+        "task": "20261004-sector-wave-full-history-preview"
+    },
+    "manifest_sha256": "c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140",
+    "method_analysis_recomputed": false,
+    "native_receipt_identity_context_verified_count": 1970,
+    "prior_receipts": [
+        {
+            "path": "verification-receipt-v3.json",
+            "sha256": "b07809c560acf955091a0cc3362858bd322dac2f29433d39882febe929ec2d8c"
+        },
+        {
+            "path": "query-native-contract-audit-receipt.json",
+            "sha256": "1b02cb7926062c4be926a1bda5da50233e211bd48e9cee70725baf28d5fef42c"
+        }
+    ],
+    "query_security_full_rows_reconstructed_count": 2075,
+    "reconstruction_adapter_sha256": "aff9b1c452509c662a9738f9209d94133c7a2d7b38d9d479861746166872c5ab",
+    "representative_interval_full_rows_reconstructed_count": 7875,
+    "run_recomputation_basis": "original_pinned_buildLabCase_sourceRunIndices_only",
+    "schema_version": "opportunity-query-reconstruction-audit.v1",
+    "status": "verified"
+}

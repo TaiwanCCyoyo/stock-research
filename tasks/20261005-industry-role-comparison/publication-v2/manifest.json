@@ -1,0 +1,20 @@
+{
+  "schema_version": "industry-role-transport.v2",
+  "source_artifact_id": "industry-role-publication.v1-d5c256e0f5207587a61a579739a92e902c839d1a203dd6b8067d738f9e0b65f2",
+  "result_parts": [
+    "results.json.xz.part000",
+    "results.json.xz.part001"
+  ],
+  "files": {
+    "input-audit.json.xz": "586e0461f464562bae14dc44db5edd194c26ac7b323b191cdf22365b5ee17675",
+    "packet.json.xz": "71fa77c33490ff6612fe838b09d9f35f5e1bbe4e7192db2375f6682cad21a0b2",
+    "receipt.json.xz": "b3b1315355f114ae48cc48009e9dbf5f76180a458b28cb2aa0f34c4437207ac8",
+    "results.json.xz.part000": "f2f7cf5e457d8fa362dbb337b4b9e2d7ec8a529c22270c7c09d8c17e853b4151",
+    "results.json.xz.part001": "66664a6b506577244484527b3de7c4ec22e8c8d5589a0061733ee176bd0d1be3",
+    "source-inputs.zip": "3addd3d5d17c228fca055b4a27137c5cc73d73749404b54f634c397aab7cabb9",
+    "source-manifest.json": "50ddb5b86a351a3e4a6dc58fae70af0c0bf2f287b20ea8e760c39a0231558cdd",
+    "summary.json.xz": "0435c06a2d3144258142597b218e5f3e54a9cd97ab14f1206328b51d74fe518e"
+  },
+  "bulk_limitation": "Bulk source data remains local at the recorded source paths; this package permits compact evidence reading, not full recomputation.",
+  "artifact_id": "industry-role-transport.v2-03dff10e7e7d270ef703560c4233ae320261f74d1ebb0d07ec3c93f5de845785"
+}

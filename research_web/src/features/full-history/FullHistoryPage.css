@@ -1,0 +1,823 @@
+.fh-page {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+    padding-bottom: 30px;
+}
+.fh-hero {
+    position: relative;
+    overflow: hidden;
+    padding: 30px 24px;
+}
+.fh-hero::after {
+    content: "";
+    position: absolute;
+    inset: 15% 12% 0 30%;
+    opacity: 0.13;
+    background: var(--accent);
+    clip-path: polygon(
+        0 90%,
+        8% 66%,
+        15% 78%,
+        23% 39%,
+        32% 65%,
+        40% 32%,
+        51% 60%,
+        62% 17%,
+        74% 48%,
+        84% 37%,
+        100% 89%,
+        100% 100%,
+        0 100%
+    );
+    pointer-events: none;
+}
+.fh-hero > div {
+    position: relative;
+    z-index: 1;
+}
+.fh-hero .fh-intro {
+    font-size: 23px;
+    color: var(--ink);
+    margin: 0 0 10px;
+}
+.fh-preview-badge {
+    display: inline-block;
+    font-size: 12px;
+    padding: 5px 10px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    color: var(--muted);
+}
+.fh-hero-date {
+    min-width: 260px;
+    text-align: right;
+}
+.fh-hero-date > strong {
+    display: block;
+    font:
+        600 clamp(26px, 3vw, 38px)/1.3 Georgia,
+        serif;
+    font-variant-numeric: tabular-nums;
+}
+.fh-hero-date small {
+    display: block;
+    max-width: 340px;
+    color: var(--muted);
+}
+.fh-datebar .fh-controls > div > small {
+    display: block;
+    margin-top: 6px;
+    color: var(--muted);
+}
+.fh-datebar .fh-speed {
+    margin-left: auto;
+}
+.fh-datebar form {
+    display: flex;
+    gap: 8px;
+}
+.fh-datebar .fh-play {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    font-size: 19px;
+    background: var(--accent);
+    color: var(--paper);
+}
+.fh-compare-toggle {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+    flex-wrap: wrap;
+}
+.fh-growth-rule {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 20px;
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+}
+.fh-growth-rule p {
+    margin: 6px 0;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.7;
+}
+.fh-growth-rule label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.fh-growth-rule details {
+    width: 100%;
+    font-size: 13px;
+}
+.fh-compare-toggle a {
+    font-size: 13px;
+    color: var(--muted);
+}
+.fh-phase-legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin: 0 0 12px;
+    color: var(--muted);
+    font-size: 12px;
+}
+.fh-phase-legend > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.fh-phase-legend i {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+.fh-phase-rising {
+    background: var(--cell-deep);
+}
+.fh-phase-slow {
+    background: var(--cell-light);
+}
+.fh-phase-resting {
+    background: var(--cell-warm);
+}
+.fh-phase-retreat {
+    background: var(--muted);
+}
+.fh-phase-unknown {
+    background: var(--line);
+}
+.fh-page .fh-caption {
+    font-size: 12px;
+    margin: 12px 0 0;
+    line-height: 1.7;
+}
+.fh-page .fh-market {
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 16px;
+}
+.fh-aside {
+    align-self: start;
+}
+.fh-search-label {
+    display: block;
+    color: var(--muted);
+    font-size: 12px;
+}
+.fh-search-label input {
+    display: block;
+    width: 100%;
+    margin-top: 6px;
+    box-sizing: border-box;
+}
+.fh-ranking-list {
+    max-height: 680px;
+    overflow-y: auto;
+    margin: 12px -8px;
+    padding: 0 8px;
+}
+.fh-page .fh-rank-row {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 68px 90px;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    border-radius: 0;
+    padding: 14px 0;
+    animation: fh-appear 0.3s ease-out;
+}
+.fh-page .fh-rank-row:hover,
+.fh-page .fh-rank-row.is-selected {
+    background: var(--accent-soft);
+}
+.fh-rank-name {
+    min-width: 0;
+}
+.fh-rank-name > b {
+    font-size: 14px;
+    display: block;
+}
+.fh-rank-name b > small {
+    margin-left: 5px;
+    font-size: 10px;
+    font-weight: 400;
+    color: var(--muted);
+}
+.fh-rank-name > span {
+    color: var(--muted);
+    display: block;
+    font-size: 11px;
+    margin-top: 4px;
+}
+.fh-state {
+    font-style: normal;
+    font-size: 10px;
+    padding: 2px 5px;
+    display: inline-block;
+    border-radius: 5px;
+    color: var(--ink);
+    margin-top: 5px;
+}
+.fh-spark {
+    width: 68px;
+    height: 32px;
+    color: var(--accent);
+}
+.fh-spark-empty {
+    color: var(--muted);
+    font-size: 10px;
+}
+.fh-rank-gain {
+    font-size: 17px;
+    font-weight: 600;
+    text-align: right;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+}
+.fh-rank-gain small {
+    display: block;
+    font-size: 10px;
+    color: var(--muted);
+    font-weight: 400;
+    margin-top: 4px;
+}
+.fh-stock-card {
+    position: relative;
+    background: var(--accent-soft);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+.fh-stock-card h3 {
+    margin: 0 24px 12px 0;
+    font-size: 18px;
+}
+.fh-stock-card h3 small {
+    display: block;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 400;
+    margin-top: 5px;
+}
+.fh-page .fh-stock-card p {
+    font-size: 12px;
+    margin-top: 5px;
+}
+.fh-stock-card .fh-stock-gain {
+    font-size: 28px;
+    color: var(--accent);
+}
+.fh-stock-card dl {
+    font-size: 12px;
+    margin-bottom: 16px;
+}
+.fh-page .fh-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: transparent;
+    border: 0;
+    font-size: 18px;
+    padding: 0 6px;
+}
+.fh-page .fh-ended-row {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    gap: 12px;
+    margin-top: 5px;
+    background: transparent;
+    font-size: 12px;
+}
+.fh-ended-row span {
+    color: var(--muted);
+}
+.fh-timeline-scroll {
+    overflow-x: auto;
+}
+.fh-timeline-inner {
+    min-width: 700px;
+}
+.fh-band-axis {
+    display: flex;
+    margin-left: 135px;
+    justify-content: space-between;
+    color: var(--muted);
+    font-size: 11px;
+    padding-bottom: 12px;
+}
+.fh-band-row {
+    display: grid;
+    grid-template-columns: 135px 1fr;
+    align-items: center;
+    border-top: 1px solid var(--line);
+    min-height: 50px;
+}
+.fh-band-row.is-selected {
+    background: var(--accent-soft);
+}
+.fh-page .fh-band-name {
+    border: 0;
+    background: transparent;
+    text-align: left;
+    padding: 8px 8px 8px 0;
+}
+.fh-band-name b {
+    display: block;
+    font-size: 13px;
+}
+.fh-band-name small {
+    display: block;
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: 10px;
+}
+.fh-band-track {
+    position: relative;
+    height: 38px;
+    cursor: pointer;
+    border-radius: 5px;
+    background: linear-gradient(
+            90deg,
+            transparent 49.8%,
+            var(--line) 50%,
+            transparent 50.2%
+        )
+        0 0 / 10% 100%;
+}
+.fh-wave-band {
+    position: absolute;
+    top: 10px;
+    height: 18px;
+    min-width: 1px;
+    background: var(--line);
+    border-radius: 9px;
+    overflow: hidden;
+    opacity: 0.85;
+}
+.fh-wave-band.is-open {
+    border-right: 2px dashed var(--muted);
+}
+.fh-wave-band > i {
+    display: block;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+}
+.fh-wave-band > .fh-launch-mark {
+    width: 2px;
+    background: var(--ink);
+}
+.fh-date-cursor {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1.5px;
+    background: var(--accent);
+    pointer-events: none;
+}
+.fh-holding-band {
+    position: absolute;
+    height: 2px;
+}
+.fh-timeline > button {
+    margin-top: 15px;
+}
+.fh-detail-anchor {
+    scroll-margin-top: 80px;
+}
+.fh-settings > label {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+.fh-option-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+}
+.fh-option {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px;
+    background: var(--paper);
+}
+.fh-option strong {
+    display: block;
+    font-size: 13px;
+    color: var(--ink);
+}
+.fh-option b {
+    display: block;
+    color: var(--accent);
+    font-size: 25px;
+    margin-top: 12px;
+}
+.fh-loading {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    min-height: 180px;
+}
+.fh-loading-dot {
+    width: 26px;
+    height: 26px;
+    border: 3px solid var(--line);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: fh-spin 1.2s linear infinite;
+}
+@keyframes fh-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+@keyframes fh-appear {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+@media (max-width: 1120px) {
+    .fh-page .fh-market {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .fh-ranking-list {
+        max-height: 420px;
+    }
+}
+@media (max-width: 600px) {
+    .fh-hero .fh-intro {
+        font-size: 20px;
+    }
+    .fh-hero-date {
+        text-align: left;
+        margin-top: 24px;
+    }
+    .fh-datebar .fh-speed {
+        margin-left: 0;
+    }
+    .fh-datebar form {
+        width: 100%;
+    }
+    .fh-datebar form input {
+        min-width: 0;
+        flex: 1;
+    }
+    .fh-page .fh-settings > label {
+        align-items: start;
+        flex-direction: column;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .fh-page *,
+    .fh-page *::before,
+    .fh-page *::after {
+        animation: none !important;
+        scroll-behavior: auto !important;
+    }
+}
+.fh-hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+    padding: 24px 20px;
+    background: radial-gradient(
+        ellipse at 88% 100%,
+        var(--cell-light),
+        transparent 65%
+    );
+    border-radius: 20px;
+}
+.fh-eyebrow {
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 0.15em;
+}
+.studio .fh-hero h1 {
+    font:
+        600 clamp(26px, 3vw, 38px)/1.55 "Noto Serif TC",
+        serif;
+    margin: 8px 0;
+}
+.fh-page p {
+    color: var(--muted);
+    margin: 8px 0 14px;
+}
+.fh-page .fh-scope {
+    color: var(--accent);
+    font-weight: 600;
+}
+.fh-hero-note {
+    color: var(--accent);
+    padding: 20px;
+    border-left: 1px solid var(--line);
+    min-width: 210px;
+}
+.fh-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 20px;
+    min-width: 0;
+}
+.fh-page h2 {
+    font-size: 18px;
+    margin: 0 0 12px;
+}
+.fh-controls {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+.fh-controls label {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+.fh-page button,
+.fh-page select,
+.fh-page input:not([type="range"]):not([type="checkbox"]) {
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    padding: 7px 10px;
+    color: var(--ink);
+    background: var(--paper);
+}
+.fh-page button {
+    background: var(--accent-soft);
+}
+.fh-datebar input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent);
+}
+.fh-date-labels {
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+    color: var(--muted);
+    font-size: 12px;
+}
+.fh-market {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 290px;
+    gap: 20px;
+}
+.fh-section-heading {
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+    align-items: baseline;
+}
+.fh-section-heading > span {
+    color: var(--muted);
+    font-size: 12px;
+}
+.fh-map {
+    padding: 18px;
+    overflow: hidden;
+}
+.fh-map .op-map {
+    min-height: 440px;
+}
+.fh-empty {
+    min-height: 160px;
+    display: grid;
+    place-content: center;
+    text-align: center;
+    color: var(--muted);
+    padding: 24px;
+}
+.fh-aside dl {
+    display: grid;
+    gap: 4px;
+}
+.fh-aside dt {
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 12px;
+}
+.fh-aside dd {
+    margin: 0;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+.fh-aside hr {
+    border: 0;
+    border-top: 1px solid var(--line);
+    margin: 20px 0;
+}
+.fh-error {
+    border: 1px solid var(--negative);
+    color: var(--negative);
+    padding: 16px;
+    border-radius: 12px;
+    background: var(--surface);
+}
+.fh-table-scroll {
+    overflow: auto;
+    max-height: 440px;
+}
+.fh-page table {
+    width: 100%;
+    border-collapse: collapse;
+    white-space: nowrap;
+    font-size: 13px;
+}
+.fh-page th {
+    text-align: left;
+    color: var(--muted);
+    font-weight: 500;
+    background: var(--paper);
+    position: sticky;
+    top: 0;
+}
+.fh-page th,
+.fh-page td {
+    padding: 11px 12px;
+    border-bottom: 1px solid var(--line);
+}
+.fh-page tr[aria-selected="true"] {
+    background: var(--accent-soft);
+}
+.fh-page .fh-stock-link {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    color: var(--accent);
+    font-weight: 600;
+}
+.fh-page details {
+    border-top: 1px solid var(--line);
+    margin-top: 16px;
+    padding-top: 12px;
+    color: var(--muted);
+}
+.fh-page summary {
+    cursor: pointer;
+}
+.fh-page pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-size: 12px;
+    max-height: 360px;
+    overflow: auto;
+}
+.fh-detail .wave-chart {
+    width: 100%;
+}
+.fh-chart-date {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 14px;
+}
+@media (max-width: 1050px) {
+    .fh-market {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .fh-aside dl {
+        grid-template-columns: 1fr 2fr;
+    }
+    .fh-aside dt {
+        margin-top: 0;
+    }
+}
+@media (max-width: 600px) {
+    .fh-hero {
+        display: block;
+        padding: 16px;
+    }
+    .fh-hero-note {
+        border-left: 0;
+        border-top: 1px solid var(--line);
+        padding: 14px 0 0;
+    }
+    .fh-card {
+        padding: 14px;
+    }
+    .fh-date-labels {
+        flex-wrap: wrap;
+    }
+    .fh-date-labels [role="status"] {
+        order: 3;
+        width: 100%;
+    }
+    .fh-controls {
+        gap: 10px;
+    }
+    .fh-controls label {
+        flex-wrap: wrap;
+    }
+    .fh-aside dl {
+        grid-template-columns: 1fr;
+    }
+    .fh-aside dt {
+        margin-top: 10px;
+    }
+}
+
+.fh-chart-selection {
+    margin: 18px 0;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--paper);
+}
+.fh-chart-selection .fh-section-heading {
+    margin-bottom: 12px;
+}
+.fh-chart-selection h3 {
+    margin: 0;
+    font-size: 15px;
+}
+.fh-chart-selection p,
+.fh-detail-compare-note {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.7;
+}
+.fh-chart-evidence-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
+    gap: 9px;
+}
+.fh-chart-evidence-grid > div {
+    display: grid;
+    align-content: start;
+    gap: 4px;
+    min-width: 0;
+    padding: 11px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: var(--surface);
+}
+.fh-chart-evidence-grid small,
+.fh-chart-evidence-grid span {
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.5;
+}
+.fh-chart-evidence-grid strong {
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+}
+.fh-chart-evidence-grid .fh-chart-span-note {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+}
+.fh-chart-evidence-note {
+    margin: 12px 0 0;
+}
+.fh-detail-compare-note {
+    padding: 10px 12px;
+    border-left: 2px solid var(--accent);
+    background: var(--paper);
+}
+
+@media (max-width: 600px) {
+    .fh-chart-selection {
+        padding: 12px;
+    }
+}
+.fh-page [data-return="profit"] {
+    color: #b84b4d;
+}
+.fh-page [data-return="loss"] {
+    color: #287350;
+}
+.fh-page [data-return="unknown"],
+.fh-page [data-return="flat"] {
+    color: var(--muted);
+}
+[data-appearance="dark"] .fh-page [data-return="profit"] {
+    color: #f19a98;
+}
+[data-appearance="dark"] .fh-page [data-return="loss"] {
+    color: #8fd0a7;
+}
+.fh-section-heading h2 {
+    overflow-wrap: anywhere;
+}

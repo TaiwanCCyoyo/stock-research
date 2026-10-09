@@ -1,0 +1,149 @@
+{
+    "schema_version": "opportunity-artifact-size-receipt.v1",
+    "catalogs": {
+        "catalog-v1": {
+            "manifest_path": "D:\\Project\\Stock\\.worktrees\\sector-wave-full-history-preview-20261004\\tasks\\20261004-sector-wave-full-history-preview\\catalog-v1\\manifest.json",
+            "manifest_sha256": "a3286f672527a69120b7802b6fda8aa3d56226845bfd3806b248cd9367c1535a",
+            "manifest_bytes": 1560206,
+            "tables": {
+                "baseline_waves": {
+                    "count": 53188,
+                    "file_count": 27,
+                    "compressed_bytes": 5674033,
+                    "largest_file_bytes": 215624
+                },
+                "candidates": {
+                    "count": 790250,
+                    "file_count": 396,
+                    "compressed_bytes": 90669960,
+                    "largest_file_bytes": 252268
+                },
+                "methods": {
+                    "count": 11820,
+                    "file_count": 6,
+                    "compressed_bytes": 655715,
+                    "largest_file_bytes": 112032
+                },
+                "relations": {
+                    "count": 4328518,
+                    "file_count": 2165,
+                    "compressed_bytes": 136832989,
+                    "largest_file_bytes": 81264
+                },
+                "representative_intervals": {
+                    "count": 7875,
+                    "file_count": 4,
+                    "compressed_bytes": 789153,
+                    "largest_file_bytes": 204427
+                },
+                "securities": {
+                    "count": 2075,
+                    "file_count": 2,
+                    "compressed_bytes": 608422,
+                    "largest_file_bytes": 567593
+                },
+                "source_phases": {
+                    "count": 2579106,
+                    "file_count": 1290,
+                    "compressed_bytes": 103175406,
+                    "largest_file_bytes": 82412
+                },
+                "support_records": {
+                    "count": 790250,
+                    "file_count": 396,
+                    "compressed_bytes": 64010335,
+                    "largest_file_bytes": 192221
+                },
+                "transitions": {
+                    "count": 14528,
+                    "file_count": 8,
+                    "compressed_bytes": 1085054,
+                    "largest_file_bytes": 153327
+                }
+            },
+            "all_table_compressed_bytes": 403501067,
+            "all_table_file_count": 4294,
+            "native_compressed_bytes": 467534898,
+            "native_file_count": 1970,
+            "series_compressed_bytes": 105173146,
+            "series_file_count": 2075,
+            "calendar_bytes": 53599,
+            "metadata_mirror_bytes": 1052097,
+            "metadata_mirror_file_count": 12,
+            "publication_index_sha256": "750d1e2b6416d5b286c89baeac549a9cfc625b514a4fd9d53069192713cb01ff"
+        },
+        "catalog-v2": {
+            "manifest_path": "D:\\Project\\Stock\\.worktrees\\sector-wave-full-history-preview-20261004\\tasks\\20261004-sector-wave-full-history-preview\\catalog-v2\\manifest.json",
+            "manifest_sha256": "c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140",
+            "manifest_bytes": 1560858,
+            "tables": {
+                "baseline_waves": {
+                    "count": 53188,
+                    "file_count": 27,
+                    "compressed_bytes": 5674033,
+                    "largest_file_bytes": 215624
+                },
+                "candidates": {
+                    "count": 790250,
+                    "file_count": 396,
+                    "compressed_bytes": 90669960,
+                    "largest_file_bytes": 252268
+                },
+                "methods": {
+                    "count": 11820,
+                    "file_count": 6,
+                    "compressed_bytes": 655715,
+                    "largest_file_bytes": 112032
+                },
+                "relations": {
+                    "count": 4328518,
+                    "file_count": 2165,
+                    "compressed_bytes": 136832989,
+                    "largest_file_bytes": 81264
+                },
+                "representative_intervals": {
+                    "count": 7875,
+                    "file_count": 4,
+                    "compressed_bytes": 789153,
+                    "largest_file_bytes": 204427
+                },
+                "securities": {
+                    "count": 2075,
+                    "file_count": 2,
+                    "compressed_bytes": 608422,
+                    "largest_file_bytes": 567593
+                },
+                "source_phases": {
+                    "count": 2579106,
+                    "file_count": 1290,
+                    "compressed_bytes": 103175406,
+                    "largest_file_bytes": 82412
+                },
+                "support_records": {
+                    "count": 790250,
+                    "file_count": 396,
+                    "compressed_bytes": 64010335,
+                    "largest_file_bytes": 192221
+                },
+                "transitions": {
+                    "count": 14528,
+                    "file_count": 8,
+                    "compressed_bytes": 1085054,
+                    "largest_file_bytes": 153327
+                }
+            },
+            "all_table_compressed_bytes": 403501067,
+            "all_table_file_count": 4294,
+            "native_compressed_bytes": 467534898,
+            "native_file_count": 1970,
+            "series_compressed_bytes": 105173146,
+            "series_file_count": 2075,
+            "calendar_bytes": 53599,
+            "metadata_mirror_bytes": 1052495,
+            "metadata_mirror_file_count": 12,
+            "publication_index_sha256": "5c99b23a26e552081ee3fa4867c7a82b052ad33f0631c10fda0ba3a63676d614"
+        }
+    },
+    "input_snapshot_bytes": 239760707,
+    "git_scope": "Code, rules, receipts, root metadata mirrors and index only. Full chunks, physical prices/inputs and native fits remain local."
+}

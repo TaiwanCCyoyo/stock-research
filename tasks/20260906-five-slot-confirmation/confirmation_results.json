@@ -1,0 +1,105 @@
+{
+    "gates": [
+        {
+            "detail": "longest run 1, winners [7]",
+            "name": "A: >=3 contiguous top_k beat the incumbent at exit_rank=30",
+            "passed": false
+        },
+        {
+            "detail": "failures ['r_ret_20', 'r_ext_20', 'r_above_ma60', 'r_vol_ratio', 'r_contraction', 'r_cohort_ret_20']",
+            "name": "B: at most 1 leave-one-out variant falls below the incumbent",
+            "passed": false
+        },
+        {
+            "detail": "train 4/5, holdout 3/3",
+            "name": "C: >=4/5 train years and >=2/3 holdout years positive",
+            "passed": true
+        },
+        {
+            "detail": "38.2%",
+            "name": "D2 (train): 20 consecutive losses cost <= 20%",
+            "passed": false
+        },
+        {
+            "detail": "33.1%",
+            "name": "D2 (holdout): 20 consecutive losses cost <= 20%",
+            "passed": false
+        },
+        {
+            "detail": "78%",
+            "name": "D3 (train, looser than codex's): worst seed keeps >=70% and stays positive",
+            "passed": true
+        },
+        {
+            "detail": "61%",
+            "name": "D4 (train): a one-day delay keeps >=70% and stays positive",
+            "passed": false
+        }
+    ],
+    "grid": {
+        "k10_er15": {
+            "max_drawdown_pct": -41.31482224099992,
+            "return_pct": 62.98968795619966
+        },
+        "k10_er30": {
+            "max_drawdown_pct": -33.02625606303366,
+            "return_pct": 110.4785712886002
+        },
+        "k10_er45": {
+            "max_drawdown_pct": -35.82163238489371,
+            "return_pct": 186.9332917347002
+        },
+        "k3_er15": {
+            "max_drawdown_pct": -34.360980787912304,
+            "return_pct": 311.0403703159999
+        },
+        "k3_er30": {
+            "max_drawdown_pct": -41.971329928751636,
+            "return_pct": 297.4568665000001
+        },
+        "k3_er45": {
+            "max_drawdown_pct": -51.11151830547804,
+            "return_pct": 240.8084175760001
+        },
+        "k4_er15": {
+            "max_drawdown_pct": -36.460792120034625,
+            "return_pct": 212.9702986279995
+        },
+        "k4_er30": {
+            "max_drawdown_pct": -39.38848543930171,
+            "return_pct": 228.26732899999965
+        },
+        "k4_er45": {
+            "max_drawdown_pct": -47.32113039640948,
+            "return_pct": 226.82688446400027
+        },
+        "k5_er15": {
+            "max_drawdown_pct": -35.863830894792265,
+            "return_pct": 205.78477896399966
+        },
+        "k5_er30": {
+            "max_drawdown_pct": -37.5294994916786,
+            "return_pct": 228.09622256399967
+        },
+        "k5_er45": {
+            "max_drawdown_pct": -42.25426374633575,
+            "return_pct": 219.2590528839998
+        },
+        "k7_er15": {
+            "max_drawdown_pct": -32.493416168990976,
+            "return_pct": 159.02766304679977
+        },
+        "k7_er30": {
+            "max_drawdown_pct": -31.939232656042037,
+            "return_pct": 190.24806691199964
+        },
+        "k7_er45": {
+            "max_drawdown_pct": -36.987182368847606,
+            "return_pct": 217.79299535200033
+        }
+    },
+    "incumbent_train": {
+        "max_drawdown_pct": -31.062745695993733,
+        "return_pct": 146.9006293137496
+    }
+}

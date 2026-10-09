@@ -1,0 +1,76 @@
+name: PR validation
+
+on:
+    pull_request:
+        branches: [main]
+
+permissions:
+    contents: read
+
+# Validate pull requests; initial publication does not rerun the completed suite.
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+    cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+    repository-checks:
+        name: repository-checks
+        runs-on: windows-latest
+        timeout-minutes: 20
+        env:
+            PRE_COMMIT_HOME: ${{ github.workspace }}/.cache/pre-commit
+        steps:
+            - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+              with:
+                  persist-credentials: false
+                  fetch-depth: 0
+            - uses: astral-sh/setup-uv@f0ec1fc3b38f5e7cd731bb6ce540c5af426746bb # v6.1.0
+              with:
+                  enable-cache: true
+                  cache-dependency-glob: |
+                      uv.lock
+                      pyproject.toml
+                  python-version: "3.12"
+            - name: Select test scope
+              id: scope
+              env:
+                  CHECK_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+                  CHECK_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+              run: uv run --no-project python scripts/ci_scope.py --base "$env:CHECK_BASE" --head "$env:CHECK_HEAD" --output "$env:GITHUB_OUTPUT"
+            - name: Install dependencies
+              run: uv sync --locked --group dev
+            - name: Identify hook interpreter
+              id: hook-python
+              run: |
+                  $identity = uv run --no-sync python -c "import hashlib, sys; print(hashlib.sha256((sys.version + sys.executable).encode()).hexdigest())"
+                  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+                  "identity=$identity" >> $env:GITHUB_OUTPUT
+            - name: Cache hook environments
+              uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+              with:
+                  path: ${{ env.PRE_COMMIT_HOME }}
+                  key: pre-commit-${{ runner.os }}-${{ runner.arch }}-${{ steps.hook-python.outputs.identity }}-${{ hashFiles('.pre-commit-config.yaml', 'uv.lock') }}-${{ steps.scope.outputs.run_tests }}
+            - name: Headless compatibility without optional viewers
+              if: steps.scope.outputs.run_tests == 'true'
+              run: uv run --no-sync python -m pytest scripts/tests/test_optional_research_dependencies.py tests/test_dashboard_task_index.py tests/test_stock_research_query.py
+            - name: Install optional tools for development checks
+              if: steps.scope.outputs.run_tests == 'true'
+              run: uv sync --locked --group dev --group viewer --group static-report
+            - name: Repository checks
+              env:
+                  SKIP: mypy
+                  CHECK_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+                  CHECK_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+              run: |
+                  if ($env:CHECK_BASE -eq ('0' * 40)) {
+                      uv run --no-sync pre-commit run --all-files --show-diff-on-failure
+                  } else {
+                      uv run --no-sync pre-commit run --from-ref "$env:CHECK_BASE" --to-ref "$env:CHECK_HEAD" --show-diff-on-failure
+                  }
+                  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            - name: Tests
+              if: steps.scope.outputs.run_tests == 'true'
+              run: uv run --no-sync python -m pytest scripts/tests .codex/hooks/tests .claude/hooks/tests
+            - name: Optional viewer and legacy rendering compatibility
+              if: steps.scope.outputs.run_tests == 'true'
+              run: uv run --no-sync python -m pytest tests/test_research_api.py tests/test_research_api_security.py tests/test_dashboard_presentation.py tests/test_static_report_export.py

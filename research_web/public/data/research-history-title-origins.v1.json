@@ -1,0 +1,272 @@
+{
+    "historySha256": "037c7b74029ddac4c0ad018c33967e3a2c9968a59da7baf3eb9b121d9a94f0e2",
+    "schema": "research-history-title-origins.v1",
+    "sourceRevision": "2bac4afbcbcf10833a7147686366a16f1204eb76",
+    "titles": {
+        "20260510-two-b-template-smoke": {
+            "sourcePath": "tasks/20260510-two-b-template-smoke/mission.md",
+            "sourceSha256": "3e12116a67af94f5a87d2fd871fc8fde313d4cab3ad0298c02d4ccd4c8523f5c",
+            "title": "Mission"
+        },
+        "20260809-loop-dryrun": {
+            "sourcePath": "tasks/20260809-loop-dryrun/mission.md",
+            "sourceSha256": "7dcf8284d82379669f82b3ac5dd14983d506d1435d8f02913a8e005de4aaeaee",
+            "title": "Mission"
+        },
+        "20260812-loop-explore-v2": {
+            "sourcePath": "tasks/20260812-loop-explore-v2/mission.md",
+            "sourceSha256": "78ee21cc8016be150e290cc7550dc739935688af5172db2589975f3d366e3cb2",
+            "title": "Mission"
+        },
+        "20260814-2b-false-break-structure": {
+            "sourcePath": "tasks/20260814-2b-false-break-structure/mission.md",
+            "sourceSha256": "04d6d590348210fef2c9421362c97ec6d4bd0d7006c4e21d455ec8a0a2e15a69",
+            "title": "Mission"
+        },
+        "20260816-kline-strategy-category-fit": {
+            "sourcePath": "tasks/20260816-kline-strategy-category-fit/report.md",
+            "sourceSha256": "cf0f01c5f3ccd090175ed0b073089de159228748a9b5c9eaeb459cffd3806564",
+            "title": "K 線策略 × 台股族群適配度回測報告"
+        },
+        "20260820-kline-archetype-extension": {
+            "sourcePath": "tasks/20260820-kline-archetype-extension/report.md",
+            "sourceSha256": "0ff524550fd3e1293353b8eb7158ffed2d51f26c73a89b52a709381563a8af3f",
+            "title": "K 線原型擴充研究報告 — 換一種機制，答案會不一樣嗎？"
+        },
+        "20260821-2b-entry-decomposition": {
+            "sourcePath": "tasks/20260821-2b-entry-decomposition/report.md",
+            "sourceSha256": "1e356f970421aa3b9c93297066fdf3b0ca0bd1d37fedff2155d10ceabe6da5aa",
+            "title": "2B 進場拆解報告 — 你回測的那支，98% 不是 2B"
+        },
+        "20260821-stop-mechanism-isolation": {
+            "sourcePath": "tasks/20260821-stop-mechanism-isolation/report.md",
+            "sourceSha256": "18b9a794e37d40de27089b3c86961dc2f767d2f5cd6971bdec78b9f7f086b7ed",
+            "title": "停損機制隔離實驗 — 箱底棘輪贏的是報酬，不是回撤"
+        },
+        "20260822-ratchet-generalization": {
+            "sourcePath": "tasks/20260822-ratchet-generalization/report.md",
+            "sourceSha256": "8834caf7a242138f8cc4e292a5250e3bbc4ad972fe61c88bb8c0655858227692",
+            "title": "棘輪出場能不能移植？—— 3×3 進場×出場網格"
+        },
+        "20260823-rank-profile": {
+            "sourcePath": "tasks/20260823-rank-profile/report.md",
+            "sourceSha256": "3325b14bd4051f64af61032336bd6486b0508c49306a7d1bec3474f9401e0dca",
+            "title": "名次剖面診斷：報酬到底住在排名的哪一段？"
+        },
+        "20260823-regime-overlay": {
+            "sourcePath": "tasks/20260823-regime-overlay/report.md",
+            "sourceSha256": "ab7a4402a01c2a362541991a28417f92050a3214a187bd2c6cbd82eaa48a9960",
+            "title": "迴歸疊加層：29 條臂，0 條通過"
+        },
+        "20260823-selection-vs-random": {
+            "sourcePath": "tasks/20260823-selection-vs-random/report.md",
+            "sourceSha256": "4aaba2d00d39e1777f2fd88b099d3312b5beaa73056528e5c23eec83d0f65fd4",
+            "title": "排序選股贏得過隨機嗎？—— 在同樣的部署與周轉下"
+        },
+        "20260823-turnover-mechanism": {
+            "sourcePath": "tasks/20260823-turnover-mechanism/report.md",
+            "sourceSha256": "9dd3178230f3cb364c27a9acb8035ab7c22e83a78393b6953251ad739c441eb5",
+            "title": "周轉能降到多低，選股才開始流失？"
+        },
+        "20260824-ranking-horizon": {
+            "sourcePath": "tasks/20260824-ranking-horizon/report.md",
+            "sourceSha256": "19e7ed04d505e821faba21288bffc682d02e0a2ea3c48c5e6d1858b9d2ebe5e5",
+            "title": "排序視窗：機制成立，結論相反"
+        },
+        "20260824-value-chain-ignition": {
+            "sourcePath": "tasks/20260824-value-chain-ignition/report.md",
+            "sourceSha256": "1c70849c5171543a5c251b2cdeb2eb323772e384bf4c7356e2299818e3b9c660",
+            "title": "族群點火：換上正確的分組之後，效果消失了"
+        },
+        "20260826-runner-retention": {
+            "sourcePath": "tasks/20260826-runner-retention/report.md",
+            "sourceSha256": "bd8860a36b073e8798ab966eacf1093c13665eb99bdcd7f6e58d80a133a69cb1",
+            "title": "抱不住飆股，換出場規則救不了：十三條臂、零條通過，而且贏的是對照組"
+        },
+        "20260826-tail-selection": {
+            "sourcePath": "tasks/20260826-tail-selection/report.md",
+            "sourceSha256": "ee0d33105ec6d49c692dd88a9a1f08d9923097946903d6507d902e09ab342f2c",
+            "title": "飆股怎麼選：分數是一把好篩子，不是一把好尺"
+        },
+        "20260903-entry-window": {
+            "sourcePath": "tasks/20260903-entry-window/report.md",
+            "sourceSha256": "40f4c167dc647f3425950b21631482f185e414ffb5cf3960b4bbfcc2f5788dec",
+            "title": "進場窗口有多寬：飆股不會在你出門的那一週跑掉"
+        },
+        "20260904-book-size": {
+            "sourcePath": "tasks/20260904-book-size/report.md",
+            "sourceSha256": "984056f627962a28add6c3185adb58f3d4dea95fa4b794cedd3041d451d33dbc",
+            "title": "書架寬度：訓練期的取捨在驗證期反轉，而且是預先登記的單次測試"
+        },
+        "20260904-execution-delay": {
+            "sourcePath": "tasks/20260904-execution-delay/report.md",
+            "sourceSha256": "41d4593347c2a48f692fcae61991de957d38dd036d07383aed0186e1cb3db9cb",
+            "title": "延遲三天執行：價格說可以，帳本說不行"
+        },
+        "20260904-slot-accounting": {
+            "sourcePath": "tasks/20260904-slot-accounting/report.md",
+            "sourceSha256": "88aea94667f249a3826215263bfda3ebefb57a30ee874416dfbd6525e2139fa1",
+            "title": "修掉停牌超額部署：修完之後，我的引擎和 codex 的數字**完全對上了**"
+        },
+        "20260904-swap-rule": {
+            "sourcePath": "tasks/20260904-swap-rule/report.md",
+            "sourceSha256": "a2dc3597bc92214c04e4e9f65edd1b42ad1126ed8468be47a325a0e42f8cf4f0",
+            "title": "換股規則：贏的那幾格站在一個驗證期已經否決過的地基上"
+        },
+        "20260905-add-trigger": {
+            "sourcePath": "tasks/20260905-add-trigger/report.md",
+            "sourceSha256": "25f04747ecabc0d6a1364596d492b38cdcf2d5aa42ab1e8ba3b4bc1ee74f377d",
+            "title": "加碼訊號：負面。而且對照組給了這條線目前最乾淨的一句「這裡沒有東西」"
+        },
+        "20260905-min-hold": {
+            "sourcePath": "tasks/20260905-min-hold/report.md",
+            "sourceSha256": "c44ef40db5e2bbfd132ba87e53988111568381bb44af72a5a3f90be6baffd8f8",
+            "title": "最低持有期：訓練期最好的數字，驗證期全滅。而兩個完全不同的賣出機制掉在同一條兌換率曲線上"
+        },
+        "20260905-weekly-structure": {
+            "sourcePath": "tasks/20260905-weekly-structure/report.md",
+            "sourceSha256": "15ac1f4aa792770432c5ee55c47e43bbccb45fc7131570960716723b0c0ef8cd",
+            "title": "週線結構：均線密集這一條有東西，而且它預測的是「大」不是「快」"
+        },
+        "20260905-wide-giveback": {
+            "sourcePath": "tasks/20260905-wide-giveback/report.md",
+            "sourceSha256": "4ecd0cc0c1dc05cd106858cd111ae9982b875b4aa652d69e57cc2f1c17eac061",
+            "title": "寬書架上的回吐停利：負面。而且順手量到我自己的基準過不了擁有者的門檻"
+        },
+        "20260906-absolute-entry-bar": {
+            "sourcePath": "tasks/20260906-absolute-entry-bar/report.md",
+            "sourceSha256": "0898ff629010cd8c33ce4687ee3ed1ad5e43da4dcad44081cbcd86ffe2f0238b",
+            "title": "「沒有夠好的就不買」：負面。而順手查到的一件事，把整條「空手」的路封死了"
+        },
+        "20260906-equal-risk-sizing": {
+            "sourcePath": "tasks/20260906-equal-risk-sizing/report.md",
+            "sourceSha256": "8d0665995bc446b128c09dfcd2cdcdfd40c8787b2c9126e3ba80b6f1d56e4ffd",
+            "title": "等風險下單：平台關卡沒過，但機制確實有效——它是一個「平穩 vs 報酬」的旋鈕，而那是擁有者的決定"
+        },
+        "20260906-exchange-rate": {
+            "sourcePath": "tasks/20260906-exchange-rate/report.md",
+            "sourceSha256": "29f458ee4b547766e69ca690982a751c8a0fdb96dc7429ea43fb45842525e22a",
+            "title": "兌換率：機制確實有差，但差得比訓練期小一個量級。而取捨本身是真的"
+        },
+        "20260906-execution-reality": {
+            "sourcePath": "tasks/20260906-execution-reality/report.md",
+            "sourceSha256": "b3e98231267afd0e0a7ff255e23f2b53aeaa961e6dd37456660733f1123f30cc",
+            "title": "真實執行：漏掉日子幾乎沒差、少買幾檔差很多、200 萬能跑但七成八是零股"
+        },
+        "20260906-five-slot-baseline": {
+            "sourcePath": "tasks/20260906-five-slot-baseline/report.md",
+            "sourceSha256": "5c1a4444d518d5b9941cd2f07d7d6e7d0cc22e644f1050f4f5bf550ed2f1de90",
+            "title": "五檔基準：那個被成本否決的分數，在修正過的引擎上兩個視窗都贏，而且回落只有現行的一半"
+        },
+        "20260906-five-slot-confirmation": {
+            "sourcePath": "tasks/20260906-five-slot-confirmation/report.md",
+            "sourceSha256": "1d4e0b5b90ce45bb763a89cf1873915819571a6d20a5c4eec39dc14ff511a5f1",
+            "title": "五檔候選者的穩健性確認：失敗。而且失敗的兩道，正好是擁有者最擔心的那兩件事"
+        },
+        "20260906-loss-anatomy": {
+            "sourcePath": "tasks/20260906-loss-anatomy/report.md",
+            "sourceSha256": "b281ef3172fe6d2af955ff4379837de4cfa859758a2ad98be0a5c7d27b688fb0",
+            "title": "那個冷卻期不用測：連賠是 20 檔不同的股票。而且快速賠錢的和慢速賺錢的，買進時長得一模一樣"
+        },
+        "20260906-three-slot-equal-risk": {
+            "sourcePath": "tasks/20260906-three-slot-equal-risk/report.md",
+            "sourceSha256": "09ee95e4bbc2467a94e76268a17ef165251e38047aa2cbbef12b0614c1f7835b",
+            "title": "3 檔 + 等風險：負面，零格通過。而且我自己選的上限在 3 檔上會反過來害人"
+        },
+        "20260907-streak-correction": {
+            "sourcePath": "tasks/20260907-streak-correction/report.md",
+            "sourceSha256": "ca67b9624c9174811779839164a9399f1673dd1fd09155693db19c058fa6afdb",
+            "title": "更正：codex 的 gate 2，我算錯了兩次。擁有者的反對是對的"
+        },
+        "20260908-executable-fills": {
+            "sourcePath": "tasks/20260908-executable-fills/report.md",
+            "sourceSha256": "af878f093516a32a616390d39fb0ccef5de6030b7cd6aec9a9a2e4b67a0b4511",
+            "title": "可執行成交:快的書架是成交假象,慢的書架活下來了"
+        },
+        "20261002-sector-role-evidence": {
+            "sourcePath": "tasks/20261002-sector-role-evidence/report.md",
+            "sourceSha256": "145e1c9f68f9e53871521346e1eb2390fedfd13f3627ef20b19e61009feeeae3",
+            "title": "族群分類補證：第一批"
+        },
+        "20261002-sector-wave-catalog": {
+            "sourcePath": "tasks/20261002-sector-wave-catalog/report.md",
+            "sourceSha256": "2d5b7ccf47481ac40e36563a34f6543a357d4fd796094d310a9c6d272d8e5436",
+            "title": "台灣飆股與族群波段清單 v1"
+        },
+        "20261003-wave-lab-preview": {
+            "sourcePath": "tasks/20261003-wave-lab-preview/report.md",
+            "sourceSha256": "afa6ca5f3ce06913666f38971b9edf0d608530fd8375490f24e28c4804f26208",
+            "title": "波段比較台：本輪交付與邊界"
+        },
+        "20261004-feature-discrimination-atlas": {
+            "sourcePath": "tasks/20261004-feature-discrimination-atlas/report.md",
+            "sourceSha256": "a637d44ecf949de5ae090561a830d35e97d8173a14a8b8793f1cc2737acb3908",
+            "title": "特徵辨識圖譜：atlas-v2 描述性研究報告"
+        },
+        "20261004-method-environment-map": {
+            "sourcePath": "tasks/20261004-method-environment-map/report.md",
+            "sourceSha256": "04b944b0e92ef9d4329c968c4b7f80bb33df60b61211682edcd6671aa515c509",
+            "title": "方法 × 環境：來源、假設與資料交接"
+        },
+        "20261004-opportunity-classification-fix": {
+            "sourcePath": "tasks/20261004-opportunity-classification-fix/report.md",
+            "sourceSha256": "4094ccea34a4ef0e6806651aad0a0a675a058745fc6fdbcc19f579c250c14c39",
+            "title": "Eight-case classification display correction"
+        },
+        "20261004-opportunity-explorer": {
+            "sourcePath": "tasks/20261004-opportunity-explorer/report.md",
+            "sourceSha256": "556eff40b4f4ad6547afe6095a44954aa2fc258ec7e46e3d1dd032b70a84b4cb",
+            "title": "Opportunity explorer delivery"
+        },
+        "20261004-opportunity-reader-ux": {
+            "sourcePath": "tasks/20261004-opportunity-reader-ux/report.md",
+            "sourceSha256": "45ef7de0c007072fd2d709971cccefa027f5a56169b9b28acc05c6668ea5fbd2",
+            "title": "Opportunity reader UX review follow-up"
+        },
+        "20261004-sector-wave-full-history-preview": {
+            "sourcePath": "tasks/20261004-sector-wave-full-history-preview/report.md",
+            "sourceSha256": "810684a0cb804cd166dad9a83c993c8d37c5b2f505952c648694c4af38a8d436",
+            "title": "2010 年起族群波段資料交付報告"
+        },
+        "20261005-industry-role-comparison": {
+            "sourcePath": "tasks/20261005-industry-role-comparison/report.md",
+            "sourceSha256": "eb7730951161ab0d8d043cf30042885ae190c29955bec0608d55161de7f0adc7",
+            "title": "H03 產業角色比較：完成，三候選未晉級"
+        },
+        "20261005-market-context-handoff": {
+            "sourcePath": "tasks/20261005-market-context-handoff/report.md",
+            "sourceSha256": "eeea3bff2bd034ded3b8d0eecf0df9df96d5c954b23d892bc110db7a3cb0ce5a",
+            "title": "研究資產交接與 0050 市場背景"
+        },
+        "20261005-market-full-history-web": {
+            "sourcePath": "tasks/20261005-market-full-history-web/report.md",
+            "sourceSha256": "1e4fa6a841949e87aa23b0efe3ca80609075b24230ee0b89fbe8cf1cc4b2fa29",
+            "title": "Full-history web read model"
+        },
+        "20261005-method-environment-interactions": {
+            "sourcePath": "tasks/20261005-method-environment-interactions/report.md",
+            "sourceSha256": "c3f98f76e14d42545da49144ca9c929c1f34ca572b57edb3ed437dd4069099c2",
+            "title": "第一批方法 × 相對強弱 × 0050 背景比較"
+        },
+        "20261005-opportunity-growth-display": {
+            "sourcePath": "tasks/20261005-opportunity-growth-display/mission.md",
+            "sourceSha256": "1e7e0198676c0f8e107cea0748189a57f517e7b6c8afcd4307b3553069a5d677",
+            "title": "時間調整的波段展示規則"
+        },
+        "20261005-relative-strength-holding": {
+            "sourcePath": "tasks/20261005-relative-strength-holding/report.md",
+            "sourceSha256": "81062b4a60bea4964814953b19fe45a0d65fd857018eec8afeeca4c4bc1cea79",
+            "title": "H05：固定均線出場、成交接線與收盤量測"
+        },
+        "20261008-strategy-studio": {
+            "sourcePath": "tasks/20261008-strategy-studio/report.md",
+            "sourceSha256": "6f5f2803cc03afe772599e0484d1deabe0827f0b140d518920170ff8c1b6a8b0",
+            "title": "Strategy studio implementation and verification"
+        },
+        "20261009-hhhl-pattern-probability": {
+            "sourcePath": "tasks/20261009-hhhl-pattern-probability/report.md",
+            "sourceSha256": "fca41dc28b60112a5541b1e5685be9d3be422e2fa6398820de5bce40fbb665d3",
+            "title": "頭頭高／底底高 v1：描述性機率結果"
+        }
+    }
+}

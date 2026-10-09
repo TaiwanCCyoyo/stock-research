@@ -1,0 +1,75 @@
+services:
+    research-runtime-smoke:
+        build:
+            context: .
+            dockerfile: docker/research-runtime.Dockerfile
+        working_dir: /app
+        environment:
+            STOCK_PRODUCER_DATA_ROOT: /app/data
+        volumes:
+            - ./research_core:/app/research_core:ro
+            - ./StockProject/universe.py:/app/StockProject/universe.py:ro
+            - ./universes:/app/universes:ro
+            - ./StockProject/engine:/app/StockProject/engine:ro
+            - ./StockProject/backtest_cli.py:/app/StockProject/backtest_cli.py:ro
+            - ./StockProject/strategies/test_strategy.py:/app/StockProject/strategies/test_strategy.py:ro
+            - ${STOCK_PRODUCER_DATA_ROOT:-./shioaji_stock_prices/data}:/app/data:ro
+            - ./research_lab:/app/research_lab:rw
+            - ./tasks:/app/tasks:rw
+            - ./reports:/app/reports:rw
+            - ./scripts/smoke_research_runtime.py:/app/scripts/smoke_research_runtime.py:ro
+        network_mode: "none"
+        read_only: true
+        tmpfs:
+            - /tmp
+        command: ["python", "scripts/smoke_research_runtime.py"]
+
+    research-task-smoke:
+        build:
+            context: .
+            dockerfile: docker/research-runtime.Dockerfile
+        working_dir: /app
+        environment:
+            STOCK_PRODUCER_DATA_ROOT: /app/data
+        volumes:
+            - ./research_core:/app/research_core:ro
+            - ./StockProject/universe.py:/app/StockProject/universe.py:ro
+            - ./universes:/app/universes:ro
+            - ./StockProject/engine:/app/StockProject/engine:ro
+            - ./StockProject/backtest_cli.py:/app/StockProject/backtest_cli.py:ro
+            - ${STOCK_PRODUCER_DATA_ROOT:-./shioaji_stock_prices/data}:/app/data:ro
+            - ./research_lab:/app/research_lab:rw
+            - ./tasks:/app/tasks:rw
+            - ./reports:/app/reports:rw
+            - ./scripts/run_task_backtest.py:/app/scripts/run_task_backtest.py:ro
+            - ./scripts/run_task_param_sweep.py:/app/scripts/run_task_param_sweep.py:ro
+            - ./scripts/smoke_task_research_runtime.py:/app/scripts/smoke_task_research_runtime.py:ro
+        network_mode: "none"
+        read_only: true
+        tmpfs:
+            - /tmp
+        command: ["python", "scripts/smoke_task_research_runtime.py"]
+
+    research-task-runner:
+        build:
+            context: .
+            dockerfile: docker/research-runtime.Dockerfile
+        working_dir: /app
+        environment:
+            STOCK_PRODUCER_DATA_ROOT: /app/data
+        volumes:
+            - ./research_core:/app/research_core:ro
+            - ./StockProject/universe.py:/app/StockProject/universe.py:ro
+            - ./universes:/app/universes:ro
+            - ./StockProject/engine:/app/StockProject/engine:ro
+            - ./StockProject/backtest_cli.py:/app/StockProject/backtest_cli.py:ro
+            - ${STOCK_PRODUCER_DATA_ROOT:-./shioaji_stock_prices/data}:/app/data:ro
+            - ./tasks:/app/tasks:rw
+            - ./reports:/app/reports:rw
+            - ./scripts/run_task_backtest.py:/app/scripts/run_task_backtest.py:ro
+            - ./scripts/run_task_param_sweep.py:/app/scripts/run_task_param_sweep.py:ro
+        network_mode: "none"
+        read_only: true
+        tmpfs:
+            - /tmp
+        command: ["python", "scripts/run_task_backtest.py", "--help"]

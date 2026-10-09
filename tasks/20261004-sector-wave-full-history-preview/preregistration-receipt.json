@@ -1,0 +1,33 @@
+{
+    "adapter_sha256": "ac3876886714c3b38fba8cd97106ef4300c41c98d1b20861b17c769358de0756",
+    "all_security_count": 2075,
+    "code_commit": "37cb418d41f1a92231c998dc0fa1f2471ca76622",
+    "code_identity": {
+        "method": "wave-lab-exploratory.v1",
+        "source": {
+            "analysis": "550c277df28c7ac0b2d4deb69b67eb137b500c0f8b2c80c78880fda79aef1a25",
+            "types": "9ee6c25365f2acbaf889151fa29727457e70319277aa60cca64bcadd38a675cb"
+        },
+        "wrapper": {
+            "sha256": "28269b769fa8d150e7c4bf86459d06d4a41c33bc8b453384e2d6b8bae9bc9b09"
+        }
+    },
+    "config_sha256": "0405e3c5a438ffecfc9202d06dc205bc415daffebe5f87d73c5913d517177de6",
+    "contract_sha256": "715678e2e457cc45e72acbbf1387538913eff0147abb5db6b42bbda82d4abb6f",
+    "input_receipt_sha256": "584add41770ad6cd007e0356badc56566ee1da28505473161b95c5a566f38c27",
+    "mission_sha256": "ee23f744278fc4758f6bc6595921d7adfbceda438c5721af05d376510d4b24db",
+    "no_downloads": true,
+    "performance_policy": "first eligible code lexically, all six once, retained in full output",
+    "producer_sha256": "24d20d4c752eefc290f8124539d71726c9fbb59060cd7771161c901570dbe253",
+    "registered_at": "2026-10-04T14:08:52.065212+00:00",
+    "schema_version": "opportunity-preregistration-receipt.v1",
+    "series_manifest_sha256": "92f778dd7e52a63263b1997a5175cbc8182c964f2b7e7270525622ea8fa8cd21",
+    "source_writes": false,
+    "stock_count": 1970,
+    "verification": {
+        "node_tests_passed": 6,
+        "normal_commit_hooks": "passed",
+        "python_tests_passed": 55
+    },
+    "window": { "end": "2026-10-02", "start": "2010-01-04" }
+}

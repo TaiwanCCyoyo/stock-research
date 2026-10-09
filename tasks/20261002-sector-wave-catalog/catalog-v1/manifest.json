@@ -1,0 +1,2279 @@
+{
+    "canonical_text_identities_sha256": {
+        "config": "4e07fd739284add317760f957f79e2e2b1e65d6e484d4e43d0b9d05a99e44c57",
+        "entrypoint": "550db946c8249f8405b03953384c91c9d390ed409846e04f42fc0af09d080229",
+        "evidence": "af3b74406e2d336dd303db81eb073886fec456063a2cbad753b258a81adcab2b",
+        "foundation": "f2c593a6765f778eb57b2f98631fd7ed6aad83ac6cc984faa057dcbe974fac32",
+        "groups": "95bf91524fdbbf10622d3c97cbbc5d8a58849dff59a532fc5ef76e4f512bc658",
+        "loader": "b5f1746e03858d1af01ed2270550bd0854ec571f9df17833076707a0ee1977a2",
+        "lock": "5c5190809392cdf575a4852a5f977b118a8a140af169c36525fca3706d45b318",
+        "mission": "92168f627bfe92125277f00c1dba4246e01d3a71c11c519bfe408aab34d616ce",
+        "owner_contract": "7f1ef780b8e3aa49454a8bb12a8dbb2ff827e662f3c094c05f3be552400f44e6",
+        "registry": "2d566191331f60c61030efc2b7252b8a3b32f2bcd31fa272dd4d3b5749729513",
+        "waves": "c85a8fa043664d4d6a43e4a20c104dfa4c658628a62b5afd36d1c63f7e908f06"
+    },
+    "chunks": [
+        {
+            "compression": "gzip",
+            "path": "chunks/securities-0001.json.gz",
+            "rows": 256,
+            "sha256": "f693be1c312215f62f812ef695a593e22b7b3219dbea81d6e2872c81a96ae3d3",
+            "table": "securities"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/securities-0002.json.gz",
+            "rows": 256,
+            "sha256": "4d8adb64e14c02a52efdd029f43108fc690e6dc925539c44bb616ce3dd200f8c",
+            "table": "securities"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/securities-0003.json.gz",
+            "rows": 256,
+            "sha256": "66396b4335910a074ad95ae8fde26ce388efc889ecc40615ecb8e1a19a1ab8a6",
+            "table": "securities"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/securities-0004.json.gz",
+            "rows": 256,
+            "sha256": "527c59695c4b44fc217c512f29e51fda68edf6eb551f6d386cad9575a122efd0",
+            "table": "securities"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/securities-0005.json.gz",
+            "rows": 256,
+            "sha256": "04087fe177d22d9bb0b333dbf4b501b7da4aef35c86f764999e59897aefa0d7c",
+            "table": "securities"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/securities-0006.json.gz",
+            "rows": 256,
+            "sha256": "ae6c20cfd64fd95ba1b681acb4990be2be95e10eb018e897445f615b2c8951bd",
+            "table": "securities"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/securities-0007.json.gz",
+            "rows": 256,
+            "sha256": "f829218647e814aa44640c5f3a184f099456024f2c0dfdb281dbabfbbdf4316c",
+            "table": "securities"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/securities-0008.json.gz",
+            "rows": 150,
+            "sha256": "8458b79b53588d122cc36981ac4a8c0553bfad37253e8a577b6bb6aa121c217c",
+            "table": "securities"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/groups-0001.json.gz",
+            "rows": 80,
+            "sha256": "f13e220f8ddb2edabf278496ac9c2be3df6791a9231b49e03e6f77f0c5e66fbc",
+            "table": "groups"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/taxonomy_nodes-0001.json.gz",
+            "rows": 256,
+            "sha256": "02f2d872b0db46633c63a2b3e98be2903410edc4f28bd6af72546c2563fd5445",
+            "table": "taxonomy_nodes"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/taxonomy_nodes-0002.json.gz",
+            "rows": 256,
+            "sha256": "3e0b310861ec77bbab4c90b7689278e0a49f98858c7f2885f52e569802dbc474",
+            "table": "taxonomy_nodes"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/taxonomy_nodes-0003.json.gz",
+            "rows": 54,
+            "sha256": "3f999a03bdc92e980719c59ba9e6864f0afdd1896f8f12e6c32d7c1036f41740",
+            "table": "taxonomy_nodes"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/episodes-0001.json.gz",
+            "rows": 256,
+            "sha256": "4e122f8e5850cceac3225064d5fa162d91df8340acd14e74c11879dfdce15f43",
+            "table": "episodes"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/episodes-0002.json.gz",
+            "rows": 256,
+            "sha256": "3e4a982c561b2c959ddfd8433bac7460abc5be45eb37de15c2ceffb3ed4dc4b7",
+            "table": "episodes"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/episodes-0003.json.gz",
+            "rows": 256,
+            "sha256": "20d742eaff7a0ba8b5bc926f0eba1f6aeb83b0abf9fb140d7f95ba70a535518d",
+            "table": "episodes"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/episodes-0004.json.gz",
+            "rows": 256,
+            "sha256": "66ea3957cf824ec0f29a6819e08ba7f977eb2aff7c23da74419859a1fa0b71f2",
+            "table": "episodes"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/episodes-0005.json.gz",
+            "rows": 256,
+            "sha256": "ed21e1107c00a04daff2d86e01664944283c6705bba98631cc55b195ace53373",
+            "table": "episodes"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/episodes-0006.json.gz",
+            "rows": 256,
+            "sha256": "32de1c1adb75d240c32b75f1655f8bc7458532508e61068b0438bc195e25121a",
+            "table": "episodes"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/episodes-0007.json.gz",
+            "rows": 256,
+            "sha256": "c6139bda5918a759795f35ebd1f1304a8f7e9e601ecaa6485ee406d23366cbcb",
+            "table": "episodes"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/episodes-0008.json.gz",
+            "rows": 256,
+            "sha256": "b6b6b8c1bd55dbfd78e4d3a11e099f74e6b3c0068491dbc6c5f9b9221dc044ba",
+            "table": "episodes"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/episodes-0009.json.gz",
+            "rows": 256,
+            "sha256": "7ad3f17d0d245a2e1d0624ac7ff6a1c898a13ea267e100aaea155d50ec0263a9",
+            "table": "episodes"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/episodes-0010.json.gz",
+            "rows": 256,
+            "sha256": "49bab40370571e5860769e595a6cee7210ac36e9493d92c98183b1aa5bf56b8c",
+            "table": "episodes"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/episodes-0011.json.gz",
+            "rows": 1,
+            "sha256": "f18c818d4e863c9ab0675d8e2c5f29691fa652c3f4aa50d48f17c1b96668c581",
+            "table": "episodes"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/waves-0001.json.gz",
+            "rows": 256,
+            "sha256": "f123b91d779cf9e98ecf94593c3b4b5903573d2cef559d9e66af6db51d0f8be0",
+            "table": "waves"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/waves-0002.json.gz",
+            "rows": 256,
+            "sha256": "28980295ffe20ed4efbac49d580c050a49f0c8c474de6294753f6cd2186b0d74",
+            "table": "waves"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/waves-0003.json.gz",
+            "rows": 256,
+            "sha256": "a70c27d7a7b6042b52543441d2a416a50b01dda671aeaf38ab2b77e4a6005dd6",
+            "table": "waves"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/waves-0004.json.gz",
+            "rows": 116,
+            "sha256": "192aedb1add545f12ddaa1f4fc48a588f0bf17c9cf218d0d9a8b8f220f18fa62",
+            "table": "waves"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0001.json.gz",
+            "rows": 256,
+            "sha256": "bb4322b71dc6dfcf91fb6cc3e89c429c9dc9ddd9da130bc7349fde7ad2ade2d7",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0002.json.gz",
+            "rows": 256,
+            "sha256": "7be791d77e5e6b8ba8a66fdd4946a131da22d246a7ab55d34af1e23e0989da5c",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0003.json.gz",
+            "rows": 256,
+            "sha256": "e86c62fed14b8d900376f9175f013d58db42b7664d8db95e13c5f95b7258265d",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0004.json.gz",
+            "rows": 256,
+            "sha256": "69d4835d5223aae8d1d205bfbc892788c3eecb9f928e3c8c7a5665be349e6040",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0005.json.gz",
+            "rows": 256,
+            "sha256": "f241ac931ba2a1869bf626a465ff69840659fc5242ea17d0a1cd32681d436194",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0006.json.gz",
+            "rows": 256,
+            "sha256": "462bbe86303f245f0cc356c31bf7d47e76184aea2e1206f6ee5764f8a931e67a",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0007.json.gz",
+            "rows": 256,
+            "sha256": "53dc00cfee90347e0a6c849f6abd599e99f32725bb3e10d196aa23f0cb703102",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0008.json.gz",
+            "rows": 256,
+            "sha256": "df940c6d5c5ce492c7ee1c97977f21a362010b3820c1a96fb7c057c3f0ff91ef",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0009.json.gz",
+            "rows": 256,
+            "sha256": "234a95f2b338b9e45aa6e172912b50766802b2e52197a530665bcd49b47a049e",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0010.json.gz",
+            "rows": 256,
+            "sha256": "9bda16f06c7de0413bb2b655851d5ee4e9d95a38c5500cb85bed8035a9c41908",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0011.json.gz",
+            "rows": 256,
+            "sha256": "1b683fbebc297b370aba87c124975d323ad826b67810addab2ecb10fe6160f82",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0012.json.gz",
+            "rows": 256,
+            "sha256": "e814e08753d216c7368eb60788e414d9378a2580701121a9a7f819c40696fd28",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0013.json.gz",
+            "rows": 256,
+            "sha256": "c3b7c4560a0716611aadf3b45609a964de51c4b53d2e325ddc4faba12483f008",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0014.json.gz",
+            "rows": 256,
+            "sha256": "b6ec1980f747fe02312e495a07e3c164a9a3bb5713360828e06d35701dcc2ad1",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0015.json.gz",
+            "rows": 256,
+            "sha256": "a238afa6234bcc1261e352f2cb9d67084be2a8e590ba2c29c0d9cb9e16819025",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0016.json.gz",
+            "rows": 256,
+            "sha256": "604200492aa3da3a020c878807ed4576e1b8eb346da498608e851ccd0f41d7a4",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0017.json.gz",
+            "rows": 256,
+            "sha256": "c00712312337ae05341ce1d99c91b0827cc55910122e6091dca95cd504b29408",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0018.json.gz",
+            "rows": 256,
+            "sha256": "bc4885ac47e6b70cbf3e3ade56ed8333f219242ec8a7ceaec63aba1cd545d8f4",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0019.json.gz",
+            "rows": 256,
+            "sha256": "0568f911e6e87b320c42022649c8f296586882b846296e96205adfd7139e2d5f",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0020.json.gz",
+            "rows": 256,
+            "sha256": "340e81bbf7c7ed4d10801879058710c370699a255a7c8f750fb18e79a9d4a254",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0021.json.gz",
+            "rows": 256,
+            "sha256": "38fe7cd0b487f4dc494ba1d1bfd95053ea8be92ae279a0ca648baf6ee3372cf7",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0022.json.gz",
+            "rows": 256,
+            "sha256": "cc58f977bd6ef161a704a49f13cd6724ca99fe92d1bdaa2b0abcc5bb1cc1e684",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0023.json.gz",
+            "rows": 256,
+            "sha256": "19fd42eb3a8dac6b5e9adae16bec5914238c073ed94ee0f8caa984f9da9561ed",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0024.json.gz",
+            "rows": 256,
+            "sha256": "708bec841c5dc8d4f0850dc43604664071c9b17f12cc70b13b8f0881175d4c43",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0025.json.gz",
+            "rows": 256,
+            "sha256": "ff45ef6eb676c9a4ced6618f7ddc06790f9dd90a2ce1b25cada442e9964bc300",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0026.json.gz",
+            "rows": 256,
+            "sha256": "6e75afbace9f52fd7b1ddc8e79bed060bedb560af2a2319124c3faf87b1476d1",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0027.json.gz",
+            "rows": 256,
+            "sha256": "e3aa66eb51077a884b91ba30f6bfb07e0737048615017795852fd1d98ac0a8f3",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0028.json.gz",
+            "rows": 256,
+            "sha256": "3b5a8326ebada0eac80dc4f5e6c25bfbfd0deb753a95c05f8055a0d15d051457",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0029.json.gz",
+            "rows": 256,
+            "sha256": "2a3cf53aa3029e6d36c5b6615f58e66f31aed1f916c33bc16e391f46bea19b00",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0030.json.gz",
+            "rows": 256,
+            "sha256": "2de84168d5e9a9b0a2d0b29a6582788f029f1d84c9c73a41f0743bc977e47126",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0031.json.gz",
+            "rows": 256,
+            "sha256": "14812e49ab105d2432ea2fb7a6eac5d805d5c214207aa388bd36f37298f39f28",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0032.json.gz",
+            "rows": 256,
+            "sha256": "947f5d35dfe42e1f122868e0493e5deb3e90c9a8b7e82e8a03966fb8fe69e412",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0033.json.gz",
+            "rows": 256,
+            "sha256": "eeec89e3942b5fe261e2670dce15d4abcb6e73bb0d01d91968eefe49ffce52cd",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0034.json.gz",
+            "rows": 256,
+            "sha256": "04674e19e2c439084c7cf47259e8246247e7a6261e24de0842c79fa41d0a288e",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0035.json.gz",
+            "rows": 256,
+            "sha256": "d121297661289053b8a2ede570603be5d23dedf58d60366c24cdb4af8574b8f6",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0036.json.gz",
+            "rows": 256,
+            "sha256": "e765111f3f169baad5304c9042a85a157642e35fb80c066b0685855e6c51be08",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0037.json.gz",
+            "rows": 256,
+            "sha256": "89c2c33d56c18e1cc764bcbf3c747dde13921e96c4694255c30ef297155e84d5",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0038.json.gz",
+            "rows": 256,
+            "sha256": "96005000d8743c80b2e6a262afa4299181a40e6e88cdee994f75f99439b759d0",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0039.json.gz",
+            "rows": 256,
+            "sha256": "1f038f70aa3aac8c46818e761d1af66e09a0dcbb94d8520802709ebbe7991d11",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0040.json.gz",
+            "rows": 256,
+            "sha256": "0520af3f76b550af2a89039cb5303aacaa4e358631cfd45712f4f041c85cdb2a",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0041.json.gz",
+            "rows": 256,
+            "sha256": "892e813015c71253fbfb1a9c308be4f3c867aff68975232e61888ef2f31af185",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0042.json.gz",
+            "rows": 256,
+            "sha256": "b89e7f5d7daf3edb9bce7d44200ec9c6a8d17a0f80c1ad687681bf24bf9f1152",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0043.json.gz",
+            "rows": 256,
+            "sha256": "860c0c2268e8ca910eadb267e23126434e7cb63f0361ffd6feab5765dd5ef7dc",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0044.json.gz",
+            "rows": 256,
+            "sha256": "21ea68ec118a74d70fdf44d5143971a37b4fe9e40a6a17946a56232172b167b4",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0045.json.gz",
+            "rows": 256,
+            "sha256": "dfeba022b1b2395b1f85dc62f798fbd6c378f2ddd8ab892f215ac6d4a4ef67a4",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0046.json.gz",
+            "rows": 256,
+            "sha256": "28eba92cead00f6ef555250ff3aed561fc1b0d7466af0ca883b9326e2f9bfaa4",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0047.json.gz",
+            "rows": 256,
+            "sha256": "ad4783772afff101e18fef22a29440ebc72a9b2e64b1e0f385f9b38d0687f83a",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0048.json.gz",
+            "rows": 256,
+            "sha256": "839e774619c2d02acacc4cac2be61c90449d6b75a1990194d0cfab5d56774b1e",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0049.json.gz",
+            "rows": 256,
+            "sha256": "72eeebd98269034650d1eda28011d32ec250f3a446d1080f4808051ffbc19879",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0050.json.gz",
+            "rows": 256,
+            "sha256": "87a56268dc0728e58c5946cd6612163ac03d07878c601b3f258d3b99e08e9cad",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0051.json.gz",
+            "rows": 256,
+            "sha256": "b8e9d5a81e1614abe478ca09223a1ba62ff336275ddb5710dab1cc770f67f9bf",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0052.json.gz",
+            "rows": 256,
+            "sha256": "a14b94eba6491d5258a027641ebf959a74df9d8d3f84f9381794cdf4a7b36bb8",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0053.json.gz",
+            "rows": 256,
+            "sha256": "71c1ba2ad5a063a8e20673013f1330e29b4ac2d386aaad7e23705a1ef040fb56",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0054.json.gz",
+            "rows": 256,
+            "sha256": "acc25143f8eb2928acd0b9f65ffa0cfe22a565d4c72b601cb5a028c7e5709984",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0055.json.gz",
+            "rows": 256,
+            "sha256": "548d72f011138d2a3cc65d19a81feef601aeb8a7d616a1e0fa9fe749afa40717",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0056.json.gz",
+            "rows": 256,
+            "sha256": "aa310c51f1378581ce6769a7d1a947a07a428bdba2af83e08bef8a514ef10a49",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0057.json.gz",
+            "rows": 256,
+            "sha256": "d3ae62b3b295a317a77088746a353541920a9a60889780d98d28134df415e451",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0058.json.gz",
+            "rows": 256,
+            "sha256": "c4347b2286740ff38bb96268dc2d6fac484d19db0b2ab859a651c42098e8d8f3",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0059.json.gz",
+            "rows": 256,
+            "sha256": "a75db9e58d8df21548f713ac7610256bf71e9bb00953a337ed1151da472384a1",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0060.json.gz",
+            "rows": 256,
+            "sha256": "788b94216e0e7d6cc16e78e939cb38f2124066d64a6eacf40033564c9360d059",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0061.json.gz",
+            "rows": 256,
+            "sha256": "d6b33c4452260bc1f9a9f3247bfe83c1312060e72f2a554f15454c5b4fb34a45",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0062.json.gz",
+            "rows": 256,
+            "sha256": "c8473de1b66f298712679e955ef320a27c24cbfd189c0dfbb49252a22345c049",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0063.json.gz",
+            "rows": 256,
+            "sha256": "4c716360c58eccf500fdda6d65aab41fcf1813625f7f25adba75fc9032ca04cd",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0064.json.gz",
+            "rows": 256,
+            "sha256": "aa78c268759da347103c1ae3a8039d42f063a7a9c45e5554dba4f09e0facb434",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0065.json.gz",
+            "rows": 256,
+            "sha256": "9acb5981825a287b2efdc9007e397e4b46dc1757ddee6f88139894e0228167c5",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0066.json.gz",
+            "rows": 256,
+            "sha256": "84fca4659a5188a9b0cf5b71b249edb94608eb779ce7da4edd50c34bf4267398",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0067.json.gz",
+            "rows": 256,
+            "sha256": "d4427c48df575b7c9fa94ea8890d07c51edfa4ebe10f42bccae6f159f0da9866",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0068.json.gz",
+            "rows": 256,
+            "sha256": "44ac42237b7d6ca1f495e50fa7642211b9292066906340eb10ede865a8498058",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0069.json.gz",
+            "rows": 256,
+            "sha256": "5d756a24cf80236c63ba526eece50f2300d35b9a817e623a0700fd302ea0ee78",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0070.json.gz",
+            "rows": 256,
+            "sha256": "9b09f69a3263573efdaf50a8f963836264303ca855b98c29bd90fd76354d383a",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0071.json.gz",
+            "rows": 256,
+            "sha256": "bdd59fe388b84bf0094fa41b4fe9234e825c6b5c90950209ce9d9c74cbc0fcf1",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0072.json.gz",
+            "rows": 256,
+            "sha256": "de80bbc9060e2751329d72b66898693bcefdfda99f3acd9b2744e969f72008ce",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0073.json.gz",
+            "rows": 256,
+            "sha256": "f01eef05043780ebe645e866a715d10552e2bd878792f6856023d57734bc535c",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0074.json.gz",
+            "rows": 256,
+            "sha256": "8ac1418bd606e0ea27a31a84c0762753bea3de88067c92ca7505cc8b05c5fff2",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0075.json.gz",
+            "rows": 256,
+            "sha256": "29761d9b13f58ce9fcf2674afdd4ae8b60332bd2e951b28ff74e96b7c21ffbf6",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0076.json.gz",
+            "rows": 256,
+            "sha256": "267dbcd3ac2a67fe6f7ada52b9c76106643f4084b040edfd4bfff91fd005a983",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0077.json.gz",
+            "rows": 256,
+            "sha256": "9643a8c7c67e40caa62b542d85ae4dcc60aa6631a77db5cd2a7076383c8797a6",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0078.json.gz",
+            "rows": 256,
+            "sha256": "0e4696613e0e2966709893323bdf2fd95bf1aeee9ed115c673d313c88fc4043b",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0079.json.gz",
+            "rows": 256,
+            "sha256": "7ca6b04419108621a52217bd0ac246078812a7c19d61daa7d4cd18b3fac0b3ac",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0080.json.gz",
+            "rows": 256,
+            "sha256": "9620090a185438e86e2aaa38cede71a365399b6fd33ed2d6a7c4cd0ba469b416",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0081.json.gz",
+            "rows": 256,
+            "sha256": "5b406caefb5b0c03d3a76c7e2782d4d1ca4a4c6b961aa6fe65bc9583c245a6d0",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0082.json.gz",
+            "rows": 256,
+            "sha256": "082e361f993ff388e91390754ad886a24f524385d371198891b1b7b6a2ef5d88",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0083.json.gz",
+            "rows": 256,
+            "sha256": "e57f37c77fdda8f4a30e973b4f325322351f9fdfff4b17f8d72dcc1fffcc5509",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0084.json.gz",
+            "rows": 256,
+            "sha256": "4ec9261eb8e7fd626d65404bbb862ac0e278d3f9e6e2281e763868f4643dd830",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0085.json.gz",
+            "rows": 256,
+            "sha256": "7adf3ff50e1b58ba16889389d146776d0788b0067444a30370a54451219ca8c5",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0086.json.gz",
+            "rows": 256,
+            "sha256": "e799ab0d27ec5503898b5690cf526606aec571400c7f1a2a0b36404eea58a9c0",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0087.json.gz",
+            "rows": 256,
+            "sha256": "822820c008e6b18d6610097ac37789c97037000bfb11e8dbb901dce854dafd20",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0088.json.gz",
+            "rows": 256,
+            "sha256": "6e49ba1393a4dbd1d73031aa355de0ad26e0c556bb6effe8538f61d0536cc183",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0089.json.gz",
+            "rows": 256,
+            "sha256": "a53b5370649bd0b7f3872e8d05fc5c8868c7ff8367ba970d1d6c4e123fce8124",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0090.json.gz",
+            "rows": 256,
+            "sha256": "e07d7eb973b7e653e6c661a1c32c5978feecf2f64fce787359ebf4fc12dc586d",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0091.json.gz",
+            "rows": 256,
+            "sha256": "2167c82e81f38e066cb2dab8882c51a672fb6cf93a7bcfc51182edac401b589d",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0092.json.gz",
+            "rows": 256,
+            "sha256": "d98a30a725a1d20c125c2209e9d3ff4a80763b989414ec794385d0c2fb36234b",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0093.json.gz",
+            "rows": 256,
+            "sha256": "92c2afd8e257ddb45c057efcff5264db869877fc8a243cffac7fed336753f818",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0094.json.gz",
+            "rows": 256,
+            "sha256": "620d8ec9d9ba0d35bef9909637a062c3dbde20952f26d111b9e1dba794a99666",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0095.json.gz",
+            "rows": 256,
+            "sha256": "4b2cce46542107f09d38485361ca2c70400d69c0d0efb7fbf46ae799f1ae3d12",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0096.json.gz",
+            "rows": 256,
+            "sha256": "99a9ca5584d8347c75805590ac100b031433a0b7c4b351eb39ca6a8274e30f73",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0097.json.gz",
+            "rows": 256,
+            "sha256": "b2657a063438466913eacee713988b352da5614fcaf63cf3d093650bb63f0d50",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0098.json.gz",
+            "rows": 256,
+            "sha256": "895a34b71d24a0563ddb1cec8679e8d222eb0992092430ac0a6a10523898da82",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0099.json.gz",
+            "rows": 256,
+            "sha256": "34ce58a2999edf60f4166c200fdef878df625c88137d4b92f1b368a7a5dcbb95",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0100.json.gz",
+            "rows": 256,
+            "sha256": "e4bda3466660c16a5978aecd5ad39e9cc0a929fb6e2df32a6a84d0dbc3015411",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0101.json.gz",
+            "rows": 256,
+            "sha256": "8b39837fc3d006e4907a711ab1210e2d2994edb47a9cf8469f81754ec5848a83",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0102.json.gz",
+            "rows": 256,
+            "sha256": "20f56116a964b8acf27d89a0c2e481bad43e635faf8f6cafad1cfba0359ffb80",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0103.json.gz",
+            "rows": 256,
+            "sha256": "f225044bdba33e3717582d413ed2ab1cf6ccff62270f4faab8c10b97ec58d6dd",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0104.json.gz",
+            "rows": 256,
+            "sha256": "322b94a1071e9c3d587af5ec1e1578dd6a611bd183ab296f231c1fe7bf35ae71",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0105.json.gz",
+            "rows": 256,
+            "sha256": "583256c790991e87958ab8443cdb6f9fefcd94a5bc60df8cb0ebfa9fa5e961a1",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0106.json.gz",
+            "rows": 256,
+            "sha256": "90bbd5e4286c7a850040e65851474d17018cf76fb6c61eee9bf48cb79519e311",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0107.json.gz",
+            "rows": 256,
+            "sha256": "7d7382074842843cb0e84f85832c5e52e90f2e56b5da339c6326bf7b5ca80a6b",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0108.json.gz",
+            "rows": 256,
+            "sha256": "d2c68cec180c9207c40d50804b1e0546ded5b73f20381f3ccad2d355f33eb81d",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0109.json.gz",
+            "rows": 256,
+            "sha256": "49d20ed87b611cf37c80e05b6d7097d9b6a885085721a39e5219a0ea67ff23b2",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0110.json.gz",
+            "rows": 256,
+            "sha256": "911ceb18f568bdc73025fc29be1a1890dfb6f4d0691ec6e932088d20a4fa02ff",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0111.json.gz",
+            "rows": 256,
+            "sha256": "e981ac0d0577d615362c5d825edc32109086ab79e16d39e5038f9983ed8c04f1",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0112.json.gz",
+            "rows": 256,
+            "sha256": "f99fc5d3c42e0e30e09e4b99cbba9187aeef73cb82ace925e4275e64cc9e65f4",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0113.json.gz",
+            "rows": 256,
+            "sha256": "40b7d119bc0ed6243bc720731894bc5165a22df36ee846e5c805685762dcb2ec",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0114.json.gz",
+            "rows": 256,
+            "sha256": "17954016de9a52d2e0534b3d92e7bc7b33a9ebb50fa14822e1ab5657cfc6bf33",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0115.json.gz",
+            "rows": 256,
+            "sha256": "87926bc549acc680369108dfcef6ab91e0ca9c0c5be07f1aa0b37d320459b4dd",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0116.json.gz",
+            "rows": 256,
+            "sha256": "6daa6488e347156f7f23750bdbe2ab1ddea027166fa3606bffad48e5cf79b72f",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0117.json.gz",
+            "rows": 256,
+            "sha256": "68dae656d2755809e2b635a51042b9c774259253362d799e340fc686eb644add",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0118.json.gz",
+            "rows": 256,
+            "sha256": "3c9ad36eee04f2df9a279153d771abde8213c216dcf254acc812c9003c22d8eb",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0119.json.gz",
+            "rows": 256,
+            "sha256": "8dc9bc44f53d87e4e84464f6601341877f0c96eabf03e91b705b2e425ae5b3a5",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0120.json.gz",
+            "rows": 256,
+            "sha256": "0650b12b362871c693c5cd947e0c32c2f0fcbcb9aff036324864772db0d1c7d9",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0121.json.gz",
+            "rows": 256,
+            "sha256": "e15bab8681c6c5f96d3dce3189efc6bafa497ef84aee3fd58dbb00985ee16ae1",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0122.json.gz",
+            "rows": 256,
+            "sha256": "3e540969545e2f683f0bc91364b9ca2118bd488e50c7e4ae629deb3dcfd3aec5",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0123.json.gz",
+            "rows": 256,
+            "sha256": "3b0ba335a4acb66808ae4d406fec9b2659c181c020706ab40d706736508b888a",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0124.json.gz",
+            "rows": 256,
+            "sha256": "b83f64ffe538ceb8fc733c9425494d2e2d0b4b9d2fb348094a1b0fe300827539",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0125.json.gz",
+            "rows": 256,
+            "sha256": "8d1a6400164ee997d496019fc528b35d052f501b87fad9906920b652b65c7789",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0126.json.gz",
+            "rows": 256,
+            "sha256": "4c11cd13c759203eb3f0754e9bc04ed60a4fb0933e83fc0cda6f0278ed9c7c9d",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0127.json.gz",
+            "rows": 256,
+            "sha256": "de9a12a92f33d26e957fafde88fda55968dfebf462f8947e24b8075ba1cd1838",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0128.json.gz",
+            "rows": 256,
+            "sha256": "0941d19ce5afe018eb3d6fd92548fdbf7bfbf28adfacc2f09d89aebf92aaebb8",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0129.json.gz",
+            "rows": 256,
+            "sha256": "44911ff201f53840f13cf57a5f1fcf35f3f59e7306c7419c2e2efd02c7980e96",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0130.json.gz",
+            "rows": 256,
+            "sha256": "1c444ab9db0980d37efe38719ef12241c667f6b77d5b23aeac7fe0c0b4b21292",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0131.json.gz",
+            "rows": 256,
+            "sha256": "bb2dba789c62afd61f9f0e5501d0f62a926c97b186f28902777973c4c79a92f7",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0132.json.gz",
+            "rows": 256,
+            "sha256": "4deaf8d83ade1db5978fd2b59ad5b19c612d47ed322091d6aedcd86341291157",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0133.json.gz",
+            "rows": 256,
+            "sha256": "6c015a43206807df2ad0af1fe17f46da792b81e6b9656ead2ff93f6df071f16a",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0134.json.gz",
+            "rows": 256,
+            "sha256": "b4785b77bf339e1c1ebe377cbde7460ad6a8329417931b1ba397e5f4d6dc8a31",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0135.json.gz",
+            "rows": 256,
+            "sha256": "48870fc898b670e9178016e28299bfa0181a69914ddca6d10b8d73ed0d5280db",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0136.json.gz",
+            "rows": 256,
+            "sha256": "95464c564ec818129e86807664dfacefa53d90c04bcf3ff349c114c5c8991ccd",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0137.json.gz",
+            "rows": 256,
+            "sha256": "4bbe641153a47fae69edca7bbbb5c30f8b129991ac7f0ebd95b822701e8ade51",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0138.json.gz",
+            "rows": 256,
+            "sha256": "1f45985a4290a3a161b0347b80f48c78c7814d34ef067e48a279a9a867988dff",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0139.json.gz",
+            "rows": 256,
+            "sha256": "a0539add265f8a8350632194b58fc3806c25375720bd14d58e172a0b662147f7",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0140.json.gz",
+            "rows": 256,
+            "sha256": "976e71b71db8f002288d71e0045b10046aad32fe432a8e2311629c1baaa88390",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0141.json.gz",
+            "rows": 256,
+            "sha256": "c3096efcc911e8101a0dea7df3d8ce611e92ee772520a51d87887fd629c94b43",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0142.json.gz",
+            "rows": 256,
+            "sha256": "6b095b1744bd975f51fc8a8a6c531b702c305ec8599e7cf39e6a76d289f09458",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0143.json.gz",
+            "rows": 256,
+            "sha256": "f8cb1856578a209207b5f71f7af726d305e115caa804c0296a7b4cda29b17553",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0144.json.gz",
+            "rows": 256,
+            "sha256": "5667db5afad14ee79a8c43d65a2cb4840a5a4ba673e26c5d3e357b2bf277b7ea",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0145.json.gz",
+            "rows": 256,
+            "sha256": "1742df7377fe90f38f5f440e97722c17f26bfcf2b3fcd87c795bdd055e3d0408",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0146.json.gz",
+            "rows": 256,
+            "sha256": "f15d5230215506ed6e1805eb184322f4dfb84891864e49b906472f15a0db73b7",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0147.json.gz",
+            "rows": 256,
+            "sha256": "055bdb9e5979da4472edc78962e76e46971b258173bc110e851e9afdf171a74b",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0148.json.gz",
+            "rows": 256,
+            "sha256": "89bb4259fd8126d4db7d254a146f410329eb89c45fc48f44f7736aa863b666b7",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0149.json.gz",
+            "rows": 256,
+            "sha256": "b3342459cd3dc0e8b65a22cd74b7e2b1806968c64b4b343630b23761befa892e",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0150.json.gz",
+            "rows": 256,
+            "sha256": "13bde1d05ccf5f48a48f10096a9d4908e71310e5d22bf5f852853bff69bbe05d",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0151.json.gz",
+            "rows": 256,
+            "sha256": "20ed8b5167de9961fea29f1655dc68f99e1033a6eb66622b31dce2770cdf64a1",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0152.json.gz",
+            "rows": 256,
+            "sha256": "bdb0d52b32a2ad2143583c67b4301c482306611d4052dfc1f3bc8690018bd490",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0153.json.gz",
+            "rows": 256,
+            "sha256": "b9551731e982b0d75dc21f2a4c98e725a2757069025ce66f8c0d05595efe3c98",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0154.json.gz",
+            "rows": 256,
+            "sha256": "cb6e0ca5c9b7f18a5572aa08c7e905764fe73de026ce9f7d849c9960f38fdd14",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0155.json.gz",
+            "rows": 256,
+            "sha256": "f4f7b4b9d27b13c12c4d1bcaaa35da12e3d7436e8b00e3a9c5a6d1557994999a",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0156.json.gz",
+            "rows": 256,
+            "sha256": "07f1dfebf7cadc3721c3fe2586078b47e3ff9de0fd378814557f324c4e83d0e9",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0157.json.gz",
+            "rows": 256,
+            "sha256": "5abad8ea8b19e119ed685ec4a724155f11300af21ee3df023fad9f6e593dc599",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0158.json.gz",
+            "rows": 256,
+            "sha256": "ebbbfe1880c19f8551fff0d6907d84b84f49e501c3d60e59beeb1927b77291ee",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0159.json.gz",
+            "rows": 256,
+            "sha256": "05b2a45c2684bbe383acd4f4a07f09f4b482917fe0bdbff27bb50dd4c8495e4b",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0160.json.gz",
+            "rows": 256,
+            "sha256": "a8ff0a83b46480effb4d3dd955a65289fde18773961312cec57fdc2ae56ab345",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0161.json.gz",
+            "rows": 256,
+            "sha256": "b4eec6f495e2241ab44f302646aaff2e00760978609319ae8914f572337dd8ee",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0162.json.gz",
+            "rows": 256,
+            "sha256": "aef794a9518968808e60e90cd5bbbc0eb7a9e0812af2c8a97afcb4f8df0434b5",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0163.json.gz",
+            "rows": 256,
+            "sha256": "7d2683f68c412ce970d9e563571a862e3461b56688cbcda5cd2f4aec4b385226",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0164.json.gz",
+            "rows": 256,
+            "sha256": "d8fd1413f502afe5e6e0d94c5e9d1f2cefd417cf8447f0ab30dbf88bd5e35876",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0165.json.gz",
+            "rows": 256,
+            "sha256": "9bab9914670dc64a72e0551a98a1d9f528d2ddcdc92ecb46cb40b5bab3310126",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0166.json.gz",
+            "rows": 256,
+            "sha256": "c2cfeecc8b052751f25b3dd4c19375a3114a781fb543d0a3baf8e8c807401afd",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0167.json.gz",
+            "rows": 256,
+            "sha256": "5f6708aff85ba922477590ff8a8177aad4536899144c42e9884a95d59ebd3764",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0168.json.gz",
+            "rows": 256,
+            "sha256": "2968a92f9ad99cdbf43a5505316412caa7f1065fafdf19e887f8bf9d53035dbb",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0169.json.gz",
+            "rows": 256,
+            "sha256": "227c2ca45e417ab48bc61356e3e294f625d7bb69c9a4e3ed8bac067c8072e961",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0170.json.gz",
+            "rows": 256,
+            "sha256": "53bb15f32d661af6d3bef484aa8980b72a20c4dc707b9408626cce3f9828fc20",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0171.json.gz",
+            "rows": 256,
+            "sha256": "50ebdf05445977b6110fee92fd9dc820a5e9f3279fb96bbde284bbf79505eb26",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0172.json.gz",
+            "rows": 256,
+            "sha256": "d0fb1cd4acc9988652ccb738aaf376172cd59e03df6a0f1e7c1006543226aa18",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0173.json.gz",
+            "rows": 256,
+            "sha256": "70c31e26eab4df2356e861d52f4b2957779b47e69d7831ac22141454064536de",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0174.json.gz",
+            "rows": 256,
+            "sha256": "1a7eec69525399645913c1c443b3987927df57c64c6ceccdaa08331ed992d30c",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0175.json.gz",
+            "rows": 256,
+            "sha256": "af39277bf56f281d8bd56d406e1991a9d86a6a23a3012896980d9b4411f9ccdc",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0176.json.gz",
+            "rows": 256,
+            "sha256": "297afb71f0903ff6385b7098735032202acc7280496eb0f2b3972297db602a1a",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0177.json.gz",
+            "rows": 256,
+            "sha256": "3558d37394092bc1ddcb62cddcec2b78ba796c3575bcce07203d8eb19941d1aa",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0178.json.gz",
+            "rows": 256,
+            "sha256": "b13be8cf92ff7533f9fbbe2911ec34882574c27dd026d080be237557371ea98a",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0179.json.gz",
+            "rows": 256,
+            "sha256": "0818d74a15f7527f61fe37a167583de551619a890366227a0e6dc43e1b71f62a",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0180.json.gz",
+            "rows": 256,
+            "sha256": "c8b3f2b75c9a29222fc8759457c1cb66706043e522e16565580e3a6f1044bb3c",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0181.json.gz",
+            "rows": 256,
+            "sha256": "7c759f4cd0732086db3032df15374852abd2cdb33cfb5a6ba4914ddb9e33f50d",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0182.json.gz",
+            "rows": 256,
+            "sha256": "404b862e82fe62cfab12c6a5954e425efed7f7ff60fce165a52cd068917f8db8",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0183.json.gz",
+            "rows": 256,
+            "sha256": "6e08510ca4677befd7c7b105b28cc29258f7b2df384f582809c1fcae40ec4e94",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0184.json.gz",
+            "rows": 256,
+            "sha256": "c2cf7e599281a932c2d56cd29c1042072acf39d6871936ca9ad2144054b88604",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0185.json.gz",
+            "rows": 256,
+            "sha256": "b249c2b0c428795855d2f454bf1eebf3e03253f0a1825fd82154552bf8208018",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0186.json.gz",
+            "rows": 256,
+            "sha256": "6013d3134d12825840fcb94910a4a4c74cb9c49dfd9a6bbcbae051bd3a217642",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0187.json.gz",
+            "rows": 256,
+            "sha256": "ddb3f5100f120c26f8c2829544b46228055e1d8a4c9a365d493fa7a3ad953a5f",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0188.json.gz",
+            "rows": 256,
+            "sha256": "5c8c28e1787960a5c9ef20b86a45a83a59b07498373dcf2cc233a12f09d5ce12",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0189.json.gz",
+            "rows": 256,
+            "sha256": "60ae67d3e508ed75d84fc012eb34b71fb3c83e3fbe97ab35cdbe69476cecc624",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0190.json.gz",
+            "rows": 256,
+            "sha256": "6b5d1aa0991c2f112b7657bc6aeef62b266472ff03a0f7963364f38c42367f2d",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0191.json.gz",
+            "rows": 256,
+            "sha256": "6afc297069e00e129c729adc69de8be6c54848f24ebe55ff62913021b21afeed",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0192.json.gz",
+            "rows": 256,
+            "sha256": "ab5ab1aae72f13d94e873921363850e9958178762de0841600c8ceba3590ef4e",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0193.json.gz",
+            "rows": 256,
+            "sha256": "1fd4ba883563c5f306ec7dd188d5387732619003fc24203f725a20fe67d859e4",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0194.json.gz",
+            "rows": 256,
+            "sha256": "cf8a5b7c28779707b751cd62855e3ea5f42c9fd23b548fcff16351ba11f54650",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0195.json.gz",
+            "rows": 256,
+            "sha256": "01bbeca535a8771ad1822c772548aa58376c46436ecbeb90c7d09e0afea0b380",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0196.json.gz",
+            "rows": 256,
+            "sha256": "97ba69ea4daa80608c0f22415615a52a8af6fc7d4d858d47adeea359e7e16ee2",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0197.json.gz",
+            "rows": 256,
+            "sha256": "f4739b7001c322ae806050be3753022347e295abbbdd5fe6f01e2d265f871506",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0198.json.gz",
+            "rows": 256,
+            "sha256": "83c8127d55fb4b1c60f95145ff7a15898703e929e65cbb25ca1d42b288e5fb16",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0199.json.gz",
+            "rows": 256,
+            "sha256": "3bda7b9f001306250d9d7f65b2bb68eef8939ea6c013859a371c7cb8d776fa06",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0200.json.gz",
+            "rows": 256,
+            "sha256": "f02ad9ac14ec235f76089fded85e72c45d8d4735f359d5704afeb431ec613cc4",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0201.json.gz",
+            "rows": 256,
+            "sha256": "8e05e23997239ef7868ef3253cc386082bde6f4a96f559bdf8eefdf81621e02d",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0202.json.gz",
+            "rows": 256,
+            "sha256": "9f8e8b0f0472732d3a443c5726255b15ef949d8377e1d294cae25705854f8559",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0203.json.gz",
+            "rows": 256,
+            "sha256": "19f0b4966d774135811661ff22835304f8c2d660c8508ab74295df6ae3f62af9",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0204.json.gz",
+            "rows": 256,
+            "sha256": "017aa256fc3d9bf1e03caf07ebe4f9f4983f1307d6da958f02c1ff596ac80f10",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0205.json.gz",
+            "rows": 256,
+            "sha256": "7036c1cc752d7bb51ef43b5eb214e1ad8af2bb5eba5bc323efce13b5e5bf1f04",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0206.json.gz",
+            "rows": 256,
+            "sha256": "98889f82b5512fb5ac016cce4beafedf0af973c61cb0756d6b58cd75e3f23de0",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0207.json.gz",
+            "rows": 256,
+            "sha256": "d8995d2d70484533d565c051a262f44516b4d2e407bc57f3882def3c21f35efc",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0208.json.gz",
+            "rows": 256,
+            "sha256": "983dc34f413c6c9f14af00960b9b43666c41c77931f501aae00e33e7c4aedef0",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0209.json.gz",
+            "rows": 256,
+            "sha256": "fa35f8e4370200914622f1d3247ab58b121380c43ba4151478d1786132f32136",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0210.json.gz",
+            "rows": 256,
+            "sha256": "886a5dbfb6b95d00c49d46a0750528b10bbec6dcb0ccb7b3572d0d487b484bba",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0211.json.gz",
+            "rows": 256,
+            "sha256": "4937a3b62ef4e595207a0a2cb8df89d0a225f66d10b4cfc892cd2030e2d3a4db",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0212.json.gz",
+            "rows": 256,
+            "sha256": "c3c6bc7a7430b5ece9f5c407a1701a8fcfa3ee2785b9cac97b192f6223966da7",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0213.json.gz",
+            "rows": 256,
+            "sha256": "f1ff3c98e12b01f4d8a65a226aef3d739e47445f4a3a3e03cd1ab44779964ab7",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0214.json.gz",
+            "rows": 256,
+            "sha256": "f71a62a538ce7366ac1d9e2d0930292cbeead7febf6611a86cbc58d9c70d9236",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0215.json.gz",
+            "rows": 256,
+            "sha256": "54a310c0b23757c7f48cf25b0b5d939b64a294aee81e063c8c622b1761953d6d",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0216.json.gz",
+            "rows": 256,
+            "sha256": "2ff86533cc04c8543dd56d1afb8e9a1b9bc28ad11e824ef7ebf032af6dbd8d3e",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0217.json.gz",
+            "rows": 256,
+            "sha256": "b14a3a21d3f86d9407115541e7b2ec3c4e0b44723d890cbe502124b6a2a96b62",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0218.json.gz",
+            "rows": 256,
+            "sha256": "a228ace73957dc7c0a6e6470dbb911a9f30235165077e96ff38c5e6f93bbca9a",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0219.json.gz",
+            "rows": 256,
+            "sha256": "6769f071bf774a5bd6ca9c3ddca5c3f8adbd131e62e16b78749c8b74d0ba2ee9",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0220.json.gz",
+            "rows": 256,
+            "sha256": "bfcf31870118f291b8016b9bbc936d60c1a5281ee1385477648cd97792bcff12",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0221.json.gz",
+            "rows": 256,
+            "sha256": "b8a1b97b0a0736039d3bdfa41d2e2ac8aa38920082abb9da93a9074fd43f7c54",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0222.json.gz",
+            "rows": 256,
+            "sha256": "c5d8fc88544955418563bd2127aab6e7e1af6181195aa572ee5e3398e0fd8568",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0223.json.gz",
+            "rows": 256,
+            "sha256": "44430ab5f5b67685e93b4d5aa28d1d5a5ea0ea7454d029053b148bee2a423f80",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0224.json.gz",
+            "rows": 256,
+            "sha256": "5fb7eb9f00a1dcde2c74693ed614331b69d2f31ba8e4cc9a32952be6d3b14950",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0225.json.gz",
+            "rows": 256,
+            "sha256": "585131050c61a6a4ad5ca4717937132f0c135c04db50619601aca33f80fc421c",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0226.json.gz",
+            "rows": 256,
+            "sha256": "6e176d0e650bf1543e519beb8d817c0359d20e22a18be361e77a88c95b01692f",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0227.json.gz",
+            "rows": 256,
+            "sha256": "0a14a3fc9fb73ee3787176c0d31c87974ebbc09026fb937b504aee945497640c",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0228.json.gz",
+            "rows": 256,
+            "sha256": "106badccb86874b22d73400d4da010ccf4632b5324248b4bba44d5511b9953e4",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0229.json.gz",
+            "rows": 256,
+            "sha256": "c2c4d1ac730580a4f79542df8a4cc87ea799bf7c1dfe765df0b78a8166e93b62",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0230.json.gz",
+            "rows": 256,
+            "sha256": "3eaba06aec88a96075864c325244b3d6354c6b5e514b6b47bd64f595702e665e",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0231.json.gz",
+            "rows": 256,
+            "sha256": "b5458b65e56ad3396e33c73f100db4979ec9e39cf6f59a434daea2795db70119",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0232.json.gz",
+            "rows": 256,
+            "sha256": "495f8afaac3f4cf07d8c984d0869c7cec7bc9b8730cde786c44f5afb94802b68",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0233.json.gz",
+            "rows": 256,
+            "sha256": "b161455b51441f5a80d027d935a0691054e5d8068ae5324a98498cc0931c119f",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0234.json.gz",
+            "rows": 256,
+            "sha256": "2c0c6ea5a635772523e783fb4a9ebecf6509ae423eec34622787b5b8b4e2b70f",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0235.json.gz",
+            "rows": 256,
+            "sha256": "c63a0dbc8dfe19362aad199a64d2ff4b14f02546e411640b85a1f6ce39820a75",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0236.json.gz",
+            "rows": 256,
+            "sha256": "bf3f222d5a4c17d95edfb9aeccbca80902427bb083919f3a290b0f7ec90941b2",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0237.json.gz",
+            "rows": 256,
+            "sha256": "1e73f4d4013e4cb3184ceca8a60b64f44e7fca78664ad2b4283bc16df42986e8",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0238.json.gz",
+            "rows": 256,
+            "sha256": "5374eb49fb41304922f85d485efafe51aa407b7ddc5b8c0452b4201b89701de4",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0239.json.gz",
+            "rows": 256,
+            "sha256": "c03363890ab89c79e8872f7f028282b17acf2f17a103ac39fc26e9579ffd4f43",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0240.json.gz",
+            "rows": 256,
+            "sha256": "a1219ae7e729b5dffe5234dfb5f468e3b8eca95d8491f31a2c45cf0f86aab7b7",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0241.json.gz",
+            "rows": 256,
+            "sha256": "58d4c5aef765101c1ac9d501e381006358bfce973dfc5d4df7f7397a8e7eaddb",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0242.json.gz",
+            "rows": 256,
+            "sha256": "3d710f2a740249365f13e577f79473505b56d61b84afd87d28de32febf568c0b",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0243.json.gz",
+            "rows": 256,
+            "sha256": "7cbf9de72dd458ebdd0f5cd48db3ccfb3d73e7538dfb0b379f2f579807484c29",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0244.json.gz",
+            "rows": 256,
+            "sha256": "c79d1c4f7fa62a4984c5881cbf6e743aee0d6e42791ec953aa7c2ae8f658d1d2",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0245.json.gz",
+            "rows": 256,
+            "sha256": "20a59b7665d3da6c1f455797271818585916d08d13216e47ea52b530b5a14589",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0246.json.gz",
+            "rows": 256,
+            "sha256": "c1f76a831cd77adc74dd0bc7f889b712ad02e308a6002cc36e11083558ad7bc8",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0247.json.gz",
+            "rows": 256,
+            "sha256": "18308981655461f8b869d6f70673a85375302e1dbcf639760517ffb97e33f8ca",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0248.json.gz",
+            "rows": 256,
+            "sha256": "fbb5b7cf7656b60c5d05d6831e8ecb891d3cf640dc24c95abfd374dfeb3225e7",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0249.json.gz",
+            "rows": 256,
+            "sha256": "70b7bf3fbfc3b5a8b8ba02d2da50692df4c25c15be8a4731584251c70a18c1c0",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0250.json.gz",
+            "rows": 256,
+            "sha256": "25666ed80befee2c136c1239f6967f34822544582a894a7cd285b203b3375365",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/peers-0251.json.gz",
+            "rows": 180,
+            "sha256": "7134da62260ed25f871ef8ba7d4a2b98e8b6ba5a8322ee60236cb5eaed7a3709",
+            "table": "peers"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/quality_findings-0001.json.gz",
+            "rows": 256,
+            "sha256": "ff0fd36435983a27352faae671f5cf95852f5d98285d582e492f2f3b2e3f8239",
+            "table": "quality_findings"
+        },
+        {
+            "compression": "gzip",
+            "path": "chunks/quality_findings-0002.json.gz",
+            "rows": 227,
+            "sha256": "65716e2441536784ee8ba1afe1eae0891c3c790db4df05be2877aac2d895eec5",
+            "table": "quality_findings"
+        }
+    ],
+    "classification_fetched_at": "2026-10-01T16:10:49Z",
+    "classification_mode": "retrospective",
+    "classification_snapshot_id": "c9c257b85a10a4f65aff00c88ea7f901cbc117786a3f2ed296e209832b612bfb",
+    "counts": {
+        "episodes": 2561,
+        "groups": 80,
+        "peers": 64180,
+        "quality_findings": 483,
+        "securities": 1942,
+        "taxonomy_nodes": 566,
+        "waves": 884
+    },
+    "coverage": {
+        "excluded": 379,
+        "price_codes_without_ordinary_metadata": 78,
+        "quarantined_episodes": 7,
+        "securities_without_classification": 123,
+        "securities_without_price": 1
+    },
+    "definition_id": "runaway-126-double-dd25.v1",
+    "generated_at_utc": "2026-10-02T03:59:46.820895+00:00",
+    "identity_amendments": [
+        {
+            "id": "portable-original-source-identities-20261002",
+            "outcome_recalculation": false,
+            "prior_artifact_commit": "60da46cb6b33db866cb68e5d87949c64ec31520a",
+            "prior_manifest_canonical_sha256": "2dfa7bcf0015b6538348d22333ffa13d2fbcf651255109faf3b7c2eb75785db6",
+            "reason": "Add LF-normalized identities of the original preregistered Git source; retain original physical input hashes.",
+            "source_commit": "c98fa50b1e551772c8fe3cd21e88549a300175ad",
+            "unchanged_chunks": 280
+        }
+    ],
+    "input_identities_sha256": {
+        "actions": "c14caac569e911ed7cd9f19961a0e1bcd319d92d7318c500d6fe2da94ef1c86a",
+        "config": "4e07fd739284add317760f957f79e2e2b1e65d6e484d4e43d0b9d05a99e44c57",
+        "entrypoint": "550db946c8249f8405b03953384c91c9d390ed409846e04f42fc0af09d080229",
+        "evidence": "5ff68c951e17fb028dcd208d7a832e0a5415b4dd7f0c15bb55e97b1295d41e5a",
+        "foundation": "2a59465fca0ea4a7c639cf877be689459a209e0ac32bf7eb9a2c668abc80ebe9",
+        "groups": "95bf91524fdbbf10622d3c97cbbc5d8a58849dff59a532fc5ef76e4f512bc658",
+        "loader": "9e23add68df4d2dfa024f5f0cd96014db751530d00809871d6c5f782d91423b7",
+        "lock": "471fc417b198229cd238f531fd6d3925824e195ab193bc545638058f3026fc8d",
+        "meta": "199ca8e65571aa7fc8901e7cfbcbff6761f1201c67dbadc205026a027134bbd7",
+        "mission": "92168f627bfe92125277f00c1dba4246e01d3a71c11c519bfe408aab34d616ce",
+        "owner_contract": "416c6627e71bee34b5df5b4522a8f10dc9e25b5c70a29f3e2f5434e3c41072bf",
+        "price": "fd945ee5dd0e172adac94c39d89df219b1d5e0e17cf9bd8faa0642ebb22bf7de",
+        "registry": "39374393e34ed257fc9d232e7eb10f99b907202f9824619be24f8c1915d53539",
+        "taxonomy": "7f663490f6bc9b5517f5a2331e4ac14dae39b351c850e425f06429b66349a033",
+        "waves": "c85a8fa043664d4d6a43e4a20c104dfa4c658628a62b5afd36d1c63f7e908f06"
+    },
+    "input_identity_policy": {
+        "canonical_text_field": "canonical_text_identities_sha256",
+        "canonical_text_policy": "sha256-universal-newlines.v1",
+        "raw_bytes_keys": ["actions", "meta", "price", "taxonomy"],
+        "text": "raw-bytes.legacy",
+        "text_keys": [
+            "config",
+            "mission",
+            "owner_contract",
+            "registry",
+            "loader",
+            "waves",
+            "groups",
+            "entrypoint",
+            "evidence",
+            "foundation",
+            "lock"
+        ]
+    },
+    "input_paths": {
+        "actions": "shioaji_stock_prices/data/corporate_actions.sqlite",
+        "config": "research_core/sector_groups.v1.json",
+        "entrypoint": "scripts/build_sector_wave_catalog.py",
+        "evidence": "research_core/evidence.py",
+        "foundation": "docs/en/research-foundation.md",
+        "groups": "research_core/sector_groups.py",
+        "loader": "StockProject/engine/data_loader.py",
+        "lock": "uv.lock",
+        "meta": "shioaji_stock_prices/data/symbol_meta.sqlite",
+        "mission": "tasks/20261002-sector-wave-catalog/mission.md",
+        "owner_contract": "docs/en/research-owner-contract.md",
+        "price": "shioaji_stock_prices/data/price_daily.parquet",
+        "registry": "docs/en/research-registry.json",
+        "taxonomy": "shioaji_stock_prices/data/value_chain_classification.json",
+        "waves": "research_core/sector_waves.py"
+    },
+    "limitations": [
+        "Retrospective descriptive catalog, not a predictive or executable strategy.",
+        "Cash dividends excluded; rights/capital-reduction factors are price bridges, not execution PnL.",
+        "Current business labels and company names do not establish historical business membership.",
+        "Current metadata and incomplete TWSE delisted coverage can omit historical stocks; missing identity is reported.",
+        "2019 opening and 2026 ending boundaries are partial; unconfirmed episodes are censored.",
+        "Family/subgroup and overlapping wave views are dependent and must not be summed as independent events."
+    ],
+    "metadata_amendments": [
+        {
+            "after": "其他記憶體相關（廣義）",
+            "before": "記憶體元件／模組（廣義）",
+            "corrected_config_sha256": "7e7d6d5c168dcbea3a422671fb3fa8565bc75a093a7069022eff78098cbb5442",
+            "field": "label",
+            "group_id": "memory.components",
+            "id": "memory-associated-label-20261002",
+            "outcome_recalculation": false,
+            "prior_artifact_commit": "23746283c3ef1fb6ad1b29139c4c20a30af5b087",
+            "prior_chunk_sha256": "7a579c2a67b440fa5355a2f18ed3620c3b153b1c602fa43c65a0054cb5d97ce5",
+            "prior_manifest_canonical_sha256": "4423cdda7627c3f0d060c2fc74d5feb191deff7183310f380c0b0bd578fa03be",
+            "reason": "Official source nodes say memory but do not establish a component or module business role.",
+            "unchanged_chunks": 279
+        }
+    ],
+    "quality_amendments": [
+        {
+            "changed_peers": [
+                {
+                    "added_flags": ["unexplained_extreme_jump"],
+                    "peer_id": "peer-297139a19edceb60",
+                    "prior_comparability_status": "unavailable",
+                    "security_id": "TW:3073"
+                },
+                {
+                    "added_flags": ["unexplained_extreme_jump"],
+                    "peer_id": "peer-9fa8975134633d98",
+                    "prior_comparability_status": "unavailable",
+                    "security_id": "TW:3073"
+                },
+                {
+                    "added_flags": ["unexplained_extreme_jump"],
+                    "peer_id": "peer-42bb336f85d218dd",
+                    "prior_comparability_status": "unavailable",
+                    "security_id": "TW:7810"
+                },
+                {
+                    "added_flags": ["unexplained_extreme_jump"],
+                    "peer_id": "peer-2e17edb313428c1f",
+                    "prior_comparability_status": "unavailable",
+                    "security_id": "TW:7810"
+                },
+                {
+                    "added_flags": ["unexplained_extreme_jump"],
+                    "peer_id": "peer-0361965c760174f2",
+                    "prior_comparability_status": "unavailable",
+                    "security_id": "TW:7810"
+                },
+                {
+                    "added_flags": ["unexplained_extreme_jump"],
+                    "peer_id": "peer-72c0d64674d67369",
+                    "prior_comparability_status": "unavailable",
+                    "security_id": "TW:7810"
+                },
+                {
+                    "added_flags": ["unexplained_extreme_jump"],
+                    "peer_id": "peer-a1214577bd25a261",
+                    "prior_comparability_status": "unavailable",
+                    "security_id": "TW:7810"
+                },
+                {
+                    "added_flags": ["unexplained_extreme_jump"],
+                    "peer_id": "peer-40e014864750175d",
+                    "prior_comparability_status": "unavailable",
+                    "security_id": "TW:7810"
+                },
+                {
+                    "added_flags": ["unexplained_extreme_jump"],
+                    "peer_id": "peer-755444a2841f8dfa",
+                    "prior_comparability_status": "unavailable",
+                    "security_id": "TW:7810"
+                },
+                {
+                    "added_flags": ["unexplained_extreme_jump"],
+                    "peer_id": "peer-f04f777099ccf885",
+                    "prior_comparability_status": "unavailable",
+                    "security_id": "TW:8070"
+                },
+                {
+                    "added_flags": ["unexplained_extreme_jump"],
+                    "peer_id": "peer-56f08e6f268f9431",
+                    "prior_comparability_status": "unavailable",
+                    "security_id": "TW:3073"
+                },
+                {
+                    "added_flags": ["unexplained_extreme_jump"],
+                    "peer_id": "peer-984be3aa2f73c18e",
+                    "prior_comparability_status": "unavailable",
+                    "security_id": "TW:3073"
+                },
+                {
+                    "added_flags": ["unexplained_extreme_jump"],
+                    "peer_id": "peer-c43bc1a6ac19c291",
+                    "prior_comparability_status": "unavailable",
+                    "security_id": "TW:3073"
+                },
+                {
+                    "added_flags": ["unexplained_extreme_jump"],
+                    "peer_id": "peer-aa8eae2190b9449b",
+                    "prior_comparability_status": "unavailable",
+                    "security_id": "TW:7810"
+                },
+                {
+                    "added_flags": ["unexplained_extreme_jump"],
+                    "peer_id": "peer-45c05ffeab50cf77",
+                    "prior_comparability_status": "unavailable",
+                    "security_id": "TW:7810"
+                },
+                {
+                    "added_flags": ["unexplained_extreme_jump"],
+                    "peer_id": "peer-c0ab2dd8f1706593",
+                    "prior_comparability_status": "unavailable",
+                    "security_id": "TW:7810"
+                },
+                {
+                    "added_flags": ["unexplained_extreme_jump"],
+                    "peer_id": "peer-6566b0e6c102083f",
+                    "prior_comparability_status": "unavailable",
+                    "security_id": "TW:8101"
+                }
+            ],
+            "changed_winners": [],
+            "id": "peer-window-quality-propagation-20261002",
+            "peer_comparability_counts": {
+                "comparable": 58146,
+                "quarantined": 79,
+                "unavailable": 5955
+            },
+            "price_recalculation": false,
+            "prior_artifact_commit": "76f1b224491d1216f3783672cbe069038fc8753a",
+            "prior_chunk_identities": [
+                {
+                    "path": "chunks/peers-0019.json.gz",
+                    "prior_sha256": "31dc1ebcdc8cb44ac27af7bbe393a1c3949b2a365bd59ab354bf46959b54b2b6"
+                },
+                {
+                    "path": "chunks/peers-0020.json.gz",
+                    "prior_sha256": "c2f0872bac3dceea56db765a9bfb6c0d1b52ecee5cf86e9ecfec8af6672dc357"
+                },
+                {
+                    "path": "chunks/peers-0067.json.gz",
+                    "prior_sha256": "7e7eb7123a25cddacff11fc99a746052171119c6d8cf0e7ee8d07bb6e922573c"
+                },
+                {
+                    "path": "chunks/peers-0068.json.gz",
+                    "prior_sha256": "4126e8d8e2260bc3e2aaf3274b0e77967ab6cc2df4c20c8d36c36adef7e66ed1"
+                },
+                {
+                    "path": "chunks/peers-0071.json.gz",
+                    "prior_sha256": "bea4e60c0140060bade382a64ce17cff0a95ffcbd375bbf900e9e581925e3fbc"
+                },
+                {
+                    "path": "chunks/peers-0080.json.gz",
+                    "prior_sha256": "cbe3422e04f94c6329ec3f1e6833046f459716d6ce62443dcac05e98802f0b48"
+                },
+                {
+                    "path": "chunks/peers-0122.json.gz",
+                    "prior_sha256": "6b54508961d5bda14f50e2c2f54f24139c337d594a337072735cbfb09080ad3e"
+                },
+                {
+                    "path": "chunks/peers-0124.json.gz",
+                    "prior_sha256": "58fcf0ad4415ca4fb49cb4178059bf0569853c5dc1f0a3098ae27cebe7fd6443"
+                },
+                {
+                    "path": "chunks/peers-0137.json.gz",
+                    "prior_sha256": "8359050c08dc54269eeabf8215f4d403fb1cc147f8b8b79678dc6d174208f967"
+                },
+                {
+                    "path": "chunks/peers-0138.json.gz",
+                    "prior_sha256": "69011d24e354225dd585555f0a5ee518ee2c90a902073ae41b292d439c1d516b"
+                },
+                {
+                    "path": "chunks/peers-0139.json.gz",
+                    "prior_sha256": "f88e0b42f610caf5ab843b04fdbba170e087f7ba2273ae928f6fc39204cca775"
+                },
+                {
+                    "path": "chunks/peers-0189.json.gz",
+                    "prior_sha256": "dce14c8dd832131091e58f930431a89665860701082b6adf374941288d5af804"
+                }
+            ],
+            "prior_manifest_canonical_sha256": "81c42f08550acbad1777376d0ab20d4e16bbf700134dbf64c2febfdbdff1599c",
+            "prior_peer_comparability_counts": {
+                "comparable": 58146,
+                "quarantined": 79,
+                "unavailable": 5955
+            },
+            "reason": "Propagate already-recorded dated adapter findings into each requested peer interval; preserve all price measurements.",
+            "source": "quality_findings chunks already identified in this manifest",
+            "unchanged_chunks": 268
+        }
+    ],
+    "run_id": "catalog-v1-2019-20260814",
+    "runtime": {
+        "numpy": "2.3.5",
+        "pandas": "2.3.3",
+        "pyarrow": "25.0.1",
+        "python": "3.12.11"
+    },
+    "schema_version": "sector-wave-catalog.v1",
+    "units": {
+        "appreciation_fraction": "fraction",
+        "price": "TWD",
+        "turnover_k_twd": "thousand_TWD"
+    },
+    "window": {
+        "end": "2026-08-14",
+        "start": "2019-01-02"
+    }
+}

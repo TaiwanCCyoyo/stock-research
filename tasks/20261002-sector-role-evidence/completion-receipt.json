@@ -1,0 +1,11 @@
+{
+    "assertions": 23,
+    "membership_reviews": 3,
+    "original_validated_chunk_count": 280,
+    "packet_canonical_sha256": "a57f081300b1bdd1ff600e0501fb7e7fc511041ba557ac57bf3f5a3fdef944e8",
+    "packet_id": "sector-role-evidence-20261002-batch01",
+    "scope_securities": 218,
+    "sources": 21,
+    "unknown_effective_dates": 23,
+    "verified_securities": 18
+}

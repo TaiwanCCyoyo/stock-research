@@ -1,0 +1,126 @@
+{
+  "schema_version": "opportunity-classification-gaps.v1",
+  "securities": [
+    {
+      "security_id": "TW:2002",
+      "official_broad_label_missing": false,
+      "official_exchange_code_missing": true,
+      "official_historical_effective_interval_missing": true,
+      "value_chain_historical_effective_interval_missing": true,
+      "company_role_continuous_effective_interval_missing": true,
+      "company_source_first_available_missing": true,
+      "retrospective_period_summary_available": false,
+      "role_source_context": [
+        "undated-reference"
+      ],
+      "role_revenue_share_missing": true,
+      "role_product_exhaustiveness_unverified": true
+    },
+    {
+      "security_id": "TW:2330",
+      "official_broad_label_missing": false,
+      "official_exchange_code_missing": true,
+      "official_historical_effective_interval_missing": true,
+      "value_chain_historical_effective_interval_missing": true,
+      "company_role_continuous_effective_interval_missing": true,
+      "company_source_first_available_missing": true,
+      "retrospective_period_summary_available": true,
+      "role_source_context": [
+        "retrospective-period-summary"
+      ],
+      "role_revenue_share_missing": true,
+      "role_product_exhaustiveness_unverified": true
+    },
+    {
+      "security_id": "TW:2498",
+      "official_broad_label_missing": false,
+      "official_exchange_code_missing": true,
+      "official_historical_effective_interval_missing": true,
+      "value_chain_historical_effective_interval_missing": true,
+      "company_role_continuous_effective_interval_missing": true,
+      "company_source_first_available_missing": true,
+      "retrospective_period_summary_available": true,
+      "role_source_context": [
+        "retrospective-period-summary"
+      ],
+      "role_revenue_share_missing": true,
+      "role_product_exhaustiveness_unverified": true
+    },
+    {
+      "security_id": "TW:2609",
+      "official_broad_label_missing": false,
+      "official_exchange_code_missing": true,
+      "official_historical_effective_interval_missing": true,
+      "value_chain_historical_effective_interval_missing": true,
+      "company_role_continuous_effective_interval_missing": true,
+      "company_source_first_available_missing": true,
+      "retrospective_period_summary_available": true,
+      "role_source_context": [
+        "retrospective-period-summary"
+      ],
+      "role_revenue_share_missing": true,
+      "role_product_exhaustiveness_unverified": true
+    },
+    {
+      "security_id": "TW:3017",
+      "official_broad_label_missing": false,
+      "official_exchange_code_missing": true,
+      "official_historical_effective_interval_missing": true,
+      "value_chain_historical_effective_interval_missing": true,
+      "company_role_continuous_effective_interval_missing": true,
+      "company_source_first_available_missing": true,
+      "retrospective_period_summary_available": false,
+      "role_source_context": [
+        "undated-reference"
+      ],
+      "role_revenue_share_missing": true,
+      "role_product_exhaustiveness_unverified": true
+    },
+    {
+      "security_id": "TW:3481",
+      "official_broad_label_missing": false,
+      "official_exchange_code_missing": true,
+      "official_historical_effective_interval_missing": true,
+      "value_chain_historical_effective_interval_missing": true,
+      "company_role_continuous_effective_interval_missing": true,
+      "company_source_first_available_missing": true,
+      "retrospective_period_summary_available": false,
+      "role_source_context": [
+        "undated-reference"
+      ],
+      "role_revenue_share_missing": true,
+      "role_product_exhaustiveness_unverified": true
+    },
+    {
+      "security_id": "TW:4743",
+      "official_broad_label_missing": false,
+      "official_exchange_code_missing": true,
+      "official_historical_effective_interval_missing": true,
+      "value_chain_historical_effective_interval_missing": true,
+      "company_role_continuous_effective_interval_missing": true,
+      "company_source_first_available_missing": true,
+      "retrospective_period_summary_available": false,
+      "role_source_context": [
+        "retrospective-event-context"
+      ],
+      "role_revenue_share_missing": true,
+      "role_product_exhaustiveness_unverified": true
+    },
+    {
+      "security_id": "TW:9919",
+      "official_broad_label_missing": false,
+      "official_exchange_code_missing": true,
+      "official_historical_effective_interval_missing": true,
+      "value_chain_historical_effective_interval_missing": true,
+      "company_role_continuous_effective_interval_missing": true,
+      "company_source_first_available_missing": true,
+      "retrospective_period_summary_available": false,
+      "role_source_context": [
+        "dated-profile-reference"
+      ],
+      "role_revenue_share_missing": true,
+      "role_product_exhaustiveness_unverified": true
+    }
+  ],
+  "scope_note": "Eight fixed cases only; the earlier 200 pending issuers and deferred backup/ownership discussion are not completed by this packet."
+}

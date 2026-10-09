@@ -1,0 +1,696 @@
+{
+    "baselines": {
+        "holdout": {
+            "buys": 721,
+            "drawdown": 0.16779232603742464,
+            "final": 5090055.569556501,
+            "return_pct": 154.50277847782502,
+            "sub_lot_share": 1.0
+        },
+        "holdout__hold20": {
+            "buys": 159,
+            "drawdown": 0.31445016035128065,
+            "final": 3709650.636745139,
+            "return_pct": 85.48253183725694,
+            "sub_lot_share": 1.0
+        },
+        "trainfull": {
+            "buys": 1091,
+            "drawdown": 0.37529499491678603,
+            "final": 6610668.0512799965,
+            "return_pct": 230.53340256399983,
+            "sub_lot_share": 1.0
+        },
+        "trainfull__hold20": {
+            "buys": 276,
+            "drawdown": 0.3665002403069964,
+            "final": 5772616.446041451,
+            "return_pct": 188.63082230207254,
+            "sub_lot_share": 1.0
+        },
+        "trainodd": {
+            "buys": 780,
+            "drawdown": 0.3073712569914901,
+            "final": 5607829.841279998,
+            "return_pct": 180.39149206399992,
+            "sub_lot_share": 1.0
+        },
+        "trainodd__hold20": {
+            "buys": 199,
+            "drawdown": 0.42991011795736755,
+            "final": 3685452.9729350004,
+            "return_pct": 84.27264864675003,
+            "sub_lot_share": 1.0
+        }
+    },
+    "prediction": {
+        "band": [0.6, 0.85],
+        "hold0": 0.38173141766336305,
+        "hold20": 0.8080513019051306,
+        "verdict": "band hit"
+    },
+    "rows": {
+        "armA__holdout__slip00": {
+            "arm": "armA",
+            "buys": 671,
+            "drawdown": 0.29052114309727134,
+            "final": 2559869.1690999996,
+            "hold": 0,
+            "retention": 0.18118417500833317,
+            "return_pct": 27.99345845499998,
+            "slippage_bps": 0,
+            "span": "holdout",
+            "sub_lot_share": 0.0,
+            "unfilled_by_cause": {
+                "limit_down": 1,
+                "limit_up": 3,
+                "no_row": 1,
+                "rounded_to_zero": 348
+            }
+        },
+        "armA__holdout__slip00__hold20": {
+            "arm": "armA",
+            "buys": 156,
+            "drawdown": 0.25106343432290185,
+            "final": 3291951.2992000002,
+            "hold": 20,
+            "retention": 0.7556814658108387,
+            "return_pct": 64.59756496000001,
+            "slippage_bps": 0,
+            "span": "holdout",
+            "sub_lot_share": 0.0,
+            "unfilled_by_cause": {
+                "limit_up": 1,
+                "rounded_to_zero": 73
+            }
+        },
+        "armA__holdout__slip10": {
+            "arm": "armA",
+            "buys": 671,
+            "drawdown": 0.33821726993113826,
+            "final": 2100178.48910001,
+            "hold": 0,
+            "retention": 0.03241963998543503,
+            "return_pct": 5.008924455000507,
+            "slippage_bps": 10,
+            "span": "holdout",
+            "sub_lot_share": 0.0,
+            "unfilled_by_cause": {
+                "limit_down": 1,
+                "limit_up": 3,
+                "no_row": 1,
+                "rounded_to_zero": 348
+            }
+        },
+        "armA__holdout__slip25": {
+            "arm": "armA",
+            "buys": 671,
+            "drawdown": 0.593495086825243,
+            "final": 1229501.2441000075,
+            "hold": 0,
+            "retention": -0.2493478639966912,
+            "return_pct": -38.52493779499962,
+            "slippage_bps": 25,
+            "span": "holdout",
+            "sub_lot_share": 0.0,
+            "unfilled_by_cause": {
+                "cash": 5,
+                "limit_down": 1,
+                "limit_up": 3,
+                "no_row": 1,
+                "rounded_to_zero": 349
+            }
+        },
+        "armA__holdout__slip25__hold20": {
+            "arm": "armA",
+            "buys": 156,
+            "drawdown": 0.2818558744881786,
+            "final": 3024244.924200001,
+            "hold": 20,
+            "retention": 0.5990960387965435,
+            "return_pct": 51.21224621000005,
+            "slippage_bps": 25,
+            "span": "holdout",
+            "sub_lot_share": 0.0,
+            "unfilled_by_cause": {
+                "limit_up": 1,
+                "rounded_to_zero": 73
+            }
+        },
+        "armA__holdout__slip50": {
+            "arm": "armA",
+            "buys": 576,
+            "drawdown": 0.8222625996881036,
+            "final": 488033.8421000097,
+            "hold": 0,
+            "retention": -0.4893006367898409,
+            "return_pct": -75.59830789499951,
+            "slippage_bps": 50,
+            "span": "holdout",
+            "sub_lot_share": 0.0,
+            "unfilled_by_cause": {
+                "cash": 305,
+                "limit_down": 1,
+                "limit_up": 3,
+                "no_row": 1,
+                "rounded_to_zero": 418
+            }
+        },
+        "armA__trainfull__slip00": {
+            "arm": "armA",
+            "buys": 1059,
+            "drawdown": 0.3315932966598189,
+            "final": 4280955.223999999,
+            "hold": 0,
+            "retention": 0.4947125229210047,
+            "return_pct": 114.04776119999997,
+            "slippage_bps": 0,
+            "span": "trainfull",
+            "sub_lot_share": 0.0,
+            "unfilled_by_cause": {
+                "book_full": 2,
+                "limit_down": 1,
+                "limit_up": 2,
+                "no_row": 8,
+                "rounded_to_zero": 243
+            }
+        },
+        "armA__trainfull__slip00__hold20": {
+            "arm": "armA",
+            "buys": 271,
+            "drawdown": 0.2549148148440807,
+            "final": 6112166.784279999,
+            "hold": 20,
+            "retention": 1.0900039384058862,
+            "return_pct": 205.60833921399995,
+            "slippage_bps": 0,
+            "span": "trainfull",
+            "sub_lot_share": 0.0,
+            "unfilled_by_cause": {
+                "book_full": 2,
+                "no_row": 3,
+                "rounded_to_zero": 57
+            }
+        },
+        "armA__trainfull__slip10": {
+            "arm": "armA",
+            "buys": 1059,
+            "drawdown": 0.41366734411470074,
+            "final": 3519835.9840000155,
+            "hold": 0,
+            "retention": 0.3296346575152128,
+            "return_pct": 75.99179920000077,
+            "slippage_bps": 10,
+            "span": "trainfull",
+            "sub_lot_share": 0.0,
+            "unfilled_by_cause": {
+                "book_full": 2,
+                "limit_down": 1,
+                "limit_up": 2,
+                "no_row": 8,
+                "rounded_to_zero": 243
+            }
+        },
+        "armA__trainfull__slip25": {
+            "arm": "armA",
+            "buys": 1059,
+            "drawdown": 0.566151614736281,
+            "final": 2298690.624000006,
+            "hold": 0,
+            "retention": 0.0647825045477053,
+            "return_pct": 14.934531200000295,
+            "slippage_bps": 25,
+            "span": "trainfull",
+            "sub_lot_share": 0.0,
+            "unfilled_by_cause": {
+                "book_full": 2,
+                "limit_down": 1,
+                "limit_up": 2,
+                "no_row": 8,
+                "rounded_to_zero": 243
+            }
+        },
+        "armA__trainfull__slip25__hold20": {
+            "arm": "armA",
+            "buys": 271,
+            "drawdown": 0.28308275568347085,
+            "final": 5627661.184280002,
+            "hold": 20,
+            "retention": 0.9615769946840081,
+            "return_pct": 181.3830592140001,
+            "slippage_bps": 25,
+            "span": "trainfull",
+            "sub_lot_share": 0.0,
+            "unfilled_by_cause": {
+                "book_full": 2,
+                "no_row": 3,
+                "rounded_to_zero": 57
+            }
+        },
+        "armA__trainfull__slip50": {
+            "arm": "armA",
+            "buys": 996,
+            "drawdown": 0.8240476821441066,
+            "final": 981365.7240000139,
+            "hold": 0,
+            "retention": -0.22092986627332595,
+            "return_pct": -50.9317137999993,
+            "slippage_bps": 50,
+            "span": "trainfull",
+            "sub_lot_share": 0.0,
+            "unfilled_by_cause": {
+                "book_full": 2,
+                "cash": 219,
+                "limit_down": 1,
+                "limit_up": 2,
+                "no_row": 8,
+                "rounded_to_zero": 264
+            }
+        },
+        "armA__trainodd__slip00": {
+            "arm": "armA",
+            "buys": 754,
+            "drawdown": 0.3916194644850906,
+            "final": 3377222.0,
+            "hold": 0,
+            "retention": 0.38173141766336305,
+            "return_pct": 68.8611,
+            "slippage_bps": 0,
+            "span": "trainodd",
+            "sub_lot_share": 0.0,
+            "unfilled_by_cause": {
+                "book_full": 2,
+                "limit_down": 1,
+                "limit_up": 2,
+                "no_row": 5,
+                "rounded_to_zero": 180
+            }
+        },
+        "armA__trainodd__slip00__hold20": {
+            "arm": "armA",
+            "buys": 194,
+            "drawdown": 0.43520174640037984,
+            "final": 3361932.46908,
+            "hold": 20,
+            "retention": 0.8080513019051306,
+            "return_pct": 68.09662345400001,
+            "slippage_bps": 0,
+            "span": "trainodd",
+            "sub_lot_share": 0.0,
+            "unfilled_by_cause": {
+                "book_full": 1,
+                "limit_up": 1,
+                "no_row": 1,
+                "rounded_to_zero": 36
+            }
+        },
+        "armA__trainodd__slip10": {
+            "arm": "armA",
+            "buys": 754,
+            "drawdown": 0.47079874261310634,
+            "final": 2845152.85000001,
+            "hold": 0,
+            "retention": 0.234255185854376,
+            "return_pct": 42.25764250000049,
+            "slippage_bps": 10,
+            "span": "trainodd",
+            "sub_lot_share": 0.0,
+            "unfilled_by_cause": {
+                "book_full": 2,
+                "limit_down": 1,
+                "limit_up": 2,
+                "no_row": 5,
+                "rounded_to_zero": 180
+            }
+        },
+        "armA__trainodd__slip25": {
+            "arm": "armA",
+            "buys": 754,
+            "drawdown": 0.5938502680630691,
+            "final": 2066594.8750000028,
+            "hold": 0,
+            "retention": 0.018458430117196445,
+            "return_pct": 3.3297437500001394,
+            "slippage_bps": 25,
+            "span": "trainodd",
+            "sub_lot_share": 0.0,
+            "unfilled_by_cause": {
+                "book_full": 2,
+                "limit_down": 1,
+                "limit_up": 2,
+                "no_row": 5,
+                "rounded_to_zero": 180
+            }
+        },
+        "armA__trainodd__slip25__hold20": {
+            "arm": "armA",
+            "buys": 194,
+            "drawdown": 0.492653734614486,
+            "final": 3013694.469080003,
+            "hold": 20,
+            "retention": 0.6014374090276656,
+            "return_pct": 50.68472345400015,
+            "slippage_bps": 25,
+            "span": "trainodd",
+            "sub_lot_share": 0.0,
+            "unfilled_by_cause": {
+                "book_full": 1,
+                "limit_up": 1,
+                "no_row": 1,
+                "rounded_to_zero": 36
+            }
+        },
+        "armA__trainodd__slip50": {
+            "arm": "armA",
+            "buys": 717,
+            "drawdown": 0.7915929520452019,
+            "final": 1244803.0000000068,
+            "hold": 0,
+            "retention": -0.2093216790213315,
+            "return_pct": -37.75984999999966,
+            "slippage_bps": 50,
+            "span": "trainodd",
+            "sub_lot_share": 0.0,
+            "unfilled_by_cause": {
+                "book_full": 2,
+                "cash": 119,
+                "limit_down": 1,
+                "limit_up": 2,
+                "no_row": 5,
+                "rounded_to_zero": 188
+            }
+        },
+        "armB__holdout__slip00": {
+            "arm": "armB",
+            "buys": 725,
+            "drawdown": 0.3167678394841048,
+            "final": 2984987.9595564995,
+            "hold": 0,
+            "retention": 0.31876059746649466,
+            "return_pct": 49.24939797782498,
+            "slippage_bps": 0,
+            "span": "holdout",
+            "sub_lot_share": 1.0,
+            "unfilled_by_cause": {
+                "book_full": 1,
+                "broker_rejected": 1,
+                "limit_down": 1,
+                "limit_up": 1,
+                "no_row": 1
+            }
+        },
+        "armB__holdout__slip00__hold20": {
+            "arm": "armB",
+            "buys": 159,
+            "drawdown": 0.3773668382181986,
+            "final": 2533658.02754269,
+            "hold": 20,
+            "retention": 0.3121444908526322,
+            "return_pct": 26.68290137713449,
+            "slippage_bps": 0,
+            "span": "holdout",
+            "sub_lot_share": 1.0,
+            "unfilled_by_cause": {
+                "book_full": 1,
+                "limit_down": 1,
+                "limit_up": 1,
+                "no_row": 1
+            }
+        },
+        "armB__holdout__slip10": {
+            "arm": "armB",
+            "buys": 725,
+            "drawdown": 0.37617492691977944,
+            "final": 2419516.64696653,
+            "hold": 0,
+            "retention": 0.13576346364112185,
+            "return_pct": 20.975832348326502,
+            "slippage_bps": 10,
+            "span": "holdout",
+            "sub_lot_share": 1.0,
+            "unfilled_by_cause": {
+                "book_full": 1,
+                "limit_down": 1,
+                "limit_up": 1,
+                "no_row": 1
+            }
+        },
+        "armB__holdout__slip25": {
+            "arm": "armB",
+            "buys": 725,
+            "drawdown": 0.5233672835172885,
+            "final": 1607330.3490815298,
+            "hold": 0,
+            "retention": -0.12707527165112698,
+            "return_pct": -19.63348254592351,
+            "slippage_bps": 25,
+            "span": "holdout",
+            "sub_lot_share": 1.0,
+            "unfilled_by_cause": {
+                "book_full": 1,
+                "limit_down": 1,
+                "limit_up": 1,
+                "no_row": 1
+            }
+        },
+        "armB__holdout__slip25__hold20": {
+            "arm": "armB",
+            "buys": 159,
+            "drawdown": 0.4177671015478312,
+            "final": 2217163.039292696,
+            "hold": 20,
+            "retention": 0.12702188074291862,
+            "return_pct": 10.858151964634796,
+            "slippage_bps": 25,
+            "span": "holdout",
+            "sub_lot_share": 1.0,
+            "unfilled_by_cause": {
+                "book_full": 1,
+                "limit_down": 1,
+                "limit_up": 1,
+                "no_row": 1
+            }
+        },
+        "armB__holdout__slip50": {
+            "arm": "armB",
+            "buys": 703,
+            "drawdown": 0.743183736376357,
+            "final": 783417.3173675229,
+            "hold": 0,
+            "retention": -0.39370899818707367,
+            "return_pct": -60.82913413162385,
+            "slippage_bps": 50,
+            "span": "holdout",
+            "sub_lot_share": 0.9985775248933144,
+            "unfilled_by_cause": {
+                "book_full": 1,
+                "cash": 80,
+                "limit_down": 1,
+                "limit_up": 1,
+                "no_row": 1
+            }
+        },
+        "armB__trainfull__slip00": {
+            "arm": "armB",
+            "buys": 1087,
+            "drawdown": 0.38381303056610866,
+            "final": 4677543.845279999,
+            "hold": 0,
+            "retention": 0.5807279586169013,
+            "return_pct": 133.87719226399994,
+            "slippage_bps": 0,
+            "span": "trainfull",
+            "sub_lot_share": 0.7166513339466422,
+            "unfilled_by_cause": {
+                "book_full": 4,
+                "limit_down": 1,
+                "limit_up": 2,
+                "no_row": 9,
+                "rounded_to_zero": 64
+            }
+        },
+        "armB__trainfull__slip00__hold20": {
+            "arm": "armB",
+            "buys": 272,
+            "drawdown": 0.39684214664454476,
+            "final": 5551508.592988782,
+            "hold": 20,
+            "retention": 0.9413913775187313,
+            "return_pct": 177.5754296494391,
+            "slippage_bps": 0,
+            "span": "trainfull",
+            "sub_lot_share": 0.6985294117647058,
+            "unfilled_by_cause": {
+                "book_full": 3,
+                "no_row": 4,
+                "rounded_to_zero": 14
+            }
+        },
+        "armB__trainfull__slip10": {
+            "arm": "armB",
+            "buys": 1087,
+            "drawdown": 0.4680912387316318,
+            "final": 3816894.855780038,
+            "hold": 0,
+            "retention": 0.3940632540821581,
+            "return_pct": 90.8447427890019,
+            "slippage_bps": 10,
+            "span": "trainfull",
+            "sub_lot_share": 0.7166513339466422,
+            "unfilled_by_cause": {
+                "book_full": 4,
+                "limit_down": 1,
+                "limit_up": 2,
+                "no_row": 9,
+                "rounded_to_zero": 64
+            }
+        },
+        "armB__trainfull__slip25": {
+            "arm": "armB",
+            "buys": 1087,
+            "drawdown": 0.6287368531046195,
+            "final": 2441969.915530033,
+            "hold": 0,
+            "retention": 0.09585810789552175,
+            "return_pct": 22.098495776501647,
+            "slippage_bps": 25,
+            "span": "trainfull",
+            "sub_lot_share": 0.7166513339466422,
+            "unfilled_by_cause": {
+                "book_full": 4,
+                "limit_down": 1,
+                "limit_up": 2,
+                "no_row": 9,
+                "rounded_to_zero": 64
+            }
+        },
+        "armB__trainfull__slip25__hold20": {
+            "arm": "armB",
+            "buys": 272,
+            "drawdown": 0.44413013470080487,
+            "final": 5021925.576613784,
+            "hold": 20,
+            "retention": 0.8010158519519376,
+            "return_pct": 151.0962788306892,
+            "slippage_bps": 25,
+            "span": "trainfull",
+            "sub_lot_share": 0.6985294117647058,
+            "unfilled_by_cause": {
+                "book_full": 3,
+                "no_row": 4,
+                "rounded_to_zero": 14
+            }
+        },
+        "armB__trainfull__slip50": {
+            "arm": "armB",
+            "buys": 1028,
+            "drawdown": 0.8571101052609412,
+            "final": 835795.4916900292,
+            "hold": 0,
+            "retention": -0.252502347894416,
+            "return_pct": -58.21022541549854,
+            "slippage_bps": 50,
+            "span": "trainfull",
+            "sub_lot_share": 0.7052529182879378,
+            "unfilled_by_cause": {
+                "book_full": 4,
+                "cash": 239,
+                "limit_down": 1,
+                "limit_up": 2,
+                "no_row": 9,
+                "rounded_to_zero": 67
+            }
+        },
+        "armB__trainodd__slip00": {
+            "arm": "armB",
+            "buys": 783,
+            "drawdown": 0.4499040054425676,
+            "final": 3736462.211280002,
+            "hold": 0,
+            "retention": 0.48130379970024684,
+            "return_pct": 86.82311056400009,
+            "slippage_bps": 0,
+            "span": "trainodd",
+            "sub_lot_share": 1.0,
+            "unfilled_by_cause": {
+                "book_full": 4,
+                "limit_down": 1,
+                "limit_up": 2,
+                "no_row": 6
+            }
+        },
+        "armB__trainodd__slip00__hold20": {
+            "arm": "armB",
+            "buys": 199,
+            "drawdown": 0.5041005604106145,
+            "final": 3892358.0230827807,
+            "hold": 20,
+            "retention": 1.1227593136505503,
+            "return_pct": 94.61790115413903,
+            "slippage_bps": 0,
+            "span": "trainodd",
+            "sub_lot_share": 1.0,
+            "unfilled_by_cause": {
+                "book_full": 4,
+                "limit_up": 1,
+                "no_row": 4
+            }
+        },
+        "armB__trainodd__slip10": {
+            "arm": "armB",
+            "buys": 783,
+            "drawdown": 0.5302139935312766,
+            "final": 3107380.3188300338,
+            "hold": 0,
+            "retention": 0.30693806735551404,
+            "return_pct": 55.36901594150169,
+            "slippage_bps": 10,
+            "span": "trainodd",
+            "sub_lot_share": 1.0,
+            "unfilled_by_cause": {
+                "book_full": 4,
+                "limit_down": 1,
+                "limit_up": 2,
+                "no_row": 6
+            }
+        },
+        "armB__trainodd__slip25": {
+            "arm": "armB",
+            "buys": 783,
+            "drawdown": 0.663697332283659,
+            "final": 2095624.5901900276,
+            "hold": 0,
+            "retention": 0.026504739523996394,
+            "return_pct": 4.78122950950138,
+            "slippage_bps": 25,
+            "span": "trainodd",
+            "sub_lot_share": 1.0,
+            "unfilled_by_cause": {
+                "book_full": 4,
+                "limit_down": 1,
+                "limit_up": 2,
+                "no_row": 6
+            }
+        },
+        "armB__trainodd__slip50": {
+            "arm": "armB",
+            "buys": 755,
+            "drawdown": 0.8890405888029579,
+            "final": 648238.4067500235,
+            "hold": 0,
+            "retention": -0.3746744310896863,
+            "return_pct": -67.58807966249883,
+            "slippage_bps": 50,
+            "span": "trainodd",
+            "sub_lot_share": 1.0,
+            "unfilled_by_cause": {
+                "book_full": 4,
+                "cash": 156,
+                "limit_down": 1,
+                "limit_up": 2,
+                "no_row": 6
+            }
+        }
+    },
+    "verdict": "EXECUTION ARTIFACT -- armA__trainodd__slip25 keeps only 2%"
+}

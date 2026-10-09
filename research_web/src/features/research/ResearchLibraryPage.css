@@ -1,0 +1,222 @@
+.research-run-choices {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 18px;
+}
+.research-run-choices button {
+    display: grid;
+    gap: 8px;
+    text-align: left;
+    padding: 22px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+}
+.research-run-choices button[aria-pressed="true"] {
+    background: var(--accent-soft);
+    color: var(--ink);
+    border-color: var(--accent);
+}
+.research-run-choices strong {
+    font-size: 16px;
+}
+.research-run-choices > button > span {
+    font:
+        28px Georgia,
+        serif;
+}
+.research-run-choices small {
+    font:
+        11px/1.7 "Noto Sans TC",
+        sans-serif;
+    color: var(--muted);
+}
+.research-run-method {
+    padding: 24px;
+}
+.research-run-method .op-section-title {
+    padding: 4px 0 16px;
+}
+.research-run-method p,
+.research-run-method li {
+    font-size: 13px;
+    line-height: 1.9;
+}
+.research-run-method details {
+    margin-top: 20px;
+    border-top: 1px solid var(--line);
+    padding-top: 14px;
+}
+.research-run-method dl {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+}
+.research-run-method dt {
+    font-size: 11px;
+    color: var(--muted);
+}
+.research-run-method dd {
+    margin: 0;
+}
+.research-status {
+    font-size: 11px;
+    border-radius: 5px;
+    background: var(--accent-soft);
+    padding: 5px 8px;
+    white-space: nowrap;
+}
+.research-status.failed {
+    color: var(--negative);
+}
+.research-nav-card {
+    padding: 0 24px 22px;
+}
+.research-nav-card .op-section-title {
+    padding-left: 0;
+    padding-right: 0;
+}
+.research-nav-value {
+    text-align: right;
+}
+.research-nav-value strong {
+    display: block;
+    font:
+        25px/1.5 Georgia,
+        serif;
+}
+.research-nav-value small {
+    color: var(--muted);
+    font-size: 11px;
+}
+.research-nav-card > svg {
+    width: 100%;
+    max-height: 330px;
+    cursor: crosshair;
+}
+.research-nav-card svg text {
+    font:
+        10px Georgia,
+        serif;
+    fill: var(--muted);
+}
+.research-account-facts {
+    display: flex;
+    gap: 30px;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    margin: 10px 0 20px;
+}
+.research-account-facts > span {
+    font-size: 10px;
+    color: var(--muted);
+}
+.research-account-facts b {
+    color: var(--ink);
+    display: block;
+    font:
+        22px/1.7 Georgia,
+        serif;
+}
+.research-account-facts small {
+    font-size: 9px;
+}
+.research-events {
+    padding-bottom: 20px;
+}
+.research-event-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    padding: 15px 22px;
+    font-size: 12px;
+}
+.research-event-filters input:first-child {
+    min-width: 230px;
+}
+.research-event-filters label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.research-event-filters input[type="checkbox"] {
+    min-height: 18px;
+    accent-color: var(--accent);
+    min-width: 18px;
+}
+.research-events .op-table-scroll {
+    margin: 0 22px;
+}
+.research-pagination {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 18px 22px 0;
+    font-size: 11px;
+}
+.research-event-detail {
+    margin: 20px 22px 0;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--paper);
+}
+.research-event-detail > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 11px;
+    overflow-wrap: anywhere;
+}
+.research-event-detail pre {
+    overflow: auto;
+    max-height: 420px;
+    font-size: 11px;
+    line-height: 1.7;
+}
+.research-tools summary {
+    cursor: pointer;
+}
+.research-tools pre {
+    overflow: auto;
+    max-height: 420px;
+    font-size: 12px;
+    line-height: 1.7;
+}
+.research-tools code {
+    overflow-wrap: anywhere;
+}
+.research-events time {
+    white-space: nowrap;
+}
+@media (max-width: 600px) {
+    .research-run-choices {
+        grid-template-columns: 1fr;
+    }
+    .research-run-method {
+        padding: 18px;
+    }
+    .research-nav-card {
+        padding: 0 15px 18px;
+    }
+    .research-nav-value strong {
+        font-size: 20px;
+    }
+    .research-account-facts {
+        gap: 15px;
+        justify-content: space-between;
+    }
+    .research-event-filters {
+        padding: 12px 15px;
+    }
+    .research-event-filters input:first-child {
+        width: 100%;
+    }
+    .research-events .op-table-scroll {
+        margin: 0 15px;
+    }
+}

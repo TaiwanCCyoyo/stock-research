@@ -1,0 +1,64 @@
+{
+    "schema_version": "research-result.v1",
+    "study_id": "20261004-feature-discrimination-atlas",
+    "candidate_id": "daily-close-features-38-forward-63-126.v1",
+    "run_id": "atlas-v2",
+    "phase": "exploration",
+    "outcome": "not_evaluated",
+    "identities": {
+        "owner_contract": "params/atlas-v2.json#/inputs/contracts",
+        "metric_contract": "mission.md",
+        "execution_contract": "descriptive-no-trades.v1",
+        "data_snapshot": "fda-86245f2e223fc45c9f84afb0dcf77c1fff7ab22d0a1b0b4a4c8800972ce9327e",
+        "code": "params/atlas-v2.json#/inputs/code",
+        "runtime": "params/atlas-v2.json#/runtime"
+    },
+    "window": {
+        "start": "2019-01-02",
+        "end": "2026-08-14"
+    },
+    "metrics": {
+        "sample_rows": {
+            "value": 3588909,
+            "unit": "count"
+        },
+        "eligible_rows": {
+            "value": 2788023,
+            "unit": "count"
+        },
+        "feature_count": {
+            "value": 38,
+            "unit": "count"
+        },
+        "comparison_rows": {
+            "value": 7144,
+            "unit": "count"
+        },
+        "securities": {
+            "value": 1941,
+            "unit": "count"
+        }
+    },
+    "artifacts": [
+        "mission.md",
+        "data-contract.md",
+        "sweep_results.json",
+        "universe_build_report.json",
+        "params/atlas-v2.json",
+        "runs/registered/atlas-v2/manifest.json",
+        "runs/registered/atlas-v2/receipt.json"
+    ],
+    "limitations": [
+        "Descriptive explored cohort, not survivorship-complete or independent confirmation.",
+        "Current industry references are retrospective, not PIT historical classifications.",
+        "Forward close-price rises are not captured account profit or executable returns.",
+        "Overlapping daily observations and cross-stock dependence preclude IID inference.",
+        "Incomplete future paths remain unknown, not failed opportunities.",
+        "Permanent-factor research prices exclude cash dividends and accounting entitlements."
+    ],
+    "supersedes": [],
+    "organization_status": "completed_verified_descriptive_data",
+    "strategy_evaluation_status": "not_evaluated",
+    "same_machine_redundant_copy": "D:\\Project\\Stock\\tasks\\20261004-feature-discrimination-atlas\\datasets\\atlas-v2",
+    "same_machine_input_archive": "D:\\Project\\Stock\\tasks\\20261004-feature-discrimination-atlas\\datasets\\atlas-v2-inputs"
+}

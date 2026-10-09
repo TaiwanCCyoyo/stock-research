@@ -1,0 +1,67 @@
+{
+    "schema_version": "opportunity-publication-verification.v1",
+    "results": [
+        {
+            "version": "catalog-v1",
+            "restored": [
+                "classifications.json",
+                "gaps.json",
+                "groups.json",
+                "manifest.json",
+                "series-manifest.json",
+                "sources.json",
+                "taxonomy_nodes.json"
+            ],
+            "metadata_file_count": 7,
+            "tables_restored": false,
+            "prices_restored": false,
+            "fits_restored": false,
+            "local_only_artifacts_available": false,
+            "local_only_patterns": [
+                "chunks/**",
+                "inputs/**",
+                "../inputs/**",
+                "series/**",
+                "native/**",
+                "../runs/native/**"
+            ],
+            "recovery_gaps": [
+                "Publication mirrors restore root JSON metadata only; schemas and original relative references are unchanged.",
+                "Local physical inputs, aligned price/calendar series and dense native results are excluded; Git publication cannot recover them.",
+                "Full compact event tables remain local only; restoring root metadata does not restore chunks, prices or fits. A complete query requires separately retained hash-matching tables, series and calendar artifacts.",
+                "Historical identity and first availability gaps remain unknown; publication does not reconstruct unavailable data."
+            ]
+        },
+        {
+            "version": "catalog-v2",
+            "restored": [
+                "classifications.json",
+                "gaps.json",
+                "groups.json",
+                "manifest.json",
+                "series-manifest.json",
+                "sources.json",
+                "taxonomy_nodes.json"
+            ],
+            "metadata_file_count": 7,
+            "tables_restored": false,
+            "prices_restored": false,
+            "fits_restored": false,
+            "local_only_artifacts_available": false,
+            "local_only_patterns": [
+                "chunks/**",
+                "inputs/**",
+                "../inputs/**",
+                "series/**",
+                "native/**",
+                "../runs/native/**"
+            ],
+            "recovery_gaps": [
+                "Publication mirrors restore root JSON metadata only; schemas and original relative references are unchanged.",
+                "Local physical inputs, aligned price/calendar series and dense native results are excluded; Git publication cannot recover them.",
+                "Full compact event tables remain local only; restoring root metadata does not restore chunks, prices or fits. A complete query requires separately retained hash-matching tables, series and calendar artifacts.",
+                "Historical identity and first availability gaps remain unknown; publication does not reconstruct unavailable data."
+            ]
+        }
+    ]
+}

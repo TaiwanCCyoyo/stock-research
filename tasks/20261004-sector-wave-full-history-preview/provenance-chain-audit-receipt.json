@@ -1,0 +1,67 @@
+{
+    "compact_full_scan_repeated": false,
+    "frozen_source_commit": "37cb418d41f1a92231c998dc0fa1f2471ca76622",
+    "frozen_source_git_blobs": {
+        "adapter_sha256": {
+            "git_blob_sha256": "ac3876886714c3b38fba8cd97106ef4300c41c98d1b20861b17c769358de0756",
+            "matches_source_context": true,
+            "path": "research_core/opportunity_history_catalog.py"
+        },
+        "producer_sha256": {
+            "git_blob_sha256": "24d20d4c752eefc290f8124539d71726c9fbb59060cd7771161c901570dbe253",
+            "matches_source_context": true,
+            "path": "scripts/build_opportunity_history.py"
+        }
+    },
+    "identity": {
+        "adapter_revision": "aff9b1c452509c662a9738f9209d94133c7a2d7b38d9d479861746166872c5ab",
+        "catalog_revision": "gain-continuity-v2",
+        "declared_gain_policy": "exact_pinned_js_run.preview.v2",
+        "effective_gain_policy": "exact_pinned_js_run.preview.v2",
+        "policy_source": "manifest",
+        "rule": "wave-lab-exploratory.v1",
+        "schema": "opportunity-local-history-preview.v1",
+        "selector": "wave-start-representative.preview.v1",
+        "task": "20261004-sector-wave-full-history-preview"
+    },
+    "manifest_sha256": "c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140",
+    "method_analysis_recomputed": false,
+    "native_receipt_context_verified_count": 1970,
+    "original_full_row_receipt": {
+        "path": "verification-receipt-v3.json",
+        "sha256": "b07809c560acf955091a0cc3362858bd322dac2f29433d39882febe929ec2d8c"
+    },
+    "producer_context_evidence": {
+        "bound_input_hashes": {
+            "calendar_sha256": "bd2861014f9226196a7b9dc6aa9cc04531f07205dd06090ebb8716deee09a236",
+            "config_sha256": "0405e3c5a438ffecfc9202d06dc205bc415daffebe5f87d73c5913d517177de6",
+            "input_receipt_sha256": "584add41770ad6cd007e0356badc56566ee1da28505473161b95c5a566f38c27",
+            "series_manifest_sha256": "92f778dd7e52a63263b1997a5175cbc8182c964f2b7e7270525622ea8fa8cd21"
+        },
+        "config_hash_basis": "original_params_file_bytes_and_parsed_object_equality",
+        "config_path": "../params.json",
+        "producer_adapter_code_policy": "original code bytes not read; source SHA shape and per-native receipt context consistency only",
+        "producer_identity": {
+            "adapter_sha256": "ac3876886714c3b38fba8cd97106ef4300c41c98d1b20861b17c769358de0756",
+            "calendar_sha256": "bd2861014f9226196a7b9dc6aa9cc04531f07205dd06090ebb8716deee09a236",
+            "code_identity": {
+                "method": "wave-lab-exploratory.v1",
+                "source": {
+                    "analysis": "550c277df28c7ac0b2d4deb69b67eb137b500c0f8b2c80c78880fda79aef1a25",
+                    "types": "9ee6c25365f2acbaf889151fa29727457e70319277aa60cca64bcadd38a675cb"
+                },
+                "wrapper": {
+                    "sha256": "28269b769fa8d150e7c4bf86459d06d4a41c33bc8b453384e2d6b8bae9bc9b09"
+                }
+            },
+            "config_sha256": "0405e3c5a438ffecfc9202d06dc205bc415daffebe5f87d73c5913d517177de6",
+            "input_receipt_sha256": "584add41770ad6cd007e0356badc56566ee1da28505473161b95c5a566f38c27",
+            "producer_sha256": "24d20d4c752eefc290f8124539d71726c9fbb59060cd7771161c901570dbe253",
+            "series_manifest_sha256": "92f778dd7e52a63263b1997a5175cbc8182c964f2b7e7270525622ea8fa8cd21"
+        },
+        "schema_version": "opportunity-producer-context-verification.v1"
+    },
+    "query_series_identity_verified_count": 2075,
+    "schema_version": "opportunity-provenance-chain-audit.v1",
+    "status": "verified"
+}

@@ -1,0 +1,32 @@
+[
+    {
+        "universe": "semiconductor_liquid20",
+        "label": "半導體",
+        "return_pct": 543.1987491489198,
+        "max_drawdown_pct": -45.77893586539272
+    },
+    {
+        "universe": "computer_peripherals_liquid20",
+        "label": "電腦週邊",
+        "return_pct": 331.1492800235814,
+        "max_drawdown_pct": -29.16037836702078
+    },
+    {
+        "universe": "electronic_parts_liquid20",
+        "label": "電子零組件",
+        "return_pct": 338.17128166752417,
+        "max_drawdown_pct": -34.66482515166959
+    },
+    {
+        "universe": "financial_liquid20",
+        "label": "金融保險",
+        "return_pct": 35.55398128076588,
+        "max_drawdown_pct": -28.575463948155793
+    },
+    {
+        "universe": "shipping_liquid20",
+        "label": "航運",
+        "return_pct": 155.79717848302215,
+        "max_drawdown_pct": -62.77507684595023
+    }
+]

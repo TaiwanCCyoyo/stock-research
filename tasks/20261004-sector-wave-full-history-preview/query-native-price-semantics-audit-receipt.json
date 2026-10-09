@@ -1,0 +1,54 @@
+{
+    "all_nine_tables_reconstruction_repeated": false,
+    "calendar_date_count": 4105,
+    "comparison_basis": "full_canonical_rows_with_multiplicity_for_selected_security_and_all_representative_intervals",
+    "eligible_exact_native_runs_required_and_verified_count": 1970,
+    "excluded_frozen_python_security_rows_reconstructed_count": 105,
+    "identity": {
+        "adapter_revision": "aff9b1c452509c662a9738f9209d94133c7a2d7b38d9d479861746166872c5ab",
+        "catalog_revision": "gain-continuity-v2",
+        "declared_gain_policy": "exact_pinned_js_run.preview.v2",
+        "effective_gain_policy": "exact_pinned_js_run.preview.v2",
+        "policy_source": "manifest",
+        "rule": "wave-lab-exploratory.v1",
+        "schema": "opportunity-local-history-preview.v1",
+        "selector": "wave-start-representative.preview.v1",
+        "task": "20261004-sector-wave-full-history-preview"
+    },
+    "launch_saved_segment_price_fields_verified": true,
+    "manifest_sha256": "c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140",
+    "method_analysis_recomputed": false,
+    "native_receipt_identity_context_verified_count": 1970,
+    "price_noise_verified": true,
+    "prior_receipts": [
+        {
+            "path": "verification-receipt-v3.json",
+            "sha256": "b07809c560acf955091a0cc3362858bd322dac2f29433d39882febe929ec2d8c"
+        },
+        {
+            "path": "query-native-contract-audit-receipt.json",
+            "sha256": "1b02cb7926062c4be926a1bda5da50233e211bd48e9cee70725baf28d5fef42c"
+        },
+        {
+            "path": "query-reconstruction-audit-receipt.json",
+            "sha256": "77874323e18e84c5a7f8eec4596cb7e8b0b61fbc5f45874338ea390197d7d667"
+        },
+        {
+            "path": "query-native-semantics-audit-receipt.json",
+            "sha256": "f0f053c04aed6b5ef75e618fefa6363383547c24c3fe396ce944a425a4506b62"
+        },
+        {
+            "path": "pinned-pure-wave-launch-audit-receipt.json",
+            "sha256": "d63f7bc2fe29bff5edd590b954c33b020f71a1df96609d60b98c020fed3aefc3"
+        }
+    ],
+    "query_security_full_rows_reconstructed_count": 2075,
+    "reconstruction_adapter_sha256": "aff9b1c452509c662a9738f9209d94133c7a2d7b38d9d479861746166872c5ab",
+    "representative_interval_full_rows_reconstructed_count": 7875,
+    "run_recomputation_basis": "original_pinned_buildLabCase_sourceRunIndices_only",
+    "schema_version": "opportunity-query-native-price-semantics-audit.v1",
+    "shared_native_semantics_verified_count": 1970,
+    "status": "verified",
+    "wave_full_source_directional_detection_verified": true,
+    "wave_single_exact_run_verified": true
+}

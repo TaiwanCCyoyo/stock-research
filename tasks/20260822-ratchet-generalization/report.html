@@ -1,0 +1,1071 @@
+<title>棘輪能不能移植</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+/>
+
+<style>
+    :root {
+        --ground: #f6f7f9;
+        --surface: #ffffff;
+        --surface-sunk: #eef0f4;
+        --ink: #14171c;
+        --ink-soft: #4a515c;
+        --ink-faint: #79818f;
+        --rule: #dde1e8;
+        --rule-strong: #c3c9d4;
+        --accent: #2f4b8f;
+        --accent-soft: #e6ebf7;
+        --wide: #9c2f3d;
+        --wide-soft: #f7e8ea;
+        --tight: #176b63;
+        --tight-soft: #e2f1ef;
+        --serif: "Noto Serif TC", Georgia, "Songti TC", serif;
+        --sans: "Noto Sans TC", "Helvetica Neue", Arial, sans-serif;
+        --mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+            --ground: #101318;
+            --surface: #171b22;
+            --surface-sunk: #1e232b;
+            --ink: #e8ebf0;
+            --ink-soft: #a9b1be;
+            --ink-faint: #78818f;
+            --rule: #2a303a;
+            --rule-strong: #3b434f;
+            --accent: #8aa4e0;
+            --accent-soft: #1c2437;
+            --wide: #e08d97;
+            --wide-soft: #2d1d21;
+            --tight: #6fc9be;
+            --tight-soft: #142826;
+        }
+    }
+
+    :root[data-theme="dark"] {
+        --ground: #101318;
+        --surface: #171b22;
+        --surface-sunk: #1e232b;
+        --ink: #e8ebf0;
+        --ink-soft: #a9b1be;
+        --ink-faint: #78818f;
+        --rule: #2a303a;
+        --rule-strong: #3b434f;
+        --accent: #8aa4e0;
+        --accent-soft: #1c2437;
+        --wide: #e08d97;
+        --wide-soft: #2d1d21;
+        --tight: #6fc9be;
+        --tight-soft: #142826;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        background: var(--ground);
+        color: var(--ink);
+        font-family: var(--sans);
+        font-size: 16px;
+        line-height: 1.85;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    .wrap {
+        max-width: 51rem;
+        margin: 0 auto;
+        padding: clamp(2rem, 5vw, 4.5rem) clamp(1.1rem, 4vw, 2.5rem) 6rem;
+    }
+
+    /* ---- masthead ---- */
+    .masthead {
+        border-bottom: 2px solid var(--ink);
+        padding-bottom: 1.5rem;
+        margin-bottom: 2.5rem;
+    }
+    .kicker {
+        font-family: var(--mono);
+        font-size: 0.74rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+        margin: 0 0 0.9rem;
+    }
+    h1 {
+        font-family: var(--serif);
+        font-weight: 700;
+        font-size: clamp(1.85rem, 5vw, 2.9rem);
+        line-height: 1.25;
+        text-wrap: balance;
+        margin: 0 0 1rem;
+        letter-spacing: -0.01em;
+    }
+    .standfirst {
+        font-size: 1.06rem;
+        color: var(--ink-soft);
+        margin: 0;
+        max-width: 40rem;
+    }
+    .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem 1.6rem;
+        font-family: var(--mono);
+        font-size: 0.78rem;
+        color: var(--ink-faint);
+        margin-top: 1.4rem;
+    }
+
+    /* ---- verdict ---- */
+    .verdict {
+        background: var(--surface);
+        border: 1px solid var(--rule-strong);
+        border-left: 4px solid var(--accent);
+        padding: 1.5rem 1.6rem;
+        margin: 0 0 3rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+    }
+    .verdict .label {
+        font-family: var(--mono);
+        font-size: 0.72rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--accent);
+    }
+    .verdict p {
+        margin: 0;
+    }
+    .verdict .lede {
+        font-family: var(--serif);
+        font-size: 1.24rem;
+        line-height: 1.6;
+        font-weight: 600;
+    }
+
+    /* ---- sections ---- */
+    section {
+        margin: 0 0 3.25rem;
+    }
+    h2 {
+        font-family: var(--serif);
+        font-weight: 700;
+        font-size: 1.42rem;
+        line-height: 1.4;
+        text-wrap: balance;
+        margin: 0 0 1.1rem;
+        padding-top: 1.4rem;
+        border-top: 1px solid var(--rule);
+        display: flex;
+        gap: 0.85rem;
+        align-items: baseline;
+    }
+    h2 .num {
+        font-family: var(--mono);
+        font-size: 0.82rem;
+        font-weight: 500;
+        color: var(--ink-faint);
+        flex: none;
+        padding-top: 0.2rem;
+    }
+    h3 {
+        font-family: var(--sans);
+        font-weight: 700;
+        font-size: 1.02rem;
+        margin: 2rem 0 0.7rem;
+        color: var(--ink);
+    }
+    p {
+        margin: 0 0 1.05rem;
+    }
+    strong {
+        font-weight: 700;
+    }
+    code {
+        font-family: var(--mono);
+        font-size: 0.875em;
+        background: var(--surface-sunk);
+        padding: 0.12em 0.38em;
+        border-radius: 2px;
+    }
+
+    /* ---- tables ---- */
+    .scroll {
+        overflow-x: auto;
+        margin: 0 0 1.4rem;
+        border: 1px solid var(--rule);
+        background: var(--surface);
+    }
+    table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 0.875rem;
+    }
+    th,
+    td {
+        padding: 0.58rem 0.8rem;
+        text-align: left;
+        border-bottom: 1px solid var(--rule);
+        white-space: nowrap;
+    }
+    thead th {
+        font-family: var(--mono);
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+        background: var(--surface-sunk);
+        border-bottom: 1px solid var(--rule-strong);
+    }
+    td.n,
+    th.n {
+        text-align: right;
+        font-family: var(--mono);
+        font-variant-numeric: tabular-nums;
+    }
+    tbody tr:last-child td {
+        border-bottom: none;
+    }
+    tr.pooled td {
+        background: var(--surface-sunk);
+        font-weight: 700;
+    }
+    .wide-v {
+        color: var(--wide);
+        font-weight: 600;
+    }
+    .tight-v {
+        color: var(--tight);
+        font-weight: 600;
+    }
+
+    /* ---- 3x3 matrix figure ---- */
+    figure {
+        margin: 0 0 1.6rem;
+    }
+    figcaption {
+        font-size: 0.82rem;
+        color: var(--ink-faint);
+        margin-top: 0.7rem;
+        line-height: 1.6;
+    }
+    .matrix {
+        display: grid;
+        grid-template-columns: minmax(6.5rem, 0.9fr) repeat(3, 1fr);
+        gap: 1px;
+        background: var(--rule);
+        border: 1px solid var(--rule);
+    }
+    .matrix > div {
+        background: var(--surface);
+        padding: 0.7rem 0.75rem;
+    }
+    .matrix .hd {
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+        background: var(--surface-sunk);
+        line-height: 1.5;
+    }
+    .matrix .rowhd {
+        font-weight: 700;
+        font-size: 0.84rem;
+        background: var(--surface-sunk);
+        line-height: 1.5;
+    }
+    .matrix .cell {
+        display: flex;
+        flex-direction: column;
+        gap: 0.18rem;
+    }
+    .matrix .val {
+        font-family: var(--mono);
+        font-variant-numeric: tabular-nums;
+        font-size: 1.12rem;
+        font-weight: 600;
+    }
+    .matrix .sub {
+        font-family: var(--mono);
+        font-size: 0.68rem;
+        color: var(--ink-faint);
+    }
+    .matrix .best {
+        background: var(--accent-soft);
+    }
+
+    /* ---- chain figure ---- */
+    .chain {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+
+    /* ---- callout ---- */
+    .note {
+        background: var(--accent-soft);
+        border: 1px solid var(--rule);
+        padding: 1.1rem 1.25rem;
+        margin: 0 0 1.4rem;
+    }
+    .note p:last-child {
+        margin-bottom: 0;
+    }
+    .note .tag {
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--accent);
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+    .correction {
+        background: var(--wide-soft);
+    }
+    .correction .tag {
+        color: var(--wide);
+    }
+
+    ol,
+    ul {
+        margin: 0 0 1.05rem;
+        padding-left: 1.3rem;
+    }
+    li {
+        margin-bottom: 0.55rem;
+    }
+
+    pre {
+        font-family: var(--mono);
+        font-size: 0.8rem;
+        line-height: 1.7;
+        background: var(--surface-sunk);
+        border: 1px solid var(--rule);
+        padding: 0.95rem 1.1rem;
+        overflow-x: auto;
+        margin: 0 0 1.4rem;
+    }
+
+    footer {
+        border-top: 1px solid var(--rule);
+        margin-top: 3rem;
+        padding-top: 1.5rem;
+        font-size: 0.84rem;
+        color: var(--ink-faint);
+    }
+
+    @media (max-width: 34rem) {
+        .matrix {
+            grid-template-columns: 1fr;
+        }
+        .matrix .hd {
+            display: none;
+        }
+    }
+</style>
+
+<div class="wrap">
+    <header class="masthead">
+        <p class="kicker">K 線策略研究 · 第五份</p>
+        <h1>棘輪能不能移植？</h1>
+        <p class="standfirst">
+            把 Darvas 的箱底棘輪出場接到另外兩個進場上，看它還是不是同一個東西。
+            3 個進場 × 3 個出場，180 格回測，規則在跑之前寫定。
+        </p>
+        <div class="meta">
+            <span>2026-08-22</span>
+            <span>tasks/20260822-ratchet-generalization</span>
+            <span>180 格 · 61 分鐘</span>
+        </div>
+    </header>
+
+    <div class="verdict">
+        <span class="label">結論</span>
+        <p class="lede">
+            箱底棘輪不是一個可以到處鎖上去的出場元件 ——
+            因為它根本不是一個固定行為的東西。
+        </p>
+        <p>
+            它的鬆緊由「進場點離最近一個確認箱體有多遠」決定。同一段程式碼接在創新高的進場上是寬停損、
+            接在回檔的進場上是緊停損：在 S1／S3 上比吊燈棘輪<strong
+                >多抱 9–18 天</strong
+            >， 在 S2 上<strong>少抱 12 天</strong
+            >。順帶推翻了兩個先前的風險說法。
+        </p>
+    </div>
+
+    <section>
+        <h2><span class="num">§1</span>前提：重現錨點 30 格全部歸零</h2>
+        <p>
+            網格裡有兩格是把已經量過的策略原封不動再跑一次。它們必須完全重現，否則底下每個數字都不必看。
+        </p>
+        <div class="scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th>錨點</th>
+                        <th>對照</th>
+                        <th class="n">格數</th>
+                        <th class="n">最大相對差</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>s1_atr_channel</code></td>
+                        <td>20260821 的 <code>atr_baseline</code></td>
+                        <td class="n">20</td>
+                        <td class="n tight-v">0.0000%</td>
+                    </tr>
+                    <tr>
+                        <td><code>s2_chandelier</code></td>
+                        <td>
+                            20260820 的
+                            <code>prior_refresh/kline_reversal</code>
+                        </td>
+                        <td class="n">10</td>
+                        <td class="n tight-v">0.0000%</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p>
+            這同時證明三件事：harness 沒接錯、<strong
+                >價格快取自 2026-08-21 起沒有變動</strong
+            >
+            （<code>run_daily</code>
+            每晚跑，所以這不是廢話）、以及組合器沒有動到被搬過來的區塊。
+        </p>
+        <div class="note">
+            <span class="tag">閘門</span>
+            <p>
+                <code>verify_isolation.py</code> 的 23 項檢查在 sweep
+                前後各跑一次全過。第 1 項是把九支 arm
+                <strong>在記憶體裡重新組一次跟磁碟比對</strong> ——
+                沒有這一項，「兩支 arm 的 AST 相同」
+                只證明有人用同樣方式改了兩支。閘門實測過會咬人：手改一支
+                arm、或把 <code>trend_ma</code> 從 60 改成 50，都會被抓到。
+            </p>
+        </div>
+    </section>
+
+    <section>
+        <h2><span class="num">§2</span>報酬：C 贏，但沒贏到可以稱為「元件」</h2>
+        <figure>
+            <div class="matrix">
+                <div class="hd">進場 ＼ 出場</div>
+                <div class="hd">A 固定ATR+通道<br />不棘輪</div>
+                <div class="hd">B 吊燈棘輪<br />追離波峰的距離</div>
+                <div class="hd">C 箱底棘輪<br />追確認的結構</div>
+
+                <div class="rowhd">
+                    S1 唐奇安<br /><span class="sub">20 日收盤新高</span>
+                </div>
+                <div class="cell">
+                    <span class="val">3.73</span
+                    ><span class="sub">1,087 進場</span>
+                </div>
+                <div class="cell">
+                    <span class="val">2.47</span
+                    ><span class="sub">1,201 進場</span>
+                </div>
+                <div class="cell best">
+                    <span class="val">5.76</span
+                    ><span class="sub">C−B +3.29</span>
+                </div>
+
+                <div class="rowhd">
+                    S2 K線反轉<br /><span class="sub">回檔買點</span>
+                </div>
+                <div class="cell">
+                    <span class="val">2.70</span
+                    ><span class="sub">473 進場</span>
+                </div>
+                <div class="cell">
+                    <span class="val">3.22</span
+                    ><span class="sub">450 進場</span>
+                </div>
+                <div class="cell best">
+                    <span class="val">4.86</span
+                    ><span class="sub">C−B +1.64</span>
+                </div>
+
+                <div class="rowhd">
+                    S3 動能<br /><span class="sub">新高＋爆量</span>
+                </div>
+                <div class="cell">
+                    <span class="val">3.56</span
+                    ><span class="sub">673 進場</span>
+                </div>
+                <div class="cell">
+                    <span class="val">1.64</span
+                    ><span class="sub">716 進場</span>
+                </div>
+                <div class="cell best">
+                    <span class="val">6.31</span
+                    ><span class="sub">C−B +4.67</span>
+                </div>
+            </div>
+            <figcaption>
+                驗證期每次進場平均損益，佔一個部位名目的 %。五籃合併 ——
+                <code>unconstrained</code>
+                沒有現金閘門、部位大小固定，所以加總是精確的。
+                三臂進場數不同是預期內的：出場改變部位何時關閉，而進場被
+                <code>position &gt; 0</code> 擋著。
+            </figcaption>
+        </figure>
+
+        <p>
+            三個進場合併起來 C 都贏。但預先登記的規則 5
+            要的是<strong>逐籃</strong>穩定：
+        </p>
+        <div class="scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th>進場</th>
+                        <th class="n">驗證期 C 勝 B</th>
+                        <th class="n">訓練期</th>
+                        <th>規則 6 方向</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>S1 唐奇安</td>
+                        <td class="n">4/5</td>
+                        <td class="n">5/5</td>
+                        <td class="tight-v">一致</td>
+                    </tr>
+                    <tr>
+                        <td>S2 K線反轉</td>
+                        <td class="n">3/5</td>
+                        <td class="n">2/5</td>
+                        <td class="wide-v">不一致 → 視為非發現</td>
+                    </tr>
+                    <tr>
+                        <td>S3 動能</td>
+                        <td class="n">5/5</td>
+                        <td class="n">4/5</td>
+                        <td class="tight-v">一致</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p>
+            <strong>規則 5 判定：不可移植。</strong> 需要三個進場都 ≥4/5
+            且同向，S2 只有 3/5。 而且 S2 的合併 +1.64
+            幾乎全部來自半導體一籃（+9.95），另外三籃是負的。
+            <strong>逐籃規則存在的理由就是擋這種數字</strong> ——
+            合併值被單一籃子拉起來， 看起來像通則，其實不是。
+        </p>
+        <p>
+            誠實的說法是：<strong
+                >在 S1 和 S3 上成立，在 S2 上未能成立。</strong
+            >
+        </p>
+
+        <h3>順帶一提：吊燈棘輪是三個出場裡最差的</h3>
+        <p>
+            B 在 S1（2.47 對 A 的 3.73）和 S3（1.64 對
+            3.56）都輸給連棘輪都不是的 A。 「用 ATR
+            追波峰」這個最直覺的移動停損，在兩個突破型進場上表現最差。
+        </p>
+    </section>
+
+    <section>
+        <h2><span class="num">§3</span>風險：沒有任何風險主張能通過規則 3</h2>
+        <div class="scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th>進場</th>
+                        <th class="n">交集部位</th>
+                        <th class="n">B MAE p90</th>
+                        <th class="n">C MAE p90</th>
+                        <th class="n">B 持有中位</th>
+                        <th class="n">C 持有中位</th>
+                        <th>C 較痛？</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>S1 唐奇安</td>
+                        <td class="n">850</td>
+                        <td class="n">−9.8</td>
+                        <td class="n wide-v">−11.3</td>
+                        <td class="n">18</td>
+                        <td class="n wide-v">27</td>
+                        <td class="wide-v">是 5/5</td>
+                    </tr>
+                    <tr>
+                        <td>S2 K線反轉</td>
+                        <td class="n">396</td>
+                        <td class="n wide-v">−11.9</td>
+                        <td class="n">−9.8</td>
+                        <td class="n wide-v">26</td>
+                        <td class="n">14</td>
+                        <td class="tight-v">否 1/5</td>
+                    </tr>
+                    <tr>
+                        <td>S3 動能</td>
+                        <td class="n">588</td>
+                        <td class="n">−9.8</td>
+                        <td class="n wide-v">−12.7</td>
+                        <td class="n">17</td>
+                        <td class="n wide-v">35</td>
+                        <td class="wide-v">是 5/5</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p>
+            看起來像是「棘輪在 S1／S3 更痛、在 S2 更安全」。<strong
+                >不是。</strong
+            >
+            規則 3 早就寫明：同一個進場下，抱越久的那一臂 MAE 天然越差，所以 MAE
+            差必須跟持有天數差併讀。
+        </p>
+        <div class="note">
+            <span class="tag">規則 3 檢定</span>
+            <p>
+                <strong>MAE 差與持有天數差的 Pearson 相關 = −0.851</strong>（r²
+                ≈ 0.72）， 30 格中有
+                <strong>29 格</strong>「抱更久」與「更痛」方向一致。唯一反例是
+                S2 金融驗證期。
+            </p>
+            <p>
+                但這 30 格<strong>不是 30 個獨立觀察</strong> —— 它是 3 個進場 ×
+                5 籃 × 2 視窗， 而符號是在進場層級決定的（S1／S3 持有差為正、S2
+                為負）。真正的樣本是 3 個模式各重複十次。
+                所以撐得住的說法是「方向極為穩定」，不是「統計上高度顯著」。
+            </p>
+        </div>
+        <p>
+            即使如此，方向本身已經足夠：這兩個棘輪之間的 MAE 差異，<strong
+                >主要由「在市場裡待多久」驅動， 不是停損品質的差異</strong
+            >。依規則 3，本研究不對這兩個出場提出任何風險主張。
+        </p>
+    </section>
+
+    <section>
+        <h2><span class="num">§4</span>這同時推翻了兩個先前的風險說法</h2>
+
+        <h3>20260821 的「箱底棘輪每部位更痛 10/10」</h3>
+        <p>
+            規則 4 要求把那個結論拿回來用交集規則重量。結果分兩半：
+            <strong>交集修正它撐住了</strong>（交集 164–358
+            個部位，十格全部仍是棘輪較痛），
+            <strong>但持有天數檢定它沒撐住</strong> ——
+            同樣那十格，棘輪的持有中位數每一格都比基線長 4 到 11 天。
+        </p>
+        <div class="note correction">
+            <span class="tag">修正</span>
+            <p>
+                <code>20260821</code> 應該說的是 ——
+                <strong
+                    >箱底棘輪不會讓部位變得更危險，它是讓你在部位裡待更久。</strong
+                >
+                「更痛」是待更久的必然結果，不是停損機制的缺陷。
+            </p>
+        </div>
+
+        <h3>20260820 的 Darvas 風險說法</h3>
+        <p>
+            該報告原本說 Darvas 回撤控制最好，2026-08-22
+            已修正為每部位最痛（驗證期 MAE p90 −16.0%）。
+            本研究補上機制解釋：Darvas
+            的箱體出場接在<strong>箱體突破</strong>進場上，停損離進場點很遠，
+            所以持有中位數 51 天，是六個原型裡最長的。那個 −16.0%
+            同樣主要是持有期的函數。
+        </p>
+        <p>三份研究、三個「風險」結論，追根究柢是同一件事被量了三次。</p>
+    </section>
+
+    <section>
+        <h2><span class="num">§5</span>真正的發現：棘輪的鬆緊由進場決定</h2>
+        <figure>
+            <svg
+                class="chain"
+                viewBox="0 0 720 168"
+                role="img"
+                aria-label="停損寬度、持有天數、MAE 深度三者的因果鏈，S1 與 S3 為寬停損長持有，S2 為緊停損短持有"
+            >
+                <defs>
+                    <!-- One marker per chain colour: a marker's `currentColor` resolves against
+               its own position in <defs>, not against the line that references it. -->
+                    <marker
+                        id="ar-wide"
+                        viewBox="0 0 10 10"
+                        refX="9"
+                        refY="5"
+                        markerWidth="7"
+                        markerHeight="7"
+                        orient="auto"
+                    >
+                        <path d="M0,1 L9,5 L0,9 z" fill="var(--wide)" />
+                    </marker>
+                    <marker
+                        id="ar-tight"
+                        viewBox="0 0 10 10"
+                        refX="9"
+                        refY="5"
+                        markerWidth="7"
+                        markerHeight="7"
+                        orient="auto"
+                    >
+                        <path d="M0,1 L9,5 L0,9 z" fill="var(--tight)" />
+                    </marker>
+                </defs>
+                <g
+                    fill="currentColor"
+                    font-family="IBM Plex Mono, monospace"
+                    font-size="12"
+                >
+                    <text x="8" y="18" opacity=".6">進場位置</text>
+                    <text x="196" y="18" opacity=".6">停損寬度</text>
+                    <text x="386" y="18" opacity=".6">持有天數</text>
+                    <text x="566" y="18" opacity=".6">MAE 深度</text>
+                </g>
+
+                <!-- wide chain: S1 / S3 -->
+                <g transform="translate(0,44)">
+                    <rect
+                        x="4"
+                        y="0"
+                        width="160"
+                        height="42"
+                        rx="2"
+                        fill="var(--wide-soft)"
+                        stroke="var(--wide)"
+                        stroke-width="1"
+                    />
+                    <text
+                        x="18"
+                        y="19"
+                        font-family="Noto Sans TC, sans-serif"
+                        font-size="13"
+                        font-weight="700"
+                        fill="var(--wide)"
+                    >
+                        S1 ／ S3 創新高
+                    </text>
+                    <text
+                        x="18"
+                        y="35"
+                        font-family="IBM Plex Mono, monospace"
+                        font-size="11"
+                        fill="var(--ink-soft)"
+                    >
+                        箱底遠在下方
+                    </text>
+                    <line
+                        x1="170"
+                        y1="21"
+                        x2="190"
+                        y2="21"
+                        stroke="var(--wide)"
+                        stroke-width="1.5"
+                        marker-end="url(#ar-wide)"
+                    />
+
+                    <rect
+                        x="196"
+                        y="0"
+                        width="152"
+                        height="42"
+                        rx="2"
+                        fill="var(--surface)"
+                        stroke="var(--rule-strong)"
+                    />
+                    <text
+                        x="210"
+                        y="26"
+                        font-family="IBM Plex Mono, monospace"
+                        font-size="13"
+                        fill="var(--wide)"
+                    >
+                        寬 1.4 ／ 3.5 pp
+                    </text>
+                    <line
+                        x1="354"
+                        y1="21"
+                        x2="374"
+                        y2="21"
+                        stroke="var(--wide)"
+                        stroke-width="1.5"
+                        marker-end="url(#ar-wide)"
+                    />
+
+                    <rect
+                        x="380"
+                        y="0"
+                        width="152"
+                        height="42"
+                        rx="2"
+                        fill="var(--surface)"
+                        stroke="var(--rule-strong)"
+                    />
+                    <text
+                        x="394"
+                        y="26"
+                        font-family="IBM Plex Mono, monospace"
+                        font-size="13"
+                        fill="var(--wide)"
+                    >
+                        ＋9 ／ ＋18 天
+                    </text>
+                    <line
+                        x1="538"
+                        y1="21"
+                        x2="558"
+                        y2="21"
+                        stroke="var(--wide)"
+                        stroke-width="1.5"
+                        marker-end="url(#ar-wide)"
+                    />
+
+                    <rect
+                        x="564"
+                        y="0"
+                        width="150"
+                        height="42"
+                        rx="2"
+                        fill="var(--surface)"
+                        stroke="var(--rule-strong)"
+                    />
+                    <text
+                        x="578"
+                        y="26"
+                        font-family="IBM Plex Mono, monospace"
+                        font-size="13"
+                        fill="var(--wide)"
+                    >
+                        更深
+                    </text>
+                </g>
+
+                <!-- tight chain: S2 -->
+                <g transform="translate(0,106)">
+                    <rect
+                        x="4"
+                        y="0"
+                        width="160"
+                        height="42"
+                        rx="2"
+                        fill="var(--tight-soft)"
+                        stroke="var(--tight)"
+                        stroke-width="1"
+                    />
+                    <text
+                        x="18"
+                        y="19"
+                        font-family="Noto Sans TC, sans-serif"
+                        font-size="13"
+                        font-weight="700"
+                        fill="var(--tight)"
+                    >
+                        S2 回檔進場
+                    </text>
+                    <text
+                        x="18"
+                        y="35"
+                        font-family="IBM Plex Mono, monospace"
+                        font-size="11"
+                        fill="var(--ink-soft)"
+                    >
+                        箱底就在腳邊
+                    </text>
+                    <line
+                        x1="170"
+                        y1="21"
+                        x2="190"
+                        y2="21"
+                        stroke="var(--tight)"
+                        stroke-width="1.5"
+                        marker-end="url(#ar-tight)"
+                    />
+
+                    <rect
+                        x="196"
+                        y="0"
+                        width="152"
+                        height="42"
+                        rx="2"
+                        fill="var(--surface)"
+                        stroke="var(--rule-strong)"
+                    />
+                    <text
+                        x="210"
+                        y="26"
+                        font-family="IBM Plex Mono, monospace"
+                        font-size="13"
+                        fill="var(--tight)"
+                    >
+                        緊 2.2 pp
+                    </text>
+                    <line
+                        x1="354"
+                        y1="21"
+                        x2="374"
+                        y2="21"
+                        stroke="var(--tight)"
+                        stroke-width="1.5"
+                        marker-end="url(#ar-tight)"
+                    />
+
+                    <rect
+                        x="380"
+                        y="0"
+                        width="152"
+                        height="42"
+                        rx="2"
+                        fill="var(--surface)"
+                        stroke="var(--rule-strong)"
+                    />
+                    <text
+                        x="394"
+                        y="26"
+                        font-family="IBM Plex Mono, monospace"
+                        font-size="13"
+                        fill="var(--tight)"
+                    >
+                        −12 天
+                    </text>
+                    <line
+                        x1="538"
+                        y1="21"
+                        x2="558"
+                        y2="21"
+                        stroke="var(--tight)"
+                        stroke-width="1.5"
+                        marker-end="url(#ar-tight)"
+                    />
+
+                    <rect
+                        x="564"
+                        y="0"
+                        width="150"
+                        height="42"
+                        rx="2"
+                        fill="var(--surface)"
+                        stroke="var(--rule-strong)"
+                    />
+                    <text
+                        x="578"
+                        y="26"
+                        font-family="IBM Plex Mono, monospace"
+                        font-size="13"
+                        fill="var(--tight)"
+                    >
+                        更淺
+                    </text>
+                </g>
+            </svg>
+            <figcaption>
+                停損寬度用「虧損部位的 MAE p90」量 ——
+                虧損部位在停損被打到時出場，所以那個數字
+                約等於停損實際有多寬。只取<strong>兩臂都虧損</strong>的部位（S1
+                452、S3 304、S2 226）， 因為兩臂各自的虧損部位不是同一批（C
+                的虧損數其實比 B 多），
+                拿不同子集相比會混入「哪些部位變成虧損」的差異 —— 那正是規則 2
+                的失效模式降一層重演。 符號與大小順序在共同集合上都撐住。
+            </figcaption>
+        </figure>
+
+        <p>
+            S1 和 S3
+            都是在創新高時進場，那時最後一個確認箱體的箱底早就被遠遠拋在後面，停損自然寬鬆；
+            S2 是回檔進場，價格才剛跌回箱體區間，箱底就在腳邊。
+        </p>
+        <p>
+            <strong
+                >所以「結構性停損」不是一個固定鬆緊的裝置。它的鬆緊等於「進場點離最近的確認結構有多遠」。</strong
+            >
+            這正是它不能被描述成一個行為固定的可移植元件的原因 —— 也是把 B↔C
+            訂為唯一單變數對照時
+            沒有預料到的答案：兩臂確實只差一個變數，但那個變數的效果本身依賴進場。
+        </p>
+        <p>
+            值得注意的是，S2 上的箱底棘輪是<strong
+                >更高報酬＋更短持有＋更低 MAE</strong
+            >
+            —— 三者同向改善，
+            不是取捨，是全網格裡唯一一個沒有代價的組合。但它沒通過規則 6
+            的方向一致性 （訓練期 2/5、驗證期
+            3/5），所以本研究<strong>不宣稱</strong>它成立，只把它標為值得單獨追的線索。
+        </p>
+    </section>
+
+    <section>
+        <h2><span class="num">§6</span>帳戶層級：為什麼它沒有否決權</h2>
+        <p>
+            驗證期 <code>shared</code> 下 C 勝 B 的籃數是 S1 2/5、S2 2/5、S3 2/5
+            —— 與 §2 的 4/5、3/5、5/5 方向相反，而且三個進場一致地退到 2/5。
+        </p>
+        <p>
+            這個矛盾本身就是保留規則 7 卻不給它否決權的理由。<code>shared</code>
+            有現金閘門， 帳戶同時能持有幾個部位會影響結果，而 C 的進場數在 S1
+            上比 B 少 19%（973 對 1,201）、 在 S3 上少 13%（622 對 716）——
+            抱得久就是同時能開的部位少。
+            <strong
+                ><code>shared</code>
+                在這裡量到的是部位佔用，不是停損品質。</strong
+            >
+        </p>
+    </section>
+
+    <section>
+        <h2><span class="num">§7</span>下一步</h2>
+        <ol>
+            <li>
+                <strong>單獨追 S2 × 箱底棘輪。</strong>
+                全網格唯一三者同向改善的組合，但樣本只有 473 個進場、
+                且方向不一致。擴大樣本（放棄等量籃、改用全部通過 1750 根 K
+                棒濾網的 512 檔）是先前就排好的 第 2 順位，這裡有了具體理由。
+            </li>
+            <li>
+                <strong>把「停損距離」直接當變數量。</strong>
+                本研究意外指出真正在動的是進場點到停損的距離，
+                而不是停損用什麼規則算出來。用同一個進場、同一個出場規則、只掃停損距離，可以直接檢定這個解釋。
+            </li>
+            <li>
+                <strong>不要再用帳戶回撤當風險指標。</strong>
+                三份研究的風險結論全部被持有期或部位佔用污染過。 每部位 MAE
+                加上持有天數併讀是目前唯一撐得住的量法。
+            </li>
+        </ol>
+    </section>
+
+    <section>
+        <h2><span class="num">§8</span>沿用的限制</h2>
+        <p>
+            籃子有存活者偏差；以收盤價成交，除手續費與 0.3%
+            證交稅外無滑價模型；兩個視窗都偏多頭。
+            與前三份研究相同，此處不再重述。
+        </p>
+        <p>
+            「打敗買進持有」規則沒有帶進本任務 —— 它在三份研究裡 0 勝 17 敗，
+            對一個會空手的純多策略在兩個多頭視窗裡結構上就不可能通過。
+            要不要改成用「已投入資本」對齊的基準重新定義，是使用者的決定，本研究不代為決定。
+        </p>
+    </section>
+
+    <footer>
+        <p>逐籃完整數據見 <code>report.md</code> 的附錄。重現方式：</p>
+        <pre>
+uv run python tasks/20260822-ratchet-generalization/compose_arms.py
+uv run python tasks/20260822-ratchet-generalization/verify_isolation.py
+uv run python tasks/20260822-ratchet-generalization/run_sweep.py
+PYTHONIOENCODING=utf-8 uv run python tasks/20260822-ratchet-generalization/analyze_ratchet.py</pre>
+        <p>180 格、8 個 worker，約 61 分鐘。<code>runs/</code> 未進版控。</p>
+    </footer>
+</div>

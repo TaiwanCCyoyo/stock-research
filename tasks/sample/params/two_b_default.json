@@ -1,0 +1,15 @@
+{
+    "ma_type": "sma",
+    "windows": [5, 10, 20],
+    "convergence_pct": 2.0,
+    "reclaim_window": 5,
+    "swing_lookback": 20,
+    "trend_window": 20,
+    "exit_window": 10,
+    "slow_exit_window": 20,
+    "initial_allocation_pct": 0.18,
+    "add_allocation_pct": 0.12,
+    "partial_sell_pct": 0.5,
+    "stop_loss_pct": 8.0,
+    "lot_size": 1000
+}

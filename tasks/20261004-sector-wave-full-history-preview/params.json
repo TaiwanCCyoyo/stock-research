@@ -1,0 +1,55 @@
+{
+    "schema_version": "opportunity-method-config.v1",
+    "acceptance": "exploratory",
+    "methods": ["segments", "filter"],
+    "scales": {
+        "fine": {
+            "minSegment": 6,
+            "penaltyFactor": 4,
+            "lambdaFactor": 2,
+            "small": 0.15,
+            "large": 0.3
+        },
+        "balanced": {
+            "minSegment": 10,
+            "penaltyFactor": 10,
+            "lambdaFactor": 8,
+            "small": 0.25,
+            "large": 0.4
+        },
+        "coarse": {
+            "minSegment": 16,
+            "penaltyFactor": 25,
+            "lambdaFactor": 24,
+            "small": 0.35,
+            "large": 0.5
+        }
+    },
+    "run_jump_ratio": 1.35,
+    "noise_mad_multiplier": 1.4826,
+    "noise_floor": 0.0001,
+    "segments_penalty": "noise^2 * log(max(2,run_length)) * penaltyFactor",
+    "filter_lambda": "noise * lambdaFactor",
+    "admm": { "rho": 20, "max_iterations": 5000, "tolerance": 0.00001 },
+    "phase": { "flat_abs_slope_below": 0.0003, "fast_slope_above": 0.005 },
+    "filter_segment_slope_tolerance": "max(0.0003,noise*0.2)",
+    "launch": {
+        "post_slope_above": 0.0005,
+        "delta_above": "max(0.0005,noise*0.12)",
+        "reversal_pre_below": -0.0003,
+        "breakout_abs_pre_below": 0.0003,
+        "acceleration_multiplier": 1.6,
+        "continued_gain_at_least": 0.05
+    },
+    "wave_retention_gain_at_least": 0.6,
+    "support_radius_calendar_indices": 20,
+    "primary_method": "segments",
+    "primary_scale": "balanced",
+    "representative_order": [
+        "wave_scale:large_first",
+        "start_date:ascending",
+        "wave_id:ascending"
+    ],
+    "membership_start": "wave.start",
+    "candidate_membership_gate": false
+}

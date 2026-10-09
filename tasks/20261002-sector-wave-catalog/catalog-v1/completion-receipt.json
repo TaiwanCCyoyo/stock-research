@@ -1,0 +1,13 @@
+{
+    "counts": {
+        "episodes": 2561,
+        "groups": 80,
+        "peers": 64180,
+        "quality_findings": 483,
+        "securities": 1942,
+        "taxonomy_nodes": 566,
+        "waves": 884
+    },
+    "manifest_canonical_sha256": "384ee53d22b70dc1650bf84e1887e8515565189c975c29c77ef5e6273c5138c9",
+    "run_id": "catalog-v1-2019-20260814"
+}

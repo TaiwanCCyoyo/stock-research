@@ -1,0 +1,51 @@
+{
+    "analyzed_security_count": 1970,
+    "calendar_count": 4105,
+    "cohorts": {
+        "benchmark": 1,
+        "innovation_board": 28,
+        "metadata_stock": 1942,
+        "unresolved_identity": 104
+    },
+    "coverage_caveat_count": 12450,
+    "exact_source_runs_verified_count": 1970,
+    "manifest_sha256": "c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140",
+    "method_failures": 0,
+    "native_dense_policy": "parsed_one_security_at_a_time_for_deterministic_compact_reconstruction_no_analysis_rerun",
+    "native_reconstruction_adapter_sha256": "aff9b1c452509c662a9738f9209d94133c7a2d7b38d9d479861746166872c5ab",
+    "native_semantic_reconstruction": "current V2 adapter; exact_pinned_js_run.preview.v2",
+    "native_wave_count": 106376,
+    "native_without_exact_run_claim_count": 0,
+    "nonconverged_methods": 3,
+    "parsed_native_count": 1970,
+    "phase_cross_run_count": 0,
+    "reconstructed_table_counts": {
+        "baseline_waves": 53188,
+        "candidates": 790250,
+        "methods": 11820,
+        "relations": 4328518,
+        "representative_intervals": 7875,
+        "securities": 2075,
+        "source_phases": 2579106,
+        "support_records": 790250,
+        "transitions": 14528
+    },
+    "reconstructed_without_native_count": 105,
+    "schema_version": "opportunity-verification-receipt.v1",
+    "security_count": 2075,
+    "shared_wave_count": 53188,
+    "source_run_policy": "exact_pinned_js_transform_only_when_native_claims_runs; Python fallback not compared",
+    "status": "verified",
+    "table_counts": {
+        "baseline_waves": 53188,
+        "candidates": 790250,
+        "methods": 11820,
+        "relations": 4328518,
+        "representative_intervals": 7875,
+        "securities": 2075,
+        "source_phases": 2579106,
+        "support_records": 790250,
+        "transitions": 14528
+    },
+    "unresolved_parent_relations": 0
+}

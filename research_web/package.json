@@ -1,0 +1,30 @@
+{
+    "name": "research_web",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "tsc -b && vite build",
+        "lint": "oxlint",
+        "preview": "vite preview",
+        "test:local-data": "node --experimental-strip-types --test scripts/local-artifact-validation.test.mjs",
+        "test": "node --experimental-strip-types --test src/features/market/model.test.ts src/visualizations/atlas/geometry.test.ts src/visualizations/atlas/latestQueue.test.ts src/features/wave-lab/analysis.test.ts src/features/wave-lab/synthetic.test.ts src/features/wave-lab/bundle.test.ts scripts/export-wave-lab.test.mjs src/domain/opportunities/model.test.ts src/domain/opportunities/research.test.ts src/visualizations/opportunity/packing.test.ts src/visualizations/opportunity/camera.test.ts scripts/export-opportunity-preview.test.mjs scripts/export-research-evidence.test.mjs src/features/wave-lab/feedbackIdentity.test.ts src/features/opportunities/labCase.test.ts src/features/opportunities/selection.test.ts src/features/opportunities/classificationDisplay.test.ts scripts/apply-classification-evidence.test.mjs src/components/priceExplanation.test.ts src/features/wave-lab/waveSelection.test.ts src/visualizations/opportunity/mapTypes.test.ts src/features/full-history/model.test.ts src/features/full-history/comparisons.test.ts src/features/full-history/api.test.ts src/features/full-history/frameDisplay.test.ts src/features/strategies/model.test.ts src/features/home/model.test.ts src/app/routes.test.ts src/features/strategies/format.test.ts src/features/full-history/navigation.test.ts src/features/strategies/captureModel.test.ts src/features/strategies/distributionModel.test.ts src/features/strategies/fillDisplayModel.test.ts src/features/research-history/historyModel.test.ts src/api/artifactMode.test.ts scripts/private-public-guard.test.mjs"
+    },
+    "dependencies": {
+        "lightweight-charts": "^5.2.0",
+        "react": "^19.2.7",
+        "react-dom": "^19.2.7",
+        "react-markdown": "^10.1.0",
+        "remark-gfm": "^4.0.1"
+    },
+    "devDependencies": {
+        "@types/node": "^24.13.2",
+        "@types/react": "^19.2.17",
+        "@types/react-dom": "^19.2.3",
+        "@vitejs/plugin-react": "^6.0.3",
+        "oxlint": "^1.71.0",
+        "typescript": "~6.0.2",
+        "vite": "^8.1.1"
+    }
+}

@@ -1,0 +1,3 @@
+[submodule "shioaji_stock_prices"]
+	path = shioaji_stock_prices
+	url = https://github.com/TaiwanCCyoyo/stock-data-downloader

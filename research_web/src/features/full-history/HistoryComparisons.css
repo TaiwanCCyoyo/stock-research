@@ -1,0 +1,275 @@
+.fh-comparisons > .fh-section-heading {
+    align-items: flex-start;
+}
+.fh-comparisons > .fh-section-heading p {
+    margin-bottom: 0;
+}
+.fh-comp-controls {
+    display: flex;
+    align-items: end;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 18px 0;
+}
+.fh-comp-controls label {
+    display: grid;
+    gap: 5px;
+    color: var(--muted);
+    font-size: 12px;
+}
+.fh-comp-controls input,
+.fh-comp-controls select {
+    min-width: 180px;
+}
+.fh-comp-catalog {
+    color: var(--muted);
+    font-size: 11px;
+    margin-left: auto;
+    overflow-wrap: anywhere;
+}
+.fh-comp-browser {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(210px, 270px);
+    gap: 16px;
+}
+.fh-comp-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 255px), 1fr));
+    gap: 9px;
+    max-height: 360px;
+    overflow: auto;
+    padding: 2px;
+}
+.fh-page .fh-comp-option {
+    display: grid;
+    gap: 7px;
+    align-content: start;
+    min-height: 112px;
+    text-align: left;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 11px;
+}
+.fh-page .fh-comp-option[aria-pressed="true"] {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+}
+.fh-page .fh-comp-option:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+.fh-comp-option-top,
+.fh-comp-option-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+}
+.fh-comp-option-top strong {
+    overflow-wrap: anywhere;
+}
+.fh-comp-option-top > span,
+.fh-comp-option-foot,
+.fh-comp-option small {
+    color: var(--muted);
+    font-size: 11px;
+}
+.fh-comp-option small {
+    line-height: 1.6;
+}
+.fh-comp-option-foot {
+    margin-top: auto;
+}
+.fh-comp-selected {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--paper);
+    padding: 14px;
+}
+.fh-comp-selected h3,
+.fh-comp-holdings h3 {
+    margin: 0;
+    font-size: 14px;
+}
+.fh-comp-selected ul,
+.fh-comp-holdings ul {
+    list-style: none;
+    margin: 10px 0;
+    padding: 0;
+}
+.fh-comp-selected li {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    align-items: center;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 12px;
+}
+.fh-page .fh-comp-selected li button {
+    padding: 3px 7px;
+    font-size: 11px;
+}
+.fh-comp-selected p,
+.fh-comp-selected-note {
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.6;
+}
+.fh-comp-selected-note {
+    margin: 14px 0 0;
+}
+.fh-comp-capital {
+    margin-top: 20px;
+}
+.fh-comp-capital .op-capital {
+    margin: 0;
+}
+.fh-comp-stock-controls {
+    display: flex;
+    align-items: end;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 22px;
+}
+.fh-comp-stock-controls label {
+    display: grid;
+    gap: 5px;
+    color: var(--muted);
+    font-size: 12px;
+}
+.fh-comp-stock-controls input,
+.fh-comp-stock-controls select {
+    min-width: 190px;
+}
+.fh-comp-holdings {
+    display: grid;
+    gap: 12px;
+    margin-top: 18px;
+}
+.fh-comp-holdings > section {
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--paper);
+}
+.fh-comp-holding-summary,
+.fh-comp-no-holdings {
+    color: var(--muted);
+    font-size: 12px;
+}
+.fh-comp-holdings li {
+    display: grid;
+    grid-template-columns: minmax(100px, 140px) minmax(90px, 1fr) minmax(
+            110px,
+            auto
+        );
+    align-items: center;
+    gap: 10px;
+    border-top: 1px solid var(--line);
+    padding: 9px 0;
+    font-size: 12px;
+}
+.fh-comp-stock-gain {
+    color: var(--muted);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+.fh-comp-show-more {
+    margin: 4px 0 8px;
+}
+.fh-comp-holding-evidence {
+    margin-top: 12px;
+    border-top: 1px solid var(--line);
+    padding-top: 10px;
+}
+.fh-comp-holding-evidence summary {
+    color: var(--muted);
+    font-size: 12px;
+    cursor: pointer;
+}
+.fh-comp-holding-evidence p,
+.fh-comp-holding-evidence li small {
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+.fh-comp-holding-evidence li {
+    grid-template-columns: minmax(120px, 190px) minmax(0, 1fr);
+}
+.fh-comp-holding-evidence li strong {
+    grid-column: 1 / -1;
+}
+.fh-comp-holding-evidence li small {
+    grid-column: 1 / -1;
+}
+.fh-holding-state {
+    width: fit-content;
+    padding: 3px 7px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    color: var(--muted);
+    font-size: 10px;
+}
+.fh-holding-state.state-held {
+    color: var(--accent);
+    border-color: var(--accent);
+}
+.fh-holding-state.state-not-held {
+    color: var(--ink);
+}
+.fh-comp-error {
+    color: var(--negative);
+}
+
+@media (max-width: 760px) {
+    .fh-comp-browser {
+        grid-template-columns: 1fr;
+    }
+    .fh-comp-catalog {
+        width: 100%;
+        margin-left: 0;
+    }
+    .fh-comp-holdings li {
+        grid-template-columns: 1fr;
+        gap: 5px;
+    }
+    .fh-comp-stock-gain {
+        text-align: left;
+    }
+    .fh-comp-holding-evidence li {
+        grid-template-columns: 1fr;
+    }
+}
+.fh-capital-ranking {
+    margin-bottom: 22px;
+}
+.fh-capital-ranking ol {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+    gap: 10px;
+    list-style: none;
+    padding: 0;
+}
+.fh-capital-ranking li {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px;
+    background: var(--paper);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+}
+.fh-capital-ranking li span {
+    overflow-wrap: anywhere;
+}
+.fh-capital-ranking li strong {
+    font-variant-numeric: tabular-nums;
+    font-size: 16px;
+}
+.fh-capital-ranking li small {
+    grid-column: 1 / -1;
+    color: var(--muted);
+}

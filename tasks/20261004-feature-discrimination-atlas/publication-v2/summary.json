@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0",
+  "run": {
+    "id": "atlas-v2",
+    "dataset_id": "fda-86245f2e223fc45c9f84afb0dcf77c1fff7ab22d0a1b0b4a4c8800972ce9327e",
+    "phase": "exploration"
+  },
+  "strategy": {
+    "kind": "descriptive_features_not_strategy",
+    "definition_id": "daily-close-features-38-forward-63-126.v1"
+  },
+  "data": {
+    "window": {
+      "start": "2019-01-02",
+      "end": "2026-08-14"
+    },
+    "securities": 1941,
+    "calendar_sessions": 1849
+  },
+  "metrics": {
+    "rows": 3588909,
+    "eligible_rows": 2788023,
+    "label_counts": {
+      "63": {
+        "known": 2565149,
+        "positive": 192232,
+        "unknown": 222874
+      },
+      "126": {
+        "known": 2382882,
+        "positive": 130112,
+        "unknown": 405141
+      }
+    },
+    "comparison_rows": 7144,
+    "feature_count": 38
+  },
+  "portfolio": {
+    "evaluated": false
+  },
+  "trades": [],
+  "warnings": [
+    "Descriptive explored cohort, not survivorship-complete or independent confirmation.",
+    "Current industry references are retrospective, not PIT historical classifications.",
+    "Forward close-price rises are not captured account profit or executable returns.",
+    "Overlapping daily observations and cross-stock dependence preclude IID inference.",
+    "Incomplete future paths remain unknown, not failed opportunities.",
+    "Permanent-factor research prices exclude cash dividends and accounting entitlements."
+  ],
+  "generated_at": "2026-10-04T13:33:38.156160+00:00"
+}

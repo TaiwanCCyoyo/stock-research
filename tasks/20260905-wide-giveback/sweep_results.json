@@ -1,0 +1,319 @@
+{
+    "results": {
+        "train": [
+            {
+                "buy_count": 1515,
+                "capital_turnover_per_year": 5.87815962423286,
+                "cell": "rank30",
+                "cost_drag_per_year": 0.03427268796324313,
+                "max_drawdown_pct": -31.03441336253121,
+                "mean_buy_weight": 0.019375965473443987,
+                "return_pct": 148.73918772294,
+                "runaway": {
+                    "1.0": {
+                        "capture_rate": 1.0,
+                        "held": 111,
+                        "participation": 0.23372597492692823,
+                        "participation_n": 111,
+                        "pool_share": 0.2507750157307926,
+                        "population": 111
+                    },
+                    "1.5": {
+                        "capture_rate": 1.0,
+                        "held": 64,
+                        "participation": 0.23461895162186755,
+                        "participation_n": 64,
+                        "pool_share": 0.25678795773580454,
+                        "population": 64
+                    },
+                    "2.0": {
+                        "capture_rate": 1.0,
+                        "held": 41,
+                        "participation": 0.2815466807052798,
+                        "participation_n": 41,
+                        "pool_share": 0.2828823373251826,
+                        "population": 41
+                    },
+                    "3.0": {
+                        "capture_rate": 1.0,
+                        "held": 19,
+                        "participation": 0.31171922678761443,
+                        "participation_n": 19,
+                        "pool_share": 0.2925511216350723,
+                        "population": 19
+                    }
+                },
+                "turnover_per_slot_year": 9.895339100875859,
+                "window": "train"
+            },
+            {
+                "buy_count": 633,
+                "capital_turnover_per_year": 2.6246455931447095,
+                "cell": "give20",
+                "cost_drag_per_year": 0.014900392078344114,
+                "max_drawdown_pct": -35.209185206380354,
+                "mean_buy_weight": 0.020706255478225084,
+                "return_pct": 101.10922722813002,
+                "runaway": {
+                    "1.0": {
+                        "capture_rate": 0.9009009009009009,
+                        "held": 100,
+                        "participation": 0.195670832709817,
+                        "participation_n": 100,
+                        "pool_share": 0.1487887522356355,
+                        "population": 111
+                    },
+                    "1.5": {
+                        "capture_rate": 0.96875,
+                        "held": 62,
+                        "participation": 0.13901024449928914,
+                        "participation_n": 62,
+                        "pool_share": 0.1256266050857787,
+                        "population": 64
+                    },
+                    "2.0": {
+                        "capture_rate": 1.0,
+                        "held": 41,
+                        "participation": 0.15439035137301355,
+                        "participation_n": 41,
+                        "pool_share": 0.13288478767445944,
+                        "population": 41
+                    },
+                    "3.0": {
+                        "capture_rate": 1.0,
+                        "held": 19,
+                        "participation": 0.12649937859787813,
+                        "participation_n": 19,
+                        "pool_share": 0.1077521214355685,
+                        "population": 19
+                    }
+                },
+                "turnover_per_slot_year": 4.018286331578123,
+                "window": "train"
+            },
+            {
+                "buy_count": 430,
+                "capital_turnover_per_year": 1.9392101785309188,
+                "cell": "give25",
+                "cost_drag_per_year": 0.010815249123813505,
+                "max_drawdown_pct": -36.89868571436546,
+                "mean_buy_weight": 0.022521174510229655,
+                "return_pct": 94.46849891794,
+                "runaway": {
+                    "1.0": {
+                        "capture_rate": 0.8288288288288288,
+                        "held": 92,
+                        "participation": 0.20152875587524488,
+                        "participation_n": 92,
+                        "pool_share": 0.16745315724297927,
+                        "population": 111
+                    },
+                    "1.5": {
+                        "capture_rate": 0.90625,
+                        "held": 58,
+                        "participation": 0.20990269733867764,
+                        "participation_n": 58,
+                        "pool_share": 0.17588380748944368,
+                        "population": 64
+                    },
+                    "2.0": {
+                        "capture_rate": 0.9512195121951219,
+                        "held": 39,
+                        "participation": 0.22067755979686424,
+                        "participation_n": 39,
+                        "pool_share": 0.17977524315715732,
+                        "population": 41
+                    },
+                    "3.0": {
+                        "capture_rate": 1.0,
+                        "held": 19,
+                        "participation": 0.18120086601487478,
+                        "participation_n": 19,
+                        "pool_share": 0.15173658000825813,
+                        "population": 19
+                    }
+                },
+                "turnover_per_slot_year": 2.665625313363077,
+                "window": "train"
+            },
+            {
+                "buy_count": 299,
+                "capital_turnover_per_year": 1.2446144903268017,
+                "cell": "give30",
+                "cost_drag_per_year": 0.0068033535460531305,
+                "max_drawdown_pct": -31.439746599926988,
+                "mean_buy_weight": 0.020787309103409618,
+                "return_pct": 141.46484694162004,
+                "runaway": {
+                    "1.0": {
+                        "capture_rate": 0.6846846846846847,
+                        "held": 76,
+                        "participation": 0.29229198547478036,
+                        "participation_n": 76,
+                        "pool_share": 0.20023417528369616,
+                        "population": 111
+                    },
+                    "1.5": {
+                        "capture_rate": 0.734375,
+                        "held": 47,
+                        "participation": 0.32859467957086214,
+                        "participation_n": 47,
+                        "pool_share": 0.21725547828314118,
+                        "population": 64
+                    },
+                    "2.0": {
+                        "capture_rate": 0.8780487804878049,
+                        "held": 36,
+                        "participation": 0.22683194233852896,
+                        "participation_n": 36,
+                        "pool_share": 0.18812713653183888,
+                        "population": 41
+                    },
+                    "3.0": {
+                        "capture_rate": 0.9473684210526315,
+                        "held": 18,
+                        "participation": 0.22611957578690628,
+                        "participation_n": 18,
+                        "pool_share": 0.18641515586059018,
+                        "population": 19
+                    }
+                },
+                "turnover_per_slot_year": 1.7926546954810847,
+                "window": "train"
+            },
+            {
+                "buy_count": 209,
+                "capital_turnover_per_year": 1.0141325366585696,
+                "cell": "give35",
+                "cost_drag_per_year": 0.005260104801711077,
+                "max_drawdown_pct": -30.917810707575477,
+                "mean_buy_weight": 0.024231652919973302,
+                "return_pct": 94.32573459805005,
+                "runaway": {
+                    "1.0": {
+                        "capture_rate": 0.5405405405405406,
+                        "held": 60,
+                        "participation": 0.19654239691642925,
+                        "participation_n": 60,
+                        "pool_share": 0.12339077891283598,
+                        "population": 111
+                    },
+                    "1.5": {
+                        "capture_rate": 0.609375,
+                        "held": 39,
+                        "participation": 0.28919773739203664,
+                        "participation_n": 39,
+                        "pool_share": 0.15266122940695712,
+                        "population": 64
+                    },
+                    "2.0": {
+                        "capture_rate": 0.7073170731707317,
+                        "held": 29,
+                        "participation": 0.20903576533542512,
+                        "participation_n": 29,
+                        "pool_share": 0.13025510914798072,
+                        "population": 41
+                    },
+                    "3.0": {
+                        "capture_rate": 0.8421052631578947,
+                        "held": 16,
+                        "participation": 0.13904413843274185,
+                        "participation_n": 16,
+                        "pool_share": 0.10842992023299643,
+                        "population": 19
+                    }
+                },
+                "turnover_per_slot_year": 1.1928613711998353,
+                "window": "train"
+            },
+            {
+                "buy_count": 174,
+                "capital_turnover_per_year": 0.856765200343163,
+                "cell": "give40",
+                "cost_drag_per_year": 0.0042767071239874725,
+                "max_drawdown_pct": -33.579938551927334,
+                "mean_buy_weight": 0.024589357398505655,
+                "return_pct": 91.71256051293001,
+                "runaway": {
+                    "1.0": {
+                        "capture_rate": 0.4954954954954955,
+                        "held": 55,
+                        "participation": 0.22323873651870726,
+                        "participation_n": 55,
+                        "pool_share": 0.10565673753424389,
+                        "population": 111
+                    },
+                    "1.5": {
+                        "capture_rate": 0.5625,
+                        "held": 36,
+                        "participation": 0.257537417040798,
+                        "participation_n": 36,
+                        "pool_share": 0.11717256963003467,
+                        "population": 64
+                    },
+                    "2.0": {
+                        "capture_rate": 0.6585365853658537,
+                        "held": 27,
+                        "participation": 0.16770626748884457,
+                        "participation_n": 27,
+                        "pool_share": 0.09100778822404583,
+                        "population": 41
+                    },
+                    "3.0": {
+                        "capture_rate": 0.7894736842105263,
+                        "held": 15,
+                        "participation": 0.06769087644998052,
+                        "participation_n": 15,
+                        "pool_share": 0.056300508324730915,
+                        "population": 19
+                    }
+                },
+                "turnover_per_slot_year": 0.959624865161595,
+                "window": "train"
+            }
+        ]
+    },
+    "verdicts": {
+        "train": {
+            "_plateau": {
+                "passing": 1,
+                "plateau": false
+            },
+            "give20": {
+                "capture": true,
+                "drag": true,
+                "drawdown": true,
+                "pool": false,
+                "turnover": true
+            },
+            "give25": {
+                "capture": true,
+                "drag": true,
+                "drawdown": false,
+                "pool": false,
+                "turnover": true
+            },
+            "give30": {
+                "capture": true,
+                "drag": true,
+                "drawdown": true,
+                "pool": true,
+                "turnover": true
+            },
+            "give35": {
+                "capture": true,
+                "drag": true,
+                "drawdown": true,
+                "pool": false,
+                "turnover": true
+            },
+            "give40": {
+                "capture": false,
+                "drag": true,
+                "drawdown": true,
+                "pool": false,
+                "turnover": true
+            }
+        }
+    }
+}

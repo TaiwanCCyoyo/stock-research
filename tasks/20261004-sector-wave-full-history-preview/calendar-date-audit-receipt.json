@@ -1,0 +1,19 @@
+{
+    "calendar_id": "sha256:1cdebba5f14e1e4844e04bb72e5b1ca0c97de17e7d0e914443fa8aeb5338fb6d",
+    "calendar_sha256": "bd2861014f9226196a7b9dc6aa9cc04531f07205dd06090ebb8716deee09a236",
+    "canonical_gregorian_date_count": 4105,
+    "date_policy": "real_Gregorian_YYYY_MM_DD_with_exact_round_trip",
+    "end_date": "2026-10-02",
+    "manifest_sha256": "c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140",
+    "method_analysis_recomputed": false,
+    "native_semantics_repeated": false,
+    "prior_receipts": [
+        {
+            "path": "query-native-semantics-audit-receipt.json",
+            "sha256": "f0f053c04aed6b5ef75e618fefa6363383547c24c3fe396ce944a425a4506b62"
+        }
+    ],
+    "schema_version": "opportunity-calendar-date-audit.v1",
+    "start_date": "2010-01-04",
+    "status": "verified"
+}

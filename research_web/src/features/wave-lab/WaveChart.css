@@ -1,0 +1,184 @@
+.wave-chart {
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    padding: 16px;
+}
+.wave-chart-toolbar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+.wave-chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    color: var(--muted);
+    font-size: 12px;
+}
+.wave-chart-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+.wave-swatch {
+    display: inline-block;
+    width: 18px;
+    height: 3px;
+    border-radius: 2px;
+}
+.wave-swatch-price {
+    background: #8b928d;
+}
+.wave-swatch-filter {
+    height: 2px;
+}
+.wave-phase-swatch {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border-radius: 2px;
+}
+.wave-fit-note {
+    color: var(--muted);
+    font-style: italic;
+}
+.wave-chart-cursor {
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    font-size: 12px;
+    text-align: right;
+    white-space: nowrap;
+}
+.wave-chart-scroll {
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+.wave-chart-svg {
+    display: block;
+    min-width: 480px;
+    width: 100%;
+    height: auto;
+    outline: none;
+    touch-action: none;
+    user-select: none;
+}
+.wave-chart-svg:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
+}
+.wave-grid {
+    stroke: var(--line);
+    stroke-width: 1;
+}
+.wave-axis {
+    stroke: var(--line);
+    stroke-width: 1;
+}
+.wave-axis-label {
+    fill: var(--muted);
+    font-size: 11px;
+}
+.wave-axis-title {
+    fill: var(--muted);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+}
+.wave-price-line {
+    fill: none;
+    stroke: #65736c;
+    stroke-width: 1.25;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+.wave-cursor-line {
+    stroke: var(--accent);
+    stroke-width: 1.25;
+    stroke-dasharray: 4 3;
+    pointer-events: none;
+}
+.wave-launch {
+    cursor: pointer;
+}
+.wave-launch:focus {
+    outline: none;
+}
+.wave-launch.is-selected rect {
+    opacity: 0.2;
+}
+.wave-launch.is-selected path {
+    stroke: var(--ink);
+    stroke-width: 1.5;
+}
+.wave-evidence {
+    color: #5d7469;
+    cursor: pointer;
+}
+.wave-evidence:nth-of-type(2n) {
+    color: #9a7138;
+}
+.wave-evidence.is-selected {
+    color: var(--accent);
+}
+.wave-evidence-label {
+    fill: currentColor;
+    font-size: 10px;
+    font-weight: 700;
+}
+.wave-chart figcaption {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 12px;
+}
+.wave-range-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    margin-top: 12px;
+    color: var(--muted);
+    font-size: 12px;
+}
+.wave-range-controls label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.wave-range-controls input {
+    width: 112px;
+    accent-color: var(--accent);
+}
+.wave-range-controls button {
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    padding: 5px 9px;
+}
+.wave-chart-empty {
+    color: var(--muted);
+    padding: 24px;
+    border: 1px dashed var(--line);
+}
+@media (max-width: 700px) {
+    .wave-chart {
+        padding: 12px;
+    }
+    .wave-chart-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+    .wave-chart-cursor {
+        text-align: left;
+        white-space: normal;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .wave-chart *,
+    .wave-chart *::before,
+    .wave-chart *::after {
+        transition-duration: 0.01ms !important;
+    }
+}

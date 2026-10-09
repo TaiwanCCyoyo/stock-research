@@ -1,0 +1,32 @@
+{
+    "schema": "research-evidence-export-receipt.v1",
+    "adapterVersion": "saved-ledger-evidence-adapter.v1",
+    "sourceReceiptHash": "fe8280d4b7e5846ba0cf48254a9b7ce707635feb77274c5f48267d5f66148a7e",
+    "catalogHash": "4bf8a2a4b244c4b675bd4f0ccae641ffe7ba150fd8de04a9fae9d701422f21be",
+    "ledgerHashes": {
+        "20261002-add-retry--normal-v1.json": "4d619b6a58789bcde41adcf8f4fba0e3c2dd468b199a8f7632e46ca7dacf064e",
+        "20261002-entry-extension-cap--cap-v1.json": "6f2bdff6ee5ae80294ac6aa454efed8fbf4d78863e00801730bb530552f0c838"
+    },
+    "outputs": {
+        "opportunity-explorer.json.gz": "da904cd67ec43ad38a36abfc8859d18520798540aa46c7c5ffff7fdbe8c94a3d",
+        "opportunity-explorer.json": "f051c1a859fb9297ee553e6a2692d41e7cbd705383c3bc9f814610d9159bdabf",
+        "saved-research-runs.json.gz": "fc9bf2386671c67c31e33557c21e5930e34891a7b274b6ccf78c474e42cf6437",
+        "saved-research-runs.json": "73ec6a81c4c8d8c0b18eec64c38dc043f1ee217152b34ec08cd230f9f61e4ee0"
+    },
+    "runs": [
+        {
+            "id": "stock:20261002-add-retry:normal-v1",
+            "status": "exploratory",
+            "finalStrategyApproved": false,
+            "nav": 1216,
+            "events": 736
+        },
+        {
+            "id": "stock:20261002-entry-extension-cap:cap-v1",
+            "status": "failed",
+            "finalStrategyApproved": false,
+            "nav": 1216,
+            "events": 281
+        }
+    ]
+}

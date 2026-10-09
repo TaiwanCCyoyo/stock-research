@@ -1,0 +1,106 @@
+{
+    "capital": [
+        {
+            "buy_count": 125,
+            "final": 2352049.958597,
+            "longest_below_peak_days": 461,
+            "lowest": 1164039.0500000003,
+            "max_drawdown_pct": -46.62634691449307,
+            "median_shares": 2726.0,
+            "return_pct": 17.60249792985001,
+            "sub_lot": 0.192,
+            "top_k": 5,
+            "under_100": 0.0,
+            "whole_lot_affordable": 0.8018539976825029
+        },
+        {
+            "buy_count": 271,
+            "final": 3210476.8492069994,
+            "longest_below_peak_days": 386,
+            "lowest": 1050135.3579719998,
+            "max_drawdown_pct": -56.38294796010656,
+            "median_shares": 1260.0,
+            "return_pct": 60.523842460349975,
+            "sub_lot": 0.3874538745387454,
+            "top_k": 10,
+            "under_100": 0.02952029520295203,
+            "whole_lot_affordable": 0.6222479721900348
+        },
+        {
+            "buy_count": 600,
+            "final": 3934764.2644640002,
+            "longest_below_peak_days": 364,
+            "lowest": 1869755.0530720009,
+            "max_drawdown_pct": -35.86305925943295,
+            "median_shares": 661.0,
+            "return_pct": 96.7382132232,
+            "sub_lot": 0.6533333333333333,
+            "top_k": 20,
+            "under_100": 0.08166666666666667,
+            "whole_lot_affordable": 0.3684820393974508
+        },
+        {
+            "buy_count": 862,
+            "final": 4377045.325211999,
+            "longest_below_peak_days": 358,
+            "lowest": 1633383.7706159998,
+            "max_drawdown_pct": -41.91084002304063,
+            "median_shares": 461.5,
+            "return_pct": 118.85226626059995,
+            "sub_lot": 0.7819025522041764,
+            "top_k": 30,
+            "under_100": 0.11948955916473318,
+            "whole_lot_affordable": 0.21784472769409038
+        }
+    ],
+    "experience": {
+        "avg_loss": -46061.29426768433,
+        "avg_win": 79602.45764625314,
+        "closed": 833,
+        "longest_below_peak_days": 356,
+        "longest_losing_streak": 21,
+        "losers_in_first_20": 14,
+        "loss_rate": 0.5210084033613446,
+        "max_drawdown_pct": -41.922147535703736,
+        "per_year": 317.9389312977099,
+        "share_of_days_below_peak": 0.88801261829653
+    },
+    "missed_days": {
+        "reference": 120.44623940616009,
+        "reproduces": true,
+        "rows": [
+            {
+                "best": 137.18960371826998,
+                "median": 128.13924107015993,
+                "miss_prob": 0.05,
+                "ratio": 1.0638708331777638,
+                "worst": 116.56038093607002,
+                "worst_drawdown": -43.82557822645793
+            },
+            {
+                "best": 141.0047658230501,
+                "median": 126.80092734654002,
+                "miss_prob": 0.1,
+                "ratio": 1.0527595379624193,
+                "worst": 111.95608612324006,
+                "worst_drawdown": -44.105696462029435
+            },
+            {
+                "best": 121.18921748172001,
+                "median": 114.6186618891201,
+                "miss_prob": 0.2,
+                "ratio": 0.9516167748717447,
+                "worst": 100.63942836466,
+                "worst_drawdown": -44.97984013912546
+            },
+            {
+                "best": 96.4934424064501,
+                "median": 93.65752730470005,
+                "miss_prob": 0.35,
+                "ratio": 0.7775878081911293,
+                "worst": 80.14669660584003,
+                "worst_drawdown": -50.79548324997361
+            }
+        ]
+    }
+}

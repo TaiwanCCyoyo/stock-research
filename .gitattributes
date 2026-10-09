@@ -1,0 +1,113 @@
+.githooks/* text eol=lf
+# Immutable evidence: preserve byte hashes across Windows and other checkouts.
+tasks/20261004-feature-discrimination-atlas/publication-v2/** -text
+tasks/20261005-market-context-handoff/market-context-v2/** -text
+tasks/20261005-method-environment-interactions/preregistration/** -text
+tasks/20261005-method-environment-interactions/publication-v1/** -text
+tasks/20261005-industry-role-comparison/preregistration/** -text
+tasks/20261005-industry-role-comparison/publication-v1/** -text
+tasks/20261005-industry-role-comparison/publication-v2/** -text
+# Fixed presentation selections have a byte hash in derived evidence packages.
+tasks/20261004-opportunity-explorer/preview-selections.json text eol=lf
+# Classification receipts bind original source bytes across Windows checkouts.
+research_web/fixtures/classification-v1/*.json -text
+tasks/20261004-opportunity-classification-fix/*.json text eol=lf
+# Keep recorded publication-index checksums stable across Windows checkouts.
+tasks/20261004-sector-wave-full-history-preview/*.json text eol=lf
+tasks/20261004-sector-wave-full-history-preview/catalog-*/bundle-index.json text eol=lf
+# Frozen producer identities require byte-preserving checkout on Windows.
+tasks/20261004-sector-wave-full-history-preview/method-snapshot/*.ts -text
+tasks/20261004-sector-wave-full-history-preview/params.json -text
+scripts/opportunity_history_methods.mjs -text
+# Owner-rule source snapshots retain their exact frozen SHA-256 on checkout.
+tasks/20261009-hhhl-pattern-probability/sources/*.zip -text
+tasks/20261009-hhhl-pattern-probability/publication-v1/bundle.zip -text
+# Strategy transport identities stay stable across Windows checkouts.
+research_web/public/data/research-presentation.v1.json text eol=lf
+research_web/public/data/saved-research-studio.manifest.json text eol=lf
+research_web/public/data/saved-research-studio.part-*.bin -text
+tasks/20261008-strategy-studio/publication.json text eol=lf
+# Catalog producer revision is registered by exact source bytes.
+research_core/opportunity_history_catalog.py text eol=lf
+# Current retained typed-source identities use LF; frozen originals remain in ZIP.
+tasks/20260823-rotation-universe/build_rotation_universe.py text eol=lf
+tasks/20260823-rotation-universe/eligibility.py text eol=lf
+tasks/20260823-rotation-universe/features.py text eol=lf
+tasks/20260823-rotation-universe/verify_eligibility.py text eol=lf
+tasks/20260823-rotation-universe/verify_features.py text eol=lf
+tasks/20260823-rotation-universe/candidates/rotation_ranker.py text eol=lf
+tasks/20260823-rotation-universe/original-source.zip -text
+
+# Owner-approved formatted evidence identities use stable LF checkout.
+research_core/sector_groups.v1.json text eol=lf
+research_web/public/data/research-evidence-v2-classified/export-receipt.json text eol=lf
+tasks/20260510-two-b-template-smoke/params/manual_params.json text eol=lf
+tasks/20260510-two-b-template-smoke/params/two_b_ma_convergence_sweep.json text eol=lf
+tasks/20260510-two-b-template-smoke/research_dashboard/data_snapshot.json text eol=lf
+tasks/20260809-loop-dryrun/research_dashboard/title.txt text eol=lf
+tasks/20260812-loop-explore-v2/experiment.json text eol=lf
+tasks/20260812-loop-explore-v2/research_dashboard/title.txt text eol=lf
+tasks/20260814-2b-false-break-structure/experiment.json text eol=lf
+tasks/20260816-kline-strategy-category-fit/benchmark_drawdown.json text eol=lf
+tasks/20260816-kline-strategy-category-fit/benchmark_drawdown_2019-01-02_2023-12-31.json text eol=lf
+tasks/20260816-kline-strategy-category-fit/report.html text eol=lf
+tasks/20260816-kline-strategy-category-fit/sweep_results.json text eol=lf
+tasks/20260816-kline-strategy-category-fit/universe_build_report.json text eol=lf
+tasks/20260820-kline-archetype-extension/buy_and_hold_holdout.json text eol=lf
+tasks/20260820-kline-archetype-extension/buy_and_hold_train.json text eol=lf
+tasks/20260820-kline-archetype-extension/report.html text eol=lf
+tasks/20260820-kline-archetype-extension/sweep_results.json text eol=lf
+tasks/20260821-2b-entry-decomposition/report.html text eol=lf
+tasks/20260821-2b-entry-decomposition/sweep_results.json text eol=lf
+tasks/20260821-stop-mechanism-isolation/report.html text eol=lf
+tasks/20260821-stop-mechanism-isolation/sweep_results.json text eol=lf
+tasks/20260822-ratchet-generalization/report.html text eol=lf
+tasks/20260822-ratchet-generalization/sweep_results.json text eol=lf
+tasks/20260823-rank-profile/sweep_results.json text eol=lf
+tasks/20260823-regime-overlay/sweep_results.json text eol=lf
+tasks/20260823-rotation-universe/universe_build_report.json text eol=lf
+tasks/20260823-selection-vs-random/sweep_results.json text eol=lf
+tasks/20260823-turnover-mechanism/sweep_results.json text eol=lf
+tasks/20260824-ranking-horizon/sweep_results.json text eol=lf
+tasks/20260824-value-chain-ignition/sweep_results.json text eol=lf
+tasks/20260826-runner-retention/sweep_results.json text eol=lf
+tasks/20260826-tail-selection/sweep_results.json text eol=lf
+tasks/20260903-entry-window/window_results.json text eol=lf
+tasks/20260904-book-size/sweep_results.json text eol=lf
+tasks/20260904-execution-delay/sweep_results.json text eol=lf
+tasks/20260904-slot-accounting/sweep_results.json text eol=lf
+tasks/20260904-swap-rule/sweep_results.json text eol=lf
+tasks/20260905-add-trigger/add_trigger_results.json text eol=lf
+tasks/20260905-min-hold/concentration.json text eol=lf
+tasks/20260905-min-hold/sweep_results.json text eol=lf
+tasks/20260905-wide-giveback/concentration.json text eol=lf
+tasks/20260905-wide-giveback/sweep_results.json text eol=lf
+tasks/20260906-absolute-entry-bar/absolute_bar_results.json text eol=lf
+tasks/20260906-equal-risk-sizing/equal_risk_results.json text eol=lf
+tasks/20260906-exchange-rate/exchange_rate_results.json text eol=lf
+tasks/20260906-execution-reality/execution_reality_results.json text eol=lf
+tasks/20260906-five-slot-confirmation/confirmation_results.json text eol=lf
+tasks/20260906-loss-anatomy/loss_anatomy_results.json text eol=lf
+tasks/20260906-three-slot-equal-risk/equal_risk_results.json text eol=lf
+tasks/20260907-streak-correction/streak_correction_results.json text eol=lf
+tasks/20260908-executable-fills/executable_fills_results.json text eol=lf
+tasks/20260908-executable-fills/research_result.json text eol=lf
+tasks/20261002-sector-role-evidence/completion-receipt.json text eol=lf
+tasks/20261002-sector-role-evidence/evidence-v1.json text eol=lf
+tasks/20261002-sector-wave-catalog/catalog-v1/completion-receipt.json text eol=lf
+tasks/20261002-sector-wave-catalog/catalog-v1/manifest.json text eol=lf
+tasks/20261002-sector-wave-catalog/mission.md text eol=lf
+tasks/20261004-feature-discrimination-atlas/mission.md text eol=lf
+tasks/20261004-feature-discrimination-atlas/params/atlas-v1.json text eol=lf
+tasks/20261004-feature-discrimination-atlas/params/atlas-v2.json text eol=lf
+tasks/20261004-feature-discrimination-atlas/research_result.json text eol=lf
+tasks/20261004-feature-discrimination-atlas/sweep_results.json text eol=lf
+tasks/20261004-feature-discrimination-atlas/universe_build_report.json text eol=lf
+tasks/20261004-opportunity-explorer/export-receipt.json text eol=lf
+tasks/20261004-sector-wave-full-history-preview/contract.md text eol=lf
+tasks/20261004-sector-wave-full-history-preview/mission.md text eol=lf
+tasks/20261005-market-context-handoff/mission.md text eol=lf
+tasks/20261005-market-full-history-web/presentation-manifest.json text eol=lf
+tasks/20261009-hhhl-pattern-probability/mission.md text eol=lf
+tasks/20261009-hhhl-pattern-probability/publication-v1/manifest.json text eol=lf
+tasks/20261009-hhhl-pattern-probability/sources/validation-cases.json text eol=lf

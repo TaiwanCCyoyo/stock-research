@@ -1,0 +1,27 @@
+{
+    "classifications": {
+        "count": 2075,
+        "path": "classifications.json",
+        "sha256": "79665dc66cf10528290b50b3214b24e0ee7882968f0a08c079fdde3f62f94b3e"
+    },
+    "gaps": {
+        "count": 2092,
+        "path": "gaps.json",
+        "sha256": "537d43d9f6a610a7a858b44b206617e57c7ad9b008b424221eb142dd3ff28b52"
+    },
+    "groups": {
+        "count": 80,
+        "path": "groups.json",
+        "sha256": "9cdba68ccafbaa2a9ddaa8b216d3589760f564bac038103a8e780138224fba89"
+    },
+    "sources": {
+        "count": 29,
+        "path": "sources.json",
+        "sha256": "d45da887f276bf43504d8b1fb30046d19e19e5c82e891aeabbd2084507b35527"
+    },
+    "taxonomy_nodes": {
+        "count": 566,
+        "path": "taxonomy_nodes.json",
+        "sha256": "44b5fbf4a14c41950cb73a9c059dbeadd0ae6023abb6ea63fdf4bca319550127"
+    }
+}
