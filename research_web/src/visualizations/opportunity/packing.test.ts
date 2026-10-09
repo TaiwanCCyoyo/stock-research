@@ -651,3 +651,36 @@ test("a zero-area stock does not make an unchanged day re-compact", () => {
     });
     verify(grown, 30, 2);
 });
+
+test("a new frame shape re-tightens an unchanged layout toward that shape", () => {
+    const nodes = synthetic(60, 12);
+    const options = {
+        globalRadiusScale: 30,
+        gap: 2,
+        groupGap: 12,
+        outlinePadding: 8,
+    };
+    const square = computePacking({ ...options, nodes, aspect: 1 });
+    const previous = square.nodes
+        .filter((node) => node.r > 0)
+        .map(({ id, x, y, r }) => ({ id, x, y, r }));
+    const kept = computePacking({ ...options, nodes, previous, aspect: 2.5 });
+    assert.ok(
+        Math.abs(kept.bounds.width - square.bounds.width) < 1e-6 &&
+            Math.abs(kept.bounds.height - square.bounds.height) < 1e-6,
+        "without reshape an unchanged layout keeps its shape",
+    );
+    const wide = computePacking({
+        ...options,
+        nodes,
+        previous,
+        aspect: 2.5,
+        reshape: true,
+    });
+    verify(wide, 30, 2);
+    assert.ok(
+        wide.bounds.width / wide.bounds.height >
+            square.bounds.width / square.bounds.height,
+        "reshaping spreads the layout toward the wider frame",
+    );
+});

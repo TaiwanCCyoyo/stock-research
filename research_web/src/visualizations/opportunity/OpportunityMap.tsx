@@ -386,17 +386,17 @@ export function OpportunityMap({
                     })),
                     globalRadiusScale: OPPORTUNITY_RADIUS_SCALE,
                     previous:
-                        old &&
-                        sameSource(old.snapshot.view, snapshot.view) &&
-                        Math.abs(
-                            Math.log(packedAspect.current / aspectRef.current),
-                        ) < 0.1
+                        old && sameSource(old.snapshot.view, snapshot.view)
                             ? visiblePackingPositions(old.layout.nodes)
                             : [],
                     gap: 2,
                     groupGap: 12,
                     outlinePadding: 8,
                     aspect: aspectRef.current,
+                    // A new frame shape re-tightens from the shown layout.
+                    reshape:
+                        Math.round(Math.log(packedAspect.current) * 8) !==
+                        Math.round(Math.log(aspectRef.current) * 8),
                 },
             };
             packedAspect.current = aspectRef.current;

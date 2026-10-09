@@ -15,6 +15,8 @@ export type PackingInput = {
     outlinePadding?: number;
     /** Width ÷ height of the frame the layout is shown in; groups spread to match it. */
     aspect?: number;
+    /** The frame shape changed: compact toward `aspect` even if no stock changed. */
+    reshape?: boolean;
 };
 export type PackedNode = PackingNode &
     PackingPoint & {
@@ -70,7 +72,14 @@ const CURVE_SAMPLES = 6;
 const ANCHOR_ATTRACTION = 0.28;
 const STOCK_COMPACTION_STEPS = 70;
 const GROUP_COMPACTION_STEPS = 110;
-const SETTLE_STEPS = 400;
+/**
+ * Beyond this many groups (e.g. hundreds of unclassified single-stock groups)
+ * group-level compaction costs more than a playback frame allows, so those
+ * layouts keep the plain ray-search placement.
+ */
+const MAX_COMPACTED_GROUPS = 160;
+const SETTLE_STEPS = 120;
+const REBUILD_STEPS = 8;
 /** Wider or taller frames than this get the same composition shape. */
 const MAX_ASPECT = 3;
 const compareId = (a: { id: string }, b: { id: string }) =>
@@ -344,7 +353,14 @@ function compact(
     steps: number,
 ): void {
     if (disks.length < 2) return;
-    const scale = Math.max(1, ...disks.map((disk) => Math.abs(disk.r)));
+    const maxR = Math.max(...disks.map((disk) => disk.r));
+    // Overlaps below this are invisible; the exact repair below removes them.
+    const tolerance = Math.max(1e-9, gap * 0.02);
+    const order = disks.map((_, index) => index);
+    // Neighbours drift apart or together only slowly between rebuilds; pairs
+    // within this extra distance stay candidates until the next sweep.
+    const slack = maxR * 0.5 + gap;
+    const pairs: number[] = [];
     for (let step = 0; step < steps + SETTLE_STEPS; step++) {
         const settling = step >= steps;
         if (!settling) {
@@ -354,37 +370,55 @@ function compact(
                 disk.y -= disk.y * pull * ky;
             }
         }
-        let worst = 0;
-        for (let pass = 0; pass < 2; pass++)
-            for (let i = 0; i < disks.length; i++) {
-                const a = disks[i];
+        // Every few steps, sweep along x to list the pairs that can touch, then
+        // resolve them in index order (big groups first), as a full pairwise
+        // scan would, without paying for it with hundreds of groups.
+        if (step % REBUILD_STEPS === 0) {
+            order.sort((i, j) => disks[i].x - disks[j].x || i - j);
+            pairs.length = 0;
+            for (let p = 0; p < order.length; p++) {
+                const a = disks[order[p]];
                 if (a.r === 0) continue;
-                for (let j = i + 1; j < disks.length; j++) {
-                    const b = disks[j];
+                for (let q = p + 1; q < order.length; q++) {
+                    const b = disks[order[q]];
+                    if (b.x - a.x >= a.r + maxR + gap + slack) break;
                     if (b.r === 0) continue;
-                    let dx = b.x - a.x;
-                    let dy = b.y - a.y;
-                    const min = a.r + b.r + gap;
-                    const squared = dx * dx + dy * dy;
-                    if (squared >= min * min) continue;
-                    let distance = Math.sqrt(squared);
-                    if (distance < 1e-9) {
-                        // Deterministic separation for coincident centers.
-                        const angle = (hash(a.id + b.id) / 0x100000000) * TAU;
-                        dx = Math.cos(angle);
-                        dy = Math.sin(angle);
-                        distance = 1;
-                    }
-                    const push = (min - distance) / distance;
-                    const share = (b.r * b.r) / (a.r * a.r + b.r * b.r);
-                    worst = Math.max(worst, min - distance);
-                    a.x -= dx * push * share;
-                    a.y -= dy * push * share;
-                    b.x += dx * push * (1 - share);
-                    b.y += dy * push * (1 - share);
+                    const dy = Math.abs(b.y - a.y);
+                    if (dy >= a.r + b.r + gap + slack) continue;
+                    const i = Math.min(order[p], order[q]);
+                    const j = Math.max(order[p], order[q]);
+                    pairs.push(i * disks.length + j);
                 }
             }
-        if (settling && worst <= scale * 1e-9) break;
+            pairs.sort((x, y) => x - y);
+        }
+        let worst = 0;
+        for (let pass = 0; pass < 2; pass++)
+            for (const pair of pairs) {
+                const a = disks[Math.floor(pair / disks.length)];
+                const b = disks[pair % disks.length];
+                let dx = b.x - a.x;
+                let dy = b.y - a.y;
+                const min = a.r + b.r + gap;
+                const squared = dx * dx + dy * dy;
+                if (squared >= min * min) continue;
+                let distance = Math.sqrt(squared);
+                if (distance < 1e-9) {
+                    // Deterministic separation for coincident centers.
+                    const angle = (hash(a.id + b.id) / 0x100000000) * TAU;
+                    dx = Math.cos(angle);
+                    dy = Math.sin(angle);
+                    distance = 1;
+                }
+                const push = (min - distance) / distance;
+                const share = (b.r * b.r) / (a.r * a.r + b.r * b.r);
+                worst = Math.max(worst, min - distance);
+                a.x -= dx * push * share;
+                a.y -= dy * push * share;
+                b.x += dx * push * (1 - share);
+                b.y += dy * push * (1 - share);
+            }
+        if (settling && worst <= tolerance) break;
     }
     // Push passes converge slowly when radii differ by orders of magnitude;
     // the exact ray search guarantees clearance for whatever is left.
@@ -567,6 +601,7 @@ export function computePacking(input: PackingInput): PackingLayout {
     }
     // Compact only when something changed, so an unchanged day never jiggles.
     const tighten =
+        input.reshape === true ||
         previous.size === 0 ||
         [...previous.keys()].some((id) => !ids.has(id)) ||
         input.nodes.some((node) => {
@@ -592,10 +627,13 @@ export function computePacking(input: PackingInput): PackingLayout {
         );
     // Compact, strength-ordered targets supply a fixed origin. Previous positions
     // remain the majority of each survivor's initial position before collision repair.
+    // Only surviving groups being re-tightened use them, and building them is
+    // the costliest step with hundreds of groups, so skip it otherwise.
     const canonical: Disk[] = [];
-    for (const group of [...groups].sort(
-        (a, b) => b.weight - a.weight || compareId(a, b),
-    )) {
+    const anchored = tighten && groups.some((group) => group.previous);
+    for (const group of anchored
+        ? [...groups].sort((a, b) => b.weight - a.weight || compareId(a, b))
+        : []) {
         const disk = { id: group.id, x: 0, y: 0, r: group.r };
         Object.assign(disk, placeDisk(disk, canonical, groupSeparation));
         canonical.push(disk);
@@ -605,10 +643,11 @@ export function computePacking(input: PackingInput): PackingLayout {
     const hadPreviousGroups = groups.some((group) => group.previous);
     for (const group of groups) {
         if (group.previous) {
-            const target = targets.get(group.id)!;
-            const pull = tighten ? ANCHOR_ATTRACTION : 0;
-            group.x += (target.x - group.x) * pull;
-            group.y += (target.y - group.y) * pull;
+            const target = targets.get(group.id);
+            if (target) {
+                group.x += (target.x - group.x) * ANCHOR_ATTRACTION;
+                group.y += (target.y - group.y) * ANCHOR_ATTRACTION;
+            }
         } else {
             const edge = hadPreviousGroups
                 ? placed.reduce(
@@ -634,7 +673,7 @@ export function computePacking(input: PackingInput): PackingLayout {
     // exceeds the distance to the centre (0.09 × 3² < 1); beyond that the
     // update overshoots and the layout diverges.
     const shape = Math.min(MAX_ASPECT, Math.max(1 / MAX_ASPECT, aspect)) ** 2;
-    if (tighten)
+    if (tighten && groups.length <= MAX_COMPACTED_GROUPS)
         compact(
             groups,
             groupSeparation,
