@@ -148,7 +148,7 @@ Primary workflow:
 - `docker/`: Docker image for isolated research execution.
 - `docker-compose.yml`: optional legacy Docker configuration; see the limitations above before use.
 - `tasks/`: task-local missions, candidates, runs, summaries, comparisons, walkthroughs, and daily research logs.
-- `shioaji_stock_prices/`: git submodule that owns price and corporate-action data acquisition; see Repository Responsibilities below.
+- `stock-data-downloader/`: git submodule that owns price and corporate-action data acquisition; see Repository Responsibilities below.
 
 Dashboard and API:
 
@@ -181,12 +181,12 @@ Agent support:
 
 ## Repository Responsibilities
 
-This repo and the `shioaji_stock_prices/` git submodule have a firm ownership boundary:
+This repo and the `stock-data-downloader/` git submodule have a firm ownership boundary:
 
-- **`shioaji_stock_prices/` owns source acquisition and normalization**: downloading prices/events/institutional/revenue observations, converting minute bars to daily bars, and consolidating official/fallback quotes into `price_daily.parquet`. Source scripts run in its own `uv` environment. `scripts/run_daily.py` refreshes its source artifacts and backups; it does not refresh Stock's on-demand research derivatives. New source acquisition belongs in that integrated pipeline.
+- **`stock-data-downloader/` owns source acquisition and normalization**: downloading prices/events/institutional/revenue observations, converting minute bars to daily bars, and consolidating official/fallback quotes into `price_daily.parquet`. Source scripts run in its own `uv` environment. `scripts/run_daily.py` refreshes its source artifacts and backups; it does not refresh Stock's on-demand research derivatives. New source acquisition belongs in that integrated pipeline.
 - **This repo owns the backtest engine, research workflow, API, dashboard, research price policies, indicators, patterns and derived caches**. It reads producer source artifacts without changing them; its own versioned derivatives live outside worktrees in `research_cache/` and have a separate additive backup. The 2026-10-08 owner boundary supersedes older generic "all processing in producer" wording: source consolidation stays in the producer, research calculations live in Stock. See [derived data](docs/en/research-derived-data.md) and [pattern definitions](docs/en/pattern-definitions.md).
 - **Proactively improve the producer when research benefits**: the owner authorizes schema, index and derived-artifact changes that make data easier to find, understand or reuse. Develop in isolated submodule worktrees while preserving data, consumers, backup/restore and scheduled refresh. After owner merge, safely update the primary producer `main` and deliver Stock's gitlink/consumer PR. Check shared data before acquiring more; authorized acquisition and refresh use the primary producer's canonical data location with records other sessions can find, rather than leaving shared updates only in `.tmp/` or a worktree. Follow [development and delivery](docs/en/stock-agent-operations.md#submodule-development-and-delivery) and [canonical data updates](docs/en/stock-agent-operations.md#canonical-data-updates).
-- `shioaji_stock_prices/` is developed as a standalone project with its own documentation and `AGENTS.md`, and must not reference this repo, its engine, or its dashboard by name.
+- `stock-data-downloader/` is developed as a standalone project with its own documentation and `AGENTS.md`, and must not reference this repo, its engine, or its dashboard by name.
 
 ## Notion Output
 

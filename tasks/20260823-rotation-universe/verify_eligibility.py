@@ -25,10 +25,13 @@ import pandas as pd
 TASK_ROOT = Path(__file__).resolve().parent
 REPO_ROOT = TASK_ROOT.parents[1]
 sys.path.insert(0, str(TASK_ROOT))
+sys.path.insert(0, str(REPO_ROOT))
 
 from eligibility import LIQ_WINDOW, MIN_HISTORY, add_eligibility_columns, eligible_matrix, is_eligible  # noqa: E402
 
-PRICE = REPO_ROOT / "shioaji_stock_prices/data/price_daily.parquet"
+from research_core.producer_data import producer_data_root  # noqa: E402
+
+PRICE = producer_data_root() / "price_daily.parquet"
 WINDOW_START = "2019-01-02"
 WINDOW_END = "2026-08-14"
 SAMPLE_SYMBOLS = 40

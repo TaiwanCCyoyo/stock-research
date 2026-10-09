@@ -48,7 +48,7 @@ def readonly_sqlite(path: Path) -> sqlite3.Connection:
 
 def input_paths(root: Path) -> dict[str, Path]:
     return {
-        name: root / "shioaji_stock_prices" / "data" / filename
+        name: root / "stock-data-downloader" / "data" / filename
         for name, filename in (
             ("prices", "price_daily.parquet"),
             ("metadata", "symbol_meta.sqlite"),

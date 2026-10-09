@@ -2,7 +2,7 @@
 
 Universes are plain JSON files under `universes/` (explicit `codes` list or a
 classification `rule`). Rule-based universes are resolved against
-`shioaji_stock_prices/data/symbol_meta.sqlite`, read directly the same way
+`stock-data-downloader/data/symbol_meta.sqlite`, read directly the same way
 `engine/data_loader.py` reads `corporate_actions.sqlite` -- no import of the
 submodule's own tooling.
 """
@@ -76,7 +76,7 @@ def resolve_universe(
 
 def resolve_industry_rule(industry: str, symbol_meta_db: Path = DEFAULT_SYMBOL_META_DB) -> list[str]:
     if not symbol_meta_db.is_file():
-        raise UniverseError(f"symbol_meta.sqlite not found at {symbol_meta_db}; run shioaji_stock_prices/scripts/fetch_symbol_meta.py fetch first")
+        raise UniverseError(f"symbol_meta.sqlite not found at {symbol_meta_db}; run stock-data-downloader/scripts/fetch_symbol_meta.py fetch first")
     conn = sqlite3.connect(symbol_meta_db)
     try:
         rows = conn.execute(
