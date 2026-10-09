@@ -7,9 +7,6 @@
         ".claude/hooks/tests"
     ],
     "full_paths": [
-        "scripts/ci_scope.py",
-        "scripts/ci_test_domains.json",
-        "scripts/tests/test_ci_scope.py",
         ".github/*",
         "pyproject.toml",
         "uv.lock",
@@ -36,7 +33,20 @@
         "research_core/artifact_*",
         "research_core/evidence.py"
     ],
+    "full_path_exceptions": [".github/workflows/ci.yml"],
     "domains": {
+        "ci": {
+            "paths": [
+                ".github/workflows/ci.yml",
+                "scripts/ci_scope.py",
+                "scripts/ci_test_domains.json"
+            ],
+            "tests": [
+                "scripts/tests/test_ci_scope.py",
+                "scripts/tests/test_mypy_scopes.py",
+                "scripts/tests/test_file_hygiene.py"
+            ]
+        },
         "web": {
             "paths": ["research_web/*"],
             "tests": [],

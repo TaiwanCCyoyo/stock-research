@@ -65,7 +65,8 @@ def make_plan(changes: list[tuple[str, str]], *, root: Path = ROOT, force_full: 
         path = raw_path.replace("\\", "/")
         if path in inventory:
             changed_tests.add(path)
-        if status == "A" or matches(path, manifest["full_paths"]):
+        shared = matches(path, manifest["full_paths"]) and not matches(path, manifest.get("full_path_exceptions", []))
+        if status == "A" or shared:
             full = True
             reasons.append(f"{status} {path}: new path or shared/configuration safety fallback")
             continue

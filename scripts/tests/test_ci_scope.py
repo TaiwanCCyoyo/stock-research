@@ -74,10 +74,7 @@ def test_instructions_and_prose_keep_contracts_without_market_compute(path: str)
         "research_web/package-lock.json",
         "pyproject.toml",
         "tests/conftest.py",
-        "scripts/ci_scope.py",
-        "scripts/ci_test_domains.json",
-        ".github/workflows/ci.yml",
-        "scripts/tests/test_ci_scope.py",
+        ".github/dependabot.yml",
         "unknown/new.py",
         "tests/test_new_consumer.py",
     ],
@@ -89,6 +86,36 @@ def test_unknown_and_shared_fallback_contains_every_test(path: str) -> None:
     assert plan["python_tests"] == ci_scope.test_inventory(ci_scope.ROOT, ci_scope.load_manifest())
     assert "tests/test_data_loader_symbols.py" in plan["python_tests"]
     assert ".claude/hooks/tests/test_claude_post_tool_use_hygiene.py" in plan["python_tests"]
+
+
+CI_CONTRACT_TESTS = ["scripts/tests/test_ci_scope.py", "scripts/tests/test_file_hygiene.py", "scripts/tests/test_mypy_scopes.py"]
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        [("M", ".github/workflows/ci.yml")],
+        [("M", "scripts/ci_scope.py")],
+        [("M", "scripts/ci_test_domains.json")],
+        [("M", "scripts/tests/test_ci_scope.py")],
+        [("M", ".github/workflows/ci.yml"), ("M", "scripts/ci_scope.py"), ("M", "scripts/ci_test_domains.json"), ("M", "scripts/tests/test_ci_scope.py")],
+    ],
+)
+def test_ci_only_changes_select_ci_contracts_without_full_suite(changes: list[tuple[str, str]]) -> None:
+    plan = ci_scope.make_plan(changes)
+    assert not plan["full"]
+    assert not plan["frontend"]
+    assert set(CI_CONTRACT_TESTS) <= set(plan["python_tests"])
+    if all(path != "scripts/tests/test_ci_scope.py" for _status, path in changes):
+        assert sorted(plan["python_tests"]) == CI_CONTRACT_TESTS
+    else:  # the test file is also a hooks-domain contract; still a small targeted set, never the suite
+        assert len(plan["python_tests"]) < plan["inventory_count"] // 10
+
+
+def test_ci_only_exception_does_not_cover_other_workflows_or_mixed_changes() -> None:
+    assert ci_scope.make_plan([("M", ".github/workflows/other.yml")])["full"]
+    mixed = ci_scope.make_plan([("M", ".github/workflows/ci.yml"), ("M", "research_core/ledger.py")])
+    assert mixed["full"]
 
 
 def test_new_path_and_union_fail_safe() -> None:
