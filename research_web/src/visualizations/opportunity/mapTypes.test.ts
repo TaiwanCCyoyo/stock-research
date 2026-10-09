@@ -11,6 +11,9 @@ import {
     endedBurst,
     gainColorBand,
     territoryLabelText,
+    planTerritoryLabels,
+    labelWidth,
+    COMPARISON_LINE_TAIL,
     hasMapIndustry,
     mapGroupId,
     mapIndustries,
@@ -300,4 +303,75 @@ test("gain color thresholds distinguish observed gains without inferring phases 
     const before = structuredClone(input);
     assert.equal(gainColorBand(input.gain), "light");
     assert.deepEqual(input, before);
+});
+
+test("territory labels keep every drawn line inside a 320px map with 2-4 long comparison names", () => {
+    // A 320px-wide map at zoom 1: 1000 world units across, 12px text.
+    const view = { x0: -500, x1: 500, y0: -400, y1: 400 };
+    const fontSize = (12 * 1000) / 320;
+    const longName = "台灣高股息低波動動能精選加碼重試策略第二版";
+    const groups = Array.from({ length: 8 }, (_, i) => ({
+        id: `industry-${i}`,
+        x: -450 + i * 130,
+        top: -300 + (i % 3) * 200,
+        weight: 10 - i,
+        text: territoryLabelText(
+            {
+                label: "電腦及週邊設備業",
+                maxGain: null,
+                displayMetric: { gain: 588, basis: "annualized" },
+            },
+            32,
+        ),
+    }));
+    for (const count of [2, 3, 4]) {
+        const names = Array.from(
+            { length: count },
+            (_, i) => `${longName}${i}`,
+        );
+        const plan = planTerritoryLabels({
+            groups,
+            comparisonNames: names,
+            view,
+            fontSize,
+            limit: 5,
+        });
+        for (const [id, spot] of plan) {
+            const group = groups.find((item) => item.id === id)!;
+            const rows = [
+                group.text,
+                ...spot.prefixes.map(
+                    (prefix) => `${prefix}${COMPARISON_LINE_TAIL}`,
+                ),
+            ];
+            rows.forEach((row, line) => {
+                const half = labelWidth(row, fontSize) / 2;
+                assert.ok(
+                    spot.x - half >= view.x0 - 1e-9 &&
+                        spot.x + half <= view.x1 + 1e-9,
+                    `${count} comparisons: "${row}" leaves the map horizontally`,
+                );
+                const baseline = spot.y + fontSize * 1.3 * line;
+                assert.ok(
+                    baseline - fontSize >= view.y0 - 1e-9 &&
+                        baseline + fontSize * 0.3 <= view.y1 + 1e-9,
+                    `${count} comparisons: line ${line} leaves the map vertically`,
+                );
+            });
+            for (const prefix of spot.prefixes)
+                assert.ok(prefix === "" || prefix.endsWith("… "));
+        }
+    }
+    const roomy = planTerritoryLabels({
+        groups,
+        comparisonNames: ["0050", "動能策略"],
+        view: { x0: -2000, x1: 2000, y0: -1500, y1: 1500 },
+        fontSize: 12,
+        limit: 10,
+    });
+    assert.deepEqual(
+        [...roomy.values()][0].prefixes,
+        ["0050 ", "動能策略 "],
+        "names that fit are shown in full",
+    );
 });

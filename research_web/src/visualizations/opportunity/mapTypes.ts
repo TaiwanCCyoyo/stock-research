@@ -40,6 +40,113 @@ export function territoryLabelText(
     return `${industry.label} ${count} 檔 · 最高 ${best}`;
 }
 
+/** Width of a label in font-size units: full-width (CJK) letters 1, others 0.6. */
+export function labelWidth(text: string, fontSize: number): number {
+    return (
+        [...text].reduce(
+            (sum, letter) => sum + (letter.charCodeAt(0) <= 255 ? 0.6 : 1),
+            0,
+        ) * fontSize
+    );
+}
+
+/** The longest comparison line: share text with the "partly unknown" note. */
+export const COMPARISON_LINE_TAIL = "持股日上漲占比平均 100%（部分無法計算）";
+
+export interface TerritoryLabelGroup {
+    id: string;
+    /** Territory centre x and top edge y, in world units. */
+    x: number;
+    top: number;
+    weight: number;
+    /** First line: industry, count and best gain. */
+    text: string;
+}
+export interface TerritoryLabelSpot {
+    x: number;
+    y: number;
+    /** Name shown before each comparison line; shortened with "…" or empty. */
+    prefixes: string[];
+}
+
+/**
+ * Place the largest territories' labels so every drawn line stays inside the
+ * visible view. Portfolio names are shortened to fit; a label whose own lines
+ * cannot fit is left out (stock names, the ranking and the comparison panel
+ * still show the full text).
+ */
+export function planTerritoryLabels(input: {
+    groups: readonly TerritoryLabelGroup[];
+    comparisonNames: readonly string[];
+    view: { x0: number; x1: number; y0: number; y1: number };
+    fontSize: number;
+    limit: number;
+}): Map<string, TerritoryLabelSpot> {
+    const { groups, comparisonNames, view, fontSize: font, limit } = input;
+    const plan = new Map<string, TerritoryLabelSpot>();
+    const margin = font * 0.5;
+    const available = view.x1 - view.x0 - 2 * margin;
+    const tail = labelWidth(COMPARISON_LINE_TAIL, font);
+    const prefixes = comparisonNames.map((name) => {
+        if (comparisonNames.length < 2) return "";
+        const budget = available - tail - font * 0.6;
+        if (labelWidth(`${name} `, font) <= budget) return `${name} `;
+        let shortened = "";
+        for (const letter of name) {
+            if (labelWidth(`${shortened}${letter}… `, font) > budget) break;
+            shortened += letter;
+        }
+        // Colour still tells the lines apart when no name fits.
+        return shortened ? `${shortened}… ` : "";
+    });
+    const lines = comparisonNames.length + 1;
+    const placed: { x0: number; x1: number; y0: number; y1: number }[] = [];
+    for (const group of [...groups].sort(
+        (a, b) => b.weight - a.weight || (a.id < b.id ? -1 : 1),
+    )) {
+        if (plan.size >= limit) break;
+        const width = Math.max(
+            labelWidth(group.text, font),
+            ...prefixes.map((prefix) =>
+                labelWidth(`${prefix}${COMPARISON_LINE_TAIL}`, font),
+            ),
+        );
+        if (width > available) continue;
+        const x = Math.max(
+            view.x0 + margin + width / 2,
+            Math.min(view.x1 - margin - width / 2, group.x),
+        );
+        const block = font * 1.3 * (lines - 1);
+        const y = Math.max(
+            view.y0 + font * 1.2,
+            Math.min(
+                view.y1 - font * 0.5 - block,
+                group.top - font * 0.45 - block,
+            ),
+        );
+        const box = {
+            x0: x - width / 2,
+            x1: x + width / 2,
+            y0: y - font,
+            y1: y + block + font * 0.3,
+        };
+        if (
+            box.y1 > view.y1 + 1e-9 ||
+            placed.some(
+                (other) =>
+                    box.x0 < other.x1 &&
+                    other.x0 < box.x1 &&
+                    box.y0 < other.y1 &&
+                    other.y0 < box.y1,
+            )
+        )
+            continue;
+        placed.push(box);
+        plan.set(group.id, { x, y, prefixes });
+    }
+    return plan;
+}
+
 /** Raw peak gain cannot define an equivalent radius for duration-normalized cells. */
 export function showPeakAreaReference(
     row: Pick<MapRow, "displayMetric">,

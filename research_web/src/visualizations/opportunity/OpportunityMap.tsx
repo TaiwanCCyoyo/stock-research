@@ -16,6 +16,8 @@ import {
     endedBurst,
     gainColorBand,
     territoryLabelText,
+    planTerritoryLabels,
+    type TerritoryLabelSpot,
     metricLabel,
     showPeakAreaReference,
     visiblePackingPositions,
@@ -728,77 +730,44 @@ export function OpportunityMap({
         [renderedView, frame],
     );
     const territoryLabels = useMemo(() => {
-        const plan = new Map<string, { x: number; y: number }>();
-        if (!frame) return plan;
-        const limit = pixelWidth < 500 ? 5 : 10;
-        const placed: { x0: number; x1: number; y0: number; y1: number }[] = [];
-        const lines = shownComparisons.length + 1;
-        for (const { group } of frame.groups
+        if (!frame) return new Map<string, TerritoryLabelSpot>();
+        const halfWidth = worldFrame.width / 2 / camera.zoom;
+        const halfHeight = worldFrame.height / 2 / camera.zoom;
+        const groups = frame.groups
             .filter((item) => item.decorative && !item.exiting)
-            .sort((a, b) => b.group.weight - a.group.weight)) {
-            if (plan.size >= limit) break;
-            const industry = industries.get(group.id);
-            if (!industry || !group.points.length) continue;
-            if (group.nodeIds.length < 3 && plan.size >= 3) continue;
-            const rows = [
-                territoryLabelText(industry, group.nodeIds.length),
-                // Upper bound for each comparison line drawn under the name.
-                ...shownComparisons.map(
-                    (comparison) =>
-                        `${shownComparisons.length > 1 ? `${comparison.portfolio.name} ` : ""}持股日上漲占比平均 100%（部分無法計算）`,
-                ),
-            ];
-            const width =
-                Math.max(
-                    ...rows.map((text) =>
-                        [...text].reduce(
-                            (sum, letter) =>
-                                sum + (letter.charCodeAt(0) <= 255 ? 0.6 : 1),
-                            0,
+            .sort((a, b) => b.group.weight - a.group.weight)
+            .flatMap(({ group }, rank) => {
+                const industry = industries.get(group.id);
+                if (!industry || !group.points.length) return [];
+                // Small industries are only labelled among the top three.
+                if (group.nodeIds.length < 3 && rank >= 3) return [];
+                return [
+                    {
+                        id: group.id,
+                        x: group.x,
+                        top: Math.min(...group.points.map((p) => p.y)),
+                        weight: group.weight,
+                        text: territoryLabelText(
+                            industry,
+                            group.nodeIds.length,
                         ),
-                    ),
-                ) * worldFont;
-            const top = Math.min(...group.points.map((p) => p.y));
-            const halfView = worldFrame.width / 2 / camera.zoom;
-            const x = Math.max(
-                camera.x - halfView + width / 2 + worldFont * 0.5,
-                Math.min(
-                    camera.x + halfView - width / 2 - worldFont * 0.5,
-                    group.x,
-                ),
-            );
-            const halfHeight = worldFrame.height / 2 / camera.zoom;
-            // Keep every line inside the frame; comparison lines push the
-            // name above the territory, which can leave the top edge.
-            const y = Math.max(
-                camera.y - halfHeight + worldFont * 1.2,
-                Math.min(
-                    camera.y +
-                        halfHeight -
-                        worldFont * (0.5 + 1.3 * (lines - 1)),
-                    top - worldFont * (0.45 + 1.3 * (lines - 1)),
-                ),
-            );
-            const box = {
-                x0: x - width / 2,
-                x1: x + width / 2,
-                y0: y - worldFont,
-                y1: y + worldFont * 1.3 * (lines - 1) + worldFont * 0.3,
-            };
-            if (
-                placed.some(
-                    (other) =>
-                        box.x0 < other.x1 &&
-                        other.x0 < box.x1 &&
-                        box.y0 < other.y1 &&
-                        other.y0 < box.y1,
-                )
-            )
-                continue;
-            placed.push(box);
-            plan.set(group.id, { x, y });
-        }
-        return plan;
+                    },
+                ];
+            });
+        return planTerritoryLabels({
+            groups,
+            comparisonNames: shownComparisons.map(
+                (comparison) => comparison.portfolio.name,
+            ),
+            view: {
+                x0: camera.x - halfWidth,
+                x1: camera.x + halfWidth,
+                y0: camera.y - halfHeight,
+                y1: camera.y + halfHeight,
+            },
+            fontSize: worldFont,
+            limit: pixelWidth < 500 ? 5 : 10,
+        });
     }, [
         frame,
         industries,
@@ -1419,10 +1388,7 @@ export function OpportunityMap({
                                                             fill: `var(--compare-${i + 1})`,
                                                         }}
                                                     >
-                                                        {shownComparisons.length >
-                                                        1
-                                                            ? `${comparison.portfolio.name} `
-                                                            : ""}
+                                                        {spot.prefixes[i]}
                                                         持股日上漲占比平均{" "}
                                                         {shareLabel(average)}
                                                         {known.length <
