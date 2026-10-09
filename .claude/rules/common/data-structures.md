@@ -1,6 +1,6 @@
 # Data Structure Changes
 
-The `shioaji_stock_prices` submodule owns data acquisition; this repo consumes its
+The `stock-data-downloader` submodule owns data acquisition; this repo consumes its
 artifacts. That ownership rule says where scripts live. It does not say the artifacts'
 _shape_ is frozen — and a shape that forces every research task to recompute the same
 derived facts is a cost paid forever.
@@ -35,7 +35,7 @@ particular artifact shape. If a change would make an existing `runs/` summary or
 committed table unreadable or differently interpreted, it is a destructive change for this
 purpose even though no bytes are lost.
 
-**Check the schedule before writing anything under `shioaji_stock_prices/data/`.** Two
+**Check the schedule before writing anything under `stock-data-downloader/data/`.** Two
 Windows tasks write there:
 
 | task                            | trigger        | duration                                                                 |
@@ -129,7 +129,7 @@ declaring acquisition work done.
 
 ## Committing in the submodule
 
-`shioaji_stock_prices` is its own git repository. A delegated committer must not
+`stock-data-downloader` is its own git repository. A delegated committer must not
 commit inside it. Under the owner's scoped data-improvement authorization, finish
 the producer PR/review, wait for owner merge, safely update its primary `main`, then
 deliberately update Stock's gitlink and deliver the Stock PR. Report pending merges

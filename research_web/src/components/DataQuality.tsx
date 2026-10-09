@@ -15,7 +15,7 @@ function formatShare(share: number | null | undefined): string {
     return `${Math.round(share * 100)}%`;
 }
 
-/** Global data-completeness panel fed by shioaji_stock_prices's health-check report.
+/** Global data-completeness panel fed by stock-data-downloader's health-check report.
  * Unlike StrategyHealth, this renders a neutral empty state rather than hiding —
  * "not yet checked" is itself useful signal, not a state to suppress. */
 export function DataQuality({ data }: DataQualityProps) {
@@ -24,7 +24,7 @@ export function DataQuality({ data }: DataQualityProps) {
             <section className="panel">
                 <h3 className="panel-title">資料完整性</h3>
                 <div className="empty-state">
-                    尚未檢查（於 shioaji_stock_prices 執行 run_daily.py
+                    尚未檢查（於 stock-data-downloader 執行 run_daily.py
                     後即可產生報告）
                 </div>
             </section>

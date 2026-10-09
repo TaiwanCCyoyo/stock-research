@@ -13,7 +13,7 @@ services:
             - ./StockProject/engine:/app/StockProject/engine:ro
             - ./StockProject/backtest_cli.py:/app/StockProject/backtest_cli.py:ro
             - ./StockProject/strategies/test_strategy.py:/app/StockProject/strategies/test_strategy.py:ro
-            - ${STOCK_PRODUCER_DATA_ROOT:-./shioaji_stock_prices/data}:/app/data:ro
+            - ${STOCK_PRODUCER_DATA_ROOT:-./stock-data-downloader/data}:/app/data:ro
             - ./research_lab:/app/research_lab:rw
             - ./tasks:/app/tasks:rw
             - ./reports:/app/reports:rw
@@ -37,7 +37,7 @@ services:
             - ./universes:/app/universes:ro
             - ./StockProject/engine:/app/StockProject/engine:ro
             - ./StockProject/backtest_cli.py:/app/StockProject/backtest_cli.py:ro
-            - ${STOCK_PRODUCER_DATA_ROOT:-./shioaji_stock_prices/data}:/app/data:ro
+            - ${STOCK_PRODUCER_DATA_ROOT:-./stock-data-downloader/data}:/app/data:ro
             - ./research_lab:/app/research_lab:rw
             - ./tasks:/app/tasks:rw
             - ./reports:/app/reports:rw
@@ -63,7 +63,7 @@ services:
             - ./universes:/app/universes:ro
             - ./StockProject/engine:/app/StockProject/engine:ro
             - ./StockProject/backtest_cli.py:/app/StockProject/backtest_cli.py:ro
-            - ${STOCK_PRODUCER_DATA_ROOT:-./shioaji_stock_prices/data}:/app/data:ro
+            - ${STOCK_PRODUCER_DATA_ROOT:-./stock-data-downloader/data}:/app/data:ro
             - ./tasks:/app/tasks:rw
             - ./reports:/app/reports:rw
             - ./scripts/run_task_backtest.py:/app/scripts/run_task_backtest.py:ro

@@ -1,7 +1,7 @@
 #!/bin/sh
 # Fires on every checkout, including `git worktree add` (which reports
 # prev=<all-zero sha>, branch_checkout=1). Newly created linked worktrees
-# don't inherit gitignored submodule checkouts (e.g. shioaji_stock_prices),
+# don't inherit gitignored submodule checkouts (e.g. stock-data-downloader),
 # so this hook initializes the submodule and then seeds the part of its
 # price cache that this repo actually reads. Nothing here creates a link:
 # see the copy block below for why that matters.
@@ -47,14 +47,14 @@ if git submodule status 2>/dev/null | grep -q '^-'; then
     fi
 fi
 
-# The submodule checkout above materializes shioaji_stock_prices/data as a
+# The submodule checkout above materializes stock-data-downloader/data as a
 # real directory, but mutable producer input snapshots are ignored.
 # Python owns the explicit read-set, verified copies and consistent SQLite
 # backup logic. Existing snapshots stay untouched. Minute/raw stores and
 # new derived caches are excluded; retained legacy adjusted daily inputs are
 # explicit physical snapshots. Immutable research_cache versions are read
 # explicitly from the primary root, never copied, linked or refreshed here.
-data_dir="shioaji_stock_prices/data"
+data_dir="stock-data-downloader/data"
 main_root=$(dirname "$common_dir")
 main_data="$main_root/$data_dir"
 if [ -d "$main_data" ] && [ -d "$data_dir" ]; then

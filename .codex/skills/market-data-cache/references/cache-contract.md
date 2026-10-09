@@ -2,7 +2,7 @@
 
 ## Daily Prices
 
-`shioaji_stock_prices/data/price_daily.parquet` has capitalized columns: `Code`,
+`stock-data-downloader/data/price_daily.parquet` has capitalized columns: `Code`,
 `Date`, `Open`, `High`, `Low`, `Close`, `Volume`, precomputed `SMA5/10/20/60` and
 `EMA5/10/20/60`, plus `Source`. Cast `Code` to string before comparison.
 

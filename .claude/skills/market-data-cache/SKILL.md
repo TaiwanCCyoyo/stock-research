@@ -5,7 +5,7 @@ description: How to read this repo's Taiwan market data correctly - price_daily.
 
 # Market data cache
 
-Everything the backtests read lives in `shioaji_stock_prices/data/`, which this repo
+Everything the backtests read lives in `stock-data-downloader/data/`, which this repo
 **consumes and never writes** (the submodule owns acquisition). The facts below were
 measured, not assumed, and most of them are the kind that fail silently rather than
 loudly — a wrong unit gives you a plausible number, not an exception.

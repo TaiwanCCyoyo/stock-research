@@ -16,6 +16,8 @@ from research_lab.display import action_label, field_help, field_label, stock_la
 if TYPE_CHECKING:
     import panel as pn
 
+from research_core.producer_data import producer_data_root
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 TASKS_ROOT = REPO_ROOT / "tasks"
 SITE_ROOT = REPO_ROOT / "research_lab" / "site"
@@ -418,7 +420,7 @@ def bundle_stock_names(bundle: dict[str, Any]):
     return {code: names[code] for code in sorted(bundle_stock_codes(bundle)) if code in names}
 
 
-SYMBOL_META_DB = REPO_ROOT / "shioaji_stock_prices" / "data" / "symbol_meta.sqlite"
+SYMBOL_META_DB = producer_data_root() / "symbol_meta.sqlite"
 
 
 def symbol_classification(codes: Any, db_path: Path = SYMBOL_META_DB) -> dict[str, str | None]:
@@ -1378,12 +1380,12 @@ def build_help_view() -> "pn.Column":
 
 ### 重跑 2B 回測
 ```bash
-uv run python -m scripts.run_task_backtest --task <task-id> --strategy candidates/<file>.py --codes <codes> --capital-mode all --promote-summary --data-path shioaji_stock_prices/data/adjusted_prices/daily
+uv run python -m scripts.run_task_backtest --task <task-id> --strategy candidates/<file>.py --codes <codes> --capital-mode all --promote-summary --data-path stock-data-downloader/data/adjusted_prices/daily
 ```
 
 ### 參數掃描
 ```bash
-uv run python -m scripts.run_task_param_sweep --task <task-id> --strategy candidates/<file>.py --grid-file params/<file>.json --capital-mode all --promote-best --data-path shioaji_stock_prices/data/adjusted_prices/daily
+uv run python -m scripts.run_task_param_sweep --task <task-id> --strategy candidates/<file>.py --grid-file params/<file>.json --capital-mode all --promote-best --data-path stock-data-downloader/data/adjusted_prices/daily
 ```
 
 ### Dashboard

@@ -129,8 +129,8 @@ class DataLoader:
             return price_df
         self._warnings.append(
             f"price_daily.parquet is stale for {len(stale_codes)} symbols; reloaded from CSV "
-            "(rebuild by running shioaji_stock_prices/scripts/run_daily.py, "
-            "or shioaji_stock_prices/scripts/build_price_parquet.py directly)"
+            "(rebuild by running stock-data-downloader/scripts/run_daily.py, "
+            "or stock-data-downloader/scripts/build_price_parquet.py directly)"
         )
         # Merge per (Code, Date) rather than replacing the symbol wholesale. Since
         # 2026-08-30 the parquet is built from the official artifact and reaches

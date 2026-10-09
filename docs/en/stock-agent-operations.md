@@ -4,9 +4,9 @@ Read with the root `AGENTS.md` before worktree/data operations or research repor
 
 ## Data And Worktrees
 
-- Before removing a Stock worktree, inventory its ignored task datasets, `runs/`, copied producer inputs and other needed artifacts separately from tracked status. The generic inventory does not measure ignored files inside tracked submodules: inspect `shioaji_stock_prices/data/` explicitly, including reparse attributes. Preserve session-owned reusable outputs in the primary canonical location with provenance, integrity checks, backup coverage and an indexed data contract before cleanup; never overwrite existing artifacts or import a frozen input snapshot into live producer data. If ownership, equivalence or preservation is unknown, retain the worktree and report the blocker. Existing canonical data needs no duplicate copy merely because a worktree is removed.
+- Before removing a Stock worktree, inventory its ignored task datasets, `runs/`, copied producer inputs and other needed artifacts separately from tracked status. The generic inventory does not measure ignored files inside tracked submodules: inspect `stock-data-downloader/data/` explicitly, including reparse attributes. Preserve session-owned reusable outputs in the primary canonical location with provenance, integrity checks, backup coverage and an indexed data contract before cleanup; never overwrite existing artifacts or import a frozen input snapshot into live producer data. If ownership, equivalence or preservation is unknown, retain the worktree and report the blocker. Existing canonical data needs no duplicate copy merely because a worktree is removed.
 
-- Owner update 2026-10-08: acquisition, minute-to-daily conversion, official/source consolidation, raw corporate-action facts, metadata/calendar, institutional/revenue normalization and source backups belong in `shioaji_stock_prices`. Stock owns research price restoration policy, indicators, support/resistance, patterns and derived-cache/experiment backups. See [derived data](research-derived-data.md). Historical producer SMA/EMA and technical_features remain compatibility artifacts until the separately coordinated migration; new research must use Stock definitions.
+- Owner update 2026-10-08: acquisition, minute-to-daily conversion, official/source consolidation, raw corporate-action facts, metadata/calendar, institutional/revenue normalization and source backups belong in `stock-data-downloader`. Stock owns research price restoration policy, indicators, support/resistance, patterns and derived-cache/experiment backups. See [derived data](research-derived-data.md). Historical producer SMA/EMA and technical_features remain compatibility artifacts until the separately coordinated migration; new research must use Stock definitions.
 - Immutable Stock caches live at `<primary Stock checkout>/research_cache/<family>/<version>/`. Worktrees read explicit absolute versions directly, never copy them or create links; record version and manifest hash in the mission. Mutable `price_daily.parquet` remains an explicit physical input snapshot. Cache builds are on demand, version-additive and independent of the producer's schedule; do not introduce schedules or mutate raw inputs.
 - Reshaping those artifacts is allowed when it improves research quality, data access or reuse, or removes repeated work — an added column, index, or status file, or a restructured table — under the constraints in `.claude/rules/common/data-structures.md`: never destroy existing data, never break a stored result's readability, and always check the download schedule first rather than assuming a window is free — `StockProject-OfficialBackfill` caught up with its history on 2026-08-27 and now finishes in seconds, but it still runs ~1.5h on the first run after a month rolls over, and `StockProject-DailyUpdate` holds 18:00–18:45 on weekdays — it ran 19–45 min over the twelve weekday runs to 2026-09-08, nine of which overlapped the backfill's 18:25 trigger. Never kill processes indiscriminately; `taskkill /F /IM python.exe` has already ended a backfill mid-run.
 - Mutable producer inputs are **copied, never linked**, into a new worktree: `price_daily.parquet`, `*_day.csv`, corporate-action/metadata/institutional/revenue SQLite snapshots, mapping/classification and dividends. Retained formal daily-price files under `adjusted_prices/daily` are also physical legacy input snapshots for unmigrated sample/runtime consumers, not newly calculated Stock caches. The explicit whitelist is maintained in `scripts/seed_worktree_inputs.py`; unknown artifacts, minute/raw stores, `technical_features` and new immutable derived caches are not copied. Existing snapshots are never overwritten. Stable files retain source nanosecond modification times so CSV/parquet freshness comparisons remain meaningful. Under the one-writer-per-worktree contract, an exclusive per-file seeder lock guards same-directory staging, checksum verification and atomic rename; interrupted partials remain diagnostic files, never published inputs. SQLite uses its online backup API to include committed WAL data, not a live database file copy; its copied timestamp is that of the completed snapshot, not the live main DB file. Linking previously caused real data loss when worktree removal traversed a junction into main. Inspect Windows reparse attributes before any cleanup; do not assume `os.path.islink` detects every junction.
@@ -56,8 +56,8 @@ pushes to either `main`, arbitrary branch changes or scheduler configuration cha
 
 ## Canonical Data Updates
 
-The shared producer location is `<primary Stock checkout>/shioaji_stock_prices/`;
-in this workspace it is `D:/Project/Stock/shioaji_stock_prices/`. Its configured data
+The shared producer location is `<primary Stock checkout>/stock-data-downloader/`;
+in this workspace it is `D:/Project/stock-research/stock-data-downloader/`. Its configured data
 directory is the canonical source for other sessions and future worktree copies.
 Check its existing artifacts, coverage and update records before downloading or
 recomputing shared data; reuse or extend what is available. When acquisition,
@@ -84,7 +84,7 @@ a live SQLite database file-by-file or overwrite canonical history blindly.
 
 ## Deploying A Data-Pipeline Update
 
-Updating the `shioaji_stock_prices` gitlink selects code; it does not migrate
+Updating the `stock-data-downloader` gitlink selects code; it does not migrate
 Windows task actions. A release that moves launchers into `cron/` requires this
 production handoff, following the submodule's
 [Windows scheduling procedure](https://github.com/TaiwanCCyoyo/shioaji-stock-prices/blob/49c89190f37b47f57806ab9688236c6b6d70558e/docs/operations.md#windows-scheduling):
@@ -102,7 +102,7 @@ production handoff, following the submodule's
    production checkout be pulled or its submodule updated.
 3. After the release's `cron/` files are present in the primary checkout, run
    `./cron/setup_scheduled_tasks.ps1 -UpdateActionsOnly` from its
-   `shioaji_stock_prices` directory. This preserves triggers, principal, settings
+   `stock-data-downloader` directory. This preserves triggers, principal, settings
    and enabled state; it does not start a task. Skip migration when both actions
    already reference that checkout's `cron/` launchers.
 4. Confirm both actions reference existing `cron/` VBS files and their adjacent

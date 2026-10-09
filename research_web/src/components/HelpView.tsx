@@ -40,8 +40,8 @@ export function HelpView() {
                                 價格資料
                             </td>
                             <td>
-                                <code>shioaji_stock_prices/data/</code>（在{" "}
-                                <code>shioaji_stock_prices/</code> 執行{" "}
+                                <code>stock-data-downloader/data/</code>（在{" "}
+                                <code>stock-data-downloader/</code> 執行{" "}
                                 <code>uv run python run_daily.py</code>{" "}
                                 一鍵更新下載、轉檔、除權息與 parquet 快取）
                             </td>

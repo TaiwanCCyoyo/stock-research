@@ -16,7 +16,7 @@ from scripts.seed_worktree_inputs import seed_inputs
 
 def test_seed_only_read_inputs_no_derived_or_large_raw_and_preserves_existing(tmp_path: Path):
     primary, worktree = tmp_path / "primary", tmp_path / "worktree"
-    source, target = primary / "shioaji_stock_prices/data", worktree / "shioaji_stock_prices/data"
+    source, target = primary / "stock-data-downloader/data", worktree / "stock-data-downloader/data"
     source.mkdir(parents=True)
     target.mkdir(parents=True)
     for name in ("2330_day.csv", "2330_min.csv", "price_daily.parquet", "stock_category.json5", "unknown.bin"):
@@ -36,7 +36,7 @@ def test_seed_only_read_inputs_no_derived_or_large_raw_and_preserves_existing(tm
 
 def test_sqlite_snapshot_includes_committed_wal_rows(tmp_path: Path):
     primary, worktree = tmp_path / "primary", tmp_path / "worktree"
-    source, target = primary / "shioaji_stock_prices/data", worktree / "shioaji_stock_prices/data"
+    source, target = primary / "stock-data-downloader/data", worktree / "stock-data-downloader/data"
     source.mkdir(parents=True)
     target.mkdir(parents=True)
     with sqlite3.connect(source / "institutional.sqlite") as writer:
@@ -52,7 +52,7 @@ def test_sqlite_snapshot_includes_committed_wal_rows(tmp_path: Path):
 
 def test_stable_inputs_preserve_exact_mtime_and_csv_freshness(tmp_path: Path) -> None:
     primary, worktree = tmp_path / "primary", tmp_path / "worktree"
-    source, target = primary / "shioaji_stock_prices/data", worktree / "shioaji_stock_prices/data"
+    source, target = primary / "stock-data-downloader/data", worktree / "stock-data-downloader/data"
     source.mkdir(parents=True)
     target.mkdir(parents=True)
     parquet = source / "price_daily.parquet"
@@ -71,7 +71,7 @@ def test_stable_inputs_preserve_exact_mtime_and_csv_freshness(tmp_path: Path) ->
 
 def test_failed_copy_retains_partial_and_retry_publishes_complete_input(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     primary, worktree = tmp_path / "primary", tmp_path / "worktree"
-    source, target = primary / "shioaji_stock_prices/data", worktree / "shioaji_stock_prices/data"
+    source, target = primary / "stock-data-downloader/data", worktree / "stock-data-downloader/data"
     source.mkdir(parents=True)
     target.mkdir(parents=True)
     incoming = source / "2330_day.csv"
@@ -104,7 +104,7 @@ def test_failed_copy_retains_partial_and_retry_publishes_complete_input(tmp_path
 
 def test_target_created_during_copy_is_preserved(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     primary, worktree = tmp_path / "primary", tmp_path / "worktree"
-    source, target = primary / "shioaji_stock_prices/data", worktree / "shioaji_stock_prices/data"
+    source, target = primary / "stock-data-downloader/data", worktree / "stock-data-downloader/data"
     source.mkdir(parents=True)
     target.mkdir(parents=True)
     incoming = source / "2330_day.csv"
@@ -186,7 +186,7 @@ def test_cli_prints_counts_and_receipt_path_with_complete_receipt(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     primary, worktree = tmp_path / "primary", tmp_path / "worktree"
-    source, target = primary / "shioaji_stock_prices/data", worktree / "shioaji_stock_prices/data"
+    source, target = primary / "stock-data-downloader/data", worktree / "stock-data-downloader/data"
     source.mkdir(parents=True)
     target.mkdir(parents=True)
     for name in ("2330_day.csv", "2317_day.csv"):
@@ -211,7 +211,7 @@ def test_cli_prints_counts_and_receipt_path_with_complete_receipt(
 
 def legacy_layout(tmp_path: Path) -> tuple[Path, Path, Path, Path]:
     primary, worktree = tmp_path / "primary", tmp_path / "worktree"
-    source, target = primary / "shioaji_stock_prices/data", worktree / "shioaji_stock_prices/data"
+    source, target = primary / "stock-data-downloader/data", worktree / "stock-data-downloader/data"
     (source / "adjusted_prices/daily").mkdir(parents=True)
     target.mkdir(parents=True)
     return primary, worktree, source, target

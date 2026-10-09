@@ -16,7 +16,7 @@ VALID_SPEC_DICT: dict[str, Any] = {
     "schema_version": "1.0",
     "hypothesis": "A trend filter on 2B raises expectancy above zero.",
     "strategy": {"path": "two_b_ma_convergence.py"},
-    "run": {"codes": "2330,2454", "cash": 1000000, "data_path": "shioaji_stock_prices/data"},
+    "run": {"codes": "2330,2454", "cash": 1000000, "data_path": "stock-data-downloader/data"},
     "dimensions": [{"name": "ma_fast", "kind": "range", "min": 5, "max": 20, "step": 1}],
     "gates": {"min_closed_trades": 1},
     "windows": {

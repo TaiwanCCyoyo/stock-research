@@ -59,11 +59,14 @@ import pandas as pd
 TASK_ROOT = Path(__file__).resolve().parent
 REPO_ROOT = TASK_ROOT.parents[1]
 sys.path.insert(0, str(TASK_ROOT))
+sys.path.insert(0, str(REPO_ROOT))
 
 from eligibility import LIQ_FLOOR, MIN_HISTORY, add_eligibility_columns  # noqa: E402
 
-PRICE = REPO_ROOT / "shioaji_stock_prices/data/price_daily.parquet"
-META = REPO_ROOT / "shioaji_stock_prices/data/symbol_meta.sqlite"
+from research_core.producer_data import producer_data_root  # noqa: E402
+
+PRICE = producer_data_root() / "price_daily.parquet"
+META = producer_data_root() / "symbol_meta.sqlite"
 OUT = TASK_ROOT / "features.parquet"
 
 FEATURE_COLUMNS = [
