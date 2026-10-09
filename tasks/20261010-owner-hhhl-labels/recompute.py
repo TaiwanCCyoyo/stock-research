@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import io
 import json
 import logging
 import sys
@@ -65,9 +66,23 @@ EXPECTED: dict[str, dict[str, tuple[int | None, ...]]] = {
 EXPECTED_DOCS = {"r1": 30, "b2": 30, "b3a": 30, "b3b": 32, "b4a": 30, "b4b": 32, "b5a": 30, "b5b": 38, "reviews": 30, "lines": 24, "missed": 17}
 
 
+_SNAPSHOT: dict[str, bytes] = {}
+
+
+def file_bytes(rel: str) -> bytes:
+    """Each archived file is read once per process; every check and every use sees those bytes."""
+    if rel not in _SNAPSHOT:
+        _SNAPSHOT[rel] = (HERE / rel).read_bytes()
+    return _SNAPSHOT[rel]
+
+
+def open_zip(name: str) -> zipfile.ZipFile:
+    return zipfile.ZipFile(io.BytesIO(file_bytes(f"data/{name}")))
+
+
 def verified_zip(name: str) -> dict[str, bytes]:
     """Every member of an archive zip, after re-hashing each one against the zip's own manifest."""
-    with zipfile.ZipFile(HERE / "data" / name) as z:
+    with open_zip(name) as z:
         manifest = json.loads(z.read("manifest.json"))
         members = {n: z.read(n) for n in z.namelist() if n != "manifest.json"}
     if set(members) != set(manifest):
@@ -81,7 +96,7 @@ def verified_zip(name: str) -> dict[str, bytes]:
 def pinned_zip(name: str) -> dict[str, bytes]:
     """verified_zip, plus the manifest itself must match the digest pinned in this file."""
     members = verified_zip(name)
-    with zipfile.ZipFile(HERE / "data" / name) as z:
+    with open_zip(name) as z:
         if canonical(json.loads(z.read("manifest.json"))) != PINNED[name]:
             raise SystemExit(f"{name} differs from its pinned digest; nothing run or written")
     return members
@@ -123,15 +138,15 @@ def canonical(obj: object) -> str:
 def check_pins() -> None:
     found = {}
     for name in ("chart_sets.zip", "history.zip", "rule_sources.zip"):
-        with zipfile.ZipFile(HERE / "data" / name) as z:
+        with open_zip(name) as z:
             found[name] = canonical(json.loads(z.read("manifest.json")))
-    found["owner_labels.json"] = canonical(json.loads((HERE / "data" / "owner_labels.json").read_text(encoding="utf-8")))
-    found["rule_hits.json"] = canonical(json.loads((HERE / "data" / "rule_hits.json").read_text(encoding="utf-8")))
+    found["owner_labels.json"] = canonical(json.loads(file_bytes("data/owner_labels.json").decode("utf-8")))
+    found["rule_hits.json"] = canonical(json.loads(file_bytes("data/rule_hits.json").decode("utf-8")))
     for name, member in (("rule_hits_inputs.zip", "inputs.json"), ("timeline_receipt.zip", "receipt.json")):
-        with zipfile.ZipFile(HERE / "data" / name) as z:
+        with open_zip(name) as z:
             found[name] = canonical(json.loads(z.read(member)))
     for name in PINNED_RESULTS:
-        found[name] = hashlib.sha256((HERE / name).read_bytes()).hexdigest()
+        found[name] = hashlib.sha256(file_bytes(name)).hexdigest()
     bad = sorted(k for k in {**PINNED, **PINNED_RESULTS} if found.get(k) != {**PINNED, **PINNED_RESULTS}[k])
     if bad:
         raise SystemExit(f"archived artifacts {bad} differ from their pinned digests")
@@ -164,12 +179,12 @@ def check_against_dumps(docs: dict, history: dict[str, bytes]) -> None:
 
 
 def load() -> tuple[dict, dict, dict]:
-    history = {name: verified_zip(name) for name in ("chart_sets.zip", "history.zip", "rule_sources.zip")}["history.zip"]
-    labels = json.loads((HERE / "data" / "owner_labels.json").read_text(encoding="utf-8"))["pages"]
-    with zipfile.ZipFile(HERE / "data" / "chart_sets.zip") as z:
-        sets = {p: json.loads(z.read(v["chart_set"]).decode("utf-8")) for p, v in labels.items()}
-    hits = json.loads((HERE / "data" / "rule_hits.json").read_text(encoding="utf-8"))["batches"]
-    with zipfile.ZipFile(HERE / "data" / "rule_hits_inputs.zip") as z:
+    verified = {name: verified_zip(name) for name in ("chart_sets.zip", "history.zip", "rule_sources.zip")}
+    history, shown = verified["history.zip"], verified["chart_sets.zip"]
+    labels = json.loads(file_bytes("data/owner_labels.json").decode("utf-8"))["pages"]
+    sets = {p: json.loads(shown[v["chart_set"]].decode("utf-8")) for p, v in labels.items()}
+    hits = json.loads(file_bytes("data/rule_hits.json").decode("utf-8"))["batches"]
+    with open_zip("rule_hits_inputs.zip") as z:
         receipt = json.loads(z.read("inputs.json"))
     pinned = receipt["rule_hits_sha256"]
     charted = {it["code"] for p in ("b2", "b3a", "b4a", "b5a") for it in sets[p]}
@@ -192,10 +207,10 @@ def load() -> tuple[dict, dict, dict]:
         stray = sorted(set(v) - distinct_ids(sets[p], f"chart set of page {p}"))
         if stray:
             raise SystemExit(f"{p}: documents not in the chart set shown: {stray}")
-    with zipfile.ZipFile(HERE / "data" / "timeline_receipt.zip") as z:
+    with open_zip("timeline_receipt.zip") as z:
         timeline = json.loads(z.read("receipt.json"))["batches"]
     pages_of = {"2": ["b2"], "3": ["b3a", "b3b"], "4": ["b4a", "b4b"], "5": ["b5a", "b5b"]}
-    with zipfile.ZipFile(HERE / "data" / "chart_sets.zip") as z:
+    with open_zip("chart_sets.zip") as z:
         set_digests = json.loads(z.read("manifest.json"))
     if set(timeline) != set(BATCHES):
         raise SystemExit(f"timeline receipt covers batches {sorted(timeline)}, expected {sorted(BATCHES)}")
@@ -204,7 +219,7 @@ def load() -> tuple[dict, dict, dict]:
         if sorted(listed) != sorted(f"{s}.json" for s in BATCHES[batch][0]):
             raise SystemExit(f"batch {batch}: timeline receipt lists chart sets {listed}, expected {BATCHES[batch][0]}")
         prereg = row["preregistration"]
-        committed = hashlib.sha256((HERE / f"batch{batch}-preregistration.md").read_bytes()).hexdigest()
+        committed = hashlib.sha256(file_bytes(f"batch{batch}-preregistration.md")).hexdigest()
         if prereg["file"] != f"batch{batch}-preregistration.md" or prereg["sha256"] != committed or prereg["equals_committed_copy"] is not True:
             raise SystemExit(f"batch {batch}: timeline receipt is not about the committed preregistration")
         for x in row["chart_sets"]:

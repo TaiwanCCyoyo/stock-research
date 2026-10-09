@@ -631,3 +631,31 @@ def test_timeline_refuses_a_consistently_rebuilt_chart_set_archive(tmp_path: Pat
     assert run.returncode != 0
     assert "chart_sets.zip differs from its pinned digest" in run.stderr
     assert (copy / "data" / "timeline_receipt.zip").read_bytes() == before
+
+
+def test_recompute_uses_the_snapshot_it_verified_even_if_the_file_is_replaced(tmp_path: Path) -> None:
+    import importlib.util
+    import json
+    import shutil
+    import zipfile
+
+    copy = tmp_path / "task"
+    shutil.copytree(TASK, copy, ignore=shutil.ignore_patterns("__pycache__", "tests"))
+    sys.path.insert(0, str(copy))
+    spec = importlib.util.spec_from_file_location("recompute_copy", copy / "recompute.py")
+    assert spec is not None and spec.loader is not None
+    recompute = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(recompute)
+    recompute.verified_zip("chart_sets.zip")  # verified: this is the snapshot every later step must use
+    path = copy / "data" / "chart_sets.zip"
+    with zipfile.ZipFile(path) as z:
+        members = {n: z.read(n) for n in z.namelist()}
+    original = json.loads(members["sets/set_b5b.json"])
+    tampered = json.loads(members["sets/set_b5b.json"])
+    tampered[0]["kind"] = "control" if tampered[0]["kind"] == "rule" else "rule"
+    members["sets/set_b5b.json"] = json.dumps(tampered).encode("utf-8")  # manifest left as pinned
+    with zipfile.ZipFile(path, "w") as z:
+        for n, data in members.items():
+            z.writestr(n, data)
+    _docs, sets, _hits = recompute.load()
+    assert sets["b5b"] == original
