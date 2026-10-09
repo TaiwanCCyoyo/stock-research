@@ -136,7 +136,7 @@ failure. Local tests do not substitute for a successful hosted run.
 # From Stock, after an authorized origin refresh.
 uv run python scripts/audit_public_readiness.py --repo . --ref origin/main
 uv run python scripts/audit_public_readiness.py --repo . --ref origin/main --history
-uv run python scripts/audit_public_readiness.py --repo ./shioaji_stock_prices --ref origin/main --history
+uv run python scripts/audit_public_readiness.py --repo ./stock-data-downloader --ref origin/main --history
 
 # Explicitly inspect research content not yet merged to main.
 uv run python scripts/audit_public_readiness.py --repo . --ref origin/claude/owner-hhhl-labels-20261010 --history

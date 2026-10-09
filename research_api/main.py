@@ -81,7 +81,7 @@ def _resolve_data_quality_report() -> Path | None:
 
 @router.get("/data-quality")
 def get_data_quality() -> dict:
-    """Read-only view over shioaji_stock_prices's health-check report.
+    """Read-only view over stock-data-downloader's health-check report.
 
     Returns a neutral "not yet checked" response (never a 404/500) when the
     submodule has not produced a report yet, so the dashboard can render an

@@ -1,6 +1,6 @@
 """build_price_parquet output parity and DataLoader parquet staleness fallback.
 
-build_price_parquet.py lives in the shioaji_stock_prices submodule (generic
+build_price_parquet.py lives in the stock-data-downloader submodule (generic
 data-processing scripts are owned there, not by the main repo) and is loaded
 here by file path since it isn't an importable package from this repo.
 """
@@ -17,7 +17,7 @@ from pandas.testing import assert_frame_equal
 from StockProject.engine.data_loader import DataLoader
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-_SUBMODULE_ROOT = REPO_ROOT / "shioaji_stock_prices"
+_SUBMODULE_ROOT = REPO_ROOT / "stock-data-downloader"
 
 # The script resolves its default data path through the submodule's own
 # `config` package, so that root has to be importable before the module is

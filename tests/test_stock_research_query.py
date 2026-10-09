@@ -314,7 +314,7 @@ def test_load_price_data_reads_only_requested_symbol_file(monkeypatch: MonkeyPat
 
 
 def test_load_price_data_rejects_stale_path_instead_of_using_current_data(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
-    fallback_root = tmp_path / "repo" / "shioaji_stock_prices" / "data"
+    fallback_root = tmp_path / "repo" / "stock-data-downloader" / "data"
     write_price_csv(fallback_root)
     stale_root = tmp_path / "old-machine" / "shioaji_stock_prices" / "data"
     monkeypatch.setattr(stock_research_query, "DEFAULT_DATA_PATH", fallback_root)

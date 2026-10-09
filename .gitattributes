@@ -38,6 +38,7 @@ tasks/20260823-rotation-universe/verify_eligibility.py text eol=lf
 tasks/20260823-rotation-universe/verify_features.py text eol=lf
 tasks/20260823-rotation-universe/candidates/rotation_ranker.py text eol=lf
 tasks/20260823-rotation-universe/original-source.zip -text
+tasks/20260823-rotation-universe/typed-source-provenance.json text eol=lf
 
 # Owner-approved formatted evidence identities use stable LF checkout.
 research_core/sector_groups.v1.json text eol=lf
