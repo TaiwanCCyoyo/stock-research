@@ -268,17 +268,28 @@ def test_manual_cli_plan_is_serialized_without_executing(tmp_path: Path) -> None
     assert "full=true" in output.read_text(encoding="utf-8")
 
 
-def test_workflow_checks_out_the_submodules_that_inventoried_tests_import() -> None:
+def runs_producer_code(text: str) -> bool:
+    """A test that imports or executes code from the producer submodule, not just its data."""
+    return "stock-data-downloader" in text and any(marker in text for marker in ("spec_from_file_location", "sys.path", "runpy", "import_module"))
+
+
+def test_producer_code_detector_flags_the_old_import_style() -> None:
+    old = 'ROOT = REPO / "stock-data-downloader"\nsys.path.insert(0, str(ROOT))\nspec_from_file_location("x", ROOT / "scripts" / "b.py")\n'
+    assert runs_producer_code(old)
+    assert not runs_producer_code('"""stock-data-downloader produces price_daily.parquet; Stock only consumes it."""\n')
+
+
+def test_ci_needs_no_producer_submodule_because_tests_never_run_producer_code() -> None:
+    """Stock consumes the producer's data, not its code: no checkout of the submodule in CI."""
     workflow = yaml.load((ci_scope.ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
     checkout = next(step for step in workflow["jobs"]["repository-checks"]["steps"] if step.get("uses", "").startswith("actions/checkout@"))
-    assert checkout["with"]["submodules"] == "true"
-    gitmodules = (ci_scope.ROOT / ".gitmodules").read_text(encoding="utf-8")
-    paths = [line.split("=", 1)[1].strip() for line in gitmodules.splitlines() if line.strip().startswith("path")]
-    assert "stock-data-downloader" in paths
-    # the full-path test that needs it must keep importing from that submodule path
-    importer = (ci_scope.ROOT / "tests/test_build_price_parquet.py").read_text(encoding="utf-8")
-    assert '"stock-data-downloader"' in importer
-    assert "tests/test_build_price_parquet.py" in ci_scope.test_inventory(ci_scope.ROOT, ci_scope.load_manifest())
+    assert "submodules" not in checkout.get("with", {})
+    offenders = [
+        test
+        for test in ci_scope.test_inventory(ci_scope.ROOT, ci_scope.load_manifest())
+        if runs_producer_code((ci_scope.ROOT / test).read_text(encoding="utf-8"))
+    ]
+    assert offenders == []
 
 
 def test_workflow_retains_stable_check_and_explicit_full_entry() -> None:

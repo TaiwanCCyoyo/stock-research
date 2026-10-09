@@ -35,6 +35,18 @@
     ],
     "full_path_exceptions": [".github/workflows/ci.yml"],
     "domains": {
+        "price_data_contract": {
+            "paths": [
+                "tests/fixtures/price_daily/README.md",
+                "tests/fixtures/price_daily/price_daily.parquet",
+                "tests/fixtures/price_daily/regenerate.py",
+                "tests/fixtures/price_daily/rows.json"
+            ],
+            "tests": [
+                "tests/test_build_price_parquet.py",
+                "tests/test_data_loader_symbols.py"
+            ]
+        },
         "ci": {
             "paths": [
                 ".github/workflows/ci.yml",
