@@ -687,3 +687,28 @@ def test_swap_in_cleans_up_staged_files_when_a_later_write_fails(tmp_path: Path,
     assert sorted(p.name for p in tmp_path.iterdir()) == ["rule_hits.json", "rule_hits_inputs.zip"]
     archive_io.swap_in({a: b"new-a", b: b"new-b"})  # a retry is not blocked by leftovers
     assert (a.read_bytes(), b.read_bytes()) == (b"new-a", b"new-b")
+
+
+def test_swap_in_treats_a_locked_backup_as_cleanup_and_finishes_it_next_run(tmp_path: Path, monkeypatch) -> None:  # noqa: ANN001
+    sys.path.insert(0, str(TASK))
+    import archive_io
+
+    a, b = tmp_path / "rule_hits.json", tmp_path / "rule_hits_inputs.zip"
+    a.write_bytes(b"old-a")
+    b.write_bytes(b"old-b")
+    real = Path.unlink
+
+    def locked(self: Path, missing_ok: bool = False) -> None:
+        if self.name == "rule_hits_inputs.zip.previous":
+            raise PermissionError("locked by another process")
+        return real(self, missing_ok=missing_ok)
+
+    monkeypatch.setattr(Path, "unlink", locked)
+    pending = archive_io.swap_in({a: b"new-a", b: b"new-b"})  # succeeds: the swap itself committed
+    monkeypatch.undo()
+    assert (a.read_bytes(), b.read_bytes()) == (b"new-a", b"new-b")
+    assert [p.name for p in pending] == ["rule_hits_inputs.zip.previous"]
+    assert (tmp_path / "rule_hits_inputs.zip.previous.committed").exists()
+    archive_io.swap_in({a: b"newer-a", b: b"newer-b"})  # the next run removes the marked backup and proceeds
+    assert (a.read_bytes(), b.read_bytes()) == (b"newer-a", b"newer-b")
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["rule_hits.json", "rule_hits_inputs.zip"]

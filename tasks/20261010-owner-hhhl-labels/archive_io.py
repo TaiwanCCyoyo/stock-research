@@ -9,11 +9,36 @@ from pathlib import Path
 log = logging.getLogger("archive_io")
 
 
-def swap_in(outputs: dict[Path, bytes]) -> None:
+def _committed_marker(bak: Path) -> Path:
+    return bak.with_name(bak.name + ".committed")
+
+
+def _discard_backup(bak: Path) -> bool:
+    """Post-commit cleanup: mark the backup as superseded, then delete it. Returns False when it could
+    not be deleted (for example a Windows lock); the marker then lets the next run finish the job."""
+    try:
+        _committed_marker(bak).write_bytes(b"")
+        bak.unlink()
+        _committed_marker(bak).unlink()
+        return True
+    except OSError as exc:
+        log.warning("new outputs are in place, but %s could not be removed yet (%s); the next run retries", bak, exc)
+        return False
+
+
+def swap_in(outputs: dict[Path, bytes]) -> list[Path]:
     """Replace every target together: stage new bytes, move the old files aside, then move the new
-    ones in. Any failure puts every old file back, so the targets are never left half-updated."""
+    ones in. Any failure before the new files are in place puts every old file back, so the targets are
+    never left half-updated. Removing the old copies afterwards is cleanup, not part of the swap: if it
+    fails the swap still succeeded, and the backups it could not remove are returned."""
+    for t in outputs:  # finish an earlier run's cleanup, which is safe only when marked as committed
+        bak = t.with_name(t.name + ".previous")
+        if bak.exists() and _committed_marker(bak).exists():
+            _discard_backup(bak)
+        elif _committed_marker(bak).exists():
+            _committed_marker(bak).unlink()
     leftovers = [str(x) for t in outputs for x in (t.with_name(t.name + ".partial"), t.with_name(t.name + ".previous")) if x.exists()]
-    if leftovers:  # an earlier run was interrupted; never guess which copy is right
+    if leftovers:  # an earlier run was interrupted mid-swap; never guess which copy is right
         raise SystemExit(f"leftover files from an interrupted run, resolve them by hand first: {leftovers}")
     staged: dict[Path, Path] = {}
     backups: dict[Path, Path] = {}
@@ -40,5 +65,4 @@ def swap_in(outputs: dict[Path, bytes]) -> None:
             tmp.unlink(missing_ok=True)
         log.error("swap failed; previous outputs restored")
         raise
-    for bak in backups.values():
-        bak.unlink()
+    return [bak for bak in backups.values() if not _discard_backup(bak)]
