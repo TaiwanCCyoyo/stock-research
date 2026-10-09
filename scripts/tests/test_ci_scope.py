@@ -268,6 +268,19 @@ def test_manual_cli_plan_is_serialized_without_executing(tmp_path: Path) -> None
     assert "full=true" in output.read_text(encoding="utf-8")
 
 
+def test_workflow_checks_out_the_submodules_that_inventoried_tests_import() -> None:
+    workflow = yaml.load((ci_scope.ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
+    checkout = next(step for step in workflow["jobs"]["repository-checks"]["steps"] if step.get("uses", "").startswith("actions/checkout@"))
+    assert checkout["with"]["submodules"] == "true"
+    gitmodules = (ci_scope.ROOT / ".gitmodules").read_text(encoding="utf-8")
+    paths = [line.split("=", 1)[1].strip() for line in gitmodules.splitlines() if line.strip().startswith("path")]
+    assert "stock-data-downloader" in paths
+    # the full-path test that needs it must keep importing from that submodule path
+    importer = (ci_scope.ROOT / "tests/test_build_price_parquet.py").read_text(encoding="utf-8")
+    assert '"stock-data-downloader"' in importer
+    assert "tests/test_build_price_parquet.py" in ci_scope.test_inventory(ci_scope.ROOT, ci_scope.load_manifest())
+
+
 def test_workflow_retains_stable_check_and_explicit_full_entry() -> None:
     workflow = yaml.load((ci_scope.ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
     assert "push" not in workflow["on"]
