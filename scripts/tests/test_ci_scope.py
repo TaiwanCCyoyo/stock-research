@@ -250,7 +250,9 @@ def test_workflow_retains_stable_check_and_explicit_full_entry() -> None:
     assert "SKIP" not in steps["Repository checks"].get("env", {})
     assert "if" not in steps["Repository checks"]
     assert "steps.scope.outputs.frontend" in steps["Frontend validation"]["if"]
-    assert all(command in steps["Frontend validation"]["run"] for command in ["npm test", "npm run test:local-data", "npm run lint", "npm run build"])
+    assert all(command in steps["Frontend validation"]["run"] for command in ["npm test", "npm run lint", "npm run build"])
+    # test:local-data reads private local artifacts that a public hosted runner never has; run it locally only
+    assert "test:local-data" not in steps["Frontend validation"]["run"]
 
 
 @pytest.mark.skipif(os.name != "nt", reason="Windows CI native command dispatch")

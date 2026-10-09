@@ -93,8 +93,6 @@ jobs:
                   if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
                   npm test
                   if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-                  npm run test:local-data
-                  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
                   npm run lint
                   if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
                   npm run build
