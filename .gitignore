@@ -54,6 +54,8 @@ ENVIRONMENT_SETTING.md
 # --- Stock Project Specific ---
 # Data (Ignore large binaries and raw CSVs)
 stock-data-downloader/data/*/
+# Keep the retained old initialized checkout private and out of accidental staging.
+/shioaji_stock_prices/
 StockProject/data/
 *.parquet
 *.csv
@@ -220,6 +222,7 @@ verify-*.png
 
 # Preserved code-only source snapshot required by synthetic runtime parity.
 !tasks/20260823-rotation-universe/original-source.zip
+!tasks/20260823-rotation-universe/typed-source-provenance.json
 
 # Real quote vectors and source-factor packages stay local; public readers fail closed.
 /tasks/20261005-market-context-handoff/market-context-v2/inputs/0050.json.gz

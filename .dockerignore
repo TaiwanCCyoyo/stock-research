@@ -19,6 +19,8 @@ StockProject/analytics
 StockProject/data
 StockProject/strategies/candidates
 stock-data-downloader
+# Retained migration source must never enter the build context.
+shioaji_stock_prices
 
 *.parquet
 *.csv

@@ -144,3 +144,44 @@ def test_nightly_direct_script_can_resolve_producer_root() -> None:
         check=True,
     )
     assert "--data-path" in result.stdout
+
+
+@pytest.mark.parametrize("script", ["build_rotation_universe.py", "features.py", "verify_eligibility.py"])
+@pytest.mark.parametrize("configured", [False, True])
+def test_retained_generators_resolve_inputs_without_running_research(tmp_path: Path, script: str, configured: bool) -> None:
+    root = tmp_path / "frozen producer input with spaces"
+    root.mkdir()
+    environment = dict(os.environ)
+    environment.pop("STOCK_PRODUCER_DATA_ROOT", None)
+    if configured:
+        environment["STOCK_PRODUCER_DATA_ROOT"] = str(root)
+    expected = root.resolve() if configured else REPO_ROOT / "stock-data-downloader" / "data"
+    program = (
+        "import json,runpy,sys; m=runpy.run_path(sys.argv[1], run_name='migration_probe'); "
+        "print(json.dumps([str(m[k].parent) for k in ('PRICE', 'META') if k in m]))"
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", program, str(REPO_ROOT / "tasks" / "20260823-rotation-universe" / script)],
+        cwd=REPO_ROOT,
+        env=environment,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    roots = [Path(value) for value in json.loads(result.stdout)]
+    assert roots and all(value == expected for value in roots)
+
+
+def test_retained_legacy_checkout_is_not_accidentally_stageable(tmp_path: Path) -> None:
+    repo = tmp_path / "migration checkout"
+    repo.mkdir()
+    subprocess.run(["git", "init", str(repo)], capture_output=True, check=True)
+    (repo / ".gitignore").write_bytes((REPO_ROOT / ".gitignore").read_bytes())
+    legacy = repo / "shioaji_stock_prices"
+    legacy.mkdir()
+    subprocess.run(["git", "init", str(legacy)], capture_output=True, check=True)
+    (legacy / "data").mkdir()
+    (legacy / "data" / "official_daily.sqlite").write_bytes(b"synthetic private input")
+    subprocess.run(["git", "-C", str(repo), "add", "-A"], capture_output=True, check=True)
+    result = subprocess.run(["git", "-C", str(repo), "ls-files", "-z"], capture_output=True, check=True)
+    assert result.stdout.split(b"\0") == [b".gitignore", b""]
