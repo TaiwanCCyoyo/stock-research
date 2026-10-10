@@ -143,7 +143,7 @@ There is no mandatory Claude handoff or wait. This supersedes Claude-only acquis
 assignments in the earlier App objective and handoffs without rewriting those records.
 
 Prefer verified local reuse before acquisition. Pipeline changes still belong in
-`shioaji_stock_prices`; read the acquisition skill before acquisition implementation
+`stock-data-downloader`; read the acquisition skill before acquisition implementation
 or backfill, preserve raw evidence and PIT timing, and obey existing backup,
 scheduled-writer coordination and cache-protection rules. Do not overwrite existing
 data or silently revise sealed inputs/results. Paid access, expanded credential

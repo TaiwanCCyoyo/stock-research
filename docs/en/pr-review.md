@@ -2,8 +2,8 @@
 
 The implementing agent owns [PR follow-through](git-workflow.md#pr-follow-through): assess findings, fix and verify valid issues within scope, push the fixes, and promptly resolve addressed threads before waiting for current-head CI and renewed review. Resolution does not guarantee that a new review will start; verify its actual status before reporting completion. The owner retains merge authority.
 
-Target repository: `TaiwanCCyoyo/Stock`, base `main`. CI and hosted Codex review are active (verified on PR #5). Branch protection
-is not enabled: the private repository's current GitHub plan does not support it. See [PR setup](pr-setup.md).
+Target repository: `TaiwanCCyoyo/stock-research`, base `main`. Branch protection has not been
+verified for this repository; see [PR setup](pr-setup.md).
 
 ## Current workflow
 
@@ -13,11 +13,14 @@ is not enabled: the private repository's current GitHub plan does not support it
 - Local commits and `repository-checks` run the same hooks, including both mypy
   and Pyright; the hosted job runs them on Windows. Formatting,
   whitespace, YAML, large-file, secret, encoding and Ruff checks remain enabled.
-- Changes consisting only of Markdown/reStructuredText files skip Python tests.
-  Other changes run the shared-script/Codex-hook/Claude-hook test directories;
-  this is not the complete application suite under `tests/`.
+- `scripts/ci_scope.py` selects Python tests by domain from
+  `scripts/ci_test_domains.json`. Shared, configuration, unmapped and newly added
+  paths that no domain names exactly fall back to the full suite.
   Legacy files outside the change are not newly subjected to targeted type checks.
   It does not download market data, initialize the data submodule or run studies.
+- Reviews check placement as well as behavior: AGENTS.md
+  [Project Layout And Ownership](../../AGENTS.md#project-layout-and-ownership) says
+  where code, tests, data and records belong, and which placement findings to raise.
 - Internal reviewer reports do not count as hosted review or GitHub approval.
 - Hosted Codex review reports actionable findings;
   its comments do not grant approval or merge authority. Confirm it reviewed the

@@ -10,7 +10,7 @@
 
 設計實驗時優先考慮專案可讀性、可維護性與跨策略重用。[研究產物管理規範](../en/research-program.md#reusable-research-artifacts) 要求先查既有資產，並為有後續價值的產物登記用途、欄位語意、涵蓋範圍、來源版本、取得／重算入口及使用關係；收尾須讓下一個 session 能找到、取得並理解資料，未完成的保存或說明缺口須明列。
 
-擁有者授權代理在有具體研究效益時主動改善 `shioaji_stock_prices` 的資料結構、索引與衍生產物，讓資料好找、好懂、好重用，不因它是子模組而迴避修改。程式在獨立 worktree 開發，維持既有資料、讀取相容性、備份／還原及排程更新功能。依[子模組開發與交付流程](../en/stock-agent-operations.md#submodule-development-and-delivery)，由擁有者合併子模組 PR 後，安全更新其主要 checkout 的 `main`，再更新 Stock gitlink 並交付另一份 PR；主要 checkout 的分支不作實驗用途。下載前先查共用資料，獲授權的下載／更新使用[主要資料位置](../en/stock-agent-operations.md#canonical-data-updates)，留下其他 session 可查到的紀錄，避免資料只留在 `.tmp/` 或 worktree 造成重工；既有 worktree 快照不會自動同步。
+擁有者授權代理在有具體研究效益時主動改善 `stock-data-downloader` 的資料結構與索引，讓資料好找、好懂、好重用，不因它是子模組而迴避修改；研究用衍生資料、指標與型態則屬於本專案（見[衍生資料責任](../en/research-derived-data.md)）。程式在獨立 worktree 開發，維持既有資料、讀取相容性、備份／還原及排程更新功能。依[子模組開發與交付流程](../en/stock-agent-operations.md#submodule-development-and-delivery)，由擁有者合併子模組 PR 後，安全更新其主要 checkout 的 `main`，再更新 Stock gitlink 並交付另一份 PR；主要 checkout 的分支不作實驗用途。下載前先查共用資料，獲授權的下載／更新使用[主要資料位置](../en/stock-agent-operations.md#canonical-data-updates)，留下其他 session 可查到的紀錄，避免資料只留在 `.tmp/` 或 worktree 造成重工；既有 worktree 快照不會自動同步。
 
 ## Agent 工作流程與 GitHub
 

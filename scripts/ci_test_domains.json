@@ -149,8 +149,7 @@
                 "scripts/*sector*",
                 "scripts/*industry_role*",
                 "scripts/*wave_growth*",
-                "tasks/20261005-industry-role-comparison/*",
-                "tasks/20261005-sector-wave-scan/*"
+                "tasks/20261005-industry-role-comparison/*"
             ],
             "tests": [
                 "scripts/tests/test_sector*.py",
