@@ -118,3 +118,18 @@ def test_missing_linux_api_refuses_publication(tmp_path: Path, monkeypatch: pyte
         store._linux_publish_noreplace(source, destination)
     assert failure.value.errno == errno.ENOTSUP
     assert source.read_bytes() == b"staged" and not destination.exists()
+
+
+def test_new_directory_is_published_whole_and_never_merged_into_an_existing_one(tmp_path: Path) -> None:
+    target = tmp_path / "v2"
+    store.publish_new_directory(target, {"a.json": b"{}", "nested/b.bin": b"bytes"})
+    assert (target / "a.json").read_bytes() == b"{}"
+    assert (target / "nested" / "b.bin").read_bytes() == b"bytes"
+    assert [p.name for p in tmp_path.iterdir()] == ["v2"]
+
+    with pytest.raises(FileExistsError):
+        store.publish_new_directory(target, {"a.json": b"replaced"})
+    assert (target / "a.json").read_bytes() == b"{}"
+    with pytest.raises(ValueError, match="unsafe artifact name"):
+        store.publish_new_directory(tmp_path / "v3", {"../escape": b"x"})
+    assert not (tmp_path / "v3").exists()

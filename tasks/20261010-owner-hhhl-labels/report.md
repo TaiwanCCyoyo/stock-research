@@ -13,9 +13,9 @@ not a new study and adds no market exposure.
   with its bars, and, for the blind precision batches, the hidden `kind` (rule or control) of
   each item. Without the `kind` mapping the blind precision numbers cannot be recomputed.
 - **Every published batch 2-5 acceptance number reproduces from these tracked files alone.**
-  `recompute.py --check` re-derives 30 table cells: T2 recall/precision, v1/v2/v3 recall,
-  and B precision by kind, context and category. All 30 equal the published values.
-  `tests/test_recompute.py` keeps that true.
+  `scripts/verify_owner_hhhl_labels.py --check` re-derives 30 table cells: T2 recall/precision,
+  v1/v2/v3 recall, and B precision by kind, context and category. All 30 equal the published
+  values. `scripts/tests/test_owner_hhhl_labels.py` keeps that true.
 
 | page                     |    documents | what the owner did                                                |
 | ------------------------ | -----------: | ----------------------------------------------------------------- |
@@ -41,7 +41,7 @@ All 11 pages match the earlier `.tmp` dumps document for document, except one:
 
 The archive also keeps `labels_dump`, the first snapshot of page r1, taken when only 10 charts
 were done. Seven of its charts differ from the final export in `points`, `saved_at` and `schema`,
-because the owner re-labelled them later under a newer page schema. `build_label_archive.py` refuses
+because the owner re-labelled them later under a newer page schema. `scripts/build_owner_hhhl_labels.py` refuses
 any dump that differs from the fresh export in any other way; only these documented differences are allowed.
 
 ## Known gaps
@@ -58,7 +58,7 @@ any dump that differs from the fresh export in any other way; only these documen
 - **Page 「頭頭高底底高定義草稿」 (claude.ai/artifact/3cX1QMb3mMLGKTZtG4oBEZ)** was a draft for reading,
   with no labelling database known to Claude.
 - **Recall depends on a one-time capture.** `data/rule_hits.json` records what each rule version
-  detected, produced by `capture_rule_hits.py` from the `.tmp` rule sources. It refuses to run if
+  detected, produced by `scripts/capture_owner_hhhl_rule_hits.py` from the `.tmp` rule sources. It refuses to run if
   those differ from `data/rule_sources.zip`. Recomputing the hits themselves needs the atlas-v2 tables and those
   sources. The exact source bytes are kept in `data/rule_sources.zip`; the canonical versioned copies
   are in `research_core/patterns/hhhl/`.
@@ -80,25 +80,35 @@ file timestamps and the owner's first save show that held for every batch:
 | 5     | 2026-10-08 03:26:57                 | 2026-10-08 03:27:23      | 2026-10-08 03:28:33      |
 
 The first two columns are filesystem modification times in the `.tmp` working directory, recorded
-with each file's SHA-256 in `data/timeline_receipt.zip` by `record_timeline.py`. They are a
+with each file's SHA-256 in `data/timeline_receipt.zip` by `record_timeline.py` (kept at commit
+`8e891eb`; it cannot be re-run, because those file times are gone). They are a
 **retrospective record that cannot be independently audited**: Git keeps no file times, and a
 modification time can be changed. The third column is the `saved_at` the labelling page wrote; it is
-in the archive and `recompute.py` checks it against the receipt. Each committed preregistration is
+in the archive and the verifier checks it against the receipt. Each committed preregistration is
 byte-identical to the `.tmp` file whose time is recorded.
 
 ## Files
 
-| file                                                                   | content                                                                                                                          |
-| ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `data/owner_labels.json`                                               | the 323 documents, verbatim, grouped by page with artifact URL and collection                                                    |
-| `data/chart_sets.zip`                                                  | `sets/`: what was shown, with bars and the blind `kind`                                                                          |
-| `data/history.zip`                                                     | early example sets, `earlier_dumps/` (the local dumps the results were scored from), `pages/` (page sources, chat transcription) |
-| `data/rule_sources.zip`                                                | exact bytes of the rule sources used for `rule_hits.json`                                                                        |
-| `data/rule_hits_inputs.zip`                                            | digests of the atlas tables read and the exact factor rows applied by the capture                                                |
-| `data/timeline_receipt.zip`                                            | file times, sizes and SHA-256 behind the preregistration-order table                                                             |
-| `data/rule_hits.json`                                                  | rule days per labelled chart for T2 variants, v1, v2 and v3, with the stock's session list around each window                    |
-| `batch2..5-preregistration.md`, `batch2..5-result.md`                  | the original preregistrations and results, unchanged (see the dates section)                                                     |
-| `build_label_archive.py`, `capture_rule_hits.py`, `record_timeline.py` | how the data files were built                                                                                                    |
-| `recompute.py`                                                         | offline recomputation of every published number                                                                                  |
+| file                                                  | content                                                                                                                          |
+| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `data/owner_labels.json`                              | the 323 documents, verbatim, grouped by page with artifact URL and collection                                                    |
+| `data/chart_sets.zip`                                 | `sets/`: what was shown, with bars and the blind `kind`                                                                          |
+| `data/history.zip`                                    | early example sets, `earlier_dumps/` (the local dumps the results were scored from), `pages/` (page sources, chat transcription) |
+| `data/rule_sources.zip`                               | exact bytes of the rule sources used for `rule_hits.json`                                                                        |
+| `data/rule_hits_inputs.zip`                           | digests of the atlas tables read and the exact factor rows applied by the capture                                                |
+| `data/timeline_receipt.zip`                           | file times, sizes and SHA-256 behind the preregistration-order table                                                             |
+| `data/rule_hits.json`                                 | rule days per labelled chart for T2 variants, v1, v2 and v3, with the stock's session list around each window                    |
+| `batch2..5-preregistration.md`, `batch2..5-result.md` | the original preregistrations and results, unchanged (see the dates section)                                                     |
 
-See `data-contract.md` for fields and semantics.
+Code lives with the rest of the project's shared code, not in this folder:
+
+| file                                      | content                                                                       |
+| ----------------------------------------- | ----------------------------------------------------------------------------- |
+| `research_core/owner_hhhl_labels.py`      | verified loading of the archive, plus the shared recall/precision conventions |
+| `scripts/verify_owner_hhhl_labels.py`     | offline recomputation of every published number (`--check`)                   |
+| `scripts/build_owner_hhhl_labels.py`      | how the four label files were built, from an export into a new directory      |
+| `scripts/capture_owner_hhhl_rule_hits.py` | how `rule_hits.json` and its input receipt were captured                      |
+
+The data files were produced on 2026-10-08 by the task-local scripts at commit `8e891eb`
+(`build_label_archive.py`, `capture_rule_hits.py`, `record_timeline.py`); the shared versions
+reproduce the same archive manifests. See `data-contract.md` for fields and semantics.

@@ -10,6 +10,7 @@ import os
 import shutil
 import stat
 import sys
+import uuid
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any
 
@@ -68,6 +69,29 @@ def publish_noreplace(source: Path, destination: Path) -> None:
         _linux_publish_noreplace(source, destination)
     else:
         raise OSError(errno.ENOTSUP, "atomic no-replace publication unavailable", str(destination))
+
+
+def publish_new_directory(destination: Path, files: dict[str, bytes]) -> None:
+    """Publish `files` as a brand-new directory in one step; never replace or merge into one.
+
+    Every file is written and fsynced into a fresh sibling `.staging-<name>-<uuid>` tree, which
+    then moves to `destination` with `publish_noreplace`. A failure leaves `destination` absent
+    and keeps the staging tree for diagnosis.
+    """
+    destination = safe_path(destination)
+    if destination.exists():
+        raise FileExistsError(errno.EEXIST, "publication target already exists", str(destination))
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    staging = safe_path(destination.parent / f".staging-{destination.name}-{uuid.uuid4().hex}")
+    staging.mkdir()
+    for name, data in files.items():
+        path = safe_path(staging / relative_name(name))
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("xb") as stream:
+            stream.write(data)
+            stream.flush()
+            os.fsync(stream.fileno())
+    publish_noreplace(staging, destination)
 
 
 def file_digest(path: Path) -> str:
