@@ -112,14 +112,6 @@ tasks/*/**
 !tasks/20261009-hhhl-pattern-probability/publication-v1/
 !tasks/20261009-hhhl-pattern-probability/publication-v1/bundle.zip
 !tasks/20261009-hhhl-pattern-probability/publication-v1/manifest.json
-!tasks/20261010-owner-hhhl-labels/data/
-!tasks/20261010-owner-hhhl-labels/data/owner_labels.json
-!tasks/20261010-owner-hhhl-labels/data/chart_sets.zip
-!tasks/20261010-owner-hhhl-labels/data/history.zip
-!tasks/20261010-owner-hhhl-labels/data/rule_sources.zip
-!tasks/20261010-owner-hhhl-labels/data/rule_hits.json
-!tasks/20261010-owner-hhhl-labels/data/rule_hits_inputs.zip
-!tasks/20261010-owner-hhhl-labels/data/timeline_receipt.zip
 !tasks/20261010-hhhl-v4-probability/sources/
 !tasks/20261010-hhhl-v4-probability/sources/*.zip
 !tasks/20261010-hhhl-v4-probability/preparation-v1/
