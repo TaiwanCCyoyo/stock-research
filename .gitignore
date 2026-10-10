@@ -58,7 +58,6 @@ stock-data-downloader/data/*/
 /shioaji_stock_prices/
 StockProject/data/
 *.parquet
-!tests/fixtures/price_daily/price_daily.parquet
 *.csv
 *.key
 
