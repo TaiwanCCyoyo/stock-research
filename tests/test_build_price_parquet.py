@@ -171,3 +171,53 @@ def test_a_stale_symbol_keeps_the_history_its_csv_does_not_cover(tmp_path: Path)
     assert "2015-06-01" in dates, "the CSV refresh must not delete history the CSV lacks"
     assert "2025-01-06" in dates, "and the CSV's newer bar must still win"
     assert len(stale_symbol) == 4
+
+
+STUB_PRODUCER_BUILD = """
+from pathlib import Path
+
+import pandas as pd
+
+
+def build_price_parquet(data_dir):
+    data_dir = Path(data_dir)
+    frames = []
+    for csv in sorted(data_dir.glob("*_day.csv")):
+        frame = pd.read_csv(csv)
+        frame["Code"] = csv.name.split("_")[0]
+        frames.append(frame)
+    target = data_dir / "price_daily.parquet"
+    pd.concat(frames, ignore_index=True).to_parquet(target, index=False)
+    return target
+"""
+
+
+def test_regenerate_works_in_a_fresh_clone_without_a_scratch_directory(tmp_path: Path) -> None:
+    """Regression: a clean checkout has no .tmp, and regenerate.py must create it."""
+    import importlib.util
+    import subprocess
+
+    import pandas as pd
+
+    repo = tmp_path / "fresh clone"
+    producer_scripts = repo / "stock-data-downloader" / "scripts"
+    producer_scripts.mkdir(parents=True)
+    (producer_scripts / "build_price_parquet.py").write_text(STUB_PRODUCER_BUILD, encoding="utf-8")
+    producer = producer_scripts.parent
+    for args in (["init", "-q"], ["add", "-A"], ["-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "stub"]):
+        subprocess.run(["git", "-C", str(producer), *args], check=True, capture_output=True)
+    fixture_dir = tmp_path / "fixture"
+    fixture_dir.mkdir()
+    shutil.copyfile(FIXTURE / "rows.json", fixture_dir / "rows.json")
+    assert not (repo / ".tmp").exists()
+
+    spec = importlib.util.spec_from_file_location("price_fixture_regenerate", FIXTURE / "regenerate.py")
+    assert spec and spec.loader
+    regenerate = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(regenerate)
+    commit = regenerate.regenerate(repo_root=repo, fixture_dir=fixture_dir)
+
+    assert commit
+    assert (repo / ".tmp").is_dir()
+    rebuilt = pd.read_parquet(fixture_dir / "price_daily.parquet")
+    assert sorted(rebuilt["Code"].astype(str)) == sorted(code for code, bars in ROWS.items() for _ in bars)
