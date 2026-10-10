@@ -10,8 +10,8 @@ is not enabled: the private repository's current GitHub plan does not support it
 - The upstream sync and its policy-review follow-ups may publish task branches
   and PRs using the configured owner identity; see
   [Git workflow](git-workflow.md).
-- Local commits keep both mypy and Pyright. `repository-checks` uses the same
-  hooks on Windows but skips mypy; Pyright is the remote type gate. Formatting,
+- Local commits and `repository-checks` run the same hooks, including both mypy
+  and Pyright; the hosted job runs them on Windows. Formatting,
   whitespace, YAML, large-file, secret, encoding and Ruff checks remain enabled.
 - Changes consisting only of Markdown/reStructuredText files skip Python tests.
   Other changes run the shared-script/Codex-hook/Claude-hook test directories;
