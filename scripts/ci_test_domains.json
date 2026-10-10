@@ -4,7 +4,8 @@
         "tests",
         "scripts/tests",
         ".codex/hooks/tests",
-        ".claude/hooks/tests"
+        ".claude/hooks/tests",
+        "tasks/20261010-owner-hhhl-labels/tests"
     ],
     "full_paths": [
         ".github/*",
@@ -35,6 +36,36 @@
     ],
     "full_path_exceptions": [".github/workflows/ci.yml"],
     "domains": {
+        "owner_hhhl_labels": {
+            "paths": [
+                "tasks/20261010-owner-hhhl-labels/archive_io.py",
+                "tasks/20261010-owner-hhhl-labels/batch2-preregistration.md",
+                "tasks/20261010-owner-hhhl-labels/batch2-result.md",
+                "tasks/20261010-owner-hhhl-labels/batch3-preregistration.md",
+                "tasks/20261010-owner-hhhl-labels/batch3-result.md",
+                "tasks/20261010-owner-hhhl-labels/batch4-preregistration.md",
+                "tasks/20261010-owner-hhhl-labels/batch4-result.md",
+                "tasks/20261010-owner-hhhl-labels/batch5-preregistration.md",
+                "tasks/20261010-owner-hhhl-labels/batch5-result.md",
+                "tasks/20261010-owner-hhhl-labels/build_label_archive.py",
+                "tasks/20261010-owner-hhhl-labels/capture_rule_hits.py",
+                "tasks/20261010-owner-hhhl-labels/data-contract.md",
+                "tasks/20261010-owner-hhhl-labels/data/chart_sets.zip",
+                "tasks/20261010-owner-hhhl-labels/data/history.zip",
+                "tasks/20261010-owner-hhhl-labels/data/owner_labels.json",
+                "tasks/20261010-owner-hhhl-labels/data/rule_hits.json",
+                "tasks/20261010-owner-hhhl-labels/data/rule_hits_inputs.zip",
+                "tasks/20261010-owner-hhhl-labels/data/rule_sources.zip",
+                "tasks/20261010-owner-hhhl-labels/data/timeline_receipt.zip",
+                "tasks/20261010-owner-hhhl-labels/mission.md",
+                "tasks/20261010-owner-hhhl-labels/recompute.py",
+                "tasks/20261010-owner-hhhl-labels/record_timeline.py",
+                "tasks/20261010-owner-hhhl-labels/report.md"
+            ],
+            "tests": [
+                "tasks/20261010-owner-hhhl-labels/tests/test_recompute.py"
+            ]
+        },
         "price_data_contract": {
             "paths": [
                 "tests/fixtures/price_daily/README.md",
@@ -353,6 +384,7 @@
         "scripts/tests/test_verify_opportunity_history.py",
         "scripts/tests/test_windows_viewer_launcher.py",
         "scripts/tests/test_worktree_inventory.py",
+        "tasks/20261010-owner-hhhl-labels/tests/test_recompute.py",
         "tests/test_backtest_capital_mode_comparison.py",
         "tests/test_backtest_metrics.py",
         "tests/test_backtest_universe_cli.py",
