@@ -22,6 +22,8 @@ import research_core  # noqa: E402
 
 LOGGER = logging.getLogger(__name__)
 EVIDENCE_ROOT = ACTIVE_ROOT
+# Tracked evidence code plus its local-only inputs (ignored), in one location-relative tree.
+EVIDENCE_DIR = Path(__file__).resolve().parent / "evidence"
 PROTOTYPE = "006-artifacts-5fe106d423484ccf959cc4e2e5d6f6d3/prototype"
 EXECUTION_SOURCES = (
     ("prototype", "retained_execution/prototype/__init__.py"),
@@ -30,7 +32,7 @@ EXECUTION_SOURCES = (
     ("modeled_execution", "retained_execution/modeled_execution.py"),
 )
 EXECUTION_LEAF_NAMES = frozenset({"event_limits", "valuation", "no_trade_execution", "resumption_execution"})
-SCRATCH_SOURCES = (
+EVIDENCE_SOURCES = (
     ("asof_signal_prices", "010-membership-signal/asof_signal_prices.py"),
     ("model", "025-signal-factor-inputs/model.py"),
     ("readset", "026-market-runtime/readset.py"),
@@ -115,9 +117,8 @@ def load_execution_adapters() -> dict[str, ModuleType]:
 def load_adapters() -> dict[str, ModuleType]:
     """Import the bounded code closure; do not read price tables or run accounts."""
     check_core_origin(ACTIVE_ROOT)
-    scratch = EVIDENCE_ROOT / ".tmp/claude-kline"
     modules = load_execution_adapters()
-    modules.update({name: load_exact(name, scratch / relative) for name, relative in SCRATCH_SOURCES})
+    modules.update({name: load_exact(name, EVIDENCE_DIR / relative) for name, relative in EVIDENCE_SOURCES})
     modules.update({name: load_exact(name, ACTIVE_ROOT / "tasks" / relative) for name, relative in RESTORED_SOURCES})
     # These retained feature-panel dependencies belong to the active checkout.
     # They are declared code, NOT permission to invoke their strategy runner.

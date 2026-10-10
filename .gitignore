@@ -160,6 +160,22 @@ tasks/20261005-method-environment-interactions/params/*.json
 !tasks/20261005-relative-strength-holding/retained_execution/
 !tasks/20261005-relative-strength-holding/retained_execution/**
 !tasks/20261005-relative-strength-holding/execution-source-provenance.json
+# H05 evidence: tracked source code only; its inputs beside it stay local-only.
+!tasks/20261005-relative-strength-holding/evidence/
+!tasks/20261005-relative-strength-holding/evidence/**/
+!tasks/20261005-relative-strength-holding/evidence/010-membership-signal/asof_signal_prices.py
+!tasks/20261005-relative-strength-holding/evidence/025-signal-factor-inputs/model.py
+!tasks/20261005-relative-strength-holding/evidence/026-market-runtime/readset.py
+!tasks/20261005-relative-strength-holding/evidence/006-artifacts-5fe106d423484ccf959cc4e2e5d6f6d3/prototype/features_bridge.py
+!tasks/20261005-relative-strength-holding/evidence/010-membership-signal/dual_price_features.py
+!tasks/20261005-relative-strength-holding/evidence/026-market-runtime/feature_panel.py
+!tasks/20261005-relative-strength-holding/evidence/027-cash-runtime/selection.py
+!tasks/20261005-relative-strength-holding/evidence/027-cash-runtime/cash_terms.py
+!tasks/20261005-relative-strength-holding/evidence/018-share-adapters/shares.py
+!tasks/20261005-relative-strength-holding/evidence/018-share-adapters/capital_returns.py
+!tasks/20261005-relative-strength-holding/evidence/006-artifacts-5fe106d423484ccf959cc4e2e5d6f6d3/prototype/measurement_bridge.py
+!tasks/20261005-relative-strength-holding/evidence/018-share-adapters/measurement.py
+!tasks/20261005-relative-strength-holding/evidence/018-share-adapters/cash_dividends.py
 tasks/20261005-industry-role-comparison/params/*.json
 !tasks/*/research_dashboard/
 !tasks/*/research_dashboard/*

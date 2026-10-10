@@ -154,8 +154,11 @@ def verify_supplement(path: Path, publication: Path) -> dict[str, Any]:
     if set(packet) != expected or packet["schema_version"] != SCHEMA or packet["complete"] is not True:
         raise ValueError("audit supplement schema mismatch")
     metadata, manifest, _, audit = _publication_audit(Path(publication))
+    from scripts.publish_hhhl_v4_probability import publication_bundle_identity
+
+    identity = {"run_manifest_sha256": metadata["run_manifest_sha256"], "bundle_sha256": publication_bundle_identity(metadata)}
     for field, original in (("original_run_manifest_sha256", "run_manifest_sha256"), ("original_bundle_sha256", "bundle_sha256")):
-        if packet[field] != metadata[original]:
+        if packet[field] != identity[original]:
             raise ValueError("audit supplement publication identity mismatch")
     artifacts, _ = _validate_source_manifest(manifest)
     if packet["source_artifacts"] != {name: artifacts[name] for name in SOURCE_FILES}:

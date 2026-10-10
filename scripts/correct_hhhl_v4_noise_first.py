@@ -340,9 +340,11 @@ def read_correction(path: Path, verified: dict[str, Any], publication: Path) -> 
         if digest != _sha(embedded) or digest != member_descriptors[f"{CODE_PREFIX}{relative}"]["sha256"]:
             raise ValueError(f"embedded correction code identity mismatch: {relative}")
 
+    from scripts.publish_hhhl_v4_probability import publication_bundle_identity
+
     old = original_cells(original)
     if (
-        metadata.get("original_bundle_sha256") != published["bundle_sha256"]
+        metadata.get("original_bundle_sha256") != publication_bundle_identity(published)
         or metadata.get("original_run_manifest_sha256") != published["run_manifest_sha256"]
         or metadata.get("original_cells_sha256") != _sha(_json_bytes(old))
     ):

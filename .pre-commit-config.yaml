@@ -45,11 +45,15 @@ repos:
             language: system
             types: [python]
             require_serial: true # Mypy batches share one SQLite cache.
+            # Retained H05 evidence code keeps its original logic and runtime sys.path imports.
+            exclude: ^tasks/20261005-relative-strength-holding/evidence/
           - id: pyright
             name: Pyright (Targeted Python Check)
             entry: uv run pyright
             language: system
             types: [python]
+            # Retained H05 evidence code keeps its original logic and runtime sys.path imports.
+            exclude: ^tasks/20261005-relative-strength-holding/evidence/
 
     # Ruff (Python Linter & Formatter)
     - repo: https://github.com/astral-sh/ruff-pre-commit

@@ -434,7 +434,9 @@ def verify_supplement(path: Path, publication_root: Path) -> dict[str, Any]:
 
     if metadata.get("original_run_manifest_sha256") != publication_metadata.get("run_manifest_sha256"):
         raise ValueError("supplement run manifest identity does not match publication")
-    if metadata.get("original_bundle_sha256") != publication_metadata.get("bundle_sha256"):
+    from scripts.publish_hhhl_v4_probability import publication_bundle_identity
+
+    if metadata.get("original_bundle_sha256") != publication_bundle_identity(publication_metadata):
         raise ValueError("supplement bundle identity does not match publication")
     source_artifacts, source_identity = _validate_source_manifest(manifest)
     landmark_descriptor, row_count = _source_artifact(manifest, source_artifacts)
