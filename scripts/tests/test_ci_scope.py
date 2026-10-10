@@ -1,5 +1,6 @@
 """Functional impact selection and native CI dispatch; never executes a full suite."""
 
+import ast
 import json
 import os
 import shutil
@@ -268,17 +269,74 @@ def test_manual_cli_plan_is_serialized_without_executing(tmp_path: Path) -> None
     assert "full=true" in output.read_text(encoding="utf-8")
 
 
-def test_workflow_checks_out_the_submodules_that_inventoried_tests_import() -> None:
+PRODUCER_ROOT = "stock-data-downloader"
+CODE_LOADERS = {"spec_from_file_location", "run_path", "import_module", "insert", "append"}
+
+
+def runs_producer_code(source: str) -> bool:
+    """A test that loads code from the producer submodule, not just its data.
+
+    Parsed rather than text-matched, so a test that only mentions the producer in a string or
+    docstring (including this detector's own fixtures) is not flagged. A value is tainted when it
+    is the producer root constant or is built from a tainted name; a load is a call to an import
+    or sys.path mutator that receives a tainted value.
+    """
+    tree = ast.parse(source)
+
+    def tainted(node: ast.AST, names: set[str]) -> bool:
+        return any(
+            (isinstance(sub, ast.Constant) and isinstance(sub.value, str) and sub.value.replace("\\", "/").split("/")[0] == PRODUCER_ROOT)
+            or (isinstance(sub, ast.Name) and sub.id in names)
+            for sub in ast.walk(node)
+        )
+
+    names: set[str] = set()
+    changed = True
+    while changed:  # propagate through chains such as ROOT = REPO / "..." ; SCRIPT = ROOT / "scripts"
+        changed = False
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Assign) and tainted(node.value, names):
+                for target in node.targets:
+                    if isinstance(target, ast.Name) and target.id not in names:
+                        names.add(target.id)
+                        changed = True
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            func = node.func
+            called = func.attr if isinstance(func, ast.Attribute) else func.id if isinstance(func, ast.Name) else ""
+            if called in CODE_LOADERS and any(tainted(arg, names) for arg in node.args):
+                return True
+    return False
+
+
+def test_producer_code_detector_flags_the_old_import_style() -> None:
+    old = (
+        "import importlib.util, sys\n"
+        'ROOT = REPO / "stock-data-downloader"\n'
+        "sys.path.insert(0, str(ROOT))\n"
+        'SPEC = importlib.util.spec_from_file_location("x", ROOT / "scripts" / "b.py")\n'
+    )
+    assert runs_producer_code(old)
+    assert runs_producer_code('import runpy\nrunpy.run_path("stock-data-downloader/scripts/b.py")\n')  # one whole-path literal
+    assert not runs_producer_code('"""stock-data-downloader produces price_daily.parquet; Stock only consumes it."""\n')
+
+
+def test_producer_code_detector_does_not_flag_its_own_test_file() -> None:
+    """Regression: the detector's fixtures mention the producer only inside strings."""
+    assert not runs_producer_code(Path(__file__).read_text(encoding="utf-8"))
+
+
+def test_ci_needs_no_producer_submodule_because_tests_never_run_producer_code() -> None:
+    """Stock consumes the producer's data, not its code: no checkout of the submodule in CI."""
     workflow = yaml.load((ci_scope.ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
     checkout = next(step for step in workflow["jobs"]["repository-checks"]["steps"] if step.get("uses", "").startswith("actions/checkout@"))
-    assert checkout["with"]["submodules"] == "true"
-    gitmodules = (ci_scope.ROOT / ".gitmodules").read_text(encoding="utf-8")
-    paths = [line.split("=", 1)[1].strip() for line in gitmodules.splitlines() if line.strip().startswith("path")]
-    assert "stock-data-downloader" in paths
-    # the full-path test that needs it must keep importing from that submodule path
-    importer = (ci_scope.ROOT / "tests/test_build_price_parquet.py").read_text(encoding="utf-8")
-    assert '"stock-data-downloader"' in importer
-    assert "tests/test_build_price_parquet.py" in ci_scope.test_inventory(ci_scope.ROOT, ci_scope.load_manifest())
+    assert "submodules" not in checkout.get("with", {})
+    offenders = [
+        test
+        for test in ci_scope.test_inventory(ci_scope.ROOT, ci_scope.load_manifest())
+        if runs_producer_code((ci_scope.ROOT / test).read_text(encoding="utf-8"))
+    ]
+    assert offenders == []
 
 
 def test_workflow_retains_stable_check_and_explicit_full_entry() -> None:
