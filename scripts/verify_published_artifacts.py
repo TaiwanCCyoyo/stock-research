@@ -111,7 +111,8 @@ def v4_full(root: Path, local_root: Path) -> tuple[str, str]:
 
 def v4_supplements(root: Path, local_root: Path) -> tuple[str, str]:
     full = local_root / V4 / "publication-v2"
-    missing = _local(full)
+    audit = local_root / V4 / "landmark-audit-v1.zip"  # local-only: holds real closes
+    missing = _local(full) or _local(audit)
     if missing:
         return missing
     code = (
@@ -119,7 +120,7 @@ def v4_supplements(root: Path, local_root: Path) -> tuple[str, str]:
         "from scripts.supplement_hhhl_v4_diagnostics import verify_supplement as d\n"
         "from scripts.supplement_hhhl_v4_audit import verify_supplement as a\n"
         f"d(Path('{V4}/diagnostics-supplement-v2.zip'), Path(r'{full}'))\n"
-        f"a(Path('{V4}/landmark-audit-v1.zip'), Path(r'{full}'))\n"
+        f"a(Path(r'{audit}'), Path(r'{full}'))\n"
     )
     return _cli(root, "-c", code)
 

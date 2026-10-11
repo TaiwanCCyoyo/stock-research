@@ -72,7 +72,7 @@ v2 保存已選事件、來源選取索引與程式快照，可離線核對首�
 原 v1 補件仍保存為歷史紀錄，不再作為最新查詢的充分驗證。
 目錄內 correction-transport.zip、correction.001.bin、correction.002.bin 三檔都必要；
 分片組回原補件 bytes，不單獨交付 metadata。
-另有 [同十筆原事件的L20抽查](../../tasks/20261010-hhhl-v4-probability/landmark-audit-v1.zip)，
+另有同十筆原事件的 L20 抽查 `landmark-audit-v1.zip`（含真實收盤價，只在 primary 本機），
 補交t0／Z2／bonus與L20狀態、越線、日期、漲幅區及剩餘段欄位；原包不重寫。
 reader與來源限制見資料契約；不挑成功案例、不當代表性樣本，不讀新行情。
 原 [準備包](../../tasks/20261010-hhhl-v4-probability/preparation-v1/bundle.zip) 與 25/25 驗算

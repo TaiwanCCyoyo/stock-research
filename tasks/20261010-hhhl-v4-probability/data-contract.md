@@ -331,7 +331,7 @@ Int64 的 null，所有 status／reason／outcome 不動。本次原表 162,864 
 
 ## 同十筆原事件的 L20 抽查補件
 
-原 publication 的 audit-sample.parquet 只含 t0 事件。新 `landmark-audit-v1.zip`
+原 publication 的 audit-sample.parquet 只含 t0 事件。新 `landmark-audit-v1.zip`（含十筆真實收盤價，2026-10-10 起只在 primary 本機，不進 Git）
 （schema `hhhl-v4-l20-audit-supplement.v1`）補交同十個 event_id 的全部 L20 原欄位與
 joined audit，不取代原包或增加樣本。future builder 在相同前十筆排序後直接保存
 `l20_` 欄位；這份 additive reader 只針對原完成包的舊 ten-case schema。

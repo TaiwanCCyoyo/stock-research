@@ -114,7 +114,6 @@ tasks/*/**
 !tasks/20261010-hhhl-v4-probability/sources/*.zip
 !tasks/20261010-hhhl-v4-probability/preparation-v1/
 !tasks/20261010-hhhl-v4-probability/preparation-v1/bundle.zip
-!tasks/20261010-hhhl-v4-probability/landmark-audit-v1.zip
 # Public transport (source factors and real-close sample withheld) and result-only overlays.
 !tasks/20261010-hhhl-v4-probability/publication-v2-public/
 !tasks/20261010-hhhl-v4-probability/publication-v2-public/*

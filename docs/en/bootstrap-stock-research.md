@@ -288,6 +288,8 @@ only while redistribution rights remain unconfirmed:
   4,105 daily raw/adjusted prices, OHLC and volume values.
 - `tasks/20261009-hhhl-pattern-probability/publication-v1/bundle.zip`:
   an audit sample containing real anchor-close prices.
+- `tasks/20261010-hhhl-v4-probability/landmark-audit-v1.zip`: ten audit rows with real
+  closes (local-only from 2026-10-10; it was public from the first public commit until then).
 - `tasks/20261010-hhhl-v4-probability/preparation-v1/bundle.zip`:
   32,848 source corporate-action-factor rows.
 
