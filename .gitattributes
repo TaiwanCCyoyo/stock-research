@@ -113,3 +113,5 @@ tasks/20261005-market-full-history-web/presentation-manifest.json text eol=lf
 tasks/20261009-hhhl-pattern-probability/mission.md text eol=lf
 tasks/20261009-hhhl-pattern-probability/publication-v1/manifest.json text eol=lf
 tasks/20261009-hhhl-pattern-probability/sources/validation-cases.json text eol=lf
+# H05 evidence sources pin each other's SHA-256; keep their bytes exact on Windows checkouts.
+tasks/20261005-relative-strength-holding/evidence/** -text

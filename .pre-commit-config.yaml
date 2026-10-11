@@ -1,3 +1,5 @@
+# Retained H05 evidence code keeps its exact original bytes; no hook may rewrite it.
+exclude: ^tasks/20261005-relative-strength-holding/evidence/
 repos:
     # Basic out-of-the-box checks
     - repo: https://github.com/pre-commit/pre-commit-hooks
