@@ -40,8 +40,8 @@ code, evaluate research or require the original worktree, price cache or bulk.
 
 ## Identity and storage
 
-- Transport ID: `industry-role-transport.v2-03dff10e7e7d270ef703560c4233ae320261f74d1ebb0d07ec3c93f5de845785`. <!-- pragma: allowlist secret -->
-- Scientific publication ID: `industry-role-publication.v1-d5c256e0f5207587a61a579739a92e902c839d1a203dd6b8067d738f9e0b65f2`. <!-- pragma: allowlist secret -->
+- Transport ID: `industry-role-transport.v2-ca20a8294dd258b69b73fc4c9cf481de0228ea9d0174ddd76c38914d580ce35b`. <!-- pragma: allowlist secret -->
+- Scientific publication ID: `industry-role-publication.v1-fb66c70b4ca3713ca125a039d0fa4d042bdceb64203f654320b29bc036f683aa`. <!-- pragma: allowlist secret -->
 - [manifest.json](publication-v2/manifest.json) binds all eight payload files;
   [source-manifest.json](publication-v2/source-manifest.json) is the unchanged v1 manifest.
 - Original results.json.xz is 660,188 bytes. Contiguous parts are 350,000 and

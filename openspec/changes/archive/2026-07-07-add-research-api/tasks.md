@@ -65,7 +65,7 @@
     > Evidence: 130 passed.
 - [x] 6.2 Run `uv run ruff check` on new files.
     > Evidence: `research_api/`, new/updated tests, `data_loader.py` all clean; the only
-    > repo findings are pre-existing in the `shioaji_stock_prices` submodule. `mypy` on
+    > repo findings are pre-existing in the `stock-data-downloader` submodule. `mypy` on
     > `research_api` also clean.
 - [x] 6.3 Manual E2E: start the API service alongside the existing Panel dashboard, hit
       each endpoint with a real task id and confirm response content matches what the Panel

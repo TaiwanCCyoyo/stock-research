@@ -2,8 +2,8 @@
 
 任务 ID 沿用擁有者交接的 20261010，本機開始日期為 2026-10-08（Asia/Taipei）。
 交接日期不是執行時間證據。來源為
-`D:/Project/Stock/.tmp/claude-kline/20261010-codex-handoff-hhhl-v4-probability.md`，
-SHA-256：2653c95adb14a665dd453326b4cce34cf6e7853b1ada8d002d9a8489eed42844。
+`<legacy-checkout>/.tmp/claude-kline/20261010-codex-handoff-hhhl-v4-probability.md`，
+SHA-256：5a79c097cf29d511711acd2b5a4b7cacc90781d35950f8d4d375839a6e52c763。
 
 ## 本批三個問題
 
@@ -20,7 +20,7 @@ L=10/40 僅固定敏感度，不擇优改主值。只有原 t0 時鐘，期限 t
 v4 來源與交接文字存在近期壓力起點差異；新還原價格结果與原 atlas 的未知语意也須明訂。
 擁有者已授權本批測試；這是口徑澄清，不是要求再授權、重新啟動目標或等待補抓資料。
 待確認項目及建議已交至
-`D:/Project/Stock/.tmp/claude-kline/20261010-codex-v4-definition-questions.md`。
+`<legacy-checkout>/.tmp/claude-kline/20261010-codex-v4-definition-questions.md`。
 不得用看到的機率選擇解釋。此階段只做移植、合成測試、固定輸入與 25 筆原例來源驗算，
 不讀 forward label、不計算市場命中或地標结果。四個口徑確認後以追加段落定案、提交，
 才可執行一次固定範圍計算。
@@ -35,12 +35,12 @@ v4 來源與交接文字存在近期壓力起點差異；新還原價格结果�
 | ------------------------ | ---------------------------------------------------------------- |
 | hhhl_rule_v4.py          | 6390e5a61519c041a6989257af59599e71ae1c24ba5d6d70c96c5c7ea8f8d5c8 |
 | bigrange_v4.py           | 59634879c7e0358b57baa98a2187eb7de928de7df229c3053ba905f91a6dd574 |
-| adjprice.py              | cb8d7a53b8362c51292795eefd90e9cdb8353b38fa81695779bf6e7b7fe777ef |
-| detect.py                | fba922502f8d34c2c928c7accca9baa17b1e9c83dae8be398b8b4fa773ee8eeb |
+| adjprice.py              | 99e181271fd11d68d646e44c21912c6ac76724f6ef6dfe1be17117f20ddd12a8 |
+| detect.py                | b20c1004f241b1c993263fada9225eb8108769afbcac21c24675bed4f81c4a24 |
 | set_b5b.json（驗算來源） | 4cd3eab10b14ee8063b62e3a7e520f5bcbb922f16293896199613876700efc2d |
 
 僅使用 atlas-v2 的 2019-01-02..2026-08-14，原 dataset ID
-`fda-86245f2e223fc45c9f84afb0dcf77c1fff7ab22d0a1b0b4a4c8800972ce9327e`。
+`fda-e712fc9408c147ae410a2fc0a687ef6f1dba785cab8cfb0312f79c504c6c5206`。
 原產物在 primary `tasks/20261004-feature-discrimination-atlas/datasets/atlas-v2`。
 沿用全部原股票與共用日曆，原 `base_eligible` 不換；目前參考股票池、有倖存者限制，
 不是歷史 PIT 全上市櫃母體。這是已暴露開發期，不因換 v4 變成獨立確認。

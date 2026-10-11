@@ -26,7 +26,7 @@ DIGEST = re.compile(r"[0-9a-f]{64}")
 
 
 def default_sources(project: Path) -> dict[str, Path]:
-    """Only Stock cache and formal task datasets/owner labels; not broker data."""
+    """Only stock-research cache and formal task datasets/owner labels; not broker data."""
     project = safe_path(project)
     sources: dict[str, Path] = {}
     cache = project / "research_cache"

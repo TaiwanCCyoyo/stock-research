@@ -5,23 +5,91 @@
     "files": [
         {
             "path": "retained_execution/prototype/__init__.py",
-            "original_path": "D:/Project/Stock/.tmp/claude-kline/006-artifacts-5fe106d423484ccf959cc4e2e5d6f6d3/prototype/__init__.py",
+            "original_path": "D:/Project/stock-research/tasks/20261005-relative-strength-holding/evidence/006-artifacts-5fe106d423484ccf959cc4e2e5d6f6d3/prototype/__init__.py",
             "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
         },
         {
             "path": "retained_execution/prototype/execution_policy.py",
-            "original_path": "D:/Project/Stock/.tmp/claude-kline/006-artifacts-5fe106d423484ccf959cc4e2e5d6f6d3/prototype/execution_policy.py",
+            "original_path": "D:/Project/stock-research/tasks/20261005-relative-strength-holding/evidence/006-artifacts-5fe106d423484ccf959cc4e2e5d6f6d3/prototype/execution_policy.py",
             "original_sha256": "27c65e88d51d74a492b3ec421b9f891d37c80b8332937c42c6b11631af1c8fe8"
         },
         {
             "path": "retained_execution/prototype/providers.py",
-            "original_path": "D:/Project/Stock/.tmp/claude-kline/006-artifacts-5fe106d423484ccf959cc4e2e5d6f6d3/prototype/providers.py",
+            "original_path": "D:/Project/stock-research/tasks/20261005-relative-strength-holding/evidence/006-artifacts-5fe106d423484ccf959cc4e2e5d6f6d3/prototype/providers.py",
             "original_sha256": "4da59f271e28febdbf73c7d073da6f6223d131035ebb95bab8058b5c5e7585ed"
         },
         {
             "path": "retained_execution/modeled_execution.py",
-            "original_path": "D:/Project/Stock/.tmp/claude-kline/008-codex-model-bridge/modeled_execution.py",
+            "original_path": "D:/Project/stock-research/tasks/20261005-relative-strength-holding/evidence/008-codex-model-bridge/modeled_execution.py",
             "original_sha256": "b6f1ae7988507162b145087d9cad65081ea2ab9a1c2660c666f29ead7f867a3e"
         }
-    ]
+    ],
+    "evidence_sources": [
+        {
+            "path": "evidence/010-membership-signal/asof_signal_prices.py",
+            "original_path": "<legacy-checkout>/.tmp/claude-kline/010-membership-signal/asof_signal_prices.py",
+            "original_sha256": "683cef5e5c9cd0ed886fe3291c79b42b4772ebee17e8c81d2545d660ca6374b7"
+        },
+        {
+            "path": "evidence/025-signal-factor-inputs/model.py",
+            "original_path": "<legacy-checkout>/.tmp/claude-kline/025-signal-factor-inputs/model.py",
+            "original_sha256": "f2ebe2d2d9bb079c03846fbadba1e7307bff62bd9b53b6b5542bd3f20bfafa66"
+        },
+        {
+            "path": "evidence/026-market-runtime/readset.py",
+            "original_path": "<legacy-checkout>/.tmp/claude-kline/026-market-runtime/readset.py",
+            "original_sha256": "025e219cd8dd830f5018f8425678b1eee3faf1755228057e88d0b4cf10efaa3c"
+        },
+        {
+            "path": "evidence/006-artifacts-5fe106d423484ccf959cc4e2e5d6f6d3/prototype/features_bridge.py",
+            "original_path": "<legacy-checkout>/.tmp/claude-kline/006-artifacts-5fe106d423484ccf959cc4e2e5d6f6d3/prototype/features_bridge.py",
+            "original_sha256": "f769a5d081cbecb2eb6266a6c9aaab657fd484f391326b509ce3f0fcf65975a3"
+        },
+        {
+            "path": "evidence/010-membership-signal/dual_price_features.py",
+            "original_path": "<legacy-checkout>/.tmp/claude-kline/010-membership-signal/dual_price_features.py",
+            "original_sha256": "93ec721b2da2d3a6410942b95181cb4b7efba0f0254d85f4c327cadd665206e4"
+        },
+        {
+            "path": "evidence/026-market-runtime/feature_panel.py",
+            "original_path": "<legacy-checkout>/.tmp/claude-kline/026-market-runtime/feature_panel.py",
+            "original_sha256": "01c978151e36579cf0faad325f75065aa527225e76ad363bde19193108762bf7"
+        },
+        {
+            "path": "evidence/027-cash-runtime/selection.py",
+            "original_path": "<legacy-checkout>/.tmp/claude-kline/027-cash-runtime/selection.py",
+            "original_sha256": "99af480a22725c9f717407c8c8adbf541695b801250a0453f588f602da9046ae"
+        },
+        {
+            "path": "evidence/027-cash-runtime/cash_terms.py",
+            "original_path": "<legacy-checkout>/.tmp/claude-kline/027-cash-runtime/cash_terms.py",
+            "original_sha256": "18e2f24cfdb075ac5e667a78ba704e0598c598cb200db6918714586c5e37d834"
+        },
+        {
+            "path": "evidence/018-share-adapters/shares.py",
+            "original_path": "<legacy-checkout>/.tmp/claude-kline/018-share-adapters/shares.py",
+            "original_sha256": "2d7f04f5962437608305a094e34d83d5e88e4018aada9fc9d1050514911674f0"
+        },
+        {
+            "path": "evidence/018-share-adapters/capital_returns.py",
+            "original_path": "<legacy-checkout>/.tmp/claude-kline/018-share-adapters/capital_returns.py",
+            "original_sha256": "c7c6dbf13986671a55922a09d3a5fe1b2502c07c4195413668fb448d7ed696ae"
+        },
+        {
+            "path": "evidence/006-artifacts-5fe106d423484ccf959cc4e2e5d6f6d3/prototype/measurement_bridge.py",
+            "original_path": "<legacy-checkout>/.tmp/claude-kline/006-artifacts-5fe106d423484ccf959cc4e2e5d6f6d3/prototype/measurement_bridge.py",
+            "original_sha256": "be991589b60f90ddca87e381ed6fd1909b53a655c4c5b28f624bdd751eecbb2f"
+        },
+        {
+            "path": "evidence/018-share-adapters/measurement.py",
+            "original_path": "<legacy-checkout>/.tmp/claude-kline/018-share-adapters/measurement.py",
+            "original_sha256": "49ffc24925cb16ebf6f6ad11af45ab657117f526f01d140509094eda5467ce38"
+        },
+        {
+            "path": "evidence/018-share-adapters/cash_dividends.py",
+            "original_path": "<legacy-checkout>/.tmp/claude-kline/018-share-adapters/cash_dividends.py",
+            "original_sha256": "3f0a739de1bb4bf217ce0db9d78ea7e23c4c938e161dcb0f378ab00db6e1d098"
+        }
+    ],
+    "evidence_boundary": "evidence/ holds the H05 source code (the declared evidence sources plus cash_dividends.py, which cash_terms.py reads) as tracked new versions (paths made location-relative; the four edited files are features_bridge.py, dual_price_features.py, readset.py and cash_terms.py) and its private inputs, which stay local-only and ignored. original_sha256 identifies the predecessor files, not the tracked copies."
 }

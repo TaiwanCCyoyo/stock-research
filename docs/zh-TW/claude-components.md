@@ -29,7 +29,7 @@ Claude 在 `.claude/settings.json` 維持 `model: "opusplan"`：原生 Plan Mode
 | `signal-miner`      | haiku           | Read, Grep, Glob, Bash              | 以最低成本隔離預期會產生大量 log 或 stdout 的指令，僅回傳精簡訊號而非原始輸出                                                                   |
 | `task-worker`       | sonnet (medium) | Read, Grep, Glob, Write, Edit, Bash | 執行已有明確範圍、驗收條件與驗證方式的低至中風險修改；當範圍或風險擴大時停止並回報                                                              |
 
-### Stock 專屬（非來自 ECC，upstream 沒有對應項目）
+### stock-research 專屬（非來自 ECC，upstream 沒有對應項目）
 
 | Agent                    | 模型 | 工具                    | 用途                                                        |
 | ------------------------ | ---- | ----------------------- | ----------------------------------------------------------- |
@@ -37,18 +37,18 @@ Claude 在 `.claude/settings.json` 維持 `model: "opusplan"`：原生 Plan Mode
 
 ### 未從 ECC 移植（含原因）
 
-| Agent                                                                                                                                              | 原因                                                                                                                                                                                    |
-| -------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `planner`                                                                                                                                          | 2026-06-08 移除——已由 Native Plan Mode（`EnterPlanMode`/`ExitPlanMode`）取代。Stock 曾殘留一份未套用此移除的舊檔（一般用途 ECC 範本，內容含 Stripe 訂閱範例），已於 2026-08-08 一併刪除 |
-| `architect`、`code-reviewer`、`code-simplifier`、`loop-operator`、`performance-optimizer`、`python-reviewer`、`silent-failure-hunter`、`tdd-guide` | 2026-07-13 移除——原生 Claude 功能與聚焦 reviewer 已涵蓋其責任，無須重複委派。                                                                                                           |
-| `implementation-reviewer`、`plan-reviewer`、`security-reviewer`                                                                                    | 2026-10-02 移除——目前模型、Native Plan Mode、內建 `/code-review`、hosted Codex PR review 與 pre-commit gates 已涵蓋其責任；其餘 agents 的存在是為了節省成本。                           |
-| `refactor-cleaner`                                                                                                                                 | 依賴 Node.js 工具（knip、depcheck、ts-prune）；本專案使用 Python                                                                                                                        |
-| `harness-optimizer`                                                                                                                                | 需要 ECC 內部的 `/harness-audit`；無法移植                                                                                                                                              |
-| 所有 `*-build-resolver`（共 11 個 agents）                                                                                                         | 未使用非 Python 語言                                                                                                                                                                    |
-| 非 Python 語言的程式碼審查器                                                                                                                       | 未使用的語言                                                                                                                                                                            |
-| `gan-*`、`seo-specialist`                                                                                                                          | 超出範疇                                                                                                                                                                                |
-| `homelab-*`、`network-*`、`healthcare-reviewer`                                                                                                    | 領域不符                                                                                                                                                                                |
-| `marketing-agent`                                                                                                                                  | 延後——待短片製作規劃啟動時新增                                                                                                                                                          |
+| Agent                                                                                                                                              | 原因                                                                                                                                                                                             |
+| -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `planner`                                                                                                                                          | 2026-06-08 移除——已由 Native Plan Mode（`EnterPlanMode`/`ExitPlanMode`）取代。stock-research 曾殘留一份未套用此移除的舊檔（一般用途 ECC 範本，內容含 Stripe 訂閱範例），已於 2026-08-08 一併刪除 |
+| `architect`、`code-reviewer`、`code-simplifier`、`loop-operator`、`performance-optimizer`、`python-reviewer`、`silent-failure-hunter`、`tdd-guide` | 2026-07-13 移除——原生 Claude 功能與聚焦 reviewer 已涵蓋其責任，無須重複委派。                                                                                                                    |
+| `implementation-reviewer`、`plan-reviewer`、`security-reviewer`                                                                                    | 2026-10-02 移除——目前模型、Native Plan Mode、內建 `/code-review`、hosted Codex PR review 與 pre-commit gates 已涵蓋其責任；其餘 agents 的存在是為了節省成本。                                    |
+| `refactor-cleaner`                                                                                                                                 | 依賴 Node.js 工具（knip、depcheck、ts-prune）；本專案使用 Python                                                                                                                                 |
+| `harness-optimizer`                                                                                                                                | 需要 ECC 內部的 `/harness-audit`；無法移植                                                                                                                                                       |
+| 所有 `*-build-resolver`（共 11 個 agents）                                                                                                         | 未使用非 Python 語言                                                                                                                                                                             |
+| 非 Python 語言的程式碼審查器                                                                                                                       | 未使用的語言                                                                                                                                                                                     |
+| `gan-*`、`seo-specialist`                                                                                                                          | 超出範疇                                                                                                                                                                                         |
+| `homelab-*`、`network-*`、`healthcare-reviewer`                                                                                                    | 領域不符                                                                                                                                                                                         |
+| `marketing-agent`                                                                                                                                  | 延後——待短片製作規劃啟動時新增                                                                                                                                                                   |
 
 ---
 
@@ -73,11 +73,11 @@ Claude 在 `.claude/settings.json` 維持 `model: "opusplan"`：原生 Plan Mode
 
 原生 Git／GitHub 操作遵守[共用 Git 工作契約](../en/git-workflow.md)。預設只做本地交付；擁有者啟用 PR 交付後，可推送任務分支與更新 PR，合併仍需另外授權。
 
-### Stock 專屬（非來自 ECC，upstream 沒有對應項目）
+### stock-research 專屬（非來自 ECC，upstream 沒有對應項目）
 
 | Command                  | 用途                                                                                                          |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------- |
-| `/check-daily-log`       | 檢查今天排程的資料管線 log；實際程序在 `shioaji_stock_prices` submodule 自己的同名指令，本 repo 只是指向它    |
+| `/check-daily-log`       | 檢查今天排程的資料管線 log；實際程序在 `stock-data-downloader` submodule 自己的同名指令，本 repo 只是指向它   |
 | `/check-data-progress`   | 檢查 `data/official_daily.sqlite` 更新到哪個日期、各市場的缺口與 backfill 進度；同樣指向 submodule 自己的指令 |
 | `/diagnose-strategy`     | 依 mission 與既有證據診斷；不自訂門檻、不依保留期結果調參。                                                   |
 | `/dev-log`               | 透過 `notion-dev-log` skill 把今天的開發進度記錄到 Notion                                                     |
@@ -139,11 +139,11 @@ Skills 是內部工作流程文件，在對應的 command 或 agent 需要時載
 | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `skill-curator`、`/learn-eval` | ECC 整體品質門與 Hermes curator 生命週期的手動移植未曾被觸發——唯一提示是每週的 Stop hook 提醒。已由常駐載入的 `AGENTS.md` §Skill Authoring 規則取代，該規則陳述耐用的意圖（當任務類別會重複出現時，撰寫 project skill），加上已啟用的 `skill-creator` 外掛用於撰寫。 |
 
-### Stock 專屬（非來自 ECC，upstream 沒有對應項目）
+### stock-research 專屬（非來自 ECC，upstream 沒有對應項目）
 
 | Skill                     | 用途                                                                        |
 | ------------------------- | --------------------------------------------------------------------------- |
-| `check-daily-log`         | 指向 `shioaji_stock_prices` submodule 自己的 check-daily-log 程序           |
+| `check-daily-log`         | 指向 `stock-data-downloader` submodule 自己的 check-daily-log 程序          |
 | `check-data-progress`     | 指向 submodule 自己的 check-data-progress 程序                              |
 | `notion-dev-log`          | 把開發日誌寫入 Notion：讀取 git log、詢問脈絡、建立當日子頁面並更新每日頁面 |
 | `openspec-apply-change`   | 實作 OpenSpec change 中的 tasks                                             |
@@ -210,16 +210,16 @@ Claude Code 使用官方 Pyright plugin 提供即時型別導覽與 diagnostics�
 
 Rules 是依路徑範圍載入的 Markdown 檔案，當 Claude 處理符合的檔案類型時生效。
 
-| 規則集                            | 路徑                  | 來源                      | 備註                                                                  |
-| --------------------------------- | --------------------- | ------------------------- | --------------------------------------------------------------------- |
-| `rules/python/`                   | `**/*.py`、`**/*.pyi` | ECC v2.0.0-rc.1（已修改） | Logging 與以 log 輔助除錯、pytest 指引                                |
-| `rules/common/data-structures.md` | 所有檔案              | Stock 專屬                | `shioaji_stock_prices` 資料形狀變更、排程與不可破壞既有研究結果的邊界 |
+| 規則集                            | 路徑                  | 來源                      | 備註                                                                   |
+| --------------------------------- | --------------------- | ------------------------- | ---------------------------------------------------------------------- |
+| `rules/python/`                   | `**/*.py`、`**/*.pyi` | ECC v2.0.0-rc.1（已修改） | Logging 與以 log 輔助除錯、pytest 指引                                 |
+| `rules/common/data-structures.md` | 所有檔案              | stock-research 專屬       | `stock-data-downloader` 資料形狀變更、排程與不可破壞既有研究結果的邊界 |
 
 詳細流程放在 skills 或 agent definitions。
 
 ### 已移除（2026-08-23 清理——併入 CLAUDE.md）
 
-`rules/common/` 原有檔案的 `paths` 都是 `"*"`，因此會在 session 第一次存取任何檔案時注入，與 CLAUDE.md 相比實際上沒有真正的路徑範圍效益，只是載入時機不同。其路由內容（review severity、security triggers、phase routing、skill authoring、memory routing、風險導向測試基線）已直接併入 `CLAUDE.md`；Stock 專屬的 `data-structures.md` 保留。
+`rules/common/` 原有檔案的 `paths` 都是 `"*"`，因此會在 session 第一次存取任何檔案時注入，與 CLAUDE.md 相比實際上沒有真正的路徑範圍效益，只是載入時機不同。其路由內容（review severity、security triggers、phase routing、skill authoring、memory routing、風險導向測試基線）已直接併入 `CLAUDE.md`；stock-research 專屬的 `data-structures.md` 保留。
 
 | 規則                     | 原因                                                       |
 | ------------------------ | ---------------------------------------------------------- |

@@ -1,27 +1,27 @@
 {
   "schema_version": "method-environment-publication.v1",
-  "packet_sha256": "0e298709150dd19665049912dcb31a4c34a512377cc96ac1bf8557a8a523d48b",
+  "packet_sha256": "af0a4d40f4cdd5b962de9e43c0d2d87fe1e6ccee3831662e969b6ac6f18dd4d4",
   "files": {
-    "input-audit.json.gz": "19c9765b75eb68148d6462b304f5b98e24064edf970e9b7875ebc6c00686421f",
-    "packet.json.gz": "ad9fd93439d411f0748b7cb88925968c3b6d4f33e4ad82721c8490b06d128cc8",
-    "receipt.json.gz": "2b05cbd52b5f76947ab707d13b0e44d1e3fc1d3fde9ff84132d70ffabdc41e93",
+    "input-audit.json.gz": "223c505dc3f8c19d07e5467929993a2b834c31126fb49d0468314345c76b6139",
+    "packet.json.gz": "c55a3594dcad77e176e2f823a89b8ef1c391bdcfda796e4a719497b70296da5b",
+    "receipt.json.gz": "cd0f525dfab17909f0874778dc592d455ac42166792f3921bab1f6513ddef5e5",
     "results.json.gz": "3703ae6bb5270244446b6db8dccf8f23bf8779a0909db1e2eff2fab7e35bfbf6",
-    "source-inputs.zip": "c2d1000ce0b48b07f705194cacb0f016342a13580cac4fbfe32f8c74d58995b3",
-    "summary.json.gz": "d78e0174f06566cb60dc921248115c883cae877acd92bb41b5e79e7489be2dd5"
+    "source-inputs.zip": "823d30806c9779b7648f9c6ef02fe8e4d938d226cbbe063aa579e16ac1dfd7d4",
+    "summary.json.gz": "b8f484fbf51dd5a17bcf7696ec4198c7fc4b6138002594d9ca6296274bdb812e"
   },
   "source_datasets": {
     "atlas": {
-      "dataset_id": "fda-86245f2e223fc45c9f84afb0dcf77c1fff7ab22d0a1b0b4a4c8800972ce9327e",
-      "manifest_sha256": "87f0fd48e620a270b5ea5e6da82f1bcb18e6319dfe6a1a5b4388848869fb41ef",
+      "dataset_id": "fda-e712fc9408c147ae410a2fc0a687ef6f1dba785cab8cfb0312f79c504c6c5206",
+      "manifest_sha256": "4a11326c2755928e4fcc6a3cb84d6e380f0742919cc66208d3f5932675581cef",
       "path": "tasks/20261004-feature-discrimination-atlas/runs/registered/atlas-v2"
     },
     "context": {
-      "dataset_id": "sha256:df2879f7f91e687dfb85f839e7ca8919af6b363b8038825d15d3f5f4796c8ed2",
-      "manifest_sha256": "b1b664e7ae676d19700e95cb2e046fa1964d9eec350520ae10463d38440bdee0",
+      "dataset_id": "sha256:29ce66c9010824db5f9ea421f3c0e9d53ec43e00771d083917563c4b29fd1ea2",
+      "manifest_sha256": "f722f85e2fd9bb1bb5c5eb822b5fa84238a18f3b742d887dac284f0c5d78beb4",
       "path": "tasks/20261005-market-context-handoff/market-context-v2",
       "layer": "past_only"
     }
   },
   "bulk_limitation": "Bulk source data remains local at the recorded source paths; this package permits compact evidence reading, not full recomputation.",
-  "artifact_id": "method-environment-publication.v1-b4e57eed5cc5aaf35fbda34e73d1ee7b34c230d53d71b78c66c44a20d64f4a7d"
+  "artifact_id": "method-environment-publication.v1-55461293fa3462c9159a21f6e10ffbeeaa0713ce928d877f84d103ea13a08f41"
 }

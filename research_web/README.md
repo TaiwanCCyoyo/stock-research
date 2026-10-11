@@ -37,7 +37,7 @@ uv run python -m scripts.restore_opportunity_history --source <existing-producer
 
 The source must contain `catalog-v2` and `runs/native` for the pinned snapshot.
 For this development handoff, that task is
-`D:/Project/Stock/.worktrees/sector-wave-full-history-preview-20261004/tasks/20261004-sector-wave-full-history-preview`.
+`<legacy-checkout>/.worktrees/sector-wave-full-history-preview-20261004/tasks/20261004-sector-wave-full-history-preview`.
 The command verifies all saved evidence before physically copying it to a new
 consumer destination. It refuses an existing destination, links/junctions,
 changed bytes and a different snapshot. It does not download prices, rerun
@@ -153,8 +153,8 @@ For local private viewing, configure both processes explicitly before launch:
 ```powershell
 $env:VITE_ARTIFACT_MODE = 'local-private'
 $env:STOCK_RESEARCH_DATA_MODE = 'local-private'
-$env:STOCK_PRIVATE_ARTIFACT_ROOT = 'D:/Project/Stock/StockProject/data/private-presentation/20261008-first-stage/research_web/public/data/research-evidence-v2-classified'
-$env:STOCK_SAVED_STUDIO_PACKAGE = 'D:/Project/Stock/StockProject/data/private-presentation/20261008-first-stage/research_web/public/data/saved-research-studio.manifest.json'
+$env:STOCK_PRIVATE_ARTIFACT_ROOT = 'D:/Project/stock-research/StockProject/data/private-presentation/20261008-first-stage/research_web/public/data/research-evidence-v2-classified'
+$env:STOCK_SAVED_STUDIO_PACKAGE = 'D:/Project/stock-research/StockProject/data/private-presentation/20261008-first-stage/research_web/public/data/saved-research-studio.manifest.json'
 ```
 
 These paths are server-side absolute external locations; their `public/data`

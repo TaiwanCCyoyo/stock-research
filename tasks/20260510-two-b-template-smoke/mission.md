@@ -20,7 +20,7 @@
 
 ## Data Preflight
 
-- Data path: `C:\Users\xjp01\Documents\Stock\shioaji_stock_prices\data`
+- Data path: `D:\Project\stock-research\stock-data-downloader\data`
 - Price file exists: `False`
 - Loaded date range: `2018-12-07` to `2026-01-05`
 - Available requested symbols: 2330, 2308, 2454, 2317, 3711, 2383, 2345, 3017, 3037, 2360, 2382, 2303, 6669, 2357, 3008, 3034, 3231, 2301, 2324, 2352, 2353, 2356

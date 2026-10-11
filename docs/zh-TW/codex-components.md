@@ -23,7 +23,7 @@ Codex 將 planning 與 implementation 權責保留在 main agent。Read-only age
 | `task_worker`       | 有界寫入 | 執行已有明確範圍、驗收條件與驗證方式的低至中風險修改；當範圍或風險擴大時停止並回報                                                            |
 | `doc_translator`    | 有界寫入 | 低階文件翻譯與同步者：將任何需寫入檔案的翻譯處理到單一明確的非 canonical 目標；main agent 決定來源與目標，衝突時以其維護的 canonical 文件為準 |
 | `commit-specialist` | 有界寫入 | 選用的 commit 代理；依 mode 審查 staged diff、執行 commit，sandbox 失敗時交還 main agent                                                      |
-| `researcher`        | 有界寫入 | 在隔離 worktree 中執行由 parent 登記的 Stock 實驗；不得改變方向、下載資料或調整 gates                                                         |
+| `researcher`        | 有界寫入 | 在隔離 worktree 中執行由 parent 登記的 stock-research 實驗；不得改變方向、下載資料或調整 gates                                                |
 
 ### 模型路由
 
@@ -36,7 +36,7 @@ Codex 將 planning 與 implementation 權責保留在 main agent。Read-only age
 
 一般程式碼定位使用 `explorer`；需要隔離大量輸出、能節省 context 時使用 `signal_miner`。短檢查直接在本地執行；沒有具體收益時避免同層級 handoff。`task_worker` 讓高階 main agent 將有界實作降級給 Sol，而 Luna 處理機械式工作。模糊、架構與 security-sensitive 的判斷應留給 main agent；pull request 也會經過 hosted Codex review。
 
-四個共用角色、內建 `explorer` 與 Stock `researcher` 已涵蓋目前的持續工作。只有在證明存在缺口時才新增角色。主要模型仍由使用者選擇；角色的模型預設不代表已量測的成本節省或品質。除非實際 workload 證明需要，否則維持既有的並行數與深度預設。
+四個共用角色、內建 `explorer` 與 stock-research `researcher` 已涵蓋目前的持續工作。只有在證明存在缺口時才新增角色。主要模型仍由使用者選擇；角色的模型預設不代表已量測的成本節省或品質。除非實際 workload 證明需要，否則維持既有的並行數與深度預設。
 
 主 agent 擁有研究方向、owner constraints 與最終驗收權；`researcher` 保留既有模型與有界的預先登記執行方式，共用 helper 的更新不會改變其授權。維持研究 enforcement 與 point-in-time validation。委派時提供明確路徑、命令、停止條件與精簡 context；重用已通過的證據與既有 agents。若 helper 遇到 usage limit，主 agent 在安全範圍內完成工作並回報剩餘依賴。模型或設定變更只套用到新載入的 agents；已在執行中的 helper 可能保留較早設定。
 

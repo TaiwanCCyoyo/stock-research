@@ -38,5 +38,5 @@
 
 ## 7. Verification
 
-- [x] 7.1 `uv run python -m pytest tests/ -q` and `uv run mypy` on touched modules all green — 278 passed, 1 skipped; 3 pre-existing failures in `tests/test_dashboard_presentation.py` are unrelated to this change (missing generated `shioaji_stock_prices/data/` artifacts in this worktree, not a code path this change touches); `mypy` clean on all touched modules
+- [x] 7.1 `uv run python -m pytest tests/ -q` and `uv run mypy` on touched modules all green — 278 passed, 1 skipped; 3 pre-existing failures in `tests/test_dashboard_presentation.py` are unrelated to this change (missing generated `stock-data-downloader/data/` artifacts in this worktree, not a code path this change touches); `mypy` clean on all touched modules
 - [ ] 7.2 Dry-run artifacts reviewed in the dashboard (journal/report readable); note that Docker smoke is skipped unless container entrypoints changed — BLOCKED: needs 6.2's supervised dry run, which needs real price data this worktree doesn't have

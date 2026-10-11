@@ -26,7 +26,7 @@ publication-v1/bundle.zip 的 inputs，不能把結果後新版文件當成原�
 不得宣稱原 manifest 的全部 inventory 通過；這項是 metadata defect，未觀察到數據改變。
 
 原完成 manifest 原樣保留，SHA-256：
-477d798ab3d1fbc61f203ef5801bf1bf3aac07a992543e4b95346d16c9dda5ed。
+5ed398a002880e6c6fa3ca38e95006f1d32bc7d16c56f6ef1c6a2a06b08d5352。
 新增 manifest-corrected.json，僅移除錯誤的自身 inventory entry、加上更正原因、原檔雜湊、
 被移除 entry 及 scientific_artifacts_unchanged:true。該紀錄不把自己列入 inventory。
 可攜包同時保存原檔與更正檔；以更正檔驗證科學產物，原缺陷不能靜默消失。

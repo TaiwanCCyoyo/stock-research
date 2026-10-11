@@ -1,9 +1,9 @@
 # price_daily.parquet contract fixture
 
-The data producer, `stock-data-downloader`, builds `price_daily.parquet`; Stock only reads it.
-`tests/test_build_price_parquet.py` checks Stock's side of that contract: `DataLoader` reads
+The data producer, `stock-data-downloader`, builds `price_daily.parquet`; stock-research only reads it.
+`tests/test_build_price_parquet.py` checks stock-research's side of that contract: `DataLoader` reads
 this file exactly like the same bars written as `{code}_day.csv`, and handles stale CSVs.
-It never runs producer code, so Stock's tests and CI do not need the submodule checked out.
+It never runs producer code, so stock-research's tests and CI do not need the submodule checked out.
 Whether the producer builds the file correctly is tested in the producer's own repository.
 
 | file                  | content                                                             |

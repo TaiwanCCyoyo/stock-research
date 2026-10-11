@@ -34,7 +34,7 @@ from scripts.query_opportunity_history import (
 )
 
 SCHEMA = "opportunity-history-web.v1"
-DEFAULT_SHA = "c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140"
+DEFAULT_SHA = "238e7e4aba59509bb3245ea36e9708d6d8f9b9d7c6dab9f18a9d60bba67aa6ea"
 DEFAULT_BUNDLE = Path(__file__).resolve().parents[1] / "tasks/20261005-market-full-history-web/inputs/producer-preview"
 WEB_RECEIPT_CACHE = Path(__file__).resolve().parents[1] / ".tmp/opportunity-native-verification-cache"
 WEB_STARTUP_CACHE = Path(__file__).resolve().parents[1] / ".tmp/opportunity-web-startup-cache-v1"

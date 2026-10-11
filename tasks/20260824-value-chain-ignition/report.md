@@ -91,6 +91,6 @@ uv run python tasks/20260824-value-chain-ignition/ignition.py
 ```
 
 約兩分鐘。需要 `tasks/20260823-rotation-universe/features.parquet`，以及主 checkout 的
-`shioaji_stock_prices/data/value_chain_classification.json`——那個檔案**不在 worktree 的 data
+`stock-data-downloader/data/value_chain_classification.json`——那個檔案**不在 worktree 的 data
 複本裡**（複本是建立當時的快照），腳本用 `git rev-parse --git-common-dir` 找主 checkout。
 完整結果在 `sweep_results.json`。

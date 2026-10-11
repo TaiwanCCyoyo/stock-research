@@ -115,14 +115,14 @@ plots continue to show gaps with account drill-down.
 The 0050 line uses unadjusted close, **price only, no dividends**. The original
 strategy price readset did not contain 0050: this line is explicitly from the
 separate fixed history catalog, external manifest pin
-`c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140`.
+`238e7e4aba59509bb3245ea36e9708d6d8f9b9d7c6dab9f18a9d60bba67aa6ea`.
 Its price series and calendar are separately hashed. It must not be represented
 as the strategy's original sealed benchmark or as a total-return comparison.
 
 ## Re-export and maintenance
 
 ```powershell
-uv run --no-sync python -m scripts.export_saved_research_studio --benchmark-manifest tasks/20261005-market-full-history-web/inputs/producer-preview/catalog-v2/manifest.json --benchmark-manifest-sha c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140 --split-output --output .tmp/saved-research-studio-next/saved-research-studio.manifest.json
+uv run --no-sync python -m scripts.export_saved_research_studio --benchmark-manifest tasks/20261005-market-full-history-web/inputs/producer-preview/catalog-v2/manifest.json --benchmark-manifest-sha 238e7e4aba59509bb3245ea36e9708d6d8f9b9d7c6dab9f18a9d60bba67aa6ea --split-output --output .tmp/saved-research-studio-next/saved-research-studio.manifest.json
 ```
 
 The output must be new. The producer verifies original SHA receipts, ledger,

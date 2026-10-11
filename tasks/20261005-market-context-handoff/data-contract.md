@@ -76,8 +76,8 @@ do not coerce it into the account `research-result.v1` presentation contract.
 
 Large atlas tables remain local, ignored and unchanged:
 
-- `D:/Project/Stock/.worktrees/research-workspace-20261003/tasks/20261004-feature-discrimination-atlas/runs/registered/atlas-v2`
-- `D:/Project/Stock/tasks/20261004-feature-discrimination-atlas/datasets/atlas-v2`
+- `<legacy-checkout>/.worktrees/research-workspace-20261003/tasks/20261004-feature-discrimination-atlas/runs/registered/atlas-v2`
+- `D:/Project/stock-research/tasks/20261004-feature-discrimination-atlas/datasets/atlas-v2`
 - Exact replay inputs: sibling `atlas-v2-inputs/input-archive.json`.
 
 These are same-drive physical copies, not offsite protection. A new clone can read

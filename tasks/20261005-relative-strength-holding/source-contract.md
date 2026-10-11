@@ -21,7 +21,7 @@ The current task does not add unobserved stock outcome periods to the registry.
 
 ## Reused evidence, not a new source reconstruction
 
-Paths in this table are relative to `D:/Project/Stock/.tmp/claude-kline/`.
+Paths in this table are relative to `<legacy-checkout>/.tmp/claude-kline/`.
 These are preserved local inputs; their presence is not Git or offsite backup.
 
 | Component               | Existing authority / reader                                                                           | Meaning and limit                                                                                                                                                                              |
@@ -42,7 +42,7 @@ Any known material population omission must be assessed before promotion; this
 conditional source choice cannot support an unqualified universe-completeness claim.
 
 The independent calendar is retained at
-`D:/Project/Stock/shioaji_stock_prices/.worktrees/codex-workspace/.tmp/data-gap-repair-20261004/calendar_results/calendar-audit-20261004T135812-6c324a25.json`,
+`D:/Project/stock-research/tasks/20261005-relative-strength-holding/evidence/calendar/calendar-audit-20261004T135812-6c324a25.json`,
 schema `calendar-audit.v1`. Its `calendar_dates` contains **1,216** dates in the
 selected H05 interval. The 2018–2023 dates equal all 1,463 keys in 022 v2's
 `receipt.json.daily_observed_counts`, with zero differences; this check reads
@@ -115,7 +115,7 @@ execution or substitutes for eventual owner loss-budget approval.
 `source_modules.py` imports named libraries, never the old `runner`, `account`
 or strategy launchers. The current worktree's `research_core` must supply every
 core submodule; conflicting module origins fail. A later registered job will use
-the primary Stock directory as its explicit evidence root, with the active task
+the primary stock-research directory as its explicit evidence root, with the active task
 entrypoint below `.worktrees/research-workspace-20261003/`. This accommodates the
 preserved local inputs without copying caches or changing their historical paths.
 All consumed code, including the two primary-checkout rotation feature library
@@ -141,7 +141,7 @@ leg; their share composers never mint a duplicate dividend. Event-day bounds for
 9945 remain quote-only evidence, not supported economic rights.
 
 The previously missing-looking 6472 and 6443 captures are preserved under
-`D:/Project/Stock/.worktrees/codex-workspace/.tmp/`; the loader names their actual
+`<legacy-checkout>/.worktrees/codex-workspace/.tmp/`; the loader names their actual
 locations but never rewrites original `raw_path` provenance inside their bytes.
 No new acquisition was necessary. Source payment/delivery dates retain the
 explicit old modeled timing (including the 45-calendar-day baseline); unknown

@@ -9,7 +9,7 @@ retested before preparing inputs, not after viewing market results.
 - Exact packet: preregistration/industry-roles-v1.json.gz; local plain execution
   copy: params/industry-roles-v1.json. Preparation hashed 1,984 code/data/contract
   files without evaluating new market comparisons. Environment identity included.
-- Approved digest: `36117f1c9a50c01a42d97fe63f0e8e630f4f1ce00c10a0320f92f84f4a17e339`. <!-- pragma: allowlist secret -->
+- Approved digest: `081ce4b84c3c076d47f043c4006fb3656f520d972a3c97ab711c4b313ddd4e66`. <!-- pragma: allowlist secret -->
 - Authorize ONE invocation of scripts/run_registered_job.py --execute with that
   packet/digest, a fresh exclusive run directory and 1,800-second subprocess limit.
 - Seven fixed arms, three candidate promotions, at most 2,184 comparisons. No

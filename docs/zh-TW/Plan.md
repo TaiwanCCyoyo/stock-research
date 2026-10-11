@@ -240,7 +240,7 @@ uv run python StockProject\backtest_cli.py `
   --strategy StockProject\strategies\test_strategy.py `
   --codes 2330 `
   --start 2024-01-01 `
-  --data-path shioaji_stock_prices\data `
+  --data-path stock-data-downloader\data `
   --output reports\smoke\2330_buy_hold.json
 ```
 

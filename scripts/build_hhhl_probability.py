@@ -28,7 +28,7 @@ from research_core.hhhl_transition import classify_transition
 LOGGER = logging.getLogger(__name__)
 TASK = "20261009-hhhl-pattern-probability"
 WINDOW = ("2019-01-02", "2026-08-14")
-DATASET_ID = "fda-86245f2e223fc45c9f84afb0dcf77c1fff7ab22d0a1b0b4a4c8800972ce9327e"
+DATASET_ID = "fda-e712fc9408c147ae410a2fc0a687ef6f1dba785cab8cfb0312f79c504c6c5206"
 KEY_COLUMNS = ["security_id", "asof_date", "year", "base_eligible", "eligibility_reason", "regime", "industry_ref"]
 INPUT_COLUMNS = [*KEY_COLUMNS, "Open", "High", "Low", "Close", "VolumeLots", "atr14_pct", "corporate_action_types", *OUTCOME_COLUMNS]
 SUMMARY_COLUMNS = ["security_id", "year", "base_eligible", *OUTCOME_COLUMNS]

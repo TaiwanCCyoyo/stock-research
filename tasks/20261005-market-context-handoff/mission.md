@@ -8,7 +8,7 @@ goal. This does not resume strategy research, automation or confirmation/holdout
 
 Use only the already retained `catalog-v2` manifest from
 `20261004-sector-wave-full-history-preview`, byte SHA-256
-`c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140`.
+`238e7e4aba59509bb3245ea36e9708d6d8f9b9d7c6dab9f18a9d60bba67aa6ea`.
 Its 0050 series descriptor has byte SHA-256
 `ec81dfea86cd32379547f49abc5c216eae7ae77d54be424b575b4d64112ed6b4`;
 calendar byte SHA-256 is

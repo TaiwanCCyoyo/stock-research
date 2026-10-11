@@ -15,7 +15,7 @@ account slice and the remaining source-to-execution work.
 
 ## What changed since the September audit
 
-Canonical producer: `D:/Project/Stock/shioaji_stock_prices`, observed clean at
+Canonical producer: `D:/Project/stock-research/stock-data-downloader`, observed clean at
 `3e6cbef0d285a0f10358629c4894504a6274702c` (merged producer PR #6).
 The delegated Git identity read hit a permission boundary; the parent repeated
 that same read in the authorized context. No producer mutation was needed.
@@ -34,8 +34,8 @@ The previously sealed atlas remains on its original data, unchanged.
 
 ## Existing evidence to reuse before acquiring anything
 
-All producer-relative paths below are under the canonical producer above; Stock
-scratch paths are under `D:/Project/Stock`. These are local evidence locations,
+All producer-relative paths below are under the canonical producer above; stock-research
+scratch paths are under `D:/Project/stock-research`. These are local evidence locations,
 not a claim that Git clones contain the raw inputs or that `.tmp` is durable backup.
 
 | Evidence                                                                                                                      | What it supplies                                                                                | Boundary still relevant to an account                                                                                         |

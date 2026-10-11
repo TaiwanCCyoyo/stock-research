@@ -96,7 +96,7 @@ fallback；九類表格的重建筆數與保存筆數完全一致。404 項 Pyth
 14 項 publication audit 入口、6 項 Node 測試通過，正常提交檢查通過。
 
 使用 catalog-v2 的 `manifest.json` 作為網站與 CLI 的共同入口：
-SHA-256 `c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140`。
+SHA-256 `238e7e4aba59509bb3245ea36e9708d6d8f9b9d7c6dab9f18a9d60bba67aa6ea`。
 原始計算固定於 `37cb418`，V2 adapter/export 固定於 `2ad557a`，metadata 封存工具
 固定於 `1f10ddb`；後續提交保存本報告與收據，不改原始計算。
 
@@ -111,12 +111,12 @@ SHA-256 `c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140`。
 | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 穩定 artifact ID／版本 | `20261004-sector-wave-full-history-preview/catalog-v2`；manifest schema `opportunity-local-history-preview.v1`，revision `gain-continuity-v2`                                                                                 |
 | canonical 檔案         | 本 task 的 `catalog-v2/manifest.json`；`contract.md` 與 `params.json` 定義欄位、關聯及固定設定                                                                                                                                |
-| 分支／工作目錄         | `codex/sector-wave-full-history-preview-20261004`；`D:/Project/Stock/.worktrees/sector-wave-full-history-preview-20261004`                                                                                                    |
+| 分支／工作目錄         | `codex/sector-wave-full-history-preview-20261004`；`<legacy-checkout>/.worktrees/sector-wave-full-history-preview-20261004`                                                                                                   |
 | 完整資料取得           | 保留工作目錄內的 `inputs/`、`catalog-v2/series/`、`catalog-v2/chunks/`、`runs/native/`；新 clone 只能取得 metadata 鏡像，完整備份／恢復未建立                                                                                 |
 | producer／重算入口     | `scripts/prepare_opportunity_history.py` 固定輸入；`scripts/build_opportunity_history.py` 使用固定 `params.json` 與 TS 快照執行六方法；原計算提交 `37cb418`。只有具備相同 SHA 的全部依賴才能重現，重算指令不是備份            |
 | saved-only 重匯出      | `scripts/rebuild_saved_opportunity_catalog.py --source-manifest <catalog-v1/manifest.json> --output-root <新的目錄>`；不執行 Node，V2 adapter 提交 `2ad557a`，輸出目錄必須尚未存在                                            |
 | 查詢／驗證             | `scripts/query_opportunity_history.py` 與 `scripts/verify_opportunity_history.py`；需 hash 相符的完整價格、calendar、表格及原生檔案                                                                                           |
-| 維護模組               | 主專案 `research_core/opportunity_history_*`、`scripts/*opportunity_history*` 維護衍生資料與契約；價格擷取／正規化仍由 `shioaji_stock_prices` 維護                                                                            |
+| 維護模組               | 主專案 `research_core/opportunity_history_*`、`scripts/*opportunity_history*` 維護衍生資料與契約；價格擷取／正規化仍由 `stock-data-downloader` 維護                                                                           |
 | 已知 consumer          | 網站「規劃 AI 策略研究展示網站」，chat `01a0f85b-ed76-7153-947c-759892470507`，引用 catalog-v2 供索引／依代碼投影；研究 K 線策略 chat `01a03e40-a4b7-7142-99d3-8bd6b72ff7a3` 為後續使用方向，尚未有已執行的 consumer task/run |
 | 限制與替代關係         | V2 取代 V1 的漲幅連續性政策，保留 V1；descriptive 可用，分類歷史有效日、200 家證據及完整備份仍不完整                                                                                                                          |
 
@@ -274,7 +274,7 @@ metadata 恢復指令只還原 root JSON，回傳 `tables_restored/prices_restor
    以 hash 辨識的封存備份或 artifact storage，制定保留政策並做完整還原演練。
    Git LFS 也可比較，但本次沒有擅自啟用或假定有備份。
 2. 官方／Shioaji 擷取、正規化、來源優先序與價格涵蓋資訊由
-   `shioaji_stock_prices` 維護；族群研究標註、衍生波段與版本契約留主專案；
+   `stock-data-downloader` 維護；族群研究標註、衍生波段與版本契約留主專案；
    網站負責展示投影。是否把公司業務分類證據也移到 submodule，需要確認使用者
    與其他研究是否共用，再決定所有權。
 3. 改善 loader 的來源與涵蓋 API：讓呼叫者明確知道是 Parquet 全歷史、短期 CSV

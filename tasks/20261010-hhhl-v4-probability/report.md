@@ -95,11 +95,11 @@ v4 未盲測，原來源辨識率尚未獨立驗證；已看過的 2019..2026 �
 [可攜 metadata ZIP](publication-v2/publication.zip) 與同目錄三個 `bundle.*.bin` 分片
 包含全部 1,080 格、原完成 manifest、覆蓋／診斷／兩種 label 不一致、十筆固定抽查，
 以及 **19 份執行時原始輸入／程式／定義**；26 個 members 的 bytes/hash 已逐一重驗。
-包 1,002,805 bytes、SHA-256 `afdc55ab4e17f0958fde06244f7028e46c9b1e47f3fa5a5a046e290de0dc031c`。
+包 1,002,805 bytes、SHA-256 `2dad188d45fe9ccc569c43a728fc42c42a760ddce02aa5533c52ad003cb33e72`。
 publisher 全部核驗 **1,952 個原輸出** 的 hash/bytes；原完成紀錄不覆寫、不重算市場。
 分片為 400,000／400,000／202,805 bytes，metadata ZIP 2,410 bytes；合併後原包 bytes/hash
 與上述完全相同。v1 本機原包保留；Git 採 v2 transport，reader 自動驗證、拼合並讀取。
-原大表 primary 位於 `D:/Project/Stock/tasks/20261010-hhhl-v4-probability/datasets/hhhl-v4-descriptive-01`，
+原大表 primary 位於 `D:/Project/stock-research/tasks/20261010-hhhl-v4-probability/datasets/hhhl-v4-descriptive-01`，
 470,159,439 bytes（不含完成 manifest），本機同碟、沒有異地備份證據；不假稱 Git 已含行情大表。
 392,361 个還原缺收盤觀察保留，RawClose 有值但其他 OHLC 缺而丟棄的觀察为 0。
 
@@ -132,25 +132,25 @@ distinct securities 全部一致。沒有重新偵測型態、讀新行情或重
 | L40            | 439            | 559        | 998             |
 
 補件保存全部資格／status／原因 **30 格、162,864 列** 的彙總，ZIP 1,321 bytes，
-SHA-256 `b238725454d31f2367e404d1abf2b78e36a78912f78318f52182e2320f6fb6ce`。
+SHA-256 `eb58c53119c6d8bb73d24d8adef6daf6767cd50069a3867cbe00467df4ebdd6e`。
 補件程式於 `671b8cf` 正常 hooks 提交後才執行；9 項相關合成測試通過。
 原 run、publication-v1/v2 bytes 及結果前 input identities 均保留，補件不可冒充原 run 產物。
 目前請使用 [v2 原因補件](diagnostics-supplement-v2.zip)，57686 bytes，SHA-256
-`2393f3658848d8792020006e20f243ff6e46789c007979f8dcbe5b7f225f151b`；除相同30格，另含
+`b077768605ea2b3a8541a12a473b9260fb30375853e2bd336bb4f9399cbd7ba4`；除相同30格，另含
 162864列來源投影與程式快照，可從 Git 重算核對。上述1321 bytes及舊hash只指歷史v1，
 最新reader不把缺少投影的v1當充分驗證。讀取與來源綁定見 [資料契約](data-contract.md#地標原因更正補件)。
 
 ### 同十筆原事件的 L20 證據 — 2026-10-09
 
-原 audit 只有 t0；新增 [L20 抽查補件](landmark-audit-v1.zip)，保留同十筆原 event_id，
+原 audit 只有 t0；新增 L20 抽查補件 `landmark-audit-v1.zip`（含真實收盤價，只在本機），保留同十筆原 event_id，
 增加地標status／原因、越舊線／近期遠線、首次越線日期／索引、漲幅區、原目標期限及
 剩餘段outcome等96欄。不是另外挑十筆成功案例；按原排序恰好都是1101，不能估
 全市場率或當代表性抽樣。原包不變，補件只連接已保存表、未讀新行情或重跑型態。
 
-內含原JSON55680 bytes，SHA-256 f1ab85e00c4b36f372e2bd848579b5eb928833a7030f098dfcdb64fcb5e42f3d；
+內含原JSON55680 bytes，SHA-256 e89f51dd87a9c380684c35c38cc1427dee06b14203376cc13795c2e839544376；
 ZIP只是原bytes的無損包裝。Git reader可重驗原事件及L20 join，取得方式與null／原t0時鐘語意見
 [資料契約](data-contract.md#同十筆原事件的-l20-抽查補件)。
-ZIP6861 bytes，SHA-256 26c7eff6196b706db5fba0f62b077093b51af8cbd3849e0293d6949f58e41617。
+ZIP7061 bytes，SHA-256 591870b96c241a6c95fd645d229f5e4dfb8c89274a33746a2103e7e6e963cc4c。
 
 ## 前階段歷史紀錄：來源已重現、當時機率尚未開算
 
@@ -179,7 +179,7 @@ ZIP6861 bytes，SHA-256 26c7eff6196b706db5fba0f62b077093b51af8cbd3849e0293d6949f
 4. 保持原 adjprice 數學、改用參考價因子還原價格名稱，不冒稱實際現金含息總報酬。
 
 原問題與具體建議已保存於 `sources/handoff-v4.zip`，可取得後續協作的 primary 路徑：
-`D:/Project/Stock/.tmp/claude-kline/20261010-codex-v4-definition-questions.md`。
+`<legacy-checkout>/.tmp/claude-kline/20261010-codex-v4-definition-questions.md`。
 預期回覆 `20261010-claude-v4-definition-response.md`。
 這是 `definition_pending`，不是資料下載阻塞、策略失敗或執行失敗；不反覆要求恢復目標。
 

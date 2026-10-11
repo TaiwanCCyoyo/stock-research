@@ -20,7 +20,7 @@
 
 ## Data Preflight
 
-- Data path: `shioaji_stock_prices/data`
+- Data path: `stock-data-downloader/data`
 - Price file exists: `True`
 - Loaded date range: `2018-12-07` to `2026-08-07`
 - Available requested symbols: 1101, 2891

@@ -3,7 +3,7 @@
 資產 ID：`stock-derived-cache.v1`、`hhhl-pattern-sources.v1`、`stock-research-backup.v1`。
 目的為跨 task／網站重用同一明確定義，不是證明飆股策略有效。
 
-入口：[型態字典](../../docs/en/pattern-definitions.md)、[衍生資料](../../docs/en/research-derived-data.md)、[備份](../../docs/en/price-cache-backup.md#stock-research-data-backup)。producer 是 Stock 的新純計算／cache／backup 模組；消費者是顯式採用該版本的新研究。原 atlas/v1/v4 機率與舊帳戶 loader 不自動遷移。
+入口：[型態字典](../../docs/en/pattern-definitions.md)、[衍生資料](../../docs/en/research-derived-data.md)、[備份](../../docs/en/price-cache-backup.md#stock-research-data-backup)。producer 是 stock-research 的新純計算／cache／backup 模組；消費者是顯式採用該版本的新研究。原 atlas/v1/v4 機率與舊帳戶 loader 不自動遷移。
 
 來源保存：`research_core/patterns/hhhl/v1..v4/sources.zip` 各 internal `.py` 原 bytes；v1/v4 ZIP 本身亦與其既有 task 相同，v2/v3 從原 bytes 新包裝，不聲稱原來已有同 ZIP。四版 hashes 与來源位置在唯一 sources.json。
 

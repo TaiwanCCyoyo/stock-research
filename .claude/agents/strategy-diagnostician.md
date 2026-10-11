@@ -1,6 +1,6 @@
 ---
 name: strategy-diagnostician
-description: Diagnose a completed Stock research task from its mission and recorded artifacts, separating preregistered verdicts from train-only improvement hypotheses. Use for strategy diagnosis and /diagnose-strategy.
+description: Diagnose a completed stock-research research task from its mission and recorded artifacts, separating preregistered verdicts from train-only improvement hypotheses. Use for strategy diagnosis and /diagnose-strategy.
 tools: ["Read", "Grep", "Glob", "Write"]
 model: opus
 ---

@@ -4,7 +4,7 @@
 
 Continue repairing classification and evidence gaps and coordinate ownership with the presentation session. This packet is descriptive company-business annotation. It does not evaluate a strategy, change the original episode definition, or rerun returns.
 
-The base is Stock commit `e89f5bc37ee4b1949c0af0ada4f18e89cee59428` and `sector-wave-catalog.v1`, canonical manifest SHA-256 `384ee53d22b70dc1650bf84e1887e8515565189c975c29c77ef5e6273c5138c9`. Read committed catalog identities and memberships only. Keep the original 2019-01-02–2026-08-14 price window and all 280 chunks unchanged. Do not read new price rows, change producer caches or scheduled writers, or unseal periods.
+The base is stock-research commit `e89f5bc37ee4b1949c0af0ada4f18e89cee59428` and `sector-wave-catalog.v1`, canonical manifest SHA-256 `3c5f14b1d061aef1a4b5a440f42042db3f8d23015462e6ad3e45ce5b031eab4a`. Read committed catalog identities and memberships only. Keep the original 2019-01-02–2026-08-14 price window and all 280 chunks unchanged. Do not read new price rows, change producer caches or scheduled writers, or unseal periods.
 
 ## Registered scope
 
@@ -30,4 +30,4 @@ Deliver a versioned additive packet, role ontology, issuer evidence, assertions,
 
 Validate unique identities, base-catalog references, source hashes, time/null reasons, and evidence supporting each verified assertion. Functional regressions must reject changed excerpts, unknown references, unsupported verified claims, and retrieval-as-business-start. Recheck the original catalog receipt and all chunk hashes. Preserve old bundle readability.
 
-This session owns producer annotations/schema and source verification. Generic acquisition/normalization remains in `shioaji_stock_prices`; this task performs bounded source inspection rather than adding a downloader. The website session owns its presentation/adapter proposal; it has not accepted formal implementation in this round. Handoff uses exact versioned packet and base identity.
+This session owns producer annotations/schema and source verification. Generic acquisition/normalization remains in `stock-data-downloader`; this task performs bounded source inspection rather than adding a downloader. The website session owns its presentation/adapter proposal; it has not accepted formal implementation in this round. Handoff uses exact versioned packet and base identity.

@@ -23,13 +23,13 @@
   `corporate_action_factors.parquet`、`validation-cases.json`、`input-receipt.json`、`report.json`。
   沒有 forward labels、全市場機率表或完整價格歷史。
 
-preparation bundle SHA-256：4908ef8588bd34483d7862d4052f4d236641090188eaaece5d316e12a15db549，
+preparation bundle SHA-256：bc79844a92db9d1a8696fd74b41316a41a4b37135a501e70b5adef5026f8ca87，
 314,178 bytes。解開前先核對包身分；解開後由 receipt 與 validator 核對實際輸入。
 
 primary 固定輸入位於
-`D:/Project/Stock/tasks/20261010-hhhl-v4-probability/datasets/hhhl-v4-validation-inputs-01/`；
+`D:/Project/stock-research/tasks/20261010-hhhl-v4-probability/datasets/hhhl-v4-validation-inputs-01/`；
 完整驗算報告位於
-`D:/Project/Stock/tasks/20261010-hhhl-v4-probability/datasets/hhhl-v4-validation-01/report.json`。
+`D:/Project/stock-research/tasks/20261010-hhhl-v4-probability/datasets/hhhl-v4-validation-01/report.json`。
 大輸入不只存在 worktree 或 `.tmp`；Git 包提供異地取得本次固定因子的路徑。
 本機與 worktree 同碟副本不是完整備份，不保證 canonical atlas 在其他機器已存在。
 
@@ -46,7 +46,7 @@ price_factor（參考價／前收等來源因子，未補缺值）。查詢含�
 cases SHA-256：8e2c2937c38fe276a00246b23b497b8f7f8a93b20ff9dca2be7a463453ec7abb。
 receipt 逐檔指定路徑與 hash；重驗入口先檢查、不覆寫舊輸入或報告。
 機率producer另以程式內的固定SHA綁定這兩個檔案與原input-receipt.json
-（d4942a053b2df2328da5ef83d8854e1079ddd5c50507e48961e4488ec888e550），在parent
+（9a4b527cb32881064578dfc150839244a4efd3910ceada1d696973dd965e29fe），在parent
 前置驗證與worker載入均讀前／讀後核對。這三個身分由上方原preparation包取得；
 更換`--inputs`目錄只可搬移同一份bytes，不能另造自洽receipt替换因子並冒充本實驗。
 
@@ -67,7 +67,7 @@ cases 保留 found/pattern/scale/bonus_levels/restart/leg_start；後兩欄是�
 後續比較須保留兩套欄位與分母，不更正覆寫原 label。
 
 原 atlas-v2 ID 為
-`fda-86245f2e223fc45c9f84afb0dcf77c1fff7ab22d0a1b0b4a4c8800972ce9327e`，
+`fda-e712fc9408c147ae410a2fc0a687ef6f1dba785cab8cfb0312f79c504c6c5206`，
 2019-01-02..2026-08-14、目前參考股票池、已暴露期間，沿用其
 [資料契約](../20261004-feature-discrimination-atlas/data-contract.md) 的倖存者與 PIT 限制。
 驗算只消費 25 檔，不是只研究這 25 檔，也不是全 1,941 檔機率已算完。
@@ -81,9 +81,9 @@ cases 保留 found/pattern/scale/bonus_levels/restart/leg_start；後兩欄是�
 
 ```powershell
 uv run --group dev python -m scripts.validate_hhhl_v4_source `
-  --dataset D:/Project/Stock/tasks/20261004-feature-discrimination-atlas/datasets/atlas-v2 `
+  --dataset D:/Project/stock-research/tasks/20261004-feature-discrimination-atlas/datasets/atlas-v2 `
   --sources tasks/20261010-hhhl-v4-probability/sources `
-  --inputs D:/Project/Stock/tasks/20261010-hhhl-v4-probability/datasets/hhhl-v4-validation-inputs-01 `
+  --inputs D:/Project/stock-research/tasks/20261010-hhhl-v4-probability/datasets/hhhl-v4-validation-inputs-01 `
   --report .tmp/hhhl-v4-validation-new/report.json
 ```
 
@@ -97,7 +97,7 @@ Claude 定義仍屬開發期暫定，非擁有者最終門檻。
 producer `scripts/build_hhhl_v4_probability.py`，量測／彙總為 `research_core/hhhl_v4_outcomes.py`
 及 `research_core/hhhl_v4_summary.py`，舊 v1 程式不改。
 
-固定 run 位置 `D:/Project/Stock/tasks/20261010-hhhl-v4-probability/datasets/hhhl-v4-descriptive-01`。
+固定 run 位置 `D:/Project/stock-research/tasks/20261010-hhhl-v4-probability/datasets/hhhl-v4-descriptive-01`。
 不能覆寫既存目錄，輸入沿用上列固定因子與原 atlas-v2。`attempt.json` 為未完成啟動收據，
 只有 `manifest.json` complete=true 且所有 artifact hash 可重驗才是完成；attempt 本身不會
 靜默改為完成。manifest 記錄真正執行時刻、code_commit、前後完整輸入身分與局限。
@@ -120,8 +120,8 @@ complete 不等同 label 已知；路徑比率無單位、等待為共用日曆�
 不能與原日起算的完整 126 日最大回落互換，亦不能當停損／帳戶回撤。地標對照僅同 L、
 同固定漲幅區的未越線／無線組；不把原 t0 全期間基準率標成地標的相同風險集合。
 
-只需讀取 Git 可攜結果的使用者，從 `publication-v2` 的 metadata ZIP 與三個分片讀所有摘要及原完成
-manifest／診斷／抽查／覆蓋，不需要原行情 submodule。大型 parquet 僅在上述 primary
+只需讀取 Git 可攜結果的使用者，讀 `publication-v2-public`（metadata ZIP 與兩個分片）：全部 1,080 格摘要、原完成
+manifest／診斷／覆蓋，與完整版逐格相同，不需要原行情 submodule。它只保留兩個來源資料成員的 SHA-256 與大小而不附內容：32,848 筆來源除權息因子（`inputs/12-corporate_action_factors.parquet`）與含真實收盤價的十筆抽查（`outputs/audit-sample.parquet`），因散布權未確認只留本機。完整版 `publication-v2`（三個分片）只在 primary 本機；地標抽查補件需要它。公開版由 `scripts/publish_hhhl_v4_probability.py --public-from publication-v2 --output publication-v2-public` 產生，metadata 的 `full_bundle_sha256` 指向完整版，更正與診斷補件以它對應。大型 parquet 僅在上述 primary
 位置，Git clone 不含，尚無異地備份證據。重算需原 atlas bulk，不能用最新價格快取替代。
 資料仍為已暴露 current-reference 母體，非 PIT 完整上市櫃、獨立確認、因果加分或帳戶績效。
 
@@ -140,7 +140,7 @@ Git 交付僅採 v2 分片以符合單檔限制。reader 在記憶體驗證與�
 ```python
 from pathlib import Path
 from scripts.publish_hhhl_v4_probability import verify_publication
-saved = verify_publication(Path("tasks/20261010-hhhl-v4-probability/publication-v2"))
+saved = verify_publication(Path("tasks/20261010-hhhl-v4-probability/publication-v2-public"))
 rows = saved["summaries"]
 selected = [r for r in rows if r.get("landmark") == 20 and r["slice"] == "rise_bin"]
 ```
@@ -170,7 +170,7 @@ writer 讀既有 landmarks 的五欄，逐格核對原 24 格總數與每格 dis
 讀取至封裝前後來源身分相同才成功，既存 output 拒絕覆寫。
 
 最新改用 `diagnostics-supplement-v2.zip`（`hhhl-v4-diagnostics-supplement.v2`），
-57686 bytes、解壓119096 bytes，SHA-256 2393f3658848d8792020006e20f243ff6e46789c007979f8dcbe5b7f225f151b。
+57756 bytes、解壓119096 bytes，SHA-256 b077768605ea2b3a8541a12a473b9260fb30375853e2bd336bb4f9399cbd7ba4。
 除了原30格分桶，保存162864列上述五欄投影，以及census helper／補件script兩份
 程式快照。reader 先驗各成員與程式身分，再重算每個完整reason格及distinct securities，
 並核對舊24格事件／股票數；不執行嵌入程式。原v1 bytes與結果不變，但缺投影的v1
@@ -183,13 +183,13 @@ helper整份檔案曾因noise首筆修正而改hash，但地標census公式未�
 from pathlib import Path
 from scripts.supplement_hhhl_v4_diagnostics import verify_supplement
 task = Path("tasks/20261010-hhhl-v4-probability")
-supplement = verify_supplement(task / "diagnostics-supplement-v2.zip", task / "publication-v2")
+supplement = verify_supplement(task / "diagnostics-supplement-v2.zip", task / "publication-v2-public")
 reason_rows = supplement["census"]
 ```
 
 reader 只需 Git 補件與原 v2 包，不需要 470 MB 大表；核對原 source identities、補件 hash／
 大小、投影及重算的30格各完整reason／不同股票數，不把保存收據當獨立樣本驗證。
-最新正式本機位置為 `D:/Project/Stock/tasks/20261010-hhhl-v4-probability/diagnostics-supplement-v2.zip`，
+最新正式本機位置為 `D:/Project/stock-research/tasks/20261010-hhhl-v4-probability/diagnostics-supplement-v2.zip`，
 Git 保存一份相同 bytes；原大表的本機／備份限制不因補件而解除。
 
 ## 雜訊首筆量測更正
@@ -206,7 +206,7 @@ receipt 綁定原 run manifest／bundle／四格、noise.parquet hash／bytes／
 
 最新消費改用 `noise-first-correction-v2/` 完整目錄，內部仍為
 `noise-first-correction-v2.zip`（`hhhl-v4-noise-first-correction.v2`）的原 bytes：
-713815 bytes，SHA-256 `c91f27a43a2ef98ebc87bc41a7d94e8b8ed1eaa820eb882299ee5464b7615a94`，
+713972 bytes，SHA-256 `cfce13e4b33bcddcdf8223366de13afbebc3779a19b150ef73843ee03f329319`，
 解壓成員合計973133 bytes；最大允許4 MB封包／32 MB成員。primary ZIP 與 Git
 分片組回 bytes 相同，不覆寫原713815-byte ZIP。
 為遵守正常500 KB單檔門檻，Git保存 correction-transport.zip（420 bytes）、correction.001.bin
@@ -230,7 +230,7 @@ from pathlib import Path
 from scripts.publish_hhhl_v4_probability import verify_publication
 from scripts.correct_hhhl_v4_noise_first import read_correction
 task = Path("tasks/20261010-hhhl-v4-probability")
-publication = task / "publication-v2"
+publication = task / "publication-v2-public"
 original = verify_publication(publication)  # 原始包，不自動宣稱是最新更正觀點
 current = read_correction(task / "noise-first-correction-v2", original, publication)
 rows = current["summaries"]  # 全1080格，僅替換四個指定格
@@ -331,7 +331,7 @@ Int64 的 null，所有 status／reason／outcome 不動。本次原表 162,864 
 
 ## 同十筆原事件的 L20 抽查補件
 
-原 publication 的 audit-sample.parquet 只含 t0 事件。新 `landmark-audit-v1.zip`
+原 publication 的 audit-sample.parquet 只含 t0 事件。新 `landmark-audit-v1.zip`（含十筆真實收盤價，2026-10-10 起只在 primary 本機，不進 Git）
 （schema `hhhl-v4-l20-audit-supplement.v1`）補交同十個 event_id 的全部 L20 原欄位與
 joined audit，不取代原包或增加樣本。future builder 在相同前十筆排序後直接保存
 `l20_` 欄位；這份 additive reader 只針對原完成包的舊 ten-case schema。
@@ -349,7 +349,7 @@ from pathlib import Path
 from scripts.supplement_hhhl_v4_audit import verify_supplement
 
 task = Path("tasks/20261010-hhhl-v4-probability")
-saved = verify_supplement(task / "landmark-audit-v1.zip", task / "publication-v2")
+saved = verify_supplement(task / "landmark-audit-v1.zip", task / "publication-v2")  # 需本機完整版（含真實收盤價抽查）
 audit = saved["audit"]  # 10 rows; original fields plus l20_ fields
 receipt = saved["metadata"]
 ```
@@ -364,8 +364,8 @@ timestamp[ns]，其他timestamp或extension拒收。原十筆恰好同一檔股�
 真實性的密碼學認證；要獨立確認L20投影確實來自原表，仍需取得契約所列原大表。
 writer只讀原來源，讀取前後核對hash，既有output拒覆寫。生成與大小hash收據見execution。
 
-交付ZIP6861 bytes，SHA-256 26c7eff6196b706db5fba0f62b077093b51af8cbd3849e0293d6949f58e41617；
-內部原JSON55680 bytes，SHA-256 f1ab85e00c4b36f372e2bd848579b5eb928833a7030f098dfcdb64fcb5e42f3d。
-primary同名ZIP／原JSON在D:/Project/Stock/tasks/20261010-hhhl-v4-probability/，不只留在worktree。
+交付ZIP7061 bytes，SHA-256 591870b96c241a6c95fd645d229f5e4dfb8c89274a33746a2103e7e6e963cc4c；
+內部原JSON55680 bytes，SHA-256 e89f51dd87a9c380684c35c38cc1427dee06b14203376cc13795c2e839544376。
+primary同名ZIP／原JSON在D:/Project/stock-research/tasks/20261010-hhhl-v4-probability/，不只留在worktree。
 writer的`--pack <原json> --publication <原v2> --output <新zip>`只無損包裝，不重新生成資料；
 JSON公開hash的secret誤判未以放寬scanner／baseline處理，格式後未發布的本機JSON不當原副本。

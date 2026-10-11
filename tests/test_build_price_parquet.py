@@ -1,6 +1,6 @@
-"""Stock's side of the price_daily.parquet contract, without running producer code.
+"""stock-research's side of the price_daily.parquet contract, without running producer code.
 
-stock-data-downloader produces price_daily.parquet; Stock only consumes it. These tests
+stock-data-downloader produces price_daily.parquet; stock-research only consumes it. These tests
 read a small parquet the pinned producer generated from rows.json
 (tests/fixtures/price_daily/, see its README) and check that DataLoader reads it
 identically to the same rows as day CSVs, and handles stale CSVs correctly. Whether the

@@ -1,4 +1,4 @@
-"""Explicit additive Stock research backup, verify and new-folder restore."""
+"""Explicit additive stock-research research backup, verify and new-folder restore."""
 
 from __future__ import annotations
 

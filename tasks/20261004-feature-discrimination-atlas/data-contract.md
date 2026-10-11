@@ -1,6 +1,6 @@
 # Feature discrimination atlas v1 — consumer contract
 
-2026-10-08 discovery link: [pattern dictionary](../../docs/en/pattern-definitions.md) distinguishes F20/F21/F33 proxies from owner HHHL versions. This link does not change these frozen atlas formulas, data or results. New consumers must explicitly select the [Stock price/feature basis](../../docs/en/research-derived-data.md); legacy outputs are not silently migrated.
+2026-10-08 discovery link: [pattern dictionary](../../docs/en/pattern-definitions.md) distinguishes F20/F21/F33 proxies from owner HHHL versions. This link does not change these frozen atlas formulas, data or results. New consumers must explicitly select the [stock-research price/feature basis](../../docs/en/research-derived-data.md); legacy outputs are not silently migrated.
 
 This producer answers feature coverage and false discoveries before portfolio
 design. It is independent of the retrospective wave/catalog producer. A website
@@ -114,9 +114,9 @@ verified integration. The research-core module owner maintains the schema;
 historical datasets and their definitions remain immutable.
 
 Tracked code/report/results live on `codex/feature-discrimination-atlas` in
-`D:/Project/Stock/.worktrees/research-workspace-20261003`; report publication is
+`<legacy-checkout>/.worktrees/research-workspace-20261003`; report publication is
 commit `0f1266c`. The large run remains ignored. Its verified second physical copy
-is `D:/Project/Stock/tasks/20261004-feature-discrimination-atlas/datasets/atlas-v2`;
+is `D:/Project/stock-research/tasks/20261004-feature-discrimination-atlas/datasets/atlas-v2`;
 the sibling `atlas-v2-inputs` contains the exact declared input/code/contract bytes,
 original packet and `input-archive.json`. This copy is independently located from
 the worktree, but on the same physical drive. Remote/offsite availability is not

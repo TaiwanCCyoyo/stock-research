@@ -1,8 +1,10 @@
 # Data contract: `owner-hhhl-labels.v1`
 
-**Stable ID:** `owner-hhhl-labels.v1`. **Producer:** this task (`build_label_archive.py`,
-`capture_rule_hits.py`). **Status:** complete for batches 1-5; immutable. A later labelling
-round gets a new version and does not edit these files.
+**Stable ID:** `owner-hhhl-labels.v1`. **Producer:** `scripts/build_owner_hhhl_labels.py` and
+`scripts/capture_owner_hhhl_rule_hits.py` (run on 2026-10-08 as the task-local scripts at commit
+`8e891eb`). **Reader:** `research_core.owner_hhhl_labels.load()`. **Status:** complete for
+batches 1-5; immutable. A later labelling round gets a new version and does not edit these
+files; both producers publish only into a directory that does not exist yet.
 
 ## What it answers
 
@@ -55,7 +57,7 @@ Each zip has a `manifest.json` with the SHA-256 of every member.
     - `sets/`: early example sets and the dropped batch 5 extension set;
     - `earlier_dumps/<dump>/...`: the local dumps the result files were scored from;
     - `pages/`: page sources (`*_body.html`, templates) and `owner_labels.py` (chat transcription).
-- `rule_sources.zip` `rules/`: the exact rule sources `capture_rule_hits.py` ran.
+- `rule_sources.zip` `rules/`: the exact rule sources the capture ran.
 
 ## `data/rule_hits.json`
 
@@ -75,19 +77,34 @@ A recapture against changed data can be detected by comparing these.
 `receipt.json`: per batch, the preregistration's and chart sets' filesystem modification times, sizes
 and SHA-256 in the `.tmp` working directory, whether the preregistration equals the committed copy,
 and the owner's first `saved_at`. The first two are retrospective filesystem metadata recorded on
-2026-10-08, not cryptographic proof. `recompute.py` checks the third against the archive.
+2026-10-08, not cryptographic proof. The verifier checks the third against the archive.
 
 ## Access
 
-Everything is Git-tracked under `tasks/20261010-owner-hhhl-labels/`. Run:
+Everything is Git-tracked under `tasks/20261010-owner-hhhl-labels/`. Read it in code with
+`research_core.owner_hhhl_labels.load()`, which refuses the archive unless every check below
+passes, and reuse `buy_points`, `recall` and `precision` from the same module when scoring a
+new rule against these labels. To check the archive and recompute every published number:
 
 ```
-uv run python tasks/20261010-owner-hhhl-labels/recompute.py --check
+uv run python scripts/verify_owner_hhhl_labels.py --check
 ```
 
-`recompute.py --check` also re-hashes every zip member, compares every owner document with its
-archived dump, and checks each artifact against a canonical-JSON SHA-256 pinned in `recompute.py`
-(`PINNED`). A deliberate new capture or export must update those pins in the same commit.
+The check re-hashes every zip member, compares every owner document with its archived dump, and
+checks each artifact against a digest pinned in `research_core/owner_hhhl_labels.py` (`PINNED`).
+The v1 digest is SHA-256 of `json.dumps(sort_keys=True, ensure_ascii=False)` (`contract_digest`);
+it is also stored inside `rule_hits_inputs.zip`, so v1 keeps that exact form. A new export or
+capture is a new dataset version with its own pins.
 
 The live databases remain at the artifact URLs in `owner_labels.json`, but this archive is the
 canonical copy for research. Do not read the live pages as the reference.
+
+## 2026-10-10 old-name migration
+
+By owner decision, path and name strings inside this archive were rewritten to this checkout
+(`docs/en/bootstrap-stock-research.md#old-name-migration-2026-10-10`): `rule_hits.json`, its
+input receipt, and the `detect.py`/`adjprice.py` default paths inside `rule_sources.zip`. The
+atlas-v2 tables the capture read were relabelled (`dataset_id` only), so the 120 table digests in
+`rule_hits_inputs.zip` now name the relabelled bytes. No capture was re-run: every rule day and
+every recomputed batch number is unchanged. The exact capture-time bytes are in Git at
+`87366ba`, and the predecessor checkout still holds the original tables.

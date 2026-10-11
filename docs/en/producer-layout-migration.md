@@ -57,5 +57,5 @@ two enabled jobs remain the production setup until owner merge and safe deployme
    On failure keep them paused, restore recorded actions/data placement as needed,
    and report which credentials or deployment gate remains unresolved.
 
-Legacy Stock, legacy producer folders, old data and other sessions’ worktrees remain
+Legacy checkout, legacy producer folders, old data and other sessions’ worktrees remain
 untouched. Local task resources are retained for the open PR, not production.

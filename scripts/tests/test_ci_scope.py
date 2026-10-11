@@ -318,7 +318,7 @@ def test_producer_code_detector_flags_the_old_import_style() -> None:
     )
     assert runs_producer_code(old)
     assert runs_producer_code('import runpy\nrunpy.run_path("stock-data-downloader/scripts/b.py")\n')  # one whole-path literal
-    assert not runs_producer_code('"""stock-data-downloader produces price_daily.parquet; Stock only consumes it."""\n')
+    assert not runs_producer_code('"""stock-data-downloader produces price_daily.parquet; stock-research only consumes it."""\n')
 
 
 def test_producer_code_detector_does_not_flag_its_own_test_file() -> None:
@@ -327,7 +327,7 @@ def test_producer_code_detector_does_not_flag_its_own_test_file() -> None:
 
 
 def test_ci_needs_no_producer_submodule_because_tests_never_run_producer_code() -> None:
-    """Stock consumes the producer's data, not its code: no checkout of the submodule in CI."""
+    """stock-research consumes the producer's data, not its code: no checkout of the submodule in CI."""
     workflow = yaml.load((ci_scope.ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
     checkout = next(step for step in workflow["jobs"]["repository-checks"]["steps"] if step.get("uses", "").startswith("actions/checkout@"))
     assert "submodules" not in checkout.get("with", {})

@@ -22,6 +22,8 @@ from scripts.publish_hhhl_v4_probability import (
     _validate_summaries,
     convert_publication,
     main,
+    make_public_transport,
+    publication_bundle_identity,
     publish,
     verify_publication,
 )
@@ -721,7 +723,7 @@ def test_portable_reader_accepts_foreign_windows_bulk_locator(synthetic_run: tup
     output = tmp_path / "foreign-location-publication"
     publish(run, output)
     metadata = json.loads((output / PUBLICATION_NAME).read_bytes())
-    metadata["bulk_location"] = "D:/Project/Stock/tasks/saved-only-run"
+    metadata["bulk_location"] = "E:/Research/tasks/saved-only-run"
     _rewrite_publication(output, metadata)
     result = verify_publication(output)
     assert result["metadata"]["bulk_location"] == metadata["bulk_location"]
@@ -1165,3 +1167,28 @@ def test_publication_normalizes_deflate_failure(
     with pytest.raises(ValueError, match=message) as failure:
         verify_publication(target)
     assert isinstance(failure.value.__cause__, zlib.error)
+
+
+def test_public_transport_withholds_only_source_data_and_keeps_every_cell(synthetic_run: tuple[Path, dict[str, bytes]], tmp_path: Path) -> None:
+    run, _ = synthetic_run
+    v1_root, v2_root, public_root = tmp_path / "publication-v1", tmp_path / "publication-v2", tmp_path / "publication-public"
+    publish(run, v1_root)
+    full = convert_publication(v1_root, v2_root)
+    metadata = make_public_transport(v2_root, public_root)
+    verified = verify_publication(public_root)
+
+    assert verified["withheld"] == ["outputs/audit-sample.parquet"]
+    assert verified["summaries"] == verify_publication(v2_root)["summaries"]
+    assert metadata["full_bundle_sha256"] == full["bundle_sha256"] != metadata["bundle_sha256"]
+    assert publication_bundle_identity(metadata) == publication_bundle_identity(full) == full["bundle_sha256"]
+    bundle = b"".join((public_root / part["path"]).read_bytes() for part in metadata["bundle_parts"])
+    with zipfile.ZipFile(io.BytesIO(bundle)) as archive:
+        assert "outputs/audit-sample.parquet" not in archive.namelist()
+        assert "outputs/summaries.json" in archive.namelist()
+    with pytest.raises(ValueError, match="derived only from a complete v2 transport"):
+        make_public_transport(public_root, tmp_path / "again")
+
+    metadata["withheld_members"]["outputs/summaries.json"] = "not source data"
+    _rewrite_transport_archive(public_root, metadata)
+    with pytest.raises(ValueError, match="may not be withheld: outputs/summaries.json"):
+        verify_publication(public_root)

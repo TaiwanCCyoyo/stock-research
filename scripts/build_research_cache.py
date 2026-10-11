@@ -1,4 +1,4 @@
-"""Explicit build/verify of Stock's immutable derived cache (no downloads)."""
+"""Explicit build/verify of stock-research's immutable derived cache (no downloads)."""
 
 from __future__ import annotations
 

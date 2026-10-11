@@ -5,7 +5,7 @@
         "evidence": "af3b74406e2d336dd303db81eb073886fec456063a2cbad753b258a81adcab2b",
         "foundation": "f2c593a6765f778eb57b2f98631fd7ed6aad83ac6cc984faa057dcbe974fac32",
         "groups": "95bf91524fdbbf10622d3c97cbbc5d8a58849dff59a532fc5ef76e4f512bc658",
-        "loader": "b5f1746e03858d1af01ed2270550bd0854ec571f9df17833076707a0ee1977a2",
+        "loader": "81aca912889248071bb42c556f0d8e1e6903eaced1ab13bd6d09de9d772f2358",
         "lock": "5c5190809392cdf575a4852a5f977b118a8a140af169c36525fca3706d45b318",
         "mission": "92168f627bfe92125277f00c1dba4246e01d3a71c11c519bfe408aab34d616ce",
         "owner_contract": "7f1ef780b8e3aa49454a8bb12a8dbb2ff827e662f3c094c05f3be552400f44e6",
@@ -2013,7 +2013,7 @@
         "evidence": "5ff68c951e17fb028dcd208d7a832e0a5415b4dd7f0c15bb55e97b1295d41e5a",
         "foundation": "2a59465fca0ea4a7c639cf877be689459a209e0ac32bf7eb9a2c668abc80ebe9",
         "groups": "95bf91524fdbbf10622d3c97cbbc5d8a58849dff59a532fc5ef76e4f512bc658",
-        "loader": "9e23add68df4d2dfa024f5f0cd96014db751530d00809871d6c5f782d91423b7",
+        "loader": "94b760c847483d9f30e4406ca391830f82a102f1dd005ffeb77dae6b9200e66a",
         "lock": "471fc417b198229cd238f531fd6d3925824e195ab193bc545638058f3026fc8d",
         "meta": "199ca8e65571aa7fc8901e7cfbcbff6761f1201c67dbadc205026a027134bbd7",
         "mission": "92168f627bfe92125277f00c1dba4246e01d3a71c11c519bfe408aab34d616ce",
@@ -2043,7 +2043,7 @@
         ]
     },
     "input_paths": {
-        "actions": "shioaji_stock_prices/data/corporate_actions.sqlite",
+        "actions": "stock-data-downloader/data/corporate_actions.sqlite",
         "config": "research_core/sector_groups.v1.json",
         "entrypoint": "scripts/build_sector_wave_catalog.py",
         "evidence": "research_core/evidence.py",
@@ -2051,12 +2051,12 @@
         "groups": "research_core/sector_groups.py",
         "loader": "StockProject/engine/data_loader.py",
         "lock": "uv.lock",
-        "meta": "shioaji_stock_prices/data/symbol_meta.sqlite",
+        "meta": "stock-data-downloader/data/symbol_meta.sqlite",
         "mission": "tasks/20261002-sector-wave-catalog/mission.md",
         "owner_contract": "docs/en/research-owner-contract.md",
-        "price": "shioaji_stock_prices/data/price_daily.parquet",
+        "price": "stock-data-downloader/data/price_daily.parquet",
         "registry": "docs/en/research-registry.json",
-        "taxonomy": "shioaji_stock_prices/data/value_chain_classification.json",
+        "taxonomy": "stock-data-downloader/data/value_chain_classification.json",
         "waves": "research_core/sector_waves.py"
     },
     "limitations": [

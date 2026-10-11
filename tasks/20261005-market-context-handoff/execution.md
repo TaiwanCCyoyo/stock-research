@@ -2,7 +2,7 @@
 
 ## Scope and seal
 
-- Worktree: `D:/Project/Stock/.worktrees/research-workspace-20261003`.
+- Worktree: `<legacy-checkout>/.worktrees/research-workspace-20261003`.
 - New delivery branch: `codex/research-handoff-market-context-20261005`, based on
   fetched main `13723d2e66b35369948eae494ffee3bda164f031`; preserved atlas branch
   `93cb75b97dd6c7c535a251ca2efaa1a79c1d7ddf` was merged without rewriting it
@@ -65,7 +65,7 @@ a backup of the full catalog. No downloads or source-cache writes occur.
 - New task tests after final transport changes: **100 passed in 6.31 s**.
   Normal commit hooks passed; formatting/type corrections did not change rules.
 - Final package bytes: benchmark **793,345**, atlas **807,024**. Source manifest
-  SHA remained `c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140`.
+  SHA remained `238e7e4aba59509bb3245ea36e9708d6d8f9b9d7c6dab9f18a9d60bba67aa6ea`.
   Final package IDs and all descriptor hashes are in the report/manifests.
 
 ## Independent consumer receipt
@@ -97,7 +97,7 @@ treated as evidence of an unseen period. The next small batch is a future task.
 
 ## Delivery locator
 
-Published as [Stock PR #26](https://github.com/TaiwanCCyoyo/Stock/pull/26).
+Published as [stock-research PR #26](https://github.com/TaiwanCCyoyo/Stock/pull/26).
 All 17 staged/committed artifact blobs were compared with the verified working
 bytes and matched. Main's intervening documentation-only changes through
 `2a6df6d` were merged normally into the already-pushed branch; no force push or

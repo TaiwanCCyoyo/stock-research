@@ -18,6 +18,7 @@ import pandas as pd
 
 from research_core.hhhl_v4_summary import _missing_key, landmark_census
 from research_core.jobs import confined, file_digest
+from research_core.legacy_paths import is_legacy_location
 from scripts.publish_hhhl_v4_probability import (
     TRANSPORT_SCHEMA,
     _assemble_transport_bundle,
@@ -65,7 +66,9 @@ def _identity_digest(identities: dict[str, str], suffix: str) -> str:
     matches = []
     for original, digest in identities.items():
         normalized = original.replace("\\", "/")
-        is_absolute = Path(original).is_absolute() or PurePosixPath(original).is_absolute() or PureWindowsPath(original).is_absolute()
+        is_absolute = (
+            is_legacy_location(original) or Path(original).is_absolute() or PurePosixPath(original).is_absolute() or PureWindowsPath(original).is_absolute()
+        )
         if is_absolute and normalized.endswith(suffix):
             matches.append(digest)
     if len(matches) != 1:
@@ -434,7 +437,9 @@ def verify_supplement(path: Path, publication_root: Path) -> dict[str, Any]:
 
     if metadata.get("original_run_manifest_sha256") != publication_metadata.get("run_manifest_sha256"):
         raise ValueError("supplement run manifest identity does not match publication")
-    if metadata.get("original_bundle_sha256") != publication_metadata.get("bundle_sha256"):
+    from scripts.publish_hhhl_v4_probability import publication_bundle_identity
+
+    if metadata.get("original_bundle_sha256") != publication_bundle_identity(publication_metadata):
         raise ValueError("supplement bundle identity does not match publication")
     source_artifacts, source_identity = _validate_source_manifest(manifest)
     landmark_descriptor, row_count = _source_artifact(manifest, source_artifacts)

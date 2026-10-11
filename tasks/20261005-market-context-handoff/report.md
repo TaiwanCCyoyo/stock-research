@@ -84,9 +84,9 @@ Python：`research_core.feature_atlas_publication.load_publication`／`query_com
   `publication-v1`、`market-context-v1` 保留本機；正式 v2 只改 XZ 無損封存形式。
   全部 0050 定義／結果／選定來源與原比較 JSON 位元組核對相同，沒有重選規則。
   公開 reader 支援正式 v2；舊封裝及產生提交保留，沒有默默替換。
-- 原 atlas dataset：`fda-86245f2e223fc45c9f84afb0dcf77c1fff7ab22d0a1b0b4a4c8800972ce9327e`。
-- Atlas publication：`feature-atlas-publication.v2-97453fbe244299c1d8a375a71eeb7811d825d081e3aff46309027988391a1e3a`。
-- Benchmark dataset：`sha256:df2879f7f91e687dfb85f839e7ca8919af6b363b8038825d15d3f5f4796c8ed2`。
+- 原 atlas dataset：`fda-e712fc9408c147ae410a2fc0a687ef6f1dba785cab8cfb0312f79c504c6c5206`。
+- Atlas publication：`feature-atlas-publication.v2-15dbabb3a954aca518d8886aa322c3b9148e09fc47e8f4a2b5680891be663480`。
+- Benchmark dataset：`sha256:29ce66c9010824db5f9ea421f3c0e9d53ec43e00771d083917563c4b29fd1ea2`。
 - 來源 manifest 前後 hash 均為 mission 固定的 `c7848ae7…0dfe140`。其他股票在
   來源 manifest 有列出，不代表其資料隨本包保存。
 - 網站端獨立試讀通過：原位置及複製到 `strategy-presentation/.tmp/research-handoff-smoke-20261005-1916`

@@ -37,11 +37,11 @@
 
 ## 來源與定位
 
-- `shioaji_stock_prices/data/value_chain_classification.json`：本次快照，確切身分
+- `stock-data-downloader/data/value_chain_classification.json`：本次快照，確切身分
   與擷取時間記於 catalog manifest。
-- `shioaji_stock_prices/openspec/specs/value-chain-classification/spec.md`：快照契約。
-- `shioaji_stock_prices/scripts/fetch_value_chain_classification.py`：節點與逆向索引生產程式。
-- `shioaji_stock_prices/openspec/specs/symbol-metadata/spec.md`：上市櫃身分資料契約。
+- `stock-data-downloader/openspec/specs/value-chain-classification/spec.md`：快照契約。
+- `stock-data-downloader/scripts/fetch_value_chain_classification.py`：節點與逆向索引生產程式。
+- `stock-data-downloader/openspec/specs/symbol-metadata/spec.md`：上市櫃身分資料契約。
 - `docs/en/research-industry-source-evidence.md`：官方大類不能視為完整歷史業務資料。
 
 階層、去重、跨鏈同碼與缺分類的回歸測試使用合成資料。實際覆蓋數字與行情

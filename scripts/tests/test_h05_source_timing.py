@@ -44,6 +44,7 @@ def test_real_binding_passes_matching_cash_and_composition_timing(
     factories = []
     monkeypatch.setattr(binding_module, "EVIDENCE_ROOT", tmp_path)
     monkeypatch.setattr(binding_module, "ACTIVE_ROOT", tmp_path)
+    monkeypatch.setattr(binding_module, "EVIDENCE_DIR", tmp_path / "evidence")
     monkeypatch.setattr(binding_module, "CAPITAL_ANNUAL_HASH", digest)
     monkeypatch.setattr(binding_module, "local_source_paths", lambda: ())
     monkeypatch.setattr(Path, "resolve", lambda self, strict=False: self)

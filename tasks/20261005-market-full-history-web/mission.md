@@ -4,7 +4,7 @@ This task consumes the already computed local-market preview; it does not discov
 
 Adopted window: **2010-01-04 through 2026-10-02**, exactly the producer calendar. Coverage: 1,970 eligible stocks (1,942 metadata stocks plus 28 innovation-board stocks), 104 unresolved instruments and one benchmark outside stock opportunity counts. This is not a complete historical listing universe or a claim of complete delisted-company coverage.
 
-Producer: `20261004-sector-wave-full-history-preview`, PR 21, shared query helpers at `f1a21a72bf3a8ed7895cffd0b2b017286226c762`. Immutable catalog manifest SHA-256: `c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140`. Algorithm, source wrapper and original native results remain unchanged. The producer's older adapter identity in native receipts is distinct from the current compact V2 adapter.
+Producer: `20261004-sector-wave-full-history-preview`, PR 21, shared query helpers at `f1a21a72bf3a8ed7895cffd0b2b017286226c762`. Immutable catalog manifest SHA-256: `238e7e4aba59509bb3245ea36e9708d6d8f9b9d7c6dab9f18a9d60bba67aa6ea`. Algorithm, source wrapper and original native results remain unchanged. The producer's older adapter identity in native receipts is distinct from the current compact V2 adapter.
 
 Acceptance:
 

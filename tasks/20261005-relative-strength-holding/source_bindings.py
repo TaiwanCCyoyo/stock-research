@@ -23,7 +23,7 @@ if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))
 
 from economics import BoundCapital, BoundPaid, BoundShare, EconomicBindings, prepare_economics  # noqa: E402
-from source_modules import ACTIVE_ROOT, EVIDENCE_ROOT, load_adapters, local_source_paths  # noqa: E402
+from source_modules import ACTIVE_ROOT, EVIDENCE_DIR, EVIDENCE_ROOT, load_adapters, local_source_paths  # noqa: E402
 
 LOGGER = logging.getLogger(__name__)
 BEGINNING = datetime.fromisoformat("2019-01-02T06:00:00+08:00")
@@ -62,9 +62,9 @@ def bind_existing_sources(modules: Mapping[str, Any], *, cash_payment_delay_days
         inputs[path.relative_to(EVIDENCE_ROOT).as_posix()] = digest
         return body
 
-    scratch = EVIDENCE_ROOT / ".tmp/claude-kline"
-    raw = EVIDENCE_ROOT / "shioaji_stock_prices/data/raw"
-    captures = EVIDENCE_ROOT / ".worktrees/codex-workspace/.tmp"
+    scratch = EVIDENCE_DIR
+    raw = ACTIVE_ROOT / "stock-data-downloader/data/raw"
+    captures = EVIDENCE_DIR / "captures"
     pilot = ACTIVE_ROOT / "tasks/20260921-evening-pilot"
     factor_payload = json.loads(read(scratch / "025-signal-factor-inputs/signal-factor-readset-v1.json", modules["readset"].FACTOR_HASH))
     records = factor_payload["records"]
@@ -103,7 +103,8 @@ def bind_existing_sources(modules: Mapping[str, Any], *, cash_payment_delay_days
             "annual:exdailyq:6472:2022-08-30:797",
         )
     )
-    mixed_root = EVIDENCE_ROOT / ".tmp/claude-download/005-artifacts-46d07a89845348c0b1757f988d53dfce/captures"
+    download = "005-artifacts-46d07a89845348c0b1757f988d53dfce"  # pragma: allowlist secret - artifact directory id
+    mixed_root = EVIDENCE_DIR / "claude-download" / download / "captures"
     mixed_specs = (
         ("3588-110", "annual:twt49u:3588:2021-09-02:734"),
         ("3617-112", "annual:twt49u:3617:2023-08-16:823"),
@@ -144,7 +145,7 @@ def bind_existing_sources(modules: Mapping[str, Any], *, cash_payment_delay_days
     for path in modules["source_binding"].source_paths():
         read(path)
     halt_cases = modules["source_binding"].named_cases()
-    no_trade_path = EVIDENCE_ROOT / ".worktrees/codex-workspace/tasks/20261002-momentum-probe/no-trade-4192-source.json"
+    no_trade_path = EVIDENCE_DIR / "momentum-probe/no-trade-4192-source.json"
     no_trade = modules["no_trade_execution"].bind_no_trade_source(json.loads(read(no_trade_path)), modules["readset"].PRICE_HASHES["tpex-official"])
     # A synthetic empty prefix exercises native constructors and the real core
     # seam, not a historical portfolio or a claim about held-event completeness.

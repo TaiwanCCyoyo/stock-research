@@ -22,7 +22,7 @@
 
 ### Data Preflight
 
-- Data path: `C:\Users\xjp01\Documents\Stock\shioaji_stock_prices\data`
+- Data path: `D:\Project\stock-research\stock-data-downloader\data`
 - Price file exists: `False`
 - Loaded date range: `2018-12-07` to `2026-01-05`
 - Available requested symbols: 2330, 2308, 2454, 2317, 3711, 2383, 2345, 3017, 3037, 2360, 2382, 2303, 6669, 2357, 3008, 3034, 3231, 2301, 2324, 2352, 2353, 2356
@@ -44,13 +44,13 @@ Warnings:
 ## Execution
 
 - Strategy: `TwoBMovingAverageConvergence`
-- Strategy path: `C:\Users\xjp01\Documents\Stock\tasks\20260510-two-b-template-smoke\candidates\two_b_ma_convergence.py`
+- Strategy path: `D:\Project\stock-research\tasks\20260510-two-b-template-smoke\candidates\two_b_ma_convergence.py`
 - Strategy params: `{"add_allocation_pct": 0.12, "convergence_pct": 2.0, "exit_window": 10, "initial_allocation_pct": 0.18, "lot_size": 1000, "ma_type": "sma", "partial_sell_pct": 0.5, "reclaim_window": 5, "slow_exit_window": 20, "stop_loss_pct": 8.0, "swing_lookback": 20, "trend_window": 20, "windows": [5, 10, 20]}`
 - Codes: `2330, 2308, 2454, 2317, 3711, 2383, 2345, 3017, 3037, 2360, 2382, 2303, 6669, 2357, 3008, 3034, 3231, 2301, 2324, 2352, 2353, 2356`
 - Start: `2024-01-01`
 - End: `latest available local data`
 - Initial cash: `1,000,000.000`
-- Summary output: `C:\Users\xjp01\Documents\Stock\tasks\20260510-two-b-template-smoke\runs\runner_backtest.json`
+- Summary output: `D:\Project\stock-research\tasks\20260510-two-b-template-smoke\runs\runner_backtest.json`
 
 ## Result Snapshot
 

@@ -1,6 +1,6 @@
 {
     "schema": "retired-openspec-entrypoints.v1",
-    "scope": "new stock-research only; old Stock and global settings unchanged",
+    "scope": "new stock-research only; old legacy checkout and global settings unchanged",
     "originalArchiveDigest": "sha256:f97c1792a368abf80a39fc05ed70974d7bb6e4ae80c40cf1190d727897e35798",
     "files": [
         {

@@ -1,8 +1,8 @@
 {
     "schema": "owner-hhhl-rule-hits.v1",
     "rule_sources": "data/rule_sources.zip (SHA-256 in its manifest)",
-    "atlas_tables": "D:/Project/Stock/tasks/20261004-feature-discrimination-atlas/datasets/atlas-v2/tables",
-    "corporate_actions": "D:/Project/Stock/shioaji_stock_prices/data/corporate_actions.sqlite",
+    "atlas_tables": "D:/Project/stock-research/tasks/20261004-feature-discrimination-atlas/datasets/atlas-v2/tables",
+    "corporate_actions": "D:/Project/stock-research/stock-data-downloader/data/corporate_actions.sqlite",
     "corporate_actions_note": "current-reference database read at capture time (2026-10-08); adjprice keeps ex_date <= 2026-08-14",
     "input_receipt": "data/rule_hits_inputs.zip: SHA-256 of every atlas table read and the exact factor rows applied",
     "margin_sessions": 3,

@@ -25,14 +25,14 @@
 
 ## 2. Fetcher and storage
 
-> Delivered in the `shioaji_stock_prices` submodule as `scripts/fetch_institutional.py`
+> Delivered in the `stock-data-downloader` submodule as `scripts/fetch_institutional.py`
 > (828 lines) with `tests/test_fetch_institutional.py`, merged to submodule `main` in
 > `2ed8e4c` on 2026-08-26. Verified against the live endpoints, not only fixtures.
 
 - [x] 2.1 Design the `institutional_daily` table schema (PK `date, code`; foreign/trust/
-      dealer net + gross buy/sell columns) in `shioaji_stock_prices/fetch_institutional.py`.
+      dealer net + gross buy/sell columns) in `stock-data-downloader/fetch_institutional.py`.
 - [x] 2.2 Implement the TWSE T86 fetch path with idempotent upsert and a raw-range tracking
-      table, consuming the shared `shioaji_stock_prices/shp_utils/official_api.py` helpers
+      table, consuming the shared `stock-data-downloader/shp_utils/official_api.py` helpers
       (`fetch_json_with_retry`, `parse_int`, `parse_number`, `parse_roc_compact_date`) rather
       than re-implementing HTTP fetch/parsing, per `add-official-daily-price-source`'s shared
       foundation.
@@ -47,7 +47,7 @@
 - [x] 2.5 Add a daily-incremental entry point and a historical backfill entry point, **both
       markets** (confirmed feasible for TPEx too by task 1.2). The backfill MUST follow the
       throttle/checkpoint/backoff **structure** of
-      `shioaji_stock_prices/backfill_official_history.py` (rate-limited, resumable, bounded
+      `stock-data-downloader/backfill_official_history.py` (rate-limited, resumable, bounded
       per-run) but MUST NOT import or extend that module directly: T86/TPEx are daily
       whole-market endpoints, not `backfill_official_history.py`'s per-symbol
       `(code, year_month)` shape, so this fetcher's checkpoint unit is `(market, date)` for

@@ -158,7 +158,7 @@ are not in conflict and the difference is not noise:
 
 **The trades are bit-identical; only the dividend records differ.** The extra five events are
 worth NT$48,744, which is 2.4372pp on NT$2M — matching the published gap of 2.4372pp exactly.
-A worktree's `shioaji_stock_prices/data` is a copy frozen at creation time, and the
+A worktree's `stock-data-downloader/data` is a copy frozen at creation time, and the
 corporate-action tables have been backfilled since.
 
 **Consequence, and it is not small:** every figure this line published before 2026-09-08 came

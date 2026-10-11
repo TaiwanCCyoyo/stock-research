@@ -1,8 +1,8 @@
 [English Version](../../README.md)
 
-# Stock Research Copilot
+# stock-research Research Copilot
 
-2026-10-08 的資料分工：submodule 負責下載、日 K 轉換、來源正規化與來源備份；Stock 負責研究價格、指標、型態、自己的不可變快取及研究資料備份。worktree 用明確絕對路徑唯讀共用快取，不複製、不連結；每日變動的原始行情仍保留實體快照。入口為[衍生資料契約](../en/research-derived-data.md)與[型態定義字典](../en/pattern-definitions.md)。舊均線欄位先保留歷史相容，不能默默替换舊實驗定義。
+2026-10-08 的資料分工：submodule 負責下載、日 K 轉換、來源正規化與來源備份；stock-research 負責研究價格、指標、型態、自己的不可變快取及研究資料備份。worktree 用明確絕對路徑唯讀共用快取，不複製、不連結；每日變動的原始行情仍保留實體快照。入口為[衍生資料契約](../en/research-derived-data.md)與[型態定義字典](../en/pattern-definitions.md)。舊均線欄位先保留歷史相容，不能默默替换舊實驗定義。
 
 這是台股策略研究專案，以有資料證據的對話報告為主要介面；既有 dashboard 保留為 K 線與逐筆交易的選用檢視工具，暫停一般功能擴充。完整研究流程見[英文主文件](../../README.md)。
 
@@ -10,7 +10,7 @@
 
 設計實驗時優先考慮專案可讀性、可維護性與跨策略重用。[研究產物管理規範](../en/research-program.md#reusable-research-artifacts) 要求先查既有資產，並為有後續價值的產物登記用途、欄位語意、涵蓋範圍、來源版本、取得／重算入口及使用關係；收尾須讓下一個 session 能找到、取得並理解資料，未完成的保存或說明缺口須明列。
 
-擁有者授權代理在有具體研究效益時主動改善 `shioaji_stock_prices` 的資料結構、索引與衍生產物，讓資料好找、好懂、好重用，不因它是子模組而迴避修改。程式在獨立 worktree 開發，維持既有資料、讀取相容性、備份／還原及排程更新功能。依[子模組開發與交付流程](../en/stock-agent-operations.md#submodule-development-and-delivery)，由擁有者合併子模組 PR 後，安全更新其主要 checkout 的 `main`，再更新 Stock gitlink 並交付另一份 PR；主要 checkout 的分支不作實驗用途。下載前先查共用資料，獲授權的下載／更新使用[主要資料位置](../en/stock-agent-operations.md#canonical-data-updates)，留下其他 session 可查到的紀錄，避免資料只留在 `.tmp/` 或 worktree 造成重工；既有 worktree 快照不會自動同步。
+擁有者授權代理在有具體研究效益時主動改善 `stock-data-downloader` 的資料結構與索引，讓資料好找、好懂、好重用，不因它是子模組而迴避修改；研究用衍生資料、指標與型態則屬於本專案（見[衍生資料責任](../en/research-derived-data.md)）。程式在獨立 worktree 開發，維持既有資料、讀取相容性、備份／還原及排程更新功能。依[子模組開發與交付流程](../en/stock-agent-operations.md#submodule-development-and-delivery)，由擁有者合併子模組 PR 後，安全更新其主要 checkout 的 `main`，再更新 stock-research gitlink 並交付另一份 PR；主要 checkout 的分支不作實驗用途。下載前先查共用資料，獲授權的下載／更新使用[主要資料位置](../en/stock-agent-operations.md#canonical-data-updates)，留下其他 session 可查到的紀錄，避免資料只留在 `.tmp/` 或 worktree 造成重工；既有 worktree 快照不會自動同步。
 
 ## Agent 工作流程與 GitHub
 
@@ -22,7 +22,7 @@
 
 所有變更在非預設分支完成，透過 PR 進入 `main`，不得直接 commit 或 push 到 `main`。本次同步及後續政策審查獲准建立 PR；CI 與自動 review 已生效，分支保護受目前 private repository 方案限制。
 
-擁有者已授權 Stock [合併後自動清理](../en/git-workflow.md#post-merge-cleanup)：確認自己的任務 PR 已合併到 `main` 後，該 session 更新本機 `main`，並移除自己建立的任務 worktree、本機及對應 `origin` 分支，不必再次詢問。清理須保留研究產物與共用資料，維持既有子模組交付授權及生產更新條件，排程操作仍需另行授權。
+依本 repository 的 AGENTS.md 運作約定進行[合併後清理](../en/git-workflow.md#post-merge-cleanup)：確認自己的任務 PR 已合併到 `main` 後，該 session 更新本機 `main`，並移除自己建立的任務 worktree、本機及對應 `origin` 分支，不必再次詢問。清理須保留研究產物與共用資料，產出端（stock-data-downloader）的交付須另行向擁有者確認，維持生產更新條件，排程操作仍需另行授權。
 
 - [Git 工作契約](../en/git-workflow.md)：分支、交付及合併權限。
 - [PR 設定](pr-setup.md)：CI、託管 review 與 main 保護設定。

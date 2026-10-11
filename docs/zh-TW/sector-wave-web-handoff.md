@@ -4,11 +4,11 @@
 
 ## 來源固定點
 
-- Producer worktree：`D:/Project/Stock/.worktrees/sector-wave-catalog`；head `9913d4eb891454a69b05cf4fa4d1541a0d60af11`。
+- Producer worktree：`<legacy-checkout>/.worktrees/sector-wave-catalog`；head `9913d4eb891454a69b05cf4fa4d1541a0d60af11`。
 - 契約：`docs/en/sector-wave-catalog.md`；研究：`tasks/20261002-sector-wave-catalog/report.md`、`classification-review.md`。
 - 產物：`tasks/20261002-sector-wave-catalog/catalog-v1/manifest.json` 及 `completion-receipt.json`；280 個 gzip chunks。
 - `schema_version=sector-wave-catalog.v1`；`run_id=catalog-v1-2019-20260814`。
-- `manifest_canonical_sha256=384ee53d22b70dc1650bf84e1887e8515565189c975c29c77ef5e6273c5138c9`。先重建 canonical JSON hash 並核對 receipt，再採用該身分；receipt 不是策略採用證書。
+- `manifest_canonical_sha256=3c5f14b1d061aef1a4b5a440f42042db3f8d23015462e6ad3e45ce5b031eab4a`。先重建 canonical JSON hash 並核對 receipt，再採用該身分；receipt 不是策略採用證書。
 - 觀察期間 2019-01-02～2026-08-14；分類快照 2026-10-01。文字身分處理換行差異，二進位資料仍核對原始 bytes；保留 identity、metadata、quality amendments 與前一版關聯。
 
 本提案 worktree 未合併 producer 分支。實作時以固定、已獲准的 bundle 作輸入，不依賴另一台機器上固定的 worktree 路徑；index 可重建，原產物及舊身分要保留。
@@ -81,9 +81,9 @@ Owner 進一步要求連續的細胞壁版圖與泡泡融合／破裂消長；�
 
 2026-10-02 分類 session 提供固定的補證入口；本次已唯讀核對 packet、published receipt 與所綁定 catalog。此處保存的是審查中的版本，不代表 PR 已通過 hosted review 或合併，也不代表正式網站已接入。
 
-- Producer worktree：`D:/Project/Stock/.worktrees/sector-role-evidence`；本輪核對 head `dff0902370ed93b23e9572f5582a750cd59d9381`；[PR #14](https://github.com/TaiwanCCyoyo/Stock/pull/14)。本次不查核 hosted 狀態，由原 session 負責後續交付。
+- Producer worktree：`<legacy-checkout>/.worktrees/sector-role-evidence`；本輪核對 head `dff0902370ed93b23e9572f5582a750cd59d9381`；[PR #14](https://github.com/TaiwanCCyoyo/Stock/pull/14)。本次不查核 hosted 狀態，由原 session 負責後續交付。
 - 契約：`docs/en/sector-role-evidence.md`；packet：`tasks/20261002-sector-role-evidence/evidence-v1.json`，receipt：同目錄 `completion-receipt.json`。
-- `schema_version=sector-classification-evidence.v1`；`packet_id=sector-role-evidence-20261002-batch01`；`packet_canonical_sha256=a57f081300b1bdd1ff600e0501fb7e7fc511041ba557ac57bf3f5a3fdef944e8`。本輪審查修正版取代原 `1753ab...` 草稿；後續審查修正須重新核對 identity，不能只憑相同 packet_id 重用。
+- `schema_version=sector-classification-evidence.v1`；`packet_id=sector-role-evidence-20261002-batch01`；`packet_canonical_sha256=f03fcf7ad6c1fce41fd8faca41fc6e87c043618a5e1299968fe1fa0dad35da85`。本輪審查修正版取代原 `1753ab...` 草稿；後續審查修正須重新核對 identity，不能只憑相同 packet_id 重用。
 - `scope_profile_id=sector-role-review-20261002.v1`，固定入口為 `research_core/sector_role_review_scopes.v1.json`。validator 依原 catalog 及既定規則重建完整 218 檔 queue；pending 成員不能被省略後變成 scope 外。
 - `base_catalog` 精確綁定上文的 `sector-wave-catalog.v1` 與 canonical SHA；原 1,942 securities、2,561 episodes 及 280 chunks 未改。
 - 218 檔 review queue，18 檔有至少一個已核對角色，200 檔 pending；21 來源、23 筆角色 assertions、3 筆原 membership 複核註記。這是補證範圍與進度，不是全市場角色覆蓋率或股票排名。

@@ -48,7 +48,7 @@
 
 重建器先取得同一任務目錄的發布鎖，再暫存並驗證候選；跨程序競爭發布在改動資料前拒絕，處理完成／失敗後釋放鎖，失敗後可再發布。驗證失敗保留原檔、替換失敗回復原檔，回復失敗則保留完整備份。程序直接中止留下鎖與可能的復原檔，需先確認沒有發布者並檢查復原資料，才手動清除鎖。
 
-原 catalog canonical manifest SHA-256：`384ee53d22b70dc1650bf84e1887e8515565189c975c29c77ef5e6273c5138c9`。本批的固定入口及驗證摘要見 [completion-receipt.json](completion-receipt.json)；接入說明見 [sector-role-evidence.md](../../docs/en/sector-role-evidence.md)。
+原 catalog canonical manifest SHA-256：`3c5f14b1d061aef1a4b5a440f42042db3f8d23015462e6ad3e45ce5b031eab4a`。本批的固定入口及驗證摘要見 [completion-receipt.json](completion-receipt.json)；接入說明見 [sector-role-evidence.md](../../docs/en/sector-role-evidence.md)。
 
 ## 2026-10-06 整合與 JSON 相容性更正
 
@@ -61,5 +61,5 @@
 
 新增 15 個功能回歸後，三個直接相關測試檔 **122 passed**（10.24 秒）。原證據
 包與 receipt 的位元組雜湊未變，唯讀驗證仍回傳相同 canonical packet 身分
-`a57f081300b1bdd1ff600e0501fb7e7fc511041ba557ac57bf3f5a3fdef944e8`。
+`f03fcf7ad6c1fce41fd8faca41fc6e87c043618a5e1299968fe1fa0dad35da85`。
 保留前述 93 項歷史驗證紀錄、18 家已查核／200 家 pending 與所有未知語意。

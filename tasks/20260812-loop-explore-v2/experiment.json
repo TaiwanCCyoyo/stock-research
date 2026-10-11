@@ -5,7 +5,7 @@
     "run": {
         "codes": "2330,2454",
         "cash": 10000000,
-        "data_path": "shioaji_stock_prices/data"
+        "data_path": "stock-data-downloader/data"
     },
     "dimensions": [
         {

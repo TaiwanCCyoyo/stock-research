@@ -15,17 +15,17 @@
         "selector": "wave-start-representative.preview.v1",
         "task": "20261004-sector-wave-full-history-preview"
     },
-    "manifest_sha256": "c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140",
+    "manifest_sha256": "238e7e4aba59509bb3245ea36e9708d6d8f9b9d7c6dab9f18a9d60bba67aa6ea",
     "method_analysis_recomputed": false,
     "native_receipt_identity_context_verified_count": 1970,
     "prior_receipts": [
         {
             "path": "verification-receipt-v3.json",
-            "sha256": "b07809c560acf955091a0cc3362858bd322dac2f29433d39882febe929ec2d8c"
+            "sha256": "d1163d51b959ca9e49c518f8de8a5ce2618e69be60246e409652f5e0c8bd9d1b"
         },
         {
             "path": "query-native-contract-audit-receipt.json",
-            "sha256": "1b02cb7926062c4be926a1bda5da50233e211bd48e9cee70725baf28d5fef42c"
+            "sha256": "a43aaa83df0641bdb43f7ebab1eed35c03667643d81c0ea13bee3e6c3c7cb2bf"
         }
     ],
     "query_security_full_rows_reconstructed_count": 2075,

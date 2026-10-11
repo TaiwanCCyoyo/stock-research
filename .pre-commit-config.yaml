@@ -1,10 +1,14 @@
+# Retained H05 evidence code keeps its exact original bytes: hooks that rewrite files skip it,
+# while secret, large-file and encoding checks still cover it.
 repos:
     # Basic out-of-the-box checks
     - repo: https://github.com/pre-commit/pre-commit-hooks
       rev: v6.0.0
       hooks:
           - id: trailing-whitespace
+            exclude: ^tasks/20261005-relative-strength-holding/evidence/
           - id: end-of-file-fixer
+            exclude: ^tasks/20261005-relative-strength-holding/evidence/
           - id: check-yaml
           - id: check-added-large-files
             # Owner approved: root baseline 1 MiB; all other added files keep 500 KiB.
@@ -28,6 +32,7 @@ repos:
       rev: v3.9.5
       hooks:
           - id: prettier
+            exclude: ^tasks/20261005-relative-strength-holding/evidence/
 
     # Enforce UTF-8 encoding and reject decode corruption. The language constraint this
     # hook used to carry was removed on 2026-08-23; see scripts/file_hygiene.py.
@@ -45,11 +50,15 @@ repos:
             language: system
             types: [python]
             require_serial: true # Mypy batches share one SQLite cache.
+            # Retained H05 evidence code keeps its original logic and runtime sys.path imports.
+            exclude: ^tasks/20261005-relative-strength-holding/evidence/
           - id: pyright
             name: Pyright (Targeted Python Check)
             entry: uv run pyright
             language: system
             types: [python]
+            # Retained H05 evidence code keeps its original logic and runtime sys.path imports.
+            exclude: ^tasks/20261005-relative-strength-holding/evidence/
 
     # Ruff (Python Linter & Formatter)
     - repo: https://github.com/astral-sh/ruff-pre-commit
@@ -57,7 +66,9 @@ repos:
       hooks:
           - id: ruff
             args: [--fix]
+            exclude: ^tasks/20261005-relative-strength-holding/evidence/
           - id: ruff-format
+            exclude: ^tasks/20261005-relative-strength-holding/evidence/
 
     # Taplo (TOML Formatter)
     - repo: https://github.com/ComPWA/taplo-pre-commit

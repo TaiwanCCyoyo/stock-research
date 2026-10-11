@@ -2,7 +2,7 @@
 
 The research dashboard is slow enough to hurt daily use: every K-line render calls
 `load_price_data` → `DataLoader.load_all()`, which globs and parses all ~2,068
-`{code}_day.csv` files in `shioaji_stock_prices/data/` even when the user selected one
+`{code}_day.csv` files in `stock-data-downloader/data/` even when the user selected one
 symbol. Dashboard startup is similarly slow because `discover_tasks` eagerly parses every
 `tasks/*/summary.json` (tens of KB each) before the user has picked a task. This change
 fixes the data-loading path underneath the existing Panel dashboard now, and doubles as the

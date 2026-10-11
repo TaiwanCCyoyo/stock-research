@@ -17,6 +17,7 @@ from typing import Any
 
 from research_core.hhhl_v4_summary_validation import validate_summary_comparisons, validate_summary_payload
 from research_core.jobs import confined, file_digest
+from research_core.legacy_paths import is_legacy_location
 from scripts.validate_hhhl_v4_source import write_json
 
 LOGGER = logging.getLogger(__name__)
@@ -43,6 +44,9 @@ OUTPUT_FILES = (
 )
 OUTPUT_ARTIFACTS = OUTPUT_FILES[1:]
 SUMMARY_KEY_FIELDS = ("family", "slice", "value", "sampling", "horizon", "basis")
+# Members a public transport may withhold: source data whose redistribution rights are unconfirmed.
+# Their descriptors (SHA-256, bytes) stay in the metadata; the bytes stay local-only.
+WITHHELD_REASON = "source data with unconfirmed redistribution rights; bytes kept local-only"
 _SHA256 = re.compile(r"[0-9a-f]{64}\Z")
 
 
@@ -191,7 +195,8 @@ def _identity_map(manifest: dict[str, Any]) -> dict[str, str]:
 
 
 def _identity_path_is_absolute(value: str) -> bool:
-    return Path(value).is_absolute() or PurePosixPath(value).is_absolute() or PureWindowsPath(value).is_absolute()
+    """A native absolute path, or a recorded predecessor location that stood for one."""
+    return is_legacy_location(value) or Path(value).is_absolute() or PurePosixPath(value).is_absolute() or PureWindowsPath(value).is_absolute()
 
 
 def _validate_relative_identity_path(value: str) -> None:
@@ -406,6 +411,14 @@ def convert_publication(root: Path, output: Path) -> dict[str, Any]:
     if len(bundle) != source_metadata["bundle_bytes"] or _sha(bundle) != source_metadata["bundle_sha256"]:
         raise ValueError("source publication bundle changed during transport conversion")
 
+    metadata = dict(source_metadata)
+    metadata["transport_schema"] = TRANSPORT_SCHEMA
+    _write_transport(output, metadata, bundle)
+    return metadata
+
+
+def _write_transport(output: Path, metadata: dict[str, Any], bundle: bytes) -> None:
+    """Write bounded bundle parts plus publication.zip into a new directory."""
     parts: list[dict[str, Any]] = []
     part_payloads: list[tuple[str, bytes]] = []
     for start in range(0, len(bundle), MAX_TRANSPORT_PART_BYTES):
@@ -415,8 +428,6 @@ def convert_publication(root: Path, output: Path) -> dict[str, Any]:
         parts.append({"path": name, "sha256": _sha(data), "bytes": len(data)})
         part_payloads.append((name, data))
 
-    metadata = dict(source_metadata)
-    metadata["transport_schema"] = TRANSPORT_SCHEMA
     metadata["bundle_parts"] = parts
     metadata_archive = _zip_bytes({PUBLICATION_NAME: _json_bytes(metadata)})
     if len(metadata_archive) > MAX_TRANSPORT_METADATA_BYTES:
@@ -430,12 +441,73 @@ def convert_publication(root: Path, output: Path) -> dict[str, Any]:
         with part_path.open("xb") as stream:
             stream.write(data)
     LOGGER.info(
-        "Converted HHHL v4 publication parts=%d bundle_bytes=%d at %s",
+        "Wrote HHHL v4 transport parts=%d bundle_bytes=%d at %s",
         len(parts),
         len(bundle),
         output,
     )
+
+
+def make_public_transport(root: Path, output: Path) -> dict[str, Any]:
+    """Derive a public transport from a verified complete v2 transport, withholding only source data.
+
+    The scientific outputs, source manifest and every descriptor are kept; withheld members keep their
+    SHA-256 and byte count so a local copy can still be checked against them.
+    """
+    root, output = Path(root), Path(output)
+    if output.exists() or output.is_symlink():
+        raise FileExistsError(f"publication output already exists: {output}")
+    if not output.parent.is_dir():
+        raise ValueError(f"publication parent directory must exist: {output.parent}")
+    verified = verify_publication(root)
+    source_metadata = verified["metadata"]
+    if source_metadata.get("transport_schema") != TRANSPORT_SCHEMA or verified["withheld"]:
+        raise ValueError("a public transport is derived only from a complete v2 transport")
+    bundle = _assemble_transport_bundle(root, source_metadata)
+    withheld = {name: WITHHELD_REASON for name in sorted(source_metadata["members"]) if _withholdable(name)}
+    if not withheld:
+        raise ValueError("source transport holds no withholdable member")
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(io.BytesIO(bundle)) as source, zipfile.ZipFile(buffer, "w") as public:
+        for info in source.infolist():
+            if info.filename not in withheld:
+                public.writestr(info, source.read(info), compress_type=info.compress_type)
+    public_bundle = buffer.getvalue()
+    metadata = {key: value for key, value in source_metadata.items() if key != "bundle_parts"}
+    metadata.update({
+        "full_bundle_sha256": source_metadata["bundle_sha256"],
+        "full_bundle_bytes": source_metadata["bundle_bytes"],
+        "bundle_sha256": _sha(public_bundle),
+        "bundle_bytes": len(public_bundle),
+        "withheld_members": withheld,
+    })
+    _write_transport(output, metadata, public_bundle)
+    verify_publication(output)
     return metadata
+
+
+def _withholdable(name: str) -> bool:
+    """Only the real-close audit sample and the source corporate-action factor rows may be withheld."""
+    return name == "outputs/audit-sample.parquet" or (name.startswith("inputs/") and name.endswith("-corporate_action_factors.parquet"))
+
+
+def _withheld_members(metadata: dict[str, Any], member_descriptors: dict[str, Any]) -> set[str]:
+    raw = metadata.get("withheld_members", {})
+    if not isinstance(raw, dict):
+        raise ValueError("withheld member map must be an object")
+    for name, reason in raw.items():
+        if name not in member_descriptors or not _withholdable(name):
+            raise ValueError(f"publication member may not be withheld: {name}")
+        if not isinstance(reason, str) or not reason:
+            raise ValueError(f"withheld member needs a reason: {name}")
+    if raw and _require_sha(metadata.get("full_bundle_sha256"), "full bundle") == metadata.get("bundle_sha256"):
+        raise ValueError("a public transport must name the full bundle it was derived from")
+    return set(raw)
+
+
+def publication_bundle_identity(metadata: dict[str, Any]) -> str:
+    """SHA-256 of the complete bundle: the full one for a public transport, else the bundle itself."""
+    return str(metadata.get("full_bundle_sha256", metadata.get("bundle_sha256")))
 
 
 def _expected_members(artifacts: dict[str, dict[str, Any]], identities: dict[str, str]) -> dict[str, str]:
@@ -587,6 +659,7 @@ def _verify_bundle(metadata: dict[str, Any], bundle: bytes, root: Path) -> dict[
             raise ValueError("publication descriptors exceed total expanded size limit")
         if not isinstance(descriptor.get("original_path"), str):
             raise ValueError(f"member original path is required: {name}")
+    withheld = _withheld_members(metadata, member_descriptors)
 
     try:
         with zipfile.ZipFile(io.BytesIO(bundle), mode="r") as archive:
@@ -604,10 +677,10 @@ def _verify_bundle(metadata: dict[str, Any], bundle: bytes, root: Path) -> dict[
                     raise ValueError(f"publication ZIP member exceeds expanded size limit: {info.filename}")
                 if header_expanded_bytes > MAX_BUNDLE_EXPANDED_BYTES:
                     raise ValueError("publication ZIP exceeds total expanded size limit")
-            if set(names) != set(member_descriptors):
+            if set(names) != set(member_descriptors) - withheld:
                 raise ValueError("ZIP membership does not match publication manifest")
             by_name = {info.filename: info for info in infos}
-            member_data = {name: _read_member(archive, by_name[name], descriptor) for name, descriptor in member_descriptors.items()}
+            member_data = {name: _read_member(archive, by_name[name], descriptor) for name, descriptor in member_descriptors.items() if name not in withheld}
     except zipfile.BadZipFile as exc:
         raise ValueError("invalid publication ZIP") from exc
 
@@ -648,8 +721,8 @@ def _verify_bundle(metadata: dict[str, Any], bundle: bytes, root: Path) -> dict[
         raise ValueError("publication must mark bulk location as local-only and unverified")
 
     summaries = _validate_summaries(_json_value(member_data["outputs/summaries.json"], "bundled summaries"))
-    LOGGER.info("Verified HHHL v4 publication cells=%d at %s", len(summaries), root)
-    return {"metadata": metadata, "summaries": summaries}
+    LOGGER.info("Verified HHHL v4 publication cells=%d withheld=%d at %s", len(summaries), len(withheld), root)
+    return {"metadata": metadata, "summaries": summaries, "withheld": sorted(withheld)}
 
 
 def verify_publication(root: Path) -> dict[str, Any]:
@@ -717,6 +790,7 @@ def main(argv: list[str] | None = None) -> int:
     mode.add_argument("--run", type=Path, help="completed local run directory to publish")
     mode.add_argument("--split-publication", type=Path, help="verified v1 publication directory to convert to transport v2")
     mode.add_argument("--publication", type=Path, help="publication directory to verify and query")
+    mode.add_argument("--public-from", type=Path, help="complete v2 transport to derive a public transport from (source data withheld)")
     parser.add_argument("--output", type=Path, help="new directory; required with --run or --split-publication")
     parser.add_argument("--family")
     parser.add_argument("--landmark", type=int)
@@ -742,6 +816,10 @@ def main(argv: list[str] | None = None) -> int:
             if any(value is not None for value in (args.family, args.landmark, args.basis, args.horizon, args.sampling)):
                 parser.error("summary filters require --publication")
             result = convert_publication(args.split_publication, args.output)
+        elif args.public_from is not None:
+            if args.output is None:
+                parser.error("--output is required with --public-from")
+            result = make_public_transport(args.public_from, args.output)
         else:
             if args.output is not None:
                 parser.error("--output is only valid with --run or --split-publication")

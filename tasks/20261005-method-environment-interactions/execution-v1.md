@@ -10,7 +10,7 @@ research goal and this task's fixed mission. This is one exploratory run only.
   loading market observations or calculating new comparisons.
 - Exact packet is `preregistration/interactions-v1.json.gz`; the execution copy
   is `params/interactions-v1.json`. It must decompress to identical bytes.
-- Approved packet digest: `0e298709150dd19665049912dcb31a4c34a512377cc96ac1bf8557a8a523d48b`. <!-- pragma: allowlist secret -->
+- Approved packet digest: `af0a4d40f4cdd5b962de9e43c0d2d87fe1e6ccee3831662e969b6ac6f18dd4d4`. <!-- pragma: allowlist secret -->
 - Authorize ONE invocation through `scripts/run_registered_job.py --execute`
   with that exact digest, 1,800-second subprocess timeout, existing output-root
   refusal, no sweep, no new stock dates, and no confirmation / holdout.

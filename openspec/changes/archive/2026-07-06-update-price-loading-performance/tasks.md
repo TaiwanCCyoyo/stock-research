@@ -20,7 +20,7 @@
 ## 2. Local parquet build
 
 - [x] 2.1 Write `scripts/build_price_parquet.py`, writing to a local
-      `shioaji_stock_prices/data/price_daily.parquet`. Note: instead of importing
+      `stock-data-downloader/data/price_daily.parquet`. Note: instead of importing
       `StockProject/dev_workflow/data_converter.py` (whose paths are hardcoded to
       Docker mounts), the script reuses the engine's own `_read_day_csv` parser so
       parquet rows are exactly what `load_all()` would produce from CSVs.
@@ -30,7 +30,7 @@
 - [x] 2.3 Add a test that `build_price_parquet.py` output matches `load_all()` for a sample
       of codes. (`tests/test_build_price_parquet.py`)
 - [x] 2.4 Document the rebuild step (run after `run_daily.py`) in
-      `shioaji_stock_prices/README.md`. Note: that path is a git submodule; the doc
+      `stock-data-downloader/README.md`. Note: that path is a git submodule; the doc
       edit lives in the submodule worktree.
 
 ## 3. Wire `load_symbols` into the trade-query path
@@ -86,5 +86,5 @@
       and diff run summaries — identical except `generated_at`/`run_id`/`output_path`
       (timestamps). `metrics` and `trades` byte-identical.
 - [x] 6.5 Docker-backed verification skipped: all work targets local paths
-      (`shioaji_stock_prices/data`); the Docker converter (`data_converter.py`) was not
+      (`stock-data-downloader/data`); the Docker converter (`data_converter.py`) was not
       modified.

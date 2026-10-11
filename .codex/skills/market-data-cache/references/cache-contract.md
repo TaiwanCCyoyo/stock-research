@@ -14,7 +14,7 @@ turnover_in_thousands_of_TWD = Close * Volume
 
 Owner update 2026-10-08: the producer's historical SMA/EMA columns and
 technical_features are deprecated compatibility data, not definitions for new
-research. Stock's explicitly versioned price/indicator cache is described in
+research. stock-research's explicitly versioned price/indicator cache is described in
 `docs/en/research-derived-data.md`. Do not silently substitute its gap-reset
 calculations for a historical task's input columns.
 

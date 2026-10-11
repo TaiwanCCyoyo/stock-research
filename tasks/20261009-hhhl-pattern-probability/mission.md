@@ -22,14 +22,14 @@
 
 ## 固定原始規則與移植
 
-來源：`D:/Project/Stock/.tmp/claude-kline/20261005-hhhl-examples/`。
+來源：`<legacy-checkout>/.tmp/claude-kline/20261005-hhhl-examples/`。
 原始完整位元組保存於本任務 `sources/hhhl_rule_v1.zip`，內含 `hhhl_rule_v1.py` 與 `detect.py`，避免格式器改寫研究規則；載入前核對各成員的 SHA-256。
 這不是省略檢查：正常提交 hooks 檢查移植器、測試與任務文件；來源副本另驗雜湊與行為。
 
 | 原檔            | SHA-256                                                          |
 | --------------- | ---------------------------------------------------------------- |
 | hhhl_rule_v1.py | 0039ca034d396dbba21f5e3e6de2bb552f809404e2424e5c1beb0f84eed017ba |
-| detect.py       | fba922502f8d34c2c928c7accca9baa17b1e9c83dae8be398b8b4fa773ee8eeb |
+| detect.py       | b20c1004f241b1c993263fada9225eb8108769afbcac21c24675bed4f81c4a24 |
 | 交接文件        | 5eebf7012cc0eca6015e10abf724e46bd153dcc06b00d4a472bbbbfbc6bf3dcd |
 
 只載入 detect.py 的原 `pivots_atr` 函式，不執行其中的舊案例主程式。

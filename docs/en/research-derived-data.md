@@ -1,16 +1,16 @@
-# Stock 衍生資料與快取
+# stock-research 衍生資料與快取
 
 ## 責任邊界（擁有者 2026-10-08 決定）
 
 | 層                      | 正本與寫入責任                                                                                      | 消費方式                                                      |
 | ----------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| `stock-data-downloader` | 下載、永豐分 K 轉日 K、官方行情整合、正規化、公司事件原始事實、股票資料、日曆、法人、月營收及其備份 | Stock 唯讀；live 檔案不是不可變快照                           |
-| Stock                   | 價格政策、均線／ATR／支撐壓力／型態、新衍生快取與研究資料備份                                       | [型態字典](pattern-definitions.md)與下列明確版本 API          |
+| `stock-data-downloader` | 下載、永豐分 K 轉日 K、官方行情整合、正規化、公司事件原始事實、股票資料、日曆、法人、月營收及其備份 | stock-research 唯讀；live 檔案不是不可變快照                  |
+| stock-research          | 價格政策、均線／ATR／支撐壓力／型態、新衍生快取與研究資料備份                                       | [型態字典](pattern-definitions.md)與下列明確版本 API          |
 | worktree／網站          | 指定版本消費、任務特有證據；不另定義同名公式                                                        | 不可變快取用絕對路徑唯讀；不複製、不連結、不用 mutable latest |
 
-舊 producer SMA／EMA 欄位與 `technical_features` 暫時保存相容，新研究不得當作 Stock 的新研究正本。終點是移入 Stock；刪欄須待替代來源、舊消費者輸入凍結及全面消費者通知，再以隔離 producer PR 發布新版 parquet。不要原地刪旧資料。
+舊 producer SMA／EMA 欄位與 `technical_features` 暫時保存相容，新研究不得當作 stock-research 的新研究正本。終點是移入 stock-research；刪欄須待替代來源、舊消費者輸入凍結及全面消費者通知，再以隔離 producer PR 發布新版 parquet。不要原地刪旧資料。
 
-尚未遷移的 sample runtime／dashboard help 仍使用 `stock-data-downloader/data/adjusted_prices/daily`。新 worktree 明確保存其既有正式日價檔案為實體快照，連同來源時間與收據，不重算、不改 basis，也不冒充新的 Stock 快取；其他 producer 衍生目錄及 `research_cache` 仍不複製。
+尚未遷移的 sample runtime／dashboard help 仍使用 `stock-data-downloader/data/adjusted_prices/daily`。新 worktree 明確保存其既有正式日價檔案為實體快照，連同來源時間與收據，不重算、不改 basis，也不冒充新的 stock-research 快取；其他 producer 衍生目錄及 `research_cache` 仍不複製。
 
 ## 價格與計算正本
 
@@ -32,18 +32,18 @@
 
 ## 不可變快取 v1
 
-主目錄：`D:/Project/Stock/research_cache/price-bases/<version_sha256>/`（Git 忽略）。每版本保留 `inputs/`、`implementation/`、各價格基礎／股票的 `daily.parquet`、`pivots.parquet` 與完成 `manifest.json`。身分包含所有來源 bytes、公式 bytes、參數、cutoff、日曆／缺值政策及 Python／套件版本。來源變了就產生新版本；相同身分先驗證後重用，不覆寫。
+主目錄：`D:/Project/stock-research/research_cache/price-bases/<version_sha256>/`（Git 忽略）。每版本保留 `inputs/`、`implementation/`、各價格基礎／股票的 `daily.parquet`、`pivots.parquet` 與完成 `manifest.json`。身分包含所有來源 bytes、公式 bytes、參數、cutoff、日曆／缺值政策及 Python／套件版本。來源變了就產生新版本；相同身分先驗證後重用，不覆寫。
 
 ```powershell
-uv run python -m scripts.build_research_cache build --prices FROZEN/prices.parquet --actions FROZEN/actions.parquet --calendar FROZEN/calendar.json --root D:/Project/Stock/research_cache --cutoff 2026-08-14
-uv run python -m scripts.build_research_cache verify D:/Project/Stock/research_cache/price-bases/EXPLICIT_DIGEST
+uv run python -m scripts.build_research_cache build --prices FROZEN/prices.parquet --actions FROZEN/actions.parquet --calendar FROZEN/calendar.json --root D:/Project/stock-research/research_cache --cutoff 2026-08-14
+uv run python -m scripts.build_research_cache verify D:/Project/stock-research/research_cache/price-bases/EXPLICIT_DIGEST
 ```
 
 新 worktree 可以直接 `read_cached(Path(absolute_version), "reference_factor_adjusted", "2330")`，或指定 `part="pivots"`。預設驗證全部產物 hash；大量連續查詢應先量測，而不是繞過完整性或另做一套公式。mission 記下絕對路徑、版本及 manifest hash。沒有版本或驗證失败時明確停止，不回落到 live data 或另一版本。
 
 讀取驗證按該版本封存的非空實作清單、`identity.parameters.bases` 與 schema 核對，不依目前程式檔名或 `BASES`；未來新增／移除／改名公式檔或 basis 不會讓完整舊版本失效。讀取只允許該版本確實封存的 basis。這與「目前實作能否精確重算」是不同問題：直接重算工具在計算前及成功收據前另核對目前完整實作清單的名稱與 hash（含 cache／事件類型，不只價格／指標），不能把檔案可讀或局部數值相同說成新版實作等價。
 
-正式 `build_cache`、`recompute` 與相容性 `validate` 入口均啟動新 Python 子程序，直接編譯所觀察的 Stock 來源 bytes、不使用舊 `.pyc`，並在開始／發布前核對載入 bytes 與封存身分。notebook／長駐程序不能用舊記憶體函式搭配新磁碟 hash 發布完成快取。建置身分也包含執行邊界及 artifact-store；private in-process helpers 僅供 worker／隔離 fault-injection 測試，不是正式入口。相容性收據的「原始 25 例」必須匹配原封存 cases hash；其他案例可診斷，不得借同樣數量冒充原例。
+正式 `build_cache`、`recompute` 與相容性 `validate` 入口均啟動新 Python 子程序，直接編譯所觀察的 stock-research 來源 bytes、不使用舊 `.pyc`，並在開始／發布前核對載入 bytes 與封存身分。notebook／長駐程序不能用舊記憶體函式搭配新磁碟 hash 發布完成快取。建置身分也包含執行邊界及 artifact-store；private in-process helpers 僅供 worker／隔離 fault-injection 測試，不是正式入口。相容性收據的「原始 25 例」必須匹配原封存 cases hash；其他案例可診斷，不得借同樣數量冒充原例。
 
 子程序協定固定 UTF-8，bootstrap／worker 都設定串流編碼，包含 Windows cp950 下的中文路徑與錯誤診斷；不靠使用者改全域環境設定。
 
@@ -53,7 +53,7 @@ HHHL 相容性驗算每次只擷取並驗證一份封存程式；archive hash �
 
 ## 保存／備份
 
-執行時的 raw parquet 每天可能變，仍採實體快照；不可變快取本身在 worktree 外。Stock 備份由 `scripts.backup_research_data` 管理，詳見 [備份程序](price-cache-backup.md#stock-research-data-backup)。D 槽的只增不刪內容物與快照可以防誤刪，不能防 D 磁碟損壞。
+執行時的 raw parquet 每天可能變，仍採實體快照；不可變快取本身在 worktree 外。stock-research 備份由 `scripts.backup_research_data` 管理，詳見 [備份程序](price-cache-backup.md#stock-research-data-backup)。D 槽的只增不刪內容物與快照可以防誤刪，不能防 D 磁碟損壞。
 
 `scripts.prepare_derived_cache_inputs` 先在獨立 sibling staging 完成來源複驗、四個輸入 artifacts 及 `input-receipt.json`，核對完成後才在 per-output lock 下發布整個新目錄。失敗保留 staging、不留下看似可用的正式三檔目錄；可重試相同 final 路徑，不覆寫既有目錄。staging 是失敗／診斷資料，不是已發布輸入，不得拿它冒充通過來源驗證的快照。
 

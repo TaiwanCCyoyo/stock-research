@@ -3,7 +3,7 @@ name: stock-research-query
 description: Query local stock research task artifacts through deterministic scripts or a local MCP server. Use when Codex needs to answer trade-reason, same-day values, backtest evidence, position sizing, cash, signal reason, or task trade-list questions from task artifacts.
 ---
 
-# Stock Research Query
+# stock-research Research Query
 
 ## Purpose
 

@@ -48,7 +48,7 @@ capital-mode comparison pattern.
 
 ## Impact
 
-- New local metadata store: `shioaji_stock_prices/data/symbol_meta.sqlite` (or equivalent
+- New local metadata store: `stock-data-downloader/data/symbol_meta.sqlite` (or equivalent
   JSON, TBD in design).
 - New directory: `universes/*.json`.
 - `StockProject/backtest_cli.py`: `--codes` gains `@universe` expansion; new

@@ -1,0 +1,1316 @@
+{
+    "schema_version": "old-name-migration-ledger.v1",
+    "date": "2026-10-10",
+    "pre_migration_commit": "87366ba",
+    "purpose": "Every tracked file this change rewrote or added, with its Git blob byte count before and after (old_bytes is null for a file added by the change). Exact bytes, and so their SHA-256, are in Git history: pre_migration_commit for before, the commit that adds this ledger for after. No research was re-run.",
+    "rules": {
+        "path_with_equivalent": "D:/Project/stock-research/...",
+        "path_without_equivalent": "<legacy-checkout>/...",
+        "predecessor_repository": "<legacy-repository>",
+        "project_name": "stock-research",
+        "producer_submodule": "stock-data-downloader"
+    },
+    "local_only": "Local-only artifacts in the primary checkout (copied datasets, H05 evidence inputs, the full HHHL v4 transport) were rewritten by the same pass; they are verified by scripts/verify_published_artifacts.py, not listed here.",
+    "files": [
+        {
+            "path": ".claude/agents/strategy-diagnostician.md",
+            "old_bytes": 1336,
+            "new_bytes": 1345
+        },
+        {
+            "path": ".claude/commands/fork-maintenance-sync.md",
+            "old_bytes": 1382,
+            "new_bytes": 1409
+        },
+        {
+            "path": ".claude/rules/common/data-structures.md",
+            "old_bytes": 8889,
+            "new_bytes": 8934
+        },
+        {
+            "path": ".codex/skills/fork-maintenance-sync/SKILL.md",
+            "old_bytes": 1521,
+            "new_bytes": 1548
+        },
+        {
+            "path": ".codex/skills/market-data-cache/SKILL.md",
+            "old_bytes": 1419,
+            "new_bytes": 1428
+        },
+        {
+            "path": ".codex/skills/market-data-cache/references/cache-contract.md",
+            "old_bytes": 11466,
+            "new_bytes": 11475
+        },
+        {
+            "path": ".codex/skills/stock-research-query/SKILL.md",
+            "old_bytes": 2640,
+            "new_bytes": 2649
+        },
+        {
+            "path": ".codex/skills/stock-research-query/agents/openai.yaml",
+            "old_bytes": 246,
+            "new_bytes": 255
+        },
+        {
+            "path": ".dockerignore",
+            "old_bytes": 326,
+            "new_bytes": 241
+        },
+        {
+            "path": ".gitignore",
+            "old_bytes": 9729,
+            "new_bytes": 10168
+        },
+        {
+            "path": "AGENTS.md",
+            "old_bytes": 14029,
+            "new_bytes": 14567
+        },
+        {
+            "path": "README.md",
+            "old_bytes": 18464,
+            "new_bytes": 18491
+        },
+        {
+            "path": "docs/en/agent-policy-review.md",
+            "old_bytes": 3328,
+            "new_bytes": 3355
+        },
+        {
+            "path": "docs/en/bootstrap-stock-research.md",
+            "old_bytes": 24494,
+            "new_bytes": 26438
+        },
+        {
+            "path": "docs/en/claude-components.md",
+            "old_bytes": 29120,
+            "new_bytes": 29129
+        },
+        {
+            "path": "docs/en/codex-components.md",
+            "old_bytes": 17735,
+            "new_bytes": 17753
+        },
+        {
+            "path": "docs/en/evidence-format-migration.json",
+            "old_bytes": 56605,
+            "new_bytes": 56605
+        },
+        {
+            "path": "docs/en/fork-maintenance.md",
+            "old_bytes": 36114,
+            "new_bytes": 36637
+        },
+        {
+            "path": "docs/en/git-workflow.md",
+            "old_bytes": 16184,
+            "new_bytes": 16221
+        },
+        {
+            "path": "docs/en/omitted-legacy-code.json",
+            "old_bytes": 83683,
+            "new_bytes": 83692
+        },
+        {
+            "path": "docs/en/pr-review.md",
+            "old_bytes": 2683,
+            "new_bytes": 2701
+        },
+        {
+            "path": "docs/en/pr-setup.md",
+            "old_bytes": 4827,
+            "new_bytes": 4854
+        },
+        {
+            "path": "docs/en/price-cache-backup.md",
+            "old_bytes": 16527,
+            "new_bytes": 16555
+        },
+        {
+            "path": "docs/en/producer-layout-migration.md",
+            "old_bytes": 3987,
+            "new_bytes": 3990
+        },
+        {
+            "path": "docs/en/public-readiness.md",
+            "old_bytes": 23380,
+            "new_bytes": 23482
+        },
+        {
+            "path": "docs/en/research-derived-data.md",
+            "old_bytes": 9055,
+            "new_bytes": 9154
+        },
+        {
+            "path": "docs/en/research-dividend-link-evidence.md",
+            "old_bytes": 6720,
+            "new_bytes": 6721
+        },
+        {
+            "path": "docs/en/research-first-candidate-packet.md",
+            "old_bytes": 15078,
+            "new_bytes": 15078
+        },
+        {
+            "path": "docs/en/research-goal.md",
+            "old_bytes": 7805,
+            "new_bytes": 7806
+        },
+        {
+            "path": "docs/en/research-objective.md",
+            "old_bytes": 41196,
+            "new_bytes": 41197
+        },
+        {
+            "path": "docs/en/research-program.md",
+            "old_bytes": 42720,
+            "new_bytes": 43156
+        },
+        {
+            "path": "docs/en/research-registry.json",
+            "old_bytes": 35384,
+            "new_bytes": 35385
+        },
+        {
+            "path": "docs/en/retired-openspec-entrypoints.json",
+            "old_bytes": 3802,
+            "new_bytes": 3812
+        },
+        {
+            "path": "docs/en/stock-agent-operations.md",
+            "old_bytes": 14471,
+            "new_bytes": 14606
+        },
+        {
+            "path": "docs/zh-TW/Plan.md",
+            "old_bytes": 23561,
+            "new_bytes": 23562
+        },
+        {
+            "path": "docs/zh-TW/README.md",
+            "old_bytes": 7178,
+            "new_bytes": 7214
+        },
+        {
+            "path": "docs/zh-TW/agent-contract-comparison.md",
+            "old_bytes": 19638,
+            "new_bytes": 19658
+        },
+        {
+            "path": "docs/zh-TW/claude-components.md",
+            "old_bytes": 30752,
+            "new_bytes": 30809
+        },
+        {
+            "path": "docs/zh-TW/codex-components.md",
+            "old_bytes": 16105,
+            "new_bytes": 16123
+        },
+        {
+            "path": "docs/zh-TW/etf-benchmark-research.md",
+            "old_bytes": 19517,
+            "new_bytes": 19518
+        },
+        {
+            "path": "docs/zh-TW/pr-review.md",
+            "old_bytes": 1726,
+            "new_bytes": 1735
+        },
+        {
+            "path": "docs/zh-TW/pr-setup.md",
+            "old_bytes": 4444,
+            "new_bytes": 4471
+        },
+        {
+            "path": "docs/zh-TW/research-experience-proposal.md",
+            "old_bytes": 46512,
+            "new_bytes": 46513
+        },
+        {
+            "path": "docs/zh-TW/sector-wave-web-handoff.md",
+            "old_bytes": 20021,
+            "new_bytes": 20023
+        },
+        {
+            "path": "openspec/changes/add-institutional-data-pipeline/design.md",
+            "old_bytes": 8880,
+            "new_bytes": 8881
+        },
+        {
+            "path": "openspec/changes/add-institutional-data-pipeline/proposal.md",
+            "old_bytes": 4659,
+            "new_bytes": 4666
+        },
+        {
+            "path": "openspec/changes/add-institutional-data-pipeline/tasks.md",
+            "old_bytes": 6788,
+            "new_bytes": 6792
+        },
+        {
+            "path": "openspec/changes/archive/2026-07-06-update-price-loading-performance/proposal.md",
+            "old_bytes": 3370,
+            "new_bytes": 3371
+        },
+        {
+            "path": "openspec/changes/archive/2026-07-06-update-price-loading-performance/tasks.md",
+            "old_bytes": 5883,
+            "new_bytes": 5886
+        },
+        {
+            "path": "openspec/changes/archive/2026-07-07-add-research-api/tasks.md",
+            "old_bytes": 4732,
+            "new_bytes": 4733
+        },
+        {
+            "path": "openspec/changes/archive/2026-07-13-expand-corporate-action-adjustments/tasks.md",
+            "old_bytes": 7205,
+            "new_bytes": 7206
+        },
+        {
+            "path": "openspec/changes/archive/2026-07-14-add-universe-management/proposal.md",
+            "old_bytes": 3056,
+            "new_bytes": 3057
+        },
+        {
+            "path": "openspec/changes/archive/2026-07-14-add-universe-management/tasks.md",
+            "old_bytes": 4699,
+            "new_bytes": 4700
+        },
+        {
+            "path": "openspec/changes/archive/2026-07-20-add-data-integrity-checks/design.md",
+            "old_bytes": 4646,
+            "new_bytes": 4685
+        },
+        {
+            "path": "openspec/changes/archive/2026-07-20-add-data-integrity-checks/proposal.md",
+            "old_bytes": 4233,
+            "new_bytes": 4282
+        },
+        {
+            "path": "openspec/changes/archive/2026-07-20-add-data-integrity-checks/tasks.md",
+            "old_bytes": 3842,
+            "new_bytes": 3852
+        },
+        {
+            "path": "openspec/changes/archive/2026-09-21-add-autonomous-research-loop/tasks.md",
+            "old_bytes": 4060,
+            "new_bytes": 4061
+        },
+        {
+            "path": "openspec/changes/publish-research-market-context/design.md",
+            "old_bytes": 3301,
+            "new_bytes": 3310
+        },
+        {
+            "path": "openspec/changes/publish-research-market-context/proposal.md",
+            "old_bytes": 1909,
+            "new_bytes": 1918
+        },
+        {
+            "path": "openspec/changes/reorganize-stock-derived-data/design.md",
+            "old_bytes": 5802,
+            "new_bytes": 5811
+        },
+        {
+            "path": "openspec/changes/reorganize-stock-derived-data/proposal.md",
+            "old_bytes": 2028,
+            "new_bytes": 2073
+        },
+        {
+            "path": "openspec/changes/reorganize-stock-derived-data/specs/research-derived-data/spec.md",
+            "old_bytes": 4085,
+            "new_bytes": 4103
+        },
+        {
+            "path": "openspec/changes/reorganize-stock-derived-data/tasks.md",
+            "old_bytes": 2348,
+            "new_bytes": 2366
+        },
+        {
+            "path": "openspec/specs/price-data-pipeline/spec.md",
+            "old_bytes": 4209,
+            "new_bytes": 4276
+        },
+        {
+            "path": "openspec/specs/research-api/spec.md",
+            "old_bytes": 4667,
+            "new_bytes": 4669
+        },
+        {
+            "path": "research_core/artifact_backup.py",
+            "old_bytes": 13166,
+            "new_bytes": 13175
+        },
+        {
+            "path": "research_core/derived_cache.py",
+            "old_bytes": 14275,
+            "new_bytes": 14284
+        },
+        {
+            "path": "research_core/hhhl_rule_source.py",
+            "old_bytes": 4035,
+            "new_bytes": 4035
+        },
+        {
+            "path": "research_core/hhhl_v4_source.py",
+            "old_bytes": 16411,
+            "new_bytes": 16411
+        },
+        {
+            "path": "research_core/legacy_paths.py",
+            "old_bytes": null,
+            "new_bytes": 729
+        },
+        {
+            "path": "research_core/opportunity_history_store.py",
+            "old_bytes": 24810,
+            "new_bytes": 24810
+        },
+        {
+            "path": "research_core/owner_hhhl_labels.py",
+            "old_bytes": 18089,
+            "new_bytes": 18089
+        },
+        {
+            "path": "research_core/patterns/hhhl/sources.json",
+            "old_bytes": 3093,
+            "new_bytes": 3104
+        },
+        {
+            "path": "research_core/patterns/hhhl/v1/sources.zip",
+            "old_bytes": 4443,
+            "new_bytes": 4430
+        },
+        {
+            "path": "research_core/patterns/hhhl/v2/sources.zip",
+            "old_bytes": 4759,
+            "new_bytes": 4745
+        },
+        {
+            "path": "research_core/patterns/hhhl/v3/sources.zip",
+            "old_bytes": 5920,
+            "new_bytes": 5898
+        },
+        {
+            "path": "research_core/patterns/hhhl/v4/sources.zip",
+            "old_bytes": 7841,
+            "new_bytes": 7814
+        },
+        {
+            "path": "research_core/sector_role_review_scopes.v1.json",
+            "old_bytes": 998,
+            "new_bytes": 998
+        },
+        {
+            "path": "research_web/README.md",
+            "old_bytes": 19909,
+            "new_bytes": 19928
+        },
+        {
+            "path": "research_web/fixtures/classification-v1/classification-v1.json",
+            "old_bytes": 54316,
+            "new_bytes": 54316
+        },
+        {
+            "path": "research_web/fixtures/classification-v1/sources-v1.json",
+            "old_bytes": 18432,
+            "new_bytes": 18419
+        },
+        {
+            "path": "research_web/fixtures/classification-v1/verification-receipt.json",
+            "old_bytes": 2084,
+            "new_bytes": 2084
+        },
+        {
+            "path": "research_web/public/data/research-history-title-origins.v1.json",
+            "old_bytes": 16704,
+            "new_bytes": 16704
+        },
+        {
+            "path": "scripts/backup_research_data.py",
+            "old_bytes": 1677,
+            "new_bytes": 1686
+        },
+        {
+            "path": "scripts/build_hhhl_probability.py",
+            "old_bytes": 18959,
+            "new_bytes": 18959
+        },
+        {
+            "path": "scripts/build_research_cache.py",
+            "old_bytes": 1221,
+            "new_bytes": 1230
+        },
+        {
+            "path": "scripts/ci_test_domains.json",
+            "old_bytes": 17667,
+            "new_bytes": 17942
+        },
+        {
+            "path": "scripts/publish_hhhl_v4_probability.py",
+            "old_bytes": 43442,
+            "new_bytes": 43618
+        },
+        {
+            "path": "scripts/query_opportunity_history.py",
+            "old_bytes": 19716,
+            "new_bytes": 19716
+        },
+        {
+            "path": "scripts/supplement_hhhl_v4_diagnostics.py",
+            "old_bytes": 28156,
+            "new_bytes": 28246
+        },
+        {
+            "path": "scripts/tests/test_ci_scope.py",
+            "old_bytes": 24045,
+            "new_bytes": 24063
+        },
+        {
+            "path": "scripts/tests/test_h05_source_timing.py",
+            "old_bytes": 5779,
+            "new_bytes": 5858
+        },
+        {
+            "path": "scripts/tests/test_publish_hhhl_v4_probability.py",
+            "old_bytes": 50750,
+            "new_bytes": 50745
+        },
+        {
+            "path": "scripts/tests/test_verify_published_artifacts.py",
+            "old_bytes": null,
+            "new_bytes": 1188
+        },
+        {
+            "path": "scripts/verify_published_artifacts.py",
+            "old_bytes": null,
+            "new_bytes": 11174
+        },
+        {
+            "path": "tasks/20260510-two-b-template-smoke/mission.md",
+            "old_bytes": 1359,
+            "new_bytes": 1355
+        },
+        {
+            "path": "tasks/20260510-two-b-template-smoke/walkthrough.md",
+            "old_bytes": 10550,
+            "new_bytes": 10536
+        },
+        {
+            "path": "tasks/20260809-loop-dryrun/mission.md",
+            "old_bytes": 1087,
+            "new_bytes": 1088
+        },
+        {
+            "path": "tasks/20260812-loop-explore-v2/experiment.json",
+            "old_bytes": 1023,
+            "new_bytes": 1024
+        },
+        {
+            "path": "tasks/20260812-loop-explore-v2/mission.md",
+            "old_bytes": 1088,
+            "new_bytes": 1089
+        },
+        {
+            "path": "tasks/20260814-2b-false-break-structure/experiment.json",
+            "old_bytes": 1751,
+            "new_bytes": 1752
+        },
+        {
+            "path": "tasks/20260823-regime-overlay/mission.md",
+            "old_bytes": 16303,
+            "new_bytes": 16304
+        },
+        {
+            "path": "tasks/20260823-regime-overlay/report.md",
+            "old_bytes": 32848,
+            "new_bytes": 32850
+        },
+        {
+            "path": "tasks/20260823-rotation-universe/original-source.zip",
+            "old_bytes": 17822,
+            "new_bytes": 17824
+        },
+        {
+            "path": "tasks/20260823-rotation-universe/typed-source-provenance.json",
+            "old_bytes": 3039,
+            "new_bytes": 3039
+        },
+        {
+            "path": "tasks/20260824-ranking-horizon/mission.md",
+            "old_bytes": 14448,
+            "new_bytes": 14449
+        },
+        {
+            "path": "tasks/20260824-ranking-horizon/report.md",
+            "old_bytes": 13357,
+            "new_bytes": 13358
+        },
+        {
+            "path": "tasks/20260824-value-chain-ignition/report.md",
+            "old_bytes": 6723,
+            "new_bytes": 6724
+        },
+        {
+            "path": "tasks/20260826-tail-selection/report.md",
+            "old_bytes": 20756,
+            "new_bytes": 20757
+        },
+        {
+            "path": "tasks/20260908-executable-fills/mission.md",
+            "old_bytes": 14964,
+            "new_bytes": 14965
+        },
+        {
+            "path": "tasks/20260908-executable-fills/research_result.json",
+            "old_bytes": 2124,
+            "new_bytes": 2125
+        },
+        {
+            "path": "tasks/20261002-add-retry/execution-normal-v1.md",
+            "old_bytes": null,
+            "new_bytes": 8006
+        },
+        {
+            "path": "tasks/20261002-add-stage-diagnostic/report.md",
+            "old_bytes": null,
+            "new_bytes": 8869
+        },
+        {
+            "path": "tasks/20261002-catalog-participation/report.md",
+            "old_bytes": null,
+            "new_bytes": 10068
+        },
+        {
+            "path": "tasks/20261002-entry-extension-cap/execution-v1.md",
+            "old_bytes": null,
+            "new_bytes": 9810
+        },
+        {
+            "path": "tasks/20261002-entry-persistence/execution-v3.md",
+            "old_bytes": null,
+            "new_bytes": 9807
+        },
+        {
+            "path": "tasks/20261002-failed-confirmation-exit/execution-v1.md",
+            "old_bytes": null,
+            "new_bytes": 12915
+        },
+        {
+            "path": "tasks/20261002-one-lot-delay-resumption/declined_3680.py",
+            "old_bytes": 8142,
+            "new_bytes": 8152
+        },
+        {
+            "path": "tasks/20261002-one-lot-delay-resumption/declined_6443.py",
+            "old_bytes": 10509,
+            "new_bytes": 10519
+        },
+        {
+            "path": "tasks/20261002-one-lot-delay-resumption/execution-v4.md",
+            "old_bytes": null,
+            "new_bytes": 8859
+        },
+        {
+            "path": "tasks/20261002-pool-breadth-admission/execution-v1.md",
+            "old_bytes": null,
+            "new_bytes": 11696
+        },
+        {
+            "path": "tasks/20261002-sector-role-evidence/build_packet.py",
+            "old_bytes": 23643,
+            "new_bytes": 23643
+        },
+        {
+            "path": "tasks/20261002-sector-role-evidence/completion-receipt.json",
+            "old_bytes": 368,
+            "new_bytes": 368
+        },
+        {
+            "path": "tasks/20261002-sector-role-evidence/evidence-v1.json",
+            "old_bytes": 158371,
+            "new_bytes": 158371
+        },
+        {
+            "path": "tasks/20261002-sector-role-evidence/mission.md",
+            "old_bytes": 4632,
+            "new_bytes": 4642
+        },
+        {
+            "path": "tasks/20261002-sector-role-evidence/report.md",
+            "old_bytes": 6846,
+            "new_bytes": 6846
+        },
+        {
+            "path": "tasks/20261002-sector-wave-catalog/catalog-v1/completion-receipt.json",
+            "old_bytes": 354,
+            "new_bytes": 354
+        },
+        {
+            "path": "tasks/20261002-sector-wave-catalog/catalog-v1/manifest.json",
+            "old_bytes": 85188,
+            "new_bytes": 85192
+        },
+        {
+            "path": "tasks/20261002-sector-wave-catalog/classification-review.md",
+            "old_bytes": 4426,
+            "new_bytes": 4430
+        },
+        {
+            "path": "tasks/20261002-small-probe/declined_2641.py",
+            "old_bytes": 4603,
+            "new_bytes": 4613
+        },
+        {
+            "path": "tasks/20261002-small-probe/declined_6438.py",
+            "old_bytes": 8489,
+            "new_bytes": 8499
+        },
+        {
+            "path": "tasks/20261002-weekly-rank-exit/execution-v2.md",
+            "old_bytes": null,
+            "new_bytes": 9104
+        },
+        {
+            "path": "tasks/20261003-wave-lab-preview/report.md",
+            "old_bytes": 5128,
+            "new_bytes": 5129
+        },
+        {
+            "path": "tasks/20261004-feature-discrimination-atlas/daily_research_log.md",
+            "old_bytes": 5774,
+            "new_bytes": 5774
+        },
+        {
+            "path": "tasks/20261004-feature-discrimination-atlas/data-contract.md",
+            "old_bytes": 11137,
+            "new_bytes": 11156
+        },
+        {
+            "path": "tasks/20261004-feature-discrimination-atlas/params/atlas-v1.json",
+            "old_bytes": 4440,
+            "new_bytes": 4443
+        },
+        {
+            "path": "tasks/20261004-feature-discrimination-atlas/params/atlas-v2.json",
+            "old_bytes": 4440,
+            "new_bytes": 4443
+        },
+        {
+            "path": "tasks/20261004-feature-discrimination-atlas/publication-v2/comparisons.json.xz",
+            "old_bytes": 418040,
+            "new_bytes": 418080
+        },
+        {
+            "path": "tasks/20261004-feature-discrimination-atlas/publication-v2/manifest.json",
+            "old_bytes": 2563,
+            "new_bytes": 2573
+        },
+        {
+            "path": "tasks/20261004-feature-discrimination-atlas/publication-v2/source-manifest.json",
+            "old_bytes": 374454,
+            "new_bytes": 374454
+        },
+        {
+            "path": "tasks/20261004-feature-discrimination-atlas/publication-v2/summary.json",
+            "old_bytes": 1486,
+            "new_bytes": 1486
+        },
+        {
+            "path": "tasks/20261004-feature-discrimination-atlas/report.md",
+            "old_bytes": 14800,
+            "new_bytes": 14809
+        },
+        {
+            "path": "tasks/20261004-feature-discrimination-atlas/research_result.json",
+            "old_bytes": 2460,
+            "new_bytes": 2478
+        },
+        {
+            "path": "tasks/20261004-feature-discrimination-atlas/sweep_results.json",
+            "old_bytes": 157645,
+            "new_bytes": 157645
+        },
+        {
+            "path": "tasks/20261004-feature-discrimination-atlas/universe_build_report.json",
+            "old_bytes": 1062,
+            "new_bytes": 1071
+        },
+        {
+            "path": "tasks/20261004-method-environment-map/report.md",
+            "old_bytes": 19559,
+            "new_bytes": 19561
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/artifact-size-receipt.json",
+            "old_bytes": 6155,
+            "new_bytes": 6153
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/calendar-date-audit-receipt.json",
+            "old_bytes": 827,
+            "new_bytes": 827
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/catalog-v1/bundle-index.json",
+            "old_bytes": 11189,
+            "new_bytes": 11189
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/catalog-v1/manifest.part-00000.json.gz",
+            "old_bytes": 91100,
+            "new_bytes": 91094
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/catalog-v1/manifest.part-00001.json.gz",
+            "old_bytes": 91371,
+            "new_bytes": 91376
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/catalog-v1/manifest.part-00002.json.gz",
+            "old_bytes": 105216,
+            "new_bytes": 105210
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/catalog-v1/manifest.part-00003.json.gz",
+            "old_bytes": 101209,
+            "new_bytes": 101206
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/catalog-v1/manifest.part-00004.json.gz",
+            "old_bytes": 86315,
+            "new_bytes": 86316
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/catalog-v1/manifest.part-00005.json.gz",
+            "old_bytes": 80241,
+            "new_bytes": 80240
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/catalog-v1/series-manifest.json.gz",
+            "old_bytes": 240614,
+            "new_bytes": 240617
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/catalog-v1/sources.json.gz",
+            "old_bytes": 5006,
+            "new_bytes": 5005
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/catalog-v2/bundle-index.json",
+            "old_bytes": 11189,
+            "new_bytes": 11189
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/catalog-v2/manifest.part-00000.json.gz",
+            "old_bytes": 91165,
+            "new_bytes": 91161
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/catalog-v2/manifest.part-00001.json.gz",
+            "old_bytes": 91279,
+            "new_bytes": 91280
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/catalog-v2/manifest.part-00002.json.gz",
+            "old_bytes": 105371,
+            "new_bytes": 105373
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/catalog-v2/manifest.part-00003.json.gz",
+            "old_bytes": 101272,
+            "new_bytes": 101272
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/catalog-v2/manifest.part-00004.json.gz",
+            "old_bytes": 86311,
+            "new_bytes": 86312
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/catalog-v2/manifest.part-00005.json.gz",
+            "old_bytes": 80452,
+            "new_bytes": 80453
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/catalog-v2/series-manifest.json.gz",
+            "old_bytes": 240614,
+            "new_bytes": 240617
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/catalog-v2/sources.json.gz",
+            "old_bytes": 5006,
+            "new_bytes": 5005
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/content-identity-audit-receipt.json",
+            "old_bytes": 3583,
+            "new_bytes": 3582
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/content-identity-v2-audit-receipt.json",
+            "old_bytes": 3974,
+            "new_bytes": 3974
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/extras-receipt.json",
+            "old_bytes": 840,
+            "new_bytes": 840
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/gain-diff-receipt.json",
+            "old_bytes": 3465,
+            "new_bytes": 3463
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/native-publication-anchor-audit-receipt.json",
+            "old_bytes": 1106,
+            "new_bytes": 1106
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/pinned-pure-phase-audit-receipt.json",
+            "old_bytes": 1128,
+            "new_bytes": 1128
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/pinned-pure-wave-launch-audit-receipt.json",
+            "old_bytes": 1090,
+            "new_bytes": 1090
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/preregistration-receipt.json",
+            "old_bytes": 1645,
+            "new_bytes": 1645
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/provenance-chain-audit-receipt.json",
+            "old_bytes": 3663,
+            "new_bytes": 3663
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/query-native-contract-audit-receipt.json",
+            "old_bytes": 1774,
+            "new_bytes": 1774
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/query-native-price-semantics-audit-receipt.json",
+            "old_bytes": 2654,
+            "new_bytes": 2654
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/query-native-semantics-audit-receipt.json",
+            "old_bytes": 2102,
+            "new_bytes": 2102
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/query-reconstruction-audit-receipt.json",
+            "old_bytes": 1875,
+            "new_bytes": 1875
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/report.md",
+            "old_bytes": 24640,
+            "new_bytes": 24643
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/sqlite-snapshot-audit-receipt.json",
+            "old_bytes": 8373,
+            "new_bytes": 8373
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/verification-receipt-v2.json",
+            "old_bytes": 1368,
+            "new_bytes": 1368
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/verification-receipt-v3.json",
+            "old_bytes": 1904,
+            "new_bytes": 1904
+        },
+        {
+            "path": "tasks/20261004-sector-wave-full-history-preview/verification-receipt.json",
+            "old_bytes": 1036,
+            "new_bytes": 1036
+        },
+        {
+            "path": "tasks/20261005-industry-role-comparison/execution-v1.md",
+            "old_bytes": 2970,
+            "new_bytes": 2970
+        },
+        {
+            "path": "tasks/20261005-industry-role-comparison/preregistration/industry-roles-v1.json.gz",
+            "old_bytes": 87558,
+            "new_bytes": 87501
+        },
+        {
+            "path": "tasks/20261005-industry-role-comparison/publication-v2.md",
+            "old_bytes": 4289,
+            "new_bytes": 4289
+        },
+        {
+            "path": "tasks/20261005-industry-role-comparison/publication-v2/input-audit.json.xz",
+            "old_bytes": 752,
+            "new_bytes": 748
+        },
+        {
+            "path": "tasks/20261005-industry-role-comparison/publication-v2/manifest.json",
+            "old_bytes": 1299,
+            "new_bytes": 1299
+        },
+        {
+            "path": "tasks/20261005-industry-role-comparison/publication-v2/packet.json.xz",
+            "old_bytes": 75884,
+            "new_bytes": 75880
+        },
+        {
+            "path": "tasks/20261005-industry-role-comparison/publication-v2/receipt.json.xz",
+            "old_bytes": 440,
+            "new_bytes": 436
+        },
+        {
+            "path": "tasks/20261005-industry-role-comparison/publication-v2/source-inputs.zip",
+            "old_bytes": 204079,
+            "new_bytes": 204099
+        },
+        {
+            "path": "tasks/20261005-industry-role-comparison/publication-v2/source-manifest.json",
+            "old_bytes": 1611,
+            "new_bytes": 1611
+        },
+        {
+            "path": "tasks/20261005-industry-role-comparison/publication-v2/summary.json.xz",
+            "old_bytes": 2440,
+            "new_bytes": 2440
+        },
+        {
+            "path": "tasks/20261005-market-context-handoff/data-contract.md",
+            "old_bytes": 7573,
+            "new_bytes": 7583
+        },
+        {
+            "path": "tasks/20261005-market-context-handoff/execution.md",
+            "old_bytes": 11407,
+            "new_bytes": 11417
+        },
+        {
+            "path": "tasks/20261005-market-context-handoff/goal-proposal.md",
+            "old_bytes": 5784,
+            "new_bytes": 5785
+        },
+        {
+            "path": "tasks/20261005-market-context-handoff/market-context-v2/inputs/source-manifest.json.xz",
+            "old_bytes": 446076,
+            "new_bytes": 446100
+        },
+        {
+            "path": "tasks/20261005-market-context-handoff/market-context-v2/manifest.json",
+            "old_bytes": 3245,
+            "new_bytes": 3245
+        },
+        {
+            "path": "tasks/20261005-market-context-handoff/market-context-v2/producer/mission.md.gz",
+            "old_bytes": 2732,
+            "new_bytes": 2733
+        },
+        {
+            "path": "tasks/20261005-market-context-handoff/mission.md",
+            "old_bytes": 5437,
+            "new_bytes": 5437
+        },
+        {
+            "path": "tasks/20261005-market-context-handoff/report.md",
+            "old_bytes": 9459,
+            "new_bytes": 9459
+        },
+        {
+            "path": "tasks/20261005-market-full-history-web/mission.md",
+            "old_bytes": 2231,
+            "new_bytes": 2231
+        },
+        {
+            "path": "tasks/20261005-market-full-history-web/presentation-manifest.json",
+            "old_bytes": 1297,
+            "new_bytes": 1297
+        },
+        {
+            "path": "tasks/20261005-market-full-history-web/report.md",
+            "old_bytes": 13916,
+            "new_bytes": 13917
+        },
+        {
+            "path": "tasks/20261005-method-environment-interactions/execution-v1.md",
+            "old_bytes": 2480,
+            "new_bytes": 2480
+        },
+        {
+            "path": "tasks/20261005-method-environment-interactions/preregistration/interactions-v1.json.gz",
+            "old_bytes": 87328,
+            "new_bytes": 87273
+        },
+        {
+            "path": "tasks/20261005-method-environment-interactions/publication-v1/input-audit.json.gz",
+            "old_bytes": 638,
+            "new_bytes": 637
+        },
+        {
+            "path": "tasks/20261005-method-environment-interactions/publication-v1/manifest.json",
+            "old_bytes": 1621,
+            "new_bytes": 1621
+        },
+        {
+            "path": "tasks/20261005-method-environment-interactions/publication-v1/packet.json.gz",
+            "old_bytes": 87328,
+            "new_bytes": 87273
+        },
+        {
+            "path": "tasks/20261005-method-environment-interactions/publication-v1/receipt.json.gz",
+            "old_bytes": 366,
+            "new_bytes": 363
+        },
+        {
+            "path": "tasks/20261005-method-environment-interactions/publication-v1/source-inputs.zip",
+            "old_bytes": 188213,
+            "new_bytes": 188236
+        },
+        {
+            "path": "tasks/20261005-method-environment-interactions/publication-v1/summary.json.gz",
+            "old_bytes": 2742,
+            "new_bytes": 2738
+        },
+        {
+            "path": "tasks/20261005-method-environment-interactions/report.md",
+            "old_bytes": 8420,
+            "new_bytes": 8430
+        },
+        {
+            "path": "tasks/20261005-relative-strength-holding/data-readiness.md",
+            "old_bytes": 9223,
+            "new_bytes": 9251
+        },
+        {
+            "path": "tasks/20261005-relative-strength-holding/evidence/026-market-runtime/readset.py",
+            "old_bytes": 8204,
+            "new_bytes": 8204
+        },
+        {
+            "path": "tasks/20261005-relative-strength-holding/evidence/027-cash-runtime/cash_terms.py",
+            "old_bytes": 8217,
+            "new_bytes": 8217
+        },
+        {
+            "path": "tasks/20261005-relative-strength-holding/execution-source-provenance.json",
+            "old_bytes": 6251,
+            "new_bytes": 6415
+        },
+        {
+            "path": "tasks/20261005-relative-strength-holding/source-contract.md",
+            "old_bytes": 16214,
+            "new_bytes": 16198
+        },
+        {
+            "path": "tasks/20261008-research-data-architecture/data-contract.md",
+            "old_bytes": 3847,
+            "new_bytes": 3856
+        },
+        {
+            "path": "tasks/20261008-research-data-architecture/mission.md",
+            "old_bytes": 1686,
+            "new_bytes": 1723
+        },
+        {
+            "path": "tasks/20261008-research-data-architecture/publication-v1/bundle.zip",
+            "old_bytes": 243419,
+            "new_bytes": 256156
+        },
+        {
+            "path": "tasks/20261008-research-data-architecture/publication-v1/review2.zip",
+            "old_bytes": 25448,
+            "new_bytes": 25438
+        },
+        {
+            "path": "tasks/20261008-research-data-architecture/publication-v2/bundle.zip",
+            "old_bytes": 45659,
+            "new_bytes": 45658
+        },
+        {
+            "path": "tasks/20261008-research-data-architecture/publication-v2/review8.zip",
+            "old_bytes": 29483,
+            "new_bytes": 29475
+        },
+        {
+            "path": "tasks/20261008-research-data-architecture/report.md",
+            "old_bytes": 25487,
+            "new_bytes": 25595
+        },
+        {
+            "path": "tasks/20261008-research-data-architecture/retirement-inventory.md",
+            "old_bytes": 6876,
+            "new_bytes": 6913
+        },
+        {
+            "path": "tasks/20261008-strategy-studio/data-contract.md",
+            "old_bytes": 19681,
+            "new_bytes": 19681
+        },
+        {
+            "path": "tasks/20261008-strategy-studio/report.md",
+            "old_bytes": 12647,
+            "new_bytes": 12648
+        },
+        {
+            "path": "tasks/20261008-strategy-studio/review-followup-20261008.md",
+            "old_bytes": 6852,
+            "new_bytes": 6853
+        },
+        {
+            "path": "tasks/20261009-hhhl-pattern-probability/data-contract.md",
+            "old_bytes": 10542,
+            "new_bytes": 10596
+        },
+        {
+            "path": "tasks/20261009-hhhl-pattern-probability/execution.md",
+            "old_bytes": 3630,
+            "new_bytes": 3630
+        },
+        {
+            "path": "tasks/20261009-hhhl-pattern-probability/mission.md",
+            "old_bytes": 12004,
+            "new_bytes": 12005
+        },
+        {
+            "path": "tasks/20261009-hhhl-pattern-probability/publication-v1/manifest.json",
+            "old_bytes": 4312,
+            "new_bytes": 4321
+        },
+        {
+            "path": "tasks/20261009-hhhl-pattern-probability/report.md",
+            "old_bytes": 10837,
+            "new_bytes": 10846
+        },
+        {
+            "path": "tasks/20261009-hhhl-pattern-probability/sources/hhhl_rule_v1.zip",
+            "old_bytes": 4443,
+            "new_bytes": 4430
+        },
+        {
+            "path": "tasks/20261010-hhhl-v4-probability/data-contract.md",
+            "old_bytes": 28565,
+            "new_bytes": 29313
+        },
+        {
+            "path": "tasks/20261010-hhhl-v4-probability/diagnostics-supplement-v1.zip",
+            "old_bytes": null,
+            "new_bytes": 1334
+        },
+        {
+            "path": "tasks/20261010-hhhl-v4-probability/diagnostics-supplement-v2.zip",
+            "old_bytes": null,
+            "new_bytes": 57756
+        },
+        {
+            "path": "tasks/20261010-hhhl-v4-probability/execution.md",
+            "old_bytes": 30349,
+            "new_bytes": 30403
+        },
+        {
+            "path": "tasks/20261010-hhhl-v4-probability/mission.md",
+            "old_bytes": 11183,
+            "new_bytes": 11185
+        },
+        {
+            "path": "tasks/20261010-hhhl-v4-probability/noise-first-correction-v1.zip",
+            "old_bytes": null,
+            "new_bytes": 2124
+        },
+        {
+            "path": "tasks/20261010-hhhl-v4-probability/noise-first-correction-v2/correction-transport.zip",
+            "old_bytes": null,
+            "new_bytes": 420
+        },
+        {
+            "path": "tasks/20261010-hhhl-v4-probability/noise-first-correction-v2/correction.001.bin",
+            "old_bytes": null,
+            "new_bytes": 400000
+        },
+        {
+            "path": "tasks/20261010-hhhl-v4-probability/noise-first-correction-v2/correction.002.bin",
+            "old_bytes": null,
+            "new_bytes": 313972
+        },
+        {
+            "path": "tasks/20261010-hhhl-v4-probability/publication-v2-public/bundle.001.bin",
+            "old_bytes": null,
+            "new_bytes": 400000
+        },
+        {
+            "path": "tasks/20261010-hhhl-v4-probability/publication-v2-public/bundle.002.bin",
+            "old_bytes": null,
+            "new_bytes": 311367
+        },
+        {
+            "path": "tasks/20261010-hhhl-v4-probability/publication-v2-public/publication.zip",
+            "old_bytes": null,
+            "new_bytes": 2518
+        },
+        {
+            "path": "tasks/20261010-hhhl-v4-probability/report.md",
+            "old_bytes": 17995,
+            "new_bytes": 18005
+        },
+        {
+            "path": "tasks/20261010-hhhl-v4-probability/sources/handoff-v4.zip",
+            "old_bytes": 13121,
+            "new_bytes": 12616
+        },
+        {
+            "path": "tasks/20261010-hhhl-v4-probability/sources/hhhl_rule_v4.zip",
+            "old_bytes": 7841,
+            "new_bytes": 7814
+        },
+        {
+            "path": "tasks/20261010-owner-hhhl-labels/data/rule_hits.json",
+            "old_bytes": 486687,
+            "new_bytes": 486706
+        },
+        {
+            "path": "tasks/20261010-owner-hhhl-labels/data/rule_hits_inputs.zip",
+            "old_bytes": 16635,
+            "new_bytes": 17077
+        },
+        {
+            "path": "tasks/20261010-owner-hhhl-labels/data/rule_sources.zip",
+            "old_bytes": 11936,
+            "new_bytes": 11952
+        },
+        {
+            "path": "tasks/20261010-owner-hhhl-labels/data/timeline_receipt.zip",
+            "old_bytes": 1200,
+            "new_bytes": 1200
+        },
+        {
+            "path": "tests/fixtures/price_daily/README.md",
+            "old_bytes": 1564,
+            "new_bytes": 1591
+        },
+        {
+            "path": "tests/fixtures/price_daily/regenerate.py",
+            "old_bytes": 2746,
+            "new_bytes": 2755
+        },
+        {
+            "path": "tests/test_build_price_parquet.py",
+            "old_bytes": 8807,
+            "new_bytes": 8825
+        },
+        {
+            "path": "tests/test_producer_data_root.py",
+            "old_bytes": 8526,
+            "new_bytes": 7696
+        },
+        {
+            "path": "tests/test_stock_research_query.py",
+            "old_bytes": 15884,
+            "new_bytes": 15885
+        }
+    ]
+}

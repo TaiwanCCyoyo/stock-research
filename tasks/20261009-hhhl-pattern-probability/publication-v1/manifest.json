@@ -4,33 +4,33 @@
     "phase": "descriptive_provisional",
     "run_id": "hhhl-v1-descriptive-02",
     "code_commit": "35bd7778cda505f827b056f5666fb22ca178b9bf",
-    "source_dataset_id": "fda-86245f2e223fc45c9f84afb0dcf77c1fff7ab22d0a1b0b4a4c8800972ce9327e",
+    "source_dataset_id": "fda-e712fc9408c147ae410a2fc0a687ef6f1dba785cab8cfb0312f79c504c6c5206",
     "window": {
         "start": "2019-01-02",
         "end": "2026-08-14"
     },
     "bundle": {
         "path": "bundle.zip",
-        "sha256": "c23bc4175c2ebec79ff67e69b437fe59bc47262330b2c6f0f5f1ff38f57cfde8",
-        "bytes": 235338,
+        "sha256": "d6df97672380bd1cc11cee45b70e72737fb8490519e7af8852a6fe3134323f48",
+        "bytes": 244803,
         "members": {
             "inputs/uv.lock": "471fc417b198229cd238f531fd6d3925824e195ab193bc545638058f3026fc8d",
             "inputs/research_core/hhhl_probability.py": "68d3ce12652a570e50158c8e20b49684ee8e086a8d53dc89c9f30ec38017f8fd",
-            "inputs/research_core/hhhl_rule_source.py": "42189d14ca9bc395b1fb39b9261e24b678540a6867a73c6e5164c3333830932c",
+            "inputs/research_core/hhhl_rule_source.py": "849c14b38bdaeb57d9f85d15c920687e22bb39662f8228581b5fdadab05ac54f",
             "inputs/research_core/hhhl_transition.py": "93e3451f70659abcca24a76b92d299684378031922e8acd5d245362d41f7f66f",
-            "inputs/scripts/build_hhhl_probability.py": "a62dbaa1f414bcd743f9c5c972e0986081b973a217a38ad76284cdcd768ab511",
-            "inputs/tasks/20261009-hhhl-pattern-probability/data-contract.md": "6f48994fd7a1cbfd9ef2f6efbd0ece2704584e25a1e00a8f88f50e3ae175861e",
-            "inputs/tasks/20261009-hhhl-pattern-probability/mission.md": "63561d104ff8ad0af2fea3d17e0e7f9598cb96b0019af6fb92f7c645f61fa126",
-            "inputs/tasks/20261009-hhhl-pattern-probability/sources/hhhl_rule_v1.zip": "1dcfc9f9942e41cb857351db8631e335ad2d39ed07eadab62ac415d586605ff4",
+            "inputs/scripts/build_hhhl_probability.py": "df2dbabcfce9592d1cc686e7bff1ffbe6bafe8567abed4614786c76ca3fc4a44",
+            "inputs/tasks/20261009-hhhl-pattern-probability/data-contract.md": "3b7cfa6a624a589e746f0704e63f8e4edee6bc7d3ca4d7f9b5bcfc37c87a9873",
+            "inputs/tasks/20261009-hhhl-pattern-probability/mission.md": "555af88d0d7aa583add89a8bfedee0d9b8bb05eb9c133cf9d6a6dcdadbe71797",
+            "inputs/tasks/20261009-hhhl-pattern-probability/sources/hhhl_rule_v1.zip": "9cfe14d101893e2a7b5e4c950c67c7e24fccc5794ce25453dcf4afe5eecd4df7",
             "outputs/audit-sample.parquet": "708657f65b4c03168e28608ac552c8c6b12e8b4cbf681cf1c1333b635160a56d",
-            "outputs/manifest-corrected.json": "416b98ca2899f3be608eb85e8e2ccdeb256167d521ca3b252060310fa35bcaa3",
-            "outputs/manifest.json": "477d798ab3d1fbc61f203ef5801bf1bf3aac07a992543e4b95346d16c9dda5ed",
+            "outputs/manifest-corrected.json": "285714a900d21a294077aa8cb25563183f6faf8d9dce2990203bd3eac4626cc7",
+            "outputs/manifest.json": "5ed398a002880e6c6fa3ca38e95006f1d32bc7d16c56f6ef1c6a2a06b08d5352",
             "outputs/summaries.json": "228eca45420c237a40315b05b4df63a7d29b13aa8f3216a4ffb440fb9da0f416"
         }
     },
     "authoritative_completion_metadata": "bundle.zip:outputs/manifest-corrected.json",
     "comparisons": 558,
-    "canonical_run": "D:/Project/Stock/tasks/20261009-hhhl-pattern-probability/datasets/hhhl-v1-descriptive-02",
+    "canonical_run": "D:/Project/stock-research/tasks/20261009-hhhl-pattern-probability/datasets/hhhl-v1-descriptive-02",
     "artifacts": {
         "audit-sample.parquet": {
             "sha256": "708657f65b4c03168e28608ac552c8c6b12e8b4cbf681cf1c1333b635160a56d",

@@ -9,7 +9,7 @@
         "owner_contract": "params/atlas-v2.json#/inputs/contracts",
         "metric_contract": "mission.md",
         "execution_contract": "descriptive-no-trades.v1",
-        "data_snapshot": "fda-86245f2e223fc45c9f84afb0dcf77c1fff7ab22d0a1b0b4a4c8800972ce9327e",
+        "data_snapshot": "fda-e712fc9408c147ae410a2fc0a687ef6f1dba785cab8cfb0312f79c504c6c5206",
         "code": "params/atlas-v2.json#/inputs/code",
         "runtime": "params/atlas-v2.json#/runtime"
     },
@@ -59,6 +59,6 @@
     "supersedes": [],
     "organization_status": "completed_verified_descriptive_data",
     "strategy_evaluation_status": "not_evaluated",
-    "same_machine_redundant_copy": "D:\\Project\\Stock\\tasks\\20261004-feature-discrimination-atlas\\datasets\\atlas-v2",
-    "same_machine_input_archive": "D:\\Project\\Stock\\tasks\\20261004-feature-discrimination-atlas\\datasets\\atlas-v2-inputs"
+    "same_machine_redundant_copy": "D:\\Project\\stock-research\\tasks\\20261004-feature-discrimination-atlas\\datasets\\atlas-v2",
+    "same_machine_input_archive": "D:\\Project\\stock-research\\tasks\\20261004-feature-discrimination-atlas\\datasets\\atlas-v2-inputs"
 }

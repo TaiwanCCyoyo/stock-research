@@ -5,45 +5,45 @@
     "versions": {
         "v1": {
             "archive": "v1/sources.zip",
-            "sha256": "1dcfc9f9942e41cb857351db8631e335ad2d39ed07eadab62ac415d586605ff4",
+            "sha256": "9cfe14d101893e2a7b5e4c950c67c7e24fccc5794ce25453dcf4afe5eecd4df7",
             "members": {
                 "hhhl_rule_v1.py": "0039ca034d396dbba21f5e3e6de2bb552f809404e2424e5c1beb0f84eed017ba",
-                "detect.py": "fba922502f8d34c2c928c7accca9baa17b1e9c83dae8be398b8b4fa773ee8eeb"
+                "detect.py": "b20c1004f241b1c993263fada9225eb8108769afbcac21c24675bed4f81c4a24"
             },
             "origin": "tasks/20261009-hhhl-pattern-probability/sources/hhhl_rule_v1.zip",
             "approval": "owner-discussed-development-rule; batch3 recall failed; not final strategy approval"
         },
         "v2": {
             "archive": "v2/sources.zip",
-            "sha256": "462f4e02426899cf6a31bddd2c2376c0f07e41461c0501dd416cf93c67ef853e",
+            "sha256": "20e636d0238cbe1c928f46d8008e68d4818ddbecebc7818c60650edf9e68c7a5",
             "members": {
                 "hhhl_rule_v2.py": "05df86c353c96731f789ca676c100d6aefd8bb1e8f9deb6dbf27ecc99e3645c7",
-                "detect.py": "fba922502f8d34c2c928c7accca9baa17b1e9c83dae8be398b8b4fa773ee8eeb"
+                "detect.py": "b20c1004f241b1c993263fada9225eb8108769afbcac21c24675bed4f81c4a24"
             },
-            "origin": "D:/Project/Stock/.tmp/claude-kline/20261005-hhhl-examples/hhhl_rule_v2.py; original bytes packaged, not edited",
+            "origin": "<legacy-checkout>/.tmp/claude-kline/20261005-hhhl-examples/hhhl_rule_v2.py; original bytes packaged, not edited",
             "approval": "owner-discussed-development-rule; batch4 precision failed; not final strategy approval"
         },
         "v3": {
             "archive": "v3/sources.zip",
-            "sha256": "63d5535612c6df9f791804ddcb44368b7203368210dfd6911e6a19a083c73b32",
+            "sha256": "39470bf749ec27f8794cf9b9a04ff2acb908c12476a550bc2904b3fb2e969ac1",
             "members": {
                 "hhhl_rule_v3.py": "d2850eb48aa0758347820152af6f816f77bda415efdc7a3d88f11ff6eee83450",
-                "detect.py": "fba922502f8d34c2c928c7accca9baa17b1e9c83dae8be398b8b4fa773ee8eeb",
+                "detect.py": "b20c1004f241b1c993263fada9225eb8108769afbcac21c24675bed4f81c4a24",
                 "bigrange.py": "b7e763975036baf2b41b0fe53387c0d8aa5f1fa9bd5726a3100e3ff98a28dcf7"
             },
-            "origin": "D:/Project/Stock/.tmp/claude-kline/20261005-hhhl-examples; original bytes packaged, not edited",
+            "origin": "<legacy-checkout>/.tmp/claude-kline/20261005-hhhl-examples; original bytes packaged, not edited",
             "approval": "owner-discussed-development-rule; batch5 precision passed but recall undecided; not final strategy approval"
         },
         "v4": {
             "archive": "v4/sources.zip",
-            "sha256": "5d2797194ed16158c0a56bcb5226d11efc1872c80bfc4a86b84074b910ec85e1",
+            "sha256": "83742449aa0b2afb2aa1b80041682ad72d93a94fde0181ab5b012b50de2e72d4",
             "members": {
                 "hhhl_rule_v4.py": "6390e5a61519c041a6989257af59599e71ae1c24ba5d6d70c96c5c7ea8f8d5c8",
                 "bigrange_v4.py": "59634879c7e0358b57baa98a2187eb7de928de7df229c3053ba905f91a6dd574",
-                "adjprice.py": "cb8d7a53b8362c51292795eefd90e9cdb8353b38fa81695779bf6e7b7fe777ef",
-                "detect.py": "fba922502f8d34c2c928c7accca9baa17b1e9c83dae8be398b8b4fa773ee8eeb"
+                "adjprice.py": "99e181271fd11d68d646e44c21912c6ac76724f6ef6dfe1be17117f20ddd12a8",
+                "detect.py": "b20c1004f241b1c993263fada9225eb8108769afbcac21c24675bed4f81c4a24"
             },
-            "origin": "Stock PR33 tasks/20261010-hhhl-v4-probability/sources/hhhl_rule_v4.zip",
+            "origin": "stock-research PR33 tasks/20261010-hhhl-v4-probability/sources/hhhl_rule_v4.zip",
             "approval": "owner-discussed development direction; four measurement choices Claude-provisional; source examples are not fresh recognition or strategy approval"
         }
     }

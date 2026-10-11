@@ -21,7 +21,7 @@
 
 ## 固定入口與權責
 
-2026-10-08 架構入口：[型態字典](pattern-definitions.md)集中 HHHL v1～v4 與 F20/F21/F33/M04 的差異、來源與批准狀態；[Stock 衍生資料](research-derived-data.md)說明 producer 與 Stock 的分工。[架構交付](../../tasks/20261008-research-data-architecture/report.md)含 25 原例／75 組重算、可攜收據及備份演練；價格品質 v2 修正另存 publication-v2，不覆寫原 v1 相容性證據。Claude 完整標註仍待接收，不把 25 正例當全部正反標註，也不自動改接既有研究。
+2026-10-08 架構入口：[型態字典](pattern-definitions.md)集中 HHHL v1～v4 與 F20/F21/F33/M04 的差異、來源與批准狀態；[stock-research 衍生資料](research-derived-data.md)說明 producer 與 stock-research 的分工。[架構交付](../../tasks/20261008-research-data-architecture/report.md)含 25 原例／75 組重算、可攜收據及備份演練；價格品質 v2 修正另存 publication-v2，不覆寫原 v1 相容性證據。Claude 完整標註仍待接收，不把 25 正例當全部正反標註，也不自動改接既有研究。
 
 | 要找什麼                         | 正式位置／責任                                                                                                          |
 | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
@@ -54,14 +54,13 @@
 8.86%；無線 9.68%、有線 6.22%。早期越線總比例較高，但同漲幅分層未呈一致加分，
 2026 截尾與未知差異不能略過；未評估帳戶、停損、獨立驗證或策略通過。
 [資料契約](../../tasks/20261010-hhhl-v4-probability/data-contract.md) 與
-[可攜全部結果目錄](../../tasks/20261010-hhhl-v4-probability/publication-v2/)
+[可攜全部結果目錄](../../tasks/20261010-hhhl-v4-probability/publication-v2-public/)
 提供完整 1,080 格、原完成紀錄、診斷／覆蓋／抽查、19 份結果前原始 inputs。
 請取得整個目錄：
-[publication.zip](../../tasks/20261010-hhhl-v4-probability/publication-v2/publication.zip)、
-[bundle.001.bin](../../tasks/20261010-hhhl-v4-probability/publication-v2/bundle.001.bin)、
-[bundle.002.bin](../../tasks/20261010-hhhl-v4-probability/publication-v2/bundle.002.bin)、
-[bundle.003.bin](../../tasks/20261010-hhhl-v4-probability/publication-v2/bundle.003.bin)
-四檔都必要；只有 publication.zip 的 metadata 不能驗讀完整結果。
+[publication.zip](../../tasks/20261010-hhhl-v4-probability/publication-v2-public/publication.zip)、
+[bundle.001.bin](../../tasks/20261010-hhhl-v4-probability/publication-v2-public/bundle.001.bin)、
+[bundle.002.bin](../../tasks/20261010-hhhl-v4-probability/publication-v2-public/bundle.002.bin)
+三檔都必要。這是公開版：1,080 格與完整版逐格相同，只保留來源除權息因子與真實收盤價抽查的雜湊而不附內容；完整版 `publication-v2` 只在 primary 本機。
 reader `scripts/publish_hhhl_v4_probability.py --publication ...` 不依賴原行情 checkout。
 另有 [可重算地標未知原因補件](../../tasks/20261010-hhhl-v4-probability/diagnostics-supplement-v2.zip)，
 保留缺價／窗未滿分桶；由既有表補交、不覆寫原包，讀取入口見資料契約。
@@ -73,7 +72,7 @@ v2 保存已選事件、來源選取索引與程式快照，可離線核對首�
 原 v1 補件仍保存為歷史紀錄，不再作為最新查詢的充分驗證。
 目錄內 correction-transport.zip、correction.001.bin、correction.002.bin 三檔都必要；
 分片組回原補件 bytes，不單獨交付 metadata。
-另有 [同十筆原事件的L20抽查](../../tasks/20261010-hhhl-v4-probability/landmark-audit-v1.zip)，
+另有同十筆原事件的 L20 抽查 `landmark-audit-v1.zip`（含真實收盤價，只在 primary 本機），
 補交t0／Z2／bonus與L20狀態、越線、日期、漲幅區及剩餘段欄位；原包不重寫。
 reader與來源限制見資料契約；不挑成功案例、不當代表性樣本，不讀新行情。
 原 [準備包](../../tasks/20261010-hhhl-v4-probability/preparation-v1/bundle.zip) 與 25/25 驗算
@@ -92,11 +91,21 @@ reader與來源限制見資料契約；不挑成功案例、不當代表性樣�
 primary 本機位置、查詢／重算與未知／相依／current-reference 限制；不新增期間、
 不換 v2/v3、下載或自動啟動下一研究，原 H05 接續狀態未因此改變。
 
-| Stable asset                 | Questions and formal description                                                                                                                                                                    | Availability                                                                                                                                                                                                                                                                                                              |
-| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `opportunity-history-web.v1` | [2010 onward wave membership, price basis, saved trend/candidate detail](../../tasks/20261005-market-full-history-web/report.md)                                                                    | Local physical producer bundle required; preliminary rules and current snapshot grouping, not a complete historical universe or backup                                                                                                                                                                                    |
-| `saved-research-studio.v1`   | [Saved trade/account audits, daily map participation and research-history discovery](../../tasks/20261008-strategy-studio/data-contract.md)                                                         | Private external package retains original modeled runs, frozen OHLC and 0050 comparison; preservation receipt: `<primary-checkout>/StockProject/data/private-presentation/20261008-first-stage/restore-manifest.json`; default public mode generates fictional controls; live participation requires pinned local catalog |
-| `owner-hhhl-labels.v1`       | [Owner's HH/HL labels, blind judgments, critiques and line checks for batches 1-5, with what was shown and the blind rule/control mapping](../../tasks/20261010-owner-hhhl-labels/data-contract.md) | Fully Git-tracked; `recompute.py --check` reproduces every published batch 2-5 number offline; hindsight chart judgments, not same-day features; early chat rulings are a Claude transcription                                                                                                                            |
+| Stable asset                                                                    | Questions and formal description                                                                                                                                                                    | Availability                                                                                                                                                                                                                                                                                                              |
+| ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `opportunity-history-web.v1`                                                    | [2010 onward wave membership, price basis, saved trend/candidate detail](../../tasks/20261005-market-full-history-web/report.md)                                                                    | Local physical producer bundle required; preliminary rules and current snapshot grouping, not a complete historical universe or backup                                                                                                                                                                                    |
+| `saved-research-studio.v1`                                                      | [Saved trade/account audits, daily map participation and research-history discovery](../../tasks/20261008-strategy-studio/data-contract.md)                                                         | Private external package retains original modeled runs, frozen OHLC and 0050 comparison; preservation receipt: `<primary-checkout>/StockProject/data/private-presentation/20261008-first-stage/restore-manifest.json`; default public mode generates fictional controls; live participation requires pinned local catalog |
+| `owner-hhhl-labels.v1`                                                          | [Owner's HH/HL labels, blind judgments, critiques and line checks for batches 1-5, with what was shown and the blind rule/control mapping](../../tasks/20261010-owner-hhhl-labels/data-contract.md) | Fully Git-tracked; read via `research_core.owner_hhhl_labels.load()`; `scripts/verify_owner_hhhl_labels.py --check` reproduces every published batch 2-5 number offline; hindsight chart judgments, not same-day features; early chat rulings are a Claude transcription                                                  |
+| `hhhl-v4-probability` publication-v2                                            | [HHHL v4 probability and early line crossing: 1,080 fixed descriptive comparisons over 1,941 stocks](../../tasks/20261010-hhhl-v4-probability/data-contract.md)                                     | Git: `publication-v2-public` (all 1,080 cells; source factors and the real-close sample withheld by digest), correction-v2 and diagnostics-v2; full `publication-v2` local-only; read the noise-first correction overlay for the latest four cells; not account performance                                               |
+| `hhhl-probability.v1`                                                           | [Owner's HH/HL v1 rule: 54-case source check and 558 fixed descriptive summaries](../../tasks/20261009-hhhl-pattern-probability/data-contract.md)                                                   | Portable index in Git; large tables only in the primary local location named by the contract; not the F21/F33 false-break 2B                                                                                                                                                                                              |
+| `hhhl-pattern-sources.v1`, `stock-derived-cache.v1`, `stock-research-backup.v1` | [Versioned pattern sources, immutable derived price caches and research-data backup](../../tasks/20261008-research-data-architecture/data-contract.md)                                              | Rules and portable evidence in Git; cache versions live in the primary `research_cache/`, read by explicit absolute path                                                                                                                                                                                                  |
+| `feature-discrimination-atlas.v1` / `atlas-v2`                                  | [How many later big moves a feature covers, and how many non-qualifying observations it selects](../../tasks/20261004-feature-discrimination-atlas/data-contract.md)                                | Fixed 2019-01-02..2026-08-14; large tables are local only (see the locator below); not a PIT universe or account result                                                                                                                                                                                                   |
+| `feature-atlas-publication.v2`                                                  | [Every original atlas comparison and definition](../../tasks/20261004-feature-discrimination-atlas/publication-v2/manifest.json)                                                                    | Git-portable; no source worktree or price submodule needed                                                                                                                                                                                                                                                                |
+| `market-context-manifest.v2`                                                    | [0050 background context, `benchmark-context.rules.v1`](../../tasks/20261005-market-context-handoff/data-contract.md)                                                                               | Git-portable manifest and single data contract                                                                                                                                                                                                                                                                            |
+| `method-environment-publication.v1`                                             | [624 method x environment comparisons, path summaries and non-promotion reasons](../../tasks/20261005-method-environment-interactions/data-contract.md)                                             | Git-portable with a reader; cross-source version and past-only limits stated in the contract                                                                                                                                                                                                                              |
+| `industry-role-transport.v2`                                                    | [1,316 industry-role comparisons with paired results](../../tasks/20261005-industry-role-comparison/publication-v2.md)                                                                              | Git-portable sharded transport; the v1 completion package stays local                                                                                                                                                                                                                                                     |
+| `sector-wave-catalog.v1` / `catalog-v2`                                         | [Sector waves and same-period peer comparison](sector-wave-catalog.md); [2010-onward catalog](../../tasks/20261004-sector-wave-full-history-preview/report.md)                                      | Fixed manifests in Git; see each contract for coverage                                                                                                                                                                                                                                                                    |
+| `wave-growth-display.v1`                                                        | [Time-adjusted wave display](opportunity-presentation.md#time-adjusted-wave-display)                                                                                                                | Shared calculation in `research_core/wave_growth.py`                                                                                                                                                                                                                                                                      |
 
 設計實驗與累積策略時，優先考慮整個專案的可讀性、可維護性與後續用途。A 策略沒有晉級，其特徵、標籤、診斷或失敗比較仍可能幫助 B 策略；應讓未參與 A 的 session 能從正式入口找到並理解這些資產。
 
@@ -104,7 +113,7 @@ primary 本機位置、查詢／重算與未知／相依／current-reference 限
 
 先從本頁定位表、方法／假設登記與既有 task catalog，依研究問題、資料用途、欄位／特徵、方法別名及來源尋找可用資料與共用計算。讀取對應資料說明並確認版本、覆蓋、取得方式與限制，再決定直接重用、延伸或新建；在新 task 記錄採用或不採用的理由。catalog 的檔案存在狀態不代表資料已完整、可取得或適用。
 
-計算特徵、標籤或還原價格前，查[型態字典](pattern-definitions.md)及[Stock 衍生資料](research-derived-data.md)的定義與共用實作。適用時直接引用；公式、參數或缺值政策有差異時登記新版本及差異，不以同名副本默默替換，亦不自動改接已封存結果。
+計算特徵、標籤或還原價格前，查[型態字典](pattern-definitions.md)及[stock-research 衍生資料](research-derived-data.md)的定義與共用實作。適用時直接引用；公式、參數或缺值政策有差異時登記新版本及差異，不以同名副本默默替換，亦不自動改接已封存結果。
 
 ### 新增或延伸產物要留下的說明
 
@@ -123,7 +132,22 @@ primary 本機位置、查詢／重算與未知／相依／current-reference 限
 
 ### 放置與維護
 
-- 通用行情擷取與正規化沿用 `shioaji_stock_prices` 的責任；任務特有證據沿用 `tasks/<task-id>/`，暫存探查沿用 `.tmp/`。持續需要的資料說明與決定回到正式任務紀錄，並從本頁連入。
+每個東西只有一個擁有者和一個固定位置；新增前先照下表放，並在同一個變更登記到本頁定位表。
+
+| 東西                                     | 位置                                         | 規則                                                                                        |
+| ---------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| 行情擷取、正規化與來源備份               | `stock-data-downloader/`（submodule）        | stock-research 只讀它的資料，不 import 它的程式                                             |
+| 可重用程式：資料讀取、共用計算、驗證原語 | `research_core/`                             | 被兩個以上 task／script／test 使用即屬此處；寫雜湊、路徑、發布等工具前先用 `artifact_store` |
+| 命令列入口                               | `scripts/`（`build_`／`verify_`／`query_`…） | 保持薄層；不 import 其他 script 的私有函式，共用邏輯移到 `research_core/`                   |
+| 測試                                     | `scripts/tests/`、`tests/`                   | 不為單一 task 新增 CI test root                                                             |
+| 研究紀錄與小型資料                       | `tasks/<task-id>/`                           | mission、預註冊、報告、資料說明、小型追蹤資料與封存結果；只放該研究自己的一次性程式         |
+| 跨任務重用資料                           | `tasks/<task-id>/datasets/<dataset-id>/`     | 版本化、不覆寫；在本頁登記                                                                  |
+| 研究保存的證據程式與其本機輸入           | `tasks/<task-id>/evidence/`                  | 程式進 Git 且以自身位置解析路徑；同層輸入只留本機；凍結證據不重構                           |
+| 不可變衍生快取                           | `research_cache/`                            | 依[衍生資料](research-derived-data.md)版本化                                                |
+| 暫存探查                                 | `.tmp/`                                      | 不是正式位置；有後續價值的內容須移回上列位置                                                |
+
+- 已被封存 packet／receipt 以 SHA-256 固定的程式是凍結證據：原地保持位元組不變，不為整理而搬移或改寫；新工作改用 `research_core/` 的新版本。改用共用工具也不得改寫已存資料或重新固定其雜湊，必要時保留具名的舊格式（例如 `research_core.owner_hhhl_labels.contract_digest`）。
+- 通用行情擷取與正規化屬於 `stock-data-downloader`；任務特有證據沿用 `tasks/<task-id>/`，暫存探查沿用 `.tmp/`。持續需要的資料說明與決定回到正式任務紀錄，並從本頁連入。
 - 可跨任務重用的資料放在 primary checkout 的 `tasks/<task-id>/datasets/<dataset-id>/`，不可變衍生快取沿用 primary 的版本化 `research_cache/`，擷取產物沿用 producer canonical data。消費端記錄並讀取明確絕對路徑、版本及 hash；不讓 worktree 忽略檔成為唯一正式位置。固定的可變來源快照仍依[工作區資料契約](stock-agent-operations.md#data-and-worktrees)實體保存，不用 live data 取代；此規則不授權搬動其他 session 的產物或去重既有封存資料。
 - 確認計算會跨任務使用時，優先延伸既有共用研究模組或 `scripts/`，由任務引用；維持清楚的輸入／輸出契約，避免各策略維護互相漂移的副本。
 - 依既有 Git、大小、敏感性與備份契約選擇保存方式，並記錄實際可取得的範圍。搬移、清理或版本替換前，先查 producer／consumer 與固定 run 引用，保留歷史結果的可讀性；破壞性操作仍需另行授權。
@@ -168,7 +192,7 @@ H05 帳戶決策元件：[relative-strength-holding 報告](../../tasks/20261005
 
 以下是接續時優先查的原報告，不是把舊方法永久淘汰，也不是本輪重驗績效。
 
-最新可重用資產：**feature-discrimination-atlas.v1 / atlas-v2** 可回答「特徵涵蓋多少未來大漲觀察、選中多少未達標觀察」，含所有負例與未知值。入口為 [報告](../../tasks/20261004-feature-discrimination-atlas/report.md)、[唯一資料契約](../../tasks/20261004-feature-discrimination-atlas/data-contract.md) 與 [查詢程式](../../scripts/query_feature_discrimination_atlas.py)。固定 2019-01-02..2026-08-14；不是 PIT 完整股票池、獨立波段或帳戶績效。實體冗餘位於 `D:/Project/Stock/tasks/20261004-feature-discrimination-atlas/datasets/atlas-v2`，重算輸入另存 `atlas-v2-inputs`；已核驗雜湊但同機同碟，Git clone 不含這些大型資料。不可用最新快取默默取代。
+最新可重用資產：**feature-discrimination-atlas.v1 / atlas-v2** 可回答「特徵涵蓋多少未來大漲觀察、選中多少未達標觀察」，含所有負例與未知值。入口為 [報告](../../tasks/20261004-feature-discrimination-atlas/report.md)、[唯一資料契約](../../tasks/20261004-feature-discrimination-atlas/data-contract.md) 與 [查詢程式](../../scripts/query_feature_discrimination_atlas.py)。固定 2019-01-02..2026-08-14；不是 PIT 完整股票池、獨立波段或帳戶績效。實體冗餘位於 `D:/Project/stock-research/tasks/20261004-feature-discrimination-atlas/datasets/atlas-v2`，重算輸入另存 `atlas-v2-inputs`；已核驗雜湊但同機同碟，Git clone 不含這些大型資料。不可用最新快取默默取代。
 
 | 類別                                                                              | 任務／原報告                                                                                                                                                                                                                                                                                                                            | 接續時的界線                                                                          |
 | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
@@ -189,7 +213,7 @@ H05 帳戶決策元件：[relative-strength-holding 報告](../../tasks/20261005
 git show 919aef7211255e54b6f22b94d4ab7e698641fcca:tasks/20261002-add-retry/execution-normal-v1.md
 ```
 
-現有實體位置：`D:/Project/Stock/.worktrees/codex-workspace/tasks/`。**這是本機 Git／資料可用性，不是已確認遠端備份或可從全新 clone 取得。** 不清除此保存分支／worktree；遠端不存在該物件或忽略中的 run 不在時，先報告證據缺口，不重跑或捏造歷史。整合舊分支與大產物保存是另行定範圍的工作。
+現有實體位置：`<legacy-checkout>/.worktrees/codex-workspace/tasks/`。**這是本機 Git／資料可用性，不是已確認遠端備份或可從全新 clone 取得。** 不清除此保存分支／worktree；遠端不存在該物件或忽略中的 run 不在時，先報告證據缺口，不重跑或捏造歷史。整合舊分支與大產物保存是另行定範圍的工作。
 
 ## 下一個有界工作與依賴
 

@@ -80,7 +80,7 @@ def test_wrong_core_submodule_origin_rejected(tmp_path: Path, monkeypatch: pytes
         sources.check_core_origin(LOCATION.parents[2])
 
 
-def test_execution_closure_is_portable_but_full_sources_still_require_primary_evidence(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_execution_closure_is_portable(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     missing_primary = tmp_path / "missing-primary"
     monkeypatch.setattr(sources, "EVIDENCE_ROOT", missing_primary)
     modules = sources.load_execution_adapters()
@@ -91,8 +91,26 @@ def test_execution_closure_is_portable_but_full_sources_still_require_primary_ev
     assert callable(modules["no_trade_execution"].build_execution)
     assert callable(modules["resumption_execution"].extend_factory)
     assert not missing_primary.exists()
-    with pytest.raises((FileNotFoundError, sources.SourceModuleError), match="missing-primary"):
-        sources.load_adapters()
+
+
+def test_evidence_code_loads_from_the_checkout_while_its_inputs_stay_local() -> None:
+    """The evidence sources are tracked code; loading them needs no local-only input."""
+    program = r"""
+import importlib.util, pathlib, sys
+path = pathlib.Path(sys.argv[1])
+spec = importlib.util.spec_from_file_location("h05_evidence_smoke", path)
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+modules = module.load_adapters()
+evidence = module.EVIDENCE_DIR.resolve()
+for name, _ in module.EVIDENCE_SOURCES:
+    assert pathlib.Path(modules[name].__file__).resolve().is_relative_to(evidence), name
+print(len(modules))
+"""
+    result = subprocess.run([sys.executable, "-I", "-c", program, str(LOCATION)], capture_output=True, text=True, check=False, timeout=120)
+    assert result.returncode == 0, result.stderr
+    assert sources.EVIDENCE_DIR == LOCATION.parent / "evidence"
+    assert all((sources.EVIDENCE_DIR / relative).is_file() for _, relative in sources.EVIDENCE_SOURCES)
 
 
 def test_retained_features_load_from_isolated_checkout_with_exact_bytes(tmp_path: Path) -> None:
@@ -126,10 +144,10 @@ module.load_execution_adapters = lambda: {}
 try:
     module.load_adapters()
 except FileNotFoundError as error:
-    assert pathlib.Path(error.filename).is_relative_to(root / ".tmp" / "claude-kline")
+    assert pathlib.Path(error.filename).is_relative_to(module.EVIDENCE_DIR)
 else:
-    raise AssertionError("missing private sources were accepted")
-module.SCRATCH_SOURCES = ()
+    raise AssertionError("missing evidence sources were accepted")
+module.EVIDENCE_SOURCES = ()
 module.RESTORED_SOURCES = ()
 module.load_adapters()
 declared = {}
