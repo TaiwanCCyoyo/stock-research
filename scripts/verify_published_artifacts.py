@@ -222,7 +222,7 @@ def hhhl_v1_publication(root: Path, local_root: Path) -> tuple[str, str]:
         actual = {n: hashlib.sha256(z.read(n)).hexdigest() for n in z.namelist() if not n.endswith("/")}
     if set(actual) != set(declared["members"]):
         problems.append(f"member set differs: {sorted(set(actual) ^ set(declared['members']))[:3]}")
-    problems += [f"member digest differs: {n}" for n in sorted(actual) if declared["members"].get(n) not in (None, actual[n])]
+    problems += [f"member digest differs: {n}" for n in sorted(actual) if declared["members"].get(n) != actual[n]]
     return ("pass", "bundle and every member match") if not problems else ("fail", "; ".join(problems[:3]))
 
 

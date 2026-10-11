@@ -22,7 +22,7 @@
 
 所有變更在非預設分支完成，透過 PR 進入 `main`，不得直接 commit 或 push 到 `main`。本次同步及後續政策審查獲准建立 PR；CI 與自動 review 已生效，分支保護受目前 private repository 方案限制。
 
-擁有者已授權 stock-research [合併後自動清理](../en/git-workflow.md#post-merge-cleanup)：確認自己的任務 PR 已合併到 `main` 後，該 session 更新本機 `main`，並移除自己建立的任務 worktree、本機及對應 `origin` 分支，不必再次詢問。清理須保留研究產物與共用資料，維持既有子模組交付授權及生產更新條件，排程操作仍需另行授權。
+依本 repository 的 AGENTS.md 運作約定進行[合併後清理](../en/git-workflow.md#post-merge-cleanup)：確認自己的任務 PR 已合併到 `main` 後，該 session 更新本機 `main`，並移除自己建立的任務 worktree、本機及對應 `origin` 分支，不必再次詢問。清理須保留研究產物與共用資料，產出端（stock-data-downloader）的交付須另行向擁有者確認，維持生產更新條件，排程操作仍需另行授權。
 
 - [Git 工作契約](../en/git-workflow.md)：分支、交付及合併權限。
 - [PR 設定](pr-setup.md)：CI、託管 review 與 main 保護設定。
