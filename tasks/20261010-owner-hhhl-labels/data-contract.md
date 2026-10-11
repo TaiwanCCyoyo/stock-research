@@ -98,3 +98,13 @@ capture is a new dataset version with its own pins.
 
 The live databases remain at the artifact URLs in `owner_labels.json`, but this archive is the
 canonical copy for research. Do not read the live pages as the reference.
+
+## 2026-10-10 old-name migration
+
+By owner decision, path and name strings inside this archive were rewritten to this checkout
+(`docs/en/bootstrap-stock-research.md#old-name-migration-2026-10-10`): `rule_hits.json`, its
+input receipt, and the `detect.py`/`adjprice.py` default paths inside `rule_sources.zip`. The
+atlas-v2 tables the capture read were relabelled (`dataset_id` only), so the 120 table digests in
+`rule_hits_inputs.zip` now name the relabelled bytes. No capture was re-run: every rule day and
+every recomputed batch number is unchanged. The exact capture-time bytes are in Git at
+`87366ba`, and the predecessor checkout still holds the original tables.

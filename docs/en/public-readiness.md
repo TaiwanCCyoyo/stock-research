@@ -1,6 +1,6 @@
 # Public release preparation
 
-This checklist covers **TaiwanCCyoyo/Stock** and **TaiwanCCyoyo/shioaji-stock-prices**.
+This checklist covers **TaiwanCCyoyo/stock-research** and **TaiwanCCyoyo/stock-data-downloader**.
 It does not authorize changing visibility, permissions, credentials, releases,
 research evidence or Git history. CI optimization is a separate task.
 

@@ -5,7 +5,7 @@ transports) are read from `--local-root` (default: the primary checkout); a miss
 reported as `local-missing`, never as a pass. The full test suite does not read these real artifacts,
 so run this after any change that rewrites stored evidence or the code that reads it.
 
-    uv run python -m scripts.verify_published_artifacts [--only NAME ...] [--json OUT]
+    uv run python -m scripts.verify_published_artifacts [--only NAME ...] [--json OUT] [--allow-local-missing]
 """
 
 from __future__ import annotations
@@ -214,15 +214,16 @@ def hhhl_v1_publication(root: Path, local_root: Path) -> tuple[str, str]:
     if not bundle.exists():
         return ("local-missing", str(bundle))
     data = bundle.read_bytes()
-    text = json.dumps(manifest)
-    if hashlib.sha256(data).hexdigest() not in text:
-        return ("fail", "bundle.zip SHA-256 not named by manifest.json")
+    declared = manifest["bundle"]
+    if hashlib.sha256(data).hexdigest() != declared["sha256"] or len(data) != declared["bytes"]:
+        return ("fail", "bundle.zip SHA-256/bytes differ from manifest.json")
     problems = _zip_descriptors(data, "hhhl-v1 bundle.zip")
     with zipfile.ZipFile(io.BytesIO(data)) as z:
-        missing = [n for n in z.namelist() if hashlib.sha256(z.read(n)).hexdigest() not in text and not n.endswith("/")]
-    if missing:
-        problems.append(f"members not named by manifest: {missing[:3]}")
-    return ("pass", "bundle and members match") if not problems else ("fail", "; ".join(problems[:3]))
+        actual = {n: hashlib.sha256(z.read(n)).hexdigest() for n in z.namelist() if not n.endswith("/")}
+    if set(actual) != set(declared["members"]):
+        problems.append(f"member set differs: {sorted(set(actual) ^ set(declared['members']))[:3]}")
+    problems += [f"member digest differs: {n}" for n in sorted(actual) if declared["members"].get(n) not in (None, actual[n])]
+    return ("pass", "bundle and every member match") if not problems else ("fail", "; ".join(problems[:3]))
 
 
 CHECKS = [
@@ -257,6 +258,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--root", type=Path, default=ROOT, help="checkout whose tracked publications and code are verified")
     ap.add_argument("--local-root", type=Path, default=PRIMARY, help="where local-only artifacts live")
     ap.add_argument("--only", nargs="*", help="run only checks whose name contains one of these words")
+    ap.add_argument("--allow-local-missing", action="store_true", help="exit 0 when local-only inputs are absent (incomplete check)")
     ap.add_argument("--json", type=Path, help="write the result table as JSON")
     a = ap.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
@@ -274,7 +276,8 @@ def main(argv: list[str] | None = None) -> int:
         sys.stdout.flush()
     if a.json:
         a.json.write_text(json.dumps(rows, ensure_ascii=False, indent=1), encoding="utf-8")
-    return 1 if any(r["status"] == "fail" for r in rows) else 0
+    blocking = {"fail"} if a.allow_local_missing else {"fail", "local-missing"}
+    return 1 if any(r["status"] in blocking for r in rows) else 0
 
 
 if __name__ == "__main__":
