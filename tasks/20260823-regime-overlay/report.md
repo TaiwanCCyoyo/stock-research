@@ -380,7 +380,7 @@ Train 完全相反：中位數 +75.0%，35.6% 的個股贏過 0050。那是一�
    （120/250 日）、加入一個低波動或風險調整後動能的分量、或直接加規模欄位。
    **規模欄位需要補工具**：`symbol_meta.sqlite` 沒有股本或市值，只有 code/name/isin/listed_date/
    market/industry_category/is_etf。成交金額（`price_daily.parquet` 的 Volume × Close）可以當
-   代理，但那是流動性不是市值，兩者在台股會分歧。真的要市值，是 `shioaji_stock_prices` 的工作。
+   代理，但那是流動性不是市值，兩者在台股會分歧。真的要市值，是 `stock-data-downloader` 的工作。
 3. **把「市場寬度」當成一個可交易性判斷，而不是空頭判斷。** §5.2 顯示這條策略線在寬市場大勝、
    在窄市場結構性落後。§3 已經證明寬度**當空頭偵測器**沒用，但「贏過指數的個股比例」是另一個
    問題，而且它在 2024–2026 會給出正確的警告，即使那是大多頭。這需要一個新的預先登記研究，
@@ -424,7 +424,7 @@ uv run python tasks/20260823-regime-overlay/blend_probe.py
 `verify_defence_symbol.py` 讀 `runs/grid/{window}__base.json`，所以要在 `run_grid.py` 之後跑。
 
 需要 `tasks/20260823-rotation-universe/features.parquet`（未進版控，用 `features.py` 重建，
-約一分鐘）。`detector.py` 需要 `shioaji_stock_prices/data/official_daily.sqlite`，那個檔 7.3GB
+約一分鐘）。`detector.py` 需要 `stock-data-downloader/data/official_daily.sqlite`，那個檔 7.3GB
 且**依設計不會複製進 worktree**；它會用 `git rev-parse --git-common-dir` 找到主 checkout 的
 那一份，並以唯讀模式開啟，因為 `StockProject-OfficialBackfill` 一天有 23 小時在寫它。
 

@@ -1,4 +1,4 @@
-# Stock PR 審核
+# stock-research PR 審核
 
 實作 agent 負責[PR 後續處理](../en/git-workflow.md#pr-follow-through)：評估審核意見，修正並驗證範圍內成立的問題，推送修正後立即解決已處理的審核討論，再等待當前 head 的 CI 與重新審核。解決討論不保證會啟動新的審核；回報完成前須確認實際狀態。合併權仍由擁有者保留。
 

@@ -25,7 +25,7 @@ if str(HERE) not in sys.path:
 from selection import CashSelection, select_cash  # noqa: E402
 
 SOURCE = TASKS / "015-cash-source-readset" / "cash-readset-v2.json"
-SOURCE_HASH = "cbb817c112f0c4eacb4d7492fe30718dc256f3a5efaf5f6450b0e498e39767db"  # pragma: allowlist secret - artifact checksum
+SOURCE_HASH = "cf37912a96ff008a1c23c5d893dfd14aaa3fedd1fdf41933421bfc5d83a1b593"  # pragma: allowlist secret - artifact checksum
 ADAPTER_PATH = TASKS / "018-share-adapters" / "cash_dividends.py"
 ADAPTER_HASH = "3f0a739de1bb4bf217ce0db9d78ea7e23c4c938e161dcb0f378ab00db6e1d098"  # pragma: allowlist secret - artifact checksum
 TAIPEI = timezone(timedelta(hours=8))

@@ -198,7 +198,7 @@ or a future adapter and therefore are not a runnable job packet.
 | `tasks/20260904-slot-accounting/candidates/rotation_ranker_v8.py`  | `167ea874948bf26947b854deb4d6e6d8074e3c86c49988a7f83303ce759bf287` |
 | `tasks/20260826-runner-retention/candidates/rotation_ranker_v5.py` | `61608f53a35116b32f0bf7e7e3a1e85285a3cc6532f18c59d93ddd8dfe7c9d91` |
 | `tasks/20260823-rotation-universe/eligibility.py`                  | `8e3ff7c5a072a7abc83f289d3e27e741fbd42b7613a8651dafa40d3df7316f74` |
-| `tasks/20260823-rotation-universe/features.py`                     | `14f1ab8d7a47e6a013e349730584166af05ee0386db9291bf3ba54094dfe896a` |
+| `tasks/20260823-rotation-universe/features.py`                     | `d4e1c2b223915be452f1d6af4da4db441a177ea22e845739431f7aca2419dc98` |
 | `tasks/20260824-ranking-horizon/features_v2.py`                    | `9b47a3ac66f3d6eb7457176c0d7e8ab0fe5aa7c50d8f8c52f6a3dd8682788e45` |
 
 ## New-checkout availability — 2026-10-09

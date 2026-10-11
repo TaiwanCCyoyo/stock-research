@@ -1,7 +1,7 @@
 {
     "schema_version": "opportunity-native-publication-anchor-audit.v1",
     "status": "verified",
-    "trusted_manifest_sha256": "c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140",
+    "trusted_manifest_sha256": "238e7e4aba59509bb3245ea36e9708d6d8f9b9d7c6dab9f18a9d60bba67aa6ea",
     "manifest_trust_policy": "registered_publication",
     "git_preserved_manifest_parts_verified": 6,
     "native_security_count": 1970,
@@ -15,11 +15,11 @@
     "prior_receipts": [
         {
             "path": "query-native-price-semantics-audit-receipt.json",
-            "sha256": "32b0df51c7068088efaf9d06f692d57bd9c696f1eeef8a6b23bdfb0b6923ea89"
+            "sha256": "f7ebf608da173cc111fc6309f2ccf91142649bd2c5e7c649c42b32a8b4b47ac8"
         },
         {
             "path": "pinned-pure-phase-audit-receipt.json",
-            "sha256": "17b05ffed600341bea92b89483ecfa0cf6a1528be3fb874a4cdda235f6e19c3e"
+            "sha256": "bbe28d9dd2a12f02a01cd4a31aff58efab57b7f38e45e676ba78b33f76f785a1"
         }
     ]
 }

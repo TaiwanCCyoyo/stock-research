@@ -1,4 +1,4 @@
 interface:
-    display_name: "Stock Research Query"
+    display_name: "stock-research Research Query"
     short_description: "Query local stock research task data through scripts and MCP."
     default_prompt: "Use this skill to inspect local stock research task trades and explain the evidence."

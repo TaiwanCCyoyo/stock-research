@@ -51,11 +51,9 @@ ENVIRONMENT_SETTING.md
 !.vscode/settings.json
 .idea/
 
-# --- Stock Project Specific ---
+# --- stock-research Project Specific ---
 # Data (Ignore large binaries and raw CSVs)
 stock-data-downloader/data/*/
-# Keep the retained old initialized checkout private and out of accidental staging.
-/shioaji_stock_prices/
 StockProject/data/
 *.parquet
 *.csv
@@ -117,6 +115,14 @@ tasks/*/**
 !tasks/20261010-hhhl-v4-probability/preparation-v1/
 !tasks/20261010-hhhl-v4-probability/preparation-v1/bundle.zip
 !tasks/20261010-hhhl-v4-probability/landmark-audit-v1.zip
+# Public transport (source factors and real-close sample withheld) and result-only overlays.
+!tasks/20261010-hhhl-v4-probability/publication-v2-public/
+!tasks/20261010-hhhl-v4-probability/publication-v2-public/*
+!tasks/20261010-hhhl-v4-probability/noise-first-correction-v2/
+!tasks/20261010-hhhl-v4-probability/noise-first-correction-v2/*
+!tasks/20261010-hhhl-v4-probability/noise-first-correction-v1.zip
+!tasks/20261010-hhhl-v4-probability/diagnostics-supplement-v1.zip
+!tasks/20261010-hhhl-v4-probability/diagnostics-supplement-v2.zip
 !tasks/20261008-research-data-architecture/publication-v1/
 !tasks/20261008-research-data-architecture/publication-v1/bundle.zip
 !tasks/20261008-research-data-architecture/publication-v1/review2.zip

@@ -1,4 +1,4 @@
-"""On-demand immutable Stock price/feature versions; no live producer writes."""
+"""On-demand immutable stock-research price/feature versions; no live producer writes."""
 
 from __future__ import annotations
 

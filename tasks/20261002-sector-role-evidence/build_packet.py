@@ -19,7 +19,7 @@ from research_core.sector_role_evidence import validate_packet
 ROOT = Path(__file__).resolve().parents[2]
 TASK = Path(__file__).resolve().parent
 CATALOG = ROOT / "tasks/20261002-sector-wave-catalog/catalog-v1"
-BASE_SHA = "384ee53d22b70dc1650bf84e1887e8515565189c975c29c77ef5e6273c5138c9"
+BASE_SHA = "3c5f14b1d061aef1a4b5a440f42042db3f8d23015462e6ad3e45ce5b031eab4a"
 INSPECTED_AT = "2026-10-02T07:54:27+00:00"
 CREATED_AT = "2026-10-02T08:18:49+00:00"
 SEEDS = "2408 2344 2337 3006 6485 3260 3324 3017 6230 2421 8046 3189 3037 6274 2368 5381 5321 2614".split()

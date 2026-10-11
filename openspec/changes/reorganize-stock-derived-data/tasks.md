@@ -9,7 +9,7 @@
 - [x] 2.1 Implement and synthetic-test three price bases, factor ambiguity, gaps and quality reasons.
 - [x] 2.2 Implement ATR14 and confirmed 1.5/4 ATR pivots; verify frozen no-gap parity.
 - [x] 2.3 Produce bounded legacy-v4 compatibility evidence without evaluating strategy outcomes.
-- [x] 2.4 Verify the merged producer release and update only the Stock gitlink if still needed.
+- [x] 2.4 Verify the merged producer release and update only the stock-research gitlink if still needed.
 
 ## 3. Immutable cache and backup
 
@@ -24,6 +24,6 @@
 - [x] 4.3 Record producer indicator retirement dependencies and consumer preservation inventory, without premature deletion.
 - [x] 4.4 Run focused tests and normal hooks, commit scoped changes, deliver the authorized PR and follow current-head checks/review.
 
-Claude's annotation task has not been received. Stock components are independently prepared/delivered; do not declare the ordered 1-7 program closed, archive this change or delete producer indicators/worktrees on that basis. Evidence and pending scope: tasks/20261008-research-data-architecture/report.md.
+Claude's annotation task has not been received. stock-research components are independently prepared/delivered; do not declare the ordered 1-7 program closed, archive this change or delete producer indicators/worktrees on that basis. Evidence and pending scope: tasks/20261008-research-data-architecture/report.md.
 
 Delivery verification: PR #36 implementation head f58efc6 passed PR validation run 37798526191 and automatic review with no new findings/unresolved threads, then merged at 2026-10-08T15:19:56Z as 595f1fb. The documentation-only completion record was committed after that merge and is delivered separately from current main; it still requires its own CI/review. The separate annotation dependency remains unreceived.

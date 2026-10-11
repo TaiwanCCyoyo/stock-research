@@ -46,7 +46,7 @@ left standing rather than edited away so the reasoning stays legible.
 
 **The mitigation, pre-registered here.** The _detector_ -- the part that says "this is a
 bear" -- does not need the strategy's data. It needs an index proxy and a breadth series, and
-`shioaji_stock_prices/data/official_daily.sqlite` holds TWSE daily bars from **2013-08-01**:
+`stock-data-downloader/data/official_daily.sqlite` holds TWSE daily bars from **2013-08-01**:
 0050 has 3,180 bars from 2013-08-01 to 2026-08-20 with no gaps, and TWSE carries 803 to 1,379
 distinct codes a year across the span. So the detector is profiled over thirteen years and
 several drawdown episodes, while the strategy P&L is measured over the seven years the price

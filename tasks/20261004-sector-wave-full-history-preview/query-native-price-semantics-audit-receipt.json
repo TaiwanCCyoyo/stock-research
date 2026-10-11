@@ -16,30 +16,30 @@
         "task": "20261004-sector-wave-full-history-preview"
     },
     "launch_saved_segment_price_fields_verified": true,
-    "manifest_sha256": "c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140",
+    "manifest_sha256": "238e7e4aba59509bb3245ea36e9708d6d8f9b9d7c6dab9f18a9d60bba67aa6ea",
     "method_analysis_recomputed": false,
     "native_receipt_identity_context_verified_count": 1970,
     "price_noise_verified": true,
     "prior_receipts": [
         {
             "path": "verification-receipt-v3.json",
-            "sha256": "b07809c560acf955091a0cc3362858bd322dac2f29433d39882febe929ec2d8c"
+            "sha256": "d1163d51b959ca9e49c518f8de8a5ce2618e69be60246e409652f5e0c8bd9d1b"
         },
         {
             "path": "query-native-contract-audit-receipt.json",
-            "sha256": "1b02cb7926062c4be926a1bda5da50233e211bd48e9cee70725baf28d5fef42c"
+            "sha256": "a43aaa83df0641bdb43f7ebab1eed35c03667643d81c0ea13bee3e6c3c7cb2bf"
         },
         {
             "path": "query-reconstruction-audit-receipt.json",
-            "sha256": "77874323e18e84c5a7f8eec4596cb7e8b0b61fbc5f45874338ea390197d7d667"
+            "sha256": "bba376a9062ce1453a986496c7bc4166cbcd22f74f67dfb0baca71fd29081228"
         },
         {
             "path": "query-native-semantics-audit-receipt.json",
-            "sha256": "f0f053c04aed6b5ef75e618fefa6363383547c24c3fe396ce944a425a4506b62"
+            "sha256": "3243ad0e14370fc40af55b69e50fb239d76a30a6663801a6a3b4187d2cb9c381"
         },
         {
             "path": "pinned-pure-wave-launch-audit-receipt.json",
-            "sha256": "d63f7bc2fe29bff5edd590b954c33b020f71a1df96609d60b98c020fed3aefc3"
+            "sha256": "e16fc1f71574abdcceab831f33956d44b19577becd6996d82e74969a5d472c2e"
         }
     ],
     "query_security_full_rows_reconstructed_count": 2075,

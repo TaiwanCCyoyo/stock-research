@@ -25,7 +25,7 @@ The owner authorized publication/readiness work and 0050 context generation, not
 
 ## Migration Plan
 
-Add new artifacts and indexes only, deliver through a Stock PR, and leave old tasks/inputs untouched. Consumers opt into the new dataset identity. Rollback means stop referencing the new dataset, not delete historic evidence.
+Add new artifacts and indexes only, deliver through a stock-research PR, and leave old tasks/inputs untouched. Consumers opt into the new dataset identity. Rollback means stop referencing the new dataset, not delete historic evidence.
 
 ## Open Questions
 

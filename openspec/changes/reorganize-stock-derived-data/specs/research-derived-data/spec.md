@@ -2,7 +2,7 @@
 
 ### Requirement: Definitions retain identity and approval evidence
 
-Stock SHALL index versioned HHHL definitions and legacy proxies with distinct names, source hashes, approval status and task links, and SHALL preserve original rule bytes without modifying historical source packets.
+stock-research SHALL index versioned HHHL definitions and legacy proxies with distinct names, source hashes, approval status and task links, and SHALL preserve original rule bytes without modifying historical source packets.
 
 #### Scenario: A consumer looks up an old 2B name
 
@@ -63,7 +63,7 @@ ATR and pivots SHALL equal direct calculation under the same versioned definitio
 
 ### Requirement: Backups and restores are verified and additive
 
-Stock SHALL provide explicit snapshot backup for cache, task datasets and owner annotations, with SHA256 verification and no delete/overwrite behavior. Restore SHALL only create a new destination and SHALL verify recovered files before completion.
+stock-research SHALL provide explicit snapshot backup for cache, task datasets and owner annotations, with SHA256 verification and no delete/overwrite behavior. Restore SHALL only create a new destination and SHALL verify recovered files before completion.
 
 #### Scenario: The source moves during backup
 

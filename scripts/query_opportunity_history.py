@@ -26,7 +26,7 @@ V2_ADAPTERS = {
     "9404d299d52f403e15eba2824e3cdd1e9e6213589d1231629c29363bf933ad66",
 }
 V1_ADAPTER = "ac3876886714c3b38fba8cd97106ef4300c41c98d1b20861b17c769358de0756"
-REGISTERED_MANIFEST_SHA256 = "c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140"
+REGISTERED_MANIFEST_SHA256 = "238e7e4aba59509bb3245ea36e9708d6d8f9b9d7c6dab9f18a9d60bba67aa6ea"
 
 
 def validate_manifest_trust(manifest_bytes: bytes, expected_manifest_sha256: str | None = None) -> dict[str, str]:

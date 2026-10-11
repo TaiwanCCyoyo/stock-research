@@ -23,10 +23,10 @@
 
 ```powershell
 uv run --no-sync python -m scripts.build_hhhl_v4_probability `
-  --dataset D:/Project/Stock/tasks/20261004-feature-discrimination-atlas/datasets/atlas-v2 `
+  --dataset D:/Project/stock-research/tasks/20261004-feature-discrimination-atlas/datasets/atlas-v2 `
   --task-root tasks/20261010-hhhl-v4-probability `
-  --inputs D:/Project/Stock/tasks/20261010-hhhl-v4-probability/datasets/hhhl-v4-validation-inputs-01 `
-  --output D:/Project/Stock/tasks/20261010-hhhl-v4-probability/datasets/hhhl-v4-descriptive-01 `
+  --inputs D:/Project/stock-research/tasks/20261010-hhhl-v4-probability/datasets/hhhl-v4-validation-inputs-01 `
+  --output D:/Project/stock-research/tasks/20261010-hhhl-v4-probability/datasets/hhhl-v4-descriptive-01 `
   --workers 4
 ```
 
@@ -46,7 +46,7 @@ uv run --no-sync python -m scripts.build_hhhl_v4_probability `
   原 publication-v1/v2、manifest、行情與 1,080 格彙總未覆寫，沒有第二次市場 run。
 - 方法索引的模糊「M04 假跌破 2B」名稱改為 M04 spring／F21/F33 2B 代理分列；
   不改原來源、實驗或公式，不把其結果當作擁有者 HHHL 定義的測試。
-- 這項修正不改 Stock／submodule 資料分工或備份流程；架構仍只討論。
+- 這項修正不改 stock-research／submodule 資料分工或備份流程；架構仍只討論。
 
 ## PR #33 worker 截止時間更正 — 2026-10-08
 
@@ -139,7 +139,7 @@ uv run --no-sync python -m scripts.build_hhhl_v4_probability `
 - 19項合成回歸通過（79.13秒）。normal hooks 先指出 pandas 型別註記／格式，補正
   後全數通過；程式先封存於 f1ba001。之後再核對1項完整成功路徑（4.10秒）。
 - 只從原 hash-verified noise 表產生 primary `noise-first-correction-v2.zip`，713815
-  bytes／解壓973133 bytes，SHA-256 c91f27a43a2ef98ebc87bc41a7d94e8b8ed1eaa820eb882299ee5464b7615a94。
+  bytes／解壓973133 bytes，SHA-256 cfce13e4b33bcddcdf8223366de13afbebc3779a19b150ef73843ee03f329319。
   離線 reader 核對四格與v1更正完全相同、其餘1076格與原包相同，並
   再驗原noise／manifest及v1 hash；未偵測型態、重新算價格結果或重抽日期。
 - 來源 hash 與程式快照是可重算／身分證據，不是惡意偽造的密碼學認證；部分欄位
@@ -164,7 +164,7 @@ uv run --no-sync python -m scripts.build_hhhl_v4_probability `
   hooks整理格式後通過，程式先封存於45fd594。包括原因改名／重分桶、股票數、
   投影、舊v1拒收及原來源／新補件helper身分分開的負例。未更改census公式。
 - 僅從原hash-verified landmarks讀五欄生成 primary `diagnostics-supplement-v2.zip`，
-  57686 bytes、解壓119096 bytes，SHA-256 2393f3658848d8792020006e20f243ff6e46789c007979f8dcbe5b7f225f151b。
+  57756 bytes、解壓119096 bytes，SHA-256 b077768605ea2b3a8541a12a473b9260fb30375853e2bd336bb4f9399cbd7ba4。
   reader離線重算30格與v1全部相同，涵蓋162864列；原v1的1321 bytes／hash不變。
   無價格重算、型態偵測、新期間或比較。新程式身分不冒充原run的producer/helper。
 - 全檔helper hash曾因noise更正而改變；核對原70a6872至今僅noise首筆相關改動，
@@ -309,7 +309,7 @@ uv run --no-sync python -m scripts.build_hhhl_v4_probability `
   archive fragment中的member及冒號後語意標籤不是HTML anchor，不代表整份原結果
   或收據被替換。四筆事件ID／原note／原封包不變，既有暴露與本PR更正全部保留。
 - 合併後封存型態來源／reader相關90項回歸通過（6.13秒）。不初始化或刷新producer
-  checkout、不新建Stock快取、不重跑機率；主線的新價格政策不默默替換本次舊结果。
+  checkout、不新建stock-research快取、不重跑機率；主線的新價格政策不默默替換本次舊结果。
 - registry按既有驗式通過：26事件、原22事件全部保留、正式source入口無缺漏；
   11項研究evidence回歸通過（0.51秒），未放寬更正或暴露規則。
 - 主線另合併純文件收據PR #39（204781a），再次正常merge，只更新架構report與
@@ -340,9 +340,9 @@ uv run --no-sync python -m scripts.build_hhhl_v4_probability `
   通過（4.81秒），mypy／pyright／全部正常hooks通過；沒有停用檢查或更改環境。
   61440b3另將新audit helper列入future runner前後identity清單，正常hooks亦通過。
 - 61440b3已提交且worktree乾淨後，從原封存表生成primary
-  D:/Project/Stock/tasks/20261010-hhhl-v4-probability/landmark-audit-v1.json；新建而非覆寫。
+  D:/Project/stock-research/tasks/20261010-hhhl-v4-probability/landmark-audit-v1.json；新建而非覆寫。
   同bytes原擬交Git task目錄；55680 bytes，SHA-256
-  f1ab85e00c4b36f372e2bd848579b5eb928833a7030f098dfcdb64fcb5e42f3d。
+  e89f51dd87a9c380684c35c38cc1427dee06b14203376cc13795c2e839544376。
   primary及交付副本的reader均通過：同10筆原ID、96欄，包含原t0及所有L20欄位。
   原audit／landmarks／manifest hash前後符合原publication；不改原封包或1080格。
 - plain JSON正常hooks遇公開hash的秘密偵測誤判，且formatter改交付副本排版；
@@ -353,6 +353,6 @@ uv run --no-sync python -m scripts.build_hhhl_v4_probability `
   修正，45項補件測試再通過（5.55秒），06f672b的mypy／pyright／全部hooks通過。
   初次ZIP在局部測試後、transport提交完成前產生；06f672b封存後另新建校驗ZIP，
   與primary及Git交付副本逐bytes相同，沒有冒稱初次封裝已在封存程式下執行。
-  ZIP6861 bytes，SHA-256 26c7eff6196b706db5fba0f62b077093b51af8cbd3849e0293d6949f58e41617；
+  ZIP7061 bytes，SHA-256 591870b96c241a6c95fd645d229f5e4dfb8c89274a33746a2103e7e6e963cc4c；
   單一成員publication.json與原55680-byte JSON一致，三份ZIP及reader皆通過。
   registry27事件通過原驗式，11項evidence回歸通過（0.48秒）；原26事件保留。

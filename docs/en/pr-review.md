@@ -1,4 +1,4 @@
-# Stock PR Review
+# stock-research PR Review
 
 The implementing agent owns [PR follow-through](git-workflow.md#pr-follow-through): assess findings, fix and verify valid issues within scope, push the fixes, and promptly resolve addressed threads before waiting for current-head CI and renewed review. Resolution does not guarantee that a new review will start; verify its actual status before reporting completion. The owner retains merge authority.
 
@@ -34,6 +34,6 @@ Require a PR, resolved conversations and a successful `repository-checks` from
 GitHub Actions; require the branch to be current, block deletion and force pushes,
 and leave bypass actors empty. With one owner identity, require zero approving
 reviews because the author cannot approve their own PR. This is the observed
-upstream model, not a claim that Stock already enforces it.
+upstream model, not a claim that stock-research already enforces it.
 
 Observed evidence (2026-09-20): [PR #5 review](https://github.com/TaiwanCCyoyo/Stock/pull/5#issuecomment-5747122478), [main CI](https://github.com/TaiwanCCyoyo/Stock/actions/runs/35485837491). A passing CI job does not prevent a direct push without branch protection.

@@ -28,7 +28,7 @@
 - Parent reviewed `params/atlas-v1.json` and authorizes exactly this one bounded
   exploratory execution under the owner's instruction to finish organizing data.
   Canonical packet SHA256:
-  `7f77af3fdd61f4f00f83ce9f1d7627b8b6858c1a89f0266448fe384a9882bfc1`.
+  `a6c1da86488d5b4c66a872dd8dee2a61fe4eb748cf74a3279c4a9cb67d705f27`.
 - This approval fixes 38 binary features, 20 continuous components, both outcome
   definitions, daily and grid126 panels, context comparisons, runtime, input bytes
   and the 3600-second cap. It does not authorize parameter tuning or a strategy.
@@ -57,7 +57,7 @@
   values matched exactly after optimization, with combined feature/legacy time
   falling to 0.705s. No aggregate outcome comparisons were inspected to choose it.
 - Parent approves only `params/atlas-v2.json`, canonical SHA256
-  `728a9659c8ef94f7d2858d354a4af2b329edb5a5ff070b94f169ecb35788a4a3`.
+  `824623eaefb49d7daedb614bda7c28a0ebb04ad969b57f074541e08a980d8d96`.
   Compared to v1, only the job ID/argument and those two implementation hashes
   change. The source bytes, scientific definitions, runtime and budget are identical.
 
@@ -75,7 +75,7 @@
 - parent 完成 95 passed、1 Windows symlink 權限 skip，全部比較重算一致，
   receipt 重用核驗及 finalizer 輸出／重播輸入雜湊保存核驗通過。
   完成 dataset_id 為
-  `fda-86245f2e223fc45c9f84afb0dcf77c1fff7ab22d0a1b0b4a4c8800972ce9327e`。
+  `fda-e712fc9408c147ae410a2fc0a687ef6f1dba785cab8cfb0312f79c504c6c5206`。
 - 第二份輸出位於主 checkout 的 `tasks/20261004-feature-discrimination-atlas/datasets/atlas-v2`，
   精確宣告輸入封存為 `atlas-v2-inputs`。兩者是同實體磁碟冗餘，不是災難備份。
 - 稽核時序補充：v2 canonical packet 雜湊及核准存在於開始前，但 packet 的

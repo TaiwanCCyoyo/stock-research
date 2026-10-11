@@ -10,9 +10,9 @@ redistributed. Preserve historical missions, source hashes and stored results.
 
 ## Current decision record
 
-The initial audit used Stock main `324bbfc9f2ed520dfa6ce97f4298880aa2dd1e50`
+The initial audit used stock-research main `324bbfc9f2ed520dfa6ce97f4298880aa2dd1e50`
 and producer main `f8feec7f124a71073cc18409774d821ad99f2102`. Preparation starts
-from Stock main `04a93f77d6eb143bf70c252ae3bc3030b54ebf0c`. These are inspection
+from stock-research main `04a93f77d6eb143bf70c252ae3bc3030b54ebf0c`. These are inspection
 snapshots; refresh and record refs before a later release decision.
 
 The owner's disclosure principle permits pure research content when it contains
@@ -24,12 +24,12 @@ data, secrets and third-party restrictions even when the research itself is appr
 
 | Severity | Status                                  | Evidence and required next step                                                                                                                                                                                                                                                  |
 | -------- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CRITICAL | Credential revocation unknown           | A PAT was embedded in historical Stock `.gitmodules`. First affected commit: `9ed6e400f8794eda505c040e9997a316cc89419d`; 27 trees on the old branch contained it. The owner must confirm revocation; do not test or recreate the credential merely for publishing.               |
+| CRITICAL | Credential revocation unknown           | A PAT was embedded in historical legacy-repository `.gitmodules`. First affected commit: `9ed6e400f8794eda505c040e9997a316cc89419d`; 27 trees on the old branch contained it. The owner must confirm revocation; do not test or recreate the credential merely for publishing.   |
 | CRITICAL | Exposure reduced; retention not cleared | Owner-authorized remote `ai-dev-20260202` deletion at `4777f814fee7e363f11edec93cb6782e6a0257e0` was read back as absent. Cached refs, local objects, other clones and possible retained GitHub refs were preserved. Deletion is not history erasure.                            |
 | CRITICAL | Local URL repaired                      | The embedded credential was removed from `.git/modules/user_logger/config`, key `remote.origin.url`; destination and other keys were preserved. Local config is separate from tracked Git content.                                                                               |
 | HIGH     | Historical release withdrawn            | Former producer release `v1.0/data.zip` was reported as 1,817,789,646 bytes with data through 2024-03-11. The owner reports the asset, release and tag withdrawn; API read-back on 2026-10-09 found no `v1.0` release/tag. Retained copies/history remain separate review scope. |
 | MEDIUM   | Pure research disclosure approved       | The owner permits pure research judgments under the no-personal-data/no-secrets/lawful-publication principle. Owner-label wording, timestamps and Claude artifact links still require privacy and third-party restriction checks.                                                |
-| MEDIUM   | Data rights mapping pending             | Stock publishes source/derived market fragments inside compressed evidence. Producer's Apache 2.0 code declaration is not evidence of permission for every upstream dataset.                                                                                                     |
+| MEDIUM   | Data rights mapping pending             | stock-research publishes source/derived market fragments inside compressed evidence. Producer's Apache 2.0 code declaration is not evidence of permission for every upstream dataset.                                                                                            |
 | LOW      | Historic personal metadata remains      | Historical source headers/Git author metadata contain personal contact information. Archived missions/provenance include machine paths. Current generic changelog examples use `<user>`; history is unchanged.                                                                   |
 
 No actual token, account number, certificate, private key or verbatim private
@@ -61,7 +61,7 @@ asset was downloaded and no remote state was changed by this follow-up.
 
 | Artifact/location                                                                                                                                                                      | Class and known source                                                                                                                                                                                    | Evidence still needed                                                                                                                                                                                                                                                               |
 | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Stock source, tests and agent configuration                                                                                                                                            | Program code, synthetic tests and operational documents                                                                                                                                                   | Review repository/third-party code notices independently of data rights. Test placeholders and synthetic Windows paths are not actual credentials/accounts.                                                                                                                         |
+| stock-research source, tests and agent configuration                                                                                                                                   | Program code, synthetic tests and operational documents                                                                                                                                                   | Review repository/third-party code notices independently of data rights. Test placeholders and synthetic Windows paths are not actual credentials/accounts.                                                                                                                         |
 | `research_core/patterns/hhhl/v*/sources.zip`, `tasks/20261009-hhhl-pattern-probability/sources/`, `tasks/20261010-hhhl-v4-probability/sources/`                                        | Owner-supplied HHHL rule code and research handoff prose, versions 1–4                                                                                                                                    | Confirm distribution of owner-supplied text/code and copied third-party content. Preserve hashes; sanitization requires an explicitly authorized new publication version, not rewriting frozen evidence.                                                                            |
 | `tasks/20261010-owner-hhhl-labels/data/owner_labels.json` on owner-label branch                                                                                                        | 11 Claude artifact references; 323 verbatim documents with stock identifiers/dates, judgments, reasons, points and `saved_at`                                                                             | Pure research disclosure is approved; check wording, timestamps and links for personal data, secrets and third-party restrictions. No confirmed account/identity numbers or full user/assistant conversation export in the inspected snapshot; future additions require inspection. |
 | Owner-label `data/history.zip`, `chart_sets.zip`, `rule_sources.zip`, `rule_hits_inputs.zip`, `timeline_receipt.zip`                                                                   | Old annotation dumps, labelling HTML/Python, OHLC fragments, rule source and provenance. `history.zip`: 351 members, 1,049,707 expanded bytes                                                             | Privacy/secret checks under the approved research-disclosure principle and chart-price sources/rights. History versions were introduced at `c04790719ec8c1d623020633ab6232b785a75ba8` and `54b0da26afa0409e3c8dca5e1b23eb0634da6386`.                                               |
@@ -77,7 +77,7 @@ asset was downloaded and no remote state was changed by this follow-up.
 | Producer ignored `price_daily.parquet`, adjusted prices and `technical_features/`                                                                                                      | Normalized/derived data; price parquet: 205,050,515 observed bytes                                                                                                                                        | Transformation does not establish distribution rights. Trace mixed inputs and acquisition-time terms.                                                                                                                                                                               |
 | Former producer `v1.0/data.zip` (withdrawn; historical inventory)                                                                                                                      | Historical release metadata only; contents unverified, independent of Git history; not a current published asset                                                                                          | Review retained copies only if proposed for publication: member inventory, sources/acquisition dates/terms and private-record checks. This task performed no asset download or deletion. Historical yfinance dividend data, if included, needs its own source mapping.              |
 
-Source pointers: producer `README.md` and `docs/pipeline.md`; Stock
+Source pointers: producer `README.md` and `docs/pipeline.md`; stock-research
 [pattern definitions](pattern-definitions.md),
 [derived-data ownership](research-derived-data.md), and task source/data
 contracts. Current local contents do not establish what was packaged in 2024.
@@ -112,8 +112,8 @@ a gap. Bounds can be raised explicitly for a trusted named scope, at increased
 memory cost. The preflight preserves ordinary ZIP and concatenated-prefix ZIP
 scanning within the limits; it does not certify an archive as safe or licensed.
 
-The preparation scan inspected 3,888 Stock main history blobs, 684 producer main
-history blobs and 3,895 owner-label branch history blobs. Stock's four historical
+The preparation scan inspected 3,888 stock-research main history blobs, 684 producer main
+history blobs and 3,895 owner-label branch history blobs. stock-research's four historical
 credential-URL candidates were exact redaction placeholders, not a newly found
 live token. Producer's two candidates were versions of the URL-rejection fixture
 in `tests/test_official_api.py:315`. No fixture or historical evidence was removed
@@ -121,7 +121,7 @@ to make these reports pass. Coverage gaps remain for Parquet semantics, historic
 segment combinations and two malformed UTF-16 producer history objects.
 
 After the coverage/resource fixes and integration of main
-`7f79585da2730fd01075839fbcc973d0090e1ae2`, repeat scans inspected 3,891 Stock
+`7f79585da2730fd01075839fbcc973d0090e1ae2`, repeat scans inspected 3,891 stock-research
 main history blobs (18 gaps), 684 producer history blobs (2 gaps), and 3,895
 owner-label history blobs (5 gaps). Their credential-URL candidates were the same
 four redaction placeholders and two rejection-test fixtures described above.
@@ -133,7 +133,7 @@ because GitHub reported an account billing/spending restriction, not a code
 failure. Local tests do not substitute for a successful hosted run.
 
 ```powershell
-# From Stock, after an authorized origin refresh.
+# From stock-research, after an authorized origin refresh.
 uv run python scripts/audit_public_readiness.py --repo . --ref origin/main
 uv run python scripts/audit_public_readiness.py --repo . --ref origin/main --history
 uv run python scripts/audit_public_readiness.py --repo ./stock-data-downloader --ref origin/main --history
@@ -147,7 +147,7 @@ intended published ref, including tags. Cached remote-tracking refs can include
 the deleted old branch; label those findings as **local retained history**, not
 as evidence the remote branch still exists. Fetch does not cover GitHub PR refs,
 caches, releases, Actions artifacts, issues/comments, other clones or unreachable
-objects. Initial Stock Gitleaks failed before complete coverage; it was not a clean
+objects. Initial stock-research Gitleaks failed before complete coverage; it was not a clean
 audit result.
 
 Reports belong under `.tmp/`; inspect them before sharing. Never copy actual

@@ -68,8 +68,8 @@
 
 ### 原產物定位與保存限制
 
-- 完整回交筆記目前為本機 `.tmp`：`D:/Project/Stock/.worktrees/sector-classification-eight-case-20261004/.tmp/shared-research-data-contract-20261004.md`。本報告保存上列可延續決定／限制，但不把該 `.tmp` 當永久唯一本。
-- 八案例來源包在該 worktree 的 `tasks/20261004-sector-classification-eight-case/`，分類端回報提交 `75a4c59`；原 preview 在 `D:/Project/Stock/.worktrees/sector-wave-web-contract-20261004/tasks/20261004-sector-wave-web-contract/`。此次未搬移／上傳來源包，也未獨立重驗它們的全部數字／雜湊。
+- 完整回交筆記目前為本機 `.tmp`：`<legacy-checkout>/.worktrees/sector-classification-eight-case-20261004/.tmp/shared-research-data-contract-20261004.md`。本報告保存上列可延續決定／限制，但不把該 `.tmp` 當永久唯一本。
+- 八案例來源包在該 worktree 的 `tasks/20261004-sector-classification-eight-case/`，分類端回報提交 `75a4c59`；原 preview 在 `<legacy-checkout>/.worktrees/sector-wave-web-contract-20261004/tasks/20261004-sector-wave-web-contract/`。此次未搬移／上傳來源包，也未獨立重驗它們的全部數字／雜湊。
 - 原資料 Git／備份、完整產業 evidence 隊列及分類抓取歸屬的進一步調整仍未由此次盤點核准。新批次只解決其實際遇到的重大缺口。
 
 ## 本輪驗證與下一步

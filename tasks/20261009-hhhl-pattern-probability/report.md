@@ -129,7 +129,7 @@ context：clears **9.60%**（1,530/15,945，未知 2,184）、after_decline **5.
   十筆抽查、原及更正完成紀錄、八份**當次凍結 bytes**的輸入快照。約 235 KB；
   不需原價格資料就能閱讀所有彙總，尚未接網站介面。
 - [資料契約與查詢範例](data-contract.md)：事件／控制／雜訊／轉態大表固定在
-  D:/Project/Stock/tasks/20261009-hhhl-pattern-probability/datasets/hhhl-v1-descriptive-02/。
+  D:/Project/stock-research/tasks/20261009-hhhl-pattern-probability/datasets/hhhl-v1-descriptive-02/。
   bulk／原 atlas 為本機實體資料，非新 clone 可得或災難備份。完整重算需原 atlas、
   commit 35bd7778cda505f827b056f5666fb22ca178b9bf 與相應依賴；快照不是完整獨立環境。
 - [執行與更正紀錄](execution.md)：01 未完成留存；02 同定義四程序一次完成，

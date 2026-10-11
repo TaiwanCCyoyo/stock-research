@@ -77,7 +77,7 @@
 - [x] 6.2 When the fallback path is used, add an explicit `summary.json` warning stating
       that the primary corporate-action index was unavailable.
 - [x] 6.3 Mark the yfinance dividend fetch path as deprecated in
-      `shioaji_stock_prices/README.md`.
+      `stock-data-downloader/README.md`.
 
 ## 7. Validation
 

@@ -2,7 +2,7 @@
 
 - [x] 1.1 Identify the TWSE/TPEx ISIN public data source(s) for industry category, market,
       ETF flag, and listing date.
-- [x] 1.2 Implement a fetcher writing `shioaji_stock_prices/data/symbol_meta.sqlite`
+- [x] 1.2 Implement a fetcher writing `stock-data-downloader/data/symbol_meta.sqlite`
       (or documented equivalent), recording a fetch timestamp.
 - [x] 1.3 Add a lookup helper for querying classification by code, returning an explicit
       "no data" result for unknown symbols.

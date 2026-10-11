@@ -15,18 +15,18 @@
 
 - 規則原始 bytes：本任務 `sources/hhhl_rule_v1.zip`，內含原樣的 `hhhl_rule_v1.py` 與 `detect.py`；載入前核對各成員的 SHA-256。
   [mission](mission.md) 記錄原 SHA-256。正常 Python adapter 只重綁 import seam。
-- 原資料：`D:/Project/Stock/tasks/20261004-feature-discrimination-atlas/datasets/atlas-v2`，
+- 原資料：`D:/Project/stock-research/tasks/20261004-feature-discrimination-atlas/datasets/atlas-v2`，
   完整 schema／缺值／公司事件定義沿用 [原資料契約](../20261004-feature-discrimination-atlas/data-contract.md)。
   不用最新 producer 快取替换。完整输入 manifest 驗算後使用；期間不擴張。
-- 結果保存：primary `D:/Project/Stock/tasks/20261009-hhhl-pattern-probability/datasets/<run-id>/`。
+- 結果保存：primary `D:/Project/stock-research/tasks/20261009-hhhl-pattern-probability/datasets/<run-id>/`。
   Parquet 被 Git 忽略；本機實體、非 junction、非災難備份，新 clone 無法取得。
   Git 保存 sources、adapter、此契約、報告及 `publication-v1/bundle.zip` 全彙總。
 - Producer：`scripts/build_hhhl_probability.py`；consumer：本研究報告、其他 session 的
-  pandas/Parquet 讀者。尚無網站接入或策略整合。維護責任是 Stock research_core，不是行情下載端。
+  pandas/Parquet 讀者。尚無網站接入或策略整合。維護責任是 stock-research research_core，不是行情下載端。
 
 ```powershell
-uv run python -m scripts.validate_hhhl_rule_source --dataset D:/Project/Stock/tasks/20261004-feature-discrimination-atlas/datasets/atlas-v2 --sources tasks/20261009-hhhl-pattern-probability/sources --cases tasks/20261009-hhhl-pattern-probability/sources/validation-cases.json
-uv run python -m scripts.build_hhhl_probability --dataset D:/Project/Stock/tasks/20261004-feature-discrimination-atlas/datasets/atlas-v2 --task-root tasks/20261009-hhhl-pattern-probability --output D:/Project/Stock/tasks/20261009-hhhl-pattern-probability/datasets/EXPLICIT_NEW_RUN --rule hhhl_rule_v1 --workers 4
+uv run python -m scripts.validate_hhhl_rule_source --dataset D:/Project/stock-research/tasks/20261004-feature-discrimination-atlas/datasets/atlas-v2 --sources tasks/20261009-hhhl-pattern-probability/sources --cases tasks/20261009-hhhl-pattern-probability/sources/validation-cases.json
+uv run python -m scripts.build_hhhl_probability --dataset D:/Project/stock-research/tasks/20261004-feature-discrimination-atlas/datasets/atlas-v2 --task-root tasks/20261009-hhhl-pattern-probability --output D:/Project/stock-research/tasks/20261009-hhhl-pattern-probability/datasets/EXPLICIT_NEW_RUN --rule hhhl_rule_v1 --workers 4
 ```
 
 只在固定 mission、移植驗算及必要測試完成後手動執行一次；原 run 不覆盖。

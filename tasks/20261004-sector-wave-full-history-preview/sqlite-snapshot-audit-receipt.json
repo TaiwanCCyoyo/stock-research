@@ -190,7 +190,7 @@
         "Current WAL state does not prove WAL absence at snapshot creation time.",
         "Logical equality certifies that the saved backup contains no extra logical contents beyond its pinned source main bytes."
     ],
-    "manifest_sha256": "c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140",
+    "manifest_sha256": "238e7e4aba59509bb3245ea36e9708d6d8f9b9d7c6dab9f18a9d60bba67aa6ea",
     "schema_version": "sqlite-pinned-main-logical-audit.v1",
     "source_connections_opened": 0
 }

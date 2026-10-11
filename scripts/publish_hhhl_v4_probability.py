@@ -17,6 +17,7 @@ from typing import Any
 
 from research_core.hhhl_v4_summary_validation import validate_summary_comparisons, validate_summary_payload
 from research_core.jobs import confined, file_digest
+from research_core.legacy_paths import is_legacy_location
 from scripts.validate_hhhl_v4_source import write_json
 
 LOGGER = logging.getLogger(__name__)
@@ -194,7 +195,8 @@ def _identity_map(manifest: dict[str, Any]) -> dict[str, str]:
 
 
 def _identity_path_is_absolute(value: str) -> bool:
-    return Path(value).is_absolute() or PurePosixPath(value).is_absolute() or PureWindowsPath(value).is_absolute()
+    """A native absolute path, or a recorded predecessor location that stood for one."""
+    return is_legacy_location(value) or Path(value).is_absolute() or PurePosixPath(value).is_absolute() or PureWindowsPath(value).is_absolute()
 
 
 def _validate_relative_identity_path(value: str) -> None:

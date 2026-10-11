@@ -80,8 +80,8 @@ F10＋F37 10.17–24.16%、F32＋F37 8.00–21.46%、F33＋F37 7.07–23.18%。
   7 個檔案、705,803 bytes；完整 624 比較、1,872 路徑摘要及配對／晉級資料皆保留，
   不是只有上表。Git 可攜副本附完整 packet、receipt、原程式／契約 ZIP。
 - 原 run：`tasks/20261005-method-environment-interactions/runs/registered/interactions-v1`，
-  位於 `D:/Project/Stock/.worktrees/research-workspace-20261003`，本機保留不覆寫。
-- atlas 原大型資料另有 `D:/Project/Stock/tasks/20261004-feature-discrimination-atlas/datasets/atlas-v2`
+  位於 `<legacy-checkout>/.worktrees/research-workspace-20261003`，本機保留不覆寫。
+- atlas 原大型資料另有 `D:/Project/stock-research/tasks/20261004-feature-discrimination-atlas/datasets/atlas-v2`
   實體副本。此新封裝不包含 bulk，也不增加異地備份；不刪除來源 worktree。
 - 程式與規則提交 `7183118`，執行封包提交 `6f59919`；兩者均早於市場比較。
   一次完成，70.53 秒，沒有重試或參數更動。44 個新增合成測試與正常 hooks 通過。

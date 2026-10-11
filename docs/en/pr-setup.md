@@ -1,14 +1,14 @@
 # Enable PR Delivery in a Downstream Project
 
-Stock status (2026-09-20): CI and hosted review already work. GitHub Free supports private-repository Actions with included usage; private-repository branch rulesets require Pro or another supported plan. Do not confuse running CI with enforcing it.
+stock-research status (2026-09-20): CI and hosted review already work. GitHub Free supports private-repository Actions with included usage; private-repository branch rulesets require Pro or another supported plan. Do not confuse running CI with enforcing it.
 
 Reset the [Git workflow contract](git-workflow.md) to local-only when adopting this template, then follow this guide to enable delivery deliberately. This guide is for repository owners. It does not grant agents setup, publishing, or administration authority, and copying the template configures none of it.
 
-Stock's current configuration status is documented in [PR review](pr-review.md).
+stock-research's current configuration status is documented in [PR review](pr-review.md).
 
 ## 1. Choose an identity model
 
-**Shared identity (used upstream; proposed for Stock).** Agent sessions push task branches and open pull requests with the owner's own GitHub credentials, so agent-authored commits are attributed to the owner. Distinguish agent work by branch prefix and commit message, not by identity.
+**Shared identity (used upstream; proposed for stock-research).** Agent sessions push task branches and open pull requests with the owner's own GitHub credentials, so agent-authored commits are attributed to the owner. Distinguish agent work by branch prefix and commit message, not by identity.
 
 This is the simplest option and needs no App, no private key, and no token helper. Its cost is explicit: **agent and owner share one identity, so there is no enforced separation between roles.** Accept that limitation knowingly, or do not use this model.
 

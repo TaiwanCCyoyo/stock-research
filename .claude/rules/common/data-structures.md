@@ -7,8 +7,8 @@ derived facts is a cost paid forever.
 
 Owner update 2026-10-08: source acquisition/normalization stay in the producer;
 research price policies, indicators, support/resistance, patterns and immutable
-derived caches now belong in Stock. See [derived-data ownership](../../../docs/en/research-derived-data.md).
-New reusable research derivatives are built in Stock, not new producer columns.
+derived caches now belong in stock-research. See [derived-data ownership](../../../docs/en/research-derived-data.md).
+New reusable research derivatives are built in stock-research, not new producer columns.
 Producer SMA/EMA removal and technical_features migration follow a separate
 isolated producer PR after replacement availability and frozen legacy inputs;
 this does not authorize rewriting old data or invalidating saved results.
@@ -22,7 +22,7 @@ something every study currently recomputes. Prefer additive or versioned artifac
 while checking consumer compatibility and stored-result interpretation. Preserve
 backup/restore and scheduled daily/backfill behavior. Development, two-repository
 delivery and canonical data updates follow
-[Stock agent operations](../../../docs/en/stock-agent-operations.md#submodule-development-and-delivery).
+[stock-research agent operations](../../../docs/en/stock-agent-operations.md#submodule-development-and-delivery).
 
 Three conditions bound this, and the third is the one that has already gone wrong.
 
@@ -132,7 +132,7 @@ declaring acquisition work done.
 `stock-data-downloader` is its own git repository. A delegated committer must not
 commit inside it. Under the owner's scoped data-improvement authorization, finish
 the producer PR/review, wait for owner merge, safely update its primary `main`, then
-deliberately update Stock's gitlink and deliver the Stock PR. Report pending merges
+deliberately update stock-research's gitlink and deliver the stock-research PR. Report pending merges
 or production/data handoffs; a local commit or staged gitlink alone is not completion.
 Follow [delivery authorization](../../../docs/en/git-workflow.md#delivery-authorization)
 without asking again for stages already authorized by the owner.

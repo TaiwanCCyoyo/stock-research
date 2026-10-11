@@ -723,7 +723,7 @@ def test_portable_reader_accepts_foreign_windows_bulk_locator(synthetic_run: tup
     output = tmp_path / "foreign-location-publication"
     publish(run, output)
     metadata = json.loads((output / PUBLICATION_NAME).read_bytes())
-    metadata["bulk_location"] = "D:/Project/Stock/tasks/saved-only-run"
+    metadata["bulk_location"] = "E:/Research/tasks/saved-only-run"
     _rewrite_publication(output, metadata)
     result = verify_publication(output)
     assert result["metadata"]["bulk_location"] == metadata["bulk_location"]

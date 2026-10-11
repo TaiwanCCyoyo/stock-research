@@ -323,7 +323,7 @@ train. What is missing is not bear data but a mechanism that reads the regime.
 | short selling                                           | not supported by the engine                                         |
 
 So raising cash and rotating into 0050 are both buildable now. Hedging with an inverse ETF is
-not, and would be `shioaji_stock_prices` work before it could be tested.
+not, and would be `stock-data-downloader` work before it could be tested.
 
 **One trap on the way in.** Measured on unadjusted closes, 0050 returned -66.2% in 2025 with a
 -77.2% drawdown, which reads as a crash. It is a 4-for-1 split on 2025-06-18 (`price_factor`

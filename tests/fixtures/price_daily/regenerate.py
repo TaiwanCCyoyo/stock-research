@@ -1,6 +1,6 @@
 """Regenerate price_daily.parquet from rows.json with the pinned stock-data-downloader.
 
-Stock only consumes the producer's data; it never runs producer code in its tests or CI.
+stock-research only consumes the producer's data; it never runs producer code in its tests or CI.
 This script is the one place that does, by hand, when the producer's parquet format
 changes: it writes rows.json as {code}_day.csv files into a scratch directory, runs the
 submodule's build_price_parquet there, and copies the result next to this file.

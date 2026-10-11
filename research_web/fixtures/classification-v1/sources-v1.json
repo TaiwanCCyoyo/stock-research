@@ -4,7 +4,7 @@
     {
       "source_id": "catalog:securities-0001.json.gz",
       "source_type": "preserved-catalog-chunk",
-      "local_path": "D:\\Project\\Stock\\.worktrees\\sector-wave-catalog\\tasks\\20261002-sector-wave-catalog\\catalog-v1\\chunks\\securities-0001.json.gz",
+      "local_path": "<legacy-checkout>\\.worktrees\\sector-wave-catalog\\tasks\\20261002-sector-wave-catalog\\catalog-v1\\chunks\\securities-0001.json.gz",
       "repository_commit": "9913d4eb891454a69b05cf4fa4d1541a0d60af11",
       "repository_path": "tasks/20261002-sector-wave-catalog/catalog-v1/chunks/securities-0001.json.gz",
       "content_digest": {
@@ -17,7 +17,7 @@
     {
       "source_id": "catalog:securities-0002.json.gz",
       "source_type": "preserved-catalog-chunk",
-      "local_path": "D:\\Project\\Stock\\.worktrees\\sector-wave-catalog\\tasks\\20261002-sector-wave-catalog\\catalog-v1\\chunks\\securities-0002.json.gz",
+      "local_path": "<legacy-checkout>\\.worktrees\\sector-wave-catalog\\tasks\\20261002-sector-wave-catalog\\catalog-v1\\chunks\\securities-0002.json.gz",
       "repository_commit": "9913d4eb891454a69b05cf4fa4d1541a0d60af11",
       "repository_path": "tasks/20261002-sector-wave-catalog/catalog-v1/chunks/securities-0002.json.gz",
       "content_digest": {
@@ -30,7 +30,7 @@
     {
       "source_id": "catalog:securities-0003.json.gz",
       "source_type": "preserved-catalog-chunk",
-      "local_path": "D:\\Project\\Stock\\.worktrees\\sector-wave-catalog\\tasks\\20261002-sector-wave-catalog\\catalog-v1\\chunks\\securities-0003.json.gz",
+      "local_path": "<legacy-checkout>\\.worktrees\\sector-wave-catalog\\tasks\\20261002-sector-wave-catalog\\catalog-v1\\chunks\\securities-0003.json.gz",
       "repository_commit": "9913d4eb891454a69b05cf4fa4d1541a0d60af11",
       "repository_path": "tasks/20261002-sector-wave-catalog/catalog-v1/chunks/securities-0003.json.gz",
       "content_digest": {
@@ -43,7 +43,7 @@
     {
       "source_id": "catalog:securities-0005.json.gz",
       "source_type": "preserved-catalog-chunk",
-      "local_path": "D:\\Project\\Stock\\.worktrees\\sector-wave-catalog\\tasks\\20261002-sector-wave-catalog\\catalog-v1\\chunks\\securities-0005.json.gz",
+      "local_path": "<legacy-checkout>\\.worktrees\\sector-wave-catalog\\tasks\\20261002-sector-wave-catalog\\catalog-v1\\chunks\\securities-0005.json.gz",
       "repository_commit": "9913d4eb891454a69b05cf4fa4d1541a0d60af11",
       "repository_path": "tasks/20261002-sector-wave-catalog/catalog-v1/chunks/securities-0005.json.gz",
       "content_digest": {
@@ -56,7 +56,7 @@
     {
       "source_id": "catalog:securities-0008.json.gz",
       "source_type": "preserved-catalog-chunk",
-      "local_path": "D:\\Project\\Stock\\.worktrees\\sector-wave-catalog\\tasks\\20261002-sector-wave-catalog\\catalog-v1\\chunks\\securities-0008.json.gz",
+      "local_path": "<legacy-checkout>\\.worktrees\\sector-wave-catalog\\tasks\\20261002-sector-wave-catalog\\catalog-v1\\chunks\\securities-0008.json.gz",
       "repository_commit": "9913d4eb891454a69b05cf4fa4d1541a0d60af11",
       "repository_path": "tasks/20261002-sector-wave-catalog/catalog-v1/chunks/securities-0008.json.gz",
       "content_digest": {
@@ -69,7 +69,7 @@
     {
       "source_id": "catalog:groups-0001.json.gz",
       "source_type": "preserved-catalog-chunk",
-      "local_path": "D:\\Project\\Stock\\.worktrees\\sector-wave-catalog\\tasks\\20261002-sector-wave-catalog\\catalog-v1\\chunks\\groups-0001.json.gz",
+      "local_path": "<legacy-checkout>\\.worktrees\\sector-wave-catalog\\tasks\\20261002-sector-wave-catalog\\catalog-v1\\chunks\\groups-0001.json.gz",
       "repository_commit": "9913d4eb891454a69b05cf4fa4d1541a0d60af11",
       "repository_path": "tasks/20261002-sector-wave-catalog/catalog-v1/chunks/groups-0001.json.gz",
       "content_digest": {
@@ -82,7 +82,7 @@
     {
       "source_id": "catalog:taxonomy_nodes-0001.json.gz",
       "source_type": "preserved-catalog-chunk",
-      "local_path": "D:\\Project\\Stock\\.worktrees\\sector-wave-catalog\\tasks\\20261002-sector-wave-catalog\\catalog-v1\\chunks\\taxonomy_nodes-0001.json.gz",
+      "local_path": "<legacy-checkout>\\.worktrees\\sector-wave-catalog\\tasks\\20261002-sector-wave-catalog\\catalog-v1\\chunks\\taxonomy_nodes-0001.json.gz",
       "repository_commit": "9913d4eb891454a69b05cf4fa4d1541a0d60af11",
       "repository_path": "tasks/20261002-sector-wave-catalog/catalog-v1/chunks/taxonomy_nodes-0001.json.gz",
       "content_digest": {
@@ -95,7 +95,7 @@
     {
       "source_id": "catalog:taxonomy_nodes-0002.json.gz",
       "source_type": "preserved-catalog-chunk",
-      "local_path": "D:\\Project\\Stock\\.worktrees\\sector-wave-catalog\\tasks\\20261002-sector-wave-catalog\\catalog-v1\\chunks\\taxonomy_nodes-0002.json.gz",
+      "local_path": "<legacy-checkout>\\.worktrees\\sector-wave-catalog\\tasks\\20261002-sector-wave-catalog\\catalog-v1\\chunks\\taxonomy_nodes-0002.json.gz",
       "repository_commit": "9913d4eb891454a69b05cf4fa4d1541a0d60af11",
       "repository_path": "tasks/20261002-sector-wave-catalog/catalog-v1/chunks/taxonomy_nodes-0002.json.gz",
       "content_digest": {
@@ -108,7 +108,7 @@
     {
       "source_id": "catalog:taxonomy_nodes-0003.json.gz",
       "source_type": "preserved-catalog-chunk",
-      "local_path": "D:\\Project\\Stock\\.worktrees\\sector-wave-catalog\\tasks\\20261002-sector-wave-catalog\\catalog-v1\\chunks\\taxonomy_nodes-0003.json.gz",
+      "local_path": "<legacy-checkout>\\.worktrees\\sector-wave-catalog\\tasks\\20261002-sector-wave-catalog\\catalog-v1\\chunks\\taxonomy_nodes-0003.json.gz",
       "repository_commit": "9913d4eb891454a69b05cf4fa4d1541a0d60af11",
       "repository_path": "tasks/20261002-sector-wave-catalog/catalog-v1/chunks/taxonomy_nodes-0003.json.gz",
       "content_digest": {
@@ -121,19 +121,19 @@
     {
       "source_id": "catalog:manifest",
       "source_type": "preserved-research-artifact",
-      "local_path": "D:\\Project\\Stock\\.worktrees\\sector-wave-catalog\\tasks\\20261002-sector-wave-catalog\\catalog-v1\\manifest.json",
+      "local_path": "<legacy-checkout>\\.worktrees\\sector-wave-catalog\\tasks\\20261002-sector-wave-catalog\\catalog-v1\\manifest.json",
       "repository_commit": "9913d4eb891454a69b05cf4fa4d1541a0d60af11",
       "repository_path": "tasks/20261002-sector-wave-catalog/catalog-v1/manifest.json",
       "content_digest": {
         "algorithm": "sha256",
         "basis": "raw-file-bytes",
-        "value": "a38d6e66f8a1f92d958db1c38258e32eb3d83f44df56d6758960d2aae8fa0e56"
+        "value": "0b3f2974921832ee77ccebe344685f976a198b30300912550d3582bc1ee29fa6"
       }
     },
     {
       "source_id": "preview:classification-snapshot",
       "source_type": "preserved-research-artifact",
-      "local_path": "D:\\Project\\Stock\\.worktrees\\sector-wave-web-contract-20261004\\tasks\\20261004-sector-wave-web-contract\\classification-snapshot.json",
+      "local_path": "<legacy-checkout>\\.worktrees\\sector-wave-web-contract-20261004\\tasks\\20261004-sector-wave-web-contract\\classification-snapshot.json",
       "repository_commit": "fac041c88a96ff9ee5bceb36602422635756d066",
       "repository_path": "tasks/20261004-sector-wave-web-contract/classification-snapshot.json",
       "content_digest": {
@@ -145,13 +145,13 @@
     {
       "source_id": "role-evidence:packet",
       "source_type": "preserved-research-artifact",
-      "local_path": "D:\\Project\\Stock\\.worktrees\\sector-role-evidence\\tasks\\20261002-sector-role-evidence\\evidence-v1.json",
+      "local_path": "<legacy-checkout>\\.worktrees\\sector-role-evidence\\tasks\\20261002-sector-role-evidence\\evidence-v1.json",
       "repository_commit": "284a73b2e518bc7512e1b6095cf42b47f8cc773b",
       "repository_path": "tasks/20261002-sector-role-evidence/evidence-v1.json",
       "content_digest": {
         "algorithm": "sha256",
         "basis": "raw-file-bytes",
-        "value": "46a1d729011d59b7429c59b9000b0b6e7be5c71a4e8673be0232f46ed66e729b"
+        "value": "fe24ecd3be61611c8be93ca3191e1a0e99f31e5234e68fd27592dde06d7b2001"
       }
     },
     {
@@ -325,7 +325,7 @@
       "source_type": "company-annual-report",
       "title": "陽明海運2021年度年報（110年度）",
       "url": "https://e-solution.yangming.com/files/Investor_Relations/110Annual.pdf",
-      "local_path": "D:\\Project\\Stock\\.worktrees\\sector-classification-eight-case-20261004\\.tmp\\classification-sources\\yangming-2021-annual.pdf",
+      "local_path": "<legacy-checkout>\\.worktrees\\sector-classification-eight-case-20261004\\.tmp\\classification-sources\\yangming-2021-annual.pdf",
       "content_digest": {
         "algorithm": "sha256",
         "basis": "raw-file-bytes",

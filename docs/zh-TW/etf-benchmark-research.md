@@ -89,7 +89,7 @@ SMH 官網頁首另外顯示截至 2026-09-30 的 YTD 68.93%，但頁首未同�
 4. **方法卡與持股卡分開。** 方法卡列官方規則、版本、生效日、公開程度；持股卡列該期持股、股票／期貨／現金及權重分母。AI 的解釋必須另標「推論」，不可裝成投信官方決策。
 5. **比較資料是獨立可版本化物件。** 建議含 `instrument_id`、`domicile`、`exchange`、`currency`、`benchmark_role`、`methodology_version`、`effective_at`、`as_of`、`published_at`、`retrieved_at`、`source_url`、`source_content_hash`、`return_basis`、`distribution_policy`、`fee_basis`、`tax_basis`、`period_start/end`、`annualized`、`coverage`、`missing_reason`。來源原數不可被 UI 四捨五入或換匯結果覆蓋。
 6. **缺口仍可漂亮呈現。** 狀態可顯示「官方資料截至 8 月底」、「只有季報」、「尚未核對配息計算法」、「最新持股未取得」，而不是空白、零或不知來源的補值。方法頁與來源頁可以正常開啟，未具備同口徑的排行／比較曲線維持停用。
-7. **取得資料與展示分工。** 日後行情、分配、匯率與持股擷取／正規化按本專案責任邊界放入 `shioaji_stock_prices`；此文件沒有新增擷取腳本。研究網站讀取具來源與版本的產物，前端不能以抓網頁的方式在使用者點擊時悄悄改掉歷史數字。
+7. **取得資料與展示分工。** 日後行情、分配、匯率與持股擷取／正規化按本專案責任邊界放入 `stock-data-downloader`；此文件沒有新增擷取腳本。研究網站讀取具來源與版本的產物，前端不能以抓網頁的方式在使用者點擊時悄悄改掉歷史數字。
 
 ## 未完成缺口與邊界
 

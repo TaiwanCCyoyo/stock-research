@@ -170,18 +170,3 @@ def test_retained_generators_resolve_inputs_without_running_research(tmp_path: P
     )
     roots = [Path(value) for value in json.loads(result.stdout)]
     assert roots and all(value == expected for value in roots)
-
-
-def test_retained_legacy_checkout_is_not_accidentally_stageable(tmp_path: Path) -> None:
-    repo = tmp_path / "migration checkout"
-    repo.mkdir()
-    subprocess.run(["git", "init", str(repo)], capture_output=True, check=True)
-    (repo / ".gitignore").write_bytes((REPO_ROOT / ".gitignore").read_bytes())
-    legacy = repo / "shioaji_stock_prices"
-    legacy.mkdir()
-    subprocess.run(["git", "init", str(legacy)], capture_output=True, check=True)
-    (legacy / "data").mkdir()
-    (legacy / "data" / "official_daily.sqlite").write_bytes(b"synthetic private input")
-    subprocess.run(["git", "-C", str(repo), "add", "-A"], capture_output=True, check=True)
-    result = subprocess.run(["git", "-C", str(repo), "ls-files", "-z"], capture_output=True, check=True)
-    assert result.stdout.split(b"\0") == [b".gitignore", b""]

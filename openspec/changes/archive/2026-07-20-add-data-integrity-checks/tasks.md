@@ -1,7 +1,7 @@
 ## 1. `research_api` endpoint
 
 - [x] 1.1 Add `GET /data-quality` to `research_api/main.py`: probe candidate paths for
-      `shioaji_stock_prices/data/data_quality_report.json` (mirroring the pattern in
+      `stock-data-downloader/data/data_quality_report.json` (mirroring the pattern in
       `StockProject/engine/data_loader.py:241`'s `_resolve_corporate_action_db`).
 - [x] 1.2 Return the report contents as-is when found; return a neutral "not yet checked"
       response (not a 404/500) when the file does not exist.
@@ -35,7 +35,7 @@ directly in a browser via 5.4, which asserts the same two behaviors this task wo
 - [x] 4.1 Apply this change's `price-data-pipeline` spec delta to
       `openspec/specs/price-data-pipeline/spec.md`, removing producer-side requirements now
       owned by the submodule's own baseline and keeping only the artifact-contract requirements
-      Stock depends on.
+      stock-research depends on.
 
 ## 5. Validation
 

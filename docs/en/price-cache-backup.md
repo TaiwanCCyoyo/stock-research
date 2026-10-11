@@ -12,7 +12,7 @@ own README documents the commands.
 ## Why this exists
 
 On 2026-08-13, `git worktree remove` was run against a worktree whose
-`shioaji_stock_prices/data` was an NTFS junction pointing at the main
+`stock-data-downloader/data` was an NTFS junction pointing at the main
 checkout. The removal traversed the junction and deleted ~4000 per-symbol
 CSVs from the canonical cache. There was no backup, and Volume Shadow Copy
 was not enabled on the drive, so the only recovery path was re-downloading
@@ -259,15 +259,15 @@ Repeat the drill after any change to the backup code. Restoring a handful of
 files takes minutes and is the only thing that turns an assumption into a
 fact.
 
-## Stock research data backup
+## stock-research research data backup
 
-Owner decision 2026-10-08 adds a separate Stock scope: `research_cache/`, formal
+Owner decision 2026-10-08 adds a separate stock-research scope: `research_cache/`, formal
 `tasks/*/datasets/`, and `tasks/20261010-owner-hhhl-labels/` when Claude has delivered
 it. Producer source backups above remain unchanged. This is an explicit command,
 not a new schedule or an extension of `run_daily`.
 
 ```powershell
-uv run python -m scripts.backup_research_data backup --project D:/Project/Stock --destination D:/StockResearchBackup
+uv run python -m scripts.backup_research_data backup --project D:/Project/stock-research --destination D:/StockResearchBackup
 uv run python -m scripts.backup_research_data verify D:/StockResearchBackup/snapshots/EXPLICIT_DIGEST.json
 uv run python -m scripts.backup_research_data restore D:/StockResearchBackup/snapshots/EXPLICIT_DIGEST.json --destination D:/StockResearchRestore/NEW_DRILL_DIRECTORY
 ```

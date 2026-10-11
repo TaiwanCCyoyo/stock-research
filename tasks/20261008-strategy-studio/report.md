@@ -11,7 +11,7 @@ Subsequent Claude review fixes are documented separately in
 verification below retain their original scope.
 
 Base: refreshed local `main` and task branch at `f9d67e2`, in the retained
-`D:/Project/Stock/.worktrees/strategy-presentation` checkout. Task branch:
+`<legacy-checkout>/.worktrees/strategy-presentation` checkout. Task branch:
 `codex/strategy-studio-next-20261008`. No original mission, source prices, saved
 run, wave rule, scheduler or producer data was changed. Unrelated
 `.claude/launch.json` remains unstaged.

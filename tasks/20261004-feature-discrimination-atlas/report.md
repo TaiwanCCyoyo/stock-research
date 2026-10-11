@@ -171,12 +171,12 @@ parent 已完成的驗證為：95 個測試通過、1 個 Windows symlink 權限
 本報告編寫未重跑研究或讀取市場來源檔。
 
 權威輸出：[runs/registered/atlas-v2](runs/registered/atlas-v2)，資料身分為
-`fda-86245f2e223fc45c9f84afb0dcf77c1fff7ab22d0a1b0b4a4c8800972ce9327e`。
+`fda-e712fc9408c147ae410a2fc0a687ef6f1dba785cab8cfb0312f79c504c6c5206`。
 結果封套保留 [research_result.json](research_result.json) 的
 `strategy_evaluation_status=not_evaluated`。
 
 實體第二份輸出保存於
-`D:\Project\Stock\tasks\20261004-feature-discrimination-atlas\datasets\atlas-v2`；
+`D:\Project\stock-research\tasks\20261004-feature-discrimination-atlas\datasets\atlas-v2`；
 宣告來源、程式與合約的重播位元組保存於同目錄下 `atlas-v2-inputs`。
 它們與 worktree 位於同一實體磁碟，是同機冗餘，不是災難備份；只取得 Git
 clone 不會取得被忽略的大型資料或原始快照。後續消費須讀 manifest 驗證的

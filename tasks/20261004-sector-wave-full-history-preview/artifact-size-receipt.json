@@ -2,9 +2,9 @@
     "schema_version": "opportunity-artifact-size-receipt.v1",
     "catalogs": {
         "catalog-v1": {
-            "manifest_path": "D:\\Project\\Stock\\.worktrees\\sector-wave-full-history-preview-20261004\\tasks\\20261004-sector-wave-full-history-preview\\catalog-v1\\manifest.json",
-            "manifest_sha256": "a3286f672527a69120b7802b6fda8aa3d56226845bfd3806b248cd9367c1535a",
-            "manifest_bytes": 1560206,
+            "manifest_path": "<legacy-checkout>\\.worktrees\\sector-wave-full-history-preview-20261004\\tasks\\20261004-sector-wave-full-history-preview\\catalog-v1\\manifest.json",
+            "manifest_sha256": "5c501a00d3eb1127815ce489c9720a4fd799add08a494e34baa7182a909bc655",
+            "manifest_bytes": 1560202,
             "tables": {
                 "baseline_waves": {
                     "count": 53188,
@@ -70,12 +70,12 @@
             "calendar_bytes": 53599,
             "metadata_mirror_bytes": 1052097,
             "metadata_mirror_file_count": 12,
-            "publication_index_sha256": "750d1e2b6416d5b286c89baeac549a9cfc625b514a4fd9d53069192713cb01ff"
+            "publication_index_sha256": "aea3ea8a026805603db99968ac2e69e21a8255fb270456fc706033e675f30904"
         },
         "catalog-v2": {
-            "manifest_path": "D:\\Project\\Stock\\.worktrees\\sector-wave-full-history-preview-20261004\\tasks\\20261004-sector-wave-full-history-preview\\catalog-v2\\manifest.json",
-            "manifest_sha256": "c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140",
-            "manifest_bytes": 1560858,
+            "manifest_path": "<legacy-checkout>\\.worktrees\\sector-wave-full-history-preview-20261004\\tasks\\20261004-sector-wave-full-history-preview\\catalog-v2\\manifest.json",
+            "manifest_sha256": "238e7e4aba59509bb3245ea36e9708d6d8f9b9d7c6dab9f18a9d60bba67aa6ea",
+            "manifest_bytes": 1560854,
             "tables": {
                 "baseline_waves": {
                     "count": 53188,
@@ -141,7 +141,7 @@
             "calendar_bytes": 53599,
             "metadata_mirror_bytes": 1052495,
             "metadata_mirror_file_count": 12,
-            "publication_index_sha256": "5c99b23a26e552081ee3fa4867c7a82b052ad33f0631c10fda0ba3a63676d614"
+            "publication_index_sha256": "bc543f009f061144db10053655ac08be16f66aac956a841834729af31a8ce214"
         }
     },
     "input_snapshot_bytes": 239760707,

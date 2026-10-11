@@ -6,7 +6,7 @@
     "candidate_id": "rotation_ranker_v14__k5_er30_all",
     "identities": {
         "code": "tasks/20260908-executable-fills/candidates/rotation_ranker_v14.py",
-        "data_snapshot": "shioaji_stock_prices/data + tasks/20260824-ranking-horizon/features_v2.parquet",
+        "data_snapshot": "stock-data-downloader/data + tasks/20260824-ranking-horizon/features_v2.parquet",
         "execution_contract": "tasks/20260908-executable-fills/candidates/execution_model.py",
         "metric_contract": "tasks/20260908-executable-fills/mission.md#6",
         "owner_contract": "docs/en/research-owner-contract.md@2026-09-08",

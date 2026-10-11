@@ -1,15 +1,15 @@
 {
   "schema_version": "feature-atlas-publication.v2",
-  "publication_id": "feature-atlas-publication.v2-97453fbe244299c1d8a375a71eeb7811d825d081e3aff46309027988391a1e3a",
-  "dataset_id": "fda-86245f2e223fc45c9f84afb0dcf77c1fff7ab22d0a1b0b4a4c8800972ce9327e",
+  "publication_id": "feature-atlas-publication.v2-15dbabb3a954aca518d8886aa322c3b9148e09fc47e8f4a2b5680891be663480",
+  "dataset_id": "fda-e712fc9408c147ae410a2fc0a687ef6f1dba785cab8cfb0312f79c504c6c5206",
   "run_id": "atlas-v2",
-  "source_manifest_sha256": "87f0fd48e620a270b5ea5e6da82f1bcb18e6319dfe6a1a5b4388848869fb41ef",
-  "comparison_original_sha256": "ffd7fcc3b01948909413d2d1d1840540a60916a7759c4b6ca0a2fbeedda62fc5",
+  "source_manifest_sha256": "4a11326c2755928e4fcc6a3cb84d6e380f0742919cc66208d3f5932675581cef",
+  "comparison_original_sha256": "4d09878fbcee364d1a28d7e9fef5c73725b52220f07718aa4e37cf1690e66424",
   "files": [
     {
       "path": "comparisons.json.xz",
-      "sha256": "da0c168e1e95ea6ad3612618518268d000a655769e808bff1d932871461ed383",
-      "bytes": 418040
+      "sha256": "95f7207d915ec5ddd75a4aef1ae3794012d69b85bd28dc6da7833c9eed55925a",
+      "bytes": 418080
     },
     {
       "path": "definitions.json",
@@ -18,12 +18,12 @@
     },
     {
       "path": "summary.json",
-      "sha256": "cc2e3ac4f10eae8c2e937f34f2d1cce55a09686cd0215bc19aae8ecff91e481d",
+      "sha256": "6cef23ae30a65560fcb92f8846b21f519cf8bea1df4535b7fcc9eb7fe039f6ca",
       "bytes": 1486
     },
     {
       "path": "source-manifest.json",
-      "sha256": "87f0fd48e620a270b5ea5e6da82f1bcb18e6319dfe6a1a5b4388848869fb41ef",
+      "sha256": "4a11326c2755928e4fcc6a3cb84d6e380f0742919cc66208d3f5932675581cef",
       "bytes": 374454
     }
   ],
@@ -57,13 +57,13 @@
   "interpretation": "Preserved descriptive exploration; missing-outcome bounds are not confidence intervals; price-path metrics are not account performance. Original warnings and model stage remain in summary.json and definitions.json.",
   "bulk_locations": [
     {
-      "path": "D:/Project/Stock/tasks/20261004-feature-discrimination-atlas/datasets/atlas-v2",
+      "path": "D:/Project/stock-research/tasks/20261004-feature-discrimination-atlas/datasets/atlas-v2",
       "availability": "local_same_drive_nonportable",
       "off_machine_backup": false,
       "verified_by_publication": false
     },
     {
-      "path": "D:/Project/Stock/.worktrees/research-workspace-20261003/tasks/20261004-feature-discrimination-atlas/runs/registered/atlas-v2",
+      "path": "<legacy-checkout>/.worktrees/research-workspace-20261003/tasks/20261004-feature-discrimination-atlas/runs/registered/atlas-v2",
       "availability": "local_same_drive_nonportable",
       "off_machine_backup": false,
       "verified_by_publication": false

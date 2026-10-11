@@ -11,9 +11,9 @@
 producer 仍有 convert_stock_price.py 的 rounded 四組 SMA／EMA、build_price_parquet.py 合併後重算及 shp_utils/technical_components.py 的 opt-in unrounded cache。刪欄前必須：
 
 1. 檢查其他 active worktree／外部 consumer 並通知現用 session；本次未取得通知回執。
-2. 保存舊 parquet／日 CSV／technical_features 所需輸入、版本與備份；本次 Stock 備份不涵蓋 producer 全資料。
-3. 檢查 producer 命令／tests／backup，隔離 producer PR 交付；不能只從 Stock 搜不到就刪。
-4. owner merge 後协调 writer／scheduler，以新版產物部署，不原地刪舊欄或覆寫歷史；再發 Stock gitlink PR。
+2. 保存舊 parquet／日 CSV／technical_features 所需輸入、版本與備份；本次 stock-research 備份不涵蓋 producer 全資料。
+3. 檢查 producer 命令／tests／backup，隔離 producer PR 交付；不能只從 stock-research 搜不到就刪。
+4. owner merge 後协调 writer／scheduler，以新版產物部署，不原地刪舊欄或覆寫歷史；再發 stock-research gitlink PR。
 
 ## 46 個 Git 登記工作區
 
@@ -21,7 +21,7 @@ dirty 是 tracked status 數；日價只查實體 price_daily.parquet 存在，�
 
 | 工作區                                    | 用途推論／狀態                 | dirty | 日價 |
 | ----------------------------------------- | ------------------------------ | ----: | ---- |
-| D:/Project/Stock                          | primary                        |     1 | 有   |
+| D:/Project/stock-research                 | primary                        |     1 | 有   |
 | C:4229/Stock                              | v4 變體研究                    |     0 | 無   |
 | C:5472/Stock                              | 本架構 task                    |     2 | 無   |
 | C:83b2/Stock                              | detached 檢查點                |     0 | 無   |
@@ -68,4 +68,4 @@ dirty 是 tracked status 數；日價只查實體 price_daily.parquet 存在，�
 | sync-starter-kit-communication-20261003   | 溝通流程                       |     0 | 有   |
 | update-price-submodule-20261003           | gitlink 更新                   |     0 | 有   |
 
-D 名稱相對 D:/Project/Stock/.worktrees/，C 名稱相對 C:/Users/xjp01/.codex/worktrees/。下一輪補各 PR 狀態、untracked／ignored 尺寸與唯一資料保存位置，再由擁有者逐項決定；本表不提供刪除保證。
+D 名稱相對 <legacy-checkout>/.worktrees/，C 名稱相對 C:/Users/xjp01/.codex/worktrees/。下一輪補各 PR 狀態、untracked／ignored 尺寸與唯一資料保存位置，再由擁有者逐項決定；本表不提供刪除保證。

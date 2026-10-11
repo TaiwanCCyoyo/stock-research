@@ -28,7 +28,7 @@ PRICE_HASHES = {
     "twse-recovered": "4c2d7844546bf70aa15f76932b8d8d859814d00af1ad71fae9cd627f43730f4d",  # pragma: allowlist secret - artifact checksum
 }
 MEMBERSHIP_HASH = "9356d2148252d92918cc0967e06aa97ffe2f251a6f098bb7279d9d9666d09062"  # pragma: allowlist secret - artifact checksum
-FACTOR_HASH = "aa1dfabe51795ad5264e2839b725a56e3c681f106c5ab06b8e5333b2f44b8dab"  # pragma: allowlist secret - artifact checksum
+FACTOR_HASH = "1e2bca559137c0e7ff87037ba5889e05a3192fbae6b00839961db606482b1c3a"  # pragma: allowlist secret - artifact checksum
 FACTOR_MODEL_HASH = "f2ebe2d2d9bb079c03846fbadba1e7307bff62bd9b53b6b5542bd3f20bfafa66"  # pragma: allowlist secret - artifact checksum
 BAR_TIME_POLICY = "development-raw-close-effective-evening-v1"
 KEYS = ["market", "code", "date"]

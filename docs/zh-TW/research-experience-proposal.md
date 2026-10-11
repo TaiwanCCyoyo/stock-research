@@ -99,7 +99,7 @@ Owner 進一步要求修正通用規則，不能針對航運或任何已知贏�
 
 本次只讀已保存的 catalog，驗證檔案／參照；不執行 builder，不重新計算行情或修改分類 producer。v1 驗證通過也不等於分類在歷史當時可知。
 
-分類 session 另提供第一批 `sector-classification-evidence.v1` 角色補證；本輪依其審查修正，唯讀核對 head `dff0902`、packet canonical SHA `a57f081300b1bdd1ff600e0501fb7e7fc511041ba557ac57bf3f5a3fdef944e8`，packet／receipt／原 catalog validator 通過。218 檔核對範圍中，18 檔有至少一個已核對角色，200 檔待核實，保留 23 assertions 與 21 來源。此為審查中的補證入口，尚未接入概念或正式網站；固定入口與責任見 [交接契約](sector-wave-web-handoff.md)。
+分類 session 另提供第一批 `sector-classification-evidence.v1` 角色補證；本輪依其審查修正，唯讀核對 head `dff0902`、packet canonical SHA `f03fcf7ad6c1fce41fd8faca41fc6e87c043618a5e1299968fe1fa0dad35da85`，packet／receipt／原 catalog validator 通過。218 檔核對範圍中，18 檔有至少一個已核對角色，200 檔待核實，保留 23 assertions 與 21 來源。此為審查中的補證入口，尚未接入概念或正式網站；固定入口與責任見 [交接契約](sector-wave-web-handoff.md)。
 
 ## 3. 網頁與 UX
 
@@ -253,7 +253,7 @@ research_core/presentation/       建議新增：純資料 adapter 與展示契�
 research_core/evidence.py         現有證據核心；避免與 renderer 混在一起
 tasks/<study>/                    不可覆寫的 mission、run 與原始研究證據
 benchmarks/etf/                   建議新增：方法、來源與比較契約等小型紀錄
-shioaji_stock_prices/             唯一行情／ETF 原始資料取得與正規化責任
+stock-data-downloader/             唯一行情／ETF 原始資料取得與正規化責任
 docs/zh-TW/                      owner 可讀的提案與使用說明
 openspec/                        正式實作時才建立能力與驗收契約
 .tmp/                           可丟棄的展示索引、預覽與暫存

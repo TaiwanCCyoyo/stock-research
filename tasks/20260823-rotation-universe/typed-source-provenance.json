@@ -1,12 +1,12 @@
 {
     "schema": "retained-rotation-typed-source.v1",
     "originalArchive": "original-source.zip",
-    "archiveDigest": "sha256:f3a3ad0c024a03fc4fa0bc50d25e048f1a08ba519547b9e8df6c5b1ddb52b5ae",
+    "archiveDigest": "sha256:f08271501a3d65e606dc46268355a235ca6ffc1aa528f2f12044858cf995d7b1",
     "files": [
         {
             "path": "build_rotation_universe.py",
-            "originalDigest": "sha256:00807ca331347a7e02e5d837a3b5364d50695da44c22458c3f5647bb940190cb",
-            "originalBytes": 6932,
+            "originalDigest": "sha256:17eba579e2a226f642bc01e040525d982a3721a4185d2feb0f79c93aa6d8a369",
+            "originalBytes": 6933,
             "typedDigest": "sha256:19025d5da347cb2fa0c4ca14eb5b9c0fa1bf457ad91a397dbb57d3330609bcfd",
             "typedBytes": 6930,
             "change": "type narrowing only; producer data root resolved through research_core.producer_data instead of a fixed submodule path; no scientific result rewrite"
@@ -21,8 +21,8 @@
         },
         {
             "path": "features.py",
-            "originalDigest": "sha256:8ba090718fb1fbab83b29fce43f9dd176efebfed7d4fbda814f876f2adeb91c3",
-            "originalBytes": 10689,
+            "originalDigest": "sha256:2f9fbd1dfad73ac8cdb90083316f22c94c34b5e51a04a1ba23805b22cda1c96a",
+            "originalBytes": 10691,
             "typedDigest": "sha256:4938765767d909b1661b2b3805c7e2cbf5496b4656aee3820974b42d0daa1ffb",
             "typedBytes": 10682,
             "change": "type narrowing only; producer data root resolved through research_core.producer_data instead of a fixed submodule path; no scientific result rewrite"
@@ -37,8 +37,8 @@
         },
         {
             "path": "verify_eligibility.py",
-            "originalDigest": "sha256:84991c950c109e9c5d8eeba50e26658d58fdb3c33f28ea47b0448ec90d9d5174",
-            "originalBytes": 5443,
+            "originalDigest": "sha256:a160d20bf939e2378c972587abea11b872afbd6ad1e8417267ab34b84c196fc4",
+            "originalBytes": 5444,
             "typedDigest": "sha256:374d52c70b3e8e3e5332117b2a815644252be2f5019a2fc842953e56a207a51c",
             "typedBytes": 5708,
             "change": "type narrowing only; producer data root resolved through research_core.producer_data instead of a fixed submodule path; no scientific result rewrite"

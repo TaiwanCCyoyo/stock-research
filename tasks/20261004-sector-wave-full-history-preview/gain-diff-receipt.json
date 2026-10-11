@@ -31,12 +31,12 @@
     },
     "manifests": [
         {
-            "path": "D:\\Project\\Stock\\.worktrees\\sector-wave-full-history-preview-20261004\\tasks\\20261004-sector-wave-full-history-preview\\catalog-v1\\manifest.json",
-            "sha256": "a3286f672527a69120b7802b6fda8aa3d56226845bfd3806b248cd9367c1535a"
+            "path": "<legacy-checkout>\\.worktrees\\sector-wave-full-history-preview-20261004\\tasks\\20261004-sector-wave-full-history-preview\\catalog-v1\\manifest.json",
+            "sha256": "5c501a00d3eb1127815ce489c9720a4fd799add08a494e34baa7182a909bc655"
         },
         {
-            "path": "D:\\Project\\Stock\\.worktrees\\sector-wave-full-history-preview-20261004\\tasks\\20261004-sector-wave-full-history-preview\\catalog-v2\\manifest.json",
-            "sha256": "c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140"
+            "path": "<legacy-checkout>\\.worktrees\\sector-wave-full-history-preview-20261004\\tasks\\20261004-sector-wave-full-history-preview\\catalog-v2\\manifest.json",
+            "sha256": "238e7e4aba59509bb3245ea36e9708d6d8f9b9d7c6dab9f18a9d60bba67aa6ea"
         }
     ],
     "method": {

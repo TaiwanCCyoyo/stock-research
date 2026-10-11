@@ -8,17 +8,17 @@ than real market behavior. Separately, a researcher has no way to see local data
 completeness at all: no report exists, and no dashboard surface shows one.
 
 Per project data-ownership rules, all producer-side work (health-check scanning, silent
-failure fixes, targeted re-fetch) belongs in the `shioaji_stock_prices` submodule, which now
+failure fixes, targeted re-fetch) belongs in the `stock-data-downloader` submodule, which now
 has its own OpenSpec baseline and is building this itself as
 `add-data-quality-report` (see that change's proposal for the `data_quality_report.json`
-artifact contract). This change is Stock's consumer-side counterpart: read that artifact,
-show it in dashboard v2, and add the backtest-runtime warning that only Stock's engine can
+artifact contract). This change is stock-research's consumer-side counterpart: read that artifact,
+show it in dashboard v2, and add the backtest-runtime warning that only stock-research's engine can
 compute (it needs the requested backtest window, which the submodule does not know about).
 
 ## What Changes
 
 - Add a read-only `GET /data-quality` endpoint to `research_api` that reads
-  `shioaji_stock_prices/data/data_quality_report.json` (probing candidate paths the same way
+  `stock-data-downloader/data/data_quality_report.json` (probing candidate paths the same way
   `DataLoader._resolve_corporate_action_db` already does for `corporate_actions.sqlite`) and
   returns its contents, or a neutral "not yet checked" response when the file does not exist.
 - Add a data-quality panel to `research_web`: missing symbols, symbols with partial
@@ -36,7 +36,7 @@ compute (it needs the requested backtest window, which the submodule does not kn
 ### New Capabilities
 
 - None. (The `data-integrity-checks` capability proposed earlier now lives in the
-  `shioaji_stock_prices` submodule as `data-quality-report`; see that repo's
+  `stock-data-downloader` submodule as `data-quality-report`; see that repo's
   `add-data-quality-report` change.)
 
 ### Modified Capabilities
@@ -45,8 +45,8 @@ compute (it needs the requested backtest window, which the submodule does not kn
 - `research-dashboard-v2`: gains a data-quality panel fed by the new endpoint.
 - `backtest-runtime`: summary warnings gain a `partial_data_symbols` category distinct from
   fully-missing symbols.
-- `price-data-pipeline` (Stock's own baseline spec, not the submodule's): rewritten to
-  describe only the artifact contracts Stock consumes (file paths, schemas, degrade-without-
+- `price-data-pipeline` (stock-research's own baseline spec, not the submodule's): rewritten to
+  describe only the artifact contracts stock-research consumes (file paths, schemas, degrade-without-
   crashing behavior), since the producer behavior itself now lives in the submodule's own
   baseline. See this change's `price-data-pipeline` spec delta.
 
@@ -56,7 +56,7 @@ compute (it needs the requested backtest window, which the submodule does not kn
 - No change to corporate-action adjustment math (see `expand-corporate-action-adjustments`).
 - Does not hard-fail backtests on incomplete data — research must remain usable with
   imperfect data; this only makes the imperfection visible.
-- Does not duplicate the submodule's health-check scanning logic — Stock only reads the
+- Does not duplicate the submodule's health-check scanning logic — stock-research only reads the
   artifact the submodule produces.
 
 ## Impact
@@ -67,6 +67,6 @@ compute (it needs the requested backtest window, which the submodule does not kn
   `partial_data_symbols` warning category.
 - `openspec/specs/price-data-pipeline/spec.md`: rewritten as a consumer contract (see
   this change's spec delta).
-- Depends on: `shioaji_stock_prices`'s `add-data-quality-report` change producing
+- Depends on: `stock-data-downloader`'s `add-data-quality-report` change producing
   `data/data_quality_report.json` before the dashboard panel has anything to show (the
   endpoint and panel work correctly with the neutral "not yet checked" state either way).

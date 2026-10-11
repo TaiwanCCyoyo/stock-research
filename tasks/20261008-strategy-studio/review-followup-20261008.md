@@ -8,7 +8,7 @@ compressed package remain unchanged. See the [extended data contract](data-contr
 
 This follow-up starts from updated `origin/main` at
 `2bac4afbcbcf10833a7147686366a16f1204eb76` after PR #32 merged, in the retained
-`D:/Project/Stock/.worktrees/strategy-presentation` checkout, on
+`<legacy-checkout>/.worktrees/strategy-presentation` checkout, on
 `codex/studio-review-coverage-20261008`. It does not acquire data, run a backtest,
 refit waves, modify original research missions/results or alter schedulers.
 

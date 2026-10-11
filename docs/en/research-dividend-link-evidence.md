@@ -8,7 +8,7 @@ unchanged.
 
 ## Verified statement projection
 
-`shioaji_stock_prices/shp_utils/mops_dividend_statements.py` now projects one
+`stock-data-downloader/shp_utils/mops_dividend_statements.py` now projects one
 ordinary detail body, after raw SHA-256 and company/serial/subject/route checks.
 It retains source blocks and exposes five separately qualified fields. It does
 not fetch data, write caches, merge announcements or create entitlements/payments.

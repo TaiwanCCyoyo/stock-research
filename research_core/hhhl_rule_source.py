@@ -17,13 +17,13 @@ LOGGER = logging.getLogger(__name__)
 SOURCE_HASHES = {
     "hhhl_rule_v1": {
         "hhhl_rule_v1.py": "0039ca034d396dbba21f5e3e6de2bb552f809404e2424e5c1beb0f84eed017ba",  # pragma: allowlist secret - verified source SHA-256
-        "detect.py": "fba922502f8d34c2c928c7accca9baa17b1e9c83dae8be398b8b4fa773ee8eeb",  # pragma: allowlist secret - verified source SHA-256
+        "detect.py": "b20c1004f241b1c993263fada9225eb8108769afbcac21c24675bed4f81c4a24",  # pragma: allowlist secret - verified source SHA-256
     },
     "hhhl_rule_v4": {
         "hhhl_rule_v4.py": "6390e5a61519c041a6989257af59599e71ae1c24ba5d6d70c96c5c7ea8f8d5c8",  # pragma: allowlist secret - verified source SHA-256
         "bigrange_v4.py": "59634879c7e0358b57baa98a2187eb7de928de7df229c3053ba905f91a6dd574",  # pragma: allowlist secret - verified source SHA-256
-        "adjprice.py": "cb8d7a53b8362c51292795eefd90e9cdb8353b38fa81695779bf6e7b7fe777ef",  # pragma: allowlist secret - verified source SHA-256
-        "detect.py": "fba922502f8d34c2c928c7accca9baa17b1e9c83dae8be398b8b4fa773ee8eeb",  # pragma: allowlist secret - verified source SHA-256
+        "adjprice.py": "99e181271fd11d68d646e44c21912c6ac76724f6ef6dfe1be17117f20ddd12a8",  # pragma: allowlist secret - verified source SHA-256
+        "detect.py": "b20c1004f241b1c993263fada9225eb8108769afbcac21c24675bed4f81c4a24",  # pragma: allowlist secret - verified source SHA-256
     },
 }
 Pivot = tuple[int, int, float]

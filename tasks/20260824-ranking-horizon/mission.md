@@ -51,7 +51,7 @@ repairs that. Two consequences are accepted rather than argued away:
 
 ## 1b. The value-chain classification exists now, and is deliberately not used here
 
-`shioaji_stock_prices` gained `data/value_chain_classification.json` on 2026-08-23 (main commit
+`stock-data-downloader` gained `data/value_chain_classification.json` on 2026-08-23 (main commit
 `977b17f`): the TPEx Industry Value Chain platform, 47 chains, each with upstream/midstream/
 downstream nodes, and 2,212 symbols carrying **multiple** memberships. That is the grouping
 `docs/en/research-objective.md` has wanted since the cohort work -- official `industry_category`

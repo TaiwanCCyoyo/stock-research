@@ -1,7 +1,7 @@
 {
     "schema_version": "opportunity-pinned-pure-wave-launch-audit.v1",
     "status": "verified",
-    "manifest_sha256": "c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140",
+    "manifest_sha256": "238e7e4aba59509bb3245ea36e9708d6d8f9b9d7c6dab9f18a9d60bba67aa6ea",
     "code_identity": {
         "source": {
             "analysis": "550c277df28c7ac0b2d4deb69b67eb137b500c0f8b2c80c78880fda79aef1a25",

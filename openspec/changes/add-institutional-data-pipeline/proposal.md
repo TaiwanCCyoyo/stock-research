@@ -8,7 +8,7 @@ add a strategy that uses it, keeping the change reviewable and low-risk to exist
 backtests.
 
 This is a lower-priority, later-stage piece of a broader "official-data-as-primary"
-direction (see `shioaji_stock_prices`'s `add-official-daily-price-source` change, delivered
+direction (see `stock-data-downloader`'s `add-official-daily-price-source` change, delivered
 2026-08-07): that change built a reusable official-OpenAPI HTTP fetch/retry/backoff helper
 (`shp_utils/official_api.py`) this pipeline should consume directly, and a rate-limited
 resumable history crawler this pipeline's historical backfill should follow the same
@@ -19,7 +19,7 @@ not need independently-verified correctness to be useful.
 
 ## What Changes
 
-- Add `shioaji_stock_prices/fetch_institutional.py`: fetches daily three-major-institution
+- Add `stock-data-downloader/fetch_institutional.py`: fetches daily three-major-institution
   buy/sell data from TWSE's dated T86 report
   (`www.twse.com.tw/rwd/zh/fund/T86?date=YYYYMMDD&selectType=ALLBUT0999`) for listed stocks
   and TPEx's dated equivalent
@@ -27,7 +27,7 @@ not need independently-verified correctness to be useful.
   stocks — confirmed by direct probing, see `docs/institutional-sources.md` in the submodule
   (task 1.3) — following the same idempotent-upsert, retry/backoff, and raw-range-tracking
   pattern already proven in `fetch_corporate_actions.py`.
-- Store results in a new local `shioaji_stock_prices/data/institutional.sqlite`, table
+- Store results in a new local `stock-data-downloader/data/institutional.sqlite`, table
   `institutional_daily` keyed by `(date, code)`, with columns for foreign/trust/dealer net
   buy-sell shares (and gross buy/sell shares per category).
 - Add a backfill entry point for historical range fetch, and wire a daily incremental fetch
@@ -64,15 +64,15 @@ not need independently-verified correctness to be useful.
 
 - **Sequencing dependency**: the `add-official-daily-price-source` change's shared
   official-OpenAPI fetch helper and rate-limited resumable history crawler have now landed in
-  the `shioaji_stock_prices` submodule (archived 2026-08-07), unblocking this change.
+  the `stock-data-downloader` submodule (archived 2026-08-07), unblocking this change.
   `fetch_institutional.py`'s T86/TPEx fetch MUST consume `shp_utils/official_api.py`'s
   fetch/retry/backoff helpers directly; its historical-backfill entry point MUST follow the
   same throttle/checkpoint/backoff design as `backfill_official_history.py` without importing
   it, since T86's whole-market-per-day shape needs a `(market, date)` checkpoint unit instead
   of that module's per-symbol `(code, year_month)` unit — see `design.md`'s Context section.
-- New file: `shioaji_stock_prices/fetch_institutional.py`.
-- New local database: `shioaji_stock_prices/data/institutional.sqlite`.
-- `shioaji_stock_prices/run_daily.py`: add institutional fetch step.
+- New file: `stock-data-downloader/fetch_institutional.py`.
+- New local database: `stock-data-downloader/data/institutional.sqlite`.
+- `stock-data-downloader/run_daily.py`: add institutional fetch step.
 - `StockProject/engine/data_loader.py`: new opt-in join method.
 - `StockProject/engine/strategy_base.py`: snapshot fields available when opted in.
 - Tests: fetcher idempotency, join correctness, and a regression test proving default

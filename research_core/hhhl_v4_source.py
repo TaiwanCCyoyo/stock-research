@@ -15,12 +15,12 @@ import pandas as pd
 
 LOGGER = logging.getLogger(__name__)
 RULE_ID = "hhhl_rule_v4"
-DATASET_ID = "fda-86245f2e223fc45c9f84afb0dcf77c1fff7ab22d0a1b0b4a4c8800972ce9327e"
+DATASET_ID = "fda-e712fc9408c147ae410a2fc0a687ef6f1dba785cab8cfb0312f79c504c6c5206"
 # Exact members of the preregistered preparation-v1 bundle (4908ef85...db549).
 FIXED_INPUT_SHA256 = {
     "corporate_action_factors.parquet": "sha256:427b81a70d3548a0595a80c547544cf4da8824ddcbda2dbb366032e68ba5df7a".removeprefix("sha256:"),
     "validation-cases.json": "sha256:8e2c2937c38fe276a00246b23b497b8f7f8a93b20ff9dca2be7a463453ec7abb".removeprefix("sha256:"),
-    "input-receipt.json": "sha256:d4942a053b2df2328da5ef83d8854e1079ddd5c50507e48961e4488ec888e550".removeprefix("sha256:"),
+    "input-receipt.json": "sha256:9a4b527cb32881064578dfc150839244a4efd3910ceada1d696973dd965e29fe".removeprefix("sha256:"),
 }
 DEFAULT_CUTOFF = "2026-08-14"
 RAW_COLUMNS = (

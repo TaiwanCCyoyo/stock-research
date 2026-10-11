@@ -6,7 +6,7 @@
 ## 網頁
 
 入口 `http://127.0.0.1:5177/#wave-lab`。主工作區在
-`D:/Project/Stock/.worktrees/strategy-presentation`；舊市場地圖維持原定義。
+`<legacy-checkout>/.worktrees/strategy-presentation`；舊市場地圖維持原定義。
 
 - 8 個預選真實案例及 8 個合成反例，預設呈現使用者的盤整後再加速例子。
 - 同軸原始路徑、分段直線、趨勢濾波、階段、發車區間、大小波段。
@@ -18,7 +18,7 @@
 真實價格投影 SHA-256：
 `f6b609ed98e7cf5bfa4a8bbbe40d6dc4a5d8126ffba2948ce9d8195784b5b416`。
 原 catalog hash：
-`384ee53d22b70dc1650bf84e1887e8515565189c975c29c77ef5e6273c5138c9`。
+`3c5f14b1d061aef1a4b5a440f42042db3f8d23015462e6ad3e45ce5b031eab4a`。
 範圍仍是本投影的 2019-01-02 至 2026-08-14 子集；不宣稱 2010 已完成。
 
 ## 方法與限制

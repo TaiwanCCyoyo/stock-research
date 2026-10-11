@@ -165,7 +165,7 @@ Holdout：
 1. **加權方式，而不是選股規則。** 如果指數的優勢來自加權，那可測的是「在同一個選股規則下改變
    加權」——市值加權、或按流動性加權的十檔組合。這需要**市值資料**，而
    `symbol_meta.sqlite` 沒有股本或市值。成交金額是流動性代理不是市值代理。**這是需要補的工具，
-   在 `shioaji_stock_prices` 那一側。**
+   在 `stock-data-downloader` 那一側。**
 2. **產業鏈分類（`value_chain_classification.json`，47 條鏈、上中下游節點、2,212 檔多重歸屬）。**
    這是 `docs/en/research-objective.md` 從 cohort 研究以來一直想要的分組，本研究刻意沒用（見
    `mission.md` §1b）。它不會解決第 3 節的問題——更細的主題標籤還是等權重選中小型股——但它是

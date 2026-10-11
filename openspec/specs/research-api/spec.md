@@ -91,13 +91,13 @@ POSTs, since no `CORSMiddleware` is configured and the API remains bound to
 ### Requirement: Data quality is readable without a live health-check run
 
 The API MUST expose a read-only `GET /data-quality` endpoint that returns the local data
-completeness report produced by the `shioaji_stock_prices` submodule, or a neutral "not yet
+completeness report produced by the `stock-data-downloader` submodule, or a neutral "not yet
 checked" response when no report exists.
 
 #### Scenario: Report file exists
 
 - **WHEN** `GET /data-quality` is called and
-  `shioaji_stock_prices/data/data_quality_report.json` is found at one of the candidate
+  `stock-data-downloader/data/data_quality_report.json` is found at one of the candidate
   probe paths
 - **THEN** the API MUST return that report's contents.
 

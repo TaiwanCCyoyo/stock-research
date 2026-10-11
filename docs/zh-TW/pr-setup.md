@@ -1,14 +1,14 @@
 # 在下游專案啟用 PR 交付
 
-Stock 狀態（2026-09-20）：CI 與託管 review 已生效。GitHub Free 的 private repo 可在額度內使用 Actions；private repo 的分支 ruleset 需要 Pro 等支援方案。能跑 CI 不代表伺服器會強制通過。
+stock-research 狀態（2026-09-20）：CI 與託管 review 已生效。GitHub Free 的 private repo 可在額度內使用 Actions；private repo 的分支 ruleset 需要 Pro 等支援方案。能跑 CI 不代表伺服器會強制通過。
 
 重設[共用 Git 工作契約](../en/git-workflow.md)為 local-only 時採用本範本，然後按照本指南有意識地啟用交付。本指南供 repository 擁有者使用。它不授予 agent 設定、發布或管理權限，複製本範本也不會設定其中任何項目。
 
-Stock 目前的設定狀態見[PR 審核](pr-review.md)。
+stock-research 目前的設定狀態見[PR 審核](pr-review.md)。
 
 ## 1. 選擇身分模式
 
-**共用身分（上游採用、Stock 預計採用的方式）。** Agent session 以擁有者的 GitHub 憑證推送任務分支並建立 pull request，因此 agent 編寫的 commit 會歸屬於擁有者。用 branch 前綴與 commit 訊息區分 agent 工作，不以身分區分。
+**共用身分（上游採用、stock-research 預計採用的方式）。** Agent session 以擁有者的 GitHub 憑證推送任務分支並建立 pull request，因此 agent 編寫的 commit 會歸屬於擁有者。用 branch 前綴與 commit 訊息區分 agent 工作，不以身分區分。
 
 這是最簡單的選項，不需要 App、不需要私鑰、也不需要 token helper。代價是明確的：**agent 與擁有者共用同一身分，所以沒有強制的角色分離。** 有意識地接納這個限制，或不要使用此模式。
 

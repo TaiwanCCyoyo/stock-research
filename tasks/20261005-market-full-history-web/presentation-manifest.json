@@ -8,7 +8,7 @@
     "native_validation_source_commit": "ceca52741eef1a45f77bf8834b5f5203235b45ba",
     "builder_source_commit": "9e3bf7ea3ddbc58a8567223c1b83893bd33feecc",
     "manifest": "inputs/producer-preview/catalog-v2/manifest.json",
-    "manifest_sha256": "c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140",
+    "manifest_sha256": "238e7e4aba59509bb3245ea36e9708d6d8f9b9d7c6dab9f18a9d60bba67aa6ea",
     "price_window": { "from": "2010-01-04", "through": "2026-10-02" },
     "stock_count": 1970,
     "excluded_instrument_count": 105,

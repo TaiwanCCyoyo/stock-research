@@ -12,17 +12,17 @@ No old checkout/folder, Git history, remote setting or production schedule was c
 - PR #38 and #40 are excluded from the initial source; their old branches/diffs
   remain untouched for the owner's later Codex PR requests.
 - New public downloader: `TaiwanCCyoyo/stock-data-downloader`, root/main
-  `8795859880eef99c0968fc6c3bca4863743003d2`; the compatibility submodule path
-  remains `shioaji_stock_prices`. Only code is initialized; no live data is copied.
+  `8795859880eef99c0968fc6c3bca4863743003d2`; the submodule path was later renamed
+  to `stock-data-downloader`. Only code is initialized; no live data is copied.
 - PR #43 final scanner/docs corrections remain pending.
   Do not publish with an unverified scanner.
 
 The original 1,526 regular source files (27,041,930 bytes) are individually hashed
-in `D:/Project/Stock/StockProject/data/private-presentation/stock-research-bootstrap-20261009/preservation-manifest.json`.
+in `D:/Project/stock-research/StockProject/data/private-presentation/stock-research-bootstrap-20261009/preservation-manifest.json`.
 The matching source-tree TAR preserves every original byte, including docs and
 fixtures. Restore it only to a separate private directory and verify that inventory;
 never overwrite another working tree. The nine earlier presentation originals
-remain in `D:/Project/Stock/StockProject/data/private-presentation/20261008-first-stage/`.
+remain in `D:/Project/stock-research/StockProject/data/private-presentation/20261008-first-stage/`.
 Their preservation receipt remains valid. No ignored live producer data was copied.
 
 ## Minimum necessary content decisions
@@ -111,7 +111,7 @@ reviewed alternative retaining the checks. PR #43 final verified scanner/docs is
 also pending. The new downloader gitlink is already verified and no remote is
 configured for this local candidate.
 
-Final Stock suite: 1 failed, 3817 passed, 4 skipped, 3 warnings in 489.36s (0:08:09). The single HHHL builder failure requires git rev-parse HEAD; this local candidate has no initial commit because existing hooks block it. Targeted scripts pyright reports 0 errors/0 warnings and all-files detect-secrets passes. Re-run the HEAD-dependent test after a legitimate initial commit; do not fabricate HEAD or skip the test.
+Final suite: 1 failed, 3817 passed, 4 skipped, 3 warnings in 489.36s (0:08:09). The single HHHL builder failure requires git rev-parse HEAD; this local candidate has no initial commit because existing hooks block it. Targeted scripts pyright reports 0 errors/0 warnings and all-files detect-secrets passes. Re-run the HEAD-dependent test after a legitimate initial commit; do not fabricate HEAD or skip the test.
 
 ## Removed duplicate legacy documents
 
@@ -169,12 +169,12 @@ unknown smoke/loop studies are retained pending a separate decision.
 
 [The exact omission inventory](omitted-legacy-code.json) records each path,
 byte count and SHA256, the original commit and verified private source archive.
-The old `D:/Project/Stock` directory and remote Stock-legacy repository are
+The predecessor checkout (`<legacy-checkout>`) and repository (`<legacy-repository>`) are
 unchanged; no old-folder cleanup is scheduled. Historical source references in
 reports and the draft first-candidate packet identify legacy evidence, not an
 executable promise from this new checkout.
 
-To restore an omitted file, obtain that path from `legacyPublishedBase` in Stock-legacy and verify its
+To restore an omitted file, obtain that path from `legacyPublishedBase` in `<legacy-repository>` and verify its
 `publishedGitBlobDigest`. Apply the individually recorded `restoreWorkingBytes`
 line-ending rule to reproduce the saved working bytes, then verify the original
 `digest` and byte count. Alternatively, read its exact member from the private
@@ -193,8 +193,8 @@ The owner retired the 10 repository OpenSpec skills, five OPSX commands and
 OpenSpec; other development checks remain enabled. Do not reinstall these
 entrypoints during a starter sync. The exact retired-source inventory is in
 [retired-openspec-entrypoints.json](retired-openspec-entrypoints.json); original
-bytes remain in the preserved private source TAR. Old Stock and global settings
-are unchanged.
+bytes remain in the preserved private source TAR. The predecessor checkout and global
+settings are unchanged.
 
 Native planning and repository documentation now own durable implementation
 handoff. Describe observable behavior, artifact contracts and safety boundaries;
@@ -243,8 +243,8 @@ format migration does not establish redistribution rights or public readiness.
 ## Standalone canonical data configuration
 
 The verified canonical producer copy is `D:/Project/stock-data-downloader/data`.
-Stock does not duplicate this directory into its producer submodule or Vite
-public. The local ignored `.env.local` contains only
+stock-research does not duplicate this directory into its producer submodule or
+Vite public. The local ignored `.env.local` contains only
 `STOCK_PRODUCER_DATA_ROOT=D:/Project/stock-data-downloader/data`; it contains no
 API credentials and changes no global environment or scheduler.
 
@@ -271,11 +271,11 @@ The presentation default stays public synthetic. Producer root configuration
 does not activate private UI packages, download data or authorize a strategy.
 
 The copy receipt at
-`D:/Project/Stock/.tmp/new-local-data-copy-receipt-20261009.json` records
+`<legacy-checkout>/.tmp/new-local-data-copy-receipt-20261009.json` records
 15,245 verified files and 42,570,473,861 bytes with zero source changes.
 The tracked producer `stock_category.json5` was preserved without overwrite;
 its original data copy is in the ignored research-private quarantine.
-Original Stock data and backup destinations remain unchanged. Windows job and
+The predecessor checkout's data and backup destinations remain unchanged. Windows job and
 downloader backup/environment migration are owned by the separate producer task.
 
 ## Public export availability
@@ -291,7 +291,7 @@ only while redistribution rights remain unconfirmed:
 - `tasks/20261010-hhhl-v4-probability/preparation-v1/bundle.zip`:
   32,848 source corporate-action-factor rows.
 
-Original bytes remain in the old Stock source archive and current ignored local
+Original bytes remain in the predecessor source archive and current ignored local
 paths. Independent copies and per-file SHA-256/byte-count restore records are
 under `StockProject/data/public-export-originals-20261009/`. Public delivery
 uses a fresh Git root, excluding these files and the private bootstrap history.
@@ -306,3 +306,29 @@ Synthetic builder/publication tests create their own inputs and preserve their
 hash/provenance assertions. Code-only source ZIPs and owner-produced summaries
 remain included. HHHL v1's original full ZIP and its detailed summary payload
 are not published; its report and manifest retain historical evidence identity.
+
+## Old-name migration (2026-10-10)
+
+The owner decided that this project shows no predecessor folder or project name. One
+mechanical pass rewrote them in tracked files, inside archives and transports, and in the
+local-only artifacts of the primary checkout, then propagated every changed SHA-256 (and its
+byte count) to a fixpoint. No research was re-run and no result changed; the verifiers were
+re-run against the rewritten evidence.
+
+- A path whose target now exists here points here: `D:/Project/stock-research/...`, including
+  the formal datasets copied into `tasks/*/datasets/` and the H05 evidence in
+  `tasks/20261005-relative-strength-holding/evidence/`.
+- A path with no equivalent here (old session worktrees, scratch directories) is written as
+  `<legacy-checkout>/...`; `<legacy-repository>` names the predecessor GitHub repository.
+  Both are provenance only.
+- The project name is `stock-research`; the producer submodule is `stock-data-downloader`.
+- Digests labelled `original_*` still identify the predecessor bytes and were not rewritten.
+- Readers that hash their own manifest (publication and dataset identities) were re-derived
+  with each reader's own identity function; the opportunity catalogs' multipart manifests were
+  re-split with the publisher's rules. The 1,941 local atlas-v2 tables changed only their
+  `dataset_id` label, because that identity covers the rewritten paths; every value is unchanged.
+- `scripts/verify_published_artifacts.py` runs every published artifact's own reader. All 15
+  checks pass after the migration, including every check that passed before it; the three HHHL v4
+  checks became runnable only once its overlays were tracked.
+- [The migration ledger](old-name-migration-ledger.json) lists every rewritten tracked file
+  with its byte count before and after; the exact bytes on both sides are in Git history.

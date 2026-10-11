@@ -2,7 +2,7 @@
     "schema": "stock-research-omitted-legacy-code.v1",
     "sourceCommit": "git:02ba5e2c2cd097acd8c1e4c7eb5b44dac2c3a9d1",
     "legacyRepository": "https://github.com/TaiwanCCyoyo/Stock-legacy",
-    "privateSourceArchive": "D:\\Project\\Stock\\StockProject\\data\\private-presentation\\stock-research-bootstrap-20261009\\source-tree-02ba5e2c2cd097acd8c1e4c7eb5b44dac2c3a9d1.tar",
+    "privateSourceArchive": "D:\\Project\\stock-research\\StockProject\\data\\private-presentation\\stock-research-bootstrap-20261009\\source-tree-02ba5e2c2cd097acd8c1e4c7eb5b44dac2c3a9d1.tar",
     "sourceArchiveDigest": "sha256:f97c1792a368abf80a39fc05ed70974d7bb6e4ae80c40cf1190d727897e35798",
     "selection": "Only task-local Python files in task names before 20260921, excluding the four retained tasks listed below. Reports, results, downloaded data and original source archives are not removed.",
     "retainedEarlyTasks": [

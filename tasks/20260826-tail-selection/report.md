@@ -290,6 +290,6 @@ uv run python tasks/20260826-tail-selection/tail_stats.py           # 約 50 秒
 
 需要 `tasks/20260824-ranking-horizon/features_v2.parquet`（未進版控，用該任務的
 `features_v2.py` 重建）以及主 checkout 的
-`shioaji_stock_prices/data/value_chain_classification.json` —— 那個檔案**不在 worktree 的
+`stock-data-downloader/data/value_chain_classification.json` —— 那個檔案**不在 worktree 的
 data 複本裡**，`tail_features.py` 用 `git rev-parse --git-common-dir` 找主 checkout。
 完整結果在 `sweep_results.json`。

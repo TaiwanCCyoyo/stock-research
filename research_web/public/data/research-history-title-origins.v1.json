@@ -55,7 +55,7 @@
         },
         "20260823-regime-overlay": {
             "sourcePath": "tasks/20260823-regime-overlay/report.md",
-            "sourceSha256": "ab7a4402a01c2a362541991a28417f92050a3214a187bd2c6cbd82eaa48a9960",
+            "sourceSha256": "75bd86ce419389f9faa4f6fade5631bbf25a742a60e8a098b3959124428cf19c",
             "title": "迴歸疊加層：29 條臂，0 條通過"
         },
         "20260823-selection-vs-random": {
@@ -70,7 +70,7 @@
         },
         "20260824-ranking-horizon": {
             "sourcePath": "tasks/20260824-ranking-horizon/report.md",
-            "sourceSha256": "19e7ed04d505e821faba21288bffc682d02e0a2ea3c48c5e6d1858b9d2ebe5e5",
+            "sourceSha256": "334b0b89a1e8c77b2a26db1fddaf06a0bd791d96a884e35d542b012cf61cdb50",
             "title": "排序視窗：機制成立，結論相反"
         },
         "20260824-value-chain-ignition": {
@@ -85,7 +85,7 @@
         },
         "20260826-tail-selection": {
             "sourcePath": "tasks/20260826-tail-selection/report.md",
-            "sourceSha256": "ee0d33105ec6d49c692dd88a9a1f08d9923097946903d6507d902e09ab342f2c",
+            "sourceSha256": "f073e8e7236c47037dd1242812d47b7daa302deb70037c15e891d510419eb697",
             "title": "飆股怎麼選：分數是一把好篩子，不是一把好尺"
         },
         "20260903-entry-window": {
@@ -185,7 +185,7 @@
         },
         "20261002-sector-role-evidence": {
             "sourcePath": "tasks/20261002-sector-role-evidence/report.md",
-            "sourceSha256": "145e1c9f68f9e53871521346e1eb2390fedfd13f3627ef20b19e61009feeeae3",
+            "sourceSha256": "17016ab6732bd24592c3f85099c1f7fca0e864012d6f9d3ef1ce738bfcfd4f74",
             "title": "族群分類補證：第一批"
         },
         "20261002-sector-wave-catalog": {
@@ -195,12 +195,12 @@
         },
         "20261003-wave-lab-preview": {
             "sourcePath": "tasks/20261003-wave-lab-preview/report.md",
-            "sourceSha256": "afa6ca5f3ce06913666f38971b9edf0d608530fd8375490f24e28c4804f26208",
+            "sourceSha256": "b47b50bca898f151b1376ccbf8907f9328b7287bb0c7ac75a3126fa393c24c18",
             "title": "波段比較台：本輪交付與邊界"
         },
         "20261004-feature-discrimination-atlas": {
             "sourcePath": "tasks/20261004-feature-discrimination-atlas/report.md",
-            "sourceSha256": "a637d44ecf949de5ae090561a830d35e97d8173a14a8b8793f1cc2737acb3908",
+            "sourceSha256": "bccb6838dc17c43b81ed2905aafc0778d3aeeef9537c3c7a476299e7dde670a9",
             "title": "特徵辨識圖譜：atlas-v2 描述性研究報告"
         },
         "20261004-method-environment-map": {
@@ -225,7 +225,7 @@
         },
         "20261004-sector-wave-full-history-preview": {
             "sourcePath": "tasks/20261004-sector-wave-full-history-preview/report.md",
-            "sourceSha256": "810684a0cb804cd166dad9a83c993c8d37c5b2f505952c648694c4af38a8d436",
+            "sourceSha256": "c58e95a0f8cb94179ce8c32d892793864128565c1a9b152a04c38b66fd04691d",
             "title": "2010 年起族群波段資料交付報告"
         },
         "20261005-industry-role-comparison": {
@@ -240,12 +240,12 @@
         },
         "20261005-market-full-history-web": {
             "sourcePath": "tasks/20261005-market-full-history-web/report.md",
-            "sourceSha256": "1e4fa6a841949e87aa23b0efe3ca80609075b24230ee0b89fbe8cf1cc4b2fa29",
+            "sourceSha256": "580eca8483dbc688dd4eb3f5b926551d9332c1367ef8a233e95499e2d6c016fa",
             "title": "Full-history web read model"
         },
         "20261005-method-environment-interactions": {
             "sourcePath": "tasks/20261005-method-environment-interactions/report.md",
-            "sourceSha256": "c3f98f76e14d42545da49144ca9c929c1f34ca572b57edb3ed437dd4069099c2",
+            "sourceSha256": "e1c1fddd360f47b4ebaa554d1b0c844fb12d45803e0c6c632a79de661f97a6f4",
             "title": "第一批方法 × 相對強弱 × 0050 背景比較"
         },
         "20261005-opportunity-growth-display": {

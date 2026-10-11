@@ -45,6 +45,13 @@
             ],
             "tests": ["scripts/tests/test_owner_hhhl_labels.py"]
         },
+        "published_artifacts": {
+            "paths": [
+                "research_core/legacy_paths.py",
+                "scripts/verify_published_artifacts.py"
+            ],
+            "tests": ["scripts/tests/test_verify_published_artifacts.py"]
+        },
         "price_data_contract": {
             "paths": [
                 "tests/fixtures/price_daily/README.md",
@@ -363,6 +370,7 @@
         "scripts/tests/test_windows_viewer_launcher.py",
         "scripts/tests/test_worktree_inventory.py",
         "scripts/tests/test_owner_hhhl_labels.py",
+        "scripts/tests/test_verify_published_artifacts.py",
         "tests/test_backtest_capital_mode_comparison.py",
         "tests/test_backtest_metrics.py",
         "tests/test_backtest_universe_cli.py",

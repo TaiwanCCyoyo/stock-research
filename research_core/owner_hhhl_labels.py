@@ -91,11 +91,11 @@ FRESH_CHANGES = {"b2-14-3015-2025-09-11": {"saved_at": "2026-10-06T16:16:37.796Z
 PINNED = {
     "chart_sets.zip": "6e2b331a15466123d520966686902c8810fd3029cc1a5975978e1f875d5f8dc6",  # pragma: allowlist secret
     "history.zip": "04984133b1031dfc5d07c7db50e95029ea0c4a1f344ef5c58421fda2596e9e8a",  # pragma: allowlist secret
-    "rule_sources.zip": "16e95056493584ea95eae58d6b6c9f32ac2bcb178fa438af4e0e5ee1e2a8df29",  # pragma: allowlist secret
+    "rule_sources.zip": "b5fd17a44724ae59370c7d77c1f4e2150c17c008584d4fae65721174fac9db17",  # pragma: allowlist secret
     "owner_labels.json": "a0b68a808ab777f0e62d2c06bc46dca27601973a330f298c9418b86cf0b36c05",  # pragma: allowlist secret
-    "rule_hits_inputs.zip": "5f46c7c752d68a908df49ceb65bac67c9b46c969a3a28af47c50cd9e050887f2",  # pragma: allowlist secret
-    "rule_hits.json": "2e4f22115d693f73ee6670898a65072382a3d30fb5b04711b36f514ceda100e4",  # pragma: allowlist secret
-    "timeline_receipt.zip": "d1ea6f4a81c5d0dfbe82dd5f6247e09c5e726ea52b12ada85a413bfe9a128609",  # pragma: allowlist secret
+    "rule_hits_inputs.zip": "14e0f9f181589c7eb412b1805b196a438d49ad0a9a1268f132e92a4eea842579",  # pragma: allowlist secret
+    "rule_hits.json": "6d04e9155319382ae72e6511984aaa43c509a2c018e431ccb9c9b4ddb7175cd8",  # pragma: allowlist secret
+    "timeline_receipt.zip": "437fb998161b9bad818bd4e74d007113d02be96f7931fc6dd8540e844f27cf83",  # pragma: allowlist secret
 }
 # Raw-byte SHA-256 of the published result files, so the expected numbers cannot drift from them unnoticed.
 PINNED_RESULTS = {

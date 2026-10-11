@@ -21,7 +21,7 @@ detail including field layouts, historical-range floors, and known parsing gotch
 endpoint locally" beyond corporate actions. Two pieces are relevant here, and they are
 reusable to different degrees:
 
-- **Directly reusable**: `shioaji_stock_prices/shp_utils/official_api.py`'s
+- **Directly reusable**: `stock-data-downloader/shp_utils/official_api.py`'s
   `fetch_json_with_retry`/`parse_int`/`parse_number`/`parse_roc_compact_date` — a generic
   HTTP-fetch-with-retry-and-backoff helper with no TWSE-price-specific assumptions. This
   change should import and consume it directly instead of writing a second retry/backoff
