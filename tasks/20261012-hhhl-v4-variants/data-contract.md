@@ -53,6 +53,8 @@ receipt 的 `execution.cache_lineage` 提供原 attempt 及 cache seal 取得路
 
 ## 核對與同規格重算
 
+正式執行 pin 的 SHA-256 是實際載入檔案 bytes；不把不同換行的檔案偷偷視為相同。`.gitattributes` 固定各封存來源的原有換行（既有七個 dependency 為 CRLF，新 v1 modules／CLI／auditors／input pins 為 LF），保留原 receipt、cache seal 與來源 hash。使用含此 checkout 修正的交付版本；全新 Git checkout 在 `core.autocrlf=true/false/input` 都應取得相同封存 bytes，實質程式編輯仍會被 hash 核對拒絕。
+
 正式 CLI 的固定版本已存在時會拒絕執行。完整同規格重算可使用共用 API `research_core.hhhl_variants_run.run_study(inputs, staging)`：`inputs` 是 `FrozenInputs(primary, pins_path)`，`staging` 由呼叫端在自己的新 task 或 scratch 建立並確認為空。它回傳完整彙總與固定選擇清單，逐筆輸出寫入該新目錄；來源、24 特徵、控制與選擇規則都由固定實作提供。先取得 input pins 宣告的全部版本，核對發布 receipt 的程式與環境身分，完成後呼叫 `inputs.verify_after()`，再與發布的邏輯結果比對。publisher 新增的來源身分欄另行核對，不把它們當計算差異；重算資料亦不覆蓋原版本。
 
 需要快取延續時，從 receipt 的 `execution.cache_lineage.path` 取得保留的 `daily-cache-seal.json` 與其來源目錄；先核對該 seal 的外部 hash，再呼叫 `research_core.hhhl_variants_continue_v1.verified_cache(source, seal_path, pins_path, inputs)`。傳回的 `seal["artifacts"]` 供 `run_cached_study(inputs, staging, source, seal["artifacts"])` 使用，完整名稱是 `research_core.hhhl_variants_continue_pipeline_v1.run_cached_study`。重算前後都驗 cache／輸入／程式身分；缺少原 cache 時使用上述無 cache API，不能製造 seal 或略過核對。這兩條路徑已有完整合成結果 parity；本 task 的正式執行採有封存來源的延續路徑。

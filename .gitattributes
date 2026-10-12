@@ -117,3 +117,38 @@ tasks/20261009-hhhl-pattern-probability/sources/validation-cases.json text eol=l
 tasks/20261005-relative-strength-holding/evidence/** -text
 # HHHL publication receipt and aggregate chunks are bound by external SHA-256.
 tasks/20261012-hhhl-v4-variants/publication-v1/** -text
+# Preserve the exact source bytes sealed by the completed HHHL v1 execution.
+# Existing dependencies were CRLF; new v1 modules and task pins were LF.
+# These per-file rules work with autocrlf=true, false and input on any host.
+research_core/artifact_store.py text eol=crlf
+research_core/derived_features.py text eol=crlf
+research_core/feature_atlas_dataset.py text eol=crlf
+research_core/feature_atlas_io.py text eol=crlf
+research_core/hhhl_v4_source.py text eol=crlf
+research_core/jobs.py text eol=crlf
+research_core/patterns/hhhl/source.py text eol=crlf
+research_core/hhhl_variants_audit.py text eol=lf
+research_core/hhhl_variants_continue_pipeline_v1.py text eol=lf
+research_core/hhhl_variants_continue_v1.py text eol=lf
+research_core/hhhl_variants_daily.py text eol=lf
+research_core/hhhl_variants_features.py text eol=lf
+research_core/hhhl_variants_flag_summary.py text eol=lf
+research_core/hhhl_variants_inputs.py text eol=lf
+research_core/hhhl_variants_observations.py text eol=lf
+research_core/hhhl_variants_paths.py text eol=lf
+research_core/hhhl_variants_pattern.py text eol=lf
+research_core/hhhl_variants_publication_v1.py text eol=lf
+research_core/hhhl_variants_query.py text eol=lf
+research_core/hhhl_variants_rates.py text eol=lf
+research_core/hhhl_variants_references.py text eol=lf
+research_core/hhhl_variants_run.py text eol=lf
+research_core/hhhl_variants_selection.py text eol=lf
+research_core/hhhl_variants_summary.py text eol=lf
+research_core/hhhl_variants_summary_fast_v1.py text eol=lf
+scripts/continue_hhhl_variants.py text eol=lf
+scripts/run_hhhl_variants.py text eol=lf
+tasks/20261012-hhhl-v4-variants/evidence/verify_ten_events.py text eol=lf
+tasks/20261012-hhhl-v4-variants/evidence/verify_peer_features.py text eol=lf
+tasks/20261012-hhhl-v4-variants/evidence/verify_summary.py text eol=lf
+tasks/20261012-hhhl-v4-variants/params/input-pins-v1.json text eol=lf
+tasks/20261012-hhhl-v4-variants/mission.md text eol=lf
