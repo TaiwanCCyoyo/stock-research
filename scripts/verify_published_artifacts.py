@@ -226,6 +226,14 @@ def hhhl_v1_publication(root: Path, local_root: Path) -> tuple[str, str]:
     return ("pass", "bundle and every member match") if not problems else ("fail", "; ".join(problems[:3]))
 
 
+def hhhl_variants_publication(root: Path, _local_root: Path) -> tuple[str, str]:
+    """Verify the portable aggregate without requiring its large local dataset."""
+    from research_core.hhhl_variants_query import load_summary
+
+    frame, receipt = load_summary(root / "tasks/20261012-hhhl-v4-variants/publication-v1")
+    return "pass", f"dataset={receipt['dataset_id']} rows={len(frame)}"
+
+
 CHECKS = [
     Check("owner-hhhl-labels.v1", owner_labels),
     Check("hhhl-v4 public transport + correction", v4_public),
@@ -250,6 +258,7 @@ CHECKS = [
             "tasks/20261008-research-data-architecture/publication-v2/review8.zip",
         ),
     ),
+    Check("hhhl-variants-publication.v1", hhhl_variants_publication),
 ]
 
 

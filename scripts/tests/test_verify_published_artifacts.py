@@ -7,9 +7,13 @@ import io
 import json
 import zipfile
 from pathlib import Path
+from typing import Any
 
+import pandas as pd
 import pytest
 
+from research_core.artifact_store import canonical, publish_new_directory
+from research_core.hhhl_variants_query import REQUIRED_COLUMNS, summary_transport
 from scripts import verify_published_artifacts as inventory
 
 
@@ -75,3 +79,46 @@ def test_v1_bundle_members_must_match_their_declared_digests_exactly(tmp_path: P
     root, local = _v1_publication(tmp_path, edit)
     status, _detail = inventory.hhhl_v1_publication(root, local)
     assert status == expected
+
+
+def test_variants_portable_publication_passes_and_tampered_chunk_fails(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    root = tmp_path / "fake checkout"
+    publication = root / "tasks/20261012-hhhl-v4-variants/publication-v1"
+    row: dict[str, Any] = dict.fromkeys(REQUIRED_COLUMNS)
+    row.update(
+        row_kind="baseline",
+        cohort_id="P-clean",
+        split_id="development",
+        horizon=126,
+        calendar_full_n=0,
+        hit_n=0,
+        loss_n=0,
+        flat_win_n=0,
+        unknown_n=0,
+        censored_n=0,
+        known_security_n=0,
+        flag_unknown_n=0,
+    )
+    data = pd.DataFrame([row]).to_parquet(index=False)
+    assert isinstance(data, bytes)
+    files, descriptor = summary_transport(data, rows=1)
+    receipt = {
+        "schema_version": "hhhl-variants-publication.v1",
+        "dataset_id": "invented-variants",
+        "summary": descriptor,
+        "local_dataset": {"path": "D:/absent-local-dataset", "manifest_sha256": "0" * 64},
+        "execution": {},
+    }
+    publish_new_directory(publication, {**files, "receipt.json": canonical(receipt)})
+    argv = ["--root", str(root), "--local-root", str(tmp_path / "absent local inputs"), "--only", "hhhl-variants"]
+    assert inventory.main(argv) == 0
+    output = capsys.readouterr().out
+    assert "pass" in output and "hhhl-variants-publication.v1" in output
+    assert "dataset=invented-variants rows=1" in output
+    chunk = publication / descriptor["chunks"][0]["path"]
+    original = bytearray(chunk.read_bytes())
+    original[0] ^= 1
+    chunk.write_bytes(original)
+    assert inventory.main(argv) == 1
+    output = capsys.readouterr().out
+    assert "fail" in output and "hash/size mismatch" in output

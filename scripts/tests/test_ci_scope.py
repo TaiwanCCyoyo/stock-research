@@ -558,3 +558,10 @@ def test_changed_suffix_style_hook_test_is_always_selected(tmp_path: Path, monke
     plan = ci_scope.make_plan([("M", names[1])], root=tmp_path)
     assert not plan["full"]
     assert set(plan["python_tests"]) == set(names)
+
+
+@pytest.mark.parametrize("change", [("A", "scripts/tests/test_hhhl_variants_checkout_identity.py"), ("M", ".gitattributes")])
+def test_checkout_identity_consumer_is_selected_for_test_and_eol_policy(change: tuple[str, str]) -> None:
+    plan = ci_scope.make_plan([change])
+    assert not plan["full"]
+    assert "scripts/tests/test_hhhl_variants_checkout_identity.py" in plan["python_tests"]

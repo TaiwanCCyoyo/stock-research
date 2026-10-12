@@ -1,0 +1,209 @@
+{
+    "schema_version": "hhhl-result-verification.v1",
+    "dataset_id": "hhhl-variants-8655494b7ed84915eda8468d1fe21f7d2903919f27ece0fd548137ba6573755c",
+    "publication_receipt_sha256": "f35af5c378b6ca45a633ff5ed43759fda0c67986ceb769e29f2fc11997cef629",
+    "dataset_manifest_sha256": "d57f619ed8baf5bd80ae90a4ba974e1e34ebbf3f1ac5478f7a4472d7e292f79d",
+    "market_execution": {
+        "exit_code": 0,
+        "approved_mission_merge": "fcda359370cd81594451839d4e79e2216cbce255",
+        "code_commit": "ad7a445f5612761d6ed3f0766aae572b80dd2e3b",
+        "started_at_utc": "2026-10-12T05:09:27.187687+00:00",
+        "publication_log_time_taipei": "2026-10-12T16:12:08.570",
+        "python": "3.12.11",
+        "numpy": "2.3.5",
+        "pandas": "2.3.3",
+        "pyarrow": "25.0.1",
+        "same_approved_specification": true
+    },
+    "checks": {
+        "hhhl-verify-ten-events": {
+            "exit_code": 0,
+            "result": {
+                "assertions": 34190,
+                "case_ids": [
+                    "hhhl_rule_v4:TW:1101:2019-06-17",
+                    "hhhl_rule_v4:TW:1101:2019-09-06",
+                    "hhhl_rule_v4:TW:1101:2019-10-18",
+                    "hhhl_rule_v4:TW:1101:2019-11-20",
+                    "hhhl_rule_v4:TW:1101:2020-06-10",
+                    "hhhl_rule_v4:TW:1784:2024-01-15",
+                    "hhhl_rule_v4:TW:6186:2025-09-16",
+                    "hhhl_rule_v4:TW:3032:2019-09-05",
+                    "hhhl_rule_v4:TW:6243:2021-10-27",
+                    "hhhl_rule_v4:TW:6294:2021-07-30"
+                ],
+                "checked_local_features": [
+                    "A",
+                    "B",
+                    "B2",
+                    "C",
+                    "C2",
+                    "C3",
+                    "C4",
+                    "D",
+                    "D2",
+                    "E",
+                    "E2",
+                    "E3",
+                    "E4_cat",
+                    "E4_big",
+                    "F",
+                    "G",
+                    "G2_limit",
+                    "G2_position",
+                    "I",
+                    "K",
+                    "K2"
+                ],
+                "flag_ids": [
+                    "X1",
+                    "X2",
+                    "X3",
+                    "X4",
+                    "X5_MA20",
+                    "X5_MA60",
+                    "X6_10",
+                    "X6_15"
+                ],
+                "flag_rows_checked": 800,
+                "hash_evidence": {
+                    "audit_digest_sha256": "e0d940615f32cd4c6211466d5bdb594134b92385dd4b483d7b6a9d518a37738c",
+                    "audit_sha256": "785ee56e64dcf6edc6705e2a67ffb289b75d25f467bed56b7d6237688df25252",
+                    "manifest_sha256": "d57f619ed8baf5bd80ae90a4ba974e1e34ebbf3f1ac5478f7a4472d7e292f79d",
+                    "verification_code_sha256": "c9f1407dc81d6307791a0865152415a748b50f6ea47ce923985b27accd178237"
+                },
+                "peer_features_not_checked": ["H", "J", "K3"],
+                "schema_version": "hhhl-ten-events-verification.v1"
+            }
+        },
+        "hhhl-verify-peer-features": {
+            "exit_code": 0,
+            "result": {
+                "audit_sha256": "785ee56e64dcf6edc6705e2a67ffb289b75d25f467bed56b7d6237688df25252",
+                "cases": [
+                    {
+                        "assertions": "passed",
+                        "checked_features": ["H", "K3", "J"],
+                        "event_id": "hhhl_rule_v4:TW:1101:2019-06-17"
+                    },
+                    {
+                        "assertions": "passed",
+                        "checked_features": ["H", "K3", "J"],
+                        "event_id": "hhhl_rule_v4:TW:1101:2019-09-06"
+                    },
+                    {
+                        "assertions": "passed",
+                        "checked_features": ["H", "K3", "J"],
+                        "event_id": "hhhl_rule_v4:TW:1101:2019-10-18"
+                    },
+                    {
+                        "assertions": "passed",
+                        "checked_features": ["H", "K3", "J"],
+                        "event_id": "hhhl_rule_v4:TW:1101:2019-11-20"
+                    },
+                    {
+                        "assertions": "passed",
+                        "checked_features": ["H", "K3", "J"],
+                        "event_id": "hhhl_rule_v4:TW:1101:2020-06-10"
+                    },
+                    {
+                        "assertions": "passed",
+                        "checked_features": ["H", "K3", "J"],
+                        "event_id": "hhhl_rule_v4:TW:1784:2024-01-15"
+                    },
+                    {
+                        "assertions": "passed",
+                        "checked_features": ["H", "K3", "J"],
+                        "event_id": "hhhl_rule_v4:TW:6186:2025-09-16"
+                    },
+                    {
+                        "assertions": "passed",
+                        "checked_features": ["H", "K3", "J"],
+                        "event_id": "hhhl_rule_v4:TW:3032:2019-09-05"
+                    },
+                    {
+                        "assertions": "passed",
+                        "checked_features": ["H", "K3", "J"],
+                        "event_id": "hhhl_rule_v4:TW:6243:2021-10-27"
+                    },
+                    {
+                        "assertions": "passed",
+                        "checked_features": ["H", "K3", "J"],
+                        "event_id": "hhhl_rule_v4:TW:6294:2021-07-30"
+                    }
+                ],
+                "dataset_manifest_sha256": "d57f619ed8baf5bd80ae90a4ba974e1e34ebbf3f1ac5478f7a4472d7e292f79d",
+                "feature_definition_sha256": "503c2ba5565bbf16e4321b50288fba0c2b0315c80b9771d4e6b161d13e11928d",
+                "input_manifest_sha256": {
+                    "atlas": "4a11326c2755928e4fcc6a3cb84d6e380f0742919cc66208d3f5932675581cef",
+                    "v4_bulk": "924fea6c28b1788d1cc05e2c02557476b75e6c701f7811676abd82039e2f0d30"
+                },
+                "input_pins_sha256": "f01658d5c894f1bbf4decc4b033fa054fc4000046c7c8cdc52a9f8ae15c6d24b",
+                "schema_version": "hhhl-peer-feature-integrity.v1",
+                "script_sha256": "31a5467df580585cd957005bd2c31b88964d2e36f9fce1879a0c356982e4f7ef"
+            }
+        },
+        "hhhl-verify-summary": {
+            "exit_code": 0,
+            "result": {
+                "checked": {
+                    "annual_tables": 15960,
+                    "core_rows": 159600,
+                    "count_columns": 67,
+                    "legacy_inventory": 192,
+                    "near_high_inventory": 9,
+                    "pattern_union_slices": 40,
+                    "rate_formulas": 815067,
+                    "reverse_flag_slices": 4800,
+                    "rise_partitions": 11520,
+                    "single_partitions": 5760
+                },
+                "dataset_id": "hhhl-variants-8655494b7ed84915eda8468d1fe21f7d2903919f27ece0fd548137ba6573755c",
+                "logical_summary_sha256": "6d3b68d219ad0ea3b60275659093d6fede74577e7615f4efe2f35146f7a32f32",
+                "publication_receipt_sha256": "f35af5c378b6ca45a633ff5ed43759fda0c67986ceb769e29f2fc11997cef629",
+                "schema_version": "hhhl-summary-conservation.v1",
+                "verification_code_sha256": "c44447f20179f5b1ce2c101533eb5b86a3b3c3cc8c720acc38a685b81a92eb26"
+            }
+        }
+    },
+    "public_query": {
+        "exit_code": 0,
+        "result": {
+            "schema_version": "hhhl-public-query-smoke.v1",
+            "summary_rows": 159609,
+            "event_id": "hhhl_rule_v4:TW:1101:2019-06-17",
+            "observations": 4,
+            "flags": 80,
+            "duplicate_observation_keys": 0,
+            "cohorts": ["P-all", "P-clean"],
+            "publication_receipt_sha256": "f35af5c378b6ca45a633ff5ed43759fda0c67986ceb769e29f2fc11997cef629"
+        }
+    },
+    "published_artifacts": {
+        "command": "uv run python -m scripts.verify_published_artifacts",
+        "exit_code": 0,
+        "existing_checks_passed": 15,
+        "added_hhhl_check_passed": true,
+        "summary_rows": 159609,
+        "comparison": "All existing checks passed before implementation and after publication."
+    },
+    "synthetic_verification": {
+        "original_hhhl_tests_passed": 257,
+        "complete_frame_continuation_parity_cases": 14,
+        "pipeline_cache_publication_ci_tests_passed": 93,
+        "summary_evidence_tests_passed": 7,
+        "normal_commit_hooks": "passed for implementation and verification commits; final delivery uses normal hooks"
+    },
+    "retained_evidence": {
+        "ten_events": "evidence/verify_ten_events.py",
+        "peer_features": "evidence/verify_peer_features.py",
+        "summary": "evidence/verify_summary.py",
+        "canonical_receipt": "publication-v1/receipt.json",
+        "query_module": "research_core.hhhl_variants_query"
+    },
+    "limits": [
+        "Fixed ten-event audit is a deterministic sample, not exhaustive verification of all event rows.",
+        "No account backtest, stop-loss simulation, new parameter search, independent unseen-period validation or off-device backup claim.",
+        "Large per-event artifacts require the immutable local dataset; portable aggregate queries need only the Git publication."
+    ]
+}
