@@ -181,6 +181,9 @@ class Conservation:
             self.require(bool(np.array_equal(annual, self.counts[main, positions])), "annual additive counts differ from main")
             removed = nullable(self.removed[drop])
             self.require(removed is None or removed in YEARS, "invalid removed year")
+            event_years = [year for year in YEARS if self.count(table[year], "calendar_full_n") + self.count(table[year], "censored_n") > 0]
+            expected_removed = min(event_years, key=lambda year: (-self.count(table[year], "hit_n"), year)) if event_years else None
+            self.require(removed == expected_removed, "removed year differs from maximum-hit earliest-event year")
             expected = annual if removed is None else annual - self.counts[table[int(removed)], positions]
             self.require(bool(np.array_equal(expected, self.counts[drop, positions])), "drop-year additive counts differ")
             self.checked["annual_tables"] += 1
