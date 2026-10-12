@@ -5,10 +5,7 @@ import { resolve } from "node:path";
 // @ts-expect-error Plain Node module also used by the functional guard test.
 import { assertNoPrivatePublicCandidates } from "./scripts/private-public-guard.mjs";
 // @ts-expect-error Plain Node module also used by its functional test.
-import {
-    copyReports,
-    handleReportRequest,
-} from "./scripts/research-reports.mjs";
+import * as reports from "./scripts/research-reports.mjs";
 
 // AI-written reports live beside their studies: tasks/<task-id>/web-report/.
 const tasksRoot = fileURLToPath(new URL("../tasks", import.meta.url));
@@ -35,12 +32,18 @@ export default defineConfig({
             // untouched, before Vite's HTML transform could inject its client.
             configureServer(server) {
                 server.middlewares.use((request, response, next) => {
-                    if (!handleReportRequest(tasksRoot, request.url, response))
+                    if (
+                        !reports.handleReportRequest(
+                            tasksRoot,
+                            request.url,
+                            response,
+                        )
+                    )
                         next();
                 });
             },
             closeBundle() {
-                if (buildOutDir) copyReports(tasksRoot, buildOutDir);
+                if (buildOutDir) reports.copyReports(tasksRoot, buildOutDir);
             },
         },
         {
