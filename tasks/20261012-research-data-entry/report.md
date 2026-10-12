@@ -47,8 +47,15 @@ passed after the entry and after the checkpoint follow-up. The initial checkpoin
 targeted run passed 421 tests with two POSIX symlink skips. After the dependency
 and execution-boundary changes, all 109 incremental, fresh-source, original cache
 boundary and CI-scope tests passed. Normal commit hooks passed on the final code.
-These are overlapping test groups, not 530 distinct tests. Draft hosted CI has
-its own narrower scope and must be read at the delivered head.
+The final Windows path/catalog/deletion run passed 135 tests with two POSIX skips,
+including all documented superscript COM/LPT aliases rejected before any write.
+These are overlapping test groups, not a sum of distinct tests.
+
+Hosted CI at `a696aca` passed normal hooks and all 88 draft selector/CI contracts.
+The earlier missing-inventory failures are fixed. Its whole check still concludes
+failure at the explicit draft/full-validation gate: the full suite remains
+pending. This is not a green PR or proof that the hosted research suite passed;
+renewed review and checks must refer to the final delivered head.
 
 [The compressed evidence packet](evidence-v1.json.gz) retains raw source pins,
 the owner-designated handoff identity, both synthetic deletion receipts and both
