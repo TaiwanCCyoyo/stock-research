@@ -48,3 +48,11 @@ reason breakdown若有多原因須按固定優先序互斥（invalid_anchor→mi
 receipt 的 `execution.cache_lineage` 提供原 attempt 及 cache seal 取得路徑、hash；延續前須依 execution plan 停止原 writer，不能並行啟動同一版本。
 
 出版後查詢：`uv run python -m scripts.query_hhhl_variants --publication tasks/20261012-hhhl-v4-variants/publication-v1 --verify`，或加 `--row-kind baseline --cohort P-all --horizon 252` 等 exact filter。`--event <original-event-id> --part observations`／`flags` 驗外部 manifest pin 及相關分片，只讀本機逐筆版本；新 clone 沒有本機版本會明確失敗。小型彙總查詢只需 Git publication。沒有參數搜尋、下載或缺資料補算功能。
+
+## 核對與同規格重算
+
+正式 CLI 的固定版本已存在時會拒絕執行。完整同規格重算可使用共用 API `research_core.hhhl_variants_run.run_study(inputs, staging)`：`inputs` 是 `FrozenInputs(primary, pins_path)`，`staging` 由呼叫端在自己的新 task 或 scratch 建立並確認為空。它回傳完整彙總與固定選擇清單，逐筆輸出寫入該新目錄；來源、24 特徵、控制與選擇規則都由固定實作提供。先取得 input pins 宣告的全部版本，核對發布 receipt 的程式與環境身分，完成後呼叫 `inputs.verify_after()`，再與發布的邏輯結果比對。publisher 新增的來源身分欄另行核對，不把它們當計算差異；重算資料亦不覆蓋原版本。
+
+需要快取延續時，從 receipt 的 `execution.cache_lineage.path` 取得保留的 `daily-cache-seal.json` 與其來源目錄；先核對該 seal 的外部 hash，再呼叫 `research_core.hhhl_variants_continue_v1.verified_cache(source, seal_path, pins_path, inputs)`。傳回的 `seal["artifacts"]` 供 `run_cached_study(inputs, staging, source, seal["artifacts"])` 使用，完整名稱是 `research_core.hhhl_variants_continue_pipeline_v1.run_cached_study`。重算前後都驗 cache／輸入／程式身分；缺少原 cache 時使用上述無 cache API，不能製造 seal 或略過核對。這兩條路徑已有完整合成結果 parity；本 task 的正式執行採有封存來源的延續路徑。
+
+只需核對既有結果時，task 的 `evidence/verify_ten_events.py`、`verify_peer_features.py` 與 `verify_summary.py` 分別獨立核對固定抽查、同日同儕特徵，以及完整彙總守恆／年度規則。前兩者接受絕對 `--dataset`，後者接受絕對 `--publication`；核對輸出只列身分、hash 與檢查數。其他研究延伸採用這些共用定義時，仍先在自己的 mission 記錄使用版本與 changed requirements，避免把本版描述結果冒稱新的策略驗證。
