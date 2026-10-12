@@ -160,7 +160,7 @@ def execute_plan(plan: dict[str, Any], *, root: Path = ROOT) -> int:
         if not plan.get("frontend"):
             raise ValueError("Refusing empty validation plan")
         return 0
-    return subprocess.run([sys.executable, "-m", "pytest", *tests], cwd=root, check=False).returncode
+    return subprocess.run([sys.executable, "-m", "pytest", "--durations=20", *tests], cwd=root, check=False).returncode
 
 
 def main() -> int:

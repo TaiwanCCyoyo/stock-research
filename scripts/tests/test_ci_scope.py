@@ -232,18 +232,20 @@ def test_cli_failure_does_not_emit_green_output(tmp_path: Path) -> None:
     assert not output.exists()
 
 
-def test_executor_passes_actual_selected_paths_and_failure(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize("exit_code", [0, 7])
+def test_executor_passes_actual_selected_paths_and_failure(monkeypatch: pytest.MonkeyPatch, exit_code: int) -> None:
     plan = ci_scope.make_plan([("M", "research_core/hhhl_transition.py")])
     observed: list[list[str]] = []
 
     def fake_run(command: list[str], **kwargs: object) -> subprocess.CompletedProcess[bytes]:
         observed.append(command)
         assert kwargs["cwd"] == ci_scope.ROOT
-        return subprocess.CompletedProcess(command, 7)
+        assert kwargs["check"] is False
+        return subprocess.CompletedProcess(command, exit_code)
 
     monkeypatch.setattr(ci_scope.subprocess, "run", fake_run)
-    assert ci_scope.execute_plan(plan) == 7
-    assert observed == [[sys.executable, "-m", "pytest", *plan["python_tests"]]]
+    assert ci_scope.execute_plan(plan) == exit_code
+    assert observed == [[sys.executable, "-m", "pytest", "--durations=20", *plan["python_tests"]]]
     assert "scripts/tests/test_research_ledger.py" not in observed[0]
 
 
@@ -357,6 +359,57 @@ def test_workflow_retains_stable_check_and_explicit_full_entry() -> None:
     assert all(command in steps["Frontend validation"]["run"] for command in ["npm test", "npm run lint", "npm run build"])
     # test:local-data reads private local artifacts that a public hosted runner never has; run it locally only
     assert "test:local-data" not in steps["Frontend validation"]["run"]
+
+
+def test_hook_environments_are_saved_after_preparation_before_downstream_checks() -> None:
+    workflow = yaml.load((ci_scope.ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
+    job = workflow["jobs"]["repository-checks"]
+    steps = job["steps"]
+    indices = {step["name"]: i for i, step in enumerate(steps) if "name" in step}
+    restore = steps[indices["Restore hook environments"]]
+    prepare = steps[indices["Prepare hook environments"]]
+    save = steps[indices["Save hook environments"]]
+    assert restore["id"] == "hook-cache"
+    assert prepare["id"] == "hook-environments"
+    assert restore["uses"].startswith("actions/cache/restore@")
+    assert save["uses"].startswith("actions/cache/save@")
+    assert restore["uses"].split("@")[1] == save["uses"].split("@")[1]
+    assert restore["with"]["path"] == save["with"]["path"] == "${{ env.PRE_COMMIT_HOME }}"
+    assert job["env"]["PRE_COMMIT_HOME"] == "${{ github.workspace }}/.cache/pre-commit"
+    assert restore["with"]["key"] == (
+        "pre-commit-${{ runner.os }}-${{ runner.arch }}-${{ steps.hook-python.outputs.identity }}-${{ hashFiles('.pre-commit-config.yaml', 'uv.lock') }}"
+    )
+    assert save["with"]["key"] == "${{ steps.hook-cache.outputs.cache-primary-key }}"
+    assert prepare["if"] == "steps.hook-cache.outputs.cache-hit != 'true'"
+    assert save["if"] == "steps.hook-cache.outputs.cache-hit != 'true' && steps.hook-environments.outcome == 'success'"
+    assert (
+        indices["Restore hook environments"]
+        < indices["Prepare hook environments"]
+        < indices["Save hook environments"]
+        < indices["Repository checks"]
+        < indices["Draft selector and CI contracts"]
+        < indices["Selected Python tests"]
+    )
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows CI native command dispatch")
+@pytest.mark.parametrize("exit_code", [0, 7])
+def test_hook_environment_preparation_native_dispatch(tmp_path: Path, exit_code: int) -> None:
+    shell = shutil.which("pwsh") or shutil.which("powershell")
+    assert shell is not None
+    workflow = yaml.load((ci_scope.ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
+    step = next(step for step in workflow["jobs"]["repository-checks"]["steps"] if step.get("name") == "Prepare hook environments")
+    (tmp_path / "uv.cmd").write_text('@echo off\n> "%CI_ARGS_FILE%" echo %*\nexit /b %CI_EXIT_CODE%\n', encoding="ascii")
+    args_file = tmp_path / "arguments.txt"
+    environment = {
+        **os.environ,
+        "PATH": str(tmp_path) + os.pathsep + os.environ.get("PATH", ""),
+        "CI_ARGS_FILE": str(args_file),
+        "CI_EXIT_CODE": str(exit_code),
+    }
+    result = subprocess.run([shell, "-NoProfile", "-NonInteractive", "-Command", step["run"]], cwd=tmp_path, env=environment, capture_output=True, timeout=30)
+    assert result.returncode == exit_code, result.stderr
+    assert args_file.read_text(encoding="ascii").strip() == "run --no-sync pre-commit install-hooks"
 
 
 @pytest.mark.skipif(os.name != "nt", reason="Windows CI native command dispatch")
@@ -481,6 +534,7 @@ def test_draft_runs_hosted_contracts_and_hooks_before_pending_gate() -> None:
     assert "scripts/tests/test_mypy_scopes.py" in targeted["run"]
     assert "scripts/tests/test_file_hygiene.py" in targeted["run"]
     assert "--execute" not in targeted["run"]
+    assert "--durations=20" in targeted["run"]
 
 
 def test_pinned_node_and_built_frontend_precede_python_consumers() -> None:
