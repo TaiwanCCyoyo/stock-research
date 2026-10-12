@@ -1,0 +1,124 @@
+"""Synthetic publication, discovery and identity failures; no live inputs."""
+
+import os
+from pathlib import Path
+
+import pytest
+
+from research_core.artifact_store import file_digest, read_json, write_json
+from research_core.research_data_builder import publish_bundle
+from research_core.research_data_catalog import DataCatalog
+from research_core.research_data_paths import DATA_ROOT_ENV, DataRoots
+
+
+def metadata() -> dict:
+    unavailable = {"start": None, "end": None, "reason": "not applicable to synthetic data"}
+    return {
+        "data_id": "synthetic-features",
+        "kind": "features",
+        "definition_version": "fixture.v1",
+        "parameters": {"fixture": True},
+        "inputs": {"prices": "invented-v1"},
+        "coverage": {
+            "scope": "two invented stocks",
+            "raw_input_period": {"start": "2010-01-04", "end": "2010-01-05", "reason": None},
+            "valid_indicator_period": unavailable,
+            "complete_label_period": unavailable,
+        },
+        "status": "partial",
+        "limitations": ["synthetic fixture"],
+        "backup": {"status": "not_backed_up", "off_machine": False},
+    }
+
+
+@pytest.fixture
+def catalog(tmp_path: Path) -> DataCatalog:
+    (tmp_path / "primary/.git").mkdir(parents=True)
+    return DataCatalog(DataRoots.from_env({DATA_ROOT_ENV: str(tmp_path / "primary/research_data")}))
+
+
+def inventory(root: Path) -> dict:
+    return {p.relative_to(root).as_posix(): (p.stat().st_size, file_digest(p)) for p in root.rglob("*") if p.is_file()}
+
+
+def test_publish_reuse_and_two_worktrees_share_one_physical_version(catalog: DataCatalog):
+    entry = publish_bundle(catalog, metadata(), {"features.json": b'{"MA20": [1,2]}'})
+    snapshot = catalog.read()["version_id"]
+    before = inventory(catalog.roots.data)
+    for name in ("first", "second"):
+        worktree = catalog.roots.primary / ".worktrees" / name
+        worktree.mkdir(parents=True)
+        roots = DataRoots.from_env({DATA_ROOT_ENV: str(catalog.roots.data)}, worktree=worktree)
+        other = DataCatalog(roots)
+        result = other.get(entry["data_id"], entry["version_id"], manifest_sha256=entry["manifest"]["sha256"])
+        assert os.path.samefile(roots.artifact_path("data", result["manifest"]["path"]), catalog.roots.artifact_path("data", entry["manifest"]["path"]))
+        assert not (worktree / "research_data").exists()
+    assert publish_bundle(catalog, metadata(), {"features.json": b'{"MA20": [1,2]}'}) == entry
+    assert catalog.read()["version_id"] == snapshot
+    assert inventory(catalog.roots.data) == before
+
+
+def test_definition_and_input_changes_produce_new_versions_and_reject_reuse(catalog: DataCatalog):
+    entry = publish_bundle(catalog, metadata(), {"features.json": b"old"})
+    changed = {**metadata(), "definition_version": "fixture.v2", "inputs": {"prices": "invented-v2"}}
+    new = publish_bundle(catalog, changed, {"features.json": b"new"}, lineage={"extends": entry["version_id"], "mode": "rebuild_definition"})
+    assert new["version_id"] != entry["version_id"]
+    with pytest.raises(ValueError, match="identity mismatch"):
+        catalog.get(entry["data_id"], entry["version_id"], manifest_sha256=entry["manifest"]["sha256"], expected_inputs=changed["inputs"])
+    with pytest.raises(ValueError, match="identity mismatch"):
+        catalog.get(entry["data_id"], entry["version_id"], manifest_sha256=entry["manifest"]["sha256"], definition_version="fixture.v2")
+    with pytest.raises(KeyError):
+        catalog.get(entry["data_id"], "latest", manifest_sha256=entry["manifest"]["sha256"])
+
+
+def test_corruption_raises_without_recalculation(catalog: DataCatalog):
+    entry = publish_bundle(catalog, metadata(), {"features.json": b"old"})
+    file = catalog.roots.artifact_path("data", entry["manifest"]["path"]).parent / "features.json"
+    file.chmod(0o600)
+    file.write_bytes(b"bad")
+    with pytest.raises(ValueError, match="hash/size mismatch"):
+        catalog.get(entry["data_id"], entry["version_id"], manifest_sha256=entry["manifest"]["sha256"])
+    assert file.read_bytes() == b"bad"
+
+
+@pytest.mark.parametrize("name", ["../escape", "C:/escape", "name:stream", "manifest.json"])
+def test_unsafe_publication_names_fail(catalog: DataCatalog, name: str):
+    with pytest.raises(ValueError):
+        publish_bundle(catalog, metadata(), {name: b"bad"})
+    assert not (catalog.roots.data / "catalog.json").exists()
+
+
+def test_metadata_replacement_and_writer_conflict_fail_closed(catalog: DataCatalog):
+    entry = publish_bundle(catalog, metadata(), {"features.json": b"original"})
+    with pytest.raises(ValueError, match="identity metadata mismatch"):
+        catalog.register([{**entry, "limitations": ["rewrite"]}])
+    assert not (catalog.roots.data / ".catalog.lock").exists()
+    write_json(catalog.roots.data / ".catalog.lock", {"owner": "other writer"})
+    assert read_json(catalog.roots.data / ".catalog.lock")
+    with pytest.raises(FileExistsError):
+        catalog.register([entry])
+
+
+def test_old_catalog_snapshot_survives_later_registration(catalog: DataCatalog):
+    publish_bundle(catalog, metadata(), {"features.json": b"old"})
+    old = catalog.read()
+    publish_bundle(catalog, metadata(), {"features.json": b"new"})
+    assert len(catalog.read()["entries"]) == 2
+    assert catalog.read(old["version_id"]) == old
+
+
+def test_cli_catalog_and_worktree_check(catalog: DataCatalog, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]):
+    import sys
+
+    from scripts.research_data import main
+
+    publish_bundle(catalog, metadata(), {"features.json": b"fixture"})
+    monkeypatch.setenv(DATA_ROOT_ENV, str(catalog.roots.data))
+    monkeypatch.setattr(sys, "argv", ["research_data", "catalog"])
+    assert main() == 0
+    assert "synthetic-features" in capsys.readouterr().out
+    worktree = catalog.roots.primary / ".worktrees/test"
+    worktree.mkdir(parents=True)
+    monkeypatch.setattr(sys, "argv", ["research_data", "check-worktree", str(worktree)])
+    assert main() == 0
+    assert "verified" in capsys.readouterr().out

@@ -38,6 +38,11 @@
 
 ## 不可變快取 v1
 
+2026-10-12：正式共用研究版本由 primary `research_data/` catalog 定位，
+`research_cache/` 保留底層區塊。設定、固定版本讀取、原位 legacy 登記與備份範圍見
+[共用入口契約](../../tasks/20261012-research-data-entry/data-contract.md)。既有資料與 pinned 原始碼
+保留原位置及 bytes；入口完成不代表 2010 全市場版本或高效率每日延伸已完成。
+
 主目錄：`D:/Project/stock-research/research_cache/price-bases/<version_sha256>/`（Git 忽略）。每版本保留 `inputs/`、`implementation/`、各價格基礎／股票的 `daily.parquet`、`pivots.parquet` 與完成 `manifest.json`。身分包含所有來源 bytes、公式 bytes、參數、cutoff、日曆／缺值政策及 Python／套件版本。來源變了就產生新版本；相同身分先驗證後重用，不覆寫。
 
 ```powershell
