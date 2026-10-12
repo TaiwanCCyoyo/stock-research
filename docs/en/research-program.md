@@ -23,7 +23,7 @@
 
 2026-10-12 預先登記：[`hhhl-v4-variants.v1`](../../tasks/20261012-hhhl-v4-variants/mission.md)
 研究高過高條件與翻倍的描述關聯，以及未翻倍時的支撐／型態失效訊號。
-**mission 已由 owner 合併（PR #7）；runner／query 已實作，正式市場計算尚未開始。**
+**mission 已由 owner 合併（PR #7）；正式固定計算進行中，完整結果尚未發布。**
 [共用資料契約](../../tasks/20261012-hhhl-v4-variants/data-contract.md)提供24特徵／76 bins、
 固定選擇與旗標時間觀察的 `research_core.hhhl_variants_*` API；
 [來源 pins](../../tasks/20261012-hhhl-v4-variants/params/input-pins-v1.json)固定既有本機輸入。

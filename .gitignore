@@ -257,3 +257,5 @@ verify-*.png
 !tasks/20261012-hhhl-v4-variants/evidence/
 !tasks/20261012-hhhl-v4-variants/evidence/verify_ten_events.py
 !tasks/20261012-hhhl-v4-variants/evidence/verify_peer_features.py
+!tasks/20261012-hhhl-v4-variants/evidence/verify_summary.py
+!tasks/20261012-hhhl-v4-variants/legacy-extension-map.csv

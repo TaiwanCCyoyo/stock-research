@@ -302,6 +302,7 @@
         "scripts/tests/test_hhhl_variants_run.py",
         "scripts/tests/test_hhhl_variants_selection.py",
         "scripts/tests/test_hhhl_variants_summary.py",
+        "scripts/tests/test_hhhl_variants_summary_evidence.py",
         "scripts/tests/test_hhhl_variants_summary_fast_v1.py",
         "scripts/tests/test_hhhl_v4_landmark_view.py",
         "scripts/tests/test_hhhl_v4_outcomes.py",

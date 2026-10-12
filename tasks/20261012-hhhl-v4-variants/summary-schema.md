@@ -35,6 +35,8 @@
 
 `cost_denominator_n` 是全部完整窗口最終 hit，旗標 unknown 也留在分母；`cost_lower/cost_upper` 是嚴格早於首次 hit 的觸發比例界。這是未來停損研究的素材代價，不是模擬交易損益。`trigger_return_p10/median/p90` 是首次有效觸發日 close/anchor−1 的 linear quantile，缺價格另報。`scope=full` 的 L 恰等於 H，其他 scope=landmark 的 L 固定5／10／20／40。
 
+舊 active 表的 `extension` 靜態標記在 [legacy-extension-map.csv](legacy-extension-map.csv)，以 `horizon/landmark` join 所有 `base_row_kind=legacy_cross` 列；新增 L5 或 H252 為 true，其餘為原有126日比較。映射直接沿用 mission，另存以保持執行中已封存實作與彙總字節不變。
+
 ## 逐筆版本
 
 primary 的版本位置及外部 manifest pin 在 publication receipt。所有 relative paths、bytes、hash、Parquet rows、original code 都由 manifest 宣告。`observations/` 的鍵是 `(cohort_id,event_id,horizon)`；`features/` 每個 common-calendar 股票日一列，24個值及各自 `_bin/_status/_reason`；`flags/` 只存原 clean／over 事件，P-all 是彙總時的聯集；`pivots/` 保留低點 extreme／confirmed 兩個 index。`daily/` 是同日曆順序的計算輸出，不能把缺日壓縮。
