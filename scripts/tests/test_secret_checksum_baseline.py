@@ -23,6 +23,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
         ("research_web/public/data/saved-research-studio.manifest.json", None),
         ("research_web/public/data/research-presentation.v1.json", ("sourceSha256",)),
         ("docs/en/evidence-format-migration.json", ("sourceArchiveSha256",)),
+        ("tasks/20261012-hhhl-v4-variants/params/input-pins-v1.json", ("calendar", "sha256")),
     ],
 )
 def test_checksum_baseline_accepts_known_value_and_rejects_new_value(tmp_path: Path, relative: str, fields: tuple[str, ...] | None) -> None:
