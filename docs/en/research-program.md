@@ -23,13 +23,13 @@
 
 2026-10-12 預先登記：[`hhhl-v4-variants.v1`](../../tasks/20261012-hhhl-v4-variants/mission.md)
 研究高過高條件與翻倍的描述關聯，以及未翻倍時的支撐／型態失效訊號。
-**mission 已由 owner 合併（PR #7）；正式固定計算進行中，完整結果尚未發布。**
+**mission 已由 owner 合併（PR #7）；固定計算與驗證完成，完整結果透過 PR #9 交付，merge 由 owner 決定。**
 [共用資料契約](../../tasks/20261012-hhhl-v4-variants/data-contract.md)提供24特徵／76 bins、
 固定選擇與旗標時間觀察的 `research_core.hhhl_variants_*` API；
 [來源 pins](../../tasks/20261012-hhhl-v4-variants/params/input-pins-v1.json)固定既有本機輸入。
-合併後大型可重用逐筆資料出版到 primary
+大型可重用逐筆版本已出版到 primary
 `tasks/20261012-hhhl-v4-variants/datasets/hhhl-v4-variants-01/`，
-小型完整 summary 與 receipt 進 Git；取得與重算入口見契約，執行前固定方式見 [execution plan](../../tasks/20261012-hhhl-v4-variants/execution-plan.md)。
+小型完整 summary 共159,609列，19個驗 hash 分片與 receipt 進 Git；[報告](../../tasks/20261012-hhhl-v4-variants/report.md)、[完整候選數字附錄](../../tasks/20261012-hhhl-v4-variants/result-tables-v1.md)及[驗證收據](../../tasks/20261012-hhhl-v4-variants/verification-v1.json)提供結論與證據。取得與重算入口見契約，執行前固定方式見 [execution plan](../../tasks/20261012-hhhl-v4-variants/execution-plan.md)。
 保留同股多事件、unknown／截尾、年度集中與 current-reference 限制，不當策略效果或獨立驗證。
 
 2026-10-08 架構入口：[型態字典](pattern-definitions.md)集中 HHHL v1～v4 與 F20/F21/F33/M04 的差異、來源與批准狀態；[stock-research 衍生資料](research-derived-data.md)說明 producer 與 stock-research 的分工。[架構交付](../../tasks/20261008-research-data-architecture/report.md)含 25 原例／75 組重算、可攜收據及備份演練；價格品質 v2 修正另存 publication-v2，不覆寫原 v1 相容性證據。Claude 完整標註仍待接收，不把 25 正例當全部正反標註，也不自動改接既有研究。
@@ -60,9 +60,9 @@
 
 ## Reusable research artifacts
 
-| 資產版本              | 定義／契約                                                                                                                                                                                                                                      | 取得與目前狀態                                                                                                                                                                                                                                                      |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `hhhl-v4-variants.v1` | [mission](../../tasks/20261012-hhhl-v4-variants/mission.md)、[data contract](../../tasks/20261012-hhhl-v4-variants/data-contract.md)、[summary schema](../../tasks/20261012-hhhl-v4-variants/summary-schema.md)：24特徵、固定候選與失效旗標時序 | mission 已合併；共用定義、runner／query、同規格 cache continuation 及合成測試可用，正式計算中尚未發布完整結果。逐筆版本固定在 primary `tasks/20261012-hhhl-v4-variants/datasets/hhhl-v4-variants-01/`，完整小型summary進Git；輸入、版本化性能實作與重算入口見契約。 |
+| 資產版本              | 定義／契約                                                                                                                                                                                                                                        | 取得與目前狀態                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `hhhl-v4-variants.v1` | [mission](../../tasks/20261012-hhhl-v4-variants/mission.md)、[data contract](../../tasks/20261012-hhhl-v4-variants/data-contract.md)、[summary schema](../../tasks/20261012-hhhl-v4-variants/summary-schema.md)：24特徵、固定16候選與失效旗標時序 | 固定計算／驗證完成，[報告](../../tasks/20261012-hhhl-v4-variants/report.md)與[publication receipt](../../tasks/20261012-hhhl-v4-variants/publication-v1/receipt.json)透過 PR #9 交付；完整159,609列彙總可由 `research_core.hhhl_variants_query`／`scripts.query_hhhl_variants` 只讀 Git 分片查用。逐筆 immutable 版本已在 primary `tasks/20261012-hhhl-v4-variants/datasets/hhhl-v4-variants-01/`，取得須驗 receipt 外部 manifest pin；輸入、共用 API、cache lineage 與同規格重算入口見契約。 |
 
 2026-10-08 v4 完成：[HHHL v4 機率／早期越線](../../tasks/20261010-hhhl-v4-probability/report.md)
 一次 1,941 檔、1,080 個固定描述性比較完成。126 日 E-all 8.49%、同日無事件主控制

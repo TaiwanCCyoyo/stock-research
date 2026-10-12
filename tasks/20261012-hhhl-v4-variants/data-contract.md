@@ -1,6 +1,6 @@
 # HHHL v4 variants 共用資料契約 v1
 
-定義 ID：`hhhl-variants-features.v1`；實驗／候選 ID 前綴：`hhhl-v4-variants.v1`。mission 已由 owner 合併，runner／query 已實作；**正式計算進行中，完整結果及逐筆版本尚未發布**。批准與固定公式在 [mission](mission.md)，來源身分在 [input pins](params/input-pins-v1.json)，執行與同規格性能延續方式在 [execution plan](execution-plan.md)，完整結果欄位在 [summary schema](summary-schema.md)。
+定義 ID：`hhhl-variants-features.v1`；實驗／候選 ID 前綴：`hhhl-v4-variants.v1`。mission 已由 owner 合併，**固定計算完成，完整彙總及 primary 逐筆版本已發布**。[報告](report.md)、[數字附錄](result-tables-v1.md)、[驗證收據](verification-v1.json)與程式透過 PR #9 交付，merge 仍由 owner 決定。批准與固定公式在 [mission](mission.md)，來源身分在 [input pins](params/input-pins-v1.json)，執行與同規格性能延續方式在 [execution plan](execution-plan.md)，完整結果欄位在 [summary schema](summary-schema.md)。
 
 ## 已可取得的共用定義
 
@@ -13,19 +13,21 @@
 
 取得：clone本repository後讀上列Git檔。測試：`uv run python -m pytest scripts/tests/test_hhhl_variants_*.py -q`（shell glob支援不同時請展開檔名）。inventory查詢：`uv run python -c "import json; from research_core.hhhl_variants_features import feature_inventory; print(json.dumps(feature_inventory(), ensure_ascii=False, indent=2))"`。既有frozen source／atlasreader仍是正式來源，不能將新bin分類器冒稱完整特徵計算。
 
-## 合併後出版的資料
+## 已出版的逐筆資料
 
 大型版本目錄固定 primary：`D:/Project/stock-research/tasks/20261012-hhhl-v4-variants/datasets/hhhl-v4-variants-01/`。worktree不作唯一存放處；每個artifact有relative portable path、bytes、SHA-256、schema／rowcount、keys與price basis，manifest及外部pin由Git小型receipt引用。新clone無本機逐筆輸入時回報missing；向owner取得該immutable版本，再以manifest驗证，不能重新下載或重造舊v4事件。
 
 大型邏輯表以 `observations/<ordinal>.parquet`（事件／股票日×H）、`features/<ordinal>.parquet`（股票日×24特徵，值與bin／原因）、`flags/<ordinal>.parquet`（原P event×flag×L/H，firsttrigger／unknown）分片保存。`daily/<ordinal>.parquet` 存每日計算值，`pivots/<ordinal>.json` 存低點極值與確認 index；ordinal 依原 atlas security_id 排序，manifest 每片另列 original code，不能把檔名當股票代碼。另有 `daily-boundaries.parquet`（K3分界與H有效群體數）、`selection.json`（僅development選擇／候選）、`event-counts-by-stock.parquet`、固定10筆 `audit/ten-events.json` 與 `audit-digest.json`、`execution-start.json`、`manifest.json`。逐筆資料不混進小型Git封裝。
 
-`observations`最低鍵 `(cohort_id,event_id,horizon)`，重複為錯誤；C控制event_id是固定cohort/code/ISO t0、可跨cohort重疊。原P event_id不改。另存original code、t0、calendar_index、split_id、calendar_full、full_path、label、first_hit_offset、first_missing_offset、reason。數值null和狀態unknown與0分離。feature只用t0可知值；flag只用確認時點，來源pivot extreme與confirmed兩日期都存。
+`observations`最低鍵 `(cohort_id,event_id,horizon)`，重複為錯誤；C控制event_id是固定cohort/code/ISO t0、可跨cohort重疊。原P event_id不改，逐筆亦存 P-all 聯集列：每個原事件在兩個 H 各有原群與 P-all 一列，通常共四列。取得原事件集時只選 P-clean／P-over，或只選 P-all，不能兩者相加。另存original code、t0、calendar_index、split_id、calendar_full、full_path、label、first_hit_offset、first_missing_offset、reason。數值null和狀態unknown與0分離。feature只用t0可知值；flag只用確認時點，來源pivot extreme與confirmed兩日期都存。
 
 所有P事件的聯集率稱事件比例，不是股票比例；`known_security_n`是主known分母distinct code。同股重複與控制重疊不是獨立證據。2019暖機不足、current-reference行业／factor／rank、已暴露期間都須保留。
 
 ## 一份完整彙總 parquet
 
-Git小型交付：task下完整邏輯 `publication-v1/summary.parquet`、`schema.md`、`receipt.json`。為保留每個新增Git檔500KiB限制，邏輯 parquet 的原始 bytes 以每片480KiB的 `summary.parquet.part-00000.bin` 等依序保存；receipt 列每片 bytes／hash及重建後完整 parquet 的 bytes／hash／rows，query 在記憶體驗證並重建，沒有重新計算。primary dataset 亦保有單一實體 `summary.parquet`。全部基本切片／未知／不適用／候選／年度／旗標／敏感性在同一parquet，以row_kind區分；合法zero known列照列，率null。
+Git小型交付：task下完整邏輯 `publication-v1/summary.parquet` 的分片、`publication-v1/receipt.json` 與本 task 的 `summary-schema.md`。邏輯 parquet 共 159,609 列／8,941,105 bytes；為保留每個新增Git檔500KiB限制，原始 bytes 以每片480KiB的 `summary.parquet.part-00000.bin` 等19片依序保存。receipt 列每片 bytes／hash及重建後完整 parquet 的 bytes／hash／rows，query 在記憶體驗證並重建，沒有重新計算。primary dataset 亦保有單一實體 `summary.parquet`。全部基本切片／未知／不適用／候選／年度／旗標／敏感性在同一parquet，以row_kind區分；合法zero known列照列，率null。
+
+逐筆 dataset ID 為 `hhhl-variants-8655494b7ed84915eda8468d1fe21f7d2903919f27ece0fd548137ba6573755c`；manifest 外部 pin 及完整 summary hash 由 Git receipt 固定。完整年度表 127,680 列、刪最好年表 15,960 列；legacy 基本表實際 192 列，為 4L×2H×2split×2cohort×2上方線×3state，完整庫存已核對。mission 的比較上界不作補造重複列的理由。本機資料不是異機備份；尚未聲稱有額外備份。
 
 | 欄位                                                                                                                                      | 語義                                                                                                                            |
 | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
@@ -38,7 +40,7 @@ Git小型交付：task下完整邏輯 `publication-v1/summary.parquet`、`schema
 | `flag_lower`, `flag_upper`, `return_bin`, `trigger_return_p10`, `trigger_return_median`, `trigger_return_p90`, `trigger_return_unknown_n` | 時序依mission；分位數linear，非交易損益。                                                                                       |
 | `year`, `removed_year`, `small_sample`, `not_applicable_reason`, `unknown_reason`, `reference_*`                                          | 年度／最好一年刪除、known<300註記、未知與控制參考及loss差≥10pp註記，不作晉級。                                                  |
 
-reason breakdown若有多原因須按固定優先序互斥（invalid_anchor→missing_before_hit→window_end；feature先not_applicable再source缺值再warmup），另metadata保存全部validator diagnostics。每種row_kind在receipt列keys、計數與分母，不依外觀合併不同比率。
+reason breakdown若有多原因須按固定優先序互斥（invalid_anchor→missing_before_hit→window_end；feature先not_applicable再source缺值再warmup），另metadata保存全部validator diagnostics。receipt 列每種 row_kind 與 base_row_kind 的列數；keys 與分母見 summary-schema.md 及 summary 的 riskset 欄位，不依外觀合併不同比率。
 
 固定執行入口：`uv run python -m scripts.run_hhhl_variants --primary D:/Project/stock-research --approved-mission-merge fcda359370cd81594451839d4e79e2216cbce255`。要求 clean committed code，逐筆版本或 publication 已存在即拒絕覆寫，不下載或重偵測事件。執行收據封存程式hash、環境與核准 merge。
 

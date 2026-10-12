@@ -251,7 +251,10 @@ verify-*.png
 /tasks/20261010-hhhl-v4-probability/preparation-v1/bundle.zip
 
 # Complete aggregate-only HHHL variants parquet transported as bounded chunks.
+!tasks/20261012-hhhl-v4-variants/publication-v1/
+!tasks/20261012-hhhl-v4-variants/publication-v1/receipt.json
 !tasks/20261012-hhhl-v4-variants/publication-v1/summary.parquet.part-*.bin
+!tasks/20261012-hhhl-v4-variants/verification-v1.json
 
 # Retained independent checks; their local quote inputs remain ignored.
 !tasks/20261012-hhhl-v4-variants/evidence/

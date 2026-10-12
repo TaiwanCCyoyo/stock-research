@@ -8,7 +8,8 @@ repos:
           - id: trailing-whitespace
             exclude: ^tasks/20261005-relative-strength-holding/evidence/
           - id: end-of-file-fixer
-            exclude: ^tasks/20261005-relative-strength-holding/evidence/
+            # Byte-addressed receipts must retain their original final bytes.
+            exclude: ^tasks/(20261005-relative-strength-holding/evidence/|20261012-hhhl-v4-variants/publication-v1/)
           - id: check-yaml
           - id: check-added-large-files
             # Owner approved: root baseline 1 MiB; all other added files keep 500 KiB.
