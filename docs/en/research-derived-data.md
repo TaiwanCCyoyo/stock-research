@@ -30,6 +30,12 @@
 
 舊 atlas／HHHL task 不改讀這個新模組。新基礎有更嚴格的缺值／事件處理，可能與舊程式去掉缺價後的結果不同；必須看差異紀錄，不能宣稱是逐筆等價替換。
 
+## 特徵區塊重用與有限執行 v1
+
+`research_core.derived_features_selective_v1.compute_selected` 延用 `derived-features.v1` 的數值定義與缺價重新暖機，只計算要求欄位及必要依賴；不是原 HHHL v4 的 G／X4 替代品。`feature_identity_v1` 固定輸入、程式、日曆、股票、定義、政策與 runtime 的完整身分；`feature_block_store_v1` 驗證後重用，缺少或毀損只新增 generation，保存舊資料與失敗診斷，不用 mutable latest。
+
+預定正式根目錄為 primary `D:/Project/stock-research/research_cache/feature-blocks-v1/`；本次只用合成資料測試，沒有市場區塊。查詢入口 `uv run python -m scripts.feature_blocks plan/query`、取得與 manifest 外部 pin 規則見 [資料契約](../../tasks/20261012-research-feature-reuse/data-contract.md)。單股 scheduler 使用 `stock_feature_pool_v2`；全重用時不要求 worker admission。它用有限 Windows Job Objects，完整 barrier 後才讓上層做全域運算；橫斷面 rank 與選擇不可拆成單股工作。記憶體限制是 admission estimate 加事後程序峰值核對，不是 OS 記憶體沙箱；小工作可能以直接計算較快，見 [固定合成實測](../../tasks/20261012-research-feature-reuse/report.md)。
+
 ## 不可變快取 v1
 
 主目錄：`D:/Project/stock-research/research_cache/price-bases/<version_sha256>/`（Git 忽略）。每版本保留 `inputs/`、`implementation/`、各價格基礎／股票的 `daily.parquet`、`pivots.parquet` 與完成 `manifest.json`。身分包含所有來源 bytes、公式 bytes、參數、cutoff、日曆／缺值政策及 Python／套件版本。來源變了就產生新版本；相同身分先驗證後重用，不覆寫。

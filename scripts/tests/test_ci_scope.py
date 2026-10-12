@@ -92,6 +92,17 @@ def test_unknown_and_shared_fallback_contains_every_test(path: str) -> None:
 CI_CONTRACT_TESTS = ["scripts/tests/test_ci_scope.py", "scripts/tests/test_file_hygiene.py", "scripts/tests/test_mypy_scopes.py"]
 
 
+def test_feature_block_domain_routes_new_execution_contracts() -> None:
+    plan = ci_scope.make_plan([("A", "research_core/stock_feature_pool_v1.py")])
+    assert not plan["full"]
+    assert "feature_blocks" in plan["domains"]
+    assert "scripts/tests/test_stock_feature_pool_v1.py" in plan["python_tests"]
+    assert "scripts/tests/test_feature_blocks_cli.py" in plan["python_tests"]
+    assert "scripts/tests/test_prepared_stock_input_v1.py" in plan["python_tests"]
+    # Shared numerical foundations retain the existing full safety fallback.
+    assert ci_scope.make_plan([("A", "research_core/derived_features_selective_v1.py")])["full"]
+
+
 @pytest.mark.parametrize(
     "changes",
     [
