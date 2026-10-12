@@ -233,6 +233,38 @@ explicit demonstration mode uses invented names, prices and market caps.
 - Peak mode explicitly means retrospective highest close within the window;
   it does not describe an achievable sale or known signal.
 
+## Research report library
+
+Open `/#reports`. Each study can publish one report as free-form HTML/JS that an
+agent writes to fit its findings; the studio only provides the library, the
+frame and a shared look. Nothing is registered by hand.
+
+- **Location:** `tasks/<task-id>/web-report/index.html`, with its own `kit/` and
+  `data/` folders. The Vite plugin (`scripts/research-reports.mjs`) lists every
+  such folder at `/reports/index.json`, serves files under `/reports/<task-id>/`
+  (never outside that folder), and a build copies them to `dist/reports/`.
+- **Listing metadata:** `<meta name="report:title|summary|date|status|period|tags|kit">`
+  in the report's `<head>`. `status` is one of `exploratory`, `descriptive`,
+  `demo`, `superseded`, `failed`, `accepted`; `tags` is comma-separated.
+- **Shared look:** copy `report-kit/v1/report-kit.css` and `report-kit.js` into the
+  report's `kit/` folder. The copy freezes the look of a published report; a later
+  kit version gets a new folder (`v2/`) instead of changing `v1`. The kit mirrors
+  the studio's palettes, light/dark appearance and Taiwan colours (red = up), and
+  offers optional helpers: formatting, `{columns, rows}` tables, SVG/HTML builders,
+  segmented controls, tooltips and a diverging scale.
+- **Data:** load data with classic `<script src="data/*.js">` files that assign to
+  `window.REPORT_DATA`. Script tags work both in the studio and when the file is
+  opened directly from disk, where `fetch` does not. Keep each file under the
+  repository's 500 KiB commit limit; `data/` is excluded from Prettier.
+- **Frame:** the viewer shows a report in its own document
+  (`sandbox="allow-scripts allow-same-origin …"`). The frame keeps the studio's
+  origin because browsers block a fully sandboxed (opaque) origin from loading
+  anything on `127.0.0.1`. The kit reports its height (`rk:height`) and follows
+  the studio theme (`rk:theme`); the first paint reads the theme from the URL hash.
+  Avoid `vh` units inside a report, since the frame grows to the report's height.
+- **Example:** `tasks/20261012-hhhl-v4-variants/web-report/`, with its data
+  exported by `tasks/20261012-hhhl-v4-variants/build_web_report_data.py`.
+
 ## Wave annotation laboratory
 
 Open `/#wave-lab` for the bounded retrospective comparison. It starts with the

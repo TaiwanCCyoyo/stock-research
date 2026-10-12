@@ -11,12 +11,14 @@ import { StrategyOverviewPage } from "../features/strategies/StrategyOverviewPag
 import { StrategyDetailPage } from "../features/strategies/StrategyDetailPage";
 import { StrategyComparePage } from "../features/strategies/StrategyComparePage";
 import { ResearchHistoryPage } from "../features/research-history/ResearchHistoryPage";
+import { ReportsPage } from "../features/report-library/ReportsPage";
+import { ReportViewer } from "../features/report-library/ReportViewer";
 import { studioRoute, type StudioPage } from "./routes";
 import "./studio.css";
 
 export default function Studio() {
     const [route, setRoute] = useState(() => studioRoute(location.hash));
-    const { page, runId } = route;
+    const { page, runId, reportId } = route;
     const [palette, setPalette] = useState(() => {
         try {
             return localStorage.getItem("atlas.palette") ?? "forest";
@@ -95,6 +97,7 @@ export default function Studio() {
                             { id: "market", label: "飆股地圖" },
                             { id: "strategies", label: "策略" },
                             { id: "compare", label: "比較" },
+                            { id: "reports", label: "研究報告" },
                             { id: "history", label: "研究歷程" },
                             { id: "funds", label: "ETF 圖鑑" },
                         ] as const
@@ -103,7 +106,9 @@ export default function Studio() {
                             key={n.id}
                             aria-current={
                                 page === n.id ||
-                                (n.id === "strategies" && page === "strategy")
+                                (n.id === "strategies" &&
+                                    page === "strategy") ||
+                                (n.id === "reports" && page === "report")
                                     ? "page"
                                     : undefined
                             }
@@ -188,6 +193,15 @@ export default function Studio() {
                 )}
                 {page === "compare" && <StrategyComparePage />}
                 {page === "history" && <ResearchHistoryPage />}
+                {page === "reports" && <ReportsPage />}
+                {page === "report" && reportId && (
+                    <ReportViewer
+                        key={reportId}
+                        reportId={reportId}
+                        palette={palette}
+                        appearance={resolvedAppearance}
+                    />
+                )}
                 <div hidden={page !== "market"}>
                     <FullHistoryPage active={page === "market"} />
                 </div>

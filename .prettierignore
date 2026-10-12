@@ -19,3 +19,5 @@ tasks/20261005-industry-role-comparison/publication-v2/**
 /scripts/opportunity_history_methods.mjs
 # Published HHHL bytes already have external integrity pins.
 /tasks/20261012-hhhl-v4-variants/publication-v1/**
+# Generated report data scripts are single-line JSON; formatting would bloat them past the size limit.
+/tasks/*/web-report/data/

@@ -1,0 +1,2048 @@
+<!doctype html>
+<html lang="zh-Hant">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>高過高型態，加上哪些條件和飆股有關？</title>
+        <meta
+            name="report:title"
+            content="高過高型態，加上哪些條件和飆股有關？"
+        />
+        <meta
+            name="report:summary"
+            content="HHHL v4 的 24 種條件、16 個組合、8 個失效訊號，全部和「同條件、沒有型態」的股票並排比較。PR #9 結果的互動版，只涵蓋 2019 年起。"
+        />
+        <meta name="report:date" content="2026-10-12" />
+        <meta name="report:status" content="demo" />
+        <meta name="report:period" content="2019-01-02 – 2026-08-14" />
+        <meta name="report:tags" content="HHHL,型態,停損訊號,示範" />
+        <meta name="report:kit" content="v1" />
+        <link rel="stylesheet" href="kit/report-kit.css" />
+        <style>
+            /* Report-specific layout; colours come from kit tokens only. */
+            .bars {
+                display: grid;
+                grid-template-columns: minmax(170px, 230px) 1fr 70px 80px 96px;
+                gap: 6px 12px;
+                align-items: center;
+                font-size: 13px;
+            }
+            .bars .head {
+                color: var(--muted);
+                font-size: 12px;
+            }
+            .bars .head.num,
+            .bars .num {
+                text-align: right;
+                font-variant-numeric: tabular-nums;
+            }
+            .bars .name small {
+                display: block;
+                color: var(--muted);
+                font-size: 11.5px;
+            }
+            .bar-track {
+                position: relative;
+                height: 18px;
+                background: var(--surface-2);
+                border-radius: 3px;
+            }
+            .bar-fill {
+                position: absolute;
+                inset: 0 auto 0 0;
+                border-radius: 3px;
+                background: var(--accent);
+            }
+            .bar-fill.is-control {
+                background: var(--compare);
+            }
+            .bar-ref {
+                position: absolute;
+                top: -3px;
+                bottom: -3px;
+                width: 2px;
+                background: var(--ink);
+                opacity: 0.55;
+            }
+            .heat-family {
+                margin: 16px 0 6px;
+                font-size: 12px;
+                color: var(--muted);
+                letter-spacing: 0.05em;
+            }
+            .heat-row {
+                display: grid;
+                grid-template-columns: minmax(150px, 210px) 1fr;
+                gap: 10px;
+                align-items: stretch;
+                padding: 3px 0;
+            }
+            .heat-label {
+                font-size: 13px;
+                align-self: center;
+            }
+            .heat-label small {
+                display: block;
+                color: var(--muted);
+                font-size: 11px;
+            }
+            .heat-cells {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 4px;
+            }
+            .heat-cell {
+                min-width: 92px;
+                flex: 0 0 auto;
+                border-radius: 6px;
+                padding: 4px 8px;
+                border: 1px solid transparent;
+                cursor: default;
+                font-variant-numeric: tabular-nums;
+                line-height: 1.35;
+            }
+            .heat-cell .bin {
+                font-size: 11px;
+                color: var(--muted);
+            }
+            .heat-cell .rate {
+                font-size: 14px;
+                font-weight: 600;
+                color: var(--ink);
+            }
+            .heat-cell .diff {
+                font-size: 11px;
+                color: var(--ink);
+                opacity: 0.8;
+            }
+            .heat-cell.is-small {
+                border-style: dashed;
+                border-color: var(--line-strong);
+                opacity: 0.6;
+            }
+            .heat-cell.is-na {
+                background-image: repeating-linear-gradient(
+                    135deg,
+                    transparent 0 5px,
+                    var(--line) 5px 6px
+                );
+            }
+            .heat-cell.is-unknown {
+                opacity: 0.55;
+            }
+            .heat-scale {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 12px;
+                color: var(--muted);
+            }
+            .heat-scale span.swatch {
+                width: 120px;
+                height: 10px;
+                border-radius: 3px;
+            }
+            .cand-row td {
+                vertical-align: middle;
+            }
+            .cand-name {
+                white-space: normal !important;
+                min-width: 220px;
+                line-height: 1.45;
+            }
+            .cand-name small {
+                color: var(--muted);
+                display: block;
+                font-size: 11px;
+            }
+            .stack {
+                display: flex;
+                height: 20px;
+                border-radius: 3px;
+                overflow: hidden;
+                background: var(--surface-2);
+            }
+            .stack span {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 11px;
+                color: var(--ink);
+                white-space: nowrap;
+                overflow: hidden;
+            }
+            .stack-grid {
+                display: grid;
+                grid-template-columns: minmax(180px, 260px) 1fr;
+                gap: 6px 12px;
+                align-items: center;
+                font-size: 13px;
+            }
+            .stack-grid .sep {
+                grid-column: 1 / -1;
+                border-top: 1px dashed var(--line);
+                margin: 4px 0;
+            }
+            .near-cards {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                gap: 10px;
+                margin-top: 14px;
+            }
+            .near-cards .rk-finding b {
+                font-size: 22px;
+            }
+            @media (max-width: 640px) {
+                .bars {
+                    grid-template-columns: minmax(0, 1fr) 56px 56px;
+                }
+                .bars .name,
+                .bars .head.lead {
+                    grid-column: 1 / -1;
+                }
+                .bars .known {
+                    display: none;
+                }
+                .heat-row,
+                .stack-grid {
+                    grid-template-columns: minmax(0, 1fr);
+                }
+                .heat-cell {
+                    min-width: 78px;
+                }
+            }
+            select.rk-select {
+                border: 1px solid var(--line-strong);
+                border-radius: 6px;
+                background: var(--surface);
+                padding: 2px 6px;
+            }
+        </style>
+    </head>
+    <body>
+        <main class="rk-page">
+            <header class="rk-hero">
+                <div class="rk-eyebrow">
+                    HHHL v4 條件研究 · PR #9 結果的互動呈現
+                </div>
+                <h1>高過高型態，加上哪些條件和飆股有關？</h1>
+                <p class="rk-lede">
+                    把 PR #9 算好的全部數字攤開來看：型態本身、24 種條件、16
+                    個組合，都和「同條件、但沒有型態」的股票並排，
+                    才分得出是型態的功勞還是條件的功勞；最後看沒變飆股的事件，過程中最常出現哪些訊號。
+                </p>
+                <div class="rk-meta">
+                    <span class="rk-badge is-warn"
+                        >資料期間 2019-01-02 – 2026-08-14</span
+                    >
+                    <span class="rk-badge"
+                        >描述性結果 · 不是策略、不是帳戶損益</span
+                    >
+                    <span class="rk-badge"
+                        >比例是「事件」比例，不是股票比例</span
+                    >
+                    <span class="rk-badge"
+                        >飆股＝起點後 126／252 個交易日內收盤曾達 2 倍</span
+                    >
+                </div>
+            </header>
+
+            <div class="rk-banner" role="note">
+                <strong>這是示範報告。</strong>
+                PR #9 只用 2019 年起的資料，不符合「從 2010
+                年開始」的要求，大盤狀態也沒有拆開。 下一份 pattern-scan
+                報告會從 2010
+                年重算並取代它。這份的用途是確認報告網頁的呈現方式。
+            </div>
+
+            <ol class="rk-findings" id="findings"></ol>
+
+            <ul class="rk-toc">
+                <li><a href="#s-pattern">1 型態本身</a></li>
+                <li><a href="#s-conditions">2 條件地圖</a></li>
+                <li><a href="#s-combos">3 組合</a></li>
+                <li><a href="#s-volatility">4 選到什麼股票</a></li>
+                <li><a href="#s-stops">5 停損訊號取捨</a></li>
+                <li><a href="#s-after">6 跌破之後</a></li>
+                <li><a href="#s-years">7 逐年</a></li>
+                <li><a href="#s-data">8 資料與限制</a></li>
+            </ul>
+
+            <div
+                class="rk-card rk-controls"
+                id="global-controls"
+                style="margin-bottom: 28px"
+            ></div>
+
+            <!-- 1 -->
+            <section class="rk-section" id="s-pattern">
+                <header>
+                    <div>
+                        <div class="rk-q">問題 1</div>
+                        <h2>
+                            高過高本身，比一般股票、比單純創新高更容易翻倍嗎？
+                        </h2>
+                    </div>
+                </header>
+                <p class="rk-answer" id="pattern-answer"></p>
+                <div class="rk-card">
+                    <div class="bars" id="pattern-bars"></div>
+                </div>
+                <p class="rk-foot">
+                    灰色是沒有型態要求的對照組。直線標出「全部股票日」的翻倍率，方便比較。賠錢＝從沒翻倍、而且期限最後一天收盤低於起點。
+                </p>
+                <h3 style="margin: 22px 0 4px; font-size: 15px">
+                    「上方沒有壓力線」的高過高，是不是就等於創新高？
+                </h3>
+                <div class="near-cards" id="near-cards"></div>
+            </section>
+
+            <!-- 2 -->
+            <section class="rk-section" id="s-conditions">
+                <header>
+                    <div>
+                        <div class="rk-q">問題 2、3</div>
+                        <h2>
+                            加上哪些條件翻倍率最高？是型態的功勞，還是條件的功勞？
+                        </h2>
+                    </div>
+                </header>
+                <p class="rk-answer">
+                    每一格是「高過高 ＋
+                    這個條件」的翻倍率；底色是它比<strong>比較對象</strong>高（紅）或低（綠）多少。
+                    預設的比較對象是「同條件的全部股票」：幾乎每一格都比它高 1–3
+                    個百分點，這是「突破當天」本身的效果。 切到「同條件 250
+                    日新高」，大多數格子會變綠：同樣條件下，單純創新高放量的股票反而更常翻倍。
+                    翻倍率最高的格子（年線乖離大、離一年低點遠、強弱前
+                    10%、底部深）都是「已經很強」的狀態。滑過格子可看兩半股票各自的數字。
+                </p>
+                <div class="rk-controls" id="heat-controls"></div>
+                <div class="rk-card">
+                    <div class="heat-scale" id="heat-scale"></div>
+                    <div id="heatmap"></div>
+                </div>
+                <p class="rk-foot">
+                    虛線框＝已知事件少於 300
+                    筆，數字不穩。斜線＝比較對象沒有這個條件（例如「離 Z2
+                    多遠」只有型態才有），只能和「同型態不加條件」比。
+                    「同條件全部股票」也包含少量有型態的日子（約占
+                    2%），所以是「近似沒有型態」。
+                </p>
+            </section>
+
+            <!-- 3 -->
+            <section class="rk-section" id="s-combos">
+                <header>
+                    <div>
+                        <div class="rk-q">問題 2、3</div>
+                        <h2>
+                            16 個組合：在另一半股票上，還比沒有型態的股票好嗎？
+                        </h2>
+                    </div>
+                </header>
+                <p class="rk-answer" id="combo-answer"></p>
+                <div class="rk-controls" id="combo-controls"></div>
+                <div class="rk-card rk-table-wrap">
+                    <table class="rk-table" id="combo-table"></table>
+                </div>
+                <p class="rk-foot">
+                    組合是 PR #9
+                    事前規則在「開發半」股票選出的，順序固定，不依結果重排。預設看「確認半」：這些股票沒參與挑選。
+                    兩半仍共用同一段行情，不是獨立驗證。
+                </p>
+            </section>
+
+            <!-- 4 -->
+            <section class="rk-section" id="s-volatility">
+                <header>
+                    <div>
+                        <div class="rk-q">檢查</div>
+                        <h2>這些條件，是不是只是選到高波動、低價股？</h2>
+                    </div>
+                </header>
+                <p class="rk-answer" id="vol-answer"></p>
+                <div class="rk-controls" id="vol-controls"></div>
+                <div class="rk-card">
+                    <div class="stack-grid" id="vol-stacks"></div>
+                </div>
+                <div class="rk-legend" id="vol-legend"></div>
+            </section>
+
+            <!-- 5 -->
+            <section class="rk-section" id="s-stops">
+                <header>
+                    <div>
+                        <div class="rk-q">問題 6</div>
+                        <h2>哪個訊號適合當停損：抓得到失敗，又少砍飆股？</h2>
+                    </div>
+                </header>
+                <p class="rk-answer" id="stop-answer"></p>
+                <div class="rk-controls" id="stop-controls"></div>
+                <div class="rk-grid-2">
+                    <div class="rk-card">
+                        <div class="rk-chart" id="stop-chart"></div>
+                    </div>
+                    <div class="rk-card rk-table-wrap">
+                        <table class="rk-table" id="stop-table"></table>
+                    </div>
+                </div>
+                <p class="rk-foot">
+                    縱軸＝沒變飆股的事件中，期間內出現過這個訊號的比例；橫軸＝最後變飆股的事件中，在達標「之前」就出現過的比例（拿它停損會先砍掉的飆股）。
+                    越靠左上越好；斜線上的點等於沒有區分力。這是價格路徑的描述，不是停損後的實際損益。
+                </p>
+            </section>
+
+            <!-- 6 -->
+            <section class="rk-section" id="s-after">
+                <header>
+                    <div>
+                        <div class="rk-q">問題 5、6</div>
+                        <h2>
+                            出現訊號之後，翻倍機會真的變小嗎？還是只是因為已經跌了？
+                        </h2>
+                    </div>
+                </header>
+                <p class="rk-answer">
+                    出現訊號的事件通常已經在跌，本來就比較難翻倍。所以把事件按「觀察日當時的漲跌」分層比較：
+                    同一層裡，有訊號的翻倍率仍明顯較低，才代表這個訊號帶了「跌幅以外」的資訊。最右欄是「單純跌
+                    10%」的同一個差距，當作基準。
+                </p>
+                <div class="rk-controls" id="after-controls"></div>
+                <p class="rk-answer" id="after-answer"></p>
+                <div class="rk-card rk-table-wrap">
+                    <table class="rk-table" id="after-table"></table>
+                </div>
+                <p class="rk-foot">
+                    只收觀察日當時還沒翻倍、而且到觀察日價格完整的事件；跌破支撐的事件不排除。期限仍從起點算。
+                </p>
+            </section>
+
+            <!-- 7 -->
+            <section class="rk-section" id="s-years">
+                <header>
+                    <div>
+                        <div class="rk-q">檢查</div>
+                        <h2>是不是靠某一年？</h2>
+                    </div>
+                </header>
+                <p class="rk-answer" id="year-answer"></p>
+                <div class="rk-card">
+                    <div class="rk-chart" id="year-chart"></div>
+                </div>
+                <div class="rk-legend" id="year-legend"></div>
+            </section>
+
+            <!-- 8 -->
+            <section class="rk-section" id="s-data">
+                <header>
+                    <div>
+                        <div class="rk-q">附錄</div>
+                        <h2>資料與限制</h2>
+                    </div>
+                </header>
+                <div class="rk-card" id="data-notes"></div>
+            </section>
+        </main>
+
+        <script src="kit/report-kit.js"></script>
+        <script src="data/summary.js"></script>
+        <script src="data/single-126.js"></script>
+        <script src="data/single-252.js"></script>
+        <script src="data/kdist.js"></script>
+        <script>
+            (function () {
+                "use strict";
+                const K = window.ReportKit;
+                const D = window.REPORT_DATA;
+                const { fmt, html, svg } = K;
+
+                /* ---------------- labels ---------------- */
+                const COHORTS = {
+                    "P-all": { name: "高過高（全部）", note: "v4 真型態突破" },
+                    "P-clean": {
+                        name: "高過高・上方無壓力線",
+                        note: "突破後上方沒有原指定線",
+                    },
+                    "P-over": {
+                        name: "高過高・上方有壓力線",
+                        note: "上方有不阻擋的線",
+                    },
+                    "C-52w": {
+                        name: "250 日新高 ＋ 量 1.5 倍",
+                        note: "不要求型態",
+                        control: true,
+                    },
+                    "C-nh": {
+                        name: "新高爆量",
+                        note: "不要求型態（PR #9 主控制）",
+                        control: true,
+                    },
+                    "C-base": {
+                        name: "全部股票日",
+                        note: "所有合格股票、每一天",
+                        control: true,
+                    },
+                };
+                const FEATURES = {
+                    A: ["上方最近壓力線距離", "只有「有壓力線」的型態才有"],
+                    B: ["離最後低點 Z2 多遠", "收盤 ÷ Z2 − 1"],
+                    B2: ["突破時離突破線多遠", "收盤 ÷ 突破線 − 1"],
+                    E: ["底部長度", "從型態重啟點到突破的交易日"],
+                    E2: ["底部深度", "底部最低點離突破線多深"],
+                    E3: ["高過高／低過低轉折數", ""],
+                    E4_cat: ["型態類別", ""],
+                    E4_big: ["大尺度高過高", ""],
+                    C: ["均線多頭排列", "收盤 > MA20 > MA60 > MA120 > MA240"],
+                    C2: ["年線方向", "MA240 和 20 日前比"],
+                    C3: ["收盤比年線高多少", "收盤 ÷ MA240 − 1"],
+                    C4: ["週線站上上彎週 MA10", "上一個完整週"],
+                    D: ["離一年高點", "收盤 ÷ 前 250 日最高收盤"],
+                    D2: ["離一年低點", "收盤 ÷ 前 250 日最低收盤"],
+                    G: ["突破量比", "當日量 ÷ 前 20 日均量"],
+                    G2_limit: ["突破日漲停", "原價日漲幅 ≥ 9.5%"],
+                    G2_position: ["收在當日高檔", "收盤在當日區間上 25%"],
+                    F: ["波動收斂", "前一日 ATR% ÷ 前 120 日中位數"],
+                    H: ["120 日強弱排名", "同日全部合格股中的百分位"],
+                    I: ["0050 大盤狀態", "當時已知的狀態"],
+                    J: ["同產業同步", "近 11 日同產業新高爆量的其他檔數"],
+                    K: ["波動度 ATR%", "只當診斷，不參與挑選"],
+                    K2: ["股價", "原始收盤價，只當診斷"],
+                    K3: ["成交金額", "同日三等分，只當診斷"],
+                };
+                const FAMILIES = [
+                    [
+                        "型態結構（只有型態才有）",
+                        ["A", "B", "B2", "E", "E2", "E3", "E4_cat", "E4_big"],
+                    ],
+                    ["均線與趨勢", ["C", "C2", "C3", "C4"]],
+                    ["價格位置（支撐壓力）", ["D", "D2"]],
+                    ["量價與 K 線", ["G", "G2_limit", "G2_position", "F"]],
+                    ["強弱與環境", ["H", "I", "J"]],
+                    ["診斷（不參與挑選）", ["K", "K2", "K3"]],
+                ];
+                const BINS = {
+                    A: {
+                        lt10: "<10%",
+                        "10to20": "10–20%",
+                        "20to40": "20–40%",
+                        ge40: "≥40%",
+                    },
+                    B: {
+                        lt05: "<5%",
+                        "05to10": "5–10%",
+                        "10to20": "10–20%",
+                        ge20: "≥20%",
+                    },
+                    B2: { lt03: "<3%", "03to08": "3–8%", ge08: "≥8%" },
+                    E: {
+                        lt20: "<20 日",
+                        "20to60": "20–60 日",
+                        "60to120": "60–120 日",
+                        ge120: "≥120 日",
+                    },
+                    E2: { lt15: "<15%", "15to30": "15–30%", ge30: "≥30%" },
+                    E3: {
+                        zero: "0 個",
+                        one: "1 個",
+                        two: "2 個",
+                        three: "3 個",
+                        ge4: "≥4 個",
+                    },
+                    E4_cat: { hhhl: "高過高", bottom: "底部", range: "區間" },
+                    C: {
+                        all: "全部成立",
+                        partial: "部分成立",
+                        none: "都不成立",
+                    },
+                    C2: { positive: "上彎", nonpositive: "走平或下彎" },
+                    C3: {
+                        lt10: "<10%",
+                        "10to30": "10–30%",
+                        "30to60": "30–60%",
+                        ge60: "≥60%",
+                    },
+                    D: {
+                        ge100: "創新高",
+                        "090to100": "差 10% 內",
+                        lt090: "低於 9 成",
+                    },
+                    D2: {
+                        lt150: "<1.5 倍",
+                        "150to250": "1.5–2.5 倍",
+                        ge250: "≥2.5 倍",
+                    },
+                    G: {
+                        lt150: "<1.5 倍",
+                        "150to200": "1.5–2 倍",
+                        "200to300": "2–3 倍",
+                        "300to500": "3–5 倍",
+                        ge500: "≥5 倍",
+                    },
+                    F: {
+                        le070: "≤0.7 收斂",
+                        "070to100": "0.7–1.0",
+                        gt100: ">1.0 擴張",
+                    },
+                    H: { ge90: "前 10%", "70to90": "前 10–30%", lt70: "其餘" },
+                    I: { up: "上漲", mixed: "混合", down: "下跌" },
+                    J: { zero: "0 檔", one_to_two: "1–2 檔", ge3: "≥3 檔" },
+                    K: { lt03: "<3%", "03to05": "3–5%", ge05: "≥5%" },
+                    K2: {
+                        lt20: "<20 元",
+                        "20to50": "20–50 元",
+                        "50to150": "50–150 元",
+                        ge150: "≥150 元",
+                    },
+                    K3: { low: "低", middle: "中", high: "高" },
+                };
+                const BIN_ORDER = (feature) => [
+                    ...Object.keys(BINS[feature] ?? { true: 1, false: 1 }),
+                    "feature_unknown",
+                ];
+                const binLabel = (feature, bin) =>
+                    bin === "feature_unknown"
+                        ? "未知"
+                        : bin === "true"
+                          ? "是"
+                          : bin === "false"
+                            ? "否"
+                            : (BINS[feature]?.[bin] ?? bin);
+                const SHORT = {
+                    C3: "年線乖離",
+                    D2: "離一年低點",
+                    G: "量比",
+                    H: "強弱排名",
+                    B: "離 Z2",
+                };
+                const FLAGS = {
+                    X1: ["跌回突破線", "收盤 < 突破線"],
+                    X2: ["跌破最後低點 Z2", "收盤 < Z2"],
+                    X3: ["跌破型態起點低點", "收盤 < restart 低點"],
+                    X4: ["出現更低的確認低點", "底底高被破壞"],
+                    X5_MA20: ["跌破 MA20", ""],
+                    X5_MA60: ["跌破 MA60", ""],
+                    X6_10: ["跌 10%", "純跌幅基準"],
+                    X6_15: ["跌 15%", "純跌幅基準"],
+                };
+                const RETURN_BINS = [
+                    ["lt1", "還在起點以下"],
+                    ["b1_1p10", "漲 0–10%"],
+                    ["b1p10_1p25", "漲 10–25%"],
+                    ["ge1p25", "漲 25% 以上"],
+                    ["pooled", "全部合計"],
+                ];
+
+                /* ---------------- data access ---------------- */
+                const rows = (name) => K.records(D[name]);
+                const baseline = rows("baseline");
+                const singles = {
+                    126: rows("single_126"),
+                    252: rows("single_252"),
+                };
+                const candidates = rows("candidate");
+                const kdist = rows("kdist");
+                const reverse = rows("reverse");
+                const flags = rows("flags");
+                const years = rows("year");
+                const drops = rows("drop_best_year");
+                const near = rows("near_high");
+                const rate = (r) => (r ? fmt.ratio(r.hit_n, r.known_n) : null);
+                const lossRate = (r) =>
+                    r ? fmt.ratio(r.loss_n, r.known_n) : null;
+                const base = (cohort, split, h) =>
+                    baseline.find(
+                        (r) =>
+                            r.cohort_id === cohort &&
+                            r.split === split &&
+                            r.horizon === h,
+                    );
+                const single = (cohort, split, h, feature, bin) =>
+                    singles[h].find(
+                        (r) =>
+                            r.cohort_id === cohort &&
+                            r.split === split &&
+                            r.feature_id === feature &&
+                            r.bin_id === bin,
+                    );
+                const cand = (cohort, split, h, id) =>
+                    candidates.find(
+                        (r) =>
+                            r.cohort_id === cohort &&
+                            r.split === split &&
+                            r.horizon === h &&
+                            r.candidate_id === id,
+                    );
+                const known = (r) => (r && r.known_n > 0 ? r : null);
+
+                const state = {
+                    h: 252,
+                    split: "merged",
+                    cohort: "P-all",
+                    comparator: "C-base",
+                    comboComparator: "C-base",
+                    comboSplit: "cross",
+                    flagH: 252,
+                    landmark: "full",
+                    flag: "X3",
+                    afterL: 20,
+                    afterH: 252,
+                    volFeature: "K",
+                };
+                const SPLITS = [
+                    { value: "merged", label: "全部股票" },
+                    { value: "dev", label: "開發半" },
+                    { value: "cross", label: "確認半" },
+                ];
+                const HORIZONS = [
+                    { value: 126, label: "半年（126 日）" },
+                    { value: 252, label: "一年（252 日）" },
+                ];
+
+                /* ---------------- findings ---------------- */
+                function findings() {
+                    const pAll = base("P-all", "merged", 252);
+                    const c52 = base("C-52w", "merged", 252);
+                    const cBase = base("C-base", "merged", 252);
+                    const triple =
+                        "hhhl-v4-variants.v1:C3=ge60&D2=ge250&H=ge90";
+                    const tp = cand("P-all", "cross", 252, triple);
+                    const tc = cand("C-base", "cross", 252, triple);
+                    const t52 = cand("C-52w", "cross", 252, triple);
+                    const x3 = reverse.find(
+                        (r) =>
+                            r.horizon === 252 &&
+                            r.scope === "full" &&
+                            r.flag_id === "X3",
+                    );
+                    const items = [
+                        [
+                            `${fmt.pct(rate(pAll))} vs ${fmt.pct(rate(c52))}`,
+                            `高過高一年內翻倍的比例，輸給單純「250 日新高＋量」；一般股票日是 ${fmt.pct(rate(cBase))}。型態本身沒有加分。`,
+                        ],
+                        [
+                            `${fmt.pp(rate(tp) - rate(tc))} / ${fmt.pp(rate(tp) - rate(t52))}`,
+                            `最強組合（年線乖離 ≥60%＋離一年低點 ≥2.5 倍＋強弱前 10%）在確認半的一年翻倍率 ${fmt.pct(rate(tp))}：比同條件的一般股票高，但比同條件、當天也創新高放量的股票低。型態的加分，大致就是「突破創新高」本身。`,
+                        ],
+                        [
+                            `${fmt.pct(fmt.ratio(x3.nonhit_flag_triggered_n, x3.nonhit_flag_known_n))} / ${fmt.pct(fmt.ratio(x3.hit_flag_triggered_n, x3.hit_flag_known_n))}`,
+                            `「跌破型態起點低點」抓到一半沒變飆股的事件，只先碰到約一成的飆股，是八個訊號中代價最低的；但「單純跌 15%」的取捨也差不多。`,
+                        ],
+                    ];
+                    const list = document.getElementById("findings");
+                    for (const [big, text] of items)
+                        list.append(
+                            html("li", { class: "rk-finding" }, [
+                                html("b", { class: "rk-num" }, big),
+                                html("p", {}, text),
+                            ]),
+                        );
+                }
+
+                /* ---------------- 1 pattern bars ---------------- */
+                function renderPattern() {
+                    const box = document.getElementById("pattern-bars");
+                    box.replaceChildren();
+                    const order = [
+                        "P-all",
+                        "P-clean",
+                        "P-over",
+                        "C-52w",
+                        "C-nh",
+                        "C-base",
+                    ];
+                    const data = order.map((c) => ({
+                        c,
+                        r: base(c, state.split, state.h),
+                    }));
+                    const max =
+                        Math.max(...data.map((d) => rate(d.r) ?? 0)) * 1.15;
+                    const ref = rate(base("C-base", state.split, state.h));
+                    ["", "翻倍率", "翻倍率", "賠錢率", "已知事件"].forEach(
+                        (t, i) =>
+                            box.append(
+                                html(
+                                    "div",
+                                    {
+                                        class: `head${i === 0 ? " lead" : ""}${i >= 2 ? " num" : ""}${i === 4 ? " known" : ""}`,
+                                    },
+                                    t,
+                                ),
+                            ),
+                    );
+                    for (const { c, r } of data) {
+                        const info = COHORTS[c];
+                        const value = rate(r);
+                        box.append(
+                            html("div", { class: "name" }, [
+                                info.name,
+                                html("small", {}, info.note),
+                            ]),
+                        );
+                        const track = html("div", { class: "bar-track" }, [
+                            html("div", {
+                                class: `bar-fill${info.control ? " is-control" : ""}`,
+                                style: `width:${((value ?? 0) / max) * 100}%`,
+                            }),
+                            html("div", {
+                                class: "bar-ref",
+                                style: `left:${((ref ?? 0) / max) * 100}%`,
+                                title: "全部股票日",
+                            }),
+                        ]);
+                        box.append(track);
+                        box.append(
+                            html(
+                                "div",
+                                { class: "num" },
+                                html("strong", {}, fmt.pct(value)),
+                            ),
+                        );
+                        box.append(
+                            html("div", { class: "num" }, fmt.pct(lossRate(r))),
+                        );
+                        box.append(
+                            html(
+                                "div",
+                                { class: "num known" },
+                                `${fmt.int(r?.known_n)}`,
+                            ),
+                        );
+                    }
+                    const p = rate(base("P-all", state.split, state.h));
+                    const c52 = rate(base("C-52w", state.split, state.h));
+                    const pc = rate(base("P-clean", state.split, state.h));
+                    document.getElementById("pattern-answer").innerHTML =
+                        `<strong>沒有。</strong>高過高全部的翻倍率 ${fmt.pct(p)}，比一般股票高，但低於不要求型態的「250 日新高＋量」${fmt.pct(c52)}。` +
+                        `上方沒有壓力線的子集 ${fmt.pct(pc)} 稍好，仍沒有超過它。賠錢率則幾組都在四成多，差不多。`;
+                }
+                function renderNear() {
+                    const pooled = (bin) =>
+                        near.find(
+                            (r) =>
+                                r.cohort_id === "P-clean" &&
+                                r.split_id === "pooled" &&
+                                r.bin_id === bin,
+                        );
+                    const overlap = near.find(
+                        (r) =>
+                            r.cohort_id === "C-52w" && r.split_id === "pooled",
+                    );
+                    const box = document.getElementById("near-cards");
+                    const cards = [
+                        [
+                            fmt.pct(pooled("ge100").near_high_rate),
+                            "上方無壓力線的高過高，當天也創 250 日新高的比例",
+                        ],
+                        [
+                            fmt.pct(pooled("ge095").near_high_rate),
+                            "離 250 日新高 5% 以內的比例",
+                        ],
+                        [
+                            fmt.pct(overlap.near_high_rate),
+                            "反過來：「250 日新高＋量」的事件中，同一天也是上方無線高過高的比例",
+                        ],
+                    ];
+                    for (const [big, text] of cards)
+                        box.append(
+                            html("div", { class: "rk-finding" }, [
+                                html("b", { class: "rk-num" }, big),
+                                html("p", {}, text),
+                            ]),
+                        );
+                    box.after(
+                        html(
+                            "p",
+                            { class: "rk-foot" },
+                            `大約一半到七成是，但兩者不是同一件事：創新高的事件只有三成同時是這種型態。分母是 D 已知的 ${fmt.int(pooled("ge100").near_high_known_n)} 筆，另有 ${fmt.int(pooled("ge100").near_high_unknown_n)} 筆因 2019 年暖機不足而未知。`,
+                        ),
+                    );
+                }
+
+                /* ---------------- 2 heatmap ---------------- */
+                const COMPARATORS = [
+                    { value: "C-base", label: "同條件全部股票" },
+                    { value: "C-52w", label: "同條件 250 日新高" },
+                    { value: "self", label: "同型態不加條件" },
+                    { value: "none", label: "不比較，只看翻倍率" },
+                ];
+                function comparatorRate(split, h, feature, bin) {
+                    if (state.comparator === "self")
+                        return {
+                            r: rate(base(state.cohort, split, h)),
+                            na: false,
+                        };
+                    if (state.comparator === "none")
+                        return { r: null, na: false };
+                    const row = known(
+                        single(state.comparator, split, h, feature, bin),
+                    );
+                    return { r: rate(row), n: row?.known_n, na: !row };
+                }
+                function renderHeat() {
+                    const box = document.getElementById("heatmap");
+                    box.replaceChildren();
+                    const diverge = K.diverging(0.08);
+                    const allRates = [];
+                    for (const [, feats] of FAMILIES)
+                        for (const f of feats)
+                            for (const b of BIN_ORDER(f)) {
+                                const r = known(
+                                    single(
+                                        state.cohort,
+                                        state.split,
+                                        state.h,
+                                        f,
+                                        b,
+                                    ),
+                                );
+                                if (r) allRates.push(rate(r));
+                            }
+                    const maxRate = Math.max(...allRates);
+                    const seq = (v) =>
+                        K.mix(
+                            K.token("--surface"),
+                            K.token("--accent"),
+                            0.08 + 0.7 * Math.min(1, v / maxRate),
+                        );
+                    const scale = document.getElementById("heat-scale");
+                    scale.replaceChildren();
+                    if (state.comparator === "none") {
+                        scale.append(
+                            "翻倍率 低",
+                            html("span", {
+                                class: "swatch",
+                                style: `background:linear-gradient(90deg, ${seq(0)}, ${seq(maxRate)})`,
+                            }),
+                            "高",
+                        );
+                    } else {
+                        scale.append(
+                            "比對照低 8 pp",
+                            html("span", {
+                                class: "swatch",
+                                style: `background:linear-gradient(90deg, ${diverge(-0.08)}, ${diverge(0)}, ${diverge(0.08)})`,
+                            }),
+                            "比對照高 8 pp",
+                        );
+                    }
+                    for (const [family, feats] of FAMILIES) {
+                        box.append(
+                            html("div", { class: "heat-family" }, family),
+                        );
+                        for (const f of feats) {
+                            const cells = html("div", { class: "heat-cells" });
+                            let any = false;
+                            for (const b of BIN_ORDER(f)) {
+                                const r = known(
+                                    single(
+                                        state.cohort,
+                                        state.split,
+                                        state.h,
+                                        f,
+                                        b,
+                                    ),
+                                );
+                                if (!r) continue;
+                                any = true;
+                                const v = rate(r);
+                                const comp = comparatorRate(
+                                    state.split,
+                                    state.h,
+                                    f,
+                                    b,
+                                );
+                                const diff =
+                                    comp.r === null || comp.r === undefined
+                                        ? null
+                                        : v - comp.r;
+                                const cls = ["heat-cell"];
+                                if (r.known_n < 300) cls.push("is-small");
+                                if (comp.na) cls.push("is-na");
+                                if (b === "feature_unknown")
+                                    cls.push("is-unknown");
+                                const bg =
+                                    state.comparator === "none"
+                                        ? seq(v)
+                                        : diverge(diff);
+                                const cell = html(
+                                    "div",
+                                    {
+                                        class: cls.join(" "),
+                                        style: `background-color:${bg}`,
+                                        tabindex: "0",
+                                    },
+                                    [
+                                        html(
+                                            "div",
+                                            { class: "bin" },
+                                            binLabel(f, b),
+                                        ),
+                                        html(
+                                            "div",
+                                            { class: "rate" },
+                                            fmt.pct(v),
+                                        ),
+                                        html(
+                                            "div",
+                                            { class: "diff" },
+                                            state.comparator === "none"
+                                                ? `${fmt.int(r.known_n)} 筆`
+                                                : comp.na
+                                                  ? "對照不適用"
+                                                  : fmt.pp(diff),
+                                        ),
+                                    ],
+                                );
+                                const tip = () => {
+                                    const lines = [
+                                        `<b>${FEATURES[f][0]}：${binLabel(f, b)}</b>`,
+                                    ];
+                                    for (const sp of SPLITS) {
+                                        const rr = known(
+                                            single(
+                                                state.cohort,
+                                                sp.value,
+                                                state.h,
+                                                f,
+                                                b,
+                                            ),
+                                        );
+                                        const cc = comparatorRate(
+                                            sp.value,
+                                            state.h,
+                                            f,
+                                            b,
+                                        );
+                                        lines.push(
+                                            `${sp.label}：${COHORTS[state.cohort].name} ${fmt.pct(rate(rr))}（${fmt.int(rr?.known_n)} 筆）` +
+                                                (state.comparator === "none"
+                                                    ? ""
+                                                    : cc.na
+                                                      ? "，對照不適用"
+                                                      : `，對照 ${fmt.pct(cc.r)}，差 ${fmt.pp(rate(rr) - cc.r)}`),
+                                        );
+                                    }
+                                    lines.push(
+                                        `賠錢率 ${fmt.pct(lossRate(r))}・股票 ${fmt.int(r.known_security_n)} 檔`,
+                                    );
+                                    if (r.known_n < 300)
+                                        lines.push(
+                                            "已知事件少於 300 筆，數字不穩。",
+                                        );
+                                    return lines.join("<br>");
+                                };
+                                cell.addEventListener("mousemove", (e) =>
+                                    K.tooltip.show(e, tip()),
+                                );
+                                cell.addEventListener("mouseleave", () =>
+                                    K.tooltip.hide(),
+                                );
+                                cell.addEventListener("focus", (e) => {
+                                    const rect =
+                                        e.target.getBoundingClientRect();
+                                    K.tooltip.show(
+                                        {
+                                            clientX: rect.right,
+                                            clientY: rect.top,
+                                        },
+                                        tip(),
+                                    );
+                                });
+                                cell.addEventListener("blur", () =>
+                                    K.tooltip.hide(),
+                                );
+                                cells.append(cell);
+                            }
+                            if (!any) continue;
+                            box.append(
+                                html("div", { class: "heat-row" }, [
+                                    html("div", { class: "heat-label" }, [
+                                        FEATURES[f][0],
+                                        FEATURES[f][1]
+                                            ? html("small", {}, FEATURES[f][1])
+                                            : null,
+                                    ]),
+                                    cells,
+                                ]),
+                            );
+                        }
+                    }
+                }
+
+                /* ---------------- 3 combos ---------------- */
+                const CAND_IDS = [
+                    ...new Set(candidates.map((r) => r.candidate_id)),
+                ];
+                function candLabel(id) {
+                    return id
+                        .split(":")[1]
+                        .split("&")
+                        .map((part) => {
+                            const [f, b] = part.split("=");
+                            return `${SHORT[f] ?? f} ${binLabel(f, b)}`;
+                        })
+                        .join(" ＋ ");
+                }
+                function renderCombos() {
+                    const table = document.getElementById("combo-table");
+                    table.replaceChildren();
+                    const split = state.comboSplit;
+                    const h = state.h;
+                    const compLabel = {
+                        "C-base": "同條件全部股票",
+                        "C-52w": "同條件 250 日新高",
+                        self: "高過高不加條件",
+                    }[state.comboComparator];
+                    const compCohort = state.comboComparator;
+                    const data = CAND_IDS.map((id, i) => {
+                        const p = cand("P-all", split, h, id);
+                        const comp =
+                            compCohort === "self"
+                                ? base("P-all", split, h)
+                                : known(cand(compCohort, split, h, id));
+                        const drop =
+                            split === "merged"
+                                ? null
+                                : drops.find(
+                                      (d) =>
+                                          d.base_row_kind === "candidate" &&
+                                          d.candidate_id === id &&
+                                          d.split === split &&
+                                          d.horizon === h,
+                                  );
+                        return { i, id, p, comp, drop };
+                    });
+                    const max =
+                        Math.max(
+                            ...data.flatMap((d) => [
+                                rate(d.p) ?? 0,
+                                rate(d.comp) ?? 0,
+                            ]),
+                        ) * 1.1;
+                    const W = 220;
+                    const head = html("tr", {}, [
+                        html("th", {}, "#"),
+                        html("th", {}, "條件（都要再加高過高）"),
+                        html(
+                            "th",
+                            {},
+                            html("span", {}, [
+                                "● 高過高＋條件　",
+                                html(
+                                    "span",
+                                    { style: "color:var(--compare)" },
+                                    `○ ${compLabel}`,
+                                ),
+                            ]),
+                        ),
+                        html("th", {}, "翻倍率"),
+                        html("th", {}, "對照"),
+                        html("th", {}, "差"),
+                        html("th", {}, "賠錢率"),
+                        html("th", {}, "已知事件（股票）"),
+                        html("th", {}, "刪最好一年"),
+                    ]);
+                    table.append(html("thead", {}, head));
+                    const body = html("tbody");
+                    let wins = 0;
+                    let comparable = 0;
+                    for (const d of data) {
+                        const pr = rate(d.p);
+                        const cr = rate(d.comp);
+                        if (cr !== null) {
+                            comparable += 1;
+                            if (pr > cr) wins += 1;
+                        }
+                        const s = svg(
+                            "svg",
+                            {
+                                width: W,
+                                height: 22,
+                                viewBox: `0 0 ${W} 22`,
+                                role: "img",
+                                "aria-label": `翻倍率 ${fmt.pct(pr)}，對照 ${fmt.pct(cr)}`,
+                            },
+                            [
+                                svg("line", {
+                                    x1: 0,
+                                    x2: W,
+                                    y1: 11,
+                                    y2: 11,
+                                    class: "rk-gridline",
+                                }),
+                                cr === null
+                                    ? null
+                                    : svg("line", {
+                                          x1: (Math.min(pr, cr) / max) * W,
+                                          x2: (Math.max(pr, cr) / max) * W,
+                                          y1: 11,
+                                          y2: 11,
+                                          stroke: "var(--line-strong)",
+                                          "stroke-width": 4,
+                                      }),
+                                cr === null
+                                    ? null
+                                    : svg("circle", {
+                                          cx: (cr / max) * W,
+                                          cy: 11,
+                                          r: 5.5,
+                                          fill: "var(--surface)",
+                                          stroke: "var(--compare)",
+                                          "stroke-width": 2,
+                                      }),
+                                svg("circle", {
+                                    cx: (pr / max) * W,
+                                    cy: 11,
+                                    r: 5.5,
+                                    fill: "var(--accent)",
+                                }),
+                            ],
+                        );
+                        const diff = cr === null ? null : pr - cr;
+                        const isPatternOnly =
+                            d.p.reference_kind === "pattern_only_unfiltered";
+                        body.append(
+                            html("tr", { class: "cand-row" }, [
+                                html("td", {}, String(d.i + 1)),
+                                html("td", { class: "cand-name" }, [
+                                    candLabel(d.id),
+                                    isPatternOnly && compCohort !== "self"
+                                        ? html(
+                                              "small",
+                                              {},
+                                              "含型態專屬條件：沒有型態的股票沒有這個值，對照不適用",
+                                          )
+                                        : null,
+                                ]),
+                                html("td", {}, s),
+                                html("td", {}, html("strong", {}, fmt.pct(pr))),
+                                html(
+                                    "td",
+                                    { class: cr === null ? "is-na" : "" },
+                                    cr === null ? "不適用" : fmt.pct(cr),
+                                ),
+                                html(
+                                    "td",
+                                    {
+                                        class:
+                                            diff > 0
+                                                ? "rk-gain"
+                                                : diff < 0
+                                                  ? "rk-loss"
+                                                  : "",
+                                    },
+                                    fmt.pp(diff),
+                                ),
+                                html("td", {}, fmt.pct(lossRate(d.p))),
+                                html(
+                                    "td",
+                                    {},
+                                    `${fmt.int(d.p.known_n)}（${fmt.int(d.p.known_security_n)}）`,
+                                ),
+                                html(
+                                    "td",
+                                    {
+                                        title: d.drop
+                                            ? `刪掉 ${d.drop.removed_year} 年起點的事件`
+                                            : "合併兩半時各半刪的年份可能不同，請切到單一半看",
+                                    },
+                                    d.drop
+                                        ? `${fmt.pct(rate(d.drop))}（${d.drop.removed_year}）`
+                                        : "—",
+                                ),
+                            ]),
+                        );
+                    }
+                    table.append(body);
+                    const pBase = rate(base("P-all", split, h));
+                    const diffs = data
+                        .map((d) =>
+                            rate(d.comp) === null
+                                ? null
+                                : rate(d.p) - rate(d.comp),
+                        )
+                        .filter((v) => v !== null)
+                        .sort((a, b) => a - b);
+                    const median = diffs.length
+                        ? diffs[Math.floor(diffs.length / 2)]
+                        : null;
+                    const losses = data
+                        .map((d) => lossRate(d.p))
+                        .filter((v) => v !== null);
+                    const reading = {
+                        "C-base":
+                            "比一般同條件股票好一些，這部分可以算型態（或者說「突破」）的功勞。切到「同條件 250 日新高」看看差別。",
+                        "C-52w":
+                            "同樣的條件下，單純創新高放量的股票反而更常翻倍：高過高沒有比它多帶資訊。",
+                        self: "條件確實讓高過高的翻倍率變高。",
+                    }[compCohort];
+                    document.getElementById("combo-answer").innerHTML =
+                        `每個組合都把翻倍率從高過高原本的 ${fmt.pct(pBase)} 拉到兩成上下。` +
+                        `和「${compLabel}」比，能比較的 ${comparable} 個組合中有 ${wins} 個較高，差距中位數 ${fmt.pp(median)}：${reading}` +
+                        `同時賠錢率升到 ${fmt.pct(Math.min(...losses), 0)}–${fmt.pct(Math.max(...losses), 0)}（高過高整體約四成）：這些條件選到的是漲得多、也跌得兇的股票。`;
+                }
+
+                /* ---------------- 4 volatility ---------------- */
+                const VOL_FEATURES = [
+                    { value: "K", label: "波動度 ATR%" },
+                    { value: "K2", label: "股價" },
+                    { value: "K3", label: "成交金額" },
+                ];
+                function renderVol() {
+                    const f = state.volFeature;
+                    const bins = Object.keys(BINS[f]);
+                    const colors = [
+                        "--cell-light",
+                        "--cell-mid",
+                        "--cell-deep",
+                        "--accent",
+                    ].map(K.token);
+                    const shares = (pick) => {
+                        const counts = bins.map(pick);
+                        const total = counts.reduce((a, b) => a + (b || 0), 0);
+                        return {
+                            counts,
+                            total,
+                            shares: counts.map((c) =>
+                                total ? (c || 0) / total : 0,
+                            ),
+                        };
+                    };
+                    const fromSingle = (cohort) =>
+                        shares(
+                            (b) =>
+                                single(cohort, "merged", 126, f, b)?.known_n ??
+                                0,
+                        );
+                    const fromCand = (id) =>
+                        shares(
+                            (b) =>
+                                kdist.find(
+                                    (r) =>
+                                        r.cohort_id === "P-all" &&
+                                        r.horizon === 126 &&
+                                        r.candidate_id === id &&
+                                        r.feature_id === f &&
+                                        r.bin_id === b,
+                                )?.known_n ?? 0,
+                        );
+                    const grid = document.getElementById("vol-stacks");
+                    grid.replaceChildren();
+                    const addRow = (label, s, strong) => {
+                        grid.append(
+                            html(
+                                "div",
+                                {},
+                                strong ? html("strong", {}, label) : label,
+                            ),
+                        );
+                        const bar = html("div", {
+                            class: "stack",
+                            role: "img",
+                            "aria-label":
+                                `${label}：` +
+                                bins
+                                    .map(
+                                        (b, i) =>
+                                            `${binLabel(f, b)} ${fmt.pct(s.shares[i], 0)}`,
+                                    )
+                                    .join("，"),
+                        });
+                        bins.forEach((b, i) => {
+                            const w = s.shares[i] * 100;
+                            bar.append(
+                                html(
+                                    "span",
+                                    {
+                                        style: `width:${w}%;background:${colors[i % colors.length]}`,
+                                        title: `${binLabel(f, b)}：${fmt.pct(s.shares[i])}（${fmt.int(s.counts[i])} 筆）`,
+                                    },
+                                    w >= 9 ? fmt.pct(s.shares[i], 0) : "",
+                                ),
+                            );
+                        });
+                        grid.append(bar);
+                    };
+                    addRow("全部股票日", fromSingle("C-base"), true);
+                    addRow("250 日新高＋量", fromSingle("C-52w"), true);
+                    addRow("高過高（全部）", fromSingle("P-all"), true);
+                    grid.append(html("div", { class: "sep" }));
+                    CAND_IDS.forEach((id, i) =>
+                        addRow(`${i + 1}. ${candLabel(id)}`, fromCand(id)),
+                    );
+                    const legend = document.getElementById("vol-legend");
+                    legend.replaceChildren(
+                        ...bins.map((b, i) =>
+                            html("span", {}, [
+                                html("i", {
+                                    style: `background:${colors[i % colors.length]}`,
+                                }),
+                                binLabel(f, b),
+                            ]),
+                        ),
+                    );
+                    const hi = (s) => s.shares[bins.length - 1];
+                    const all = fromSingle("C-base");
+                    const c1 = fromCand(CAND_IDS[0]);
+                    const p = fromSingle("P-all");
+                    document.getElementById("vol-answer").innerHTML =
+                        f === "K"
+                            ? `<strong>高過高本身不是，但那些條件是。</strong>全部股票日中 ATR% ≥5% 的占 ${fmt.pct(hi(all))}，高過高只有 ${fmt.pct(hi(p))}；` +
+                              `第 1 個條件（年線乖離 ≥60%）選到的事件卻有 ${fmt.pct(hi(c1))} 落在這一格。高波動股本來就比較容易翻倍、也比較容易大跌，這解釋了上一節翻倍率和賠錢率同時升高。`
+                            : `切換看看股價與成交金額：強勢條件選到的股票，價格與成交金額的分布也和一般股票不同。這些是診斷，不參與挑選。`;
+                }
+
+                /* ---------------- 5 stop trade-off ---------------- */
+                function stopRows() {
+                    const lm =
+                        state.landmark === "full"
+                            ? state.flagH
+                            : Number(state.landmark);
+                    const scope =
+                        state.landmark === "full" ? "full" : "landmark";
+                    return Object.keys(FLAGS).map((id) => {
+                        const r = reverse.find(
+                            (x) =>
+                                x.horizon === state.flagH &&
+                                x.landmark === lm &&
+                                x.scope === scope &&
+                                x.flag_id === id,
+                        );
+                        return {
+                            id,
+                            r,
+                            catch: fmt.ratio(
+                                r?.nonhit_flag_triggered_n,
+                                r?.nonhit_flag_known_n,
+                            ),
+                            cost: fmt.ratio(
+                                r?.hit_flag_triggered_n,
+                                r?.hit_flag_known_n,
+                            ),
+                        };
+                    });
+                }
+                function renderStops() {
+                    const data = stopRows();
+                    const W = 460;
+                    const H = 340;
+                    const m = { l: 46, r: 16, t: 14, b: 40 };
+                    const x = (v) => m.l + v * (W - m.l - m.r);
+                    const y = (v) => H - m.b - v * (H - m.t - m.b);
+                    const g = [];
+                    for (let t = 0; t <= 1.0001; t += 0.2) {
+                        g.push(
+                            svg("line", {
+                                x1: x(t),
+                                x2: x(t),
+                                y1: y(0),
+                                y2: y(1),
+                                class: "rk-gridline",
+                            }),
+                        );
+                        g.push(
+                            svg("line", {
+                                x1: x(0),
+                                x2: x(1),
+                                y1: y(t),
+                                y2: y(t),
+                                class: "rk-gridline",
+                            }),
+                        );
+                        g.push(
+                            svg(
+                                "text",
+                                {
+                                    x: x(t),
+                                    y: H - m.b + 16,
+                                    "text-anchor": "middle",
+                                },
+                                `${Math.round(t * 100)}%`,
+                            ),
+                        );
+                        g.push(
+                            svg(
+                                "text",
+                                {
+                                    x: m.l - 8,
+                                    y: y(t) + 4,
+                                    "text-anchor": "end",
+                                },
+                                `${Math.round(t * 100)}%`,
+                            ),
+                        );
+                    }
+                    g.push(
+                        svg("line", {
+                            x1: x(0),
+                            y1: y(0),
+                            x2: x(1),
+                            y2: y(1),
+                            stroke: "var(--faint)",
+                            "stroke-dasharray": "4 4",
+                        }),
+                    );
+                    g.push(
+                        svg(
+                            "text",
+                            {
+                                x: x(0.62),
+                                y: y(0.66),
+                                transform: `rotate(-36 ${x(0.62)} ${y(0.66)})`,
+                            },
+                            "沒有區分力",
+                        ),
+                    );
+                    g.push(
+                        svg(
+                            "text",
+                            {
+                                x: (m.l + W - m.r) / 2,
+                                y: H - 6,
+                                "text-anchor": "middle",
+                                class: "rk-label",
+                            },
+                            "代價：飆股在達標前就出現的比例 →",
+                        ),
+                    );
+                    g.push(
+                        svg(
+                            "text",
+                            {
+                                x: 12,
+                                y: (m.t + H - m.b) / 2,
+                                "text-anchor": "middle",
+                                class: "rk-label",
+                                transform: `rotate(-90 12 ${(m.t + H - m.b) / 2})`,
+                            },
+                            "抓到：沒變飆股的事件出現過的比例 →",
+                        ),
+                    );
+                    for (const d of data) {
+                        if (d.catch === null || d.cost === null) continue;
+                        const isBase = d.id.startsWith("X6");
+                        const sel = d.id === state.flag;
+                        const dot = svg("circle", {
+                            cx: x(d.cost),
+                            cy: y(d.catch),
+                            r: sel ? 8 : 6,
+                            fill: isBase ? "var(--surface)" : "var(--accent)",
+                            stroke: isBase
+                                ? "var(--compare)"
+                                : "var(--surface)",
+                            "stroke-width": 2,
+                            tabindex: "0",
+                            style: "cursor:pointer",
+                        });
+                        const tip = () =>
+                            `<b>${FLAGS[d.id][0]}</b>${FLAGS[d.id][1] ? FLAGS[d.id][1] + "<br>" : ""}` +
+                            `沒變飆股的事件中出現過：${fmt.pct(d.catch)}（${fmt.int(d.r.nonhit_flag_triggered_n)} / ${fmt.int(d.r.nonhit_flag_known_n)}）<br>` +
+                            `飆股達標前就出現：${fmt.pct(d.cost)}（${fmt.int(d.r.hit_flag_triggered_n)} / ${fmt.int(d.r.hit_flag_known_n)}）<br>` +
+                            `觸發當天相對起點的報酬中位數：開發半 ${fmt.pct(d.r.trigger_return_median_dev)}、確認半 ${fmt.pct(d.r.trigger_return_median_cross)}`;
+                        dot.addEventListener("mousemove", (e) =>
+                            K.tooltip.show(e, tip()),
+                        );
+                        dot.addEventListener("mouseleave", () =>
+                            K.tooltip.hide(),
+                        );
+                        dot.addEventListener("click", () => {
+                            state.flag = d.id;
+                            renderStops();
+                            renderAfter();
+                        });
+                        g.push(dot);
+                        g.push(
+                            svg(
+                                "text",
+                                {
+                                    x: x(d.cost) + 10,
+                                    y: y(d.catch) + 4,
+                                    class: "rk-label",
+                                },
+                                FLAGS[d.id][0],
+                            ),
+                        );
+                    }
+                    const chart = document.getElementById("stop-chart");
+                    chart.replaceChildren(
+                        svg(
+                            "svg",
+                            {
+                                viewBox: `0 0 ${W} ${H}`,
+                                width: W,
+                                role: "img",
+                                "aria-label": "停損訊號取捨散佈圖",
+                            },
+                            g,
+                        ),
+                    );
+                    const table = document.getElementById("stop-table");
+                    table.replaceChildren(
+                        html(
+                            "thead",
+                            {},
+                            html("tr", {}, [
+                                html("th", {}, "訊號"),
+                                html("th", {}, "抓到"),
+                                html("th", {}, "代價"),
+                                html("th", {}, "抓到 − 代價"),
+                            ]),
+                        ),
+                        html(
+                            "tbody",
+                            {},
+                            data.map((d) =>
+                                html(
+                                    "tr",
+                                    {
+                                        class:
+                                            d.id === state.flag
+                                                ? "is-strong"
+                                                : "",
+                                    },
+                                    [
+                                        html("td", {}, FLAGS[d.id][0]),
+                                        html("td", {}, fmt.pct(d.catch)),
+                                        html("td", {}, fmt.pct(d.cost)),
+                                        html(
+                                            "td",
+                                            {},
+                                            fmt.pp(d.catch - d.cost),
+                                        ),
+                                    ],
+                                ),
+                            ),
+                        ),
+                    );
+                    const pattern = data.filter(
+                        (d) => !d.id.startsWith("X6") && d.catch !== null,
+                    );
+                    const cheapest = [...pattern].sort(
+                        (a, b) => a.cost - b.cost,
+                    )[0];
+                    const widest = [...pattern].sort(
+                        (a, b) => b.catch - b.cost - (a.catch - a.cost),
+                    )[0];
+                    const drop15 = data.find((d) => d.id === "X6_15");
+                    const ma20 = data.find((d) => d.id === "X5_MA20");
+                    document.getElementById("stop-answer").innerHTML =
+                        `代價最低的是<strong>「${FLAGS[cheapest.id][0]}」</strong>：抓到 ${fmt.pct(cheapest.catch)} 沒變飆股的事件，只先碰到 ${fmt.pct(cheapest.cost)} 的飆股。` +
+                        `「抓到 − 代價」最大的是「${FLAGS[widest.id][0]}」（${fmt.pct(widest.catch)} / ${fmt.pct(widest.cost)}）。` +
+                        `要注意，單純「跌 15%」也有 ${fmt.pct(drop15.catch)} / ${fmt.pct(drop15.cost)}，和型態訊號差不多；` +
+                        `「跌破 MA20」則幾乎人人碰到（飆股也有 ${fmt.pct(ma20.cost)}）。點圖上的點，下一節會換成那個訊號。`;
+                }
+
+                /* ---------------- 6 after the signal ---------------- */
+                function flagRow(flag, bin, st) {
+                    return flags.find(
+                        (r) =>
+                            r.horizon === state.afterH &&
+                            r.landmark === state.afterL &&
+                            r.flag_id === flag &&
+                            r.return_bin === bin &&
+                            r.flag_state === st,
+                    );
+                }
+                function renderAfter() {
+                    const table = document.getElementById("after-table");
+                    const flag = state.flag;
+                    const head = html("tr", {}, [
+                        html("th", {}, `第 ${state.afterL} 日時的漲跌`),
+                        html("th", {}, `有「${FLAGS[flag][0]}」翻倍率`),
+                        html("th", {}, "沒有 翻倍率"),
+                        html("th", {}, "差"),
+                        html("th", {}, "「跌 10%」的同一個差"),
+                    ]);
+                    const body = RETURN_BINS.map(([bin, label]) => {
+                        const t = flagRow(flag, bin, "triggered");
+                        const f = flagRow(flag, bin, "all_false");
+                        const bt = flagRow("X6_10", bin, "triggered");
+                        const bf = flagRow("X6_10", bin, "all_false");
+                        const d1 =
+                            rate(known(t)) !== null && rate(known(f)) !== null
+                                ? rate(t) - rate(f)
+                                : null;
+                        const d2 =
+                            rate(known(bt)) !== null && rate(known(bf)) !== null
+                                ? rate(bt) - rate(bf)
+                                : null;
+                        const cell = (r) =>
+                            known(r)
+                                ? `${fmt.pct(rate(r))}（${fmt.int(r.known_n)}）`
+                                : "—";
+                        const small = known(t) && t.known_n < 100;
+                        return html(
+                            "tr",
+                            { class: bin === "pooled" ? "is-strong" : "" },
+                            [
+                                html("td", {}, label),
+                                html(
+                                    "td",
+                                    {
+                                        title: small ? "樣本少於 100 筆" : "",
+                                        style: small ? "opacity:.55" : "",
+                                    },
+                                    cell(t),
+                                ),
+                                html("td", {}, cell(f)),
+                                html(
+                                    "td",
+                                    {
+                                        class:
+                                            d1 < 0
+                                                ? "rk-loss"
+                                                : d1 > 0
+                                                  ? "rk-gain"
+                                                  : "",
+                                    },
+                                    fmt.pp(d1),
+                                ),
+                                html("td", { class: "rk-num" }, fmt.pp(d2)),
+                            ],
+                        );
+                    });
+                    table.replaceChildren(
+                        html("thead", {}, head),
+                        html("tbody", {}, body),
+                    );
+                    const t = known(flagRow(flag, "lt1", "triggered"));
+                    const f = known(flagRow(flag, "lt1", "all_false"));
+                    const bt = known(flagRow("X6_10", "lt1", "triggered"));
+                    const bf = known(flagRow("X6_10", "lt1", "all_false"));
+                    document.getElementById("after-answer").innerHTML =
+                        t && f && bt && bf
+                            ? `樣本最多的是「第 ${state.afterL} 日還在起點以下」這一層：有「${FLAGS[flag][0]}」的事件翻倍率 ${fmt.pct(rate(t))}，沒有的 ${fmt.pct(rate(f))}，差 ${fmt.pp(rate(t) - rate(f))}；` +
+                              `同一層裡「跌 10%」差 ${fmt.pp(rate(bt) - rate(bf))}。` +
+                              (Math.abs(rate(t) - rate(f)) >
+                              Math.abs(rate(bt) - rate(bf)) + 0.01
+                                  ? "差距比跌幅基準大，這個訊號多帶了跌幅以外的資訊。"
+                                  : "差距和跌幅基準差不多，這個訊號沒有多帶跌幅以外的資訊。") +
+                              "上面幾層有訊號的樣本很少（淡色），不要過度解讀。"
+                            : "這個組合在「還在起點以下」這一層沒有足夠樣本。";
+                }
+
+                /* ---------------- 7 years ---------------- */
+                function renderYears() {
+                    const series = [
+                        ["P-all", "var(--accent)", false],
+                        ["C-52w", "var(--gain)", true],
+                        ["C-nh", "var(--compare)", true],
+                        ["C-base", "var(--faint)", true],
+                    ];
+                    const ys = [2019, 2020, 2021, 2022, 2023, 2024, 2025];
+                    const pts = series.map(([c]) =>
+                        ys.map((yv) =>
+                            rate(
+                                known(
+                                    years.find(
+                                        (r) =>
+                                            r.cohort_id === c &&
+                                            r.horizon === state.h &&
+                                            r.year === yv,
+                                    ),
+                                ),
+                            ),
+                        ),
+                    );
+                    const max =
+                        Math.max(...pts.flat().filter((v) => v !== null)) *
+                        1.12;
+                    const W = 720;
+                    const H = 260;
+                    const m = { l: 46, r: 20, t: 12, b: 30 };
+                    const x = (i) =>
+                        m.l + (i / (ys.length - 1)) * (W - m.l - m.r);
+                    const y = (v) => H - m.b - (v / max) * (H - m.t - m.b);
+                    const g = [];
+                    for (let t = 0; t <= max; t += 0.05) {
+                        g.push(
+                            svg("line", {
+                                x1: m.l,
+                                x2: W - m.r,
+                                y1: y(t),
+                                y2: y(t),
+                                class: "rk-gridline",
+                            }),
+                        );
+                        g.push(
+                            svg(
+                                "text",
+                                {
+                                    x: m.l - 8,
+                                    y: y(t) + 4,
+                                    "text-anchor": "end",
+                                },
+                                `${Math.round(t * 100)}%`,
+                            ),
+                        );
+                    }
+                    ys.forEach((yv, i) =>
+                        g.push(
+                            svg(
+                                "text",
+                                { x: x(i), y: H - 8, "text-anchor": "middle" },
+                                String(yv),
+                            ),
+                        ),
+                    );
+                    series.forEach(([c, color, dashed], si) => {
+                        const d = pts[si]
+                            .map((v, i) =>
+                                v === null ? null : `${x(i)},${y(v)}`,
+                            )
+                            .filter(Boolean);
+                        g.push(
+                            svg("polyline", {
+                                points: d.join(" "),
+                                fill: "none",
+                                stroke: color,
+                                "stroke-width": c === "P-all" ? 3 : 2,
+                                "stroke-dasharray": dashed ? "5 4" : null,
+                            }),
+                        );
+                        pts[si].forEach((v, i) => {
+                            if (v === null) return;
+                            const dot = svg("circle", {
+                                cx: x(i),
+                                cy: y(v),
+                                r: 3.5,
+                                fill: color,
+                            });
+                            dot.addEventListener("mousemove", (e) =>
+                                K.tooltip.show(
+                                    e,
+                                    `<b>${ys[i]}・${COHORTS[c].name}</b>翻倍率 ${fmt.pct(v)}`,
+                                ),
+                            );
+                            dot.addEventListener("mouseleave", () =>
+                                K.tooltip.hide(),
+                            );
+                            g.push(dot);
+                        });
+                    });
+                    document.getElementById("year-chart").replaceChildren(
+                        svg(
+                            "svg",
+                            {
+                                viewBox: `0 0 ${W} ${H}`,
+                                width: W,
+                                role: "img",
+                                "aria-label": "逐年翻倍率",
+                            },
+                            g,
+                        ),
+                    );
+                    document
+                        .getElementById("year-legend")
+                        .replaceChildren(
+                            ...series.map(([c, color, dashed]) =>
+                                html("span", {}, [
+                                    html("i", { style: `background:${color}` }),
+                                    COHORTS[c].name +
+                                        (dashed ? "（虛線＝對照）" : ""),
+                                ]),
+                            ),
+                        );
+                    const pr = pts[0];
+                    const dropBase = (sp) =>
+                        drops.find(
+                            (d) =>
+                                d.base_row_kind === "baseline" &&
+                                d.split === sp &&
+                                d.horizon === state.h,
+                        );
+                    const dd = dropBase("dev");
+                    const dc = dropBase("cross");
+                    document.getElementById("year-answer").innerHTML =
+                        `翻倍率每年差很多：2020 年 ${fmt.pct(pr[1])}，2021 年只有 ${fmt.pct(pr[2])}。高過高和對照組幾乎一起漲跌，沒有哪一年型態特別突出。` +
+                        (dd && dc
+                            ? `刪掉翻倍最多的 ${dd.removed_year} 年後，高過高的翻倍率降到開發半 ${fmt.pct(rate(dd))}、確認半 ${fmt.pct(rate(dc))}。`
+                            : "") +
+                        `2026 年的期限還沒走完，不列入。`;
+                }
+
+                /* ---------------- 8 notes ---------------- */
+                function renderNotes() {
+                    const s = D.source;
+                    const items = [
+                        `資料：PR #9 已發布的彙總（${fmt.int(s.summary_rows)} 列），由 <code>tasks/20261012-hhhl-v4-variants/build_web_report_data.py</code> 匯出；兩半股票互斥，「全部股票」是兩半的整數計數相加後重算比例。`,
+                        `資料集：<code class="rk-mono">${s.dataset_id}</code>，來源收據 <code>${s.publication}</code>。`,
+                        `期間 ${s.period}，而且這段期間之前已經被看過：結果是描述，不是獨立驗證。<strong>不符合從 2010 年開始的要求。</strong>`,
+                        "同一檔股票可以有很多事件、時間也會重疊：所有比例都是事件比例，不能說成「多少比例的股票會成為飆股」。",
+                        "賠錢＝從沒翻倍、而且期限最後一天收盤低於起點；這是價格路徑，不含成本、停損、資金配置。",
+                        "「同條件全部股票」包含少量有型態的日子；產業分類與還原因子是現在的版本，不是當時的版本。",
+                        "完整數字、定義與未知值：見 <code>tasks/20261012-hhhl-v4-variants/report.md</code>、<code>result-tables-v1.md</code> 與 <code>data-contract.md</code>。",
+                    ];
+                    document.getElementById("data-notes").replaceChildren(
+                        html(
+                            "ul",
+                            { style: "margin:0;padding-left:1.2em" },
+                            items.map((t) => {
+                                const li = html("li");
+                                li.innerHTML = t;
+                                return li;
+                            }),
+                        ),
+                    );
+                }
+
+                /* ---------------- controls ---------------- */
+                function controls() {
+                    const gc = document.getElementById("global-controls");
+                    gc.append(
+                        html(
+                            "strong",
+                            { style: "color:var(--ink)" },
+                            "全頁設定",
+                        ),
+                    );
+                    K.segmented(gc, {
+                        label: "飆股期限",
+                        options: HORIZONS,
+                        value: state.h,
+                        onChange: (v) => {
+                            state.h = v;
+                            state.flagH = v;
+                            state.afterH = v;
+                            renderAll();
+                        },
+                    });
+                    K.segmented(gc, {
+                        label: "第 1、2 節的股票",
+                        options: SPLITS,
+                        value: state.split,
+                        onChange: (v) => {
+                            state.split = v;
+                            renderPattern();
+                            renderHeat();
+                        },
+                    });
+                    gc.append(
+                        html(
+                            "span",
+                            {},
+                            "第 3 節預設看確認半；第 5、6 節可在各自的區塊再調整。",
+                        ),
+                    );
+
+                    const hc = document.getElementById("heat-controls");
+                    K.segmented(hc, {
+                        label: "型態",
+                        options: [
+                            { value: "P-all", label: "全部" },
+                            { value: "P-clean", label: "上方無線" },
+                            { value: "P-over", label: "上方有線" },
+                        ],
+                        value: state.cohort,
+                        onChange: (v) => {
+                            state.cohort = v;
+                            renderHeat();
+                        },
+                    });
+                    K.segmented(hc, {
+                        label: "比較對象",
+                        options: COMPARATORS,
+                        value: state.comparator,
+                        onChange: (v) => {
+                            state.comparator = v;
+                            renderHeat();
+                        },
+                    });
+
+                    const cc = document.getElementById("combo-controls");
+                    K.segmented(cc, {
+                        label: "股票",
+                        options: SPLITS,
+                        value: state.comboSplit,
+                        onChange: (v) => {
+                            state.comboSplit = v;
+                            renderCombos();
+                        },
+                    });
+                    K.segmented(cc, {
+                        label: "對照",
+                        options: COMPARATORS.slice(0, 3),
+                        value: state.comboComparator,
+                        onChange: (v) => {
+                            state.comboComparator = v;
+                            renderCombos();
+                        },
+                    });
+
+                    K.segmented(document.getElementById("vol-controls"), {
+                        label: "看",
+                        options: VOL_FEATURES,
+                        value: state.volFeature,
+                        onChange: (v) => {
+                            state.volFeature = v;
+                            renderVol();
+                        },
+                    });
+
+                    const sc = document.getElementById("stop-controls");
+                    K.segmented(sc, {
+                        label: "觀察到",
+                        options: [
+                            { value: "5", label: "前 5 日" },
+                            { value: "10", label: "前 10 日" },
+                            { value: "20", label: "前 20 日" },
+                            { value: "40", label: "前 40 日" },
+                            { value: "full", label: "整段期限" },
+                        ],
+                        value: state.landmark,
+                        onChange: (v) => {
+                            state.landmark = v;
+                            renderStops();
+                        },
+                    });
+
+                    const ac = document.getElementById("after-controls");
+                    const select = html(
+                        "select",
+                        { class: "rk-select", "aria-label": "訊號" },
+                        Object.entries(FLAGS).map(([id, [name]]) =>
+                            html("option", { value: id }, name),
+                        ),
+                    );
+                    select.value = state.flag;
+                    select.addEventListener("change", () => {
+                        state.flag = select.value;
+                        renderAfter();
+                        renderStops();
+                    });
+                    ac.append(
+                        html("span", { class: "rk-control" }, ["訊號", select]),
+                    );
+                    K.segmented(ac, {
+                        label: "觀察日",
+                        options: [5, 10, 20, 40].map((v) => ({
+                            value: v,
+                            label: `第 ${v} 日`,
+                        })),
+                        value: state.afterL,
+                        onChange: (v) => {
+                            state.afterL = v;
+                            renderAfter();
+                        },
+                    });
+                    document.addEventListener("rk:theme", () => renderAll());
+                }
+                function renderAll() {
+                    renderPattern();
+                    renderHeat();
+                    renderCombos();
+                    renderVol();
+                    renderStops();
+                    renderAfter();
+                    renderYears();
+                }
+
+                findings();
+                renderNear();
+                renderNotes();
+                controls();
+                renderAll();
+            })();
+        </script>
+    </body>
+</html>

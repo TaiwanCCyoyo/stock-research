@@ -1,8 +1,18 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { fileURLToPath } from "node:url";
+import { resolve } from "node:path";
 // @ts-expect-error Plain Node module also used by the functional guard test.
 import { assertNoPrivatePublicCandidates } from "./scripts/private-public-guard.mjs";
+// @ts-expect-error Plain Node module also used by its functional test.
+import {
+    copyReports,
+    handleReportRequest,
+} from "./scripts/research-reports.mjs";
+
+// AI-written reports live beside their studies: tasks/<task-id>/web-report/.
+const tasksRoot = fileURLToPath(new URL("../tasks", import.meta.url));
+let buildOutDir = "";
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -14,6 +24,23 @@ export default defineConfig({
                 assertNoPrivatePublicCandidates(
                     fileURLToPath(new URL("./public", import.meta.url)),
                 );
+            },
+        },
+        {
+            name: "research-reports",
+            configResolved(config) {
+                buildOutDir = resolve(config.root, config.build.outDir);
+            },
+            // Registered directly (not as a post hook) so report HTML is served
+            // untouched, before Vite's HTML transform could inject its client.
+            configureServer(server) {
+                server.middlewares.use((request, response, next) => {
+                    if (!handleReportRequest(tasksRoot, request.url, response))
+                        next();
+                });
+            },
+            closeBundle() {
+                if (buildOutDir) copyReports(tasksRoot, buildOutDir);
             },
         },
         {

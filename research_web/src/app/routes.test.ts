@@ -18,3 +18,14 @@ test("saved strategy identifiers round-trip and malformed identifiers fall back"
     assert.equal(studioRoute("#strategy/%zz").page, "strategies");
     assert.equal(studioRoute("#strategy/").page, "strategies");
 });
+test("report routes keep a safe report id and fall back to the library", () => {
+    assert.equal(studioRoute("#reports").page, "reports");
+    assert.deepEqual(studioRoute("#report/20261012-hhhl-v4-variants"), {
+        page: "report",
+        runId: null,
+        reportId: "20261012-hhhl-v4-variants",
+    });
+    assert.equal(studioRoute("#report/..%2Fsecret").page, "reports");
+    assert.equal(studioRoute("#report/%zz").page, "reports");
+    assert.equal(studioRoute("#report/").page, "reports");
+});
