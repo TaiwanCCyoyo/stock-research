@@ -1,3 +1,20 @@
+# Maintained text uses LF; later frozen-evidence rules override this default.
+* text=auto eol=lf
+
+# Binary assets retain their original bytes.
+*.png -text
+*.jpg -text
+*.jpeg -text
+*.gif -text
+*.webp -text
+*.ico -text
+*.pdf -text
+*.zip -text
+*.gz -text
+*.parquet -text
+*.sqlite -text
+*.bin -text
+
 .githooks/* text eol=lf
 # Immutable evidence: preserve byte hashes across Windows and other checkouts.
 tasks/20261004-feature-discrimination-atlas/publication-v2/** -text
