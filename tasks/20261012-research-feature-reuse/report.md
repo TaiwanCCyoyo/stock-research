@@ -37,7 +37,7 @@ Parent process lifetime peak 最高 116,256,768 bytes；child lifetime peak 最�
 
 資產入口為 [資料契約](data-contract.md)、`research_core.feature_block_store_v1`／`stock_feature_pool_v2` 和 `scripts.feature_blocks`。先比完整身分與 bytes，再重用；缺少／失效只增加新 generation，不能覆寫舊檔。缺少 pivot 時重算必要 ATR 中間值有明確理由；沒有「任何情況都不能重算」規則。
 
-固定量測保留 v1 原來源與數字；review 指出 v1 在全重用路徑仍先做 worker memory admission，低記憶體時可能不必要地拒絕零程序重用。新 v2 coordinator 保留靜態 budget 驗證，只在缺塊工作存在時做 worker admission；全重用回傳 effective_workers=0。v2 的完整實作身分不同，不替既有 v1 區塊偷偷換標籤。這是合成功能回歸修正，未重跑或改稱 v1 的正式量測為 v2 性能證據。
+固定量測保留 v1 原來源與數字；review 指出 v1 在全重用路徑仍先做 worker memory admission，低記憶體時可能不必要地拒絕零程序重用。新 v2 coordinator 保留靜態 budget 驗證，只在缺塊工作存在時做 worker admission；全重用回傳 effective_workers=0。v2 的完整實作身分不同，不替既有 v1 區塊偷偷換標籤。這是合成功能回歸修正，未重跑或改稱 v1 的正式量測為 v2 性能證據。 v2 的 18 個 low-RAM／失效恢復／conflict 回歸案例全部通過，正常 hooks 亦通過。
 
 全域 rank／選擇仍在完整 barrier 後，由上層依批准 mission 處理，先合併整數 count 與 distinct stock set 再算率。本 API 拒絕把橫斷面特徵塞進單股程序。凍結 v4 G／X4 的缺價語義不同，沒有改接新 gap-reset API；原始結果與執行來源 bytes 保持不變。
 
@@ -46,3 +46,5 @@ Parent process lifetime peak 最高 116,256,768 bytes；child lifetime peak 最�
 本次 task worktree 保留供 PR：`D:/Project/stock-research/.worktrees/research-feature-reuse`。正常建置 hook 建立了 initialized producer submodule 與約 4.98 GB 實體快照；本研究沒有讀取它們。未來清理須依既有 initialized-submodule／資料保存流程，不得 force removal。原 HHHL worktree 已合併、保存後正常移除。
 
 Portable receipt: compressed 6984 bytes, expanded 28354 bytes; SHA-256 `e9f5dcfe0651928ded3075537b457d9e0122631dcbc023260732cf8460d006d2`.
+
+保存後再次核對：primary 與 task checkout 的全部 27 個 HHHL execution pins，以及 15 個 synthetic source pins 均吻合原收據。既有 checkout 有三檔在屬性更新後保留舊 CRLF；證明差異僅換行後恢复原 LF bytes，Git 內容無差異，沒有重寫定義或结果。
