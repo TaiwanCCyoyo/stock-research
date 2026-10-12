@@ -76,6 +76,10 @@ mismatch. `read_market_context` delegates to the existing retained reader.
 `publish_bundle` verifies and publishes already produced byte payloads under a
 new immutable ID, then registers it. It does not calculate a market table.
 
+Windows device-name rejection includes the COM/LPT superscript digit aliases
+documented in [Microsoft's naming rules](https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file).
+All payload paths are validated before the shared data root or bundle is written.
+
 `build_feature_blocks` delegates to the existing `stock_feature_pool_v2` and
 `FeatureBlockStore`, including complete identities, bounded owned Windows
 workers and their barrier. It requires explicit calculation authorization and

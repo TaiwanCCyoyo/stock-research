@@ -95,7 +95,26 @@ def test_corruption_raises_without_recalculation(catalog: DataCatalog):
     assert file.read_bytes() == b"bad"
 
 
-@pytest.mark.parametrize("name", ["../escape", "C:/escape", "name:stream", "manifest.json", "bad.", "bad ", "CON.txt", "left<right", "null\0name"])
+@pytest.mark.parametrize(
+    "name",
+    [
+        "../escape",
+        "C:/escape",
+        "name:stream",
+        "manifest.json",
+        "bad.",
+        "bad ",
+        "CON.txt",
+        "COM¹.txt",
+        "COM²",
+        "COM³",
+        "LPT¹.txt",
+        "LPT²",
+        "LPT³",
+        "left<right",
+        "null\0name",
+    ],
+)
 def test_unsafe_publication_names_fail(catalog: DataCatalog, name: str):
     with pytest.raises(ValueError):
         publish_bundle(catalog, metadata(), {name: b"bad"})

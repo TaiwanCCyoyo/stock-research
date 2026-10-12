@@ -14,7 +14,8 @@ from research_core.artifact_store import relative_name, safe_path
 
 LOGGER = logging.getLogger(__name__)
 DATA_ROOT_ENV = "STOCK_RESEARCH_DATA_ROOT"
-WINDOWS_DEVICES = {"CON", "PRN", "AUX", "NUL", *(f"COM{number}" for number in range(1, 10)), *(f"LPT{number}" for number in range(1, 10))}
+# Win32 also reserves superscript 1, 2 and 3 in COM/LPT device names.
+WINDOWS_DEVICES = {"CON", "PRN", "AUX", "NUL", *(f"{prefix}{digit}" for prefix in ("COM", "LPT") for digit in (*"123456789", *"¹²³"))}
 
 
 def _artifact_name(name: str) -> str:
