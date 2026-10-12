@@ -17,11 +17,14 @@ SCHEMA = "research-data-catalog.v1"
 DIGEST = re.compile(r"[0-9a-f]{64}")
 READERS = {"market_context", "derived_cache", "feature_block", "bundle", "metadata_only"}
 KINDS = {"universe", "prices", "pivots", "features", "patterns", "labels", "market", "episodes"}
+CATALOG_FIELDS = {"data_id", "kind", "definition_version", "parameters", "inputs", "coverage", "status", "limitations", "backup"}
 
 
 def validate_entry(entry: dict[str, Any], roots: DataRoots) -> dict[str, Any]:
     """Validate discovery metadata without interpreting research observations."""
     entry = read_detached(entry)
+    if set(entry) != CATALOG_FIELDS | {"version_id", "reader", "manifest"}:
+        raise ValueError("catalog entry must contain only discovery metadata and a manifest pin")
     for field in ("data_id", "version_id", "definition_version"):
         if not isinstance(entry.get(field), str) or not entry[field].strip():
             raise ValueError(f"nonempty {field} required")
@@ -103,7 +106,7 @@ class DataCatalog:
         if not isinstance(snapshot, str) or not DIGEST.fullmatch(snapshot):
             raise ValueError("explicit catalog snapshot digest required")
         path = self.roots.artifact_path("data", f"catalog-snapshots/{snapshot}/catalog.json")
-        catalog = read_json(path)
+        catalog = read_json(path, max_bytes=64_000_000)
         body = {key: value for key, value in catalog.items() if key != "version_id"}
         if catalog.get("schema") != SCHEMA or catalog.get("version_id") != snapshot or object_digest(body) != snapshot:
             raise ValueError("catalog snapshot identity mismatch")
@@ -203,18 +206,28 @@ def verify_entry(entry: dict[str, Any], roots: DataRoots) -> dict[str, Any]:
 
         result = verify_block(path.parent)
     else:
-        result = read_json(path)
+        result = read_json(path, max_bytes=64_000_000)
         if reader == "bundle":
             if result.get("schema") != "research-data-bundle.v1" or result.get("complete") is not True:
                 raise ValueError("incomplete shared bundle")
-            stored_metadata = {key: value for key, value in entry.items() if key not in {"version_id", "reader", "manifest"}}
-            if result.get("metadata") != stored_metadata or object_digest(result) != entry["version_id"]:
+            stored_metadata = {key: value for key, value in entry.items() if key in CATALOG_FIELDS}
+            declared_metadata = result.get("metadata")
+            if (
+                not isinstance(declared_metadata, dict)
+                or {key: declared_metadata.get(key) for key in CATALOG_FIELDS} != stored_metadata
+                or object_digest(result) != entry["version_id"]
+            ):
                 raise ValueError("catalog/bundle identity metadata mismatch")
             verify_files(path.parent, result["artifacts"])
     if reader in {"market_context", "derived_cache", "feature_block"}:
         sealed = read_json(path)
         if reader == "market_context":
-            if entry["version_id"] != sealed["dataset_id"].removeprefix("sha256:") or entry["definition_version"] != sealed["definition_version"]:
+            source_inputs = {key: sealed[key] for key in ("series_id", "calendar_id", "source_manifest_sha256")}
+            if (
+                entry["version_id"] != sealed["dataset_id"].removeprefix("sha256:")
+                or entry["definition_version"] != sealed["definition_version"]
+                or entry["inputs"] != source_inputs
+            ):
                 raise ValueError("catalog/market-context identity mismatch")
         elif reader == "derived_cache":
             if (

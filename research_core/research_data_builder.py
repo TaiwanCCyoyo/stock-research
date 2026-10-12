@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from research_core.artifact_store import canonical, object_digest, publish_new_directory, relative_name, safe_path
-from research_core.research_data_catalog import DataCatalog, validate_entry, verify_entry
+from research_core.research_data_catalog import CATALOG_FIELDS, DataCatalog, validate_entry, verify_entry
 
 LOGGER = logging.getLogger(__name__)
 
@@ -32,12 +32,14 @@ def publish_bundle(catalog: DataCatalog, metadata: dict[str, Any], payloads: dic
     version = object_digest(body)
     path = catalog.roots.artifact_path("data", f"{metadata['kind']}/{relative_name(metadata['data_id'])}/{version}")
     entry = {
-        **metadata,
+        **{key: metadata[key] for key in CATALOG_FIELDS},
         "version_id": version,
         "reader": "bundle",
         "manifest": {"scope": "data", "path": f"{metadata['kind']}/{metadata['data_id']}/{version}/manifest.json", "sha256": object_digest(body)},
     }
     validate_entry(entry, catalog.roots)
+    for name in payloads:
+        catalog.roots.artifact_path("data", f"{metadata['kind']}/{metadata['data_id']}/{version}/{name}")
     # object_digest hashes canonical bytes, exactly the manifest being written.
     if not path.exists():
         publish_new_directory(path, {**payloads, "manifest.json": canonical(body)})

@@ -35,6 +35,29 @@
     ],
     "full_path_exceptions": [".github/workflows/ci.yml"],
     "domains": {
+        "research_data": {
+            "paths": [
+                "research_core/research_data_builder.py",
+                "research_core/research_data_catalog.py",
+                "research_core/research_data_extension.py",
+                "research_core/research_data_incremental.py",
+                "research_core/research_data_legacy.py",
+                "research_core/research_data_paths.py",
+                "research_core/derived_features_chunk_v2.py",
+                "scripts/research_data.py",
+                "tasks/20261012-research-data-entry/*"
+            ],
+            "tests": [
+                "scripts/tests/test_derived_features_chunk_v2.py",
+                "scripts/tests/test_research_data_catalog.py",
+                "scripts/tests/test_research_data_extension.py",
+                "scripts/tests/test_research_data_feature_builder.py",
+                "scripts/tests/test_research_data_incremental.py",
+                "scripts/tests/test_research_data_legacy.py",
+                "scripts/tests/test_research_data_paths.py",
+                "scripts/tests/test_research_data_windows_deletion.py"
+            ]
+        },
         "owner_hhhl_labels": {
             "paths": [
                 "research_core/owner_hhhl_labels.py",
@@ -294,6 +317,7 @@
         "scripts/tests/test_correct_hhhl_v4_noise_first.py",
         "scripts/tests/test_derived_cache.py",
         "scripts/tests/test_derived_features.py",
+        "scripts/tests/test_derived_features_chunk_v2.py",
         "scripts/tests/test_derived_features_selective_v1.py",
         "scripts/tests/test_export_market_atlas.py",
         "scripts/tests/test_feature_atlas_dataset.py",
@@ -389,6 +413,13 @@
         "scripts/tests/test_research_causal_scenarios.py",
         "scripts/tests/test_research_chronology.py",
         "scripts/tests/test_research_cohort_lifecycle.py",
+        "scripts/tests/test_research_data_catalog.py",
+        "scripts/tests/test_research_data_extension.py",
+        "scripts/tests/test_research_data_feature_builder.py",
+        "scripts/tests/test_research_data_incremental.py",
+        "scripts/tests/test_research_data_legacy.py",
+        "scripts/tests/test_research_data_paths.py",
+        "scripts/tests/test_research_data_windows_deletion.py",
         "scripts/tests/test_research_decision.py",
         "scripts/tests/test_research_evidence.py",
         "scripts/tests/test_research_execution_account.py",

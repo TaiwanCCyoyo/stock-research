@@ -15,8 +15,9 @@ before a separately merged research mission.
   variants, the 0050 market context and two 25-stock price demonstrations.
   Historical data, source identities and receipts were not rewritten.
 - Shared data included in the existing verified backup/restore scope.
-- A tested exact state-replay extension bridge and correction/tail planner;
-  efficient checkpoint continuation remains open, as detailed below.
+- A retained exact v1 replay bridge, and a new bounded v2 checkpoint kernel with
+  immutable feature extension, affected-stock rebuild and actual label/context
+  tail publication. Full and chunked v2 outputs are tested exactly equal.
 
 ## Actual verification
 
@@ -46,25 +47,44 @@ hooks, targeted results and the post-change retained-artifact comparison are
 recorded with delivery after source formatting stabilizes. Local raw diagnostics
 are at `.tmp/research-data-evidence/`, not Git.
 
-## Explicit incomplete handoff requirements
+## Checkpoint follow-up and research boundary
 
 This entry has not produced 2010-onward full-market features, prices, patterns,
 labels or episodes and has not run pattern-scan. The 0050 context's complete scope
 is benchmark-only. Existing 2019 datasets remain legacy and the 25-stock versions
 remain partial. A missing or differently pinned artifact causes an error.
 
-Handoff 10.10a asks for efficient daily state continuation, corrected-stock
-rebuilds and actual retrospective tail updates under new immutable versions.
-This stage implements planning and exact replay parity, but not that complete
-incremental builder. Full calendar replay is recorded honestly; it is not
-advertised as computation of new dates only. The efficient mechanism and its
-end-to-end version-publication verification remain required work.
+The initial `d6f6207` draft implemented only an exact replay bridge. The follow-up
+adds genuine checkpoint state for EMA/ATR/pivots and bounded per-period reuse of
+the existing SMA/BB formula API. Full and chunk computation share the v2 kernel,
+including gaps, warmup, equal extrema, confirmation dates and JSON roundtrips.
+Rolling execution has a distinct numerical identity; v1 last-bit equivalence is
+not claimed. Stored v1 evidence is not rewritten or relabeled.
+
+Synthetic feature publication tests append twice, verify full-v2 equality on
+readback and keep all old files byte-identical. Separate tests show zero compute
+for the same request, only a missing feature initialized, and only a corrected
+or factor-changed stock rebuilt. Actual H126/H252 and both context-layer updates
+publish new pinned bundles, reference unchanged prefixes and reproduce the
+retained full calculations. Tail updates preserve context event history. These
+are mechanism tests, not a full-market performance measurement or completion of
+the future pattern-scan's pattern/episode builders.
+
+Parent review identified missing CI test inventory, incomplete pre-write Windows
+name validation, missing linked-worktree identity checks and unbound market-context
+input declarations. The follow-up adds the reviewed domain/inventory without
+weakening full fallback, validates every payload name before any dataset write,
+checks Git registration/common directory/admin back-pointer and canonical data
+overlap, and binds all three benchmark source identities to the sealed manifest.
+Negative and mutation tests cover each finding. Draft CI must be reported as its
+actual contracts/checks scope, not as the full research suite.
 
 Primary's HHHL variants `params/input-pins-v1.json` raw bytes did not match its
 retained execution pin during registration; the task checkout's tracked bytes
-did match. The catalog therefore leaves that input period unknown rather than
-rewriting primary or re-pinning an old result. This metadata observation does
-not claim the retained result was corrupted: its original reader passed.
+did match. Their canonical JSON identities were also verified equal. The catalog
+conservatively leaves that input period unknown rather than rewriting primary or
+re-pinning an old result. This is a raw-byte observation, not a corruption claim;
+the original result reader passed.
 
 ## Ownership and next stage
 
@@ -76,8 +96,10 @@ these are not new shared-area copies and were not used for market computation.
 Keep this worktree for the PR and unfinished extension/mission work. Other
 sessions' worktrees and primary branch were preserved.
 
-Only `20261012-claude-handoff-pattern-scan.md` was found in the provided primary
-handoff directory; a `(1)` version was not locally available. Pin the actual
-supplied bytes in the later mission, and reconcile any newer supplied version
-before mission approval. Do not equate the owner's spoken 2B definition with
-legacy F33 or HHHL without the final explicit definition and confirmation rule.
+On 2026-10-13 the owner explicitly confirmed
+`D:/Project/stock-research/.tmp/claude-kline/20261012-claude-handoff-pattern-scan.md`
+as the execution handoff. Its actual local raw-byte identity is retained in the
+evidence packet; no Library transfer or independent Library byte-equivalence is
+claimed. Pin those designated bytes in the later mission. Do not equate the
+owner's spoken 2B definition with legacy F33 or HHHL without the final explicit
+definition and confirmation rule.

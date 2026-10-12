@@ -12,15 +12,52 @@ import pytest
 from research_core.research_data_paths import DATA_ROOT_ENV, DataRoots
 
 
+def fixture_git(root: Path, *arguments: str) -> str:
+    result = subprocess.run(
+        [
+            "git",
+            "-c",
+            "core.hooksPath=" + str(root.parent / "no-hooks"),
+            "-c",
+            "commit.gpgSign=false",
+            "-c",
+            "user.name=Fixture",
+            "-c",
+            "user.email=fixture@example.test",
+            "-C",
+            str(root),
+            *arguments,
+        ],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    return result.stdout
+
+
+def init_fixture_repo(primary: Path) -> None:
+    primary.mkdir()
+    fixture_git(primary, "-c", "init.templateDir=", "init", "--initial-branch=main")
+    fixture_git(primary, "commit", "--allow-empty", "-m", "Synthetic fixture")
+
+
+def replace_git_marker(worktree: Path, content: bytes) -> None:
+    """Overwrite an existing synthetic marker without Windows _O_CREAT."""
+    with (worktree / ".git").open("r+b") as stream:
+        stream.write(content)
+        stream.truncate()
+
+
 @pytest.fixture
 def checkout(tmp_path: Path) -> tuple[Path, Path, Path]:
     primary = tmp_path / "primary"
-    (primary / ".git").mkdir(parents=True)
+    init_fixture_repo(primary)
     data = primary / "research_data"
     data.mkdir()
     worktree = primary / ".worktrees" / "task"
-    worktree.mkdir(parents=True)
-    (worktree / ".git").write_text("gitdir: ../../.git/worktrees/task", encoding="utf-8")
+    fixture_git(primary, "worktree", "add", "--detach", str(worktree), "HEAD")
     return primary, data, worktree
 
 
@@ -179,6 +216,84 @@ def test_missing_worktree_is_rejected(checkout: tuple[Path, Path, Path]) -> None
     _, data, worktree = checkout
     with pytest.raises(ValueError, match="existing directory"):
         DataRoots.from_env({DATA_ROOT_ENV: str(data)}, worktree=worktree / "missing")
+
+
+@pytest.mark.parametrize("name", [".git", "research_cache", "tasks", "stock-data-downloader", "research_data"])
+@pytest.mark.parametrize("child", [False, True])
+def test_canonical_roots_never_count_as_worktrees(checkout: tuple[Path, Path, Path], name: str, child: bool) -> None:
+    primary, data, _ = checkout
+    candidate = primary / name
+    if child:
+        candidate /= "child"
+    candidate.mkdir(parents=True, exist_ok=True)
+    with pytest.raises(ValueError, match="protected primary root"):
+        DataRoots(primary, data).validate_worktree(candidate)
+
+
+def test_ancestor_of_canonical_roots_rejected(checkout: tuple[Path, Path, Path]) -> None:
+    primary, data, _ = checkout
+    with pytest.raises(ValueError, match="protected primary root"):
+        DataRoots(primary, data).validate_worktree(primary.parent)
+
+
+@pytest.mark.parametrize("git_marker", ["missing", "directory", "file"])
+def test_nonregistered_directory_rejected(checkout: tuple[Path, Path, Path], git_marker: str) -> None:
+    primary, data, worktree = checkout
+    fake = primary.parent / "nonregistered"
+    fake.mkdir()
+    if git_marker == "directory":
+        (fake / ".git").mkdir()
+    elif git_marker == "file":
+        (fake / ".git").write_bytes((worktree / ".git").read_bytes())
+    expected = "not registered" if git_marker == "file" else "regular .git file"
+    with pytest.raises(ValueError, match=expected):
+        DataRoots(primary, data).validate_worktree(fake)
+
+
+def test_fake_git_pointer_fails_closed(checkout: tuple[Path, Path, Path]) -> None:
+    primary, data, worktree = checkout
+    replace_git_marker(worktree, b"gitdir: missing-admin-directory")
+    with pytest.raises(ValueError, match="Git worktree identity check failed"):
+        DataRoots(primary, data).validate_worktree(worktree)
+
+
+def test_registered_path_cannot_point_at_primary_git_directory(checkout: tuple[Path, Path, Path]) -> None:
+    primary, data, worktree = checkout
+    replace_git_marker(worktree, f"gitdir: {(primary / '.git').as_posix()}\n".encode("utf-8"))
+    with pytest.raises(ValueError, match="identity|administration"):
+        DataRoots(primary, data).validate_worktree(worktree)
+
+
+def test_registered_worktree_using_foreign_git_metadata_rejected(checkout: tuple[Path, Path, Path]) -> None:
+    primary, data, worktree = checkout
+    foreign = primary.parent / "foreign-primary"
+    init_fixture_repo(foreign)
+    foreign_worktree = primary.parent / "foreign-worktree"
+    fixture_git(foreign, "worktree", "add", "--detach", str(foreign_worktree), "HEAD")
+    replace_git_marker(worktree, (foreign_worktree / ".git").read_bytes())
+    with pytest.raises(ValueError, match="identity does not match"):
+        DataRoots(primary, data).validate_worktree(worktree)
+
+
+def test_foreign_registered_worktree_not_registered_with_primary(checkout: tuple[Path, Path, Path]) -> None:
+    primary, data, _ = checkout
+    foreign = primary.parent / "foreign-primary"
+    init_fixture_repo(foreign)
+    foreign_worktree = primary.parent / "foreign-worktree"
+    fixture_git(foreign, "worktree", "add", "--detach", str(foreign_worktree), "HEAD")
+    with pytest.raises(ValueError, match="not registered"):
+        DataRoots(primary, data).validate_worktree(foreign_worktree)
+
+
+def test_git_failure_preserves_diagnostics(checkout: tuple[Path, Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:
+    primary, data, worktree = checkout
+
+    def failed_git(*args: object, **kwargs: object) -> subprocess.CompletedProcess[str]:
+        return subprocess.CompletedProcess(["git"], 128, stdout="", stderr="fatal: fixture identity failure")
+
+    monkeypatch.setattr(subprocess, "run", failed_git)
+    with pytest.raises(ValueError, match="128.*fatal: fixture identity failure"):
+        DataRoots(primary, data).validate_worktree(worktree)
 
 
 @pytest.mark.parametrize("in_worktree", [False, True])

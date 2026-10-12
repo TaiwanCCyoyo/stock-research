@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import os
 import stat
+import subprocess
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -45,6 +46,20 @@ def _checked_path(path: Path) -> Path:
 
 def _overlaps(left: Path, right: Path) -> bool:
     return left == right or left.is_relative_to(right) or right.is_relative_to(left)
+
+
+def _git_read(root: Path, *arguments: str) -> str:
+    command = ["git", "-c", "core.quotePath=false", "-C", str(root), *arguments]
+    try:
+        result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", check=False)
+    except (OSError, UnicodeError) as error:
+        LOGGER.warning("Git identity check could not run: root=%s error=%s", root, error)
+        raise ValueError(f"Git worktree identity check failed: {error}") from error
+    if result.returncode != 0:
+        message = f"stderr={result.stderr.strip()!r}; stdout={result.stdout.strip()!r}"
+        LOGGER.warning("Git identity check failed: root=%s code=%s message=%s", root, result.returncode, message)
+        raise ValueError(f"Git worktree identity check failed (exit code {result.returncode}): {message}")
+    return result.stdout
 
 
 @dataclass(frozen=True)
@@ -107,8 +122,10 @@ class DataRoots:
     def validate_worktree(self, worktree: Path) -> None:
         """Reject shared-root copies and filesystem aliases anywhere in a worktree."""
         worktree = _checked_path(worktree)
-        if worktree == self.primary or _overlaps(worktree, self.data):
-            raise ValueError("worktree must be separate from primary shared data")
+        protected = (self.primary / ".git", self.primary / "research_cache", self.primary / "tasks", self.primary / "stock-data-downloader", self.data)
+        for root in protected:
+            if _overlaps(worktree, root):
+                raise ValueError(f"worktree overlaps protected primary root: {root}")
         if not worktree.is_dir():
             raise ValueError("worktree must be an existing directory")
         copied_root = worktree / "research_data"
@@ -122,4 +139,27 @@ class DataRoots:
             _checked_path(Path(directory))
             for name in (*directories, *files):
                 _checked_path(Path(directory) / name)
+        git_file = _checked_path(worktree / ".git")
+        if not git_file.is_file():
+            raise ValueError("linked worktree must have a regular .git file")
+        registered = {
+            Path(field.removeprefix("worktree "))
+            for field in _git_read(self.primary, "worktree", "list", "--porcelain", "-z").split("\0")
+            if field.startswith("worktree ")
+        }
+        if worktree == self.primary or worktree not in registered:
+            raise ValueError(f"worktree is not registered with primary checkout: {worktree}")
+        common_dir = Path(_git_read(worktree, "rev-parse", "--path-format=absolute", "--git-common-dir").rstrip("\r\n"))
+        top_level = Path(_git_read(worktree, "rev-parse", "--show-toplevel").rstrip("\r\n"))
+        if common_dir != self.primary / ".git" or top_level != worktree:
+            raise ValueError(f"Git worktree identity does not match primary checkout: {worktree}")
+        admin = _checked_path(Path(_git_read(worktree, "rev-parse", "--absolute-git-dir").rstrip("\r\n")))
+        if admin.parent != self.primary / ".git" / "worktrees":
+            raise ValueError(f"Git metadata is not linked worktree administration: {admin}")
+        try:
+            back_pointer = Path(_checked_path(admin / "gitdir").read_text(encoding="utf-8").rstrip("\r\n"))
+        except (OSError, UnicodeError) as error:
+            raise ValueError(f"Git worktree back-pointer check failed: {error}") from error
+        if back_pointer != git_file:
+            raise ValueError(f"Git worktree administration belongs to another path: {admin}")
         LOGGER.debug("Validated worktree isolation: %s", worktree)

@@ -1,6 +1,7 @@
 """Synthetic publication, discovery and identity failures; no live inputs."""
 
 import os
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -41,13 +42,26 @@ def inventory(root: Path) -> dict:
     return {p.relative_to(root).as_posix(): (p.stat().st_size, file_digest(p)) for p in root.rglob("*") if p.is_file()}
 
 
+def make_worktree(catalog: DataCatalog, name: str) -> Path:
+    primary = catalog.roots.primary
+    git = ["git", "-c", "init.templateDir=", "-c", f"core.hooksPath={primary / 'no-hooks'}", "-c", "commit.gpgSign=false", "-C", str(primary)]
+    subprocess.run([*git, "init", "-b", "main"], check=True, capture_output=True)
+    subprocess.run(
+        [*git, "-c", "user.name=Synthetic fixture", "-c", "user.email=fixture@example.invalid", "commit", "--allow-empty", "-m", "fixture"],
+        check=True,
+        capture_output=True,
+    )
+    target = primary / ".worktrees" / name
+    subprocess.run([*git, "worktree", "add", "--detach", str(target), "HEAD"], check=True, capture_output=True)
+    return target
+
+
 def test_publish_reuse_and_two_worktrees_share_one_physical_version(catalog: DataCatalog):
     entry = publish_bundle(catalog, metadata(), {"features.json": b'{"MA20": [1,2]}'})
     snapshot = catalog.read()["version_id"]
     before = inventory(catalog.roots.data)
     for name in ("first", "second"):
-        worktree = catalog.roots.primary / ".worktrees" / name
-        worktree.mkdir(parents=True)
+        worktree = make_worktree(catalog, name)
         roots = DataRoots.from_env({DATA_ROOT_ENV: str(catalog.roots.data)}, worktree=worktree)
         other = DataCatalog(roots)
         result = other.get(entry["data_id"], entry["version_id"], manifest_sha256=entry["manifest"]["sha256"])
@@ -81,11 +95,12 @@ def test_corruption_raises_without_recalculation(catalog: DataCatalog):
     assert file.read_bytes() == b"bad"
 
 
-@pytest.mark.parametrize("name", ["../escape", "C:/escape", "name:stream", "manifest.json"])
+@pytest.mark.parametrize("name", ["../escape", "C:/escape", "name:stream", "manifest.json", "bad.", "bad ", "CON.txt", "left<right", "null\0name"])
 def test_unsafe_publication_names_fail(catalog: DataCatalog, name: str):
     with pytest.raises(ValueError):
         publish_bundle(catalog, metadata(), {name: b"bad"})
     assert not (catalog.roots.data / "catalog.json").exists()
+    assert not catalog.roots.data.exists()
 
 
 def test_metadata_replacement_and_writer_conflict_fail_closed(catalog: DataCatalog):
@@ -117,8 +132,40 @@ def test_cli_catalog_and_worktree_check(catalog: DataCatalog, monkeypatch: pytes
     monkeypatch.setattr(sys, "argv", ["research_data", "catalog"])
     assert main() == 0
     assert "synthetic-features" in capsys.readouterr().out
-    worktree = catalog.roots.primary / ".worktrees/test"
-    worktree.mkdir(parents=True)
+    worktree = make_worktree(catalog, "test")
     monkeypatch.setattr(sys, "argv", ["research_data", "check-worktree", str(worktree)])
     assert main() == 0
     assert "verified" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("key", ["series_id", "calendar_id", "source_manifest_sha256"])
+def test_market_context_inputs_must_match_sealed_source(catalog: DataCatalog, monkeypatch: pytest.MonkeyPatch, key: str):
+    from research_core import market_context_artifact
+    from research_core.artifact_store import canonical
+    from research_core.research_data_catalog import verify_entry
+
+    path = catalog.roots.primary / "tasks/fixture-context/manifest.json"
+    path.parent.mkdir(parents=True)
+    source = {
+        "dataset_id": "sha256:fixture-context",
+        "definition_version": "fixture-context.v1",
+        "series_id": "series-v1",
+        "calendar_id": "calendar-v1",
+        "source_manifest_sha256": "source-v1",
+    }
+    path.write_bytes(canonical(source))
+    entry = {
+        **metadata(),
+        "data_id": "market-context",
+        "kind": "market",
+        "version_id": "fixture-context",
+        "definition_version": "fixture-context.v1",
+        "reader": "market_context",
+        "manifest": {"scope": "primary", "path": path.relative_to(catalog.roots.primary).as_posix(), "sha256": file_digest(path)},
+        "inputs": {key: source[key] for key in ("series_id", "calendar_id", "source_manifest_sha256")},
+    }
+    monkeypatch.setattr(market_context_artifact, "read_dataset", lambda _: {"verified_fixture": True})
+    verify_entry(entry, catalog.roots)
+    entry["inputs"][key] = "wrong-source"
+    with pytest.raises(ValueError, match="market-context identity mismatch"):
+        verify_entry(entry, catalog.roots)

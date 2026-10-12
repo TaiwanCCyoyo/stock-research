@@ -83,7 +83,7 @@ disposable `.tmp` staging outside shared versions. Identical requests calculate
 zero blocks; adding one feature computes only that missing block. This adapter
 does not implement a second scheduler, formula library or hash verifier.
 
-## Extension bridge and remaining requirement
+## Checkpoint extensions and retained v1 bridge
 
 `plan_extension` distinguishes unchanged stocks, appended dates, historical or
 factor corrections requiring a full affected-stock rebuild, and definition
@@ -99,12 +99,43 @@ The receipt reports state and verification replay costs. `add_selected` computes
 missing columns only; a caller must first verify the original stored manifest,
 because schema checks alone do not certify reused values.
 
-**This bridge is not the efficient daily continuation requested in handoff
-10.10a.** The retained numerical API has no state checkpoint, and repeating its
-full calendar is necessary for this exact bridge. Checkpoint continuation, actual
-retrospective-tail execution, price-factor rebuild orchestration and immutable
-extended-bundle publication remain to be implemented and verified together.
-No daily increment performance claim or all-kind extension completion is made.
+The v1 bridge remains available for exact legacy comparisons. New extensions use
+`derived_features_chunk_v2.compute_selected_chunk` with JSON checkpoints and
+`research_data_incremental.build_incremental_features`. Full initialization and
+chunk continuation use the same kernel. EMA, ATR and pivot state carry forward;
+SMA and BB reuse the existing v1 formula API on fixed per-period warm context,
+at most 120 rows per period. Adding a feature cannot change another's values.
+This is a new numerical identity: bounded pandas rolling accumulation can differ
+in its last bits from full-history v1. Never reuse or concatenate v1 output under
+the v2 identity; new formal studies must preregister and initialize v2 from their
+full required input start.
+
+Every stock/feature has a separate sealed checkpoint. Dates append only after
+exact prefix-input, factor, implementation and basis checks. Historical or factor
+corrections rebuild only the affected stock; implementation/basis changes rebuild
+affected outputs. Same requests calculate zero, and a newly requested feature
+initializes only itself. Published daily/pivot segments are referenced by fixed
+version and manifest pins, not copied or linked. Readers verify declarations,
+bounded Parquet framing and both payload and manifest bytes; read failure never
+starts calculation. Discovery stays compact: detailed stock state and segment
+lists live in the sealed bundle manifest, not the catalog.
+
+`publish_forward_series` applies the original H126/H252 outcome definition or the
+retained 0050 context definition. Labels recalculate the last horizon's anchors;
+retrospective context revisits the last 10 anchors plus necessary warm observations.
+Context event checkpoints preserve launch/resumption history. Unchanged prefixes
+reference immutable old files with explicit slice bounds; each update has a new
+version, external manifest pin and lineage. Source corrections force a whole-series
+rebuild. Price basis, factor identity and calendar are recorded explicitly.
+
+This verifies mechanisms on invented inputs, including consecutive publication
+and readback equal to whole-history recalculation. It is not a measured full-market
+throughput claim. The adapters are sequential and do not add a second scheduler;
+the existing bounded v2 block worker remains available. New study-specific pattern
+states, episode reconciliation and first 2010 full-market datasets belong to the
+subsequent approved mission. Bundle/catalog JSON reads are bounded at 64 MB and
+Parquet uses the existing evidence limits; larger scopes require partitioning,
+not disabling those limits.
 
 ## Preservation and backup
 
