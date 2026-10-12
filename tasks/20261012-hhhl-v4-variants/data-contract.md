@@ -1,6 +1,6 @@
 # HHHL v4 variants 共用資料契約 v1
 
-定義 ID：`hhhl-variants-features.v1`；實驗／候選 ID 前綴：`hhhl-v4-variants.v1`。此版尚在 mission／合成驗證階段，**沒有新的市場結果或逐筆 dataset**。批准與固定公式在 [mission](mission.md)，來源身分在 [input pins](params/input-pins-v1.json)。
+定義 ID：`hhhl-variants-features.v1`；實驗／候選 ID 前綴：`hhhl-v4-variants.v1`。mission 已由 owner 合併，runner／query 已實作；**正式市場計算尚未開始，沒有新的市場結果或逐筆 dataset**。批准與固定公式在 [mission](mission.md)，來源身分在 [input pins](params/input-pins-v1.json)，執行方式在 [execution plan](execution-plan.md)。
 
 ## 已可取得的共用定義
 
@@ -17,7 +17,7 @@
 
 大型版本目錄固定 primary：`D:/Project/stock-research/tasks/20261012-hhhl-v4-variants/datasets/hhhl-v4-variants-01/`。worktree不作唯一存放處；每個artifact有relative portable path、bytes、SHA-256、schema／rowcount、keys與price basis，manifest及外部pin由Git小型receipt引用。新clone無本機逐筆輸入時回報missing；向owner取得該immutable版本，再以manifest驗证，不能重新下載或重造舊v4事件。
 
-予定檔：`observations.parquet`（事件／股票日×H）、`features.parquet`（identity×feature，值與bin／原因）、`flags.parquet`（event×flag×L/H，firsttrigger／unknown）、`daily-boundaries.parquet`（K3等分界與H有效群體數）、`selection.json`（僅development選擇／候選）、`manifest.json`。價格還原path若須保存亦列獨立檔／契約，不混進小型Git封裝。
+大型邏輯表以 `observations/<ordinal>.parquet`（事件／股票日×H）、`features/<ordinal>.parquet`（股票日×24特徵，值與bin／原因）、`flags/<ordinal>.parquet`（原P event×flag×L/H，firsttrigger／unknown）分片保存。`daily/<ordinal>.parquet` 存每日計算值，`pivots/<ordinal>.json` 存低點極值與確認 index；ordinal 依原 atlas security_id 排序，manifest 每片另列 original code，不能把檔名當股票代碼。另有 `daily-boundaries.parquet`（K3分界與H有效群體數）、`selection.json`（僅development選擇／候選）、`event-counts-by-stock.parquet`、固定10筆 `audit/ten-events.json` 與 `audit-digest.json`、`execution-start.json`、`manifest.json`。逐筆資料不混進小型Git封裝。
 
 `observations`最低鍵 `(cohort_id,event_id,horizon)`，重複為錯誤；C控制event_id是固定cohort/code/ISO t0、可跨cohort重疊。原P event_id不改。另存original code、t0、calendar_index、split_id、calendar_full、full_path、label、first_hit_offset、first_missing_offset、reason。數值null和狀態unknown與0分離。feature只用t0可知值；flag只用確認時點，來源pivot extreme與confirmed兩日期都存。
 
@@ -25,7 +25,7 @@
 
 ## 一份完整彙總 parquet
 
-Git小型交付：task下 `publication-v1/summary.parquet`、`schema.md`、`receipt.json`，全部基本切片／未知／不適用／候選／年度／旗標／敏感性在同一parquet，以row_kind區分；合法zero known列照列，率null。
+Git小型交付：task下完整邏輯 `publication-v1/summary.parquet`、`schema.md`、`receipt.json`。為保留每個新增Git檔500KiB限制，邏輯 parquet 的原始 bytes 以每片480KiB的 `summary.parquet.part-00000.bin` 等依序保存；receipt 列每片 bytes／hash及重建後完整 parquet 的 bytes／hash／rows，query 在記憶體驗證並重建，沒有重新計算。primary dataset 亦保有單一實體 `summary.parquet`。全部基本切片／未知／不適用／候選／年度／旗標／敏感性在同一parquet，以row_kind區分；合法zero known列照列，率null。
 
 | 欄位                                                                                                                                      | 語義                                                                                                                            |
 | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
@@ -40,4 +40,6 @@ Git小型交付：task下 `publication-v1/summary.parquet`、`schema.md`、`rece
 
 reason breakdown若有多原因須按固定優先序互斥（invalid_anchor→missing_before_hit→window_end；feature先not_applicable再source缺值再warmup），另metadata保存全部validator diagnostics。每種row_kind在receipt列keys、計數與分母，不依外觀合併不同比率。
 
-合併後CLI `scripts/run_hhhl_variants.py` 預定讀此mission、input pins及明示primary路徑，無download功能；`scripts/query_hhhl_variants.py` 預定驗manifest／外部pin、依cohort/split/H/candidate/flag篩選，無參數搜尋功能。**這兩個CLI尚未實作，不能宣稱現在可重算市場結果。** 完成時更新實際指令、程式hash、環境及輸出receipt，保持本版公式、bins與選擇不變。
+固定執行入口：`uv run python -m scripts.run_hhhl_variants --primary D:/Project/stock-research --approved-mission-merge fcda359370cd81594451839d4e79e2216cbce255`。要求 clean committed code，逐筆版本或 publication 已存在即拒絕覆寫，不下載或重偵測事件。執行收據封存程式hash、環境與核准 merge。
+
+出版後查詢：`uv run python -m scripts.query_hhhl_variants --publication tasks/20261012-hhhl-v4-variants/publication-v1 --verify`，或加 `--row-kind baseline --cohort P-all --horizon 252` 等 exact filter。`--event <original-event-id> --part observations`／`flags` 驗外部 manifest pin 及相關分片，只讀本機逐筆版本；新 clone 沒有本機版本會明確失敗。小型彙總查詢只需 Git publication。沒有參數搜尋、下載或缺資料補算功能。

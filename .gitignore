@@ -249,3 +249,6 @@ verify-*.png
 /tasks/20261005-market-context-handoff/market-context-v2/inputs/0050.json.gz
 /tasks/20261009-hhhl-pattern-probability/publication-v1/bundle.zip
 /tasks/20261010-hhhl-v4-probability/preparation-v1/bundle.zip
+
+# Complete aggregate-only HHHL variants parquet transported as bounded chunks.
+!tasks/20261012-hhhl-v4-variants/publication-v1/summary.parquet.part-*.bin
