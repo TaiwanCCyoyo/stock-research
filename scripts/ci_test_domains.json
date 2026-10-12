@@ -134,6 +134,7 @@
             ],
             "tests": [
                 "scripts/tests/test_*hhhl*.py",
+                "scripts/tests/test_hhhl_variants_checkout_identity.py",
                 "scripts/tests/test_pattern_sources.py",
                 "scripts/tests/test_cache_execution.py"
             ],
@@ -216,6 +217,7 @@
                 "scripts/tests/test_mypy_scopes.py",
                 "scripts/tests/test_added_file_size_limits.py",
                 "scripts/tests/test_secret_checksum_baseline.py",
+                "scripts/tests/test_hhhl_variants_checkout_identity.py",
                 "scripts/tests/test_worktree_inventory.py",
                 "scripts/tests/test_seed_worktree_inputs.py",
                 "scripts/tests/test_audit_public_readiness.py",
@@ -287,6 +289,7 @@
         "scripts/tests/test_hhhl_rule_source.py",
         "scripts/tests/test_hhhl_transition.py",
         "scripts/tests/test_hhhl_variants_audit.py",
+        "scripts/tests/test_hhhl_variants_checkout_identity.py",
         "scripts/tests/test_hhhl_variants_continue_pipeline_v1.py",
         "scripts/tests/test_hhhl_variants_continue_v1.py",
         "scripts/tests/test_hhhl_variants_daily.py",
