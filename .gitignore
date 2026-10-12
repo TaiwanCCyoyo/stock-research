@@ -252,3 +252,8 @@ verify-*.png
 
 # Complete aggregate-only HHHL variants parquet transported as bounded chunks.
 !tasks/20261012-hhhl-v4-variants/publication-v1/summary.parquet.part-*.bin
+
+# Retained independent checks; their local quote inputs remain ignored.
+!tasks/20261012-hhhl-v4-variants/evidence/
+!tasks/20261012-hhhl-v4-variants/evidence/verify_ten_events.py
+!tasks/20261012-hhhl-v4-variants/evidence/verify_peer_features.py

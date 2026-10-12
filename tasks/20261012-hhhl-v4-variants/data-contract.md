@@ -1,6 +1,6 @@
 # HHHL v4 variants 共用資料契約 v1
 
-定義 ID：`hhhl-variants-features.v1`；實驗／候選 ID 前綴：`hhhl-v4-variants.v1`。mission 已由 owner 合併，runner／query 已實作；**正式市場計算尚未開始，沒有新的市場結果或逐筆 dataset**。批准與固定公式在 [mission](mission.md)，來源身分在 [input pins](params/input-pins-v1.json)，執行方式在 [execution plan](execution-plan.md)。
+定義 ID：`hhhl-variants-features.v1`；實驗／候選 ID 前綴：`hhhl-v4-variants.v1`。mission 已由 owner 合併，runner／query 已實作；**正式計算進行中，完整結果及逐筆版本尚未發布**。批准與固定公式在 [mission](mission.md)，來源身分在 [input pins](params/input-pins-v1.json)，執行與同規格性能延續方式在 [execution plan](execution-plan.md)，完整結果欄位在 [summary schema](summary-schema.md)。
 
 ## 已可取得的共用定義
 
@@ -41,5 +41,10 @@ Git小型交付：task下完整邏輯 `publication-v1/summary.parquet`、`schema
 reason breakdown若有多原因須按固定優先序互斥（invalid_anchor→missing_before_hit→window_end；feature先not_applicable再source缺值再warmup），另metadata保存全部validator diagnostics。每種row_kind在receipt列keys、計數與分母，不依外觀合併不同比率。
 
 固定執行入口：`uv run python -m scripts.run_hhhl_variants --primary D:/Project/stock-research --approved-mission-merge fcda359370cd81594451839d4e79e2216cbce255`。要求 clean committed code，逐筆版本或 publication 已存在即拒絕覆寫，不下載或重偵測事件。執行收據封存程式hash、環境與核准 merge。
+
+同規格延續入口：`scripts.continue_hhhl_variants`，要求 primary 的完整 sealed daily cache，前後核對原 code、輸入、快取 hash 和股票身分。
+其共用實作為 `hhhl_variants_continue_v1`、`hhhl_variants_continue_pipeline_v1`、`hhhl_variants_summary_fast_v1`；
+`hhhl_variants_publication_v1.publish_result` 只序列化已驗證結果，不授予計算權限。
+receipt 的 `execution.cache_lineage` 提供原 attempt 及 cache seal 取得路徑、hash；延續前須依 execution plan 停止原 writer，不能並行啟動同一版本。
 
 出版後查詢：`uv run python -m scripts.query_hhhl_variants --publication tasks/20261012-hhhl-v4-variants/publication-v1 --verify`，或加 `--row-kind baseline --cohort P-all --horizon 252` 等 exact filter。`--event <original-event-id> --part observations`／`flags` 驗外部 manifest pin 及相關分片，只讀本機逐筆版本；新 clone 沒有本機版本會明確失敗。小型彙總查詢只需 Git publication。沒有參數搜尋、下載或缺資料補算功能。
