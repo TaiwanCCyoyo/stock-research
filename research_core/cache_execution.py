@@ -118,6 +118,10 @@ def _worker_main() -> None:
         receipt = _validate_in_process(
             inputs=Path(payload["inputs"]), cutoff=payload["cutoff"], cache_version=Path(payload["cache_version"]) if payload["cache_version"] else None
         )
+    elif operation == "research-data":
+        from research_core.research_data_execution import _execute_in_process
+
+        receipt = _execute_in_process(payload)
     else:
         raise ValueError("unknown cache operation")
     print(json.dumps(receipt, ensure_ascii=False, allow_nan=False))  # noqa: T201 - worker protocol

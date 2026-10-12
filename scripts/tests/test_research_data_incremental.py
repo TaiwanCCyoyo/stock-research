@@ -1,5 +1,6 @@
 """Synthetic published checkpoint extensions equal full v2 recomputation."""
 
+import sys
 from pathlib import Path
 from unittest.mock import Mock
 
@@ -8,6 +9,7 @@ import pandas as pd
 import pytest
 
 from research_core import derived_features_chunk_v2 as kernel
+from research_core import research_data_execution as execution
 from research_core import research_data_incremental as incremental
 from research_core.artifact_store import file_digest
 from research_core.hhhl_variants_paths import outcomes_for_closes
@@ -33,8 +35,22 @@ def catalog(tmp_path: Path) -> DataCatalog:
     return DataCatalog(DataRoots.from_env({DATA_ROOT_ENV: str(tmp_path / "primary/research_data")}))
 
 
+@pytest.fixture(autouse=True)
+def captured_sources_for_private_fault_injection(monkeypatch: pytest.MonkeyPatch):
+    """Model captured worker sources for these explicitly in-process tests."""
+    root = Path(execution.__file__).resolve().parents[1]
+    captured = {
+        path: file_digest(path)
+        for name, module in tuple(sys.modules.items())
+        if name.split(".", 1)[0] in {"research_core", "StockProject", "scripts"}
+        if (location := getattr(module, "__file__", None)) is not None
+        if (path := Path(location).resolve()).is_relative_to(root) and path.suffix == ".py"
+    }
+    monkeypatch.setattr(incremental.cache_execution, "_LOADED_SOURCES", captured)
+
+
 def build(catalog: DataCatalog, data: dict[str, pd.DataFrame], names: list[str], base: dict | None = None, factors: dict[str, str] | None = None) -> dict:
-    return incremental.build_incremental_features(
+    return incremental._build_incremental_features_in_process(
         catalog, data, names, factor_ids=factors or {code: "factor-v1" for code in data}, price_basis="synthetic", base=base, calculation_authorized=True
     )
 
@@ -123,6 +139,51 @@ def test_no_authorization_no_write_and_missing_segment_no_recompute(catalog: Dat
         build(catalog, {"A": frame(21)}, ["SMA5"], first)
 
 
+@pytest.mark.parametrize("artifact", ["daily", "pivots"])
+@pytest.mark.parametrize("damage", ["delete", "corrupt"])
+@pytest.mark.parametrize("requested_rows", [25, 30], ids=["unchanged", "append"])
+def test_transitive_base_segment_damage_fails_before_kernel_or_publication(
+    catalog: DataCatalog, monkeypatch: pytest.MonkeyPatch, artifact: str, damage: str, requested_rows: int
+):
+    names = ["SMA5", "pivots_1p5"]
+    first = build(catalog, {"INVENTED": frame(20)}, names)
+    second = build(catalog, {"INVENTED": frame(25)}, names, first)
+    damaged_feature = "SMA5" if artifact == "daily" else "pivots_1p5"
+    record = second["stocks"]["INVENTED"]["features"][damaged_feature]
+    segment_key = "daily_segments" if artifact == "daily" else "pivot_segments"
+    assert any(reference.get("version_id") == first["version_id"] for reference in record[segment_key])
+
+    first_directory = catalog.roots.data / Path(first["manifest"]["path"]).parent
+    damaged = first_directory / f"stocks/INVENTED/{damaged_feature}/{artifact}.parquet"
+    damaged.chmod(0o600)
+    if damage == "delete":
+        damaged.unlink()
+    else:
+        damaged.write_bytes(b"synthetic broken ancestor segment")
+
+    versions_directory = first_directory.parent
+    snapshots_directory = catalog.roots.data / "catalog-snapshots"
+    versions_before = {path.name for path in versions_directory.iterdir()}
+    snapshots_before = {path.name for path in snapshots_directory.iterdir()}
+    catalog_before = catalog.read()
+    pointer_before = (catalog.roots.data / "catalog.json").read_bytes()
+    assert len(versions_before) == 2
+
+    full = Mock(side_effect=AssertionError("damaged ancestor must fail before full kernel"))
+    chunk = Mock(side_effect=AssertionError("damaged ancestor must fail before chunk kernel"))
+    monkeypatch.setattr(kernel, "compute_selected_full", full)
+    monkeypatch.setattr(kernel, "compute_selected_chunk", chunk)
+    with pytest.raises((ValueError, OSError)):
+        build(catalog, {"INVENTED": frame(requested_rows)}, names, second)
+
+    full.assert_not_called()
+    chunk.assert_not_called()
+    assert catalog.read() == catalog_before
+    assert (catalog.roots.data / "catalog.json").read_bytes() == pointer_before
+    assert {path.name for path in versions_directory.iterdir()} == versions_before
+    assert {path.name for path in snapshots_directory.iterdir()} == snapshots_before
+
+
 @pytest.mark.parametrize("layer", ["past_only", "retrospective"])
 def test_context_tail_and_event_checkpoint_equal_full(layer: str):
     dates = pd.bdate_range("2010-01-04", periods=110).strftime("%Y-%m-%d").tolist()
@@ -143,15 +204,15 @@ def test_context_tail_and_event_checkpoint_equal_full(layer: str):
 def test_published_label_tails_equal_full_and_preserve_old_version(catalog: DataCatalog, horizon: int):
     dates = pd.DatetimeIndex(pd.bdate_range("2010-01-04", periods=300).values, name="Date")
     closes = 10 + np.arange(300, dtype=float) / 10
-    first = incremental.publish_forward_series(
+    first = incremental._publish_forward_series_in_process(
         catalog, "INVENTED", dates[:280], closes[:280], price_basis="synthetic", factor_id="factor-v1", horizon=horizon, calculation_authorized=True
     )
     manifest = catalog.roots.data / first["manifest"]["path"]
     before = file_digest(manifest)
-    second = incremental.publish_forward_series(
+    second = incremental._publish_forward_series_in_process(
         catalog, "INVENTED", dates[:291], closes[:291], price_basis="synthetic", factor_id="factor-v1", horizon=horizon, base=first, calculation_authorized=True
     )
-    third = incremental.publish_forward_series(
+    third = incremental._publish_forward_series_in_process(
         catalog, "INVENTED", dates, closes, price_basis="synthetic", factor_id="factor-v1", horizon=horizon, base=second, calculation_authorized=True
     )
     actual = incremental.load_forward_series(catalog, third)
@@ -166,13 +227,13 @@ def test_published_label_tails_equal_full_and_preserve_old_version(catalog: Data
 def test_published_context_tail_equals_full(catalog: DataCatalog, layer: str):
     dates = pd.DatetimeIndex(pd.bdate_range("2010-01-04", periods=90).values, name="Date")
     closes = np.r_[np.full(25, 100.0), np.full(30, 110.0), np.full(20, 120.0), np.full(15, 90.0)]
-    first = incremental.publish_forward_series(
+    first = incremental._publish_forward_series_in_process(
         catalog, "0050", dates[:65], closes[:65], price_basis="synthetic", factor_id="factor-v1", context_layer=layer, calculation_authorized=True
     )
-    second = incremental.publish_forward_series(
+    second = incremental._publish_forward_series_in_process(
         catalog, "0050", dates[:76], closes[:76], price_basis="synthetic", factor_id="factor-v1", context_layer=layer, base=first, calculation_authorized=True
     )
-    third = incremental.publish_forward_series(
+    third = incremental._publish_forward_series_in_process(
         catalog, "0050", dates, closes, price_basis="synthetic", factor_id="factor-v1", context_layer=layer, base=second, calculation_authorized=True
     )
     actual = incremental.load_forward_series(catalog, third)
@@ -183,17 +244,17 @@ def test_published_context_tail_equals_full(catalog: DataCatalog, layer: str):
 def test_forward_basis_factor_change_rebuilds_and_same_request_reuses(catalog: DataCatalog, monkeypatch: pytest.MonkeyPatch):
     dates = pd.DatetimeIndex(pd.bdate_range("2010-01-04", periods=40).values, name="Date")
     closes = np.linspace(10, 15, 40)
-    first = incremental.publish_forward_series(
+    first = incremental._publish_forward_series_in_process(
         catalog, "A", dates, closes, price_basis="synthetic", factor_id="factor-v1", horizon=10, calculation_authorized=True
     )
     compute = Mock(wraps=incremental.outcomes_for_closes)
     monkeypatch.setattr(incremental, "outcomes_for_closes", compute)
-    same = incremental.publish_forward_series(
+    same = incremental._publish_forward_series_in_process(
         catalog, "A", dates, closes, price_basis="synthetic", factor_id="factor-v1", horizon=10, base=first, calculation_authorized=True
     )
     assert same == first
     compute.assert_not_called()
-    second = incremental.publish_forward_series(
+    second = incremental._publish_forward_series_in_process(
         catalog, "A", dates, closes, price_basis="synthetic", factor_id="factor-v2", horizon=10, base=first, calculation_authorized=True
     )
     assert second["extension_receipt"]["mode"] == "full_rebuild"

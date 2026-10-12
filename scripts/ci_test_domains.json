@@ -39,6 +39,7 @@
             "paths": [
                 "research_core/research_data_builder.py",
                 "research_core/research_data_catalog.py",
+                "research_core/research_data_execution.py",
                 "research_core/research_data_extension.py",
                 "research_core/research_data_incremental.py",
                 "research_core/research_data_legacy.py",
@@ -50,6 +51,7 @@
             "tests": [
                 "scripts/tests/test_derived_features_chunk_v2.py",
                 "scripts/tests/test_research_data_catalog.py",
+                "scripts/tests/test_research_data_execution.py",
                 "scripts/tests/test_research_data_extension.py",
                 "scripts/tests/test_research_data_feature_builder.py",
                 "scripts/tests/test_research_data_incremental.py",
@@ -414,6 +416,7 @@
         "scripts/tests/test_research_chronology.py",
         "scripts/tests/test_research_cohort_lifecycle.py",
         "scripts/tests/test_research_data_catalog.py",
+        "scripts/tests/test_research_data_execution.py",
         "scripts/tests/test_research_data_extension.py",
         "scripts/tests/test_research_data_feature_builder.py",
         "scripts/tests/test_research_data_incremental.py",

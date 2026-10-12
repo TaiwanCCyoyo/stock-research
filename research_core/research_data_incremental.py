@@ -6,12 +6,14 @@ import copy
 import io
 import logging
 import platform
+import sys
 from pathlib import Path
 from typing import Any, cast
 
 import numpy as np
 import pandas as pd
 
+from research_core import cache_execution
 from research_core import derived_features_chunk_v2 as kernel
 from research_core.artifact_store import canonical, file_digest, object_digest, read_json
 from research_core.bounded_parquet import read_evidence_parquet
@@ -32,17 +34,17 @@ def _bundle_metadata(catalog: DataCatalog, reference: dict[str, Any]) -> dict[st
 
 
 def implementation_identity() -> dict[str, Any]:
-    from research_core import derived_features_selective_v1, hhhl_variants_paths, market_context
-
-    sources = [
-        Path(__file__),
-        Path(kernel.__file__),
-        Path(derived_features_selective_v1.__file__),
-        Path(hhhl_variants_paths.__file__),
-        Path(market_context.__file__),
-    ]
+    root = Path(__file__).resolve().parents[1]
+    sources = {
+        path.relative_to(root).as_posix(): path
+        for name, module in tuple(sys.modules.items())
+        if name.split(".", 1)[0] in {"research_core", "StockProject", "scripts"}
+        if (location := getattr(module, "__file__", None)) is not None
+        if (path := Path(location).resolve()).is_relative_to(root) and path.suffix == ".py"
+    }
+    cache_execution.require_loaded(sources)
     return {
-        "sources": {path.name: file_digest(path) for path in sources},
+        "sources": {name: file_digest(path) for name, path in sorted(sources.items())},
         "runtime": {"python": platform.python_version(), "numpy": np.__version__, "pandas": pd.__version__},
         "definition": kernel.definition_metadata(),
     }
@@ -89,6 +91,20 @@ def _bound_stocks(entry: dict[str, Any]) -> dict[str, Any]:
                 feature[key] = [_bind(ref, entry) for ref in feature[key]]
             feature["checkpoint"] = _bind(feature["checkpoint"], entry)
     return stocks
+
+
+def _verify_retained_references(catalog: DataCatalog, references: list[dict[str, Any]], verified: dict[tuple[str, str, str], set[str]]) -> None:
+    """Verify every external dependency before reusing or extending a bundle."""
+    for reference in references:
+        key = (reference["data_id"], reference["version_id"], reference["manifest_sha256"])
+        if key not in verified:
+            entry = catalog.get(key[0], key[1], manifest_sha256=key[2])
+            if entry["reader"] != "bundle":
+                raise ValueError("retained incremental reference requires a sealed bundle")
+            manifest = verify_entry(entry, catalog.roots)
+            verified[key] = {row["path"] for row in manifest["artifacts"]}
+        if reference["artifact"] not in verified[key]:
+            raise ValueError("retained reference is not declared in its sealed bundle")
 
 
 def _read_segment(catalog: DataCatalog, reference: dict[str, Any]) -> pd.DataFrame:
@@ -138,6 +154,22 @@ def build_incremental_features(
     base: dict[str, Any] | None = None,
     calculation_authorized: bool = False,
 ) -> dict[str, Any]:
+    """Execute checkpoint publication in the shared fresh-source boundary."""
+    from research_core.research_data_execution import execute_features
+
+    return execute_features(catalog, prepared, features, factor_ids, price_basis, base, calculation_authorized)
+
+
+def _build_incremental_features_in_process(
+    catalog: DataCatalog,
+    prepared: dict[str, pd.DataFrame],
+    features: list[str],
+    *,
+    factor_ids: dict[str, str],
+    price_basis: str,
+    base: dict[str, Any] | None = None,
+    calculation_authorized: bool = False,
+) -> dict[str, Any]:
     """Append new rows, initialize only new features, or rebuild corrected stocks.
 
     Full prepared inputs are observed to verify history, not replayed as features.
@@ -160,6 +192,7 @@ def build_incremental_features(
     schema_changed = old is not None and (old["implementation"] != implementation or old["parameters"]["price_basis"] != price_basis)
     payloads: dict[str, bytes] = {}
     stocks: dict[str, Any] = {}
+    verified_references: dict[tuple[str, str, str], set[str]] = {}
     receipt: dict[str, Any] = {"processed_new_rows": 0, "initialized_feature_rows": 0, "reused_features": 0, "stocks": {}}
     for code, frame in sorted(prepared.items()):
         # Validate every publication name before any dataset write.
@@ -187,6 +220,14 @@ def build_incremental_features(
             previous_feature = None if prior is None else prior["features"].get(feature)
             prefix = f"stocks/{code}/{feature}"
             if previous_feature is not None and not rebuild:
+                _verify_retained_references(
+                    catalog,
+                    [*previous_feature["daily_segments"], *previous_feature["pivot_segments"], previous_feature["checkpoint"]],
+                    verified_references,
+                )
+                daily_counts = [reference["rows"] for reference in previous_feature["daily_segments"]]
+                if any(type(count) is not int or count < 0 for count in daily_counts) or sum(daily_counts) != n:
+                    raise ValueError("retained daily segment rows differ from input identity")
                 if len(frame) == n:
                     feature_records[feature] = previous_feature
                     receipt["reused_features"] += 1
@@ -219,6 +260,8 @@ def build_incremental_features(
         stocks[code] = {"rows": len(frame), "input_identity": identity, "factor_id": factor_ids[code], "features": feature_records}
         receipt["stocks"][code] = {"reason": reason, "appended_dates": max(0, len(frame) - n), "full_stock_rebuild": rebuild}
     if not payloads and old is not None:
+        if implementation_identity() != implementation:
+            raise ValueError("incremental implementation changed before reuse")
         LOGGER.info("Reused complete checkpoint version=%s", old["version_id"])
         return old
     # New references cannot contain the ID of their own manifest. A same-version
@@ -265,6 +308,8 @@ def build_incremental_features(
         "stocks": stocks,
         "extension_receipt": receipt,
     }
+    if implementation_identity() != implementation:
+        raise ValueError("incremental implementation changed before publication")
     entry = publish_bundle(
         catalog,
         metadata,
@@ -368,6 +413,25 @@ def publish_forward_series(
     base: dict[str, Any] | None = None,
     calculation_authorized: bool = False,
 ) -> dict[str, Any]:
+    """Execute forward-tail publication in the shared fresh-source boundary."""
+    from research_core.research_data_execution import execute_forward
+
+    return execute_forward(catalog, code, dates, closes, price_basis, factor_id, horizon, context_layer, base, calculation_authorized)
+
+
+def _publish_forward_series_in_process(
+    catalog: DataCatalog,
+    code: str,
+    dates: pd.DatetimeIndex,
+    closes: np.ndarray,
+    *,
+    price_basis: str,
+    factor_id: str,
+    horizon: int | None = None,
+    context_layer: str | None = None,
+    base: dict[str, Any] | None = None,
+    calculation_authorized: bool = False,
+) -> dict[str, Any]:
     """Publish actual label/context tail updates as new immutable versions.
 
     Original windows/formulas remain in hhhl_variants_paths and market_context.
@@ -416,6 +480,8 @@ def publish_forward_series(
     )
     if append and len(input_frame) == n:
         assert old is not None
+        if implementation_identity() != implementation:
+            raise ValueError("incremental implementation changed before reuse")
         return old
     strings = [day.date().isoformat() for day in dates]
     values = [None if not np.isfinite(value) or value <= 0 else float(value) for value in closes]
@@ -511,6 +577,8 @@ def publish_forward_series(
     }
     if context_layer is not None:
         metadata["checkpoint_before_tail"] = receipt["checkpoint_before_tail"]
+    if implementation_identity() != implementation:
+        raise ValueError("incremental implementation changed before publication")
     entry = publish_bundle(
         catalog,
         metadata,

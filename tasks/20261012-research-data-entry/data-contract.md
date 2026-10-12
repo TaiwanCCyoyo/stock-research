@@ -120,6 +120,15 @@ bounded Parquet framing and both payload and manifest bytes; read failure never
 starts calculation. Discovery stays compact: detailed stock state and segment
 lists live in the sealed bundle manifest, not the catalog.
 
+Public feature and forward-series builders reuse `cache_execution.execute` to
+start a fresh source-captured interpreter. Physical caller-input snapshots stay
+in task-owned `.tmp/research-data-execution/`; no shared dataset is copied or
+linked. The worker binds all loaded project dependencies to their compiled bytes
+and checks them again before publication or reuse. Private in-process helpers
+are worker and isolated fault-injection entry points only. A stale notebook
+cannot publish old memory formulas with new disk source pins. Every retained
+ancestor segment is verified before extending or returning an unchanged version.
+
 `publish_forward_series` applies the original H126/H252 outcome definition or the
 retained 0050 context definition. Labels recalculate the last horizon's anchors;
 retrospective context revisits the last 10 anchors plus necessary warm observations.

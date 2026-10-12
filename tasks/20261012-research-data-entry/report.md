@@ -79,6 +79,12 @@ overlap, and binds all three benchmark source identities to the sealed manifest.
 Negative and mutation tests cover each finding. Draft CI must be reported as its
 actual contracts/checks scope, not as the full research suite.
 
+Additional local review identified transitive retained-segment verification and
+stale in-memory source identity gaps. Extensions now verify every retained source
+bundle before reuse. Public builders reuse the existing fresh-source worker,
+with loaded-byte checks before calculation and publication. Synthetic regressions
+cover deleted/corrupt ancestors, stale callers and source changes during a run.
+
 Primary's HHHL variants `params/input-pins-v1.json` raw bytes did not match its
 retained execution pin during registration; the task checkout's tracked bytes
 did match. Their canonical JSON identities were also verified equal. The catalog
