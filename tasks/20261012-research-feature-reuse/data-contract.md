@@ -28,4 +28,14 @@ The runtime identity binds Python/numpy/pandas/pyarrow and exact execution sourc
 
 The thin CLI provides metadata planning/query and the fixed **invented-input** benchmark only. See `uv run python -m scripts.feature_blocks --help` and each command's `--help` for arguments. No CLI command runs a market study. Library callers supply approved missions and immutable inputs separately.
 
+```powershell
+uv run python -m scripts.feature_blocks plan --store D:/Project/stock-research/research_cache/feature-blocks-v1 --identities D:/Project/stock-research/.tmp/explicit-identities.json
+uv run python -m scripts.feature_blocks query --store D:/Project/stock-research/research_cache/feature-blocks-v1 --identity D:/Project/stock-research/.tmp/explicit-identity.json
+uv run python -B -X pycache_prefix=D:/Project/stock-research/.tmp/unused-benchmark-pycache -m scripts.feature_blocks benchmark-synthetic --output D:/Project/stock-research/.tmp/new-feature-benchmark
+```
+
+The first packet is an object with `identities` array; the second is one complete identity. Supply your approved exact identities rather than placeholders. Benchmark output and pycache prefix must be fresh paths, and measurement runs separately from test suites or other task workloads.
+
 The [mission](mission.md) fixes benchmark dimensions and execution bounds before measurement. [Report](report.md) and its portable compressed receipt retain numerical/byte parity, timings, resource observations, negative speedups and partial-reuse counts. Synthetic payloads remain in task-owned scratch; Git contains the reusable implementation, tests, this contract and small measured evidence. Historical HHHL logs retain only observed boundaries; unavailable historical CPU/RAM/I/O are explicitly unknown.
+
+`benchmark-v1.json.gz` is a small gzip transport containing an envelope under `research-feature-measurement-envelope.v1`: the complete benchmark receipt, code commit, command, excluded diagnostic-run reason and preservation metadata. It does not contain frames. Inspect offline with standard `gzip`/`json`, limiting expanded bytes to 128,000 and verifying the checksum recorded in the report before loading. Absolute scratch locators describe the measured run; another checkout reproduces the invented inputs from the fixed public benchmark instead of depending on those locators. Exact source hashes are retained so a future formula/runtime change cannot silently relabel this measurement.
