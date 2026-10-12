@@ -42,10 +42,18 @@ SMA20 block. Its second consumer computed zero and admitted zero workers. Adding
 BB20_Upper computed one block and reused SMA20. This is synthetic behavior proof,
 not a market performance benchmark.
 
-The retained-artifact baseline passed all 16 checks before changes. Final normal
-hooks, targeted results and the post-change retained-artifact comparison are
-recorded with delivery after source formatting stabilizes. Local raw diagnostics
-are at `.tmp/research-data-evidence/`, not Git.
+The retained-artifact baseline passed all 16 checks before changes; all 16 also
+passed after the entry and after the checkpoint follow-up. The initial checkpoint
+targeted run passed 421 tests with two POSIX symlink skips. After the dependency
+and execution-boundary changes, all 109 incremental, fresh-source, original cache
+boundary and CI-scope tests passed. Normal commit hooks passed on the final code.
+These are overlapping test groups, not 530 distinct tests. Draft hosted CI has
+its own narrower scope and must be read at the delivered head.
+
+[The compressed evidence packet](evidence-v1.json.gz) retains raw source pins,
+the owner-designated handoff identity, both synthetic deletion receipts and both
+registered-worktree consumer proofs. It contains no real price vectors. Local
+raw diagnostics are at `.tmp/research-data-evidence/`, not Git.
 
 ## Checkpoint follow-up and research boundary
 
