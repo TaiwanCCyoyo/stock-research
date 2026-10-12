@@ -34,7 +34,7 @@
 
 `research_core.derived_features_selective_v1.compute_selected` 延用 `derived-features.v1` 的數值定義與缺價重新暖機，只計算要求欄位及必要依賴；不是原 HHHL v4 的 G／X4 替代品。`feature_identity_v1` 固定輸入、程式、日曆、股票、定義、政策與 runtime 的完整身分；`feature_block_store_v1` 驗證後重用，缺少或毀損只新增 generation，保存舊資料與失敗診斷，不用 mutable latest。
 
-預定正式根目錄為 primary `D:/Project/stock-research/research_cache/feature-blocks-v1/`；本次只用合成資料測試，沒有市場區塊。查詢入口 `uv run python -m scripts.feature_blocks plan/query`、取得與 manifest 外部 pin 規則見 [資料契約](../../tasks/20261012-research-feature-reuse/data-contract.md)。單股 scheduler 用有限 Windows Job Objects，完整 barrier 後才讓上層做全域運算；橫斷面 rank 與選擇不可拆成單股工作。記憶體限制是 admission estimate 加事後程序峰值核對，不是 OS 記憶體沙箱；小工作可能以直接計算較快，見 [固定合成實測](../../tasks/20261012-research-feature-reuse/report.md)。
+預定正式根目錄為 primary `D:/Project/stock-research/research_cache/feature-blocks-v1/`；本次只用合成資料測試，沒有市場區塊。查詢入口 `uv run python -m scripts.feature_blocks plan/query`、取得與 manifest 外部 pin 規則見 [資料契約](../../tasks/20261012-research-feature-reuse/data-contract.md)。單股 scheduler 使用 `stock_feature_pool_v2`；全重用時不要求 worker admission。它用有限 Windows Job Objects，完整 barrier 後才讓上層做全域運算；橫斷面 rank 與選擇不可拆成單股工作。記憶體限制是 admission estimate 加事後程序峰值核對，不是 OS 記憶體沙箱；小工作可能以直接計算較快，見 [固定合成實測](../../tasks/20261012-research-feature-reuse/report.md)。
 
 ## 不可變快取 v1
 

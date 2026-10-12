@@ -35,7 +35,9 @@ Parent process lifetime peak 最高 116,256,768 bytes；child lifetime peak 最�
 
 ## 使用與限制
 
-資產入口為 [資料契約](data-contract.md)、`research_core.feature_block_store_v1`／`stock_feature_pool_v1` 和 `scripts.feature_blocks`。先比完整身分與 bytes，再重用；缺少／失效只增加新 generation，不能覆寫舊檔。缺少 pivot 時重算必要 ATR 中間值有明確理由；沒有「任何情況都不能重算」規則。
+資產入口為 [資料契約](data-contract.md)、`research_core.feature_block_store_v1`／`stock_feature_pool_v2` 和 `scripts.feature_blocks`。先比完整身分與 bytes，再重用；缺少／失效只增加新 generation，不能覆寫舊檔。缺少 pivot 時重算必要 ATR 中間值有明確理由；沒有「任何情況都不能重算」規則。
+
+固定量測保留 v1 原來源與數字；review 指出 v1 在全重用路徑仍先做 worker memory admission，低記憶體時可能不必要地拒絕零程序重用。新 v2 coordinator 保留靜態 budget 驗證，只在缺塊工作存在時做 worker admission；全重用回傳 effective_workers=0。v2 的完整實作身分不同，不替既有 v1 區塊偷偷換標籤。這是合成功能回歸修正，未重跑或改稱 v1 的正式量測為 v2 性能證據。
 
 全域 rank／選擇仍在完整 barrier 後，由上層依批准 mission 處理，先合併整數 count 與 distinct stock set 再算率。本 API 拒絕把橫斷面特徵塞進單股程序。凍結 v4 G／X4 的缺價語義不同，沒有改接新 gap-reset API；原始結果與執行來源 bytes 保持不變。
 

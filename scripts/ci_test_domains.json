@@ -253,7 +253,8 @@
                 "research_core/stock_feature_pool_v1.py",
                 "research_core/stock_feature_worker_v1.py",
                 "research_core/feature_benchmark_v1.py",
-                "scripts/feature_blocks.py"
+                "scripts/feature_blocks.py",
+                "research_core/stock_feature_pool_v2.py"
             ],
             "tests": [
                 "scripts/tests/test_derived_features_selective_v1.py",
@@ -262,7 +263,8 @@
                 "scripts/tests/test_research_measurement_v1.py",
                 "scripts/tests/test_prepared_stock_input_v1.py",
                 "scripts/tests/test_stock_feature_pool_v1.py",
-                "scripts/tests/test_feature_blocks_cli.py"
+                "scripts/tests/test_feature_blocks_cli.py",
+                "scripts/tests/test_stock_feature_pool_v2.py"
             ]
         }
     },
@@ -417,6 +419,7 @@
         "scripts/tests/test_seed_worktree_inputs.py",
         "scripts/tests/test_start_research_web.py",
         "scripts/tests/test_stock_feature_pool_v1.py",
+        "scripts/tests/test_stock_feature_pool_v2.py",
         "scripts/tests/test_strategy_map_capture.py",
         "scripts/tests/test_studio_review_coverage.py",
         "scripts/tests/test_supplement_hhhl_v4_audit.py",

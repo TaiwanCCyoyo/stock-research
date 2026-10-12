@@ -167,3 +167,4 @@ research_core/stock_feature_worker_v1.py text eol=lf
 research_core/feature_benchmark_v1.py text eol=lf
 scripts/feature_blocks.py text eol=lf
 tasks/20261012-research-feature-reuse/benchmark-v1.json.gz -text
+research_core/stock_feature_pool_v2.py text eol=lf
