@@ -120,6 +120,10 @@
                 border-color: var(--line-strong);
                 opacity: 0.6;
             }
+            .heat-cell.is-unfiltered {
+                border-style: dotted;
+                border-color: var(--line-strong);
+            }
             .heat-cell.is-na {
                 background-image: repeating-linear-gradient(
                     135deg,
@@ -323,8 +327,10 @@
                 </div>
                 <p class="rk-foot">
                     虛線框＝已知事件少於 300
-                    筆，數字不穩。斜線＝比較對象沒有這個條件（例如「離 Z2
-                    多遠」只有型態才有），只能和「同型態不加條件」比。
+                    筆，數字不穩。標＊的格子是型態專屬條件（例如「離 Z2
+                    多遠」只有型態才有）：沒有型態的股票沒有這個值，照 PR #9
+                    的口徑改和「未加條件」的控制組比，
+                    虛線點框標示；要看條件本身讓型態變好多少，請切到「同型態不加條件」。
                     「同條件全部股票」也包含少量有型態的日子（約占
                     2%），所以是「近似沒有型態」。
                 </p>
@@ -675,6 +681,14 @@
                     );
                 const known = (r) => (r && r.known_n > 0 ? r : null);
 
+                /** The one way to change the chosen signal, so the chart, table and menu agree. */
+                let flagSelect = null;
+                function selectFlag(id) {
+                    state.flag = id;
+                    if (flagSelect) flagSelect.value = id;
+                    renderStops();
+                    renderAfter();
+                }
                 const state = {
                     h: 252,
                     split: "merged",
@@ -866,18 +880,69 @@
                     { value: "self", label: "同型態不加條件" },
                     { value: "none", label: "不比較，只看翻倍率" },
                 ];
-                function comparatorRate(split, h, feature, bin) {
-                    if (state.comparator === "self")
+                /**
+                 * The published comparator for one pattern row. A matched condition
+                 * reads the control cohort's same-condition row. A pattern-only
+                 * condition (Z2, restart, drawn lines…) has no value for stocks
+                 * without the pattern, so PR #9 published an unfiltered control
+                 * instead: its C-52w counts sit on the pattern row itself, and the
+                 * unfiltered C-base is the baseline row.
+                 */
+                function publishedControl(
+                    cohort,
+                    patternRow,
+                    comparator,
+                    split,
+                    h,
+                    sameCondition,
+                ) {
+                    if (comparator === "none") return { r: null, kind: "none" };
+                    if (comparator === "self")
                         return {
-                            r: rate(base(state.cohort, split, h)),
-                            na: false,
+                            r: rate(base(cohort, split, h)),
+                            kind: "self",
                         };
-                    if (state.comparator === "none")
-                        return { r: null, na: false };
-                    const row = known(
-                        single(state.comparator, split, h, feature, bin),
+                    if (
+                        patternRow?.reference_kind === "pattern_only_unfiltered"
+                    ) {
+                        if (comparator === "C-52w") {
+                            const n = patternRow.reference_c52w_known_n;
+                            const r =
+                                n > 0
+                                    ? fmt.ratio(
+                                          patternRow.reference_c52w_hit_n,
+                                          n,
+                                      )
+                                    : null;
+                            return {
+                                r,
+                                n,
+                                kind: r === null ? "na" : "unfiltered",
+                            };
+                        }
+                        const b = known(base("C-base", split, h));
+                        return {
+                            r: rate(b),
+                            n: b?.known_n,
+                            kind: b ? "unfiltered" : "na",
+                        };
+                    }
+                    const row = known(sameCondition());
+                    return {
+                        r: rate(row),
+                        n: row?.known_n,
+                        kind: row ? "matched" : "na",
+                    };
+                }
+                function comparatorRate(split, h, feature, bin) {
+                    return publishedControl(
+                        state.cohort,
+                        single(state.cohort, split, h, feature, bin),
+                        state.comparator,
+                        split,
+                        h,
+                        () => single(state.comparator, split, h, feature, bin),
                     );
-                    return { r: rate(row), n: row?.known_n, na: !row };
                 }
                 function renderHeat() {
                     const box = document.getElementById("heatmap");
@@ -958,7 +1023,9 @@
                                         : v - comp.r;
                                 const cls = ["heat-cell"];
                                 if (r.known_n < 300) cls.push("is-small");
-                                if (comp.na) cls.push("is-na");
+                                if (comp.kind === "na") cls.push("is-na");
+                                if (comp.kind === "unfiltered")
+                                    cls.push("is-unfiltered");
                                 if (b === "feature_unknown")
                                     cls.push("is-unknown");
                                 const bg =
@@ -988,9 +1055,11 @@
                                             { class: "diff" },
                                             state.comparator === "none"
                                                 ? `${fmt.int(r.known_n)} 筆`
-                                                : comp.na
+                                                : comp.kind === "na"
                                                   ? "對照不適用"
-                                                  : fmt.pp(diff),
+                                                  : comp.kind === "unfiltered"
+                                                    ? `${fmt.pp(diff)} ＊`
+                                                    : fmt.pp(diff),
                                         ),
                                     ],
                                 );
@@ -1018,11 +1087,15 @@
                                             `${sp.label}：${COHORTS[state.cohort].name} ${fmt.pct(rate(rr))}（${fmt.int(rr?.known_n)} 筆）` +
                                                 (state.comparator === "none"
                                                     ? ""
-                                                    : cc.na
+                                                    : cc.kind === "na"
                                                       ? "，對照不適用"
-                                                      : `，對照 ${fmt.pct(cc.r)}，差 ${fmt.pp(rate(rr) - cc.r)}`),
+                                                      : `，對照${cc.kind === "unfiltered" ? "（未加條件）" : ""} ${fmt.pct(cc.r)}，差 ${fmt.pp(rate(rr) - cc.r)}`),
                                         );
                                     }
+                                    if (comp.kind === "unfiltered")
+                                        lines.push(
+                                            "＊這是型態專屬條件，沒有型態的股票沒有這個值；照 PR #9 的口徑，對照是未加條件的控制組。",
+                                        );
                                     lines.push(
                                         `賠錢率 ${fmt.pct(lossRate(r))}・股票 ${fmt.int(r.known_security_n)} 檔`,
                                     );
@@ -1097,10 +1170,14 @@
                     const compCohort = state.comboComparator;
                     const data = CAND_IDS.map((id, i) => {
                         const p = cand("P-all", split, h, id);
-                        const comp =
-                            compCohort === "self"
-                                ? base("P-all", split, h)
-                                : known(cand(compCohort, split, h, id));
+                        const comp = publishedControl(
+                            "P-all",
+                            p,
+                            compCohort,
+                            split,
+                            h,
+                            () => cand(compCohort, split, h, id),
+                        );
                         const drop =
                             split === "merged"
                                 ? null
@@ -1117,7 +1194,7 @@
                         Math.max(
                             ...data.flatMap((d) => [
                                 rate(d.p) ?? 0,
-                                rate(d.comp) ?? 0,
+                                d.comp.r ?? 0,
                             ]),
                         ) * 1.1;
                     const W = 220;
@@ -1153,10 +1230,12 @@
                     const body = html("tbody");
                     let wins = 0;
                     let comparable = 0;
+                    let unfiltered = 0;
                     for (const d of data) {
                         const pr = rate(d.p);
-                        const cr = rate(d.comp);
-                        if (cr !== null) {
+                        const cr = d.comp.r ?? null;
+                        if (d.comp.kind === "unfiltered") unfiltered += 1;
+                        else if (cr !== null) {
                             comparable += 1;
                             if (pr > cr) wins += 1;
                         }
@@ -1217,7 +1296,7 @@
                                         ? html(
                                               "small",
                                               {},
-                                              "含型態專屬條件：沒有型態的股票沒有這個值，對照不適用",
+                                              "含型態專屬條件：沒有型態的股票沒有這個值，對照是未加條件的控制組（＊，PR #9 口徑）",
                                           )
                                         : null,
                                 ]),
@@ -1226,7 +1305,11 @@
                                 html(
                                     "td",
                                     { class: cr === null ? "is-na" : "" },
-                                    cr === null ? "不適用" : fmt.pct(cr),
+                                    cr === null
+                                        ? "不適用"
+                                        : d.comp.kind === "unfiltered"
+                                          ? `${fmt.pct(cr)} ＊`
+                                          : fmt.pct(cr),
                                 ),
                                 html(
                                     "td",
@@ -1263,10 +1346,9 @@
                     table.append(body);
                     const pBase = rate(base("P-all", split, h));
                     const diffs = data
+                        .filter((d) => d.comp.kind !== "unfiltered")
                         .map((d) =>
-                            rate(d.comp) === null
-                                ? null
-                                : rate(d.p) - rate(d.comp),
+                            d.comp.r === null ? null : rate(d.p) - d.comp.r,
                         )
                         .filter((v) => v !== null)
                         .sort((a, b) => a - b);
@@ -1285,7 +1367,10 @@
                     }[compCohort];
                     document.getElementById("combo-answer").innerHTML =
                         `每個組合都把翻倍率從高過高原本的 ${fmt.pct(pBase)} 拉到兩成上下。` +
-                        `和「${compLabel}」比，能比較的 ${comparable} 個組合中有 ${wins} 個較高，差距中位數 ${fmt.pp(median)}：${reading}` +
+                        `和「${compLabel}」比，同條件可比的 ${comparable} 個組合中有 ${wins} 個較高，差距中位數 ${fmt.pp(median)}：${reading}` +
+                        (unfiltered
+                            ? `另外 ${unfiltered} 個含型態專屬條件，只能和未加條件的控制組比（標＊），不算在上面的計數裡。`
+                            : "") +
                         `同時賠錢率升到 ${fmt.pct(Math.min(...losses), 0)}–${fmt.pct(Math.max(...losses), 0)}（高過高整體約四成）：這些條件選到的是漲得多、也跌得兇的股票。`;
                 }
 
@@ -1552,11 +1637,7 @@
                         dot.addEventListener("mouseleave", () =>
                             K.tooltip.hide(),
                         );
-                        dot.addEventListener("click", () => {
-                            state.flag = d.id;
-                            renderStops();
-                            renderAfter();
-                        });
+                        dot.addEventListener("click", () => selectFlag(d.id));
                         g.push(dot);
                         g.push(
                             svg(
@@ -2004,19 +2085,17 @@
                     });
 
                     const ac = document.getElementById("after-controls");
-                    const select = html(
+                    const select = (flagSelect = html(
                         "select",
                         { class: "rk-select", "aria-label": "訊號" },
                         Object.entries(FLAGS).map(([id, [name]]) =>
                             html("option", { value: id }, name),
                         ),
-                    );
+                    ));
                     select.value = state.flag;
-                    select.addEventListener("change", () => {
-                        state.flag = select.value;
-                        renderAfter();
-                        renderStops();
-                    });
+                    select.addEventListener("change", () =>
+                        selectFlag(select.value),
+                    );
                     ac.append(
                         html("span", { class: "rk-control" }, ["訊號", select]),
                     );
