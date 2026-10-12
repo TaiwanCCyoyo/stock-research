@@ -152,3 +152,17 @@ tasks/20261012-hhhl-v4-variants/evidence/verify_peer_features.py text eol=lf
 tasks/20261012-hhhl-v4-variants/evidence/verify_summary.py text eol=lf
 tasks/20261012-hhhl-v4-variants/params/input-pins-v1.json text eol=lf
 tasks/20261012-hhhl-v4-variants/mission.md text eol=lf
+# Feature-block receipts bind these source bytes across fresh checkouts.
+research_core/__init__.py text eol=crlf
+research_core/bounded_parquet.py text eol=crlf
+research_core/windows_process_job.py text eol=crlf
+research_core/derived_features_selective_v1.py text eol=lf
+research_core/feature_identity_v1.py text eol=lf
+research_core/feature_block_store_v1.py text eol=lf
+research_core/prepared_stock_input_v1.py text eol=lf
+research_core/research_measurement_v1.py text eol=lf
+research_core/stock_feature_contract_v1.py text eol=lf
+research_core/stock_feature_pool_v1.py text eol=lf
+research_core/stock_feature_worker_v1.py text eol=lf
+research_core/feature_benchmark_v1.py text eol=lf
+scripts/feature_blocks.py text eol=lf
