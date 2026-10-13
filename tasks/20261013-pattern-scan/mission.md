@@ -58,9 +58,12 @@
   raw close × Volume 為千元成交額。這是參考日 restatement，不是含息帳戶報酬或歷史可得因子。
   0050 2025-06-18 一拆四必須納入相同價格政策。
 - 不解釋的大幅跳動沿用 price-basis.v2 Quality/reason：原始單日絕對變動 ≥40%，
-  無有效公司行動解釋者記 unexplained_jump。型態 detection 回看或 label 全窗口跨此日，
-  該事件結果覆寫為 unknown / unexplained_jump（包括先 hit 的例子），事件保留；
-  同時保存原 label 及 quality-overlay 原因以稽核，不能靠 dropna 穿越缺口。
+  無有效公司行動解釋者記 unexplained_jump。型態 detection 回看或結果全窗口跨此日，
+  該事件的 effective_label 為 unknown / unexplained_jump（包括先 hit 的例子），事件保留。
+  共用 base label 不改寫；detection 回看因型態而異，quality overlay／事件資格以
+  event_id+horizon 另存，引用固定 base-label version。不能把 B1 的長回看 jump 寫入
+  security_id/t0/horizon 共用列，影響同日 L1 的短回看。保存 base/effective 與各 scope 原因，
+  不能靠 dropna 穿越缺口。
 - 逐日資格提案：metadata reference 為 ordinary stock、當日完整有效價格／正量、
   最近60個 common sessions 的研究價皆有效；前20日 raw 成交額平均 ≥
   原v4門檻 **NT$1m（1,000千元）**，要求20日成交額均可知，
@@ -191,8 +194,14 @@ E4_cat=bottom/hhhl/range；E4_big=false/true。逐值公式最终以既有 featu
 
 H126/H252重用 outcomes_for_closes。t0+1..t0+H首次close≥2×anchor為hit；
 先缺價則unknown，先hit則其後普通缺價不撤銷已知hit；
-完整路徑未hit且末close<anchor為loss，否则flat-win。品質jump overlay另遵上節更保守規則。
-主分母只收calendar_full且已知；hit與loss率並列。截尾hit及未知不混回主分母，
+完整路徑未hit且末close<anchor為loss，否则flat-win。這是共用 base outcome；
+calendar_full、base_main_eligible與普通缺價的 first-decision 語意不變。
+型態 detection／結果窗口品質及事件資格另由 apply_event_overlay 形成 event_id+horizon
+投影；品質原因使 effective_label unknown，資格排除只改 event_main_eligible、不改 label。
+每張型態／條件／控制彙總只用自己的 effective_label、event_main_eligible；主分母須
+base calendar_full、effective known 且沒有事件資格排除。base/effective counts、各 scope
+原因及 excluded_n 分開保留，不能以同股同日共用標籤覆寫不同型態分母。
+hit與loss率並列。截尾hit及未知不混回主分母，
 完整日曆及截尾各報上下界。零分母率null；整數counts及stock-set先合併再算rate。
 新統計支持2010..2026，不直接用硬寫2019..2026的舊RateAccumulator。
 
@@ -268,7 +277,7 @@ Q4–Q6使用12原pattern+每pattern前10candidate，最多132組，9個旗標
 缺價、冷卻、R1b/R2e/R3b/P1確認前不触發；原F10/F32/F33／v4 API parity；
 因子／jump、未來行插入不改past-only、週線完成、全市場barrier、CRC與92候選、
 同條件控制not_applicable、episode合併、路徑與flag clocks。這些都須在市場運算前完成。
-目前 only40 pure helper tests，不能等同每pattern detector已測。
+目前僅有純合成 primitive／cohort／event overlay 驗證，不能等同每pattern detector已測。
 
 按 [execution plan](execution-plan.md) 先估成本、量測代表股票串行與有限worker
 相同輸入的wall/CPU/RSS/I/O/啟動/serialization；觀測不到明列unknown。
@@ -276,9 +285,12 @@ Q4–Q6使用12原pattern+每pattern前10candidate，最多132組，9個旗標
 stock order不變。不把100% CPU當最佳，不在market結果出來後改selection。
 
 Formal shared versions由既有builder no-replace發布：universe/prices/pivots/features/
-patterns/labels/episodes/context，manifest給raw期間、valid期間、eligible label periods、
+patterns/labels/event-outcomes/episodes/context，manifest給raw期間、valid期間、eligible label periods、
 known/unknown coverage、身份與backup狀態。研究固定其版本與manifest SHA，
 read失敗明確停止，不靜默重算。不把2010–2018接到舊2019資料；
+labels 以固定版本內 security_id/t0/horizon 保存 base outcome；每個 event-outcomes bundle
+固定唯一 base-label version+manifest pin，鍵 event_id/horizon 包含型態、子型、definition/input
+身分。引用 base 版本改變須新增 overlay bundle 版本，不覆寫舊投影。
 2019舊事件只作重疊差異核對（input／factor／price-basis／warmup起點等原因明列）。
 公用新pattern與episode增量狀態未完成；本研究固定cutoff，
 後續增量要逐個版本證明append/tail=全算，不假稱PR12已包全部。

@@ -8,8 +8,9 @@
 1. 準備：核對handoff bytes；盤點7個catalog版本與每項缺口；收錄全部定義、
    未決事項、輸出、comparison上限；驗raw日期鍵／Code/Source projection而非OHLC結果。
    保存本次價格及4種metadata/action實體快照，不覆寫舊seed。
-2. mission PR：只交此設計、兩個new-version純helper、合成測試與input observation pins。
-   owner確認「低過低」及補充文字後才ready／merge。CI/review綠燈不自動啟動研究。
+2. mission PR：交此設計、new-version純helper、合成測試與input observation pins。
+   H1=v4／L3=F33依原handoff固定；另加「低過低」才需新定義。owner review／merge
+   最後mission文字才核准計算，CI/review綠燈不自動啟動研究。
 3. merge後從最新main接續同task checkout；實作每個detector/condition adapter、
    支持2010的統計、fresh-source thin runner、結果schemas與讀取／validation。
    重用price_basis／feature blocks／worker pool／HHHL public APIs；不import script private helper。
@@ -32,8 +33,11 @@
    事前inventory完整definition/input/code/calendar/basis/policies/parameters/runtime；
    missing/invalid/incompatible理由給新version。先stage→verify→no-replace publish primary shared。
 8. 各stock feature/pivot/pattern可有限平行；同日RS/J/K3等全stock barrier完成後才計算；
-   PAT需所有pattern events，labels→episodes→cohorts→development selection→全部confirmation
+   PAT需所有pattern events，base labels→episodes；獨立cohorts→event_outcomes→development selection→全部confirmation
    candidates→Q4–Q6。重現性依input/source identity與deterministic ordering，不依完成順序。
+   每event/horizon套自己的detection/result品質與資格，引用固定base-label version+manifest；
+   shared labels不存型態回看理由。各summary只消費自己的effective_label/event_main_eligible，
+   同日B1/L1及union members不得互相覆寫，base/effective／excluded counts可重算。
 9. 單次fixed calculation；分phase／stock/version的receipt支援resume。中斷保留部分輸出，
    不覆寫已封存檔；stale source/input或missing/corrupt ancestor停止publication。
    rerun bug fix記暴露／reason／新source版本；spec改動先修mission merge，再看結果。

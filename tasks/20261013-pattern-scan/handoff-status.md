@@ -2,7 +2,7 @@
 
 基準：main 061cde2（PR #12合併）；原本機handoff的固定bytes見input pins。
 「完成」僅在這一列宣稱的範圍；「部分」不能視為完成研究。
-本次新helper的40個合成測試只補selection/cooldown/episode/path primitive，
+初版40個合成測試補selection/cooldown/episode/path；新增19個cohort及42個event overlay cases，
 不產生市場數字，不重做PR12已完成的入口驗證。正式研究仍待mission merge。
 
 ## 原始來源與已發布版本
@@ -41,9 +41,9 @@ catalog snapshot固定在input pins；兩個price-base完整ID由catalog取得�
 | 1.2010期間                  | 部分         | raw日期鍵与snapshot確認，cutoff固定2026-10-12                                          | adjusted有效coverage、每股缺漏、正式版本及所有報表待計算          |
 | 1.因子/0050                 | 部分         | 原始action snapshot涵蓋2010，已保存identity                                            | price-basis.v2正式全市场、0050新cutoff相容性／split驗證           |
 | 1.逐日股票池                | 部分         | mission明列逐日資格、保留新上市／下市；原算法可參考                                    | 新universe builder及逐日eligible資料；門檻提案待merge             |
-| 1.早期quality               | 部分         | price-basis.v2已有≥40% unexplained_jump規則                                            | 本次affected detection/result窗口unknown overlay與年代分表        |
+| 1.早期quality               | 部分         | 原jump規則；event_id/horizon overlay純合成隔離通過，不改shared base label              | 真實detection/result窗口adapter、正式overlay與年代分表            |
 | 1.timing/cooldown           | 部分         | confirmed_pivot_view；新20/21session cooldown合成通過                                  | 各detector完整confirmed metadata與no-future合成                   |
-| 2.outcome                   | 部分         | 原first-decision labels／截尾/rates API；mission保留                                   | 新2010labels、quality overlay、rates全期版本                      |
+| 2.outcome                   | 部分         | 原first-decision API；base/event分離契約與B1/L1分母合成驗證                            | 新2010base labels/event_outcomes、rates全期版本                   |
 | 2.controls                  | 部分         | C-nh/C-52w原式盤點                                                                     | C-dip/C-trend/P1-b、原控coldown/同條件完整資料                    |
 | 3.H1                        | 部分         | public load_detector v4；S=Z2/L=restart映射有原例                                      | 2010全段、cooldown、与2019原事件比對及品質原因                    |
 | 3.B1a/B1b                   | 未完成       | mission寫完整定義及有限搜尋提案                                                        | 新cup/handle detector、全部正反合成案例、正式事件                 |

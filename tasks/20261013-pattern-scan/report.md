@@ -1,7 +1,7 @@
 # Pattern-scan v1 準備報告
 
 **研究尚未執行；本次完成handoff盤點、mission提案、原始來源覆蓋與snapshot準備，
-以及兩個pure helper版本。** [逐項狀態](handoff-status.md)保留每項證據與未完成限制。
+以及pure helper、獨立cohort與event overlay。** [逐項狀態](handoff-status.md)保留每項證據與未完成限制。
 
 已確認raw來源有2010-01-04..2026-10-12的6,653,745列／2,076代碼／4,110日期；
 不是合格股票數或完整還原價認證。既有catalog七筆中，唯一2010起complete是0050背景；
@@ -32,7 +32,7 @@
 原branch與初始化producer／舊物理seed輸入保留。本次新增5個約243MB物理input snapshots，
 沒有copy/link formal shared versions、沒有改producer source、下載或排程。
 [execution plan](execution-plan.md)列出mission合併後的detector、成本、封存、正式builder、
-研究與audit順序。owner圖形／補充提案未定前不開始市場計算。
+研究與audit順序。市場計算等owner mission merge；H1=v4／L3=F33已定，追加圖形才需新定義。
 
 已另外核實4110個raw日期鍵皆存在official來源，沒有nonofficial-only日期。
 原始input pins及synthetic source pins分开，兩者都不宣稱全市場研究完成。
@@ -51,3 +51,15 @@ R3a(100)→R3b(110)兩邊各自保留，union仍只有100；A(10,30)/B(0)案例�
 
 [P1來源與合成收據 v2](cohort-evidence-v2.json.gz)固定新增cohort source/test及原v1依賴身份，
 原synthetic-evidence-v1保持原bytes，不以新source重釘舊驗證。
+
+## PR14 P2：同日型態品質的獨立投影
+
+shared labels移除pattern-specific quality_overlay；base outcome仍以固定版本內stock/t0/horizon保存。
+新增apply_event_overlay，以event_id/horizon保存detection/result品質、事件資格及有效label，
+不修改base或同日其他型態。B1長回看含jump與L1短回看無jump共用base hit，
+有效主分母分別0與1；不同horizon、子型、definition/input身分各自保存。
+品質原因使事件unknown；資格排除保留原label並只移出主分母；截尾hit仍保留且不進主分母。
+正式shared bundle與summary consumer契約同步；尚未建立真實overlay或完成detector接線。
+
+42個新overlay cases通過；包含舊helper／selection／CI scope的focused regression合計
+**196 passed**。新增來源將另存v3證據；v1/v2來源與packet保持byte-identical。
