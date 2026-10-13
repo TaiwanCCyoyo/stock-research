@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from research_core.annual_rotation import annual_candidates, economic_path, first_observed_trade, paired_benchmark_path, select_leaders
+from research_core.annual_rotation import annual_candidates, annual_holding, economic_path, first_observed_trade, paired_benchmark_path, select_leaders
 
 
 def fixture() -> tuple[Any, pd.DataFrame, pd.DataFrame]:
@@ -144,3 +144,46 @@ def test_known_halt_cannot_excuse_an_observed_corrupt_quote():
     result = economic_path(raw, events, dates, start=dates[1], end=dates[-1], known_halts={"2021-12-30"})
     assert result["gross_multiplier"] is None
     assert "invalid_ohlc" in result["reasons"][0]
+
+
+def test_ytd_missing_terminal_quote_retains_selected_position():
+    dates, raw, events = fixture()
+    raw = raw.drop(index=3)
+    result = annual_holding(raw, events, dates, year=2021, full_year_through=2020)
+    assert result["code"] == "1234"
+    assert result["entry_date"] == "2021-01-04"
+    assert result["exit_date"] == "2022-01-03"
+    assert result["raw_entry"] == 100
+    assert result["raw_exit"] is None
+    assert result["position_status"] == "unresolved"
+    assert result["gross_multiplier"] is None
+    assert "2022-01-03:ambiguous_or_missing_raw_exit" in result["reasons"]
+
+
+def test_whole_year_suspension_cannot_enter_and_exit_next_year():
+    dates, raw, events = fixture()
+    raw = raw.loc[raw.Date.isin([dates[0], dates[-1]])]
+    holding = annual_holding(raw, events, dates, year=2021, full_year_through=2021)
+    assert holding["entry_date"] == holding["exit_date"] == "2022-01-03"
+    assert holding["gross_multiplier"] is None
+    assert holding["position_status"] == "unresolved"
+    benchmark = paired_benchmark_path(raw, events, dates, holding)
+    assert benchmark["status"] == "unknown"
+    assert benchmark["reasons"] == ["unordered_strategy_endpoints"]
+
+
+@pytest.mark.parametrize("entry,exit", [("2022-01-03", "2021-01-04"), (None, "2022-01-03")])
+def test_unordered_or_missing_strategy_endpoints_are_unknown(entry: str | None, exit: str):
+    dates, raw, events = fixture()
+    result = paired_benchmark_path(raw, events, dates, {"entry_date": entry, "exit_date": exit, "is_ytd": False})
+    assert result["status"] == "unknown"
+    assert result["gross_multiplier"] is None
+
+
+def test_annual_holding_preserves_normal_raw_execution_prices():
+    dates, raw, events = fixture()
+    result = annual_holding(raw, events, dates, year=2021, full_year_through=2021)
+    assert result["status"] == "modeled"
+    assert result["position_status"] == "modeled_exit_or_mark"
+    assert result["raw_entry"] == result["raw_exit"] == 100
+    assert result["gross_multiplier"] == pytest.approx(100 / 90)

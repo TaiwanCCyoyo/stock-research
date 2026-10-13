@@ -16,7 +16,7 @@ import subprocess
 import sys
 from collections import Counter
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -26,12 +26,13 @@ REPO = Path(__file__).resolve().parents[2]
 TASK = Path(__file__).resolve().parent
 sys.path.insert(0, str(REPO))
 
+from research_core.annual_publication import reuse_rank_rows, verified_result
 from research_core.annual_ranking_pool import rank_panel
-from research_core.annual_rotation import economic_path, first_observed_trade, paired_benchmark_path, select_leaders
+from research_core.annual_rotation import annual_holding, paired_benchmark_path, select_leaders
 from research_core.annual_statistics import equity_drawdown, summarize_annual_excess
 from research_core.artifact_store import canonical, file_digest, object_digest, read_json, verify_files, write_json
 from research_core.research_data_builder import publish_bundle
-from research_core.research_data_catalog import DataCatalog, verify_entry
+from research_core.research_data_catalog import DataCatalog
 from research_core.research_data_paths import DataRoots
 from research_core.research_measurement_v1 import phase_receipt, resource_sample
 
@@ -141,6 +142,7 @@ def source_identity(params_path: Path) -> dict[str, Any]:
         "research_core/annual_rotation.py",
         "research_core/annual_statistics.py",
         "research_core/annual_ranking_pool.py",
+        "research_core/annual_publication.py",
         "research_core/price_basis.py",
         "research_core/artifact_store.py",
         "research_core/research_data_builder.py",
@@ -202,45 +204,19 @@ def measure(params: dict[str, Any], inputs: tuple, output: Path) -> dict[str, An
 def holding(
     raw: pd.DataFrame, actions: pd.DataFrame, days: pd.DatetimeIndex, year: int, params: dict[str, Any], *, avoid: bool, benchmark: bool = False
 ) -> dict[str, Any]:
-    scheduled = cast(pd.Timestamp, days[np.array([cast(pd.Timestamp, day).year for day in days]) == year][0])
-    entry = first_observed_trade(raw, days, on_or_after=scheduled, avoid_one_price=avoid)
-    is_ytd = year > params["complete_through_year"]
-    future = days[days >= pd.Timestamp(f"{year + 1}-01-01")]
-    exit_day = (
-        cast(pd.Timestamp, days[-1])
-        if is_ytd
-        else first_observed_trade(raw, days, on_or_after=cast(pd.Timestamp, future[0]), avoid_one_price=avoid)
-        if len(future)
-        else None
-    )
-    info: dict[str, Any] = {
-        "code": str(raw.Code.iloc[0]),
-        "year": year,
-        "scheduled_entry": str(scheduled.date()),
-        "entry_date": None if entry is None else str(entry.date()),
-        "exit_date": None if exit_day is None else str(exit_day.date()),
-        "is_ytd": is_ytd,
-        "exit_kind": "mark_close_liquidation_scenario" if is_ytd else "observed_open_scenario",
-    }
-    if entry is None or exit_day is None or entry >= exit_day or entry.year != year:
-        return {**info, "status": "unknown", "reasons": ["missing_or_unordered_execution_endpoints"], "gross_multiplier": None, "net_multiplier": None}
-    result = economic_path(
+    return annual_holding(
         raw,
         actions,
         days,
-        start=entry,
-        end=exit_day,
-        end_field="Close" if is_ytd else "Open",
+        year=year,
+        full_year_through=params["complete_through_year"],
+        avoid_one_price=avoid,
         commission=params["commission"],
         sell_tax=params["etf_sell_tax"] if benchmark else params["stock_sell_tax"],
         slippage=params["slippage"],
         split_ratios=params["exact_benchmark_splits"] if benchmark else {},
         known_halts=set(params["known_benchmark_halts"]) if benchmark else set(),
     )
-    # Preserve observed raw endpoint prices even when intermediate economics fail.
-    result["raw_entry"] = float(raw.loc[raw.Date.eq(entry), "Open"].iloc[0])
-    result["raw_exit"] = float(raw.loc[raw.Date.eq(exit_day), "Close" if is_ytd else "Open"].iloc[0])
-    return {**info, **result}
 
 
 def summary_window(years: list[dict[str, Any]], start_year: int, params: dict[str, Any]) -> dict[str, Any]:
@@ -283,14 +259,22 @@ def summary_window(years: list[dict[str, Any]], start_year: int, params: dict[st
     return result
 
 
-def run(params: dict[str, Any], inputs: tuple, measurement: dict[str, Any], output: Path, source: dict[str, Any]) -> dict[str, Any]:
+def run(
+    params: dict[str, Any], inputs: tuple, measurement: dict[str, Any], output: Path, source: dict[str, Any], previous_rank: Path | None = None
+) -> dict[str, Any]:
+    held_before = resource_sample()
     entry, prices, actions, types, days = inputs
     if measurement["input_version_id"] != entry["version_id"] or measurement["parameters_sha256"] != object_digest(params):
         raise ValueError("measurement used different inputs or settings")
-    if any(file_digest(REPO / name) != digest for name, digest in measurement["kernel_sha256"].items()):
-        raise ValueError("measurement used different ranking implementation")
     selected, scope_report = scope(prices, types)
-    panel = rank_panel(selected, actions, days, params["ranking_years"], workers=measurement["selected_workers"])
+    if previous_rank is not None:
+        panel = reuse_rank_rows(previous_rank, catalog(), repo=REPO, input_entry=entry, parameters=params)
+        if source["runtime"] != read_json(previous_rank)["source"]["runtime"]:
+            raise ValueError("rank reuse runtime changed")
+    else:
+        if any(file_digest(REPO / name) != digest for name, digest in measurement["kernel_sha256"].items()):
+            raise ValueError("measurement used different ranking implementation")
+        panel = rank_panel(selected, actions, days, params["ranking_years"], workers=measurement["selected_workers"])
     rows = panel["rows"]
     held_codes = {leader["code"] for year in params["ranking_years"] for leader in select_leaders([row for row in rows if row["year"] == year], count=5)}
     groups = {code: selected.loc[selected.Code.eq(code)] for code in sorted(held_codes)}
@@ -426,6 +410,7 @@ def run(params: dict[str, Any], inputs: tuple, measurement: dict[str, Any], outp
         "continuous_benchmarks": continuous_benchmarks,
         "measurement": {key: measurement[key] for key in ("sample_codes", "selected_workers", "estimate_full_wall_seconds", "memory_budget_bytes")},
         "execution": {key: value for key, value in panel["performance"].items() if key != "worker_receipts"},
+        "holding_execution": phase_receipt("held_paths_and_summary", held_before, resource_sample()),
     }
     # The public summary omits quote vectors and detailed daily equity; shared bundle retains them.
     for arm in public["arms"].values():
@@ -447,18 +432,25 @@ def run(params: dict[str, Any], inputs: tuple, measurement: dict[str, Any], outp
         payloads[f"implementation/{name}"] = (REPO / name).read_bytes()
     if source_identity(TASK / "params/study-v1.json") != source:
         raise ValueError("executed source changed; publication stopped")
+    reused = panel["performance"].get("rank_reuse")
+    lineage = {"input_entry": entry, **({"ranking_reuse_entry": reused["entry"]} if reused else {})}
     result_entry = publish_bundle(
         catalog(),
         metadata(
             "annual-rotation-process",
             "episodes",
-            {"input_version": entry["version_id"], "input_manifest_sha256": entry["manifest"]["sha256"], "source": source},
+            {
+                "input_version": entry["version_id"],
+                "input_manifest_sha256": entry["manifest"]["sha256"],
+                "source": source,
+                **({"ranking_reuse_entry": reused["entry"]} if reused else {}),
+            },
             params,
             str(days[0].date()),
             str(days[-1].date()),
         ),
         payloads,
-        lineage={"input_entry": entry},
+        lineage=lineage,
     )
     result = {**public, "process_entry": result_entry}
     write_json(output, result)
@@ -471,26 +463,36 @@ def main() -> int:
     parser.add_argument("--input-pin", type=Path, default=TASK / "params/input-pin-v1.json")
     parser.add_argument("--measurement", type=Path, default=TASK / "params/measurement-v2.json")
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--reuse-ranked-result", type=Path, help="verify and reuse an unchanged frozen ranking; recompute held paths only")
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO)
-    params_path = TASK / "params/study-v1.json"
-    params = read_json(params_path)
-    source = source_identity(params_path)
     before = resource_sample()
-    if args.mode == "prepare":
-        result = prepare(params, args.output)
-    elif args.mode == "verify":
-        result = read_json(args.output)
-        verify_entry(result["input_entry"], catalog().roots)
-        verify_entry(result["process_entry"], catalog().roots)
+    if args.mode == "verify":
+        result, _, _ = verified_result(args.output, catalog())
         result = {"verified_input_version": result["input_entry"]["version_id"], "verified_process_version": result["process_entry"]["version_id"]}
     else:
-        inputs = load_inputs(args.input_pin)
-        result = measure(params, inputs, args.output) if args.mode == "measure" else run(params, inputs, read_json(args.measurement), args.output, source)
+        params_path = TASK / "params/study-v1.json"
+        params = read_json(params_path)
+        source = source_identity(params_path)
+        if args.output.exists():
+            raise ValueError("output already exists; retain evidence and choose a new path")
+        if args.mode == "prepare":
+            result = prepare(params, args.output)
+        else:
+            inputs = load_inputs(args.input_pin)
+            result = (
+                measure(params, inputs, args.output)
+                if args.mode == "measure"
+                else run(params, inputs, read_json(args.measurement), args.output, source, args.reuse_ranked_result)
+            )
     LOGGER.info("Completed mode=%s receipt=%s", args.mode, phase_receipt(args.mode, before, resource_sample()))
     print(
         json.dumps(
-            {"mode": args.mode, "output": str(args.output), "version_id": result.get("version_id", result.get("process_entry", {}).get("version_id"))},
+            {
+                "mode": args.mode,
+                "output": str(args.output),
+                "version_id": result.get("version_id", result.get("process_entry", {}).get("version_id", result.get("verified_process_version"))),
+            },
             ensure_ascii=True,
         )
     )  # noqa: T201

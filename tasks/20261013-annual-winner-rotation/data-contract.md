@@ -40,8 +40,19 @@ owned output path. Output JSON is created exclusively. Reuse verifies immutable
 bytes; it does not rerun market calculations. Source changes require a new
 source/version/run; never re-pin old results after formatting.
 
+`verified_result` compares every public value with the process bundle's stored
+`results.json`, checks registered input/process/source and archived source member
+digests, and rejects a changed verdict, return or otherwise valid swapped input.
+Numeric JSON formatting is semantic (0.0 equals 0); booleans remain distinct.
+`--reuse-ranked-result` verifies the old bundle, exact inputs/settings/runtime,
+unchanged ranking/economic source prefix and dependencies, and the runner's
+historical-scope AST before reusing its retained candidates. It recomputes only
+held paths, publishes a new process version with `ranking_reuse_entry` lineage,
+and records zero newly ranked stocks. The original process version remains
+byte-identical. A changed ranking definition or scope cannot use this bridge.
+
 ```powershell
-uv run python tasks/20261013-annual-winner-rotation/run_study.py run --output .tmp/annual-winner-replay.json
+uv run python tasks/20261013-annual-winner-rotation/run_study.py run --reuse-ranked-result tasks/20261013-annual-winner-rotation/sweep_results.json --output .tmp/annual-winner-replay.json
 ```
 
 Initial authorized preparation (already completed in this study) is explicit,
@@ -82,6 +93,9 @@ by 2,000,000 and do not certify lot-size feasibility.
   unknown; adjusted prices never become transaction prices or inferred shares.
 - `first_observed_trade`: next positive-volume valid raw open; optional one-price
   avoidance. Daily OHLC is not order-book, odd-lot or statutory-limit evidence.
+- `annual_holding`: preserve the fixed issuer and unresolved position when a
+  YTD terminal quote is absent or a full-year suspension produces unordered
+  endpoints. `paired_benchmark_path` rejects those endpoints before evaluation.
 - `rank_panel`: one stock per task, <=2 admitted workers/in-flight jobs, deterministic
   parent barrier, integer candidate counts before any rates. Synthetic Windows
   serial/two-worker equality is tested; resource receipts are observations, not

@@ -204,12 +204,64 @@ def paired_benchmark_path(raw: pd.DataFrame, actions: pd.DataFrame, calendar: pd
     """Require exact strategy dates; never find different benchmark endpoints."""
     if strategy.get("entry_date") is None or strategy.get("exit_date") is None:
         return {"status": "unknown", "reasons": ["missing_strategy_endpoints"], "gross_multiplier": None, "net_multiplier": None}
+    start = cast(pd.Timestamp, pd.Timestamp(strategy["entry_date"]))
+    end = cast(pd.Timestamp, pd.Timestamp(strategy["exit_date"]))
+    if pd.isna(start) or pd.isna(end) or start >= end:
+        return {"status": "unknown", "reasons": ["unordered_strategy_endpoints"], "gross_multiplier": None, "net_multiplier": None}
     return economic_path(
         raw,
         actions,
         calendar,
-        start=cast(pd.Timestamp, pd.Timestamp(strategy["entry_date"])),
-        end=cast(pd.Timestamp, pd.Timestamp(strategy["exit_date"])),
+        start=start,
+        end=end,
         end_field="Close" if strategy["is_ytd"] else "Open",
         **policy,
     )
+
+
+def annual_holding(
+    raw: pd.DataFrame, actions: pd.DataFrame, calendar: pd.DatetimeIndex, *, year: int, full_year_through: int, avoid_one_price: bool = False, **policy: Any
+) -> dict[str, Any]:
+    """Keep a chosen issuer and unresolved endpoints even when a mark is absent."""
+    year_days = calendar[pd.Series(calendar).dt.year.to_numpy() == year]
+    if not len(year_days) or raw.empty:
+        raise ValueError("nonempty issuer history and trading-year calendar required")
+    scheduled = cast(pd.Timestamp, year_days[0])
+    entry = first_observed_trade(raw, calendar, on_or_after=scheduled, avoid_one_price=avoid_one_price)
+    is_ytd = year > full_year_through
+    future = calendar[calendar >= pd.Timestamp(f"{year + 1}-01-01")]
+    end = (
+        cast(pd.Timestamp, calendar[-1])
+        if is_ytd
+        else first_observed_trade(raw, calendar, on_or_after=cast(pd.Timestamp, future[0]), avoid_one_price=avoid_one_price)
+        if len(future)
+        else None
+    )
+    info = {
+        "code": str(raw.Code.iloc[0]),
+        "year": year,
+        "scheduled_entry": str(scheduled.date()),
+        "entry_date": None if entry is None else str(entry.date()),
+        "exit_date": None if end is None else str(end.date()),
+        "is_ytd": is_ytd,
+        "exit_kind": "mark_close_liquidation_scenario" if is_ytd else "observed_open_scenario",
+    }
+    if entry is None or end is None or entry >= end or entry.year != year:
+        return {
+            **info,
+            "status": "unknown",
+            "position_status": "unresolved",
+            "reasons": ["missing_or_unordered_execution_endpoints"],
+            "raw_entry": None,
+            "raw_exit": None,
+            "gross_multiplier": None,
+            "net_multiplier": None,
+        }
+    result = economic_path(raw, actions, calendar, start=entry, end=end, end_field="Close" if is_ytd else "Open", **policy)
+    for key, date, field in (("raw_entry", entry, "Open"), ("raw_exit", end, "Close" if is_ytd else "Open")):
+        observations = raw.loc[raw.Date.eq(date), field]
+        value = float(observations.iloc[0]) if len(observations) == 1 else np.nan
+        result[key] = value if np.isfinite(value) and value > 0 else None
+        if result[key] is None:
+            result["reasons"].append(f"{date.date()}:ambiguous_or_missing_{key}")
+    return {**info, **result, "position_status": "unresolved" if result["status"] == "unknown" else "modeled_exit_or_mark"}

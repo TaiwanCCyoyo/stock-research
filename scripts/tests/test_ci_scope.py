@@ -43,7 +43,7 @@ def test_domain_and_downstream_union(path: str, domain: str, consumer: str) -> N
     [
         (
             path,
-            {"market_context", "method_environment", "sector", "opportunity", "research_data"},
+            {"market_context", "method_environment", "sector", "opportunity", "research_data", "annual"},
             {
                 "scripts/tests/test_method_environment_runner.py",
                 "scripts/tests/test_sector_wave_catalog_io.py",
@@ -55,7 +55,7 @@ def test_domain_and_downstream_union(path: str, domain: str, consumer: str) -> N
     + [
         (
             path,
-            {"hhhl", "opportunity", "research_data"},
+            {"hhhl", "opportunity", "research_data", "annual"},
             {"tests/test_opportunity_history_api.py"},
         )
         for path in ("research_core/hhhl_variants_paths.py", "research_core/hhhl_variants_observations.py")
@@ -67,6 +67,7 @@ def test_research_data_upstreams_keep_all_downstream_tests(path: str, expected_d
     assert not plan["full"]
     assert set(plan["domains"]) == expected_domains
     assert set(manifest["domains"]["research_data"]["tests"]) <= set(plan["python_tests"])
+    assert set(manifest["domains"]["annual"]["tests"]) <= set(plan["python_tests"])
     assert existing_consumer_tests <= set(plan["python_tests"])
     assert plan["frontend"]
     assert "scripts/tests/test_research_ledger.py" not in plan["python_tests"]
@@ -137,8 +138,9 @@ def test_feature_block_upstreams_select_research_data_consumers(path: str) -> No
     manifest = ci_scope.load_manifest()
     plan = ci_scope.make_plan([("M", path)])
     assert not plan["full"]
-    assert set(plan["domains"]) == {"feature_blocks", "research_data"}
+    assert set(plan["domains"]) == {"feature_blocks", "research_data", "annual"}
     expected_tests = set(manifest["domains"]["feature_blocks"]["tests"]) | set(manifest["domains"]["research_data"]["tests"])
+    expected_tests |= set(manifest["domains"]["annual"]["tests"])
     assert set(plan["python_tests"]) == expected_tests
     assert not plan["frontend"]
     assert "scripts/tests/test_research_ledger.py" not in plan["python_tests"]
@@ -162,6 +164,86 @@ def test_feature_block_domain_routes_new_execution_contracts() -> None:
     assert "scripts/tests/test_prepared_stock_input_v1.py" in plan["python_tests"]
     # Shared numerical foundations retain the existing full safety fallback.
     assert ci_scope.make_plan([("A", "research_core/derived_features_selective_v1.py")])["full"]
+
+
+ANNUAL_TESTS = {
+    "scripts/tests/test_annual_rotation.py",
+    "scripts/tests/test_annual_statistics.py",
+    "scripts/tests/test_annual_ranking_pool.py",
+    "scripts/tests/test_annual_rotation_cli.py",
+    "scripts/tests/test_annual_publication.py",
+}
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "research_core/annual_rotation.py",
+        "research_core/annual_statistics.py",
+        "research_core/annual_ranking_pool.py",
+        "research_core/annual_publication.py",
+        "tasks/20261013-annual-winner-rotation/run_study.py",
+    ],
+)
+def test_annual_sources_select_exact_annual_consumers(source: str) -> None:
+    plan = ci_scope.make_plan([("M", source)])
+
+    assert not plan["full"]
+    assert plan["domains"] == ["annual"]
+    assert ANNUAL_TESTS == set(plan["python_tests"])
+
+
+@pytest.mark.parametrize(
+    ("source", "expected_domains"),
+    [
+        ("research_core/research_data_builder.py", {"research_data", "annual"}),
+        ("research_core/research_data_catalog.py", {"research_data", "annual"}),
+        ("research_core/research_data_paths.py", {"research_data", "annual"}),
+        ("research_core/research_measurement_v1.py", {"feature_blocks", "research_data", "annual"}),
+        ("research_core/feature_identity_v1.py", {"feature_blocks", "research_data", "annual"}),
+    ],
+)
+def test_annual_upstream_dependency_closure_selects_annual_consumers(source: str, expected_domains: set[str]) -> None:
+    plan = ci_scope.make_plan([("M", source)])
+
+    assert not plan["full"]
+    assert set(plan["domains"]) == expected_domains
+    assert ANNUAL_TESTS <= set(plan["python_tests"])
+
+
+def test_price_basis_keeps_global_full_fallback_and_includes_annual_tests() -> None:
+    manifest = ci_scope.load_manifest()
+    plan = ci_scope.make_plan([("M", "research_core/price_basis.py")])
+
+    assert "research_core/price*" in manifest["full_paths"]
+    assert plan["full"]
+    assert plan["python_tests"] == ci_scope.test_inventory(ci_scope.ROOT, manifest)
+    assert ANNUAL_TESTS <= set(plan["python_tests"])
+
+
+def test_unknown_annual_source_keeps_full_fallback() -> None:
+    plan = ci_scope.make_plan([("A", "research_core/annual_future_helper.py")])
+
+    assert plan["full"]
+    assert plan["python_tests"] == ci_scope.test_inventory(ci_scope.ROOT, ci_scope.load_manifest())
+
+
+def test_unreviewed_future_test_keeps_full_inventory_fallback(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    manifest = ci_scope.load_manifest()
+    manifest["test_roots"] = ["scripts/tests"]
+    manifest["reviewed_tests"] = ["scripts/tests/test_annual_fixture.py"]
+    monkeypatch.setattr(ci_scope, "load_manifest", lambda: manifest)
+    root_test = tmp_path / "scripts/tests/test_annual_fixture.py"
+    root_test.parent.mkdir(parents=True)
+    root_test.write_text("def test_fixture(): pass\n", encoding="utf-8")
+    future_test = root_test.parent / "test_annual_future.py"
+    future_test.write_text("def test_future(): pass\n", encoding="utf-8")
+
+    plan = ci_scope.make_plan([("M", "research_core/annual_rotation.py")], root=tmp_path)
+
+    assert plan["full"]
+    assert plan["python_tests"] == ["scripts/tests/test_annual_fixture.py", "scripts/tests/test_annual_future.py"]
+    assert any("inventory differs" in reason for reason in plan["reasons"])
 
 
 @pytest.mark.parametrize(
