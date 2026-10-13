@@ -31,6 +31,27 @@ def _equivalent(actual: Any, expected: Any) -> bool:
     return type(actual) is type(expected) and actual == expected
 
 
+def _sealed_bytes(root: Path, members: dict[str, str], name: str) -> bytes:
+    """Read a bundle member and require the bytes actually consumed to match its manifest digest.
+
+    `verify_entry` only vouches for what it read when it ran. Whatever is consumed afterwards must
+    be checked again, or a member rewritten in between would be used as if it were sealed.
+    """
+    raw = safe_path(root / name).read_bytes()
+    if hashlib.sha256(raw).hexdigest() != members.get(name):
+        raise ValueError(f"consumed bytes differ from the sealed manifest: {name}")
+    return raw
+
+
+def _json_object(raw: bytes, *, max_bytes: int = 8_000_000) -> dict[str, Any]:
+    if len(raw) > max_bytes:
+        raise ValueError("JSON member exceeds size limit")
+    value = json.loads(raw)
+    if not isinstance(value, dict):
+        raise ValueError("JSON object required")
+    return value
+
+
 def json_delivery_receipt(original: bytes, delivery: bytes) -> dict[str, Any]:
     """Validate finalized JSON meaning, then identify its delivered raw bytes.
 
@@ -156,7 +177,7 @@ def verified_result(path: Path, catalog: DataCatalog) -> tuple[dict[str, Any], P
         if members.get(f"implementation/{name}") != digest:
             raise ValueError("source snapshot differs from manifest member digest")
     root = catalog.roots.artifact_path(process_entry["manifest"]["scope"], process_entry["manifest"]["path"]).parent
-    expected = read_json(root / "results.json")
+    expected = _json_object(_sealed_bytes(root, members, "results.json"))
     public = {key: value for key, value in result.items() if key != "process_entry"}
     if not _equivalent(public, expected):
         raise ValueError("public results differ from published results.json")
@@ -178,8 +199,9 @@ def reuse_rank_rows(previous_path: Path, catalog: DataCatalog, *, repo: Path, in
     previous, root, manifest = verified_result(previous_path, catalog)
     if not _equivalent(previous["input_entry"], input_entry) or not _equivalent(manifest["metadata"]["parameters"], parameters):
         raise ValueError("rank reuse inputs/parameters mismatch")
+    members = {row["path"]: row["sha256"] for row in manifest["artifacts"]}
     module_name = "research_core/annual_rotation.py"
-    old_module = (root / "implementation" / module_name).read_bytes()
+    old_module = _sealed_bytes(root, members, f"implementation/{module_name}")
     new_module = (repo / module_name).read_bytes()
     boundary = b"\ndef paired_benchmark_path"
     if boundary not in old_module or old_module.split(boundary)[0] != new_module.split(boundary)[0]:
@@ -189,18 +211,19 @@ def reuse_rank_rows(previous_path: Path, catalog: DataCatalog, *, repo: Path, in
             raise ValueError(f"ranking dependency changed: {name}")
     runner = "tasks/20261013-annual-winner-rotation/run_study.py"
 
-    def scope_tree(path: Path) -> str:
-        tree = ast.parse(path.read_text(encoding="utf-8"))
+    def scope_tree(source: str) -> str:
+        tree = ast.parse(source)
         return ast.dump(next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "scope"))
 
-    if scope_tree(root / "implementation" / runner) != scope_tree(repo / runner):
+    old_runner = _sealed_bytes(root, members, f"implementation/{runner}").decode("utf-8")
+    if scope_tree(old_runner) != scope_tree((repo / runner).read_text(encoding="utf-8")):
         raise ValueError("historical scope implementation changed")
-    with gzip.GzipFile(fileobj=BytesIO((root / "candidates.json.gz").read_bytes())) as stream:
+    with gzip.GzipFile(fileobj=BytesIO(_sealed_bytes(root, members, "candidates.json.gz"))) as stream:
         raw = stream.read(64_000_001)
     if len(raw) > 64_000_000:
         raise ValueError("candidate payload exceeds bound")
     rows = json.loads(raw)
-    execution = read_json(root / "execution.json")
+    execution = _json_object(_sealed_bytes(root, members, "execution.json"))
     if not isinstance(rows, list) or len(rows) != execution["row_count"]:
         raise ValueError("candidate count differs from retained execution")
     return {"rows": rows, "performance": {**execution, "rank_reuse": {"entry": previous["process_entry"], "new_stocks_calculated": 0}}}

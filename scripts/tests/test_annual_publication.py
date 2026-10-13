@@ -4,6 +4,7 @@ import gzip
 import hashlib
 import json
 import os
+import stat
 import subprocess
 import sys
 from collections import Counter
@@ -708,3 +709,58 @@ def test_verified_result_hashes_each_bundle_member_once(published_result: tuple[
     assert len(manifests) == 2 and len(members) >= 4
     assert {counts[target] for target in members} == {1}
     assert {counts[target] for target in manifests} == {2}
+
+
+def _rewrite_member(target: Path, content: bytes) -> None:
+    """Simulate a write by another process or an accident after verification (members are read-only)."""
+    target.chmod(target.stat().st_mode | stat.S_IWUSR)
+    target.write_bytes(content)
+
+
+@pytest.mark.parametrize(
+    "member,altered",
+    [
+        ("candidates.json.gz", lambda old: gzip.compress(canonical([{"code": "1101", "year": 2021}, {"code": "9999", "year": 2021}]))),
+        ("execution.json", lambda old: canonical({"row_count": 2, "worker_count": 99})),
+        ("implementation/research_core/annual_rotation.py", lambda old: old + b"\n# altered after verification\n"),
+        ("implementation/tasks/20261013-annual-winner-rotation/run_study.py", lambda old: old + b"\n# altered after verification\n"),
+    ],
+    ids=["candidates-same-row-count", "execution", "old-ranking-module", "old-runner"],
+)
+def test_reuse_rank_rows_hashes_the_bytes_it_consumes(
+    synthetic_cli_publication: tuple[Path, Path, Path, dict[str, Any], dict[str, str]],
+    monkeypatch: pytest.MonkeyPatch,
+    member: str,
+    altered: Any,
+) -> None:
+    """A member rewritten after verified_result() but before it is read must not be reused as sealed."""
+    worktree, _, path, result, environment = synthetic_cli_publication
+    catalog = DataCatalog(DataRoots.from_env(environment, worktree=worktree))
+    real = annual_publication.verified_result
+
+    def verify_then_rewrite(*args: Any, **kwargs: Any) -> Any:
+        verified = real(*args, **kwargs)
+        target = verified[1] / member
+        _rewrite_member(target, altered(target.read_bytes()))
+        return verified
+
+    monkeypatch.setattr(annual_publication, "verified_result", verify_then_rewrite)
+    with pytest.raises(ValueError, match="consumed bytes differ from the sealed manifest"):
+        reuse_rank_rows(path, catalog, repo=worktree, input_entry=result["input_entry"], parameters={"fixture": "annual-publication.cli.v1", "seed": 11})
+
+
+def test_verified_result_hashes_the_results_it_compares(published_result: tuple[DataCatalog, Path, dict[str, Any]], monkeypatch: pytest.MonkeyPatch) -> None:
+    """Semantically equal JSON is not enough: the bytes compared must be the sealed bytes."""
+    catalog, path, _ = published_result
+    real = DataCatalog.get_verified
+
+    def verify_then_reformat(self: DataCatalog, data_id: str, version_id: str, **kwargs: Any) -> Any:
+        row, manifest = real(self, data_id, version_id, **kwargs)
+        if data_id == "annual-rotation-process":
+            target = self.roots.artifact_path(row["manifest"]["scope"], row["manifest"]["path"]).parent / "results.json"
+            _rewrite_member(target, target.read_bytes() + b"\n")  # same JSON meaning, different bytes
+        return row, manifest
+
+    monkeypatch.setattr(DataCatalog, "get_verified", verify_then_reformat)
+    with pytest.raises(ValueError, match="consumed bytes differ from the sealed manifest: results.json"):
+        verified_result(path, catalog)
