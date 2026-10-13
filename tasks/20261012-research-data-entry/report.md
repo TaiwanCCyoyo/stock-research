@@ -108,6 +108,10 @@ label coverage from actual main eligibility. Full-calendar, eligible and unknown
 counts and disjoint eligible runs are reported separately. Public synthetic
 regressions cover Float64/Int64 gaps, append/full equality, all-NaN H126 input,
 gapped eligibility islands and retained early-hit-before-missing semantics.
+All 113 incremental, fresh-source and CI-scope tests passed; a post-formatting
+gapped-coverage regression passed again, and normal commit hooks passed.
+[Review evidence v2](review-evidence-v2.json.gz) pins this follow-up separately;
+the earlier evidence packet remains unchanged.
 
 Primary's HHHL variants `params/input-pins-v1.json` raw bytes did not match its
 retained execution pin during registration; the task checkout's tracked bytes
