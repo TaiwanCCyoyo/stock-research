@@ -14,9 +14,10 @@
 - 本 PR 準備契約、原始來源覆蓋、實體 frozen inputs 與純合成 primitive。
   **owner 合併此 mission 後，才實作／封存完整 runner 並開始任何市場計算。**
   新市場結果前仍須完成所有 detector 合成驗證、來源／環境 pins、成本量測及正式資料驗證。
-- 原 handoff §3.1第124行明定 H1 = HHHL v4 pattern，§3.3第190行明定L3 = legacy F33；這兩項已定，不再要求重新確認。原檔沒有獨立「低過低」規格：
-  **目前不以 F33、v4 bottom、R3 或任何 LL/LH 代理替代它**，見下列待確認事項。
-  owner 若要新增，必須先固定圖形／確認語意並修訂本 mission，不在看過結果後添加。
+- Owner 2026-10-13 明確決定「就沿用 handoff 已列的型態」：本次固定12家族清單，
+  H1 = HHHL v4 pattern（原handoff §3.1第124行），L3 = legacy F33（§3.3第190行）。
+  **不新增另一套口述「低過低」或 LL/LH 型態；型態選擇已完成，不再列待決或重問。**
+  此決定只固定型態清單，以下事前補充語意仍交本mission review／merge核准。
 - mission merge 不授權下載、排程、改 producer、重開封存期間或重寫舊結果。
   缺輸入／來源 pin 不符／無法保證價格品質或無法完成契約時停止，保留失敗 receipt。
 
@@ -168,7 +169,7 @@ not_applicable 各自列原因，不當0。既有條件重用原公式及 bin_va
 | K診斷／K,K2,K3           | ATR14%；raw price；同日eligible成交額分位，原K3的三分之一分組                                                     | K<3/3–5/≥5%；K2<20/20–50/50–150/≥150；K3low/middle/high   |
 
 SR-c 正式提案用 **同版本還原Close分箱、raw量累計**，
-讓120日價格帶與t0 close直接可比；此提案與後述待決清單一起核准，不能混兩價基。
+讓120日價格帶與t0 close直接可比；此提案與後述review補充一起核准，不能混兩價基。
 K診斷只報全部分布（含缺值），不選擇，KL可選。H/J/K3跨股票計算須等全eligible stock barrier，
 每個族內最多選一atom；原A/B/E均映射SR，不延用舊selector的A/B/E獨立族。
 所有條件每個區間逐一報，包括零樣本、未知與不適用。型態專屬support及H1線條在C-base沒有S：
@@ -302,12 +303,25 @@ pattern字典更新。抽10個事件人工核對t0/pivot/S/L/confirm/conditions�
 抽5candidate從逐筆資料重算。可攜包不足以取得大型原始資料時明列local-only。
 同碟backup和異機backup分别report，不將hook/read-only當備份或安全證明。
 
-## 待owner確認的實質補充
+## Owner已定範圍與mission review補充
 
-1. 只有另加原handoff未定的獨立「低過低」時，才需固定哪兩低／中間高、觸發價、
-   extreme與confirm時點，不能由現有F33或HHHL猜測。選項是原清單H1=v4/L3=F33，或追加獨立新圖形版本；未有新增定義時保持原清單。市場計算仍等本mission merge，不以這個可能追加的圖形重問已定版本。
-2. 上文標「補充提案」的S/L、有限搜尋、R1b確認5日上限、R3ties與SR-c還原Close分箱，
-   以及逐日資格門檻／C-base-all與no-pattern分母／hit路徑診斷用詞：
-   均在市場結果前列明，owner可在mission review調整；合併代表批准最後文字。
-3. 不縮短2010起点；若fixed raw coverage內仍有因子／官方價／metadata缺口，
-   按unknown／excluded inventory照實報告，需下載等額外行動時另外請owner判斷。
+型態清單已由owner明確決定，不再阻擋ready。本PR的pure primitive／cohort／overlay準備
+已完成，detectors／完整runner／市場結果仍按execution plan在mission合併後交付。
+以下每項的**建議值就是本提案採用的唯一值**；備選只供owner修改mission，
+不會同時運算或新增參數搜尋。型態答覆沒有核准這些補充；合併最後mission文字才批准。
+目前没有必須先另答才能轉ready的選擇，owner可在review指定補充ID與替代值。
+
+| 補充ID           | 本mission採用／建議值                                                              | 具體備選及影響                                                                       |
+| ---------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| S1 S/L metadata  | 採上表每型態固定pivot/S/L；R2e保留原型態、不納入確認棒；L1/L2/L3 adapter不改原flag | 未由handoff直接提供的S/L記unknown；可保留事件率，但部分support/Y1/Y2診斷不可計算     |
+| S2 有限搜尋      | B1柄5..15、B1b杯30..250、B3平台25..65由短到長首個成立；其他候選／平手照上文        | 改由長到短首個成立；不增加參數組合，但會改代表結構、S/L及部分觸發日期，需先修mission |
+| S3 R1b确认期限   | 二測後最多5個common sessions等首個close>open，超期expired                          | 最多10日；會保留較晚確認事件並改t0/標籤，不與5日版本並跑                             |
+| S4 R3 ties／配對 | 最低價平手取窗口最早；配對取最近合法P1，再以日期決定                               | 平手窗口標unknown、不取配對；較保守，但事件數及unknown比例改變                       |
+| S5 SR-c          | 前120日同版本還原Close分20帶、raw量累計；t0用同basis比較                           | SR-c只列診斷、不参与selector；減少可選atom與組合，其他條件及上限不增加               |
+| S6 逐日資格      | ordinary reference、60日有效研究價、當日正量、前20日成交額全已知且平均≥NT$1m       | 保留其他條件，成交額平均≥NT$5m；排除較低流動性股票日，樣本／比較分母改變，不掃兩門檻 |
+| S7 C-base分母    | 同條件主對照no-pattern，並列all診斷；判定unknown不歸no-pattern                     | all作主對照、no-pattern作診斷；主對照會含型態事件，率差解释改變，不改原事件母體      |
+
+hit四路徑只叫價格路徑diagnostic，outcome另欄；這是避免將hit誤寫為nonhit的呈現契約，
+沒有新增研究假設或另調label。價格品質與資格未知按既定規則保留，不能改起點到2019。
+若固定輸入的因子／官方價／metadata仍有缺口，按unknown／excluded inventory照實報告；
+確實需要下載等額外行動時，才帶具體缺口與影響另請owner判斷。

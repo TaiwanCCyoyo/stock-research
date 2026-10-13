@@ -5,6 +5,10 @@
 初版40個合成測試補selection/cooldown/episode/path；新增19個cohort及42個event overlay cases，
 不產生市場數字，不重做PR12已完成的入口驗證。正式研究仍待mission merge。
 
+Owner 2026-10-13已明確決定沿用handoff型態清單，H1=v4、L3=legacy F33，
+不新增另一套口述「低過低」。型態選擇已完成；S1–S7補充的建議值／備選／影響
+見mission review表，仍待最後mission合併批准，不阻擋本PR轉ready。
+
 ## 原始來源與已發布版本
 
 raw價格現有2010-01-04..2026-10-12，6,653,745列／2,076代碼／4,110日期；
@@ -67,7 +71,7 @@ catalog snapshot固定在input pins；兩個price-base完整ID由catalog取得�
 | 6.episode/timing/control    | 部分         | 新鏈合併／anchor/peak ties/unknown primitive                                           | 全市場episode／matches/misses/時機quartiles、固定seedC-base對照   |
 | 7.1.path/context/lower-high | 部分         | 新四路徑／边界unknown primitive                                                        | 完整未来path/firstflag/MKT/同行/confirmed lower-high資料与表      |
 | 7.2.flags                   | 部分         | 原X5/X6及landmark clocks可用                                                           | 9flag全型態泛化、same-return/X6比較、tradeoff圖                   |
-| 8.1.mission                 | 部分         | 本提案收完整條件／上限／输入pins／未做事项                                             | owner圖形與補充提案確認、mission merge                            |
+| 8.1.mission                 | 完成準備     | 型態清單owner已定；完整條件／上限／pins與S1–S7具体review選項齊備                       | 必要準備可轉ready；正常CI／review及owner mission merge            |
 | 8.2.synthetic               | 部分         | 40 pure helper cases完成                                                               | 每個pattern成立/差一點/confirm/no-future/missing案例仍未實作      |
 | 8.3.fixed run/resume        | 未完成本研究 | 原no-replace/fresh-source機制存在                                                      | 完整runner、input/source/runtime封存、單次run及resume receipt     |
 | 8.4.report                  | 未完成       | 本report明确Q1–Q6尚無結果                                                              | 白話結論／主表及全部數字                                          |

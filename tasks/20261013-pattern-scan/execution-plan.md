@@ -9,8 +9,9 @@
    未決事項、輸出、comparison上限；驗raw日期鍵／Code/Source projection而非OHLC結果。
    保存本次價格及4種metadata/action實體快照，不覆寫舊seed。
 2. mission PR：交此設計、new-version純helper、合成測試與input observation pins。
-   H1=v4／L3=F33依原handoff固定；另加「低過低」才需新定義。owner review／merge
-   最後mission文字才核准計算，CI/review綠燈不自動啟動研究。
+   Owner 2026-10-13已定沿用原清單H1=v4／L3=F33，不新增另一套「低過低」。
+   必要準備完成後轉ready，接正常CI／review；S1–S7採mission的建議值供審閱，
+   owner merge最後mission文字才核准計算，ready或CI/review綠燈不自動啟動研究。
 3. merge後從最新main接續同task checkout；實作每個detector/condition adapter、
    支持2010的統計、fresh-source thin runner、結果schemas與讀取／validation。
    重用price_basis／feature blocks／worker pool／HHHL public APIs；不import script private helper。

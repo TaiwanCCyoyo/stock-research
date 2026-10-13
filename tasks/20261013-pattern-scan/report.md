@@ -32,7 +32,7 @@
 原branch與初始化producer／舊物理seed輸入保留。本次新增5個約243MB物理input snapshots，
 沒有copy/link formal shared versions、沒有改producer source、下載或排程。
 [execution plan](execution-plan.md)列出mission合併後的detector、成本、封存、正式builder、
-研究與audit順序。市場計算等owner mission merge；H1=v4／L3=F33已定，追加圖形才需新定義。
+研究與audit順序。市場計算等owner mission merge。
 
 已另外核實4110個raw日期鍵皆存在official來源，沒有nonofficial-only日期。
 原始input pins及synthetic source pins分开，兩者都不宣稱全市場研究完成。
@@ -64,3 +64,12 @@ shared labels移除pattern-specific quality_overlay；base outcome仍以固定�
 42個新overlay cases通過；包含舊helper／selection／CI scope的focused regression合計
 **196 passed**。[v3來源與合成收據](event-overlay-evidence-v3.json.gz)保存新增source/test、
 shared dependency及原7份source／v1/v2 packet身份；舊bytes保持不變，不重新固定舊證據。
+
+## Owner型態決定與ready準備
+
+Owner 2026-10-13明確要求沿用handoff已列型態，H1=HHHL v4、L3=legacy F33，
+不另加口述「低過低」。mission／status／索引與字典同步，型態問題已完成、不再重問。
+其餘S1–S7補充以具體建議值、備選與影響交mission review；不把型態答覆當全部批准。
+本PR準備可轉ready接正常CI／review，完整研究仍依合併後execution plan。
+本次只改文件；既有196 focused結果及v1–v3 source pins保持原驗證身份，
+正常完整hosted CI依最新ready HEAD另核實，不能把draft 95測試當full suite。
