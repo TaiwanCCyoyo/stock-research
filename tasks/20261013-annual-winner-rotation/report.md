@@ -23,7 +23,9 @@
 - 不能說：不能把 8 個年度串成完整財富曲線，也不能由「8 年中 2 年勝」推論長期複利的勝負。完整期間仍不能判定，**也不代表已證明台股版不成立**。
 - 未知的候選不是落敗者；範圍沒有被改成台灣50。
 
-**資料版本**（前 8 碼；完整識別與驗證方式見 [verification.md](verification.md)）：輸入 `de7a91ec`、原始執行的 process `463b9f10`、審查修正後的 process `256e51aa`。
+**資料版本**（前 8 碼，僅供人工定位）：輸入 `de7a91ec`、原始執行的 process `463b9f10`、審查修正後的 process `256e51aa`。
+
+**限制：重現與版本識別。** 8 碼前綴不是完整的 pin，也不是完整性保證。`input-pin-v1.json`、`measurement-v2.json`、`sweep_results.json` 尚未納入 Git；完整重現需要作者本機沒有交付的這些 pin／結果檔，以及外部的 `research_data` catalog。因此**乾淨的 checkout 目前不能直接重現本結果**，也不能說已完成可完整重現的交付。`research_result.json` 對這些檔案的引用都標為「僅本機、未交付」。驗證方式見 [verification.md](verification.md)。
 
 **可選的後續。** 補齊那 7 年，要先把補資料發布成不可變輸入，再依 [holding-policy-v2.md](holding-policy-v2.md) 實作並重算。這不影響本報告的結論範圍，也不阻擋本 PR 收尾。
 
