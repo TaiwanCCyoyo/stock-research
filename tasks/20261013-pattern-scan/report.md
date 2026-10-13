@@ -48,3 +48,6 @@ R3a(100)→R3b(110)兩邊各自保留，union仍只有100；A(10,30)/B(0)案例�
 19個新cohort cases＋原直接依賴／CI focused regressions合計 **154 passed**。
 這是接線／母體驗證，不是detector确认或市場樣本結果。新head hosted checks另讀，
 舊f212296的95项draft contracts及full pending gate是歷史CI，不能當新cohort驗證。
+
+[P1來源與合成收據 v2](cohort-evidence-v2.json.gz)固定新增cohort source/test及原v1依賴身份，
+原synthetic-evidence-v1保持原bytes，不以新source重釘舊驗證。
