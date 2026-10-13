@@ -120,6 +120,18 @@ def finalize_json_delivery_set(
     return receipt
 
 
+def finalize_json_locator(path: Path, entry: dict[str, Any], *, formatter: Callable[[list[Path]], None]) -> dict[str, Any]:
+    """Finalize an unpinned discovery pointer; never edit its referenced bundle."""
+    path = safe_path(path)
+    expected = canonical(entry)
+    if path.exists():
+        json_delivery_receipt(expected, path.read_bytes())
+    else:
+        write_json(path, entry)
+    formatter([path])
+    return json_delivery_receipt(expected, path.read_bytes())
+
+
 def verified_result(path: Path, catalog: DataCatalog) -> tuple[dict[str, Any], Path, dict[str, Any]]:
     """Bind a public report to the exact published payload and input lineage."""
     result = read_json(path)

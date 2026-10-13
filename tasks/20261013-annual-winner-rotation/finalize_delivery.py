@@ -17,8 +17,8 @@ REPO = Path(__file__).resolve().parents[2]
 TASK = Path(__file__).resolve().parent
 sys.path.insert(0, str(REPO))
 
-from research_core.annual_publication import finalize_json_delivery_set, json_delivery_receipt, verified_result
-from research_core.artifact_store import canonical, file_digest, read_json, safe_path, write_json
+from research_core.annual_publication import finalize_json_delivery_set, finalize_json_locator, json_delivery_receipt, verified_result
+from research_core.artifact_store import canonical, file_digest, read_json, safe_path
 from research_core.research_data_builder import publish_bundle
 from research_core.research_data_catalog import CATALOG_FIELDS, DataCatalog, verify_entry
 from research_core.research_data_paths import DataRoots
@@ -123,10 +123,7 @@ def finalize(output: Path, pin_output: Path, prior_pin: Path | None = None) -> d
     )
     entry = publish_bundle(cat, metadata, payloads, lineage={**refs, "relationship": "formatted_presentation_with_original_bytes_preserved"})
     verify_entry(entry, cat.roots)
-    if pin_output.exists():
-        json_delivery_receipt(canonical(entry), pin_output.read_bytes())
-    else:
-        write_json(pin_output, entry)
+    finalize_json_locator(pin_output, entry, formatter=format_new_files)
     return entry
 
 

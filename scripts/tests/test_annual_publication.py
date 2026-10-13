@@ -641,3 +641,47 @@ def test_finalize_json_delivery_set_formatter_failure_preserves_previous_version
     assert _delivery_tree_bytes(output_v1) == previous_delivery
     assert originals == source_snapshot
     assert completed_receipt == (output_v1 / "receipt.json").read_bytes()
+
+
+def test_finalize_json_locator_formats_and_repeats_with_identical_bytes_and_receipt(tmp_path: Path) -> None:
+    path = tmp_path / "delivery-pin.json"
+    entry = {
+        "data_id": "synthetic-delivery",
+        "version_id": "synthetic-v1",
+        "manifest": {"sha256": "c" * 64},
+    }
+    calls: list[list[str]] = []
+
+    def formatter(paths: list[Path]) -> None:
+        calls.append([item.name for item in paths])
+        _format_synthetic_json(paths)
+
+    first_receipt = annual_publication.finalize_json_locator(path, entry, formatter=formatter)
+    first_bytes = path.read_bytes()
+    second_receipt = annual_publication.finalize_json_locator(path, entry, formatter=formatter)
+    second_bytes = path.read_bytes()
+
+    assert first_receipt == second_receipt
+    assert first_bytes == second_bytes
+    assert json.loads(first_bytes) == entry
+    assert first_receipt == annual_publication.json_delivery_receipt(canonical(entry), first_bytes)
+    assert calls == [[path.name], [path.name]]
+
+
+def test_finalize_json_locator_rejects_mismatched_existing_entry_before_formatting(tmp_path: Path) -> None:
+    path = tmp_path / "delivery-pin.json"
+    existing = {"data_id": "synthetic-delivery", "version_id": "old-version"}
+    requested = {"data_id": "synthetic-delivery", "version_id": "new-version"}
+    path.write_bytes(canonical(existing))
+    original_bytes = path.read_bytes()
+    calls: list[list[Path]] = []
+
+    def formatter(paths: list[Path]) -> None:
+        calls.append(paths)
+        _format_synthetic_json(paths)
+
+    with pytest.raises(ValueError):
+        annual_publication.finalize_json_locator(path, requested, formatter=formatter)
+
+    assert calls == []
+    assert path.read_bytes() == original_bytes
