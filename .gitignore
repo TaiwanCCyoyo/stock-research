@@ -275,3 +275,10 @@ verify-*.png
 !tasks/20261012-hhhl-v4-variants/legacy-extension-map.csv
 # Small portable synthetic measurement receipt; invented payloads remain scratch.
 !tasks/20261012-research-feature-reuse/benchmark-v1.json.gz
+
+# Pattern-scan preparation metadata and purely synthetic evidence; quotes stay local.
+!tasks/20261013-pattern-scan/params/
+!tasks/20261013-pattern-scan/params/input-pins-v1.json.gz
+!tasks/20261013-pattern-scan/synthetic-evidence-v1.json.gz
+!tasks/20261013-pattern-scan/cohort-evidence-v2.json.gz
+!tasks/20261013-pattern-scan/event-overlay-evidence-v3.json.gz
