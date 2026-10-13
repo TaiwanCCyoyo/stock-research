@@ -76,3 +76,9 @@ MA20 在此完整窗口覆蓋全部 nonhit，但也觸及絕大多數最終 hit�
 固定十筆抽查通過 34,190 個斷言、800 個旗標列及全部 24 特徵；全彙總通過 815,067 個率公式與年度／union／未知守恆核對。既有 15 項發布驗證維持通過，新 HHHL 發布驗證亦通過。共用查詢確認同一 P-clean 事件有 H126／252 各自的原群與 P-all 列，共四列，旗標 80 列且觀察鍵無重複。詳細命令與可重算 API 見 [契約](data-contract.md)。
 
 本 session worktree `D:/Project/stock-research/.worktrees/hhhl-v4-variants-mission` 保留供 open PR #9 的 CI／review 修正；等待 owner merge 後再依 repository 工作流清理。效能重用與平行化改善另案交付，不更換本版結果。
+
+## 互動報告（2026-10-12 追加）
+
+[web-report/index.html](web-report/index.html) 把本版已發布的 summary 做成互動網頁，在研究網站的 `#reports` 可直接開啟，也可從磁碟直接開。資料由 [build_web_report_data.py](build_web_report_data.py) 從 publication-v1 匯出，只讀已發布彙總，沒有重算或改變任何數字。
+
+它補上本報告沒有並列的比較：每個條件與組合都同時和「同條件全部股票日」及「同條件 250 日新高」比。確認半 H252 的 16 個候選中，可比較的 11 個都高於同條件全部股票日（差距中位數約 +3 pp），但可比較的 7 個都低於同條件 250 日新高，所以型態相對一般股票的增量大致等於「突破創新高」本身。期間仍只有 2019 年起。
