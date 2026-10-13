@@ -30,6 +30,14 @@ def _artifact_name(name: str) -> str:
     return validated
 
 
+def _reject_alias(path: Path, info: os.stat_result) -> None:
+    """The one predicate for a forbidden filesystem alias: link, reparse point or hardlink."""
+    if stat.S_ISLNK(info.st_mode) or getattr(info, "st_file_attributes", 0) & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 1024):
+        raise ValueError(f"linked/reparse path forbidden: {path}")
+    if stat.S_ISREG(info.st_mode) and info.st_nlink > 1:
+        raise ValueError(f"hardlinked file forbidden: {path}")
+
+
 def _checked_path(path: Path) -> Path:
     """Check lexical ancestors, including dangling reparse points and hardlinks."""
     absolute = safe_path(path)
@@ -38,11 +46,36 @@ def _checked_path(path: Path) -> Path:
             info = ancestor.lstat()
         except (FileNotFoundError, NotADirectoryError):
             continue
-        if stat.S_ISLNK(info.st_mode) or getattr(info, "st_file_attributes", 0) & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 1024):
-            raise ValueError(f"linked/reparse path forbidden: {ancestor}")
-        if stat.S_ISREG(info.st_mode) and info.st_nlink > 1:
-            raise ValueError(f"hardlinked file forbidden: {ancestor}")
+        _reject_alias(ancestor, info)
     return absolute
+
+
+def _check_tree(root: Path) -> int:
+    """Apply `_reject_alias` to every entry below `root`; return how many were checked.
+
+    `root` and its own ancestors must already have passed `_checked_path`. Each entry gets
+    one lstat and a directory is entered only after it passed, so when an entry is reached
+    every directory between it and `root` has already been checked. That is the predicate
+    `_checked_path` applies per entry, at a cost linear in the entry count instead of
+    entries times path depth. It is a point-in-time check, as the per-entry form was.
+    """
+    checked = 0
+    pending = [root]
+    while pending:
+        directory = pending.pop()
+        with os.scandir(directory) as entries:
+            names = [entry.name for entry in entries]
+        for name in names:
+            child = directory / name
+            try:
+                info = child.lstat()
+            except (FileNotFoundError, NotADirectoryError):
+                continue
+            _reject_alias(child, info)
+            checked += 1
+            if stat.S_ISDIR(info.st_mode):
+                pending.append(child)
+    return checked
 
 
 def _overlaps(left: Path, right: Path) -> bool:
@@ -133,13 +166,7 @@ class DataRoots:
         if os.path.lexists(copied_root):
             raise ValueError("worktree must not contain research_data, including empty or linked roots")
 
-        def walk_error(error: OSError) -> None:
-            raise error
-
-        for directory, directories, files in os.walk(worktree, followlinks=False, onerror=walk_error):
-            _checked_path(Path(directory))
-            for name in (*directories, *files):
-                _checked_path(Path(directory) / name)
+        entries = _check_tree(worktree)
         git_file = _checked_path(worktree / ".git")
         if not git_file.is_file():
             raise ValueError("linked worktree must have a regular .git file")
@@ -163,4 +190,4 @@ class DataRoots:
             raise ValueError(f"Git worktree back-pointer check failed: {error}") from error
         if back_pointer != git_file:
             raise ValueError(f"Git worktree administration belongs to another path: {admin}")
-        LOGGER.debug("Validated worktree isolation: %s", worktree)
+        LOGGER.debug("Validated worktree isolation: %s entries=%d", worktree, entries)

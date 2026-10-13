@@ -4,12 +4,13 @@ import os
 import stat
 import subprocess
 import sys
+from collections.abc import Callable
 from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 
-from research_core.research_data_paths import DATA_ROOT_ENV, DataRoots
+from research_core.research_data_paths import DATA_ROOT_ENV, DataRoots, _check_tree, _checked_path
 
 
 def fixture_git(root: Path, *arguments: str) -> str:
@@ -368,3 +369,122 @@ def test_actual_windows_junction_rejected_without_touching_target(checkout: tupl
         # Remove only the junction itself; never recursively delete its target.
         os.rmdir(junction)
     assert (data / "sentinel").read_bytes() == b"retained"
+
+
+def legacy_tree_check(worktree: Path) -> None:
+    """The traversal used before the linear walk: every entry re-checks all of its ancestors."""
+
+    def walk_error(error: OSError) -> None:
+        raise error
+
+    for directory, directories, files in os.walk(worktree, followlinks=False, onerror=walk_error):
+        _checked_path(Path(directory))
+        for name in (*directories, *files):
+            _checked_path(Path(directory) / name)
+
+
+def build_clean(tree: Path, outside: Path) -> None:
+    (tree / "a" / "b" / "c").mkdir(parents=True)
+    (tree / "a" / "b" / "c" / "ok.txt").write_text("x", encoding="utf-8")
+    (tree / "top.txt").write_text("y", encoding="utf-8")
+
+
+def build_deep_hardlink(tree: Path, outside: Path) -> None:
+    build_clean(tree, outside)
+    os.link(outside / "shared.bin", tree / "a" / "b" / "c" / "alias.bin")
+
+
+def build_top_hardlink(tree: Path, outside: Path) -> None:
+    build_clean(tree, outside)
+    os.link(outside / "shared.bin", tree / "alias.bin")
+
+
+def build_symlink_file(tree: Path, outside: Path) -> None:
+    build_clean(tree, outside)
+    try:
+        (tree / "a" / "link.bin").symlink_to(outside / "shared.bin")
+    except OSError as error:
+        pytest.skip(f"symlink creation unavailable: {error}")
+
+
+def build_symlink_dir(tree: Path, outside: Path) -> None:
+    build_clean(tree, outside)
+    try:
+        (tree / "a" / "b" / "linkdir").symlink_to(outside / "dir", target_is_directory=True)
+    except OSError as error:
+        pytest.skip(f"symlink creation unavailable: {error}")
+
+
+def build_dangling_symlink(tree: Path, outside: Path) -> None:
+    build_clean(tree, outside)
+    try:
+        (tree / "dangling").symlink_to(outside / "missing", target_is_directory=True)
+    except OSError as error:
+        pytest.skip(f"symlink creation unavailable: {error}")
+
+
+def build_junction(tree: Path, outside: Path) -> None:
+    if sys.platform != "win32":
+        pytest.skip("junctions are Windows only")
+    build_clean(tree, outside)
+    result = subprocess.run(
+        ["cmd", "/c", "mklink", "/J", str(tree / "a" / "b" / "junction"), str(outside / "dir")], capture_output=True, text=True, check=False
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+@pytest.mark.parametrize(
+    "build,rejected",
+    [
+        (build_clean, False),
+        (build_deep_hardlink, True),
+        (build_top_hardlink, True),
+        (build_symlink_file, True),
+        (build_symlink_dir, True),
+        (build_dangling_symlink, True),
+        (build_junction, True),
+    ],
+    ids=lambda value: getattr(value, "__name__", str(value)),
+)
+def test_linear_tree_check_matches_the_per_entry_ancestor_check(tmp_path: Path, build: Callable[[Path, Path], None], rejected: bool) -> None:
+    """Differential guard: the cheaper walk must accept and reject exactly what the old one did."""
+    outside = tmp_path / "outside"
+    (outside / "dir").mkdir(parents=True)
+    (outside / "shared.bin").write_bytes(b"shared")
+    tree = tmp_path / "tree"
+    tree.mkdir()
+    build(tree, outside)
+    junction = tree / "a" / "b" / "junction"
+    try:
+        outcomes = []
+        for check in (legacy_tree_check, _check_tree):
+            try:
+                check(tree)
+                outcomes.append("accepted")
+            except ValueError:
+                outcomes.append("rejected")
+        assert outcomes == ["rejected" if rejected else "accepted"] * 2
+    finally:
+        if junction.exists() and sys.platform == "win32":
+            os.rmdir(junction)  # remove only the junction itself; never its target
+    assert (outside / "shared.bin").read_bytes() == b"shared"
+
+
+def test_linear_tree_check_does_one_lstat_per_entry(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Cost guard without timing: lstat calls stay equal to entries, not entries times depth."""
+    deep = tmp_path / "t" / "a" / "b" / "c" / "d" / "e" / "f"
+    deep.mkdir(parents=True)
+    for index in range(20):
+        (deep / f"file{index}.txt").write_text("x", encoding="utf-8")
+    calls = 0
+    original = Path.lstat
+
+    def counting_lstat(path: Path, *args: object, **kwargs: object) -> os.stat_result:
+        nonlocal calls
+        calls += 1
+        return original(path)
+
+    monkeypatch.setattr(Path, "lstat", counting_lstat)
+    checked = _check_tree(tmp_path / "t")
+    assert checked == 6 + 20  # directories a..f plus the files
+    assert calls == checked
