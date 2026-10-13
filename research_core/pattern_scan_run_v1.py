@@ -26,6 +26,7 @@ from research_core.pattern_scan_inputs_v1 import load_snapshot
 from research_core.pattern_scan_pipeline_v1 import prepare_requests, profile_requests, representative_codes
 from research_core.pattern_scan_preflight_v1 import profile_global
 from research_core.pattern_scan_profile_v1 import validate_profile
+from research_core.pattern_scan_source_snapshot_v1 import materialize_archive
 from research_core.research_data_catalog import verify_entry
 from research_core.research_data_paths import DataRoots, _artifact_name, _checked_path
 from research_core.research_measurement_v1 import host_resources, phase_receipt, resource_sample
@@ -105,6 +106,8 @@ def launch(
         write_json(staging / "source-archive.json", {"source_id": source["source_id"], "sha256": digest})
         verify_source(source)
         publish_noreplace(staging, seal)
+    retained = read_json(seal / "source-archive.json")
+    implementation = materialize_archive(seal / "executed-sources.zip", seal / "implementation", source, retained["sha256"])
     profile = None if profile_path is None else read_json(_checked_path(profile_path))
     if mode != "profile":
         if profile is None:
@@ -137,7 +140,7 @@ def launch(
     job = _MemoryBoundJob(job_memory_bytes)
     started = time.monotonic()
     try:
-        process = job.start([sys.executable, "-c", BOOTSTRAP, str(ROOT), str(path)], ROOT)
+        process = job.start([sys.executable, "-c", BOOTSTRAP, str(implementation), str(path)], implementation)
         while process.poll() is None:
             if time.monotonic() - started > timeout_seconds:
                 raise TimeoutError("owned research coordinator exceeded fixed timeout")
@@ -244,6 +247,7 @@ def _profile(snapshot: Any, source: dict[str, Any], run: Path, memory_bytes: int
     profile = profile_requests(packets, memory_bytes=memory_bytes, estimated_worker_bytes=512 * 1024**2, stocks_per_process=1)
     profile["strata"] = strata
     profile["snapshot_loading"] = phase_receipt("fixed_snapshot_loading", before, loaded)
+    profile["fixed_input_consumption"] = list(snapshot.consumption_measurements)
     profile["price_preparation"] = preparation
     reference = verified_parts(profile["profiles"][0]["results"], source=source, input_id=snapshot.input_id)
     representative = {code: reference[code] for code in sorted(reference)[:4]}

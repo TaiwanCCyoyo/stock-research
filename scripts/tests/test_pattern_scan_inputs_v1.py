@@ -1,14 +1,18 @@
 """Fixed input identity, canonical handoff and S6 daily eligibility probes."""
 
 import gzip
+import hashlib
 import json
 import sqlite3
+from io import BytesIO
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
 import pytest
 
+from research_core import pattern_scan_inputs_v1 as scan_inputs
 from research_core.artifact_store import canonical, file_digest, object_digest
 from research_core.pattern_scan_inputs_v1 import ROLES, TASK, daily_qualification, handoff_inputs, load_snapshot
 from research_core.research_data_paths import DataRoots
@@ -164,3 +168,76 @@ def test_s6_qualifies_per_day_at_exact_turnover_and_recovers_after_gap() -> None
     missing.loc[missing.index[65], "RawClose"] = np.nan
     assert not daily_qualification(missing, ordinary_reference=True).base_eligible.iloc[66:86].any()
     assert not daily_qualification(data, ordinary_reference=False).base_eligible.any()
+
+
+def test_snapshot_verifies_the_parquet_buffer_and_consumed_sqlite_image(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    roots, source, pins = bundle(tmp_path)
+    target = handoff_inputs(roots, source, pins)
+    parquet_hashes: list[str] = []
+    sqlite_hashes: list[str] = []
+    original_read = scan_inputs.pd.read_parquet
+    original_connect = sqlite3.connect
+
+    def read_verified_buffer(buffer: BytesIO, **kwargs: Any) -> pd.DataFrame:
+        assert isinstance(buffer, BytesIO)
+        parquet_hashes.append(hashlib.sha256(buffer.getvalue()).hexdigest())
+        return original_read(buffer, **kwargs)
+
+    class ObservedConnection(sqlite3.Connection):
+        def serialize(self, *, name: str = "main") -> bytes:
+            raw = super().serialize(name=name)
+            sqlite_hashes.append(hashlib.sha256(raw).hexdigest())
+            return raw
+
+    def observed_connect(*args: Any, **kwargs: Any) -> sqlite3.Connection:
+        return original_connect(*args, factory=ObservedConnection, **kwargs)
+
+    monkeypatch.setattr(scan_inputs.pd, "read_parquet", read_verified_buffer)
+    monkeypatch.setattr(scan_inputs.sqlite3, "connect", observed_connect)
+    snapshot = load_snapshot(roots, manifest_sha256=file_digest(target / "manifest.json"))
+    assert parquet_hashes == [file_digest(target / "price_daily.parquet")]
+    assert set(sqlite_hashes) == {file_digest(target / "symbol_meta.sqlite"), file_digest(target / "corporate_actions.sqlite")}
+    assert len(sqlite_hashes) == 2 and set(snapshot.prices.Code) == {"0050", "1101"}
+    for role in ROLES:
+        assert file_digest(target / role) == file_digest(source / "tasks" / TASK / "inputs" / "observed-v1" / role)
+
+
+def test_changed_consumed_parquet_buffer_is_rejected_before_decode(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    roots, source, pins = bundle(tmp_path)
+    target = handoff_inputs(roots, source, pins)
+    price = target / "price_daily.parquet"
+    expected = file_digest(price)
+    original_read = Path.read_bytes
+
+    def corrupt_buffer(path: Path) -> bytes:
+        raw = original_read(path)
+        return raw[:-1] + bytes([raw[-1] ^ 1]) if path == price else raw
+
+    def refuse_decode(*args: object, **kwargs: object) -> pd.DataFrame:
+        raise AssertionError("changed consumed buffer must not reach the decoder")
+
+    monkeypatch.setattr(Path, "read_bytes", corrupt_buffer)
+    monkeypatch.setattr(scan_inputs.pd, "read_parquet", refuse_decode)
+    with pytest.raises(ValueError, match="consumed.*price_daily.parquet"):
+        load_snapshot(roots, manifest_sha256=file_digest(target / "manifest.json"))
+    assert file_digest(price) == expected
+
+
+def test_changed_consumed_sqlite_image_is_rejected(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    roots, source, pins = bundle(tmp_path)
+    target = handoff_inputs(roots, source, pins)
+    metadata = target / "symbol_meta.sqlite"
+    expected = file_digest(metadata)
+    original_connect = sqlite3.connect
+
+    class CorruptedImage(sqlite3.Connection):
+        def serialize(self, *, name: str = "main") -> bytes:
+            return super().serialize(name=name) + b"changed"
+
+    def corrupt_connect(*args: Any, **kwargs: Any) -> sqlite3.Connection:
+        return original_connect(*args, factory=CorruptedImage, **kwargs)
+
+    monkeypatch.setattr(scan_inputs.sqlite3, "connect", corrupt_connect)
+    with pytest.raises(ValueError, match="consumed.*symbol_meta.sqlite"):
+        load_snapshot(roots, manifest_sha256=file_digest(target / "manifest.json"))
+    assert file_digest(metadata) == expected

@@ -46,7 +46,6 @@ def complete_followup(
     verify_source(source)
     if shared is not None:
         shared.validate_scope(tuple(parts), source, input_id)
-        shared.verify()
     output = _checked_path(output)
     output.mkdir(parents=True, exist_ok=True)
     before = resource_sample()
@@ -68,15 +67,17 @@ def complete_followup(
         **({"shared": shared} if shared is not None else {}),
     )
     global_directory = verify_barrier(barrier)
-    context = read_frame(global_directory / "context.parquet" if shared is None else shared.sidecar("context")).set_index("Date")
-    close_matrix = read_frame(global_directory / "close_matrix.parquet" if shared is None else shared.sidecar("close_matrix"))
-    jump_matrix = read_frame(global_directory / "jump_matrix.parquet" if shared is None else shared.sidecar("jump_matrix"))
-    benchmark = read_frame(global_directory / "benchmark.parquet" if shared is None else shared.sidecar("benchmark"))
+    context = (read_frame(global_directory / "context.parquet") if shared is None else shared.read_sidecar("context")).set_index("Date")
+    close_matrix = read_frame(global_directory / "close_matrix.parquet") if shared is None else shared.read_sidecar("close_matrix")
+    jump_matrix = read_frame(global_directory / "jump_matrix.parquet") if shared is None else shared.read_sidecar("jump_matrix")
+    benchmark = read_frame(global_directory / "benchmark.parquet") if shared is None else shared.read_sidecar("benchmark")
     industries = {
         f"TW:{code}": str(
-            read_frame(directory / "common_values.parquet" if shared is None else shared.stock(code, "common_values"), columns=["industry_ref"])[
-                "industry_ref"
-            ].iloc[0]
+            (
+                read_frame(directory / "common_values.parquet", columns=["industry_ref"])
+                if shared is None
+                else shared.read_stock(code, "common_values", columns=["industry_ref"])
+            )["industry_ref"].iloc[0]
         )
         for code, directory in parts.items()
     }
@@ -148,8 +149,8 @@ def complete_followup(
         for code, directory in sorted(event_parts[target].items()):
             original = pd.concat([group_frame(directory, "pattern:union", horizon) for horizon in (126, 252)], ignore_index=True)
             stock_directory = parts[code]
-            indicator = read_frame(stock_directory / "indicators.parquet" if shared is None else shared.stock(code, "indicators"))
-            pivots = read_frame(stock_directory / "pivots.parquet" if shared is None else shared.stock(code, "pivots"))
+            indicator = read_frame(stock_directory / "indicators.parquet") if shared is None else shared.read_stock(code, "indicators")
+            pivots = read_frame(stock_directory / "pivots.parquet") if shared is None else shared.read_stock(code, "pivots")
             identity = {
                 "stock": code,
                 "target": target,
@@ -229,8 +230,6 @@ def complete_followup(
         LOGGER.info("Completed bounded Q5/Q6 target=%s groups=%d memory=%d", target, len(groups), accumulator.memory_nbytes)
     verify_source(source)
     verify_barrier(barrier)
-    if shared is not None:
-        shared.verify()
     receipt = {
         "schema": "pattern-scan-q4-q5-q6.v1",
         "complete": True,

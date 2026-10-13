@@ -1,9 +1,11 @@
 """Invented catalog-backed table paths; no market observations are loaded."""
 
 import copy
+import hashlib
 import os
 import stat
 from dataclasses import FrozenInstanceError
+from io import BytesIO
 from pathlib import Path
 from typing import Any
 
@@ -13,6 +15,7 @@ import pytest
 from research_core import pattern_scan_shared_v1 as module
 from research_core.artifact_store import object_digest
 from research_core.pattern_scan_barrier_v1 import FIELDS, metadata
+from research_core.pattern_scan_parquet_v1 import write_frame
 from research_core.pattern_scan_shared_v1 import SIDE_CARS, load_shared
 from research_core.research_data_catalog import DataCatalog
 from research_core.research_data_file_bundle_v1 import publish_file_bundle
@@ -28,7 +31,7 @@ def published(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[DataRoot
     source = {"source_id": "synthetic-source", "runtime": {"fixture": "no research"}}
     monkeypatch.setattr(module, "verify_source", lambda value: None)
     payload = tmp_path / "invented.bin"
-    payload.write_bytes(b"synthetic table placeholder; readers validate parquet schema")
+    write_frame(pd.DataFrame({"value": [1, 2], "unused": [3, 4], "SR_a": [2.0, "none"]}), payload, index=False)
     entries: dict[str, dict[str, Any]] = {}
     for kind in (*FIELDS, "market"):
         files = {f"stocks/{object_digest(code)}/{field}.parquet": payload for code in ("0050", "2330") for field in FIELDS.get(kind, ())}
@@ -70,6 +73,8 @@ def test_corruption_stops_existing_and_new_reader(published: tuple[DataRoots, di
     path.write_bytes(b"corrupt invented payload")
     with pytest.raises(ValueError):
         shared.verify()
+    with pytest.raises(ValueError, match="consumed"):
+        shared.read_stock("0050", "prices")
     with pytest.raises(ValueError):
         load_shared(roots, entries, ("0050", "2330"), source, "invented-input")
 
@@ -113,3 +118,60 @@ def test_strict_table_lookup_and_scope(published: tuple[DataRoots, dict[str, dic
     changed_source = {**source, "source_id": "another-source"}
     with pytest.raises(ValueError, match="scope"):
         shared.validate_scope(shared.codes, changed_source, "invented-input")
+
+
+def test_get_verified_exactly_once_per_bundle_and_consumers_do_not_reverify(
+    published: tuple[DataRoots, dict[str, dict[str, Any]], dict[str, Any]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    roots, entries, source = published
+    calls: list[str] = []
+    original = DataCatalog.get_verified
+
+    def counted(catalog: DataCatalog, data_id: str, version_id: str, **kwargs: Any) -> tuple[dict[str, Any], dict[str, Any]]:
+        calls.append(data_id)
+        return original(catalog, data_id, version_id, **kwargs)
+
+    monkeypatch.setattr(DataCatalog, "get_verified", counted)
+    shared = load_shared(roots, entries, ("0050", "2330"), source, "invented-input")
+    assert len(calls) == len(set(calls)) == 7
+    for _ in range(2):
+        assert shared.read_stock("0050", "prices", columns=["value"]).value.tolist() == [1, 2]
+        assert shared.read_global("0050", columns=["value"]).value.tolist() == [1, 2]
+        assert shared.read_sidecar("context", columns=["value"]).value.tolist() == [1, 2]
+    assert len(calls) == 7
+    measurements = shared.consumption_measurements
+    assert len(measurements) == 3
+    for row in measurements:
+        assert row["read_n"] == 2 and row["consumed_bytes"] > 0
+        assert set(row["phases"]) == {"path_checks", "disk_read", "sha", "decode"}
+        assert all(phase["count"] == 2 and phase["wall_seconds"] >= 0 and phase["cpu_seconds"] >= 0 for phase in row["phases"].values())
+    measurements[0]["read_n"] = 999
+    assert shared.consumption_measurements[0]["read_n"] == 2
+
+
+def test_projected_decoder_consumes_exact_hashed_buffer_even_if_file_changes(
+    published: tuple[DataRoots, dict[str, dict[str, Any]], dict[str, Any]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    roots, entries, source = published
+    shared = load_shared(roots, entries, ("0050", "2330"), source, "invented-input")
+    path = shared.stock("0050", "prices")
+    original_payload = path.read_bytes()
+    original_decoder = module.read_frame
+    consumed: list[bytes] = []
+
+    def projected(buffer: BytesIO, **kwargs: Any) -> pd.DataFrame:
+        assert isinstance(buffer, BytesIO) and kwargs["columns"] == ["value"]
+        consumed.append(buffer.getvalue())
+        path.chmod(path.stat().st_mode | stat.S_IWRITE)
+        path.write_bytes(b"changed after verified read, before decode")
+        return original_decoder(buffer, **kwargs)
+
+    monkeypatch.setattr(module, "read_frame", projected)
+    result = shared.read_stock("0050", "prices", columns=["value"])
+    assert result.columns.tolist() == ["value"] and result.value.tolist() == [1, 2]
+    assert consumed == [original_payload]
+    assert hashlib.sha256(consumed[0]).hexdigest() == hashlib.sha256(original_payload).hexdigest()
+    with pytest.raises(ValueError, match="consumed"):
+        shared.read_stock("0050", "prices", columns=["value"])

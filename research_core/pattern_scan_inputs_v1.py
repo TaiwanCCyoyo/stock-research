@@ -7,6 +7,8 @@ preserves reference metadata limitations and excluded securities in inventory.
 from __future__ import annotations
 
 import gzip
+import hashlib
+import io
 import json
 import logging
 import sqlite3
@@ -24,6 +26,7 @@ from research_core.artifact_store import copy_verified, file_digest, object_dige
 from research_core.feature_atlas_io import security_inventory
 from research_core.price_basis import prepare_prices
 from research_core.research_data_paths import DataRoots
+from research_core.research_measurement_v1 import phase_receipt, resource_sample
 
 LOGGER = logging.getLogger(__name__)
 TASK = "20261013-pattern-scan"
@@ -62,6 +65,36 @@ def _verify(path: Path, record: dict[str, Any]) -> None:
         raise ValueError(f"fixed snapshot changed: {record['role']}")
     if path.suffix == ".sqlite" and any(Path(str(path) + suffix).exists() for suffix in ("-wal", "-shm", "-journal")):
         raise ValueError(f"frozen SQLite sidecar forbidden: {path}")
+
+
+def _verify_consumed(raw: bytes, record: dict[str, Any]) -> None:
+    if len(raw) != record["snapshot_bytes"] or hashlib.sha256(raw).hexdigest() != record["snapshot_sha256"]:
+        raise ValueError(f"consumed snapshot bytes differ: {record['role']}")
+
+
+def _database_frame(
+    path: Path, record: dict[str, Any], query: str, measurements: list[dict[str, Any]], *, params: tuple[str, ...] | None = None
+) -> pd.DataFrame:
+    before = resource_sample()
+    with closing(sqlite3.connect(path.as_uri() + "?mode=ro&immutable=1", uri=True)) as connection:
+        if connection.execute("PRAGMA quick_check").fetchone() != ("ok",):
+            raise ValueError(f"snapshot quick_check failed: {record['role']}")
+        frame = pd.read_sql_query(query, connection, params=None if params is None else list(params))
+        decoded = resource_sample()
+        # Serialize the same read-only connection's database image, including
+        # pages consumed by the query. A separate earlier file pass is not the
+        # identity of the engine's consumed snapshot.
+        raw = connection.serialize()
+        serialized = resource_sample()
+        _verify_consumed(raw, record)
+        checked = resource_sample()
+    for phase, start, end in (
+        ("sqlite_read_and_decode", before, decoded),
+        ("sqlite_consumed_image", decoded, serialized),
+        ("sqlite_consumed_sha256", serialized, checked),
+    ):
+        measurements.append({**phase_receipt(phase, start, end), "role": record["role"], "consumed_bytes": len(raw)})
+    return frame
 
 
 def handoff_inputs(roots: DataRoots, source_checkout: Path, pins_path: Path) -> Path:
@@ -114,6 +147,7 @@ class ScanSnapshot:
     actions: pd.DataFrame
     inventory: pd.DataFrame
     input_id: str
+    consumption_measurements: tuple[dict[str, Any], ...] = ()
 
     @cached_property
     def price_positions(self) -> dict[str, Any]:
@@ -148,9 +182,12 @@ def load_snapshot(roots: DataRoots, *, manifest_sha256: str) -> ScanSnapshot:
     if manifest.get("schema") != "pattern-scan-input-bundle.v1" or manifest.get("cutoff") != "2026-10-12":
         raise ValueError("approved fixed input bundle required")
     records = _descriptors({"frozen_inputs": {"records": manifest["records"]}})
+    by_role = {record["role"]: record for record in records}
     paths = {record["role"]: roots.artifact_path("primary", f"tasks/{TASK}/inputs/observed-v1/{record['role']}") for record in records}
+    verification_started = resource_sample()
     for record in records:
         _verify(paths[record["role"]], record)
+    measurements = [phase_receipt("fixed_input_initial_verification", verification_started, resource_sample())]
     dates = manifest["calendar"]["dates"]
     if object_digest(dates) != manifest["calendar"]["sha256"]:
         raise ValueError("fixed common calendar identity mismatch")
@@ -163,7 +200,16 @@ def load_snapshot(roots: DataRoots, *, manifest_sha256: str) -> ScanSnapshot:
         or any(day != day.normalize() for day in calendar)
     ):
         raise ValueError("fixed calendar requires unique sorted naive daily dates")
-    prices = pd.read_parquet(paths["price_daily.parquet"], columns=list(PRICE_COLUMNS), filters=[("Date", ">=", calendar[0]), ("Date", "<=", calendar[-1])])
+    before = resource_sample()
+    raw = paths["price_daily.parquet"].read_bytes()
+    loaded = resource_sample()
+    _verify_consumed(raw, by_role["price_daily.parquet"])
+    checked = resource_sample()
+    prices = pd.read_parquet(io.BytesIO(raw), columns=list(PRICE_COLUMNS), filters=[("Date", ">=", calendar[0]), ("Date", "<=", calendar[-1])])
+    decoded = resource_sample()
+    for phase, start, end in (("parquet_read", before, loaded), ("parquet_consumed_sha256", loaded, checked), ("parquet_decode", checked, decoded)):
+        measurements.append({**phase_receipt(phase, start, end), "role": "price_daily.parquet", "consumed_bytes": len(raw)})
+    del raw
     if not bool(prices["Code"].map(lambda value: isinstance(value, str) and bool(value.strip())).all()):
         raise ValueError("raw code identity must retain its string bytes")
     observed_dates = pd.DatetimeIndex(prices["Date"])
@@ -176,14 +222,14 @@ def load_snapshot(roots: DataRoots, *, manifest_sha256: str) -> ScanSnapshot:
         raise ValueError("raw dates differ from fixed common daily calendar")
     official = prices["Source"].eq("official")
     official_prices = prices.loc[official].copy()
-    with closing(sqlite3.connect(paths["symbol_meta.sqlite"].as_uri() + "?mode=ro&immutable=1", uri=True)) as connection:
-        if connection.execute("PRAGMA quick_check").fetchone() != ("ok",):
-            raise ValueError("metadata snapshot quick_check failed")
-        meta = pd.read_sql_query("SELECT * FROM symbol_meta ORDER BY code", connection)
-    with closing(sqlite3.connect(paths["corporate_actions.sqlite"].as_uri() + "?mode=ro&immutable=1", uri=True)) as connection:
-        if connection.execute("PRAGMA quick_check").fetchone() != ("ok",):
-            raise ValueError("action snapshot quick_check failed")
-        actions = pd.read_sql_query("SELECT * FROM corporate_actions WHERE ex_date <= ? ORDER BY code, ex_date", connection, params=[dates[-1]])
+    meta = _database_frame(paths["symbol_meta.sqlite"], by_role["symbol_meta.sqlite"], "SELECT * FROM symbol_meta ORDER BY code", measurements)
+    actions = _database_frame(
+        paths["corporate_actions.sqlite"],
+        by_role["corporate_actions.sqlite"],
+        "SELECT * FROM corporate_actions WHERE ex_date <= ? ORDER BY code, ex_date",
+        measurements,
+        params=(dates[-1],),
+    )
     if (
         meta["code"].duplicated().any()
         or not bool(meta["code"].map(lambda value: isinstance(value, str)).all())
@@ -200,6 +246,7 @@ def load_snapshot(roots: DataRoots, *, manifest_sha256: str) -> ScanSnapshot:
         actions,
         inventory,
         object_digest({"manifest": manifest_sha256, "price_basis": "price-basis.v2/reference_factor_adjusted"}),
+        tuple(measurements),
     )
     snapshot.verify_after()
     LOGGER.info(

@@ -58,7 +58,6 @@ def prepare_event_parts(
         shared.validate_scope(tuple(parts), source, input_id)
         if shared.entries != entries:
             raise ValueError("event shared catalog entries differ from supplied pins")
-        shared.verify()
     output = _checked_path(output)
     output.mkdir(parents=True, exist_ok=True)
     collected: dict[str, dict[str, Path]] = {target: {} for target in PATTERNS}
@@ -72,8 +71,8 @@ def prepare_event_parts(
         global_path = _checked_path(Path(global_record["path"]))
         if file_digest(global_path) != global_record["sha256"]:
             raise ValueError("event global feature part changed")
-        tables = {name: read_frame(directory / f"{name}.parquet" if shared is None else shared.stock(code, name)) for name in STOCK_TABLES}
-        global_values = read_frame(global_path if shared is None else shared.global_values(code))
+        tables = {name: read_frame(directory / f"{name}.parquet") if shared is None else shared.read_stock(code, name) for name in STOCK_TABLES}
+        global_values = read_frame(global_path) if shared is None else shared.read_global(code)
         for target in PATTERNS:
             identity = {
                 "code": code,
@@ -133,8 +132,6 @@ def prepare_event_parts(
             publish_noreplace(staging, destination)
             collected[target][code] = destination
         LOGGER.info("Bound all event tables stock=%s", code)
-    if shared is not None:
-        shared.verify()
     return collected
 
 
@@ -410,12 +407,21 @@ def run_analysis(
     result_metadata = metadata("patterns", source, input_id, calendar)
     result_metadata["data_id"] = "pattern-scan-report-tables-full-2010-v1"
     result_metadata["inputs"]["shared_versions"] = {
-        kind: {"version_id": entry["version_id"], "manifest_sha256": entry["manifest"]["sha256"]}
+        kind: {"data_id": entry["data_id"], "version_id": entry["version_id"], "manifest_sha256": entry["manifest"]["sha256"]}
         for kind, entry in {**entries, "event_outcomes": overlay, "episodes": episode_entry}.items()
     }
-    result_metadata["coverage"].update(
-        full_cell_n=summaries["full_cell_n"], annual_row_n=summaries["annual_row_n"], candidate_primary_row_n=summaries["candidate_primary_row_n"]
-    )
+    result_metadata["coverage"].update(**{
+        key: summaries[key]
+        for key in (
+            "full_cell_n",
+            "annual_row_n",
+            "candidate_primary_row_n",
+            "primary_single_row_n",
+            "secondary_single_row_n",
+            "missing_diagnostic_row_n",
+            "full_plus_drop_and_annual_rows_per_cell",
+        )
+    })
     result_files = {
         **{f"q1-q3/{name}": Path(path) for name, path in summaries["files"].items()},
         **{f"q5-q6/{name}": Path(path) for name, path in followup["files"].items()},
@@ -425,8 +431,8 @@ def run_analysis(
         **{f"audits/{name}": Path(path) for name, path in audits["files"].items()},
     }
     result_metadata["parameters"]["artifact_owner"] = "tasks/20261013-pattern-scan"
+    result_metadata["backup"]["primary_copy"] = "one physical task report bundle"
     result_entry = publish_file_bundle(DataCatalog(roots), result_metadata, result_files, task_id="20261013-pattern-scan")
-    shared.verify()
     verify_source(source)
     return {
         "shared_event_outcomes": overlay,
@@ -436,6 +442,7 @@ def run_analysis(
         "summary_receipt": summaries,
         "followup": followup,
         "audits": audits,
+        "shared_consumption_measurements": shared.consumption_measurements,
     }
 
 
@@ -466,7 +473,7 @@ def _audits(
     legacy, descriptor = read_legacy_h1(roots, pins["shared_catalog"]["contents"]["snapshot"])
     rows = []
     for code in sorted(parts):
-        frame = read_frame(shared.stock(code, "raw_events"))
+        frame = shared.read_stock(code, "raw_events")
         rows.append(frame.loc[frame.pattern_id.eq("H1"), ["security_id", "t0", "subtype_id", "pivot", "support", "lower"]])
     current = pd.concat(rows, ignore_index=True)
     overlap = legacy_overlap_audit(current, legacy)
@@ -481,7 +488,6 @@ def _audits(
     names.extend(("legacy-overlap.parquet", "legacy-reference.json"))
     write_json(staging / "legacy-reference.json", descriptor)
     artifacts = [describe_file(staging, staging / name) for name in names]
-    shared.verify()
     verify_source(source)
     verify_files(staging, artifacts)
     receipt = {

@@ -85,7 +85,6 @@ def run_episodes(
     verify_source(source)
     if shared is not None:
         shared.validate_scope(tuple(parts), source, input_id)
-        shared.verify()
     source_id = source["source_id"]
     if not parts or set(event_parts) != set(PATTERNS) or set(selections) != set(PATTERNS) or not set(top_candidates).issubset(PATTERNS):
         raise ValueError("episode run requires every approved pattern and fixed stock parts")
@@ -147,15 +146,15 @@ def run_episodes(
                 groups[identifier + suffix] = {"pattern_id": target, "candidate_id": candidate, "control_id": control}
     for code, directory in sorted(parts.items()):
         security_id = f"TW:{code}"
-        prices = read_frame(directory / "prices.parquet" if shared is None else shared.stock(code, "prices"))
-        labels = read_frame(directory / "base_labels.parquet" if shared is None else shared.stock(code, "base_labels"))
+        prices = read_frame(directory / "prices.parquet") if shared is None else shared.read_stock(code, "prices")
+        labels = read_frame(directory / "base_labels.parquet") if shared is None else shared.read_stock(code, "base_labels")
         dates = tuple(barrier["calendar"])
         if not isinstance(prices.index, pd.DatetimeIndex) or prices.index.strftime("%Y-%m-%d").tolist() != list(dates):
             raise ValueError("episode stock prices differ from common calendar")
         closes = [None if pd.isna(value) else float(value) for value in prices["Close"]]
         reasons = [None if pd.isna(value) else str(value) for value in prices["quality_reason"]]
         episodes, admission = per_stock_episodes(closes, labels, reasons, security_id, dates=dates)
-        global_values = read_frame(ancestors[f"global:{code}"]["path"] if shared is None else shared.global_values(code))
+        global_values = read_frame(ancestors[f"global:{code}"]["path"]) if shared is None else shared.read_global(code)
         if not global_values.index.equals(prices.index):
             raise ValueError("episode global values differ from calendar")
         anchor_mkt = global_values["MKT"].fillna("unknown").tolist()
@@ -194,12 +193,12 @@ def run_episodes(
             candidate_states: dict[str, np.ndarray] = {}
             if candidates[target]:
                 if common is None:
-                    common = read_frame(directory / "common_values.parquet" if shared is None else shared.stock(code, "common_values"))
+                    common = read_frame(directory / "common_values.parquet") if shared is None else shared.read_stock(code, "common_values")
                     for column in global_values:
                         common[column] = global_values[column].to_numpy()
-                    indicators = read_frame(directory / "indicators.parquet" if shared is None else shared.stock(code, "indicators"))
-                    raw_events = read_frame(directory / "raw_events.parquet" if shared is None else shared.stock(code, "raw_events"))
-                    pattern_states = read_frame(directory / "pattern_states.parquet" if shared is None else shared.stock(code, "pattern_states"))
+                    indicators = read_frame(directory / "indicators.parquet") if shared is None else shared.read_stock(code, "indicators")
+                    raw_events = read_frame(directory / "raw_events.parquet") if shared is None else shared.read_stock(code, "raw_events")
+                    pattern_states = read_frame(directory / "pattern_states.parquet") if shared is None else shared.read_stock(code, "pattern_states")
                 assert indicators is not None and raw_events is not None and pattern_states is not None
                 candidate_states = dict(
                     daily_candidate_states(
@@ -284,8 +283,6 @@ def run_episodes(
             if _part(event_parts[target][code], source_id, input_id, event=True) != ancestors[f"event:{target}:{code}"]:
                 raise ValueError("episode event ancestor changed during execution")
     verify_files(staging, artifacts)
-    if shared is not None:
-        shared.verify()
     files = {record["path"]: str(output / record["path"]) for record in artifacts}
     receipt = {
         "schema": "pattern-scan-episodes.v1",

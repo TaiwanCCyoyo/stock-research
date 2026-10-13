@@ -5,6 +5,7 @@ merge commit `d2dea1e70b18b624ee2da0b69a63d5b2638f27f8`。
 本階段接續同一 author worktree，branch 為 `codex/pattern-scan-execution`。
 原 preparation packets、凍結 helper 與 producer 實體快照保留。
 本檔描述執行契約；完成狀態及市場結果以之後的正式 receipt／結果報告為準。
+各彙總欄位、單位、分母及 unknown 語意見 [data dictionary](data-dictionary-v1.md)。
 
 ## 唯一固定輸入與共用入口
 
@@ -18,6 +19,8 @@ manifest SHA-256 為
 `78e5a5787aacd8eb4189b5f8eaddb691d89a008e6ea56cd5ec8b01f20fc45438`。
 每次計算只讀該身份，不讀 producer live data，不重新 seed，沒有取得或刷新資料。
 SQLite 使用 immutable/read-only URI，並驗證 sidecar 與原始 byte identity。
+Parquet 對實際解碼的同一 buffer 核對 SHA；SQLite 則核對同一只讀 connection
+讀入的 serialized database image。Profile 保留讀取／SHA／解碼及初始完整性驗證的成本。
 
 正式 shared versions 的 catalog 在 primary `research_data/`；
 唯一 published payload 在 primary `research_cache/shared-bundles-v1/`。
@@ -48,6 +51,10 @@ CLI 為 `uv run python -m scripts.pattern_scan`，所有 workflow logic 在 `res
 SHA-pinned source 保持 byte-identical。新 API 不使用舊 atlas reader 的 2019 起點。
 Frozen source ZIP 保存實際執行 dependency bytes；bug fix 另記 source／run identity，
 不替舊結果重 pin，也不在看結果後放寬規格或 selection gate。
+執行器將 ZIP 內原始 bytes materialize 到 primary scratch 的 `seal/implementation/`，
+fresh SourceFinder 編譯該副本；worker 不編譯會被後續 formatter 改動的 checkout files。
+正式 reader 每個 process 首次使用七個固定 bundle 時各驗證一次並持有 manifests，
+其後核對實際讀入的 buffer 再以同一 buffer 解碼，保留 read／SHA／decode 的分表量測。
 
 ## 表格身份、未知與比較
 

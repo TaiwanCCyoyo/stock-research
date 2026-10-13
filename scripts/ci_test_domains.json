@@ -33,9 +33,7 @@
         "research_core/artifact_*",
         "research_core/evidence.py"
     ],
-    "full_path_exceptions": [
-        ".github/workflows/ci.yml"
-    ],
+    "full_path_exceptions": [".github/workflows/ci.yml"],
     "domains": {
         "research_data": {
             "paths": [
@@ -63,10 +61,7 @@
                 "scripts/tests/test_research_data_windows_deletion.py",
                 "scripts/tests/test_research_data_file_bundle_v1.py"
             ],
-            "consumers": [
-                "annual",
-                "pattern_scan"
-            ]
+            "consumers": ["annual", "pattern_scan"]
         },
         "owner_hhhl_labels": {
             "paths": [
@@ -76,18 +71,14 @@
                 "scripts/verify_owner_hhhl_labels.py",
                 "tasks/20261010-owner-hhhl-labels/*"
             ],
-            "tests": [
-                "scripts/tests/test_owner_hhhl_labels.py"
-            ]
+            "tests": ["scripts/tests/test_owner_hhhl_labels.py"]
         },
         "published_artifacts": {
             "paths": [
                 "research_core/legacy_paths.py",
                 "scripts/verify_published_artifacts.py"
             ],
-            "tests": [
-                "scripts/tests/test_verify_published_artifacts.py"
-            ]
+            "tests": ["scripts/tests/test_verify_published_artifacts.py"]
         },
         "price_data_contract": {
             "paths": [
@@ -113,13 +104,7 @@
                 "scripts/tests/test_file_hygiene.py"
             ]
         },
-        "web": {
-            "paths": [
-                "research_web/*"
-            ],
-            "tests": [],
-            "frontend": true
-        },
+        "web": { "paths": ["research_web/*"], "tests": [], "frontend": true },
         "opportunity": {
             "paths": [
                 "research_api/history.py",
@@ -177,10 +162,7 @@
                 "scripts/tests/test_pattern_sources.py",
                 "scripts/tests/test_cache_execution.py"
             ],
-            "consumers": [
-                "opportunity",
-                "research_data"
-            ]
+            "consumers": ["opportunity", "research_data"]
         },
         "atlas": {
             "paths": [
@@ -193,12 +175,7 @@
                 "scripts/tests/test_*feature*atlas*.py",
                 "scripts/tests/test_export_market_atlas.py"
             ],
-            "consumers": [
-                "opportunity",
-                "method_environment",
-                "sector",
-                "hhhl"
-            ]
+            "consumers": ["opportunity", "method_environment", "sector", "hhhl"]
         },
         "sector": {
             "paths": [
@@ -217,10 +194,7 @@
                 "tests/test_wave_growth.py",
                 "tests/test_symbol_classification.py"
             ],
-            "consumers": [
-                "opportunity",
-                "method_environment"
-            ]
+            "consumers": ["opportunity", "method_environment"]
         },
         "market_context": {
             "paths": [
@@ -228,9 +202,7 @@
                 "scripts/*market_context*",
                 "tasks/20261005-market-context-handoff/*"
             ],
-            "tests": [
-                "scripts/tests/test_market_context*.py"
-            ],
+            "tests": ["scripts/tests/test_market_context*.py"],
             "consumers": [
                 "opportunity",
                 "method_environment",
@@ -244,13 +216,8 @@
                 "scripts/*method_environment*",
                 "tasks/20261005-method-environment-interactions/*"
             ],
-            "tests": [
-                "scripts/tests/test_method_environment*.py"
-            ],
-            "consumers": [
-                "opportunity",
-                "sector"
-            ]
+            "tests": ["scripts/tests/test_method_environment*.py"],
+            "consumers": ["opportunity", "sector"]
         },
         "hooks": {
             "paths": [
@@ -346,9 +313,7 @@
                 "scripts/tests/test_feature_blocks_cli.py",
                 "scripts/tests/test_stock_feature_pool_v2.py"
             ],
-            "consumers": [
-                "research_data"
-            ]
+            "consumers": ["research_data"]
         },
         "pattern_scan": {
             "paths": [
@@ -357,9 +322,7 @@
                 "scripts/pattern_scan.py",
                 "tasks/20261013-pattern-scan/*"
             ],
-            "tests": [
-                "scripts/tests/test_pattern_scan*.py"
-            ]
+            "tests": ["scripts/tests/test_pattern_scan*.py"]
         }
     },
     "reviewed_tests": [
@@ -511,6 +474,8 @@
         "scripts/tests/test_pattern_scan_run_v1.py",
         "scripts/tests/test_pattern_scan_selection_v1.py",
         "scripts/tests/test_pattern_scan_shared_v1.py",
+        "scripts/tests/test_pattern_scan_snapshot_dispatch_v1.py",
+        "scripts/tests/test_pattern_scan_source_snapshot_v1.py",
         "scripts/tests/test_pattern_scan_stock_v1.py",
         "scripts/tests/test_pattern_scan_summary_store_v1.py",
         "scripts/tests/test_pattern_sources.py",
@@ -613,8 +578,5 @@
         "tests/test_universe.py",
         "tests/test_wave_growth.py"
     ],
-    "pytest_file_patterns": [
-        "test_*.py",
-        "*_test.py"
-    ]
+    "pytest_file_patterns": ["test_*.py", "*_test.py"]
 }

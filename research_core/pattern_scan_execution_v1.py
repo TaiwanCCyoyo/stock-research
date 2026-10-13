@@ -41,6 +41,7 @@ NUMERICAL_THREADS = {name: "1" for name in ("OPENBLAS_NUM_THREADS", "OMP_NUM_THR
 BOOTSTRAP = """
 import hashlib,logging,os,sys,types
 from pathlib import Path
+sys.dont_write_bytecode=True
 for name in ('OPENBLAS_NUM_THREADS','OMP_NUM_THREADS','MKL_NUM_THREADS','BLIS_NUM_THREADS','NUMEXPR_NUM_THREADS'):
     os.environ[name]='1'
 logging.basicConfig(level=logging.INFO,format='%(asctime)s %(levelname)s %(name)s %(message)s')
