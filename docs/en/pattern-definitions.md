@@ -26,4 +26,26 @@
 
 ## 新定義與保存
 
+### Pattern-scan v1：尚待mission合併的固定規格
+
+以下均為[完整mission提案](../../tasks/20261013-pattern-scan/mission.md)，
+不是已完成偵測器、正式資料或策略批准；各S/L與confirm補充須先merge再市場計算。
+2010全期還原價與品質政策有新身份；不改原HHHL/F10/F32/F33來源或結果。
+「低過低」尚無獨立owner規格，不默認等同以下任何一列。
+
+| pattern_id／definition | 規則與不能互換之處                                                      | 狀態／t0                                           |
+| ---------------------- | ----------------------------------------------------------------------- | -------------------------------------------------- |
+| H1／pattern-scan.v1    | 原HHHL v4 pattern，clean/over/union；新2010完整日曆adapter與品質處理    | proposed；原v4等待量／confirm時點，不只是字面HH/HL |
+| B1／pattern-scan.v1    | 固定杯柄／無柄，杯深12–35%、柄5–15日及量1.4，有限搜尋／S/L補充見mission | proposed；收盤突破                                 |
+| B2／pattern-scan.v1    | BB20收縮前5日＋當日上軌突破，量1.5另子型；不是原F14兩收盤＋前20日       | proposed；單日突破                                 |
+| B3／pattern-scan.v1    | 平台25–65日／15%振幅，量1.5，量縮與振幅收斂子型                         | proposed；平台突破                                 |
+| B4／pattern-scan.v1    | 2% gap未補、60日close高與量2                                            | proposed；當日收盤                                 |
+| R1／pattern-scan.v1    | 60日區間、兩touch、後1–5日收復與二測；不是同日F20或5根F33               | proposed；收復／二测確認                           |
+| R2／pattern-scan.v1    | F22–25實際旗標（含原MA前置）＋下跌/近低；下一日確認另子型               | proposed；完成／次日确认                           |
+| R3／pattern-scan.v1    | Wilder RSI背離，固定[i−5,i+3]低點＋i+3確認、20日failure-swing           | proposed；不是1.5ATR pivot                         |
+| P1／pattern-scan.v1    | 60日突破後3–20日回測，再1–5日突破前High，保留b配對控制                  | proposed；等待確認                                 |
+| L1／pattern-scan.v1    | 原F10 close>前60日High；事件metadata/cooldown另版                       | proposed；原flag當日                               |
+| L2／pattern-scan.v1    | 原F32 close>MA60且ret5<0；S/L補充不改原flag                             | proposed；原flag當日                               |
+| L3／pattern-scan.v1    | 原F33後續非新低收復；新增pending/S/L metadata須逐日parity               | proposed；不是新owner「低過低」                    |
+
 新增版本須保留父版本、差異、原始來源／hash、批准證據、正反例及 `known_at`；未核准標註不能改成擁有者確認。過去期間暴露與比較次數仍沿用原紀錄，不因改名或共用快取變成未見樣本。完整 owner 標註匯出由 Claude 的獨立 task 交付；這裡的 25 原例不是那批標註的替代品。

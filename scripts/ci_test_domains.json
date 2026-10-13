@@ -398,6 +398,8 @@
         "scripts/tests/test_opportunity_startup_cache.py",
         "scripts/tests/test_optional_research_dependencies.py",
         "scripts/tests/test_owner_hhhl_labels.py",
+        "scripts/tests/test_pattern_scan_events_v1.py",
+        "scripts/tests/test_pattern_scan_selection_v1.py",
         "scripts/tests/test_pattern_sources.py",
         "scripts/tests/test_prepare_derived_cache_inputs.py",
         "scripts/tests/test_prepared_stock_input_v1.py",
