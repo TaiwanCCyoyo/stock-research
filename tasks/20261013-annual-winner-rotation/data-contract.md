@@ -61,8 +61,6 @@ hook receipt and its consumed file digests, then publishes a new input bundle.
 `measure --output NEW_MEASUREMENT` compares identical fixed representative stocks
 under serial and two-worker execution. These commands do not download data.
 
-## Process artifacts
-
 ## Formatted delivery v1
 
 `finalize_delivery.py` produces only new `delivery-v1/` presentation copies of
@@ -87,7 +85,12 @@ uv run python tasks/20261013-annual-winner-rotation/finalize_delivery.py
 ```
 
 Repeat finalization accepts only the same source bytes/meaning and stable format;
-publication reuses the same version. The normal security scanner still applies
+before any formatter/write, a completed directory must match its published raw
+receipt, member hashes and source/formatter/implementation/reference identities.
+It then returns read-only, without formatter or catalog publication. A changed
+identity or unpinned partial directory fails closed and requires a new numbered
+directory; `--prior-delivery-pin` preserves an explicit previous delivery link.
+The normal security scanner still applies
 to every Git delivery file. Formatting authorization does not authorize checksum
 baseline exceptions; false positives remain a separate owner decision.
 

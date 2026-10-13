@@ -7,12 +7,13 @@ import gzip
 import hashlib
 import json
 import math
+from collections.abc import Callable
 from decimal import Decimal
 from io import BytesIO
 from pathlib import Path
 from typing import Any
 
-from research_core.artifact_store import file_digest, read_json
+from research_core.artifact_store import canonical, file_digest, publish_new_directory, read_json, relative_name, safe_path, write_json
 from research_core.research_data_catalog import DataCatalog, verify_entry
 
 
@@ -61,6 +62,62 @@ def json_delivery_receipt(original: bytes, delivery: bytes) -> dict[str, Any]:
         "delivery_bytes": len(delivery),
         "content_equal": True,
     }
+
+
+def finalize_json_delivery_set(
+    originals: dict[str, bytes],
+    output: Path,
+    *,
+    references: dict[str, Any],
+    formatter_identity: dict[str, Any],
+    implementation_sha256: dict[str, str],
+    formatter: Callable[[list[Path]], None],
+    completed_receipt: bytes | None = None,
+) -> dict[str, Any]:
+    """Finalize new copies, or verify a completed delivery without any write.
+
+    The caller obtains completed_receipt from its verified immutable publication.
+    Any completed/partial directory without that raw-byte pin fails closed.
+    Changed sources, configuration or implementation need a new version path.
+    """
+    if not originals or "receipt.json" in originals:
+        raise ValueError("nonempty delivery originals without reserved receipt name required")
+    for name in originals:
+        if relative_name(name) != Path(name).name:
+            raise ValueError("delivery members must be flat portable filenames")
+        json_delivery_receipt(originals[name], originals[name])
+    output = safe_path(output)
+
+    def expected_receipt() -> dict[str, Any]:
+        return {
+            "schema": "annual-json-delivery-set.v1",
+            "formatter": formatter_identity,
+            "files": {name: json_delivery_receipt(raw, safe_path(output / name).read_bytes()) for name, raw in originals.items()},
+            "references": references,
+            "implementation_sha256": implementation_sha256,
+            "market_recomputed": False,
+        }
+
+    if output.exists():
+        if completed_receipt is None:
+            raise FileExistsError("existing delivery is not pinned complete; choose a new version directory")
+        if {path.name for path in output.iterdir()} != set(originals) | {"receipt.json"}:
+            raise ValueError("completed delivery members differ")
+        current = safe_path(output / "receipt.json").read_bytes()
+        if current != completed_receipt:
+            raise ValueError("completed delivery receipt raw bytes differ from sealed receipt")
+        expected = expected_receipt()
+        json_delivery_receipt(canonical(expected), current)
+        return expected
+    if completed_receipt is not None:
+        raise ValueError("completed delivery directory is absent; choose a new version directory")
+    publish_new_directory(output, originals)
+    formatter([output / name for name in originals])
+    receipt = expected_receipt()
+    write_json(output / "receipt.json", receipt)
+    formatter([output / "receipt.json"])
+    json_delivery_receipt(canonical(receipt), (output / "receipt.json").read_bytes())
+    return receipt
 
 
 def verified_result(path: Path, catalog: DataCatalog) -> tuple[dict[str, Any], Path, dict[str, Any]]:

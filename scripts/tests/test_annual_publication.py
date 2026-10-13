@@ -436,3 +436,208 @@ def test_finalize_delivery_cli_rejects_unowned_output_paths_without_creating_the
     assert "new delivery must use this task's delivery-v1 directory" in completed.stderr
     assert not output.exists()
     assert not pin_output.exists()
+
+
+def _format_synthetic_json(paths: list[Path]) -> None:
+    for path in paths:
+        parsed = json.loads(path.read_bytes())
+        path.write_text(json.dumps(parsed, ensure_ascii=False, indent=4) + "\n", encoding="utf-8")
+
+
+def _create_synthetic_delivery(
+    tmp_path: Path,
+) -> tuple[
+    dict[str, bytes],
+    Path,
+    dict[str, Any],
+    dict[str, str],
+    dict[str, str],
+    dict[str, Any],
+    bytes,
+    list[list[str]],
+]:
+    originals = {
+        "input-pin.json": b'{"data_id":"synthetic-input","version_id":"v1"}',
+        "results.json": b'{"verdict":"synthetic-only","arms":[{"year":2021,"value":1.0}]}',
+    }
+    formatter_identity = {"name": "synthetic-json-formatter", "version": "1"}
+    implementation_sha256 = {"research_core/annual_publication.py": "a" * 64}
+    references = {"input_version": "synthetic-input-v1"}
+    output = tmp_path / "delivery-v1"
+    format_calls: list[list[str]] = []
+
+    def tracked_formatter(paths: list[Path]) -> None:
+        format_calls.append([path.name for path in paths])
+        _format_synthetic_json(paths)
+
+    receipt = annual_publication.finalize_json_delivery_set(
+        originals,
+        output,
+        references=references,
+        formatter_identity=formatter_identity,
+        implementation_sha256=implementation_sha256,
+        formatter=tracked_formatter,
+    )
+    return (
+        originals,
+        output,
+        formatter_identity,
+        implementation_sha256,
+        references,
+        receipt,
+        (output / "receipt.json").read_bytes(),
+        format_calls,
+    )
+
+
+def _delivery_tree_bytes(output: Path) -> dict[str, bytes]:
+    return {path.name: path.read_bytes() for path in output.iterdir() if path.is_file()}
+
+
+def test_finalize_json_delivery_set_formats_hashes_and_reuses_existing_version_read_only(tmp_path: Path) -> None:
+    (
+        originals,
+        output,
+        formatter_identity,
+        implementation_sha256,
+        references,
+        receipt,
+        completed_receipt,
+        initial_calls,
+    ) = _create_synthetic_delivery(tmp_path)
+    original_snapshot = dict(originals)
+    before_reuse = _delivery_tree_bytes(output)
+    calls: list[list[str]] = []
+
+    def tracked_formatter(paths: list[Path]) -> None:
+        calls.append([path.name for path in paths])
+        _format_synthetic_json(paths)
+
+    # The first finalization formats every file and then the receipt.
+    assert set(receipt["files"]) == set(originals)
+    assert {name for call in initial_calls for name in call} == set(originals) | {"receipt.json"}
+    assert "receipt.json" in initial_calls[-1]
+    for name, original in originals.items():
+        delivered = (output / name).read_bytes()
+        assert json.loads(delivered) == json.loads(original)
+        assert receipt["files"][name] == annual_publication.json_delivery_receipt(original, delivered)
+    assert (output / "receipt.json").read_bytes() == completed_receipt
+    assert originals == original_snapshot
+
+    reused = annual_publication.finalize_json_delivery_set(
+        originals,
+        output,
+        references=references,
+        formatter_identity=formatter_identity,
+        implementation_sha256=implementation_sha256,
+        formatter=tracked_formatter,
+        completed_receipt=completed_receipt,
+    )
+
+    assert reused == receipt
+    assert calls == []
+    assert _delivery_tree_bytes(output) == before_reuse
+    assert originals == original_snapshot
+
+
+@pytest.mark.parametrize("identity_change", ["formatter", "source", "implementation", "references"])
+def test_finalize_json_delivery_set_rejects_changed_identity_without_mutating_completed_version(tmp_path: Path, identity_change: str) -> None:
+    (
+        originals,
+        output,
+        formatter_identity,
+        implementation_sha256,
+        references,
+        _,
+        completed_receipt,
+        _,
+    ) = _create_synthetic_delivery(tmp_path)
+    before = _delivery_tree_bytes(output)
+    changed_originals = dict(originals)
+    changed_formatter = dict(formatter_identity)
+    changed_implementation = dict(implementation_sha256)
+    changed_references = dict(references)
+    if identity_change == "formatter":
+        changed_formatter["version"] = "2"
+    elif identity_change == "source":
+        changed_originals["results.json"] = b'{"verdict":"changed source"}'
+    elif identity_change == "implementation":
+        changed_implementation["research_core/annual_publication.py"] = "b" * 64
+    else:
+        changed_references["input_version"] = "synthetic-input-v2"
+
+    with pytest.raises(ValueError):
+        annual_publication.finalize_json_delivery_set(
+            changed_originals,
+            output,
+            references=changed_references,
+            formatter_identity=changed_formatter,
+            implementation_sha256=changed_implementation,
+            formatter=_format_synthetic_json,
+            completed_receipt=completed_receipt,
+        )
+
+    assert _delivery_tree_bytes(output) == before
+    assert originals["results.json"] == b'{"verdict":"synthetic-only","arms":[{"year":2021,"value":1.0}]}'
+
+
+def test_finalize_json_delivery_set_rejects_sealed_receipt_byte_mismatch_without_mutation(tmp_path: Path) -> None:
+    (
+        originals,
+        output,
+        formatter_identity,
+        implementation_sha256,
+        references,
+        _,
+        completed_receipt,
+        _,
+    ) = _create_synthetic_delivery(tmp_path)
+    before = _delivery_tree_bytes(output)
+
+    with pytest.raises(ValueError):
+        annual_publication.finalize_json_delivery_set(
+            originals,
+            output,
+            references=references,
+            formatter_identity=formatter_identity,
+            implementation_sha256=implementation_sha256,
+            formatter=_format_synthetic_json,
+            completed_receipt=completed_receipt + b" ",
+        )
+
+    assert _delivery_tree_bytes(output) == before
+
+
+def test_finalize_json_delivery_set_formatter_failure_preserves_previous_version_and_source_bytes(tmp_path: Path) -> None:
+    (
+        originals,
+        output_v1,
+        formatter_identity,
+        implementation_sha256,
+        references,
+        _,
+        completed_receipt,
+        _,
+    ) = _create_synthetic_delivery(tmp_path)
+    source_snapshot = dict(originals)
+    previous_delivery = _delivery_tree_bytes(output_v1)
+    output_v2 = tmp_path / "delivery-v2"
+
+    def failing_formatter(paths: list[Path]) -> None:
+        paths[0].write_bytes(b"synthetic partial formatter output")
+        raise RuntimeError("synthetic formatter failure")
+
+    with pytest.raises(RuntimeError, match="synthetic formatter failure"):
+        annual_publication.finalize_json_delivery_set(
+            originals,
+            output_v2,
+            references=references,
+            formatter_identity=formatter_identity,
+            implementation_sha256=implementation_sha256,
+            formatter=failing_formatter,
+        )
+
+    assert output_v2.exists()
+    assert _delivery_tree_bytes(output_v1) == previous_delivery
+    assert originals == source_snapshot
+    assert completed_receipt == (output_v1 / "receipt.json").read_bytes()
