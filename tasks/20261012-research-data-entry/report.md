@@ -124,6 +124,11 @@ merged owner-approved `main` at `ee1baec` (PR #13), without conflicts or history
 rewrites. [Feature-retention evidence v3](retained-features-evidence-v3.json.gz)
 records these pins separately; earlier packets remain unchanged.
 
+The same downstream-closure audit also added `feature_blocks -> research_data`
+for the existing pool/identity interfaces used by this entry. Regression tests
+retain the block store's existing full fallback and verify the non-full pool and
+identity paths select both complete consumer domains. No full-path rules changed.
+
 Primary's HHHL variants `params/input-pins-v1.json` raw bytes did not match its
 retained execution pin during registration; the task checkout's tracked bytes
 did match. Their canonical JSON identities were also verified equal. The catalog
