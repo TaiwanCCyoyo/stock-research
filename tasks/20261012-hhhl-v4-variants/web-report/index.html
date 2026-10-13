@@ -10,7 +10,7 @@
         />
         <meta
             name="report:summary"
-            content="HHHL v4 的 24 種條件、16 個組合、8 個失效訊號，全部和「同條件、沒有型態」的股票並排比較。PR #9 結果的互動版，只涵蓋 2019 年起。"
+            content="HHHL v4 的 24 種條件、16 個組合、8 個失效訊號，全部和「同條件、但不要求型態」的股票並排比較。PR #9 結果的互動版，只涵蓋 2019 年起。"
         />
         <meta name="report:date" content="2026-10-12" />
         <meta name="report:status" content="demo" />
@@ -232,7 +232,7 @@
                 <h1>高過高型態，加上哪些條件和飆股有關？</h1>
                 <p class="rk-lede">
                     把 PR #9 算好的全部數字攤開來看：型態本身、24 種條件、16
-                    個組合，都和「同條件、但沒有型態」的股票並排，
+                    個組合，都和「同條件、但不要求具備型態」的股票並排，
                     才分得出是型態的功勞還是條件的功勞；最後看沒變飆股的事件，過程中最常出現哪些訊號。
                 </p>
                 <div class="rk-meta">
@@ -328,11 +328,11 @@
                 <p class="rk-foot">
                     虛線框＝已知事件少於 300
                     筆，數字不穩。標＊的格子是型態專屬條件（例如「離 Z2
-                    多遠」只有型態才有）：沒有型態的股票沒有這個值，照 PR #9
+                    多遠」只在型態成立時才有定義）：對照組沒有這個值，照 PR #9
                     的口徑改和「未加條件」的控制組比，
                     虛線點框標示；要看條件本身讓型態變好多少，請切到「同型態不加條件」。
                     「同條件全部股票」也包含少量有型態的日子（約占
-                    2%），所以是「近似沒有型態」。
+                    2%）：它是「不要求具備型態」，不是「確定沒有型態」。
                 </p>
             </section>
 
@@ -342,7 +342,8 @@
                     <div>
                         <div class="rk-q">問題 2、3</div>
                         <h2>
-                            16 個組合：在另一半股票上，還比沒有型態的股票好嗎？
+                            16
+                            個組合：在另一半股票上，還比不要求型態的同條件股票好嗎？
                         </h2>
                     </div>
                 </header>
@@ -369,6 +370,7 @@
                 </header>
                 <p class="rk-answer" id="vol-answer"></p>
                 <div class="rk-controls" id="vol-controls"></div>
+                <p class="rk-foot" id="vol-horizon"></p>
                 <div class="rk-card">
                     <div class="stack-grid" id="vol-stacks"></div>
                 </div>
@@ -410,9 +412,11 @@
                     </div>
                 </header>
                 <p class="rk-answer">
-                    出現訊號的事件通常已經在跌，本來就比較難翻倍。所以把事件按「觀察日當時的漲跌」分層比較：
-                    同一層裡，有訊號的翻倍率仍明顯較低，才代表這個訊號帶了「跌幅以外」的資訊。最右欄是「單純跌
-                    10%」的同一個差距，當作基準。
+                    出現訊號的事件通常已經在跌，本來就比較難翻倍。所以把事件按「觀察日當時的漲跌」分層，
+                    並把「單純跌
+                    10%」的同一個差距放在最右欄當參考。這只是描述：同一層裡，有訊號和沒訊號的事件，
+                    跌幅大小、股票組成和時間仍然不同，所以差距大小<strong>不能證明</strong>訊號帶了「跌幅以外」的資訊。
+                    下面的數字可以當作待驗的假說，要確認需要另做控制這些差異的檢驗（本報告沒有做）。
                 </p>
                 <div class="rk-controls" id="after-controls"></div>
                 <p class="rk-answer" id="after-answer"></p>
@@ -452,6 +456,7 @@
         </main>
 
         <script src="kit/report-kit.js"></script>
+        <script src="model.js"></script>
         <script src="data/summary.js"></script>
         <script src="data/single-126.js"></script>
         <script src="data/single-252.js"></script>
@@ -460,6 +465,7 @@
             (function () {
                 "use strict";
                 const K = window.ReportKit;
+                const M = window.HhhlReportModel;
                 const D = window.REPORT_DATA;
                 const { fmt, html, svg } = K;
 
@@ -653,7 +659,7 @@
                 const years = rows("year");
                 const drops = rows("drop_best_year");
                 const near = rows("near_high");
-                const rate = (r) => (r ? fmt.ratio(r.hit_n, r.known_n) : null);
+                const rate = M.rate;
                 const lossRate = (r) =>
                     r ? fmt.ratio(r.loss_n, r.known_n) : null;
                 const base = (cohort, split, h) =>
@@ -684,10 +690,10 @@
                 /** The one way to change the chosen signal, so the chart, table and menu agree. */
                 let flagSelect = null;
                 function selectFlag(id) {
-                    state.flag = id;
-                    if (flagSelect) flagSelect.value = id;
-                    renderStops();
-                    renderAfter();
+                    M.selectFlag(state, id, flagSelect, () => {
+                        renderStops();
+                        renderAfter();
+                    });
                 }
                 const state = {
                     h: 252,
@@ -896,43 +902,16 @@
                     h,
                     sameCondition,
                 ) {
-                    if (comparator === "none") return { r: null, kind: "none" };
-                    if (comparator === "self")
-                        return {
-                            r: rate(base(cohort, split, h)),
-                            kind: "self",
-                        };
-                    if (
-                        patternRow?.reference_kind === "pattern_only_unfiltered"
-                    ) {
-                        if (comparator === "C-52w") {
-                            const n = patternRow.reference_c52w_known_n;
-                            const r =
-                                n > 0
-                                    ? fmt.ratio(
-                                          patternRow.reference_c52w_hit_n,
-                                          n,
-                                      )
-                                    : null;
-                            return {
-                                r,
-                                n,
-                                kind: r === null ? "na" : "unfiltered",
-                            };
-                        }
-                        const b = known(base("C-base", split, h));
-                        return {
-                            r: rate(b),
-                            n: b?.known_n,
-                            kind: b ? "unfiltered" : "na",
-                        };
-                    }
-                    const row = known(sameCondition());
-                    return {
-                        r: rate(row),
-                        n: row?.known_n,
-                        kind: row ? "matched" : "na",
-                    };
+                    return M.publishedControl({
+                        comparator,
+                        patternRow,
+                        selfBaseline: base(cohort, split, h),
+                        cBaseBaseline: base("C-base", split, h),
+                        sameConditionRow:
+                            comparator === "self" || comparator === "none"
+                                ? null
+                                : known(sameCondition()),
+                    });
                 }
                 function comparatorRate(split, h, feature, bin) {
                     return publishedControl(
@@ -1094,7 +1073,7 @@
                                     }
                                     if (comp.kind === "unfiltered")
                                         lines.push(
-                                            "＊這是型態專屬條件，沒有型態的股票沒有這個值；照 PR #9 的口徑，對照是未加條件的控制組。",
+                                            "＊這是型態專屬條件，只在型態成立時才有定義；照 PR #9 的口徑，對照是未加條件的控制組。",
                                         );
                                     lines.push(
                                         `賠錢率 ${fmt.pct(lossRate(r))}・股票 ${fmt.int(r.known_security_n)} 檔`,
@@ -1296,7 +1275,7 @@
                                         ? html(
                                               "small",
                                               {},
-                                              "含型態專屬條件：沒有型態的股票沒有這個值，對照是未加條件的控制組（＊，PR #9 口徑）",
+                                              "含型態專屬條件：只在型態成立時才有定義，對照是未加條件的控制組（＊，PR #9 口徑）",
                                           )
                                         : null,
                                 ]),
@@ -1403,8 +1382,8 @@
                     const fromSingle = (cohort) =>
                         shares(
                             (b) =>
-                                single(cohort, "merged", 126, f, b)?.known_n ??
-                                0,
+                                single(cohort, "merged", state.h, f, b)
+                                    ?.known_n ?? 0,
                         );
                     const fromCand = (id) =>
                         shares(
@@ -1412,7 +1391,7 @@
                                 kdist.find(
                                     (r) =>
                                         r.cohort_id === "P-all" &&
-                                        r.horizon === 126 &&
+                                        r.horizon === state.h &&
                                         r.candidate_id === id &&
                                         r.feature_id === f &&
                                         r.bin_id === b,
@@ -1477,6 +1456,8 @@
                     const all = fromSingle("C-base");
                     const c1 = fromCand(CAND_IDS[0]);
                     const p = fromSingle("P-all");
+                    document.getElementById("vol-horizon").textContent =
+                        `分布依全頁選的期限計算：只數${state.h === 126 ? "半年（126 日）" : "一年（252 日）"}結局已知的事件，和上一節的翻倍率用同一個母體。`;
                     document.getElementById("vol-answer").innerHTML =
                         f === "K"
                             ? `<strong>高過高本身不是，但那些條件是。</strong>全部股票日中 ATR% ≥5% 的占 ${fmt.pct(hi(all))}，高過高只有 ${fmt.pct(hi(p))}；` +
@@ -1800,12 +1781,9 @@
                     document.getElementById("after-answer").innerHTML =
                         t && f && bt && bf
                             ? `樣本最多的是「第 ${state.afterL} 日還在起點以下」這一層：有「${FLAGS[flag][0]}」的事件翻倍率 ${fmt.pct(rate(t))}，沒有的 ${fmt.pct(rate(f))}，差 ${fmt.pp(rate(t) - rate(f))}；` +
-                              `同一層裡「跌 10%」差 ${fmt.pp(rate(bt) - rate(bf))}。` +
-                              (Math.abs(rate(t) - rate(f)) >
-                              Math.abs(rate(bt) - rate(bf)) + 0.01
-                                  ? "差距比跌幅基準大，這個訊號多帶了跌幅以外的資訊。"
-                                  : "差距和跌幅基準差不多，這個訊號沒有多帶跌幅以外的資訊。") +
-                              "上面幾層有訊號的樣本很少（淡色），不要過度解讀。"
+                              `同一層裡「跌 10%」的差距是 ${fmt.pp(rate(bt) - rate(bf))}。` +
+                              "兩個差距不同，是值得檢驗的線索，但還不是結論：同一層內兩組事件的跌幅分布與股票組成並不相同。" +
+                              "上面幾層有訊號的樣本很少（淡色），更不要過度解讀。"
                             : "這個組合在「還在起點以下」這一層沒有足夠樣本。";
                 }
 
@@ -1816,30 +1794,30 @@
                         ["C-52w", "var(--gain)", true],
                         ["C-nh", "var(--compare)", true],
                         ["C-base", "var(--faint)", true],
-                    ];
-                    const ys = [2019, 2020, 2021, 2022, 2023, 2024, 2025];
-                    const pts = series.map(([c]) =>
-                        ys.map((yv) =>
-                            rate(
-                                known(
-                                    years.find(
-                                        (r) =>
-                                            r.cohort_id === c &&
-                                            r.horizon === state.h &&
-                                            r.year === yv,
-                                    ),
-                                ),
-                            ),
+                    ].map(([c, color, dashed]) => ({
+                        c,
+                        color,
+                        dashed,
+                        points: M.yearSeries(years, c, state.h),
+                    }));
+                    const ys = [
+                        ...new Set(
+                            series.flatMap((s) => s.points.map((p) => p.year)),
                         ),
-                    );
+                    ].sort((a, b) => a - b);
                     const max =
-                        Math.max(...pts.flat().filter((v) => v !== null)) *
-                        1.12;
+                        Math.max(
+                            ...series.flatMap((s) =>
+                                s.points.map((p) => p.rate),
+                            ),
+                        ) * 1.12;
                     const W = 720;
                     const H = 260;
                     const m = { l: 46, r: 20, t: 12, b: 30 };
-                    const x = (i) =>
-                        m.l + (i / (ys.length - 1)) * (W - m.l - m.r);
+                    const x = (yv) =>
+                        m.l +
+                        (ys.indexOf(yv) / Math.max(1, ys.length - 1)) *
+                            (W - m.l - m.r);
                     const y = (v) => H - m.b - (v / max) * (H - m.t - m.b);
                     const g = [];
                     for (let t = 0; t <= max; t += 0.05) {
@@ -1864,50 +1842,74 @@
                             ),
                         );
                     }
-                    ys.forEach((yv, i) =>
+                    for (const yv of ys) {
+                        const partial = series[0].points.find(
+                            (p) => p.year === yv,
+                        )?.partial;
                         g.push(
                             svg(
                                 "text",
-                                { x: x(i), y: H - 8, "text-anchor": "middle" },
-                                String(yv),
+                                { x: x(yv), y: H - 8, "text-anchor": "middle" },
+                                partial ? `${yv}＊` : String(yv),
                             ),
-                        ),
-                    );
-                    series.forEach(([c, color, dashed], si) => {
-                        const d = pts[si]
-                            .map((v, i) =>
-                                v === null ? null : `${x(i)},${y(v)}`,
-                            )
-                            .filter(Boolean);
+                        );
+                    }
+                    for (const s of series) {
+                        const full = s.points.filter((p) => !p.partial);
                         g.push(
                             svg("polyline", {
-                                points: d.join(" "),
+                                points: full
+                                    .map((p) => `${x(p.year)},${y(p.rate)}`)
+                                    .join(" "),
                                 fill: "none",
-                                stroke: color,
-                                "stroke-width": c === "P-all" ? 3 : 2,
-                                "stroke-dasharray": dashed ? "5 4" : null,
+                                stroke: s.color,
+                                "stroke-width": s.c === "P-all" ? 3 : 2,
+                                "stroke-dasharray": s.dashed ? "5 4" : null,
                             }),
                         );
-                        pts[si].forEach((v, i) => {
-                            if (v === null) return;
+                        // An incomplete year hangs off the last complete one by a dotted segment.
+                        for (const p of s.points.filter((q) => q.partial)) {
+                            const prev = [...full]
+                                .reverse()
+                                .find((q) => q.year < p.year);
+                            if (prev)
+                                g.push(
+                                    svg("line", {
+                                        x1: x(prev.year),
+                                        y1: y(prev.rate),
+                                        x2: x(p.year),
+                                        y2: y(p.rate),
+                                        stroke: s.color,
+                                        "stroke-width": 1.5,
+                                        "stroke-dasharray": "1 4",
+                                        opacity: 0.8,
+                                    }),
+                                );
+                        }
+                        for (const p of s.points) {
                             const dot = svg("circle", {
-                                cx: x(i),
-                                cy: y(v),
-                                r: 3.5,
-                                fill: color,
+                                cx: x(p.year),
+                                cy: y(p.rate),
+                                r: p.partial ? 4.5 : 3.5,
+                                fill: p.partial ? "var(--surface)" : s.color,
+                                stroke: s.color,
+                                "stroke-width": p.partial ? 2 : 0,
                             });
                             dot.addEventListener("mousemove", (e) =>
                                 K.tooltip.show(
                                     e,
-                                    `<b>${ys[i]}・${COHORTS[c].name}</b>翻倍率 ${fmt.pct(v)}`,
+                                    `<b>${p.year}・${COHORTS[s.c].name}</b>翻倍率 ${fmt.pct(p.rate)}（${fmt.int(p.hit)} / ${fmt.int(p.known)}）` +
+                                        (p.partial
+                                            ? `<br>另有 ${fmt.int(p.censored)} 筆窗口還沒走完、不在分母裡：只含較早起點，不是全年比例。`
+                                            : ""),
                                 ),
                             );
                             dot.addEventListener("mouseleave", () =>
                                 K.tooltip.hide(),
                             );
                             g.push(dot);
-                        });
-                    });
+                        }
+                    }
                     document.getElementById("year-chart").replaceChildren(
                         svg(
                             "svg",
@@ -1920,18 +1922,40 @@
                             g,
                         ),
                     );
-                    document
-                        .getElementById("year-legend")
-                        .replaceChildren(
-                            ...series.map(([c, color, dashed]) =>
-                                html("span", {}, [
-                                    html("i", { style: `background:${color}` }),
-                                    COHORTS[c].name +
-                                        (dashed ? "（虛線＝對照）" : ""),
-                                ]),
-                            ),
-                        );
-                    const pr = pts[0];
+                    document.getElementById("year-legend").replaceChildren(
+                        ...series.map((s) =>
+                            html("span", {}, [
+                                html("i", {
+                                    style: `background:${s.color}`,
+                                }),
+                                COHORTS[s.c].name +
+                                    (s.dashed ? "（虛線＝對照）" : ""),
+                            ]),
+                        ),
+                        html("span", {}, "空心點與＊＝該年仍有窗口沒走完"),
+                    );
+                    const pAll = series[0].points;
+                    const complete = pAll.filter((p) => !p.partial);
+                    const hi = complete.reduce(
+                        (a, b) => (b.rate > a.rate ? b : a),
+                        complete[0],
+                    );
+                    const lo = complete.reduce(
+                        (a, b) => (b.rate < a.rate ? b : a),
+                        complete[0],
+                    );
+                    const partial = pAll.filter((p) => p.partial);
+                    const shown = new Set(pAll.map((p) => p.year));
+                    const absent = years
+                        .filter(
+                            (r) =>
+                                r.cohort_id === "P-all" &&
+                                r.horizon === state.h &&
+                                r.known_n === 0 &&
+                                r.censored_n > 0,
+                        )
+                        .map((r) => r.year)
+                        .filter((yv) => !shown.has(yv));
                     const dropBase = (sp) =>
                         drops.find(
                             (d) =>
@@ -1942,11 +1966,19 @@
                     const dd = dropBase("dev");
                     const dc = dropBase("cross");
                     document.getElementById("year-answer").innerHTML =
-                        `翻倍率每年差很多：2020 年 ${fmt.pct(pr[1])}，2021 年只有 ${fmt.pct(pr[2])}。高過高和對照組幾乎一起漲跌，沒有哪一年型態特別突出。` +
+                        `窗口已走完的年份裡，翻倍率最高是 ${hi.year} 年 ${fmt.pct(hi.rate)}，最低是 ${lo.year} 年 ${fmt.pct(lo.rate)}。高過高和對照組大致一起漲跌，沒有哪一年型態特別突出。` +
                         (dd && dc
-                            ? `刪掉翻倍最多的 ${dd.removed_year} 年後，高過高的翻倍率降到開發半 ${fmt.pct(rate(dd))}、確認半 ${fmt.pct(rate(dc))}。`
+                            ? `刪掉翻倍事件最多的 ${dd.removed_year} 年後，高過高的翻倍率是開發半 ${fmt.pct(rate(dd))}、確認半 ${fmt.pct(rate(dc))}。`
                             : "") +
-                        `2026 年的期限還沒走完，不列入。`;
+                        partial
+                            .map(
+                                (p) =>
+                                    `${p.year} 年只有 ${fmt.int(p.known)} 筆已知（另 ${fmt.int(p.censored)} 筆窗口未走完），${fmt.pct(p.rate)} 只代表較早起點，不能當全年比例。`,
+                            )
+                            .join("") +
+                        (absent.length
+                            ? `${absent.join("、")} 年在這個期限下還沒有任何已知結局，所以沒畫。`
+                            : "");
                 }
 
                 /* ---------------- 8 notes ---------------- */

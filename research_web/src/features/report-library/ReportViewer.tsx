@@ -1,14 +1,23 @@
 import { useEffect, useRef, useState } from "react";
 import { reportFrameSrc, statusLabel } from "./model";
-import { useReportIndex } from "./ReportsPage";
+import { useReportIndex } from "./useReportIndex";
 import "./reports.css";
 
 /**
- * Shows one report in its own framed document, so its CSS and scripts cannot leak
- * into the studio. The frame keeps the studio's origin: browsers block an opaque
- * (fully sandboxed) origin from loading anything on 127.0.0.1, which would leave a
- * local report without its kit and data. Reports are authored in this repository;
- * the shell still talks to them only through rk:* messages from its own frame.
+ * Shows one report in its own framed document, so its CSS cannot restyle the studio
+ * and its layout cannot break the studio page.
+ *
+ * Trust boundary: the frame keeps the studio's origin (allow-scripts together with
+ * allow-same-origin), so a report's JavaScript CAN reach the studio page, its
+ * storage and its API, exactly like studio code. Only repository-authored reports,
+ * reviewed like code, may be shown here; never point this at untrusted HTML.
+ * The shell itself listens only to rk:* messages whose source is this frame.
+ *
+ * Why not a fully sandboxed (opaque-origin) frame: in the Claude desktop app's
+ * built-in Chromium browser (tested 2026-10-13), such a frame could not load
+ * scripts, images or fetch anything from 127.0.0.1, which left a report without its
+ * kit and data. Other browsers were not tested. No popup permission is granted;
+ * reports open nothing in new windows.
  */
 export function ReportViewer({
     reportId,
@@ -88,7 +97,7 @@ export function ReportViewer({
                     className="rv-frame"
                     title={report?.title || reportId}
                     src={src}
-                    sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+                    sandbox="allow-scripts allow-same-origin"
                     referrerPolicy="no-referrer"
                     style={height ? { height } : undefined}
                     onLoad={() =>

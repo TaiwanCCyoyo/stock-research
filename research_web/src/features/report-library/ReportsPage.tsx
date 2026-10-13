@@ -1,37 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
-import {
-    filterReports,
-    reportTags,
-    statusLabel,
-    validateReportIndex,
-    type ReportEntry,
-} from "./model";
+import { useMemo, useState } from "react";
+import { filterReports, reportTags, statusLabel } from "./model";
+import { useReportIndex } from "./useReportIndex";
 import "./reports.css";
-
-export function useReportIndex() {
-    const [reports, setReports] = useState<ReportEntry[] | null>(null);
-    const [error, setError] = useState("");
-    useEffect(() => {
-        const control = new AbortController();
-        fetch("/reports/index.json", {
-            signal: control.signal,
-            cache: "no-store",
-        })
-            .then((response) => {
-                if (!response.ok)
-                    throw new Error(
-                        `報告清單讀取失敗（HTTP ${response.status}）`,
-                    );
-                return response.json();
-            })
-            .then((value) => setReports(validateReportIndex(value).reports))
-            .catch((e) => {
-                if (e.name !== "AbortError") setError(e.message);
-            });
-        return () => control.abort();
-    }, []);
-    return { reports, error };
-}
 
 export function ReportsPage() {
     const { reports, error } = useReportIndex();

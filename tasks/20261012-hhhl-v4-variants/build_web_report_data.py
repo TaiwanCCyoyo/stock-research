@@ -175,7 +175,7 @@ def build(summary: pd.DataFrame, meta: dict[str, Any]) -> dict[str, Any]:
         _with_merged(
             _where(summary, row_kind="year", base_row_kind="baseline"),
             ["cohort_id", "horizon", "year"],
-            ["known_n", "hit_n", "loss_n"],
+            ["known_n", "hit_n", "loss_n", "unknown_n", "censored_n"],
         ),
         split="merged",
     )
@@ -198,7 +198,8 @@ def build(summary: pd.DataFrame, meta: dict[str, Any]) -> dict[str, Any]:
         "kdist": _table(kdist, ["cohort_id", "horizon", "candidate_id", "feature_id", "bin_id", "known_n"]),
         "reverse": _table(reverse, [*flag_keys, *REVERSE_COUNTS, *QUANTILES]),
         "flags": _table(flags, ["horizon", "landmark", "flag_id", "return_bin", "flag_state", "known_n", "hit_n", "loss_n", "riskset_n"]),
-        "year": _table(year, ["cohort_id", "horizon", "year", "known_n", "hit_n", "loss_n"]),
+        # censored_n marks start years whose outcome windows have not all ended yet.
+        "year": _table(year, ["cohort_id", "horizon", "year", "known_n", "hit_n", "loss_n", "unknown_n", "censored_n"]),
         "drop_best_year": _table(drop, ["base_row_kind", "candidate_id", "split", "horizon", "removed_year", "known_n", "hit_n", "loss_n"]),
         "near_high": _table(
             near,

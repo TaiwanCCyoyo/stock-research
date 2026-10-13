@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import {
+    mkdir,
+    mkdtemp,
+    rm,
+    symlink,
+    unlink,
+    writeFile,
+} from "node:fs/promises";
 import { join, resolve } from "node:path";
 import test from "node:test";
 import {
@@ -168,6 +175,109 @@ test("a build copies every report folder with its generated index", async () => 
         );
     } finally {
         await rm(root, { recursive: true });
+        await rm(out, { recursive: true, force: true });
+    }
+});
+
+// Links are made only inside a synthetic scratch folder. A directory link uses a
+// junction, which Windows allows without extra privileges; a file symlink may need
+// Developer Mode, so that one case is skipped when the OS refuses to create it.
+async function link(target, path, type) {
+    try {
+        await symlink(target, path, type);
+        return true;
+    } catch (error) {
+        if (error.code === "EPERM" || error.code === "EACCES") return false;
+        throw error;
+    }
+}
+
+test("links are refused anywhere on a report path, matching the build copy", async (t) => {
+    const { root, report } = await scratchTasks();
+    const outside = `${root}-outside`;
+    const out = `${root}-dist`;
+    const links = [];
+    try {
+        await report("20261012-real", page("Real", "2026-10-12"));
+        const folder = join(root, "20261012-real", "web-report");
+        await mkdir(join(outside, "web-report"), { recursive: true });
+        await writeFile(join(outside, "secret.txt"), "secret");
+        await writeFile(
+            join(outside, "web-report", "index.html"),
+            page("Linked task", "2026-10-13"),
+        );
+
+        // A junction inside a report, to its own data folder and to outside it.
+        for (const [name, target] of [
+            ["data-link", join(folder, "data")],
+            ["escape", outside],
+        ]) {
+            await symlink(target, join(folder, name), "junction");
+            links.push(join(folder, name));
+        }
+        // A task folder that is itself a junction to a folder holding a report.
+        await symlink(outside, join(root, "20261013-linked"), "junction");
+        links.push(join(root, "20261013-linked"));
+
+        assert.ok(resolveReportFile(root, "20261012-real", "data/summary.js"));
+        assert.equal(
+            resolveReportFile(root, "20261012-real", "data-link/summary.js"),
+            null,
+        );
+        assert.equal(
+            resolveReportFile(root, "20261012-real", "escape/secret.txt"),
+            null,
+        );
+        assert.equal(
+            resolveReportFile(root, "20261013-linked", "index.html"),
+            null,
+        );
+        assert.deepEqual(
+            listReports(root).map((r) => r.id),
+            ["20261012-real"],
+        );
+
+        if (
+            await link(
+                join(folder, "data", "summary.js"),
+                join(folder, "file-link.js"),
+                "file",
+            )
+        ) {
+            links.push(join(folder, "file-link.js"));
+            assert.equal(
+                resolveReportFile(root, "20261012-real", "file-link.js"),
+                null,
+            );
+        } else
+            t.diagnostic(
+                "file symlink not permitted here; directory junctions still covered",
+            );
+
+        copyReports(root, out);
+        assert.ok(
+            existsSync(
+                join(out, "reports", "20261012-real", "data", "summary.js"),
+            ),
+        );
+        for (const name of ["data-link", "escape", "file-link.js"])
+            assert.equal(
+                existsSync(join(out, "reports", "20261012-real", name)),
+                false,
+                name,
+            );
+        assert.equal(
+            existsSync(join(out, "reports", "20261013-linked")),
+            false,
+        );
+    } finally {
+        // Remove the links themselves first so no cleanup can walk through them.
+        for (const path of links.reverse())
+            await rm(path, { force: true, recursive: false }).catch(() =>
+                unlink(path),
+            );
+        await rm(root, { recursive: true, force: true });
+        await rm(outside, { recursive: true, force: true });
         await rm(out, { recursive: true, force: true });
     }
 });

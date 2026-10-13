@@ -12,7 +12,7 @@ import {
     realpathSync,
     writeFileSync,
 } from "node:fs";
-import { extname, join, relative, resolve, sep } from "node:path";
+import { extname, isAbsolute, join, relative } from "node:path";
 
 export const REPORT_FOLDER = "web-report";
 const REPORT_ID = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
@@ -82,33 +82,49 @@ export function parseReportMeta(html) {
     };
 }
 
-function isPlainDirectory(path) {
+/** The entry's own type, without following a symlink or Windows junction. */
+function entryKind(path) {
     try {
         const stat = lstatSync(path);
-        return stat.isDirectory() && !stat.isSymbolicLink();
+        if (stat.isSymbolicLink()) return "link";
+        if (stat.isDirectory()) return "directory";
+        return stat.isFile() ? "file" : "other";
     } catch {
-        return false;
+        return "missing";
     }
+}
+
+/**
+ * Walk from tasksRoot through each named segment, checking every entry before it is
+ * entered. Any symlink or junction on the way (the task folder, web-report, a
+ * subfolder or the file itself) rejects the path, so the dev server, the build copy
+ * and the index all see the same set of plain files. Returns the path or null.
+ */
+function plainPath(tasksRoot, segments, finalKind) {
+    let path = tasksRoot;
+    for (const [index, segment] of segments.entries()) {
+        path = join(path, segment);
+        const expected =
+            index === segments.length - 1 ? finalKind : "directory";
+        if (entryKind(path) !== expected) return null;
+    }
+    return path;
 }
 
 /** List every report under tasksRoot, newest date first. Links are never followed. */
 export function listReports(tasksRoot) {
     if (!existsSync(tasksRoot)) return [];
     const reports = [];
-    for (const entry of readdirSync(tasksRoot, { withFileTypes: true })) {
-        if (!entry.isDirectory() || !REPORT_ID.test(entry.name)) continue;
-        const folder = join(tasksRoot, entry.name, REPORT_FOLDER);
-        if (!isPlainDirectory(folder)) continue;
-        const index = join(folder, "index.html");
-        let stat;
-        try {
-            stat = lstatSync(index);
-        } catch {
-            continue;
-        }
-        if (!stat.isFile()) continue;
+    for (const name of readdirSync(tasksRoot)) {
+        if (!REPORT_ID.test(name)) continue;
+        const index = plainPath(
+            tasksRoot,
+            [name, REPORT_FOLDER, "index.html"],
+            "file",
+        );
+        if (!index) continue;
         reports.push({
-            id: entry.name,
+            id: name,
             ...parseReportMeta(readFileSync(index, "utf8")),
         });
     }
@@ -119,7 +135,9 @@ export function listReports(tasksRoot) {
 
 /**
  * Resolve a requested file inside one report folder, or null. Rejects unknown ids,
- * traversal, absolute paths and anything whose real path leaves the folder.
+ * empty, "." and ".." segments, absolute paths, and any symlink or junction on the
+ * way, checked before the path is resolved. The real path must still stay inside
+ * the report folder as a second guard.
  */
 export function resolveReportFile(tasksRoot, id, requestPath) {
     if (!REPORT_ID.test(id)) return null;
@@ -131,31 +149,22 @@ export function resolveReportFile(tasksRoot, id, requestPath) {
     }
     if (rel === "" || rel.endsWith("/")) rel += "index.html";
     if (rel.includes("\0") || /^[\\/]|^[A-Za-z]:/.test(rel)) return null;
-    const folder = join(tasksRoot, id, REPORT_FOLDER);
-    if (!isPlainDirectory(folder)) return null;
-    const candidate = resolve(folder, rel);
-    let realFolder;
-    let realCandidate;
+    const parts = rel.split(/[\\/]/);
+    if (parts.some((part) => part === "" || part === "." || part === ".."))
+        return null;
+    const file = plainPath(tasksRoot, [id, REPORT_FOLDER, ...parts], "file");
+    if (!file) return null;
     try {
-        realFolder = realpathSync(folder);
-        realCandidate = realpathSync(candidate);
+        const inside = relative(
+            realpathSync(join(tasksRoot, id, REPORT_FOLDER)),
+            realpathSync(file),
+        );
+        if (!inside || inside.startsWith("..") || isAbsolute(inside))
+            return null;
     } catch {
         return null;
     }
-    const inside = relative(realFolder, realCandidate);
-    if (
-        !inside ||
-        inside.startsWith("..") ||
-        inside.includes(`..${sep}`) ||
-        /^[A-Za-z]:/.test(inside)
-    )
-        return null;
-    try {
-        if (!lstatSync(realCandidate).isFile()) return null;
-    } catch {
-        return null;
-    }
-    return realCandidate;
+    return file;
 }
 
 export function contentType(path) {

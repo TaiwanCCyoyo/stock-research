@@ -256,12 +256,23 @@ frame and a shared look. Nothing is registered by hand.
   `window.REPORT_DATA`. Script tags work both in the studio and when the file is
   opened directly from disk, where `fetch` does not. Keep each file under the
   repository's 500 KiB commit limit; `data/` is excluded from Prettier.
-- **Frame:** the viewer shows a report in its own document
-  (`sandbox="allow-scripts allow-same-origin …"`). The frame keeps the studio's
-  origin because browsers block a fully sandboxed (opaque) origin from loading
-  anything on `127.0.0.1`. The kit reports its height (`rk:height`) and follows
-  the studio theme (`rk:theme`); the first paint reads the theme from the URL hash.
-  Avoid `vh` units inside a report, since the frame grows to the report's height.
+- **Frame and trust boundary:** the viewer shows a report in its own document
+  with `sandbox="allow-scripts allow-same-origin"`. That keeps the studio's
+  origin, so a report's JavaScript can reach the studio page, its storage and its
+  API like studio code. Only repository-authored reports, reviewed like code,
+  belong here; never show untrusted HTML in this viewer. A fully sandboxed
+  (opaque-origin) frame was rejected because, in the Claude desktop app's built-in
+  Chromium browser (tested 2026-10-13), it could not load scripts, images or fetch
+  from `127.0.0.1`; other browsers were not tested. No popup permission is given.
+  The kit reports its height (`rk:height`) and follows the studio theme
+  (`rk:theme`); the first paint reads the theme from the URL hash. Avoid `vh`
+  units inside a report, since the frame grows to the report's height.
+- **Links:** a report folder is served and copied only through plain directories
+  and files. A symlink or junction anywhere on the way (the task folder,
+  `web-report/`, a subfolder or the file) is refused before the path is resolved,
+  in the dev server, the index and the build copy alike.
+- **Testable logic:** keep a report's pure rules in a small classic script beside
+  it (the example uses `model.js`) and test it from `research_web/scripts/`.
 - **Example:** `tasks/20261012-hhhl-v4-variants/web-report/`, with its data
   exported by `tasks/20261012-hhhl-v4-variants/build_web_report_data.py`.
 
