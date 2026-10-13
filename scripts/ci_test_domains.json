@@ -478,6 +478,7 @@
         "scripts/tests/test_pattern_scan_source_snapshot_v1.py",
         "scripts/tests/test_pattern_scan_stock_v1.py",
         "scripts/tests/test_pattern_scan_summary_store_v1.py",
+        "scripts/tests/test_pattern_scan_transport_v1.py",
         "scripts/tests/test_pattern_sources.py",
         "scripts/tests/test_prepare_derived_cache_inputs.py",
         "scripts/tests/test_prepared_stock_input_v1.py",
