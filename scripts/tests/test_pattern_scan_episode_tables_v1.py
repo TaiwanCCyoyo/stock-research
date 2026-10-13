@@ -110,6 +110,9 @@ def test_daily_base_is_distinct_and_keeps_adjacent_candidates() -> None:
     rows = daily_base_coverage(episodes, closes, calendar(), states, ["unknown"] * 220, "0050")
     assert rows.iloc[0].group_id == "C-base-all"
     assert rows.iloc[0].matching_indices == (60, 61)
+    named = daily_base_coverage(episodes, closes, calendar(), states, ["unknown"] * 220, "0050", group_id="C-base-daily")
+    assert named.group_id.tolist() == ["C-base-daily"]
+    pd.testing.assert_frame_equal(named.drop(columns="group_id"), rows.drop(columns="group_id"))
 
 
 def test_admission_empty_schema_and_nonhit_censored_reasons() -> None:

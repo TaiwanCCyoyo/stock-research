@@ -88,7 +88,8 @@ def build_event_tables(
         pieces.append(rows)
         memberships.extend({"group_id": group_id, "event_id": event_id} for event_id in rows.event_id)
     combined = pd.concat(pieces, ignore_index=True) if pieces else pd.DataFrame(columns=pd.Index(EVENT_COLUMNS))
-    for _, copies in combined.groupby("event_id", sort=False):
+    duplicates = combined.loc[combined.event_id.duplicated(keep=False)]
+    for _, copies in duplicates.groupby("event_id", sort=False):
         first = copies.iloc[0]
         if not cast(pd.Series, copies.eq(first).fillna(False).where(copies.notna() | first.notna(), True).all()).all():
             raise ValueError("duplicate canonical event identity has differing metadata")

@@ -129,17 +129,15 @@ def event_conditions(events: pd.DataFrame, indicators: pd.DataFrame, common_valu
             if feature == f"PAT_other_{target_pattern}":
                 allowed[:] = False
             elif present:
-                for index, state in enumerate(values):
-                    if pd.isna(state):
-                        values.iloc[index] = None
-                        reasons.iloc[index] = "pattern_window_unknown"
-                    elif isinstance(state, (bool, np.bool_)) or not isinstance(state, (int, np.integer)) or state not in (-1, 0, 1):
-                        raise ValueError("PAT source states must be integer -1/0/1")
-                    elif state == -1:
-                        values.iloc[index] = None
-                        reasons.iloc[index] = "pattern_window_unknown"
-                    else:
-                        values.iloc[index] = bool(state)
+                missing = values.isna()
+                states = values.loc[~missing]
+                integers = states.map(lambda state: isinstance(state, (int, np.integer)) and not isinstance(state, (bool, np.bool_)))
+                if not integers.all() or not states.isin((-1, 0, 1)).all():
+                    raise ValueError("PAT source states must be integer -1/0/1")
+                unknown = missing | values.eq(-1)
+                values.loc[~unknown] = values.loc[~unknown].eq(1)
+                values.loc[unknown] = None
+                reasons.loc[unknown] = "pattern_window_unknown"
         if feature == "MKT":
             reasons.loc[values.eq("unknown")] = "market_context_unknown"
         values.loc[~allowed] = None

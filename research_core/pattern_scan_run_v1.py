@@ -34,6 +34,44 @@ from research_core.research_measurement_v1 import host_resources, phase_receipt,
 LOGGER = logging.getLogger(__name__)
 
 
+def _publish_json(path: Path, payload: dict[str, Any]) -> None:
+    """A killed exclusive writer leaves staging, never a partial final file."""
+    staging = _checked_path(path.parent / f".staging-{path.name}-{uuid.uuid4().hex}")
+    write_json(staging, payload)
+    publish_noreplace(staging, _checked_path(path))
+
+
+def _attach_memory(saved: dict[str, Any], response: Path, request: dict[str, Any]) -> dict[str, Any]:
+    path = response.with_suffix(".job-memory.json")
+    if path.exists():
+        record = read_json(_checked_path(path))
+        memory = record.get("job_memory", {})
+        peak = memory.get("peak_committed_bytes") if isinstance(memory, dict) else None
+        if (
+            record.get("schema") != "pattern-scan-coordinator-memory.v1"
+            or record.get("complete") is not True
+            or record.get("request_id") != object_digest(request)
+            or record.get("response_sha256") != file_digest(response)
+            or not isinstance(memory, dict)
+            or memory.get("limit_bytes") != request["job_memory_bytes"]
+            or type(peak) is not int
+            or not 0 < peak <= request["job_memory_bytes"]
+            or memory.get("scope") != "virtual memory committed across this owned Windows job"
+        ):
+            raise ValueError("retained coordinator memory receipt differs")
+        saved["coordinator_job_memory"] = record["job_memory"]
+        saved["coordinator_job_memory_receipt"] = {"path": str(path), "sha256": file_digest(path)}
+    else:
+        saved["coordinator_job_memory"] = {
+            "limit_bytes": request["job_memory_bytes"],
+            "peak_committed_bytes": None,
+            "scope": "virtual memory committed across this owned Windows job",
+            "status": "unknown",
+            "reason": "Parent ended before a durable native memory receipt was retained",
+        }
+    return saved
+
+
 def verify_completion(saved: dict[str, Any], request: dict[str, Any], roots: DataRoots) -> None:
     """A cached receipt certifies current bytes only after their revalidation."""
     source = request["source"]
@@ -124,6 +162,8 @@ def launch(
         "source": source,
         "profile": profile,
         "memory_bytes": memory_bytes,
+        "job_memory_bytes": job_memory_bytes,
+        "timeout_seconds": timeout_seconds,
         "source_git_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
     }
     path = run / f"request-{object_digest(request)}.json"
@@ -132,11 +172,11 @@ def launch(
         if read_json(path) != request:
             raise ValueError("coordinator request differs")
     else:
-        write_json(path, request)
+        _publish_json(path, request)
     if response.exists():
         saved = read_json(response, max_bytes=128_000_000)
         verify_completion(saved, request, roots)
-        return saved
+        return _attach_memory(saved, response, request)
     job = _MemoryBoundJob(job_memory_bytes)
     started = time.monotonic()
     try:
@@ -151,8 +191,17 @@ def launch(
         if saved.get("request_id") != object_digest(request) or saved.get("complete") is not True:
             raise ValueError("coordinator response differs or incomplete")
         verify_source(source)
-        saved["coordinator_job_memory"] = job.memory_receipt()
-        return saved
+        memory_path = response.with_suffix(".job-memory.json")
+        memory = {
+            "schema": "pattern-scan-coordinator-memory.v1",
+            "complete": True,
+            "request_id": object_digest(request),
+            "response_sha256": file_digest(response),
+            "job_memory": job.memory_receipt(),
+        }
+        if not memory_path.exists():
+            _publish_json(memory_path, memory)
+        return _attach_memory(saved, response, request)
     finally:
         job.terminate_and_confirm()
         job.close()
@@ -184,7 +233,7 @@ def coordinator_main(request_path: Path) -> None:
         else:
             profile = _profile(snapshot, source, run, request["memory_bytes"], before, loaded)
             validate_profile(profile, source=source, input_id=snapshot.input_id)
-            write_json(profile_path, profile)
+            _publish_json(profile_path, profile)
         snapshot.verify_after()
         result: dict[str, Any] = {"phase": "resource_profile", "profile_path": str(profile_path), "profile": profile}
     elif mode in {"stock", "all"}:
@@ -225,7 +274,7 @@ def coordinator_main(request_path: Path) -> None:
     final_snapshot.verify_after()
     del final_snapshot
     _verify_loaded(source)
-    write_json(
+    _publish_json(
         request_path.with_suffix(".response.json"),
         {
             "schema": "pattern-scan-coordinator-receipt.v1",

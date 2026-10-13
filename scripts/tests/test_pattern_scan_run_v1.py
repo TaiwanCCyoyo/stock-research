@@ -9,7 +9,7 @@ from unittest.mock import Mock
 import pytest
 
 from research_core import pattern_scan_run_v1 as run
-from research_core.artifact_store import canonical, describe_file, file_digest, object_digest, write_json
+from research_core.artifact_store import canonical, describe_file, file_digest, object_digest, read_json, write_json
 from research_core.research_data_paths import DataRoots
 from scripts import pattern_scan
 
@@ -19,6 +19,93 @@ def roots(tmp_path: Path) -> DataRoots:
     primary = tmp_path / "primary"
     (primary / ".git").mkdir(parents=True)
     return DataRoots(primary, primary / "research_data")
+
+
+def test_atomic_response_interrupted_write_leaves_only_staging(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    final = tmp_path / "result.response.json"
+    original_write = run.write_json
+
+    def interrupted(path: Path, payload: dict[str, Any]) -> None:
+        path.write_bytes(b'{"complete":')
+        raise OSError("synthetic interrupted disk write")
+
+    monkeypatch.setattr(run, "write_json", interrupted)
+    with pytest.raises(OSError, match="interrupted"):
+        run._publish_json(final, {"complete": True})
+    assert not final.exists()
+    retained = next(tmp_path.glob(".staging-*"))
+    retained_bytes = retained.read_bytes()
+    monkeypatch.setattr(run, "write_json", original_write)
+    run._publish_json(final, {"complete": True})
+    assert read_json(final) == {"complete": True} and retained.read_bytes() == retained_bytes
+    with pytest.raises(FileExistsError):
+        run._publish_json(final, {"complete": False})
+    assert read_json(final) == {"complete": True}
+
+
+def test_retained_coordinator_memory_is_identical_on_fresh_and_resumed_read(tmp_path: Path) -> None:
+    response = tmp_path / "result.response.json"
+    saved = {"complete": True, "result": {"phase": "resource_profile"}}
+    run._publish_json(response, saved)
+    request = {"job_memory_bytes": 8192, "source": "invented-source"}
+    memory_path = response.with_suffix(".job-memory.json")
+    memory = {"limit_bytes": 8192, "peak_committed_bytes": 1234, "scope": "virtual memory committed across this owned Windows job"}
+    run._publish_json(
+        memory_path,
+        {
+            "schema": "pattern-scan-coordinator-memory.v1",
+            "complete": True,
+            "request_id": object_digest(request),
+            "response_sha256": file_digest(response),
+            "job_memory": memory,
+        },
+    )
+    first = run._attach_memory(dict(saved), response, request)
+    resumed = run._attach_memory(read_json(response), response, request)
+    assert first == resumed and resumed["coordinator_job_memory"] == memory
+    assert resumed["coordinator_job_memory_receipt"]["sha256"] == file_digest(memory_path)
+    assert read_json(response) == saved
+    response.write_bytes(canonical({"complete": False}))
+    with pytest.raises(ValueError, match="memory receipt differs"):
+        run._attach_memory(dict(saved), response, request)
+
+
+def test_parent_interruption_cannot_invent_a_cached_native_peak(tmp_path: Path) -> None:
+    response = tmp_path / "result.response.json"
+    run._publish_json(response, {"complete": True})
+    result = run._attach_memory({"complete": True}, response, {"job_memory_bytes": 8192})
+    assert result["coordinator_job_memory"]["peak_committed_bytes"] is None
+    assert result["coordinator_job_memory"]["status"] == "unknown"
+
+
+@pytest.mark.parametrize(
+    "changed",
+    [
+        {"limit_bytes": 8193},
+        {"peak_committed_bytes": None},
+        {"peak_committed_bytes": 0},
+        {"peak_committed_bytes": 8193},
+        {"peak_committed_bytes": True},
+        {"scope": "invented RSS"},
+    ],
+)
+def test_retained_memory_requires_native_scope_and_admissible_measurement(tmp_path: Path, changed: dict[str, Any]) -> None:
+    response = tmp_path / "result.response.json"
+    run._publish_json(response, {"complete": True})
+    request = {"job_memory_bytes": 8192}
+    memory = {"limit_bytes": 8192, "peak_committed_bytes": 1234, "scope": "virtual memory committed across this owned Windows job", **changed}
+    run._publish_json(
+        response.with_suffix(".job-memory.json"),
+        {
+            "schema": "pattern-scan-coordinator-memory.v1",
+            "complete": True,
+            "request_id": object_digest(request),
+            "response_sha256": file_digest(response),
+            "job_memory": memory,
+        },
+    )
+    with pytest.raises(ValueError, match="memory receipt differs"):
+        run._attach_memory({"complete": True}, response, request)
 
 
 def synthetic_entry(roots: DataRoots, name: str = "invented") -> tuple[dict[str, Any], Path]:

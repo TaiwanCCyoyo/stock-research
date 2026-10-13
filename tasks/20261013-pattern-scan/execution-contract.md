@@ -7,6 +7,22 @@ merge commit `d2dea1e70b18b624ee2da0b69a63d5b2638f27f8`。
 本檔描述執行契約；完成狀態及市場結果以之後的正式 receipt／結果報告為準。
 各彙總欄位、單位、分母及 unknown 語意見 [data dictionary](data-dictionary-v1.md)。
 
+## Resource probe v1: incomplete and retained
+
+`full-2010-20261014-v1` used source commit
+`7c708706a3ba2595fc19e8862e3dfef5a70fecac` and the fixed manifest below.
+It observed 1,942 ordinary reference securities, 4,110 sessions and six fixed
+strata (1104, 1416, 1589, 2330, 6236, 6986). The 1/2/4-worker stock artifacts
+agreed. The representative four-stock global barrier completed, but the event
+binding probe was stopped after observing 46.59–81.43 wall seconds per completed
+target for stock 1104. Its owned Windows Job was confirmed empty after teardown.
+The primary run directory, source archive, completed parts and diagnostic log
+remain retained. There is no complete profile, native coordinator peak receipt,
+formal full-period publication, Q1–Q6 result or strategy conclusion from this run.
+Only duplicate metadata comparisons and PAT state assignment are being optimized;
+definitions, clocks, strata and acceptance rules are unchanged. A new source seal
+and run identifier are required before another probe.
+
 ## 唯一固定輸入與共用入口
 
 Owner 指定的 handoff 是 primary `.tmp/claude-kline/20261012-claude-handoff-pattern-scan.md`，

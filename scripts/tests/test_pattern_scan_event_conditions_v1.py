@@ -151,3 +151,45 @@ def test_empty_events_still_has_the_full_wide_schema() -> None:
     events, indicators, common = inputs()
     result = event_conditions(events.iloc[:0], indicators, common, target_pattern="B1")
     assert result.empty and len(result.columns) == 1 + 4 * len(FEATURES)
+
+
+@pytest.mark.parametrize("invalid", (0.0, 1.0, -1.0, True, np.bool_(False), 2, "1"))
+def test_pat_noninteger_boolean_and_out_of_range_states_rejected(invalid: Any) -> None:
+    events, indicators, common = inputs()
+    common["PAT_other_R2"] = common.PAT_other_R2.astype(object)
+    common.loc[common.index[30], "PAT_other_R2"] = invalid
+    before = common.copy(deep=True)
+    with pytest.raises(ValueError, match="PAT source states must be integer -1/0/1"):
+        event_conditions(events, indicators, common, target_pattern="B1")
+    pd.testing.assert_frame_equal(common, before)
+
+
+@pytest.mark.parametrize("missing", (None, np.nan, pd.NA))
+def test_pat_mixed_known_unknown_missing_and_self_applicability(missing: Any) -> None:
+    events, indicators, common = inputs()
+    for index, position in enumerate((30, 31, 32, 33)):
+        events.loc[index, "calendar_index"] = position
+        events.loc[index, "t0"] = pd.DatetimeIndex(common.index)[position].strftime("%Y-%m-%d")
+    common["PAT_other_R2"] = common.PAT_other_R2.astype(object)
+    common.loc[common.index[30:34], "PAT_other_R2"] = [np.int8(-1), missing, np.int64(0), 1]
+    common["PAT_other_B1"] = True  # Self PAT remains N/A without validating unused states.
+    originals = [frame.copy(deep=True) for frame in (events, indicators, common)]
+    result = event_conditions(events, indicators, common, target_pattern="B1")
+    assert result.PAT_other_R2.tolist() == [None, None, False, True]
+    assert result.PAT_other_R2_status.tolist() == ["feature_unknown", "feature_unknown", "known", "known"]
+    assert result.PAT_other_R2_bin.tolist()[2:] == ["false", "true"]
+    assert result.PAT_other_R2_reason.tolist() == ["pattern_window_unknown", "pattern_window_unknown", None, None]
+    assert result.PAT_other_B1_status.eq("not_applicable").all()
+    assert result.PAT_other_B1.isna().all()
+    for frame, original in zip((events, indicators, common), originals):
+        pd.testing.assert_frame_equal(frame, original)
+    with_reason = common.copy(deep=True)
+    with_reason["PAT_other_R2_unknown_reason"] = "retained_source_reason"
+    reason_result = event_conditions(events, indicators, with_reason, target_pattern="B1")
+    assert reason_result.PAT_other_R2_reason.tolist() == [
+        "pattern_window_unknown",
+        "pattern_window_unknown",
+        "retained_source_reason",
+        "retained_source_reason",
+    ]
+    assert reason_result.PAT_other_R2_status.eq("feature_unknown").all()

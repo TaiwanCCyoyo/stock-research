@@ -186,8 +186,7 @@ def run_episodes(
             pool_pin = object_digest(pool.loc[:, ["security_id", "t0", "calendar_index"]].to_dict("records"))
             c52 = group_frame(event_directory, "C-52w", 126)
             if not daily_diagnostic_written:
-                diagnostic = daily_base_coverage(episodes, closes, dates, daily["C-base-daily"].tolist(), anchor_mkt, security_id)
-                diagnostic["group_id"] = "C-base-daily"
+                diagnostic = daily_base_coverage(episodes, closes, dates, daily["C-base-daily"].tolist(), anchor_mkt, security_id, group_id="C-base-daily")
                 observations.append(diagnostic)
                 daily_diagnostic_written = True
             candidate_states: dict[str, np.ndarray] = {}

@@ -157,3 +157,34 @@ def test_zero_groups_keep_event_projection_and_membership_schemas() -> None:
     assert result.events.empty and {"event_id", "horizon", "effective_label"}.issubset(result.events)
     assert result.conditions.empty and "event_id" in result.conditions
     assert tuple(result.group_memberships.columns) == ("group_id", "event_id")
+
+
+def test_identical_canonical_duplicates_preserve_complete_tables_and_inputs() -> None:
+    tables, global_values = _inputs()
+    expected = _build("B1", tables, global_values)
+    tables["cohort_events"] = pd.concat([tables["cohort_events"], tables["cohort_events"].iloc[[0]]], ignore_index=True)
+    originals = {name: frame.copy(deep=True) for name, frame in tables.items()}
+    original_global = global_values.copy(deep=True)
+    actual = _build("B1", tables, global_values)
+    for name in ("events", "conditions", "group_memberships"):
+        pd.testing.assert_frame_equal(getattr(actual, name), getattr(expected, name))
+    for name in ("daily_groups", "formula_groups"):
+        actual_groups, expected_groups = getattr(actual, name), getattr(expected, name)
+        assert tuple(actual_groups) == tuple(expected_groups)
+        for group_id in actual_groups:
+            pd.testing.assert_series_equal(actual_groups[group_id], expected_groups[group_id])
+    for name, original in originals.items():
+        pd.testing.assert_frame_equal(tables[name], original)
+    pd.testing.assert_frame_equal(global_values, original_global)
+
+
+@pytest.mark.parametrize(("column", "value"), (("support", 91.0), ("support", None), ("details_json", '{"conflict":true}')))
+def test_conflicting_canonical_duplicate_metadata_rejected(column: str, value: Any) -> None:
+    tables, global_values = _inputs()
+    duplicate = tables["cohort_events"].iloc[[0]].copy(deep=True)
+    duplicate[column] = value
+    tables["cohort_events"] = pd.concat([tables["cohort_events"], duplicate], ignore_index=True)
+    before = tables["cohort_events"].copy(deep=True)
+    with pytest.raises(ValueError, match="duplicate canonical event identity has differing metadata"):
+        _build("B1", tables, global_values)
+    pd.testing.assert_frame_equal(tables["cohort_events"], before)

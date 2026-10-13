@@ -235,10 +235,12 @@ def daily_base_coverage(
     daily_base_states: Sequence[int],
     anchor_regime: Sequence[str],
     security_id: str,
+    *,
+    group_id: str = "C-base-all",
 ) -> pd.DataFrame:
-    """Separate C-base-all diagnostic: daily true events, without cooldown."""
+    """Separate daily-base diagnostic under the caller's group, without cooldown."""
     retained = np.flatnonzero(np.asarray(daily_base_states) == 1).tolist()
-    return observe_group(episodes, closes, dates, retained, daily_base_states, anchor_regime, security_id, "C-base-all")
+    return observe_group(episodes, closes, dates, retained, daily_base_states, anchor_regime, security_id, group_id)
 
 
 def summarize_coverage(rows: pd.DataFrame) -> dict[str, int | float | None]:
