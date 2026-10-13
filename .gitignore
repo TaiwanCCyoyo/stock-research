@@ -184,6 +184,9 @@ tasks/20261005-method-environment-interactions/params/*.json
 tasks/20261005-industry-role-comparison/params/*.json
 !tasks/*/research_dashboard/
 !tasks/*/research_dashboard/*
+# AI-written report pages shown by the studio's report library (research_web/README.md).
+!tasks/*/web-report/
+!tasks/*/web-report/**
 !tasks/sample/runs/
 !tasks/sample/runs/.gitkeep
 tasks/**/__pycache__/
