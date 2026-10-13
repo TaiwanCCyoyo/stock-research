@@ -189,6 +189,9 @@ def _build_incremental_features_in_process(
     previous = {} if old is None else _bound_stocks(old)
     if set(previous) - set(prepared):
         raise ValueError("extension cannot remove retained stocks")
+    removed_features = {code: sorted(set(stock["features"]) - set(names)) for code, stock in previous.items() if set(stock["features"]) - set(names)}
+    if removed_features:
+        raise ValueError(f"extension cannot remove retained features: {removed_features}")
     schema_changed = old is not None and (old["implementation"] != implementation or old["parameters"]["price_basis"] != price_basis)
     payloads: dict[str, bytes] = {}
     stocks: dict[str, Any] = {}

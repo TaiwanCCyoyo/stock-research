@@ -93,6 +93,24 @@ def test_same_request_zero_compute_and_added_feature_only_initializes_missing(ca
     pd.testing.assert_frame_equal(old_daily, new_daily, check_exact=True)
 
 
+@pytest.mark.parametrize("rows", [20, 25])
+def test_extension_rejects_dropping_base_features_before_compute_or_publication(catalog: DataCatalog, monkeypatch: pytest.MonkeyPatch, rows: int):
+    first = build(catalog, {"INVENTED": frame(20)}, ["SMA5", "EMA10"])
+    original_daily, _ = incremental.load_incremental_feature(catalog, first, "INVENTED", "EMA10")
+    before = catalog.read()
+    full, chunk = Mock(), Mock()
+    monkeypatch.setattr(kernel, "compute_selected_full", full)
+    monkeypatch.setattr(kernel, "compute_selected_chunk", chunk)
+    with pytest.raises(ValueError, match="extension cannot remove retained features.*EMA10"):
+        build(catalog, {"INVENTED": frame(rows)}, ["SMA5"], first)
+    full.assert_not_called()
+    chunk.assert_not_called()
+    assert catalog.read() == before
+    assert len(list((catalog.roots.data / "features/checkpoint-features").iterdir())) == 1
+    daily, _ = incremental.load_incremental_feature(catalog, first, "INVENTED", "EMA10")
+    pd.testing.assert_frame_equal(daily, original_daily, check_exact=True)
+
+
 @pytest.mark.parametrize("correction", ["historical_price", "factor"])
 def test_only_corrected_stock_rebuilds(catalog: DataCatalog, correction: str):
     data = {"A": frame(40), "B": frame(40, 1)}

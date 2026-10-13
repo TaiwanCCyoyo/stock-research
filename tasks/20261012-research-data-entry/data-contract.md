@@ -124,6 +124,11 @@ bounded Parquet framing and both payload and manifest bytes; read failure never
 starts calculation. Discovery stays compact: detailed stock state and segment
 lists live in the sealed bundle manifest, not the catalog.
 
+An extension must include every stock and feature retained by its pinned base.
+Requests that drop an existing feature are rejected before calculation or shared
+publication, including unchanged-date requests. Adding a feature still initializes
+only that missing feature, while existing columns remain readable in the new version.
+
 Public feature and forward-series builders reuse `cache_execution.execute` to
 start a fresh source-captured interpreter. Physical caller-input snapshots stay
 in task-owned `.tmp/research-data-execution/`; no shared dataset is copied or

@@ -113,6 +113,12 @@ gapped-coverage regression passed again, and normal commit hooks passed.
 [Review evidence v2](review-evidence-v2.json.gz) pins this follow-up separately;
 the earlier evidence packet remains unchanged.
 
+The automatic review of `d416a66` identified silent feature removal when an
+extension requested only a subset of the base columns (MEDIUM). The follow-up
+rejects any removal before calculation/publication, preserving both unchanged
+and appended base versions. Targeted regressions assert zero kernel calls, no
+new catalog/version and unchanged readback of the omitted column.
+
 Primary's HHHL variants `params/input-pins-v1.json` raw bytes did not match its
 retained execution pin during registration; the task checkout's tracked bytes
 did match. Their canonical JSON identities were also verified equal. The catalog
