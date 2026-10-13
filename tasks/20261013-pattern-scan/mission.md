@@ -233,7 +233,9 @@ Q4–Q6使用12原pattern+每pattern前10candidate，最多132組，9個旗標
 
 ## Q4 episode／漏抓、Q5路徑與Q6旗標時間
 
-- Episode只收既有H126 calendar-full known hit起點，同股相鄰起點差≤20鏈式合併；
+- Episode起點先由H126 base hit套用共通result-window品質：calendar-full、已知且無結果窗口jump
+  才收，品質排除起點數與原因另存；不使用任何pattern的detection回看overlay，不改shared base。
+  合格起點同股相鄰差≤20鏈式合併；
   段內起點集合最低close為anchor、平手較早。頂點為anchor後1..126最高close、平手較早；
   頂點窗缺價／不完整為unknown，保留段而不穿越空洞補峰。
 - 各pattern／確認前10candidate在anchor−20..anchor+40是否出現；逐段保存所有匹配，

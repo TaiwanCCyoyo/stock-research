@@ -33,7 +33,8 @@
    事前inventory完整definition/input/code/calendar/basis/policies/parameters/runtime；
    missing/invalid/incompatible理由給新version。先stage→verify→no-replace publish primary shared。
 8. 各stock feature/pivot/pattern可有限平行；同日RS/J/K3等全stock barrier完成後才計算；
-   PAT需所有pattern events，base labels→episodes；獨立cohorts→event_outcomes→development selection→全部confirmation
+   PAT需所有pattern events，base labels→共通result-window品質admission→episodes；
+   獨立cohorts→event_outcomes→development selection→全部confirmation
    candidates→Q4–Q6。重現性依input/source identity與deterministic ordering，不依完成順序。
    每event/horizon套自己的detection/result品質與資格，引用固定base-label version+manifest；
    shared labels不存型態回看理由。各summary只消費自己的effective_label/event_main_eligible，

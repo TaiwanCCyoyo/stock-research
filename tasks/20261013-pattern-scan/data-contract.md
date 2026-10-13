@@ -17,7 +17,8 @@
   definition/input身分，輸出鍵event_id+horizon。LabelReference固定base-label version。
   detection/result品質原因使該event effective_label unknown；eligibility-only原因只排除主分母。
   原base outcome／calendar_full／first-decision missing語意及其他event不變，理由排序去重並保留scope。
-- merge_hit_episodes：caller提供既有label API認定的calendar-full known H126hit起點；
+- merge_hit_episodes：caller提供既有label API認定且共通result-window品質通過的calendar-full
+  known H126hit起點；先排除結果窗口jump，保存admission counts/reasons，不用pattern回看overlay；
   20session鏈合併，anchor只在起點集合挑，不用所有間隔價。輸出known/unknown、
   reason、原始start_indices、anchor/peak；不算label、不read檔。
 - describe_price_path：只描述caller一股aligned closes，unknown不當false，
