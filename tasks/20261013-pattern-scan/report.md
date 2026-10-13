@@ -25,7 +25,7 @@
 新episode機制不改原25%-drawdown sector wave，二者不互相冒充。
 新helper＋原selection API＋CI scope focused regression合計 **135 passed**；
 正常formatter／mypy／pyright／hygiene hooks均通過。
-正常hooks及hostedCI狀態以本PR實際head報告；準備證據後續固定在synthetic packet，
+正常hooks及hostedCI狀態以本PR實際head報告；[合成來源pins與重現收據](synthetic-evidence-v1.json.gz)固定本次已測raw source bytes，
 不能用PR12的4852測試當新程式的current-head完整驗證。
 
 本session沿用worktree research-data-entry，新branch codex/pattern-scan-mission；
@@ -33,3 +33,6 @@
 沒有copy/link formal shared versions、沒有改producer source、下載或排程。
 [execution plan](execution-plan.md)列出mission合併後的detector、成本、封存、正式builder、
 研究與audit順序。owner圖形／補充提案未定前不開始市場計算。
+
+已另外核實4110個raw日期鍵皆存在official來源，沒有nonofficial-only日期。
+原始input pins及synthetic source pins分开，兩者都不宣稱全市場研究完成。
