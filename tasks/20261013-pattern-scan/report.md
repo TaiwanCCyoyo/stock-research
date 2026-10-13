@@ -62,4 +62,5 @@ shared labels移除pattern-specific quality_overlay；base outcome仍以固定�
 正式shared bundle與summary consumer契約同步；尚未建立真實overlay或完成detector接線。
 
 42個新overlay cases通過；包含舊helper／selection／CI scope的focused regression合計
-**196 passed**。新增來源將另存v3證據；v1/v2來源與packet保持byte-identical。
+**196 passed**。[v3來源與合成收據](event-overlay-evidence-v3.json.gz)保存新增source/test、
+shared dependency及原7份source／v1/v2 packet身份；舊bytes保持不變，不重新固定舊證據。
