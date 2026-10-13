@@ -223,8 +223,17 @@ Q4–Q6使用12原pattern+每pattern前10candidate，最多132組，9個旗標
   主時機用窗口內首事件，不挑最漂亮事件。報matched/unmatched/unknown，
   offset、close[t0]/anchor−1、peak/close[t0]−1中位數/Q25/Q75，
   外加peak在訊號前的late flag。Q4同樣分年代與anchor日past_only背景。
-- C-52w同窗口對照；C-base隨機日以固定seed=20261013從同股窗口內合格日
-  抽最多1日，無合格日或未知原因保留，固定抽樣身份。不拿全部C-base都有日子當隨機對照。
+- Q4符合率分母：所有本組H126 episode先保留；若窗口有已確認匹配，matched吸收後來unknown；
+  無匹配且整個anchor−20..anchor+40的pattern/candidate判定皆可知為unmatched，其餘unknown。
+  主率=matched/(matched+unmatched)，另列matched/total..(matched+unknown)/total界。
+  peak unknown不撤銷已觀測pattern匹配；時機／剩餘漲幅各自附known_n/unknown_n，
+  首觀測事件前有detector unknown時，first-timing標不確定而不宣稱真正第一事件。
+- C-52w同窗口對照；C-base隨機基準固定seed=20261013，由全期C-base冷卻後事件池，
+  每pattern/candidate依stock×year抽與其事件數同量的日期、不放回，不限定在episode窗口內，
+  不用outcome挑日。pool不足時抽實際可用數、保留quota/drawn/shortfall並把該stock-year的
+  隨機對照coverage標unknown，不換股票／年度或默默減門檻。pool已冷卻，子集不再引入近距離事件。
+  使用排序stock/year/IDs與獨立seed identity、保存所有抽樣日期／pool pin，可重現。
+  同一seed不得因結果改抽；所有matched/unmatched/unknown率用上式，C-base-all日頻baseline另列。
 - nonhit互斥路徑依序：先−10%才+10%（或永無+10%）直接失敗；
   最高≥+20%先漲後回；最高<+20%且最低>−15%盤整；其餘慢跌。
   所有close均指期限future，不含anchor，缺價全路徑描述unknown。

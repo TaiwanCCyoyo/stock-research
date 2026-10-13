@@ -50,3 +50,7 @@ stock set、raw/valid/label-eligible三種期間、unknown原因及backup狀態�
 大型quote-bearing/逐筆輸出在primary本地、小aggregate進Git，receipt說明取得缺口。
 未知價格／unknown分類／warming／not_applicable不混成0；不將多次事件比例稱股票比例。
 資料／field身分、sources、已暴露期間和synthetic／market證據分開記，report不得越界。
+
+Q4隨機對照保存pattern/candidate、stock/year quota、pool manifest pin、seed、drawn日期及shortfall，
+從全期C-base已冷卻池抽取，不能在episode窗口內抽取。matched/unmatched/unknown分母與界、
+peak/timing各別known_n遵mission；不以缺峰值或未知detector假裝沒有匹配。
