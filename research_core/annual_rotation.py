@@ -59,7 +59,8 @@ def economic_path(
     unknowns: list[str] = []
     for raw_day, row in frame.iterrows():
         day = cast(pd.Timestamp, raw_day)
-        if not bool(row.Quality) and str(day.date()) not in halts:
+        permitted_missing_halt = str(day.date()) in halts and row.quality_reason == "missing_official_quote"
+        if not bool(row.Quality) and not permitted_missing_halt:
             unknowns.append(f"{day.date()}:{row.quality_reason}")
     if unknowns:
         return {"status": "unknown", "reasons": unknowns, "gross_multiplier": None, "net_multiplier": None}
@@ -92,6 +93,9 @@ def economic_path(
                     cash_gross, cash_net = gross_units * dividend, net_units * dividend
                 else:
                     close = float(row.RawClose)
+                    if not np.isfinite(close) or close <= 0:
+                        unknowns.append(f"{day.date()}:missing_dividend_reinvestment_close")
+                        break
                     gross_units *= 1 + dividend / close
                     net_units *= 1 + dividend / (close * (1 + commission))
                 applied.append({"date": str(day.date()), "type": kind, "cash_per_unit_estimate": dividend})
@@ -138,7 +142,7 @@ def economic_path(
 
 def annual_candidates(raw: pd.DataFrame, actions: pd.DataFrame, calendar: pd.DatetimeIndex, *, year: int) -> dict[str, Any]:
     """Calculate one symbol/year from its historical prefix only."""
-    years = np.array([cast(pd.Timestamp, day).year for day in calendar])
+    years = pd.Series(calendar).dt.year.to_numpy()
     year_days = calendar[years == year]
     if not len(year_days):
         raise ValueError("ranking year missing from calendar")
@@ -151,6 +155,9 @@ def annual_candidates(raw: pd.DataFrame, actions: pd.DataFrame, calendar: pd.Dat
     reference = prepare_prices(raw.loc[raw.Date.between(start, end)], selected_actions, window, basis="reference_factor_adjusted", cutoff=end)
     usable = bool(reference.Quality.all())
     factor_return = float(reference.Close.iloc[-1] / reference.Close.iloc[0] - 1) if usable else None
+    if not bool(raw.Date.eq(start).any()):
+        economic["status"] = "ineligible"
+        economic["reasons"] = ["missing_initial_anchor_new_listing_or_coverage_gap"]
     return {
         "year": year,
         "code": str(raw.Code.iloc[0]),
@@ -191,3 +198,18 @@ def first_observed_trade(raw: pd.DataFrame, calendar: pd.DatetimeIndex, *, on_or
             continue
         return cast(pd.Timestamp, row.Date)
     return None
+
+
+def paired_benchmark_path(raw: pd.DataFrame, actions: pd.DataFrame, calendar: pd.DatetimeIndex, strategy: dict[str, Any], **policy: Any) -> dict[str, Any]:
+    """Require exact strategy dates; never find different benchmark endpoints."""
+    if strategy.get("entry_date") is None or strategy.get("exit_date") is None:
+        return {"status": "unknown", "reasons": ["missing_strategy_endpoints"], "gross_multiplier": None, "net_multiplier": None}
+    return economic_path(
+        raw,
+        actions,
+        calendar,
+        start=cast(pd.Timestamp, pd.Timestamp(strategy["entry_date"])),
+        end=cast(pd.Timestamp, pd.Timestamp(strategy["exit_date"])),
+        end_field="Close" if strategy["is_ytd"] else "Open",
+        **policy,
+    )

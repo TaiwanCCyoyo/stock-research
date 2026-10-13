@@ -27,7 +27,7 @@ TASK = Path(__file__).resolve().parent
 sys.path.insert(0, str(REPO))
 
 from research_core.annual_ranking_pool import rank_panel
-from research_core.annual_rotation import economic_path, first_observed_trade, select_leaders
+from research_core.annual_rotation import economic_path, first_observed_trade, paired_benchmark_path, select_leaders
 from research_core.annual_statistics import equity_drawdown, summarize_annual_excess
 from research_core.artifact_store import canonical, file_digest, object_digest, read_json, verify_files, write_json
 from research_core.research_data_builder import publish_bundle
@@ -166,7 +166,9 @@ def source_identity(params_path: Path) -> dict[str, Any]:
 
 
 def measure(params: dict[str, Any], inputs: tuple, output: Path) -> dict[str, Any]:
-    _, prices, actions, types, calendar_days = inputs
+    input_entry, prices, actions, types, calendar_days = inputs
+    kernel_names = ["research_core/annual_rotation.py", "research_core/annual_ranking_pool.py", "research_core/price_basis.py"]
+    kernel_pins = {name: file_digest(REPO / name) for name in kernel_names}
     selected, _ = scope(prices, types)
     codes = sorted(selected.Code.unique())
     sample = [codes[int(index)] for index in np.linspace(0, len(codes) - 1, min(20, len(codes)))]
@@ -174,6 +176,8 @@ def measure(params: dict[str, Any], inputs: tuple, output: Path) -> dict[str, An
     parallel = rank_panel(selected, actions, calendar_days, params["ranking_years"], workers=2, codes=sample)
     if object_digest(serial["rows"]) != object_digest(parallel["rows"]):
         raise ValueError("serial/parallel ranking differs")
+    if {name: file_digest(REPO / name) for name in kernel_names} != kernel_pins:
+        raise ValueError("ranking source changed during measurement")
     s, p = serial["performance"], parallel["performance"]
     chosen = 2 if p["parent_total"]["wall_seconds"] < s["parent_total"]["wall_seconds"] else 1
     result = {
@@ -187,6 +191,9 @@ def measure(params: dict[str, Any], inputs: tuple, output: Path) -> dict[str, An
         "estimate_scope": "linear stock-count extrapolation; year coverage differs; not a deadline",
         "memory_budget_bytes": params["memory_observation_budget_bytes"],
         "model_tokens": None,
+        "kernel_sha256": kernel_pins,
+        "input_version_id": input_entry["version_id"],
+        "parameters_sha256": object_digest(params),
     }
     write_json(output, result)
     return result
@@ -278,10 +285,15 @@ def summary_window(years: list[dict[str, Any]], start_year: int, params: dict[st
 
 def run(params: dict[str, Any], inputs: tuple, measurement: dict[str, Any], output: Path, source: dict[str, Any]) -> dict[str, Any]:
     entry, prices, actions, types, days = inputs
+    if measurement["input_version_id"] != entry["version_id"] or measurement["parameters_sha256"] != object_digest(params):
+        raise ValueError("measurement used different inputs or settings")
+    if any(file_digest(REPO / name) != digest for name, digest in measurement["kernel_sha256"].items()):
+        raise ValueError("measurement used different ranking implementation")
     selected, scope_report = scope(prices, types)
     panel = rank_panel(selected, actions, days, params["ranking_years"], workers=measurement["selected_workers"])
     rows = panel["rows"]
-    groups = {code: frame for code, frame in selected.groupby("Code", sort=True)}
+    held_codes = {leader["code"] for year in params["ranking_years"] for leader in select_leaders([row for row in rows if row["year"] == year], count=5)}
+    groups = {code: selected.loc[selected.Code.eq(code)] for code in sorted(held_codes)}
     action_groups = {code: frame for code, frame in actions.groupby("code", sort=True)}
     empty_actions = actions.iloc[:0]
     braw = prices.loc[prices.Code.eq(params["benchmark"])]
@@ -290,14 +302,17 @@ def run(params: dict[str, Any], inputs: tuple, measurement: dict[str, Any], outp
     annual_scope = []
     for year in params["ranking_years"]:
         candidates = [row for row in rows if row["year"] == year]
-        known = [row for row in candidates if row["ranking_gross_return"] is not None]
+        eligible = [row for row in candidates if row["ranking_status"] != "ineligible"]
+        known = [row for row in eligible if row["ranking_gross_return"] is not None]
         ref = [row for row in candidates if row["reference_factor_return_diagnostic"] is not None]
         reference_leader = max(ref, key=lambda row: (row["reference_factor_return_diagnostic"], -int(row["code"]))) if ref else None
         annual_scope.append({
             "year": year,
-            "observed_candidates": len(candidates),
+            "observed_stock_years": len(candidates),
+            "observed_candidates": len(eligible),
+            "ineligible_anchor_count": len(candidates) - len(eligible),
             "known_rank_candidates": len(known),
-            "unknown_rank_candidates": len(candidates) - len(known),
+            "unknown_rank_candidates": len(eligible) - len(known),
             "unknown_reason_counts": dict(Counter(reason.split(":", 1)[-1] for row in candidates for reason in row["ranking_reasons"])),
             "reference_leader_diagnostic": None
             if reference_leader is None
@@ -313,12 +328,47 @@ def run(params: dict[str, Any], inputs: tuple, measurement: dict[str, Any], outp
                 holding(groups[leader["code"]], action_groups.get(leader["code"], empty_actions), days, year, params, avoid=arm["avoid_one_price"])
                 for leader in leaders
             ]
-            details[f"{arm['id']}/{year}"] = {"leaders": leaders, "legs": legs, "benchmark": bpaths[year]}
+            paired = [
+                paired_benchmark_path(
+                    braw,
+                    bactions,
+                    days,
+                    leg,
+                    commission=params["commission"],
+                    split_ratios=params["exact_benchmark_splits"],
+                    known_halts=set(params["known_benchmark_halts"]),
+                    entry_cost=False,
+                    exit_cost=False,
+                )
+                for leg in legs
+            ]
+            paired_net = [
+                paired_benchmark_path(
+                    braw,
+                    bactions,
+                    days,
+                    leg,
+                    commission=params["commission"],
+                    sell_tax=params["etf_sell_tax"],
+                    slippage=params["slippage"],
+                    split_ratios=params["exact_benchmark_splits"],
+                    known_halts=set(params["known_benchmark_halts"]),
+                )
+                for leg in legs
+            ]
+            details[f"{arm['id']}/{year}"] = {
+                "leaders": leaders,
+                "legs": legs,
+                "benchmark": bpaths[year],
+                "paired_benchmarks": paired,
+                "paired_benchmark_roundtrip": paired_net,
+            }
             good = len(legs) == arm["count"] and all(leg["gross_multiplier"] is not None for leg in legs)
             bpath = bpaths[year]
             on_schedule = good and all(
-                leg["entry_date"] == leg["scheduled_entry"] and (leg["is_ytd"] or leg["exit_date"] == bpath["exit_date"]) for leg in legs
+                leg["entry_date"] == leg["scheduled_entry"] == bpath["entry_date"] and (leg["is_ytd"] or leg["exit_date"] == bpath["exit_date"]) for leg in legs
             )
+            paired_known = len(paired) == arm["count"] and all(item["gross_multiplier"] is not None for item in paired)
             row = {
                 "year": year,
                 "is_ytd": year > params["complete_through_year"],
@@ -328,28 +378,13 @@ def run(params: dict[str, Any], inputs: tuple, measurement: dict[str, Any], outp
                 "exit_dates": [leg["exit_date"] for leg in legs],
                 "gross_multiplier": float(np.mean([leg["gross_multiplier"] for leg in legs])) if good else None,
                 "net_multiplier": float(np.mean([leg["net_multiplier"] for leg in legs])) if good else None,
-                "benchmark_gross": bpath["gross_multiplier"],
-                "benchmark_net_roundtrip": bpath["net_multiplier"],
-                "benchmark_dividend_net_no_boundary_costs": None,
+                "benchmark_gross": float(np.mean([item["gross_multiplier"] for item in paired])) if paired_known else None,
+                "benchmark_net_roundtrip": float(np.mean([item["net_multiplier"] for item in paired_net])) if paired_known else None,
+                "benchmark_dividend_net_no_boundary_costs": float(np.mean([item["net_multiplier"] for item in paired])) if paired_known else None,
                 "on_schedule": on_schedule,
                 "reasons": [reason for leg in legs for reason in leg["reasons"]],
                 "combined_net_marks": [],
             }
-            if bpath["gross_multiplier"] is not None:
-                bmodel = economic_path(
-                    braw,
-                    bactions,
-                    days,
-                    start=cast(pd.Timestamp, pd.Timestamp(bpath["entry_date"])),
-                    end=cast(pd.Timestamp, pd.Timestamp(bpath["exit_date"])),
-                    end_field="Close" if row["is_ytd"] else "Open",
-                    commission=params["commission"],
-                    split_ratios=params["exact_benchmark_splits"],
-                    known_halts=set(params["known_benchmark_halts"]),
-                    entry_cost=False,
-                    exit_cost=False,
-                )
-                row["benchmark_dividend_net_no_boundary_costs"] = bmodel["net_multiplier"]
             if good and on_schedule:
                 date_sets = [{mark["date"] for mark in leg["marks"]} for leg in legs]
                 if all(dates == date_sets[0] for dates in date_sets):
@@ -358,6 +393,28 @@ def run(params: dict[str, Any], inputs: tuple, measurement: dict[str, Any], outp
                     row["on_schedule"] = False
             annual.append(row)
         arm_results[arm["id"]] = {"years": annual, "windows": [summary_window(annual, year, params) for year in (2011, 2012, 2013)]}
+    continuous_benchmarks = []
+    for start_year in (2011, 2012, 2013):
+        begin, finish = bpaths[start_year]["entry_date"], bpaths[params["complete_through_year"]]["exit_date"]
+        model = paired_benchmark_path(
+            braw,
+            bactions,
+            days,
+            {"entry_date": begin, "exit_date": finish, "is_ytd": False},
+            commission=params["commission"],
+            sell_tax=params["etf_sell_tax"],
+            slippage=params["slippage"],
+            split_ratios=params["exact_benchmark_splits"],
+            known_halts=set(params["known_benchmark_halts"]),
+        )
+        details[f"continuous-benchmark/{start_year}"] = model
+        continuous_benchmarks.append({
+            "start_year": start_year,
+            "entry_date": begin,
+            "exit_date": finish,
+            **{key: model[key] for key in ("status", "reasons", "gross_multiplier", "net_multiplier")},
+            "daily_marked_max_drawdown": equity_drawdown([1.0] + [mark["net"] for mark in model["marks"]]) if model["net_multiplier"] is not None else None,
+        })
     public = {
         "schema": "annual-rotation-results.v1",
         "verdict": "insufficient_evidence_for_unbiased_full_market_significant_outperformance",
@@ -366,6 +423,7 @@ def run(params: dict[str, Any], inputs: tuple, measurement: dict[str, Any], outp
         "scope": scope_report,
         "annual_scope": annual_scope,
         "arms": arm_results,
+        "continuous_benchmarks": continuous_benchmarks,
         "measurement": {key: measurement[key] for key in ("sample_codes", "selected_workers", "estimate_full_wall_seconds", "memory_budget_bytes")},
         "execution": {key: value for key, value in panel["performance"].items() if key != "worker_receipts"},
     }
@@ -411,7 +469,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("mode", choices=["prepare", "measure", "run", "verify"])
     parser.add_argument("--input-pin", type=Path, default=TASK / "params/input-pin-v1.json")
-    parser.add_argument("--measurement", type=Path, default=TASK / "params/measurement-v1.json")
+    parser.add_argument("--measurement", type=Path, default=TASK / "params/measurement-v2.json")
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO)

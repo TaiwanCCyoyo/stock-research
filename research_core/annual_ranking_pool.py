@@ -89,12 +89,12 @@ def rank_panel(
         raise ValueError("actions must have valid stock codes and ex-dates")
     normalized_actions["code"] = normalized_actions["code"].astype(str)
     normalized_actions["ex_date"] = pd.to_datetime(normalized_actions["ex_date"])
-    prices_by_code = {str(code): frame.reset_index(drop=True) for code, frame in normalized_prices.groupby("Code", sort=True)}
+    price_indices = {str(code): indices for code, indices in normalized_prices.groupby("Code", sort=True).indices.items()}
     actions_by_code: dict[str, pd.DataFrame] = {
         str(code): frame.drop(columns=["_code"]).reset_index(drop=True)
         for code, frame in normalized_actions.assign(_code=normalized_actions["code"]).groupby("_code", sort=True)
     }
-    available_codes = sorted(prices_by_code)
+    available_codes = sorted(price_indices)
     if codes is None:
         selected_codes = available_codes
     else:
@@ -102,36 +102,37 @@ def rank_panel(
             raise ValueError("codes must contain nonempty stock-code strings")
         selected_set = set(codes)
         selected_codes = [code for code in available_codes if code in selected_set]
-    stock_inputs = [
-        (
+
+    def stock_input(code: str) -> tuple:
+        # Materialize only admitted frames, not another complete market copy.
+        return (
             code,
-            prices_by_code[code],
+            normalized_prices.iloc[price_indices[code]].reset_index(drop=True),
             actions_by_code[code] if code in actions_by_code else normalized_actions.iloc[0:0].copy(),
             calendar,
             ordered_years,
         )
-        for code in selected_codes
-    ]
+
     grouping_receipt = phase_receipt("group_stock_inputs", grouping_before, resource_sample())
-    LOGGER.debug("Annual ranking inputs grouped: stocks=%d years=%d workers=%d", len(stock_inputs), len(ordered_years), workers)
+    LOGGER.info("Annual ranking inputs grouped: stocks=%d years=%d workers=%d", len(selected_codes), len(ordered_years), workers)
 
     processing_before = resource_sample()
     stock_results: list[dict[str, Any]] = []
     peak_inflight = 0
     if workers == 1:
-        for stock_input in stock_inputs:
-            stock_results.append(_rank_stock(*stock_input))
+        for code in selected_codes:
+            stock_results.append(_rank_stock(*stock_input(code)))
             peak_inflight = max(peak_inflight, 1)
-    elif stock_inputs:
+    elif selected_codes:
         executor = ProcessPoolExecutor(max_workers=workers)
         pending: dict[Future[dict[str, Any]], str] = {}
         next_index = 0
         try:
-            while next_index < len(stock_inputs) or pending:
-                while next_index < len(stock_inputs) and len(pending) < workers:
-                    stock_input = stock_inputs[next_index]
-                    future = executor.submit(_rank_stock, *stock_input)
-                    pending[future] = stock_input[0]
+            while next_index < len(selected_codes) or pending:
+                while next_index < len(selected_codes) and len(pending) < workers:
+                    code = selected_codes[next_index]
+                    future = executor.submit(_rank_stock, *stock_input(code))
+                    pending[future] = code
                     next_index += 1
                     peak_inflight = max(peak_inflight, len(pending))
                 completed, _ = wait(pending, return_when=FIRST_COMPLETED)
@@ -151,7 +152,7 @@ def rank_panel(
     performance = {
         "schema": "annual-ranking-pool.v1",
         "workers_requested": workers,
-        "stock_count": int(len(stock_inputs)),
+        "stock_count": int(len(selected_codes)),
         "year_count": int(len(ordered_years)),
         "row_count": int(len(rows)),
         "ranking_status_counts": status_counts_int,

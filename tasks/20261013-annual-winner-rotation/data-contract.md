@@ -62,6 +62,8 @@ under serial and two-worker execution. These commands do not download data.
 
 All JSON wealth/return quantities are fractions or unit multipliers, never
 percent-valued legacy engine metrics. `gross_multiplier=1.1` means +10%.
+New listings without the initial anchor are retained with `ranking_status=ineligible`,
+excluded from the candidate denominator and separately counted in the audit.
 Unknown is null plus reasons. Wealth starts at 1; NT$2,000,000 equivalents multiply
 by 2,000,000 and do not certify lot-size feasibility.
 

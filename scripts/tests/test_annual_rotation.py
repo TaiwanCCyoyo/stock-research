@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from research_core.annual_rotation import annual_candidates, economic_path, first_observed_trade, select_leaders
+from research_core.annual_rotation import annual_candidates, economic_path, first_observed_trade, paired_benchmark_path, select_leaders
 
 
 def fixture() -> tuple[Any, pd.DataFrame, pd.DataFrame]:
@@ -111,3 +111,36 @@ def test_continuous_benchmark_does_not_charge_annual_entry_and_exit():
     dates, raw, events = fixture()
     result = economic_path(raw, events, dates, start=dates[1], end=dates[-1], commission=0.01, entry_cost=False, exit_cost=False)
     assert result["net_multiplier"] == pytest.approx(1 + 10 / (90 * 1.01))
+
+
+def test_dividend_on_known_halt_is_unknown_without_a_reinvestment_quote():
+    dates, raw, events = fixture()
+    raw = raw.drop(index=2)
+    result = economic_path(raw, events, dates, start=dates[1], end=dates[-1], known_halts={"2021-12-30"})
+    assert result["status"] == "unknown"
+    assert result["gross_multiplier"] is None
+    assert "missing_dividend_reinvestment_close" in result["reasons"][0]
+
+
+def test_paired_benchmark_never_delays_to_its_own_first_quote():
+    dates, raw, events = fixture()
+    raw = raw.drop(index=1)
+    result = paired_benchmark_path(raw, events, dates, {"entry_date": "2021-01-04", "exit_date": "2022-01-03", "is_ytd": False})
+    assert result["gross_multiplier"] is None
+    assert result["status"] == "unknown"
+
+
+def test_new_listing_is_retained_as_ineligible_not_an_unknown_candidate():
+    dates, raw, events = fixture()
+    result = annual_candidates(raw.loc[raw.Date >= dates[1]], events, dates, year=2021)
+    assert result["ranking_status"] == "ineligible"
+    assert result["ranking_gross_return"] is None
+    assert select_leaders([result]) == []
+
+
+def test_known_halt_cannot_excuse_an_observed_corrupt_quote():
+    dates, raw, events = fixture()
+    raw.loc[2, "Low"] = 1000.0
+    result = economic_path(raw, events, dates, start=dates[1], end=dates[-1], known_halts={"2021-12-30"})
+    assert result["gross_multiplier"] is None
+    assert "invalid_ohlc" in result["reasons"][0]
