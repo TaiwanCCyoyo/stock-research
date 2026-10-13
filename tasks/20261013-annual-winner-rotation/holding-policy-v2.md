@@ -5,7 +5,7 @@ approved commit is its identity. This document defines rules. It computes no ret
 no held-path price field and changes no sealed result, input pin, parameter file or source.
 `mission.md` and `params/study-v1.json` stay as registered; v1 results stay valid and readable.
 
-**Implementation status (decision 2026-10-14): not started.** It cannot start until the supplement is
+**Optional follow-up: this does not block closing PR15** (owner direction, PR discussion). **Implementation status (decision 2026-10-14): not started.** It cannot start until the supplement is
 published as an immutable input (gate G0), and the owner's question about the original claim does not
 depend on it (see `report.md`). Revised after the independent PR review: a required event price (R7)
 and rights as two sensitivity scenarios (R5), not bounds.

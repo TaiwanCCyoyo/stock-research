@@ -177,6 +177,20 @@ differs from original` (run once on v3: nothing in `delivery-v3/` or `params/` w
 
 Standard: [artifact integrity and verification](../../docs/en/artifact-integrity.md).
 
+## Minimal exact plan for the scanner and pin blocker
+
+Nothing here changes the scanner, its baseline or any hook, and no further `delivery-vN` is issued.
+
+- **Adopted (zero scanner records):** tracked prose identifies data versions by an 8-character prefix
+  (see the one-page summary in `report.md`). Full identities stay in the local `research_data` catalog
+  and in the untracked `params/input-pin-v1.json` and `sweep_results.json`.
+- **Optional, needs an owner security decision (not done):** track exactly those two files, the ones
+  `research_result.json` and `run_study.py verify` point to. The last scan counted 4 records for the input
+  pin and 26 for the reviewed sweep, so 30 records (about 9.7 KB of baseline at the current average of
+  324 B per record, against about 64 KB of headroom). The other 110 of the 140 records come from the
+  measurement and original-result files (26, nothing needs them tracked) and from the receipt and
+  locator (84, which exist only for the retired delivery flow).
+
 ## Remaining delivery approvals and data blockers
 
 Automatic approval review rejected running `.tmp/audit_annual_checksums.py` to
