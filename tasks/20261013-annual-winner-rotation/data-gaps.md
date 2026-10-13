@@ -53,6 +53,21 @@ fetched_at`。raw range 表另保留 source/range/status/row_count/raw_path/sha2
 8 個可計年度也有共同的 PIT 上市／上櫃普通股資格、歷史類型、下市 census、
 source publication timing、估值現金息與分數股／成交性缺口；「可計」不是無偏。
 
+## 補資料查證現況（暫存、尚未發布）
+
+- 原補資料 session 把 4 個權利事件的官方條件與 25 個報價日期的官方回應，保存在
+  `stock-data-downloader/.tmp/annual-winner-supplement-20261013/`。那是暫存目錄，
+  不在 Git，也不是 canonical 資料。本次審查用其 `capture-receipt.json` 核對：78 個
+  證據檔的位元組數與 SHA-256 全數相符（共 24,240,078 bytes），凍結輸入的
+  `corporate_actions.sqlite` 也與本研究 pin 一致。這只證明「擷取檔完整」，不證明內容
+  已可用於計算。
+- 狀態：4 個事件已找到官方條件；25 個報價缺口的原因仍待釐清（官方回應只證明該回應
+  不含該代碼）。尚未寫入正式資料庫，也未用補充資料重算；由原補資料 session 繼續查證。
+- 這 7 個持有年度是「目前無法完整計算」（配股／認股處理加報價缺口），不是整年行情都缺。
+- 本 PR 的結論不使用這些暫存證據。要使用，須先成為新的版本化輸入（producer 另行交付、
+  契約與寫入條件經 owner 核准，見其 `evidence-ledger.md` 末節），再依預先登記的事件與
+  缺報價處理定義重算；舊結果保留。
+
 ## 工作量與官方來源
 
 補 7 持有窗只針對 7 個股票年、4 個已知權利事件與 25 個報價日期。補全年度排名

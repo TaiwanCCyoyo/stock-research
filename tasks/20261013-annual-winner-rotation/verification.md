@@ -130,6 +130,53 @@ recorded read-only at `.tmp/formatted-delivery-scanner-findings.json`. Those
 files remain unstaged pending exact owner-approved security scope. New delivery
 formatting authorization did not grant baseline exceptions or hook bypass.
 
+## Verification-flow optimization
+
+Cause found by measurement, not assumption (single machine, warm cache, no downloads or
+market recomputation). `run_study.py verify` took 180.78 s wall (166.84 s CPU). One
+`verified_result` is 0.64-0.89 s of which SHA-256 is about 0.2 s. The remainder was
+`DataRoots.from_env(worktree=...)` -> `validate_worktree`, which re-checked every ancestor
+of each of 28,472 worktree entries (84% under `.venv`), and the runner calls `catalog()`
+once per phase, so `run` paid it up to three times. `scripts.verify_published_artifacts`
+was never the slow part: 22 s for its 16 checks (21 s after the change).
+
+| Change                                                                                    | Result                                                                                                      |
+| ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `_check_tree`: one `lstat` per entry, same `_reject_alias` predicate                      | worktree walk 1.4-1.8 s (was about 180 s); `run_study.py verify` 1.90-2.03 s over three runs (was 180.78 s) |
+| `DataCatalog.get_verified`; `verified_result` no longer verifies the process bundle twice | each bundle member is hashed once per call (test); a saving of milliseconds, kept for clarity               |
+
+Equivalence is tested, not argued: a differential test runs the old per-entry check and
+the new walk over clean, nested-hardlink, top-level-hardlink and Windows-junction trees
+and requires identical accept/reject; a cost test requires exactly one `lstat` per entry.
+The symlink cases of that test are skipped on this unprivileged Windows account (and
+therefore in Windows CI); they share `_reject_alias` with the old check. Two traps found
+on the way and covered: `os.scandir` entries report `st_nlink=0` on Windows (so the
+hardlink check still needs an `lstat` per file), and Python 3.11 `os.walk` descends into
+junctions (so the walk must stop at a reparse point before entering it).
+
+Unchanged on purpose: every sealed hash, bundle, pin and delivery version; manifest
+double-hash; scanner and baseline; the researched results. Known consequences:
+
+- `finalize_delivery.py` records live digests of `annual_publication.py`,
+  `research_data_catalog.py` and `research_data_paths.py`. Those are the three files
+  changed here, so re-running it on v1-v3 fails with `ValueError: delivery JSON content
+differs from original` (run once on v3: nothing in `delivery-v3/` or `params/` was
+  created or changed). The message comes from the receipt comparison, where the recorded
+  implementation digests differ; it does not mean delivered data changed. The bundles
+  still verify.
+- `research_data_incremental.implementation_identity()` hashes every loaded
+  `research_core`, `StockProject` and `scripts` module, and `:195` rebuilds instead of
+  extending whenever it differs. Any edit to a loaded file (this PR's, or a formatting
+  change) makes the next incremental publication a full rebuild. Checked other source-hash
+  identities: `derived_cache` (price-bases) and the feature pool v1/v2 lists do not include the
+  three changed files, and no incremental bundle exists in `research_data` or `research_cache`
+  today, so no stored version loses reuse. Narrowing that identity to the calculation's real
+  dependencies is a separate, measured change; it is not made here.
+- The walk is a point-in-time check, as before; it no longer re-checks ancestors that
+  were already checked earlier in the same walk.
+
+Standard: [artifact integrity and verification](../../docs/en/artifact-integrity.md).
+
 ## Remaining delivery approvals and data blockers
 
 Automatic approval review rejected running `.tmp/audit_annual_checksums.py` to

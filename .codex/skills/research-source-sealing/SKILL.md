@@ -5,6 +5,10 @@ description: Prepare source code for an already authorized stock-research study 
 
 # Research Source Sealing
 
+The repository-wide rules for hashes, pins and verification cost are in
+[the artifact integrity standard](../../../docs/en/artifact-integrity.md); this skill
+covers sealing source code before a run.
+
 Format before fixing the executed source identity. A receipt must describe the
 actual bytes used by the run, including line endings and imported project code.
 

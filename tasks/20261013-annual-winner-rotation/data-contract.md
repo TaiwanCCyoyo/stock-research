@@ -100,6 +100,18 @@ bundle or its manifest SHA. Completed bundle reuse does not format or rewrite
 members or locators. Existing versions preserve their creator's source identity;
 later finalizer code changes require a new version to recreate a delivery.
 
+**Status: no further `delivery-vN` versions are issued.** `delivery-v1` to `v3`, their
+pins and `finalize_delivery.py` stay exactly as sealed and keep verifying through the
+catalog. Git-facing public JSON is validated by `verified_result`, which compares it
+semantically with the sealed result, so a formatted copy needs no separate byte-hashed
+bundle (see [artifact integrity standard](../../docs/en/artifact-integrity.md)).
+One consequence is deliberate: the finalizer records the live digests of
+`annual_publication.py`, `research_data_catalog.py` and `research_data_paths.py`, and the
+verification-flow change edits exactly those three, so re-running the finalizer on v1 to
+v3 now fails with `ValueError: delivery JSON content differs from original`. That message
+comes from the receipt comparison (the recorded implementation digests differ); it does not
+mean any delivered data changed, and the failing path writes nothing.
+
 ## Process artifacts
 
 | Artifact in the process bundle       | Content                                                                                                                                                                                                                                                                                                                                                  |
