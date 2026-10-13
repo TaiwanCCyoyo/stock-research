@@ -32,7 +32,7 @@ Codex keeps planning and implementation authority in the main agent. Read-only a
 | Bounded implementation        | `gpt-6.1-sol` / medium | Routine, explicitly scoped implementation through `task_worker`                |
 | High-volume mechanical work   | `gpt-6-luna` / medium  | Signal mining and commits                                                      |
 | Translation                   | `gpt-6-luna` / low     | One explicit non-canonical document                                            |
-| Registered research execution | `gpt-5.6-luna` / max   | Fixed commands, deterministic gates and metric extraction through `researcher` |
+| Registered research execution | `gpt-6-luna` / max     | Fixed commands, deterministic gates and metric extraction through `researcher` |
 
 Use `explorer` for ordinary code location and `signal_miner` when substantial output isolation saves context. Run short checks locally; avoid same-tier handoffs without a concrete benefit. `task_worker` lets a higher-tier main agent downshift bounded implementation to Sol, while Luna handles mechanical work. Keep ambiguous, architectural, and security-sensitive judgment with the main agent; pull requests also receive hosted Codex review.
 

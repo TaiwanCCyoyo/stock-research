@@ -1,6 +1,6 @@
 name = "researcher"
 description = "Luna/max bounded stock researcher for pre-registered backtest iterations in an isolated worktree; makes only parent-authorized small changes, runs gates and analyzers, and never changes the research direction or acceptance rules."
-model = "gpt-5.6-luna"
+model = "gpt-6-luna"
 model_reasoning_effort = "max"
 sandbox_mode = "workspace-write"
 nickname_candidates = ["Researcher", "Quant", "Experimenter"]

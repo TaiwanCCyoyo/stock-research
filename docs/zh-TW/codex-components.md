@@ -32,7 +32,7 @@ Codex 將 planning 與 implementation 權責保留在 main agent。Read-only age
 | 有界實作       | `gpt-6.1-sol` / medium | 由 `task_worker` 執行明確限定範圍的一般實作                    |
 | 高流量機械工作 | `gpt-6-luna` / medium  | Signal mining 與 commit                                        |
 | 翻譯           | `gpt-6-luna` / low     | 單一明確的非 canonical 文件                                    |
-| 已登記研究執行 | `gpt-5.6-luna` / max   | 透過 `researcher` 執行固定命令、deterministic gates 與指標擷取 |
+| 已登記研究執行 | `gpt-6-luna` / max     | 透過 `researcher` 執行固定命令、deterministic gates 與指標擷取 |
 
 一般程式碼定位使用 `explorer`；需要隔離大量輸出、能節省 context 時使用 `signal_miner`。短檢查直接在本地執行；沒有具體收益時避免同層級 handoff。`task_worker` 讓高階 main agent 將有界實作降級給 Sol，而 Luna 處理機械式工作。模糊、架構與 security-sensitive 的判斷應留給 main agent；pull request 也會經過 hosted Codex review。
 
