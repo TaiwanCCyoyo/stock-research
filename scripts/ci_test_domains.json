@@ -58,7 +58,8 @@
                 "scripts/tests/test_research_data_legacy.py",
                 "scripts/tests/test_research_data_paths.py",
                 "scripts/tests/test_research_data_windows_deletion.py"
-            ]
+            ],
+            "consumers": ["annual"]
         },
         "owner_hhhl_labels": {
             "paths": [
@@ -272,6 +273,24 @@
                 "tests/test_dashboard_task_index.py"
             ]
         },
+        "annual": {
+            "paths": [
+                "research_core/annual_rotation.py",
+                "research_core/annual_statistics.py",
+                "research_core/annual_ranking_pool.py",
+                "research_core/annual_publication.py",
+                "research_core/price_basis.py",
+                "tasks/20261013-annual-winner-rotation/run_study.py",
+                "tasks/20261013-annual-winner-rotation/finalize_delivery.py"
+            ],
+            "tests": [
+                "scripts/tests/test_annual_rotation.py",
+                "scripts/tests/test_annual_statistics.py",
+                "scripts/tests/test_annual_ranking_pool.py",
+                "scripts/tests/test_annual_rotation_cli.py",
+                "scripts/tests/test_annual_publication.py"
+            ]
+        },
         "feature_blocks": {
             "paths": [
                 "research_core/derived_features_selective_v1.py",
@@ -304,6 +323,11 @@
         ".codex/hooks/tests/test_post_tool_use_hygiene.py",
         "scripts/tests/test_added_file_size_limits.py",
         "scripts/tests/test_agent_instruction_contract.py",
+        "scripts/tests/test_annual_publication.py",
+        "scripts/tests/test_annual_ranking_pool.py",
+        "scripts/tests/test_annual_rotation.py",
+        "scripts/tests/test_annual_rotation_cli.py",
+        "scripts/tests/test_annual_statistics.py",
         "scripts/tests/test_artifact_backup.py",
         "scripts/tests/test_artifact_store.py",
         "scripts/tests/test_audit_opportunity_publication.py",

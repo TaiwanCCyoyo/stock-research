@@ -1,0 +1,42 @@
+{
+    "definition_version": "annual-rotation.v1",
+    "ranking_years": [
+        2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021,
+        2022, 2023, 2024, 2025
+    ],
+    "trade_years": [
+        2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022,
+        2023, 2024, 2025, 2026
+    ],
+    "complete_through_year": 2025,
+    "arms": [
+        { "id": "known-leader", "count": 1, "avoid_one_price": false },
+        { "id": "top5", "count": 5, "avoid_one_price": false },
+        { "id": "one-price-avoidance", "count": 1, "avoid_one_price": true }
+    ],
+    "commission": 0.001425,
+    "stock_sell_tax": 0.003,
+    "etf_sell_tax": 0.001,
+    "slippage": 0.001,
+    "benchmark": "0050",
+    "exact_benchmark_splits": { "2025-06-18": 4.0 },
+    "known_benchmark_halts": [
+        "2025-06-11",
+        "2025-06-12",
+        "2025-06-13",
+        "2025-06-16",
+        "2025-06-17"
+    ],
+    "seed": 20261013,
+    "bootstrap_resamples": 20000,
+    "worker_limit": 2,
+    "memory_observation_budget_bytes": 2000000000,
+    "sources": {
+        "stock_tax": "https://www.etax.nat.gov.tw/etwmain/tax-info/understanding/tax-q-and-a/national/securities-transaction-tax/filing/mM8n39b",
+        "etf_tax": "https://www.etax.nat.gov.tw/etwmain/tax-info/understanding/tax-q-and-a/national/securities-transaction-tax/filing/KJZD0QV",
+        "brokerage": "https://law.fsc.gov.tw/LawContent.aspx?id=FE065637",
+        "2015_limit_change": "https://www.twse.com.tw/staticFiles/marketAnnounce/setAnnounce/1040005841.htm",
+        "odd_lot": "https://accessibility.twse.com.tw/zh/products/system/intraday-odd-trading.html",
+        "exact_0050_split": "https://www.twse.com.tw/zh/ETFortune/announcement?company=A00005&date=20250617&fund=0050&seq=1&type=all"
+    }
+}

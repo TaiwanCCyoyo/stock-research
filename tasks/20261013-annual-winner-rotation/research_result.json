@@ -1,0 +1,69 @@
+{
+    "schema_version": "research-result.v1",
+    "study_id": "20261013-annual-winner-rotation",
+    "candidate_id": "annual-rotation.v1-known-leader",
+    "run_id": "annual-rotation-reviewed-held-paths-v2",
+    "phase": "exploration",
+    "outcome": "incomplete",
+    "identities": {
+        "owner_contract": "mission.md",
+        "metric_contract": "data-contract.md",
+        "execution_contract": "annual-rotation.v1",
+        "data_snapshot": "params/input-pin-v1.json#/version_id (local-only, not delivered in Git)",
+        "code": "sweep_results.json#/source/files (local-only, not delivered in Git)",
+        "runtime": "sweep_results.json#/source/runtime (local-only, not delivered in Git)"
+    },
+    "window": {
+        "start": "2011-01-03",
+        "end": "2026-10-12"
+    },
+    "metrics": {
+        "complete_known_holding_years": {
+            "value": 8,
+            "unit": "count"
+        },
+        "expected_complete_years": {
+            "value": 15,
+            "unit": "count"
+        },
+        "wins_in_known_conditional_years": {
+            "value": 2,
+            "unit": "count"
+        },
+        "net_terminal_multiple": {
+            "value": null,
+            "unit": "ratio",
+            "unavailable_reason": "Seven unresolved years and incomplete PIT/economic ranking prevent a complete strategy path."
+        },
+        "daily_max_drawdown": {
+            "value": null,
+            "unit": "fraction",
+            "unavailable_reason": "Complete strategy path unavailable."
+        },
+        "significance_p_value": {
+            "value": null,
+            "unit": "fraction",
+            "unavailable_reason": "No complete paired annual window; no cherry-picked subset inference."
+        }
+    },
+    "artifacts": [
+        "mission.md",
+        "data-contract.md",
+        "report.md",
+        "verification.md",
+        "params/study-v1.json",
+        "params/input-pin-v1.json (local-only, not delivered in Git)",
+        "params/measurement-v2.json (local-only, not delivered in Git)",
+        "sweep_results.json (local-only, not delivered in Git)"
+    ],
+    "limitations": [
+        "Covered historical quotes are not a complete PIT common-stock/delisting census.",
+        "Current security type and source vintage assumptions do not certify historic eligibility or availability.",
+        "Cash dividends use estimates and immediate ex-date fractional reinvestment; rights and reductions unresolved.",
+        "Observed opens/volume do not guarantee historical limit-up/down or odd-lot fills.",
+        "2010 initial anchor lacks 2009; 2026 is separate YTD through 2026-10-12.",
+        "Original image local Library verification failed; Taiwan results do not verify the US screenshot claim.",
+        "Not reproducible from a clean checkout: input-pin-v1.json, measurement-v2.json and sweep_results.json are local-only, and the shared input and process versions live in the local research_data catalog. Short version prefixes in prose are for human lookup only, not a pin or an integrity guarantee."
+    ],
+    "supersedes": []
+}

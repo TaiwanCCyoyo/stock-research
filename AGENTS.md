@@ -76,6 +76,7 @@ These rules govern requested local reviews and hosted pull request reviews. See 
 
 - Verify what you changed and show the output as evidence; state plainly when verification was skipped or insufficient and what risk remains.
 - Focus local verification on changed behavior. Use normal commit hooks and hosted PR checks without a separate manual pass; investigate their failures when reported.
+- Follow `docs/en/artifact-integrity.md` for hashes, pins and verification cost: format before hashing, hash snapshots rather than live files, verify each bundle once per process, and record phase timings before adding a verification pass.
 - Match coverage to the risk of the change rather than a fixed repository-wide target; do not add tests that only freeze prose, model names, or configuration values.
 - A changed hook or script needs one functional regression test, because these fail silently.
 - The test suite does not read the real published artifacts. After a change that rewrites stored evidence or the code that reads it, run `uv run python -m scripts.verify_published_artifacts` and compare it with the run before the change.
