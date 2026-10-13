@@ -259,3 +259,100 @@ def test_forward_basis_factor_change_rebuilds_and_same_request_reuses(catalog: D
     )
     assert second["extension_receipt"]["mode"] == "full_rebuild"
     assert second["version_id"] != first["version_id"]
+
+
+@pytest.mark.parametrize("dtype", ["Float64", "Int64"])
+def test_public_nullable_ohlc_identity_and_gap_reset_survive_extension(catalog: DataCatalog, dtype: str):
+    dates = pd.DatetimeIndex(pd.bdate_range("2010-01-04", periods=40).values, name="Date")
+    prepared = pd.DataFrame({"Open": 100, "High": 101, "Low": 99, "Close": 100, "Quality": True}, index=dates)
+    prepared = prepared.astype({**{column: dtype for column in kernel.v1.OHLC}, "Quality": "boolean"})
+    prepared.loc[dates[17], list(kernel.v1.OHLC)] = pd.NA
+    prepared.loc[dates[28], "Quality"] = pd.NA
+    original = prepared.copy(deep=True)
+    features = ["SMA5", "EMA10", "ATR14"]
+
+    def public_build(data: pd.DataFrame, base: dict | None = None) -> dict:
+        return incremental.build_incremental_features(
+            catalog, {"INVENTED": data}, features, factor_ids={"INVENTED": "factor-v1"}, price_basis="synthetic", base=base, calculation_authorized=True
+        )
+
+    first = public_build(prepared.iloc[:21])
+    second = public_build(prepared, first)
+    assert second["extension_receipt"]["initialized_feature_rows"] == 0
+    assert public_build(prepared, second)["version_id"] == second["version_id"]
+    for name in features:
+        daily, pivots = incremental.load_incremental_feature(catalog, second, "INVENTED", name)
+        expected_daily, expected_pivots, _ = kernel.compute_selected_full(prepared, [name])
+        pd.testing.assert_frame_equal(daily, expected_daily, check_exact=True)
+        pd.testing.assert_frame_equal(pivots, expected_pivots, check_exact=True)
+        assert pd.isna(daily.loc[dates[17], name])
+        assert pd.isna(daily.loc[dates[28], name])
+    pd.testing.assert_frame_equal(prepared, original)
+    identity = incremental._input_identity(prepared)
+    zero_filled = prepared.copy(deep=True)
+    zero_filled.loc[:, list(kernel.v1.OHLC)] = prepared.loc[:, list(kernel.v1.OHLC)].fillna(0)
+    assert identity != incremental._input_identity(zero_filled)
+    regular = prepared.astype({column: "float64" for column in kernel.v1.OHLC})
+    assert identity != incremental._input_identity(regular)
+
+
+@pytest.mark.parametrize("missing", [False, True])
+def test_forward_coverage_distinguishes_full_calendar_from_known_labels(catalog: DataCatalog, missing: bool):
+    dates = pd.DatetimeIndex(pd.bdate_range("2010-01-04", periods=127).values, name="Date")
+    closes = np.full(127, np.nan if missing else 100.0)
+    entry = incremental.publish_forward_series(
+        catalog, "INVENTED", dates, closes, price_basis="synthetic", factor_id="factor-v1", horizon=126, calculation_authorized=True
+    )
+    actual = incremental.load_forward_series(catalog, entry)
+    expected = outcomes_for_closes(closes, 126).set_axis(dates)
+    pd.testing.assert_frame_equal(actual, expected, check_exact=True)
+    complete = entry["coverage"]["complete_label_period"]
+    if missing:
+        assert complete["start"] is None and complete["end"] is None and complete["reason"]
+    else:
+        assert complete == {"start": "2010-01-04", "end": "2010-01-04", "reason": None}
+    labels = entry["coverage"]["label_coverage"]
+    assert labels["calendar_full_rows"] == 1
+    assert labels["calendar_full_period"] == {"start": "2010-01-04", "end": "2010-01-04", "reason": None}
+    assert labels["main_eligible_rows"] == (0 if missing else 1)
+    assert labels["unknown_rows"] == (127 if missing else 126)
+    assert labels["eligible_label_periods"] == ([] if missing else [complete])
+
+
+def test_gapped_label_coverage_lists_eligible_islands_after_tail_update(catalog: DataCatalog):
+    dates = pd.DatetimeIndex(pd.bdate_range("2010-01-04", periods=35).values, name="Date")
+    closes = np.full(35, 100.0)
+    closes[15] = np.nan
+    first = incremental._publish_forward_series_in_process(
+        catalog, "INVENTED", dates[:20], closes[:20], price_basis="synthetic", factor_id="factor-v1", horizon=10, calculation_authorized=True
+    )
+    manifest = catalog.roots.data / first["manifest"]["path"]
+    original_pin = file_digest(manifest)
+    second = incremental._publish_forward_series_in_process(
+        catalog, "INVENTED", dates, closes, price_basis="synthetic", factor_id="factor-v1", horizon=10, base=first, calculation_authorized=True
+    )
+    coverage = second["coverage"]
+    assert coverage["complete_label_period"]["start"] is None
+    assert "discontinuous" in coverage["complete_label_period"]["reason"]
+    assert coverage["label_coverage"]["main_eligible_rows"] == 14
+    assert coverage["label_coverage"]["calendar_full_rows"] == 25
+    date_names = dates.strftime("%Y-%m-%d").tolist()
+    assert coverage["label_coverage"]["eligible_label_periods"] == [
+        {"start": date_names[0], "end": date_names[4], "reason": None},
+        {"start": date_names[16], "end": date_names[24], "reason": None},
+    ]
+    pd.testing.assert_frame_equal(incremental.load_forward_series(catalog, second), outcomes_for_closes(closes, 10).set_axis(dates), check_exact=True)
+    assert file_digest(manifest) == original_pin
+
+
+def test_resolved_hit_before_missing_price_keeps_retained_label_eligibility(catalog: DataCatalog):
+    dates = pd.DatetimeIndex(pd.bdate_range("2010-01-04", periods=3).values, name="Date")
+    closes = np.array([100.0, 250.0, np.nan])
+    entry = incremental._publish_forward_series_in_process(
+        catalog, "INVENTED", dates, closes, price_basis="synthetic", factor_id="factor-v1", horizon=2, calculation_authorized=True
+    )
+    result = incremental.load_forward_series(catalog, entry)
+    assert result.iloc[0]["label"] == "hit" and result.iloc[0]["main_eligible"]
+    assert not result.iloc[0]["full_path"]
+    assert entry["coverage"]["label_coverage"]["main_eligible_rows"] == 1
+    assert entry["coverage"]["complete_label_period"] == {"start": "2010-01-04", "end": "2010-01-04", "reason": None}

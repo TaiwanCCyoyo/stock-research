@@ -52,11 +52,11 @@ def implementation_identity() -> dict[str, Any]:
 
 def _input_identity(prepared: pd.DataFrame) -> str:
     """Logical exact prepared identity, including dtype and invalid float values."""
-    kernel.v1.compute_selected(prepared, [])
+    prices, _ = kernel.v1._validate(prepared)
     selected = prepared.loc[:, [*kernel.v1.OHLC, "Quality"]]
     rows = [
-        [*(float(value).hex() for value in values[:4]), None if pd.isna(values[4]) else bool(values[4] == 1)]
-        for values in selected.itertuples(index=False, name=None)
+        [*(float(value).hex() for value in values), None if pd.isna(quality) else bool(quality == 1)]
+        for values, quality in zip(prices, selected["Quality"], strict=True)
     ]
     return object_digest({
         "dates": [day.isoformat() for day in selected.index],
@@ -419,6 +419,47 @@ def publish_forward_series(
     return execute_forward(catalog, code, dates, closes, price_basis, factor_id, horizon, context_layer, base, calculation_authorized)
 
 
+def _coverage_periods(dates: pd.DatetimeIndex, mask: np.ndarray) -> list[dict[str, Any]]:
+    """Exact consecutive-calendar runs, never a bounds-only claim across gaps."""
+    positions = np.flatnonzero(mask)
+    if not len(positions):
+        return []
+    groups = np.split(positions, np.flatnonzero(np.diff(positions) != 1) + 1)
+    return [
+        {
+            "start": cast(pd.Timestamp, dates[group[0]]).date().isoformat(),
+            "end": cast(pd.Timestamp, dates[group[-1]]).date().isoformat(),
+            "reason": None,
+        }
+        for group in groups
+    ]
+
+
+def _label_coverage(dates: pd.DatetimeIndex, outputs: pd.DataFrame) -> tuple[dict[str, Any], dict[str, Any]]:
+    eligible = _coverage_periods(dates, outputs["main_eligible"].to_numpy(dtype=bool))
+    calendar = _coverage_periods(dates, outputs["calendar_full"].to_numpy(dtype=bool))
+    complete = (
+        eligible[0]
+        if len(eligible) == 1
+        else {
+            "start": None,
+            "end": None,
+            "reason": "main-eligible known labels are discontinuous; see eligible_label_periods"
+            if eligible
+            else "no main-eligible known labels; a full calendar alone does not resolve missing prices",
+        }
+    )
+    facts = {
+        "semantics": "main_eligible: full horizon calendar and known outcome under the retained first-decision missingness policy",
+        "calendar_full_period": calendar[0] if calendar else {"start": None, "end": None, "reason": "insufficient future calendar"},
+        "calendar_full_rows": int(outputs["calendar_full"].sum()),
+        "main_eligible_rows": int(outputs["main_eligible"].sum()),
+        "unknown_rows": int(outputs["label"].eq("unknown").sum()),
+        "eligible_label_periods": eligible,
+    }
+    return complete, facts
+
+
 def _publish_forward_series_in_process(
     catalog: DataCatalog,
     code: str,
@@ -546,11 +587,10 @@ def _publish_forward_series_in_process(
     input_refs.append(ref("inputs.parquet", input_tail))
     output_refs.append(ref("outputs.parquet", output_tail))
     unavailable = {"start": None, "end": None, "reason": "not an indicator dataset"}
-    complete = (
-        {"start": cast(pd.Timestamp, dates[0]).date().isoformat(), "end": cast(pd.Timestamp, dates[-horizon - 1]).date().isoformat(), "reason": None}
-        if horizon is not None and len(dates) > horizon
-        else {"start": None, "end": None, "reason": "context layer or insufficient future calendar; gaps remain explicit"}
-    )
+    complete: dict[str, Any] = {"start": None, "end": None, "reason": "context series has no horizon labels"}
+    label_coverage = None
+    if horizon is not None:
+        complete, label_coverage = _label_coverage(dates, outputs)
     metadata: dict[str, Any] = {
         "data_id": data_id,
         "kind": "labels" if horizon is not None else "market",
@@ -577,6 +617,8 @@ def _publish_forward_series_in_process(
     }
     if context_layer is not None:
         metadata["checkpoint_before_tail"] = receipt["checkpoint_before_tail"]
+    if label_coverage is not None:
+        metadata["coverage"]["label_coverage"] = label_coverage
     if implementation_identity() != implementation:
         raise ValueError("incremental implementation changed before publication")
     entry = publish_bundle(

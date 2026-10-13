@@ -100,6 +100,15 @@ bundle before reuse. Public builders reuse the existing fresh-source worker,
 with loaded-byte checks before calculation and publication. Synthetic regressions
 cover deleted/corrupt ancestors, stale callers and source changes during a run.
 
+The subsequent review at `f022d0f` identified nullable scalar conversion, missing
+CI consumer edges and an ambiguous calendar-only label coverage claim. The
+follow-up normalizes OHLC through the existing validator, preserves dtype and
+missing-versus-zero identity, adds both upstream consumer edges, and derives new
+label coverage from actual main eligibility. Full-calendar, eligible and unknown
+counts and disjoint eligible runs are reported separately. Public synthetic
+regressions cover Float64/Int64 gaps, append/full equality, all-NaN H126 input,
+gapped eligibility islands and retained early-hit-before-missing semantics.
+
 Primary's HHHL variants `params/input-pins-v1.json` raw bytes did not match its
 retained execution pin during registration; the task checkout's tracked bytes
 did match. Their canonical JSON identities were also verified equal. The catalog

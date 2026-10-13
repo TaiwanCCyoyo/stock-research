@@ -141,6 +141,22 @@ reference immutable old files with explicit slice bounds; each update has a new
 version, external manifest pin and lineage. Source corrections force a whole-series
 rebuild. Price basis, factor identity and calendar are recorded explicitly.
 
+For newly published label bundles, `coverage.complete_label_period` means a
+single consecutive calendar run of `main_eligible` rows: a full horizon calendar
+and an outcome already resolved under the retained label definition. It is not
+just a date-length calculation or a claim that every diagnostic price is known.
+No eligible rows or multiple disjoint runs give null bounds with a reason;
+`coverage.label_coverage.eligible_label_periods` lists every actual eligible run.
+Separate calendar bounds/counts, eligible counts and unknown counts keep full
+calendar windows distinct from missing-price outcomes. An early resolved hit
+keeps its original eligibility even when a later price is missing. Old manifests
+and numerical labels are not rewritten.
+
+Prepared input identities use the existing validator's float normalization,
+including nullable Float64/Int64 `pd.NA` as NaN. Original column dtypes remain in
+the identity, and missing values remain distinct from zero. The existing feature
+gap/reset behavior applies without filling observations.
+
 This verifies mechanisms on invented inputs, including consecutive publication
 and readback equal to whole-history recalculation. It is not a measured full-market
 throughput claim. The adapters are sequential and do not add a second scheduler;

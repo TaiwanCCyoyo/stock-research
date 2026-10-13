@@ -163,7 +163,7 @@
                 "scripts/tests/test_pattern_sources.py",
                 "scripts/tests/test_cache_execution.py"
             ],
-            "consumers": ["opportunity"]
+            "consumers": ["opportunity", "research_data"]
         },
         "atlas": {
             "paths": [
@@ -204,7 +204,12 @@
                 "tasks/20261005-market-context-handoff/*"
             ],
             "tests": ["scripts/tests/test_market_context*.py"],
-            "consumers": ["opportunity", "method_environment", "sector"]
+            "consumers": [
+                "opportunity",
+                "method_environment",
+                "sector",
+                "research_data"
+            ]
         },
         "method_environment": {
             "paths": [

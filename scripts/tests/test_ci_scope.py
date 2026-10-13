@@ -38,6 +38,40 @@ def test_domain_and_downstream_union(path: str, domain: str, consumer: str) -> N
     assert plan["reasons"]
 
 
+@pytest.mark.parametrize(
+    ("path", "expected_domains", "existing_consumer_tests"),
+    [
+        (
+            path,
+            {"market_context", "method_environment", "sector", "opportunity", "research_data"},
+            {
+                "scripts/tests/test_method_environment_runner.py",
+                "scripts/tests/test_sector_wave_catalog_io.py",
+                "tests/test_opportunity_history_api.py",
+            },
+        )
+        for path in ("research_core/market_context.py", "research_core/market_context_artifact.py")
+    ]
+    + [
+        (
+            path,
+            {"hhhl", "opportunity", "research_data"},
+            {"tests/test_opportunity_history_api.py"},
+        )
+        for path in ("research_core/hhhl_variants_paths.py", "research_core/hhhl_variants_observations.py")
+    ],
+)
+def test_research_data_upstreams_keep_all_downstream_tests(path: str, expected_domains: set[str], existing_consumer_tests: set[str]) -> None:
+    manifest = ci_scope.load_manifest()
+    plan = ci_scope.make_plan([("M", path)])
+    assert not plan["full"]
+    assert set(plan["domains"]) == expected_domains
+    assert set(manifest["domains"]["research_data"]["tests"]) <= set(plan["python_tests"])
+    assert existing_consumer_tests <= set(plan["python_tests"])
+    assert plan["frontend"]
+    assert "scripts/tests/test_research_ledger.py" not in plan["python_tests"]
+
+
 @pytest.mark.parametrize("path", ["research_web/src/app/App.tsx", r"research_web\src\components\Legend.tsx"])
 def test_pure_ui_checks_frontend_without_market_tests(path: str) -> None:
     plan = ci_scope.make_plan([("M", path)])
