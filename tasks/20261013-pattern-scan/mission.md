@@ -14,7 +14,7 @@
 - 本 PR 準備契約、原始來源覆蓋、實體 frozen inputs 與純合成 primitive。
   **owner 合併此 mission 後，才實作／封存完整 runner 並開始任何市場計算。**
   新市場結果前仍須完成所有 detector 合成驗證、來源／環境 pins、成本量測及正式資料驗證。
-- 原 handoff 明定 H1 = HHHL v4 pattern，L3 = legacy F33。另述「低過低」沒有獨立規格：
+- 原 handoff §3.1第124行明定 H1 = HHHL v4 pattern，§3.3第190行明定L3 = legacy F33；這兩項已定，不再要求重新確認。原檔沒有獨立「低過低」規格：
   **目前不以 F33、v4 bottom、R3 或任何 LL/LH 代理替代它**，見下列待確認事項。
   owner 若要新增，必須先固定圖形／確認語意並修訂本 mission，不在看過結果後添加。
 - mission merge 不授權下載、排程、改 producer、重開封存期間或重寫舊結果。
@@ -78,9 +78,17 @@
 每個事件保存 pivot、S、L、確認來源及日期、價格品質、適用／未知原因。
 沒有支撐不能用0；HHHL／legacy 標記不能當新增 owner 定義。
 
-每股、每 pattern union 先合併同日 subtype，再抑制保留事件之後20個 common sessions，
-第21個日子才可再記；被抑制事件不延長冷卻。subtype報告只取保留 union 的實際 subtype，
-原始候選另存。各控制獨立同樣冷卻；C-52w另存不冷卻版本對照 PR #9。
+每股的每個 subtype 各自以原始候選為母體，依已知觸發／確認t0排序去重後，
+抑制自身保留事件之後20個 common sessions，第21個日子才可再記。不同subtype不共用冷卻；
+R2a完成後次日R2e確認、R1a後R1b二測、R3a後R3b都保留各自樣本／t0／label。
+Union另從同股、同pattern的**所有原始subtype候選**合併同日，再獨立套20session冷卻；
+不從已冷卻subtype反推union，也不以union保留集合反向篩掉subtype。
+兩種母體不是可相加的互斥群體：Q1各自報事件/stock/unknown，Q2–Q6家族union選擇按union口徑，
+subtype獨立診斷按其自身口徑。被抑制事件不延長冷卻；各控制独立同樣冷卻，C-52w另報無冷卻。
+接線用 research_core.pattern_scan_cohorts_v1.build_pattern_cohorts，返回各subtype及union indices，
+保留原候選及兩種採用/抑制原因。Union同日保存全部raw member_subtype_ids與來源event_id；
+需單組pivot/S/L/專屬condition時，按上表subtype列舉順序取第一個原始member為representative，
+另存所有member metadata，不從subtype保留集合挑、不看結果挑support，不混合多組S/L。
 
 | control_id    | 固定公式／用途                                                                                                                                                                    |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -282,8 +290,8 @@ pattern字典更新。抽10個事件人工核對t0/pivot/S/L/confirm/conditions�
 
 ## 待owner確認的實質補充
 
-1. 「低過低」是否新增獨立型態；若新增要固定哪兩低／中間高、觸發價、
-   extreme與confirm時點，不能由現有F33或HHHL猜測。未回覆保持proposal，不開市場計算。
+1. 只有另加原handoff未定的獨立「低過低」時，才需固定哪兩低／中間高、觸發價、
+   extreme與confirm時點，不能由現有F33或HHHL猜測。選項是原清單H1=v4/L3=F33，或追加獨立新圖形版本；未有新增定義時保持原清單。市場計算仍等本mission merge，不以這個可能追加的圖形重問已定版本。
 2. 上文標「補充提案」的S/L、有限搜尋、R1b確認5日上限、R3ties與SR-c還原Close分箱，
    以及逐日資格門檻／C-base-all與no-pattern分母／hit路徑診斷用詞：
    均在市場結果前列明，owner可在mission review調整；合併代表批准最後文字。

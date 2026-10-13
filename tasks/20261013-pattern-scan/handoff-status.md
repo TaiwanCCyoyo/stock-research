@@ -131,3 +131,7 @@ catalog snapshot固定在input pins；兩個price-base完整ID由catalog取得�
 原證據：[PR12 report](../20261012-research-data-entry/report.md)及其四個compressed packets。
 本次設計與邊界：[mission](mission.md)、[execution plan](execution-plan.md)、[data contract](data-contract.md)。
 沒有用已發布PR12的測試數冒充本stage current-head CI，沒有將raw availability稱研究完整。
+
+PR14初版union反篩subtype的P1已修訂：子型各自冷卻，union從全部raw候選獨立去重／冷卻。
+新增cohort helper與19個合成案例保留R2a→R2e、R1a→R1b、R3a→R3b，旧40-case source packet不改。
+這是母體接線驗證，不是新detector或市場樣本認證。

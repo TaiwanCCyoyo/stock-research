@@ -44,3 +44,6 @@
 
 待本階段核准後的工作不是已完成項目。排程更新、market-context實體遷移及異機備份
 仍是原handoff第11節的獨立to-do，不在本次mission計算的默認權限內。
+
+Cohort接線必須用build_pattern_cohorts：raw candidates → independent subtype cooldown，
+以及raw candidates → same-day union → independent union cooldown；確認子型不被前型態抑制。

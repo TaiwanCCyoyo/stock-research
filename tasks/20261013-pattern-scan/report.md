@@ -36,3 +36,15 @@
 
 已另外核實4110個raw日期鍵皆存在official來源，沒有nonofficial-only日期。
 原始input pins及synthetic source pins分开，兩者都不宣稱全市場研究完成。
+
+## PR14 P1：確認子型的獨立母體
+
+初版mission的union保留集合反向篩subtype會刪掉後續確認訊號；此契約已修正。
+新增build_pattern_cohorts從raw候選分別形成獨立subtype及union母體，沒有回寫已SHA固定的
+舊events/selection source或v1 evidence。R2a(100)→R2e(101)、R1a(100)→R1b(108)、
+R3a(100)→R3b(110)兩邊各自保留，union仍只有100；A(10,30)/B(0)案例證明union必須
+從raw候選取得0,30，而不是由已冷卻subtype重建成只有0。
+
+19個新cohort cases＋原直接依賴／CI focused regressions合計 **154 passed**。
+這是接線／母體驗證，不是detector确认或市場樣本結果。新head hosted checks另讀，
+舊f212296的95项draft contracts及full pending gate是歷史CI，不能當新cohort驗證。

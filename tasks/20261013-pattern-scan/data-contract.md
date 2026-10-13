@@ -6,8 +6,12 @@
   重用原Atom／SelectionEvent／CRC／counts／candidate編碼，新增100/30、8單項、
   全pair/triple，最多92；必須給單一pattern與explicit target_cohorts，
   union/subtype duplicate identity會fail，confirmation rows不参与選擇。
-- research_core.pattern_scan_events_v1.per_group_cooldown：caller按stock+pattern分組；
-  subtype同日合併，冷卻後20sessions，不延長suppressed day。
+- research_core.pattern_scan_events_v1.per_group_cooldown：單一caller母體的20session冷卻primitive，
+  不延長suppressed day。既有來源與v1證據保留byte-identical。
+- research_core.pattern_scan_cohorts_v1.build_pattern_cohorts：caller按stock+pattern提供raw subtype
+  mapping；每subtype獨立去重／冷卻，union另從全部raw indices去重／冷卻，兩母體不互相篩選。
+  frozen dataclass保存stable subtype順序與各retained_indices/union_indices；future runner只能用這層接線，
+  不以union反向刪R2e/R1b/R3b，也不由冷卻後subtypes重建union。
 - merge_hit_episodes：caller提供既有label API認定的calendar-full known H126hit起點；
   20session鏈合併，anchor只在起點集合挑，不用所有間隔價。輸出known/unknown、
   reason、原始start_indices、anchor/peak；不算label、不read檔。
@@ -54,3 +58,6 @@ stock set、raw/valid/label-eligible三種期間、unknown原因及backup狀態�
 Q4隨機對照保存pattern/candidate、stock/year quota、pool manifest pin、seed、drawn日期及shortfall，
 從全期C-base已冷卻池抽取，不能在episode窗口內抽取。matched/unmatched/unknown分母與界、
 peak/timing各別known_n遵mission；不以缺峰值或未知detector假裝沒有匹配。
+
+Union同日member的完整metadata另存，representative按mission固定subtype順序，不按後來結果挑。
+Q1 subtype與union都有獨立的事件／label母體，不相加，不把union冷卻後樣本當子型全部事件。
