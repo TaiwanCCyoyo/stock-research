@@ -162,6 +162,18 @@ class DataCatalog:
         self, data_id: str, version_id: str, *, manifest_sha256: str, expected_inputs: dict[str, Any] | None = None, definition_version: str | None = None
     ) -> dict[str, Any]:
         """No latest, missing-version fallback, or calculation on a read path."""
+        return self.get_verified(data_id, version_id, manifest_sha256=manifest_sha256, expected_inputs=expected_inputs, definition_version=definition_version)[
+            0
+        ]
+
+    def get_verified(
+        self, data_id: str, version_id: str, *, manifest_sha256: str, expected_inputs: dict[str, Any] | None = None, definition_version: str | None = None
+    ) -> tuple[dict[str, Any], dict[str, Any]]:
+        """`get`, plus the reader result of the one verification it ran.
+
+        A caller that needs the verified manifest uses this instead of `get` followed by
+        another `verify_entry`, which would read and hash every member a second time.
+        """
         rows = [row for row in self.read()["entries"] if (row["data_id"], row["version_id"]) == (data_id, version_id)]
         if len(rows) != 1:
             raise KeyError(f"shared version missing: {data_id}/{version_id}")
@@ -172,8 +184,7 @@ class DataCatalog:
             or (definition_version is not None and row["definition_version"] != definition_version)
         ):
             raise ValueError("requested shared version identity mismatch")
-        verify_entry(row, self.roots)
-        return row
+        return row, verify_entry(row, self.roots)
 
 
 def verify_entry(entry: dict[str, Any], roots: DataRoots) -> dict[str, Any]:

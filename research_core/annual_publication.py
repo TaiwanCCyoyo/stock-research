@@ -135,15 +135,17 @@ def finalize_json_locator(path: Path, entry: dict[str, Any], *, formatter: Calla
 def verified_result(path: Path, catalog: DataCatalog) -> tuple[dict[str, Any], Path, dict[str, Any]]:
     """Bind a public report to the exact published payload and input lineage."""
     result = read_json(path)
+    verified: dict[str, dict[str, Any]] = {}
     for key, expected_id in (("input_entry", "annual-rotation-inputs"), ("process_entry", "annual-rotation-process")):
         entry = result[key]
         if entry["data_id"] != expected_id:
             raise ValueError("unexpected annual dataset family")
-        stored = catalog.get(entry["data_id"], entry["version_id"], manifest_sha256=entry["manifest"]["sha256"])
+        # One verification per bundle: the manifest used below comes from this same pass.
+        stored, verified[key] = catalog.get_verified(entry["data_id"], entry["version_id"], manifest_sha256=entry["manifest"]["sha256"])
         if not _equivalent(entry, stored):
             raise ValueError("public entry differs from registered identity")
     input_entry, process_entry = result["input_entry"], result["process_entry"]
-    manifest = verify_entry(process_entry, catalog.roots)
+    manifest = verified["process_entry"]
     inputs = manifest["metadata"]["inputs"]
     if inputs["input_version"] != input_entry["version_id"] or inputs["input_manifest_sha256"] != input_entry["manifest"]["sha256"]:
         raise ValueError("input/process identity mismatch")

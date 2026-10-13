@@ -6,12 +6,15 @@ import json
 import os
 import subprocess
 import sys
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
 import pytest
 
 import research_core.annual_publication as annual_publication
+import research_core.artifact_store as artifact_store
+import research_core.research_data_catalog as research_data_catalog
 from research_core.annual_publication import reuse_rank_rows, verified_result
 from research_core.artifact_store import canonical, write_json
 from research_core.research_data_builder import publish_bundle
@@ -685,3 +688,23 @@ def test_finalize_json_locator_rejects_mismatched_existing_entry_before_formatti
 
     assert calls == []
     assert path.read_bytes() == original_bytes
+
+
+def test_verified_result_hashes_each_bundle_member_once(published_result: tuple[DataCatalog, Path, dict[str, Any]], monkeypatch: pytest.MonkeyPatch) -> None:
+    """A bundle is verified once per call; the manifest alone is read twice (before and after)."""
+    catalog, path, _ = published_result
+    counts: Counter[Path] = Counter()
+    real = artifact_store.file_digest
+
+    def counting(target: Path) -> str:
+        counts[Path(target)] += 1
+        return real(target)
+
+    monkeypatch.setattr(artifact_store, "file_digest", counting)
+    monkeypatch.setattr(research_data_catalog, "file_digest", counting)
+    verified_result(path, catalog)
+    members = [target for target in counts if target.name != "manifest.json"]
+    manifests = [target for target in counts if target.name == "manifest.json"]
+    assert len(manifests) == 2 and len(members) >= 4
+    assert {counts[target] for target in members} == {1}
+    assert {counts[target] for target in manifests} == {2}
