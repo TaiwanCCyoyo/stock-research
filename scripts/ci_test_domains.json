@@ -280,7 +280,8 @@
                 "research_core/annual_ranking_pool.py",
                 "research_core/annual_publication.py",
                 "research_core/price_basis.py",
-                "tasks/20261013-annual-winner-rotation/run_study.py"
+                "tasks/20261013-annual-winner-rotation/run_study.py",
+                "tasks/20261013-annual-winner-rotation/finalize_delivery.py"
             ],
             "tests": [
                 "scripts/tests/test_annual_rotation.py",

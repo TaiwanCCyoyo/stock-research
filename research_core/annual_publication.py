@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import gzip
+import hashlib
 import json
 import math
 from decimal import Decimal
@@ -27,6 +28,39 @@ def _equivalent(actual: Any, expected: Any) -> bool:
     if isinstance(expected, list):
         return isinstance(actual, list) and len(actual) == len(expected) and all(_equivalent(a, b) for a, b in zip(actual, expected, strict=True))
     return type(actual) is type(expected) and actual == expected
+
+
+def json_delivery_receipt(original: bytes, delivery: bytes) -> dict[str, Any]:
+    """Validate finalized JSON meaning, then identify its delivered raw bytes.
+
+    The caller completes its normal formatter first. This pure function never
+    rewrites either input, changes canonical serialization or re-pins evidence.
+    """
+
+    def unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        result: dict[str, Any] = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError(f"duplicate JSON key: {key}")
+            result[key] = value
+        return result
+
+    def reject_constant(value: str) -> Any:
+        raise ValueError(f"nonfinite JSON constant: {value}")
+
+    def decode(raw: bytes) -> Any:
+        return json.loads(raw.decode("utf-8"), object_pairs_hook=unique_object, parse_constant=reject_constant)
+
+    if not _equivalent(decode(delivery), decode(original)):
+        raise ValueError("delivery JSON content differs from original")
+    return {
+        "schema": "annual-json-delivery.v1",
+        "source_sha256": hashlib.sha256(original).hexdigest(),
+        "delivery_sha256": hashlib.sha256(delivery).hexdigest(),
+        "source_bytes": len(original),
+        "delivery_bytes": len(delivery),
+        "content_equal": True,
+    }
 
 
 def verified_result(path: Path, catalog: DataCatalog) -> tuple[dict[str, Any], Path, dict[str, Any]]:

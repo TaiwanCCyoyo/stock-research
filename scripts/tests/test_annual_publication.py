@@ -11,6 +11,7 @@ from typing import Any
 
 import pytest
 
+import research_core.annual_publication as annual_publication
 from research_core.annual_publication import reuse_rank_rows, verified_result
 from research_core.artifact_store import canonical, write_json
 from research_core.research_data_builder import publish_bundle
@@ -351,3 +352,87 @@ def test_reuse_rank_rows_rejects_incompatible_synthetic_changes(
             input_entry=result["input_entry"],
             parameters=parameters,
         )
+
+
+def test_json_delivery_receipt_accepts_formatting_differences_and_is_repeatable() -> None:
+    original = b'{"amount":0.0,"flag":true,"items":[1,2],"nested":{"a":1,"b":2}}'
+    delivery = b'{\n  "nested": { "b": 2, "a": 1 },\n  "items": [1, 2], "flag": true, "amount": 0\n}'
+    original_before = original[:]
+
+    receipt = annual_publication.json_delivery_receipt(original, delivery)
+    repeated = annual_publication.json_delivery_receipt(original, delivery)
+
+    assert receipt == repeated
+    assert receipt == {
+        "schema": "annual-json-delivery.v1",
+        "source_sha256": hashlib.sha256(original).hexdigest(),
+        "delivery_sha256": hashlib.sha256(delivery).hexdigest(),
+        "source_bytes": len(original),
+        "delivery_bytes": len(delivery),
+        "content_equal": True,
+    }
+    assert original == original_before
+
+
+@pytest.mark.parametrize(
+    ("original", "delivery"),
+    [
+        (b'{"value":1}', b'{"value":2}'),
+        (b'{"value":1}', b'{"value":1,"extra":true}'),
+        (b'{"items":[1,2]}', b'{"items":[2,1]}'),
+        (b'{"value":true}', b'{"value":1}'),
+    ],
+)
+def test_json_delivery_receipt_rejects_semantically_different_content(original: bytes, delivery: bytes) -> None:
+    with pytest.raises(ValueError):
+        annual_publication.json_delivery_receipt(original, delivery)
+
+
+@pytest.mark.parametrize(
+    "invalid",
+    [
+        b'{"value":1,"value":2}',
+        b'{"value":NaN}',
+        b'{"value":Infinity}',
+        b'{"value":-Infinity}',
+    ],
+)
+@pytest.mark.parametrize("invalid_side", ["original", "delivery"])
+def test_json_delivery_receipt_rejects_duplicate_keys_and_nonfinite_numbers(invalid: bytes, invalid_side: str) -> None:
+    valid = b'{"value":1}'
+    original, delivery = (invalid, valid) if invalid_side == "original" else (valid, invalid)
+
+    with pytest.raises(ValueError):
+        annual_publication.json_delivery_receipt(original, delivery)
+
+
+@pytest.mark.parametrize("invalid_side", ["original", "delivery"])
+def test_json_delivery_receipt_rejects_invalid_utf8(invalid_side: str) -> None:
+    valid = b'{"value":1}'
+    invalid = b'{"value":"\xff"}'
+    original, delivery = (invalid, valid) if invalid_side == "original" else (valid, invalid)
+
+    with pytest.raises(ValueError):
+        annual_publication.json_delivery_receipt(original, delivery)
+
+
+def test_finalize_delivery_cli_rejects_unowned_output_paths_without_creating_them(tmp_path: Path) -> None:
+    repo = Path(__file__).resolve().parents[2]
+    script = repo / "tasks/20261013-annual-winner-rotation/finalize_delivery.py"
+    output = tmp_path / "unowned_delivery"
+    pin_output = tmp_path / "pin.json"
+
+    completed = subprocess.run(
+        [sys.executable, str(script), "--output", str(output), "--pin-output", str(pin_output)],
+        cwd=repo,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        check=False,
+        timeout=60,
+    )
+
+    assert completed.returncode != 0
+    assert "new delivery must use this task's delivery-v1 directory" in completed.stderr
+    assert not output.exists()
+    assert not pin_output.exists()

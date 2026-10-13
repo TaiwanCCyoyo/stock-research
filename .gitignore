@@ -89,6 +89,9 @@ tasks/*/**
 !tasks/*/*.py
 !tasks/*/report.html
 !tasks/*/sweep_results.json
+# Formatted annual presentation copies; immutable originals remain external.
+!tasks/20261013-annual-winner-rotation/delivery-v1/
+!tasks/20261013-annual-winner-rotation/delivery-v1/*.json
 !tasks/*/window_results.json
 !tasks/*/concentration.json
 !tasks/*/add_trigger_results.json

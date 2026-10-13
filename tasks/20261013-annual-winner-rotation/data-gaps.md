@@ -97,7 +97,8 @@ primary canonical data，再由 research 建新不可變 input/version 與新的
   不改檔、不使用其 mutable cache。其運算是否仍在執行未由本次盤點確認。
 - 其他非本 session：`.worktrees/lf-text-policy`、`research-feature-reuse`、
   `research-report-shell`；primary inventory 已有五個非 primary checkout。
-  新 worker 須先由其 owner 做 lifecycle／五-worktree budget 盤點，不清他人 checkout。
+  五-worktree budget 按 session 所有權計算；其他 session 的 checkout 不算新 worker
+  的持有量。新 worker 仍先做 lifecycle／自身預算盤點，不清他人 checkout。
 - producer inventory另有 `stock-data-downloader/.worktrees/lf-text-policy`，不可重用。
   canonical actions 已比本研究 snapshot 多 2 筆，證明 mutable vintage 正在變動；
   寫入者／排程是否 active 未確認。新增 canonical 寫入前必須按既有 records 協調

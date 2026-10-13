@@ -63,6 +63,36 @@ under serial and two-worker execution. These commands do not download data.
 
 ## Process artifacts
 
+## Formatted delivery v1
+
+`finalize_delivery.py` produces only new `delivery-v1/` presentation copies of
+the input pin, measurement v2, original public result and reviewed sweep. The
+configured Prettier hook must pass a second time without changing bytes before
+`annual_publication.json_delivery_receipt` compares parsed contents and calculates
+the new raw delivery SHA256. Duplicate keys, nonfinite numbers, invalid UTF-8,
+changed values/list order and bool/number substitutions are rejected. Object key
+order, whitespace and 0.0/0 presentation differences do not change meaning.
+
+The new `annual-rotation-delivery` immutable bundle retains `originals/*` exact
+bytes beside `delivery/*`, a finalized receipt and the finalizer's source
+snapshots. Its lineage explicitly names the original input, original process
+and reviewed process. Existing bundles, source SHA values and task originals are
+never overwritten. The bundle hash is formed after all delivery files and the
+receipt are formatted. This changes no `canonical`/`write_json` global behavior,
+market result, ranking, benchmark, source acquisition or strategy definition.
+
+```powershell
+$env:STOCK_RESEARCH_DATA_ROOT = 'D:/Project/stock-research/research_data'
+uv run python tasks/20261013-annual-winner-rotation/finalize_delivery.py
+```
+
+Repeat finalization accepts only the same source bytes/meaning and stable format;
+publication reuses the same version. The normal security scanner still applies
+to every Git delivery file. Formatting authorization does not authorize checksum
+baseline exceptions; false positives remain a separate owner decision.
+
+## Process artifacts
+
 | Artifact in the process bundle       | Content                                                                                                                                                                                                                                                                                                                                                  |
 | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `candidates.json.gz`                 | Every stock/year observed in that year's official quote history; initial/final raw closes, required/observed quote counts, economic rank or null, quality reasons, reference-factor diagnostic. Later listings do not enter earlier-year denominators. Reasons retain the first ten dates plus full count; original inputs reproduce every omitted date. |

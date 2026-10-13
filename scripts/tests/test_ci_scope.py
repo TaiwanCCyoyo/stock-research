@@ -183,6 +183,7 @@ ANNUAL_TESTS = {
         "research_core/annual_ranking_pool.py",
         "research_core/annual_publication.py",
         "tasks/20261013-annual-winner-rotation/run_study.py",
+        "tasks/20261013-annual-winner-rotation/finalize_delivery.py",
     ],
 )
 def test_annual_sources_select_exact_annual_consumers(source: str) -> None:
