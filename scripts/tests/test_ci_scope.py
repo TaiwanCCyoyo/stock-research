@@ -38,6 +38,40 @@ def test_domain_and_downstream_union(path: str, domain: str, consumer: str) -> N
     assert plan["reasons"]
 
 
+@pytest.mark.parametrize(
+    ("path", "expected_domains", "existing_consumer_tests"),
+    [
+        (
+            path,
+            {"market_context", "method_environment", "sector", "opportunity", "research_data"},
+            {
+                "scripts/tests/test_method_environment_runner.py",
+                "scripts/tests/test_sector_wave_catalog_io.py",
+                "tests/test_opportunity_history_api.py",
+            },
+        )
+        for path in ("research_core/market_context.py", "research_core/market_context_artifact.py")
+    ]
+    + [
+        (
+            path,
+            {"hhhl", "opportunity", "research_data"},
+            {"tests/test_opportunity_history_api.py"},
+        )
+        for path in ("research_core/hhhl_variants_paths.py", "research_core/hhhl_variants_observations.py")
+    ],
+)
+def test_research_data_upstreams_keep_all_downstream_tests(path: str, expected_domains: set[str], existing_consumer_tests: set[str]) -> None:
+    manifest = ci_scope.load_manifest()
+    plan = ci_scope.make_plan([("M", path)])
+    assert not plan["full"]
+    assert set(plan["domains"]) == expected_domains
+    assert set(manifest["domains"]["research_data"]["tests"]) <= set(plan["python_tests"])
+    assert existing_consumer_tests <= set(plan["python_tests"])
+    assert plan["frontend"]
+    assert "scripts/tests/test_research_ledger.py" not in plan["python_tests"]
+
+
 @pytest.mark.parametrize("path", ["research_web/src/app/App.tsx", r"research_web\src\components\Legend.tsx"])
 def test_pure_ui_checks_frontend_without_market_tests(path: str) -> None:
     plan = ci_scope.make_plan([("M", path)])
@@ -90,6 +124,33 @@ def test_unknown_and_shared_fallback_contains_every_test(path: str) -> None:
 
 
 CI_CONTRACT_TESTS = ["scripts/tests/test_ci_scope.py", "scripts/tests/test_file_hygiene.py", "scripts/tests/test_mypy_scopes.py"]
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "research_core/stock_feature_pool_v2.py",
+        "research_core/feature_identity_v1.py",
+    ],
+)
+def test_feature_block_upstreams_select_research_data_consumers(path: str) -> None:
+    manifest = ci_scope.load_manifest()
+    plan = ci_scope.make_plan([("M", path)])
+    assert not plan["full"]
+    assert set(plan["domains"]) == {"feature_blocks", "research_data"}
+    expected_tests = set(manifest["domains"]["feature_blocks"]["tests"]) | set(manifest["domains"]["research_data"]["tests"])
+    assert set(plan["python_tests"]) == expected_tests
+    assert not plan["frontend"]
+    assert "scripts/tests/test_research_ledger.py" not in plan["python_tests"]
+
+
+def test_feature_block_store_preserves_full_safety_fallback() -> None:
+    manifest = ci_scope.load_manifest()
+    plan = ci_scope.make_plan([("M", "research_core/feature_block_store_v1.py")])
+    assert plan["full"]
+    assert plan["python_tests"] == ci_scope.test_inventory(ci_scope.ROOT, manifest)
+    assert plan["python_tests"] == manifest["reviewed_tests"]
+    assert set(manifest["domains"]["research_data"]["tests"]) <= set(plan["python_tests"])
 
 
 def test_feature_block_domain_routes_new_execution_contracts() -> None:

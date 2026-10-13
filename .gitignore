@@ -249,6 +249,7 @@ verify-*.png
 !tasks/20260823-rotation-universe/typed-source-provenance.json
 
 # Real quote vectors and source-factor packages stay local; public readers fail closed.
+/research_data/
 /tasks/20261005-market-context-handoff/market-context-v2/inputs/0050.json.gz
 /tasks/20261009-hhhl-pattern-probability/publication-v1/bundle.zip
 /tasks/20261010-hhhl-v4-probability/preparation-v1/bundle.zip

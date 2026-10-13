@@ -12,6 +12,18 @@ from research_core.artifact_backup import backup_sources, default_sources, resto
 from research_core.artifact_store import file_digest, read_json
 
 
+def test_default_scope_includes_shared_data_and_restores_it(tmp_path: Path) -> None:
+    project = tmp_path / "primary"
+    shared = project / "research_data"
+    shared.mkdir(parents=True)
+    (shared / "catalog.json").write_bytes(b'{"synthetic":true}')
+    (shared / "fixture.json").write_bytes(b'{"invented":1}')
+    receipt = backup_sources(default_sources(project), tmp_path / "backup")
+    manifest = Path(receipt["manifest_path"])
+    restore_backup(manifest, tmp_path / "restored")
+    assert (tmp_path / "restored/research_data/fixture.json").read_bytes() == b'{"invented":1}'
+
+
 def test_sealed_closed_database_requires_matching_hash_and_no_sidecars(tmp_path: Path) -> None:
     source = source_tree(tmp_path)
     database = source / "historical.sqlite"

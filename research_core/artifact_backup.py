@@ -32,6 +32,9 @@ def default_sources(project: Path) -> dict[str, Path]:
     cache = project / "research_cache"
     if cache.is_dir():
         sources["research_cache"] = cache
+    shared = project / "research_data"
+    if shared.is_dir():
+        sources["research_data"] = safe_path(shared)
     tasks = project / "tasks"
     if tasks.is_dir():
         for task in sorted(tasks.iterdir()):
