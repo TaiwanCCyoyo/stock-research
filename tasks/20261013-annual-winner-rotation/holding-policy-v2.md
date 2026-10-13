@@ -5,17 +5,22 @@ approved commit is its identity. This document defines rules. It computes no ret
 no held-path price field and changes no sealed result, input pin, parameter file or source.
 `mission.md` and `params/study-v1.json` stay as registered; v1 results stay valid and readable.
 
+**Implementation status (decision 2026-10-14): not started.** It cannot start until the supplement is
+published as an immutable input (gate G0), and the owner's question about the original claim does not
+depend on it (see `report.md`). Revised after the independent PR review: a required event price (R7)
+and rights as two sensitivity scenarios (R5), not bounds.
+
 ## 決定摘要（給 owner，每一項都可以否決）
 
-| #   | 預設                                                                                                                                                                     | 為什麼                                                                          | 你否決的後果                                                                    |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| 1   | **只重算 7 條持有路徑，領先股沿用 v1，不重新排名。**                                                                                                                     | 補資料只涵蓋這 7 檔；若用新規則重排，只有「領先股」被補到證據，會製造選擇偏誤。 | 要重排就是新研究，需新的 mission 與預先登記，且 2,061 檔排名要整批重算。        |
-| 2   | **配股、減資（不退現金）、面額變更：有官方依據就計入股數；現金股利沿用 v1 的除權日再投資假設。**                                                                         | 這些都是股數變化，價格已反映；不計入會把正常事件當成虧損。                      | 維持 v1 就是這些年度永遠「未知」。                                              |
-| 3   | **認股權利（3406、3205）給「區間」，不給單一數字；兩端結論一致才下結論。**                                                                                               | 是否認股、認股價值怎麼實現，官方資料無法決定；選一個會變成選結果。              | 要單一數字，就得由你指定一種實現方式。                                          |
-| 4   | **「終端報酬」與「每日路徑」分開。** 中間日子沒有任何價格資訊（停牌、官方記錄零成交／無 OHLC）時，終端報酬照算，但每日路徑標記不完整、回撤只算參考。                     | 沒成交的日子不改變持股；v1 把它們一律當未知，太嚴。                             | 維持 v1：3162、5314 仍然未知。                                                  |
-| 5   | **資料互相矛盾：數字用固定小數位判定，日級矛盾若沒有任何價格資訊就只標記，不影響終端報酬。** 3162 的 2018-09-26 **不會被當成零成交**，而是「無價格資訊、成交筆數矛盾」。 | 矛盾的是成交筆數，不是價格；價格兩邊都沒有。                                    | 嚴格一點就是 3162 未知。                                                        |
-| 6   | **技術限制：不動 `annual_rotation.py` 前半、不改輸入版本 pin、不改 `study-v1.json`，新規則放新模組、新參數檔。**                                                         | 否則 `reuse_rank_rows` 會拒絕重用，7 條路徑會變成整批重新排名。                 | 破壞任何一項，就要重算約 2,061 檔的排名（上次約 6 分鐘到 8 分鐘，且資源吃緊）。 |
-| 7   | **這份規則不能得出「全市場冠軍」。** 排名階段仍是 v1 嚴格版，每年仍有約 516–607 個候選未解。                                                                             | 補資料只解持有階段。                                                            | —                                                                               |
+| #   | 預設                                                                                                                                                                                                                       | 為什麼                                                                                             | 你否決的後果                                                                    |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| 1   | **只重算 7 條持有路徑，領先股沿用 v1，不重新排名。**                                                                                                                                                                       | 補資料只涵蓋這 7 檔；若用新規則重排，只有「領先股」被補到證據，會製造選擇偏誤。                    | 要重排就是新研究，需新的 mission 與預先登記，且 2,061 檔排名要整批重算。        |
+| 2   | **配股、減資（不退現金）、面額變更：有官方依據就計入股數；現金股利沿用 v1 的除權日再投資假設。**                                                                                                                           | 這些都是股數變化，價格已反映；不計入會把正常事件當成虧損。                                         | 維持 v1 就是這些年度永遠「未知」。                                              |
+| 3   | **認股權利（3406、3205）只做兩個固定敏感度情境（放棄、除權日以內含價值立即變現），不稱上下界；結論只限這兩個情境，兩者一致才下結論。**                                                                                     | 官方資料無法決定是否認股、何時變現、能否交付；要稱「界限」得先證明涵蓋所有實際行為，這裡沒有證明。 | 想要真正的界限，需先定義涵蓋的行為集合並證明。                                  |
+| 4   | **「終端報酬」與「每日路徑」分開，但再投資需要事件日當天的有效收盤價。** 中間日子沒有價格資訊（停牌、無 OHLC）且不是事件日時，終端報酬照算；事件日缺價格就是未知，不借用前一日價格、也不延期（只有休市順延一種明訂例外）。 | 沒成交的日子不改變持股，但現金再投資需要那天的價格；不借價才不會憑空造結果。                       | 維持 v1：3162、5314 仍然未知。                                                  |
+| 5   | **資料互相矛盾：數字用固定小數位判定，日級矛盾若沒有任何價格資訊就只標記，不影響終端報酬。** 3162 的 2018-09-26 **不會被當成零成交**，而是「無價格資訊、成交筆數矛盾」。                                                   | 矛盾的是成交筆數，不是價格；價格兩邊都沒有。                                                       | 嚴格一點就是 3162 未知。                                                        |
+| 6   | **技術限制：不動 `annual_rotation.py` 前半、不改輸入版本 pin、不改 `study-v1.json`，新規則放新模組、新參數檔。**                                                                                                           | 否則 `reuse_rank_rows` 會拒絕重用，7 條路徑會變成整批重新排名。                                    | 破壞任何一項，就要重算約 2,061 檔的排名（上次約 6 分鐘到 8 分鐘，且資源吃緊）。 |
+| 7   | **這份規則不能得出「全市場冠軍」。** 排名階段仍是 v1 嚴格版，每年仍有約 516–607 個候選未解。                                                                                                                               | 補資料只解持有階段。                                                                               | —                                                                               |
 
 **看完規則後，7 個年度的證據狀況：5 個條件成立（各有一道執行時的檢查要過），2 個目前被擋住（3406、3205）。** 見第 7 節。
 
@@ -76,16 +81,22 @@ date, with no cash and no cost. A reduction with any cash refund is unknown. Mar
 the old units and the carried mark.
 
 **R5 Optional subscription right** (per old share: `r = rights_per_1000 / 1000` at price `S`, ex-date
-raw close `P`). Realization is not observable, so the path is an **interval**, never a point:
+raw close `P`). Whether, when and how the right is exercised, sold or delivered is not observable, so the
+path is reported under **two fixed sensitivity scenarios**, never as one number and never as bounds:
 
-- lower bound: the right lapses, credit `0`;
-- upper bound: the right is realized at intrinsic value, `V = r·max(0, P − S)`, credited as cash on the
-  ex-date and reinvested at `P` exactly like a dividend (`u·V / P` gross; net with `(1 + c)`).
+- scenario `lapse`: the right is abandoned, credit `0`;
+- scenario `realize`: the right is realized immediately at intrinsic value, `V = r·max(0, P − S)`,
+  credited as cash on the ex-date and reinvested at `P` exactly like a dividend (`u·V / P` gross; net
+  with `(1 + c)`).
 
-No scenario adds outside capital. An annual claim (beats paired net 0050 or not) is made only if it
-holds at **both** bounds; otherwise the year is _indeterminate for that claim_. Aggregates (wealth, CAGR,
-tests) are reported at both bounds. Admission also requires the disclosure to be **linked** to the
-ex-date (the announced ex-date equals the pinned event date) and the field units to be verified.
+Neither scenario adds outside capital, and neither is claimed to cover every real exercise or sale
+outcome: tradability, timing, delivery limits and funding are not modelled. Conclusions are limited to
+these two scenarios. An annual claim (beats paired net 0050 or not) is stated only if it holds in both,
+and is then described as "holds in both fixed scenarios", never as a bound; otherwise the year is
+_indeterminate for that claim_. Aggregates (wealth, CAGR, tests) are reported separately per scenario.
+`realize` needs a valid raw close on the ex-date (R7). Admission also requires the disclosure to be
+**linked** to the ex-date (the announced ex-date equals the pinned event date) and the field units to be
+verified.
 
 **R6 Effective-date shift.** If the announced ex-date is a confirmed market-wide closure, the
 entitlement takes effect on the first following trading day, provided (a) an official source confirms
@@ -102,9 +113,19 @@ quotes are observed on that day. The announced date is kept in the record and is
 | `U`   | anything else (no row and no official explanation; an interval whose later days lack valid rows; a source showing OHLC where another shows none) | the path is **unknown** (v1)                                                                 |
 
 Entry and exit are still "first positive-volume valid observed open on or after the boundary" (v1), so
-`H`/`N` days cannot be endpoints. **Terminal return** needs only valid endpoints plus the entitlement
-ledger. The **daily path** is reported `complete_equity = false` whenever any `H`/`N` day exists; daily
-drawdown is then a carried-mark reference, with the count of carried days.
+`H`/`N` days cannot be endpoints.
+
+**Required event prices.** Cash reinvestment (R3 with `d > 0`, and R6) and the `realize` scenario (R5)
+need a valid raw close `P` on the effective date itself. If that day is `H`, `N` or otherwise has no valid
+close, the path is **unknown**: a carried mark is never used as `P`, and no delay rule is applied.
+Components that change only the share count (R3 with `d = 0`, R4) need no price and take effect on the
+first valid quote day on or after their effective date. R6 is the only date shift, and it lands on a day
+with observed quotes.
+
+**Terminal return** therefore needs valid endpoints, the entitlement ledger and every required event price.
+`H`/`N` days may be ignored only when they are not the effective date of a price-needing component. The
+**daily path** is reported `complete_equity = false` whenever any `H`/`N` day exists; daily drawdown is
+then a carried-mark reference, with the count of carried days.
 
 **R8 Source conflicts.** Compare numeric terms after rounding to **six decimal places per 1,000 shares**
 (ratios) or per share (NT$). If equal at that representation, class `agreed_at_precision`; use the
@@ -131,7 +152,8 @@ ex-date, not the later listing date.
 - **G2 Rank reuse:** `reuse_rank_rows` accepts the v1 ranking unchanged. Failure stops the work.
 - **G3 Event gates:** linkage, units, corroboration (R3) or effective-date conditions (R6) per event.
 - **G4 Path gates:** every day in `[entry, exit]` is `T`, `H` or `N`; any `U` day makes that path unknown.
-- **G5 Interval gate:** rights events produce both bounds, or the path is unknown.
+- **G5 Scenario gate:** rights events produce both fixed scenarios, or the path is unknown.
+- **G6 Event-price gate:** every price-needing component has a valid raw close on its effective date, or the path is unknown.
 
 ## 6. Implementation constraints (so v2 does not force a re-rank)
 
@@ -158,10 +180,10 @@ candidate batch and become usable only through G0.
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- | -------------------------------------------------------------------------------- |
 | 2011 / 3406  | Rights offer (102.2076 per 1,000 at NT$235 recorded in the evidence ledger); linkage to the 2011-03-17 ex-right event and field units not confirmed                                   | R5              | **Blocked:** linkage and units                                                   |
 | 2012 / 6276  | Loss-offset reduction, 528.4689042 per 1,000 reduced, so `f = 0.4715310958`; suspension 2012-07-16 to 2012-07-26 inclusive, resumption 2012-07-27                                     | R4a, R7 `H`     | Ready if **G3, G4** (a valid quote exists on or after 2012-07-27)                |
-| 2016 / 3205  | Bonus 48.659339 per 1,000, rights 54.555950 per 1,000 at NT$133, cash NT$2.91956063; MOPS and TPEx differ only beyond the sixth decimal                                               | R3, R5, R8      | **Blocked:** field units unverified; then an interval                            |
+| 2016 / 3205  | Bonus 48.659339 per 1,000, rights 54.555950 per 1,000 at NT$133, cash NT$2.91956063; MOPS and TPEx differ only beyond the sixth decimal                                               | R3, R5, R8      | **Blocked:** field units unverified; then two scenarios                          |
 | 2018 / 3162  | Six days with no OHLC in any official record (2018-09-26 also has a trade-count conflict, 3 versus 0); no non-cash event in the window per `data-gaps.md` and the frozen action table | R7 `N`          | Ready if **G4**                                                                  |
-| 2020 / 6538  | Bonus 230 per 1,000 and cash NT$2.50 on 2020-08-27, in MOPS and in the TPEx ex-right record                                                                                           | R3              | Ready if **G3**                                                                  |
-| 2024 / 1519  | Cash NT$6, bonus 100 per 1,000; announced ex-date 2024-07-25 fell in a market-wide closure; effective 2024-07-26; reference price consistent with the terms                           | R3 with R6      | Ready if **G3** (tick check)                                                     |
+| 2020 / 6538  | Bonus 230 per 1,000 and cash NT$2.50 on 2020-08-27, in MOPS and in the TPEx ex-right record                                                                                           | R3              | Ready if **G3, G6** (valid close on 2020-08-27)                                  |
+| 2024 / 1519  | Cash NT$6, bonus 100 per 1,000; announced ex-date 2024-07-25 fell in a market-wide closure; effective 2024-07-26; reference price consistent with the terms                           | R3 with R6      | Ready if **G3, G6** (tick check; valid close on 2024-07-26)                      |
 | 2025 / 5314  | 1 old share to 20 new on 2025-03-31 after a halt 2025-03-20 to 2025-03-28; one-day halts 2025-08-12 and 2025-12-08; suspension from 2025-10-14 with no official end found             | R4b, R7 `H`/`N` | Ready if **G3, G4** (every day after 2025-10-14 needs a valid row, else unknown) |
 
 ## 8. Exposure and inference
