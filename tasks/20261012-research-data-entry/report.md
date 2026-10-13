@@ -128,6 +128,8 @@ The same downstream-closure audit also added `feature_blocks -> research_data`
 for the existing pool/identity interfaces used by this entry. Regression tests
 retain the block store's existing full fallback and verify the non-full pool and
 identity paths select both complete consumer domains. No full-path rules changed.
+All 83 selector regressions and normal commit hooks passed;
+[consumer-closure evidence v4](consumer-evidence-v4.json.gz) retains the source pins.
 
 Primary's HHHL variants `params/input-pins-v1.json` raw bytes did not match its
 retained execution pin during registration; the task checkout's tracked bytes
