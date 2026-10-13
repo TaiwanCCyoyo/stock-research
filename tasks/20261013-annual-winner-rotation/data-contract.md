@@ -61,9 +61,9 @@ hook receipt and its consumed file digests, then publishes a new input bundle.
 `measure --output NEW_MEASUREMENT` compares identical fixed representative stocks
 under serial and two-worker execution. These commands do not download data.
 
-## Formatted delivery v1
+## Formatted delivery (protocol v1)
 
-`finalize_delivery.py` produces only new `delivery-v1/` presentation copies of
+`finalize_delivery.py` produces only new numbered `delivery-vN/` presentation copies of
 the input pin, measurement v2, original public result and reviewed sweep. The
 configured Prettier hook must pass a second time without changing bytes before
 `annual_publication.json_delivery_receipt` compares parsed contents and calculates
@@ -81,7 +81,7 @@ market result, ranking, benchmark, source acquisition or strategy definition.
 
 ```powershell
 $env:STOCK_RESEARCH_DATA_ROOT = 'D:/Project/stock-research/research_data'
-uv run python tasks/20261013-annual-winner-rotation/finalize_delivery.py
+uv run python tasks/20261013-annual-winner-rotation/finalize_delivery.py --output tasks/20261013-annual-winner-rotation/delivery-v3 --prior-delivery-pin tasks/20261013-annual-winner-rotation/params/delivery-pin-v2.json
 ```
 
 Repeat finalization accepts only the same source bytes/meaning and stable format;
@@ -93,6 +93,12 @@ directory; `--prior-delivery-pin` preserves an explicit previous delivery link.
 The normal security scanner still applies
 to every Git delivery file. Formatting authorization does not authorize checksum
 baseline exceptions; false positives remain a separate owner decision.
+
+New unpinned discovery locators also use the normal formatter and semantic/bytes
+verification after creation. Locator presentation does not alter the referenced
+bundle or its manifest SHA. Completed bundle reuse does not format or rewrite
+members or locators. Existing versions preserve their creator's source identity;
+later finalizer code changes require a new version to recreate a delivery.
 
 ## Process artifacts
 
