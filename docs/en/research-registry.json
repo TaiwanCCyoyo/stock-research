@@ -239,7 +239,10 @@
             "kind": "exposure",
             "scope": "taiwan-price-strategy",
             "state": "viewed",
-            "window": { "start": "2019-01-02", "end": "2026-08-14" },
+            "window": {
+                "start": "2019-01-02",
+                "end": "2026-08-14"
+            },
             "recorded_on": "2026-10-08",
             "source": "tasks/20261010-hhhl-v4-probability/report.md",
             "note": "Owner handoff ID 20261010, actual local execution 2026-10-08. Exact v4 source and adjusted reference-factor prices validated on 25 cases without labels; four Claude provisional definitions sealed with 39 synthetic measurement/summary/producer tests at 70a6872037e9ad5a9d2296c282dc583a698523b4 before outcomes. Single ordered four-worker run completed in 522.563 seconds: 1941 securities, 3588909 calendar rows, 67078 events, 54288 true patterns, 162864 landmarks and 1080 fixed descriptive cells. Original t0 target/deadline, fixed L10/20/40 rise bins, unknowns, controls, noise, firsts and all negative results retained. No downloads, portfolio, stops, new window, confirmation, holdout or automation. Atlas original labels preserved separately; new first-decision labels and dividend reference factors have distinct denominators and are not cash total return. Late-2026 informative censoring, overlapping events and current-reference survivor cohort limit interpretation. Publication preserves 19 exact execution inputs and original completion manifest before later report/contract updates; bulk remains local-only. First packaging attempt failed before writes on Windows relative-path parsing, then transport-only fix; no market rerun or changed science. Original v1 evidence and exposure remain intact."
@@ -303,6 +306,19 @@
                 "tasks/20261010-hhhl-v4-probability/publication-v2#ten-case-audit-landmark-detail"
             ],
             "note": "Completes omitted portable L20 audit fields, not a replacement of original events or scientific outcomes. Code sealed at 0210c96 plus 61440b3 with normal hooks after 56 source/builder/coordinate tests and 50 supplement/bounded-reader tests. Git entry landmark-audit-v1.zip losslessly wraps the original primary JSON (55680 bytes, SHA256 e89f51dd87a9c380684c35c38cc1427dee06b14203376cc13795c2e839544376), adding ten saved L20 source rows and the same original ten event IDs with 96 joined fields. The existing bounded single-member ZIP reader and deterministic one-to-one join verify original publication/event values and full source descriptors; explicit observed-coordinate view preserves null semantics. Public hashes caused a plain JSON secret false positive and formatter changed its worktree copy; that copy remains unpublished, original primary bytes are unchanged and scanner/baseline are unchanged. Original ten cases happen to be one security, not representative or success-selected. Full source hashes bound before/after; independent projection authenticity still requires original hash-verified landmarks. No new data, prices, labels, candidates, comparisons, windows, holdout, portfolio or strategy verdict. Original packet and 1080 cells remain unchanged. Fragment names omitted detail, not a literal archive anchor."
+        },
+        {
+            "id": "annual-winner-rotation-exposure-20261013",
+            "kind": "exposure",
+            "scope": "taiwan-price-strategy",
+            "state": "viewed",
+            "window": {
+                "start": "2010-01-04",
+                "end": "2026-10-12"
+            },
+            "recorded_on": "2026-10-13",
+            "source": "tasks/20261013-annual-winner-rotation/report.md",
+            "note": "Independent preregistered annual-rotation.v1 exploration, ranking 2010-2025 and holding 2011-2025 plus separate 2026 YTD. Historical covered quote codes, incomplete PIT/delistings and economic actions; unknown candidates/holdings retained. All three strategy windows incomplete; no full-market or significance acceptance. Original frozen run retained; review corrections reuse unchanged verified ranks and recalculate held paths only. No independent unseen status, source downloads, producer writes, trades or automation."
         }
     ]
 }
