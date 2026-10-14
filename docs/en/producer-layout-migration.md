@@ -22,6 +22,10 @@ is on the same volume, so the move is a rename. Execution follows the
 [relocation runbook](producer-data-relocation-runbook.md), which needs a separate
 owner-approved window. The producer side is
 [stock-data-downloader#2](https://github.com/TaiwanCCyoyo/stock-data-downloader/pull/2).
+The companion research-input policy (live read-only inputs plus an input
+fingerprint, no sealing) is recorded in
+[drop input sealing](decision-records/2026-10-15-drop-input-sealing.md)
+(stock-research#20).
 
 The record below is kept as history.
 

@@ -100,13 +100,15 @@ def producer_data_root(*, environ: Mapping[str, str] | None = None, repo_root: P
     primary = primary_checkout(repo_root.resolve())
     env_file = primary / ENV_FILE_NAME if primary is not None else None
     if primary is not None and primary.resolve() != repo_root.resolve():
-        # A linked worktree may hold a frozen input snapshot from older seeding.
-        # Switching it silently to live data would change a study's inputs.
+        # Legacy only: a linked worktree seeded before 2026-10-15 may hold a frozen
+        # input snapshot under a running study. Switching it silently to live data
+        # would change that study's inputs. Dead once those worktrees are retired.
         snapshot = repo_root / "stock-data-downloader" / "data"
         if (snapshot / SENTINEL).is_file():
             raise ProducerRootError(
-                f"{repo_root} holds its own producer snapshot at {snapshot}; choose explicitly: "
-                f"set {ENV_KEY} to that snapshot or to the live root, or pass --data-path"
+                f"{repo_root} holds its own seeded producer snapshot at {snapshot}; this is never chosen automatically. "
+                f"Set {ENV_KEY} or pass --data-path either to that snapshot (keep the frozen inputs) "
+                f"or to the live root configured in {env_file} (adopt live read-only inputs)"
             )
     if env_file is not None:
         value = _read_env_file_value(env_file)

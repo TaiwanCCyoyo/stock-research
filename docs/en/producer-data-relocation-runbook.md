@@ -38,8 +38,8 @@ own `.env`, so producer worktrees keep their own `data/`.
    primary `.env.local` was corrected to
    `STOCK_PRODUCER_DATA_ROOT=D:/Project/stock-research/stock-data-downloader/data`;
    with the stale `D:/Project/stock-data-downloader/data` every research process
-   fails. Readers that seed worktree copies (sealed-producer-inputs work) accept
-   the resolved root, or the owner accepts that seeding has no source until they do.
+   fails. Readers use the live root through `producer_data_root()`; there is no
+   worktree seeding or input sealing to migrate (owner re-scope of stock-research#20).
 4. Window: not 17:30–19:00 on a weekday (DailyUpdate 18:00, 19–45 min), not the
    evening of the 1st (OfficialBackfill runs ~1.5 h after a month rollover).
    Budget about 30 minutes; most of it is hashing ~21 GB of SQLite/Parquet twice.

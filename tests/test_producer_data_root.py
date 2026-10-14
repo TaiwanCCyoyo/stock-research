@@ -123,7 +123,7 @@ def test_a_worktree_snapshot_is_never_silently_replaced_by_live_data(checkouts: 
     (primary / ".env.local").write_text(f"{ENV_KEY}={_producer_root(tmp_path / 'live')}\n", encoding="utf-8")
     snapshot = _producer_root(worktree / "stock-data-downloader" / "data")
 
-    with pytest.raises(ProducerRootError, match="choose explicitly"):
+    with pytest.raises(ProducerRootError, match="never chosen automatically"):
         producer_data_root(environ={}, repo_root=worktree)
     assert producer_data_root(environ={ENV_KEY: str(snapshot)}, repo_root=worktree) == snapshot.resolve()
 

@@ -263,8 +263,10 @@ no fallback to `<checkout>/stock-data-downloader/data`: neither source configure
 a relative or missing root, or a root without `price_daily.parquet` (such as the
 post-move code-only submodule `data/`) raises `ProducerRootError` naming the
 sources checked. A linked worktree that still holds its own seeded producer
-snapshot must choose explicitly (`STOCK_PRODUCER_DATA_ROOT` or `--data-path`), so
-a frozen input is never silently replaced by live data. The test suite sets a
+snapshot must choose explicitly (`STOCK_PRODUCER_DATA_ROOT` or `--data-path`, set
+to that snapshot to keep its frozen inputs or to the live root to adopt live
+read-only inputs), so a frozen input is never silently replaced by live data. This
+branch exists only for legacy seeded worktrees and becomes dead once they are retired. The test suite sets a
 synthetic root in the repository `conftest.py` and never reads real producer data.
 
 Load that configuration explicitly for a local API process:
