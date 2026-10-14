@@ -248,11 +248,24 @@ producer's own `.env` (`SHIOAJI_DATA_DIR`). Until the
 [relocation runbook](producer-data-relocation-runbook.md) records its execution,
 the data still lives at `D:/Project/stock-research/stock-data-downloader/data`.
 stock-research does not duplicate this directory into its producer submodule or
-Vite public. The local ignored `.env.local` contains only
-`STOCK_PRODUCER_DATA_ROOT=<canonical producer data directory>`, switched to
+Vite public. The primary checkout's ignored `.env.local` contains only
+`STOCK_PRODUCER_DATA_ROOT=<canonical producer data directory>`: today
+`D:/Project/stock-research/stock-data-downloader/data`, switched to
 `D:/StockData/stock-data-downloader` by runbook step 9 (the earlier value
 `D:/Project/stock-data-downloader/data` no longer exists). It contains no API
 credentials and changes no global environment or scheduler.
+
+`research_core.producer_data.producer_data_root()` resolves the root from the
+process environment first, then from that key in the primary checkout's
+`.env.local`, located through `git rev-parse --git-common-dir` so linked
+worktrees need no copy. Only that key is parsed; nothing else is loaded. There is
+no fallback to `<checkout>/stock-data-downloader/data`: neither source configured,
+a relative or missing root, or a root without `price_daily.parquet` (such as the
+post-move code-only submodule `data/`) raises `ProducerRootError` naming the
+sources checked. A linked worktree that still holds its own seeded producer
+snapshot must choose explicitly (`STOCK_PRODUCER_DATA_ROOT` or `--data-path`), so
+a frozen input is never silently replaced by live data. The test suite sets a
+synthetic root in the repository `conftest.py` and never reads real producer data.
 
 Load that configuration explicitly for a local API process:
 
@@ -263,9 +276,7 @@ uv run --env-file .env.local python -m research_api
 The shared producer-root setting supplies the query default, API data-quality
 report and universe metadata. An explicit CLI `--data-path` also supplies
 `symbol_meta.sqlite` from the same directory in both universe-selection paths.
-An explicitly configured relative or missing root fails without fallback or
-acquisition. With no setting, the existing submodule defaults and unconfigured
-CLI loader behavior remain compatible.
+A relative, missing or non-producer root fails without fallback or acquisition.
 
 Docker uses the same host override with a read-only mount; its process setting
 is `/app/data`. Resolve configuration with

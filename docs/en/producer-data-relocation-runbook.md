@@ -33,9 +33,13 @@ own `.env`, so producer worktrees keep their own `data/`.
 2. The primary research checkout `D:/Project/stock-research` is on `main` with no
    uncommitted tracked changes. Another session's work there is never reset,
    stashed or switched; otherwise stop and coordinate with its owner.
-3. Research readers that seed or read the primary's `stock-data-downloader/data/`
-   (owned by the sealed-producer-inputs work) accept `STOCK_PRODUCER_DATA_ROOT`, or
-   the owner accepts that new worktree seeding has no source until they do.
+3. Research readers resolve the root through `producer_data_root()` (environment,
+   then the primary `.env.local`; no fallback). Before stock-research#19 merged, the
+   primary `.env.local` was corrected to
+   `STOCK_PRODUCER_DATA_ROOT=D:/Project/stock-research/stock-data-downloader/data`;
+   with the stale `D:/Project/stock-data-downloader/data` every research process
+   fails. Readers that seed worktree copies (sealed-producer-inputs work) accept
+   the resolved root, or the owner accepts that seeding has no source until they do.
 4. Window: not 17:30–19:00 on a weekday (DailyUpdate 18:00, 19–45 min), not the
    evening of the 1st (OfficialBackfill runs ~1.5 h after a month rollover).
    Budget about 30 minutes; most of it is hashing ~21 GB of SQLite/Parquet twice.
@@ -256,8 +260,17 @@ A producer development worktree must still print its own `data` and `default`.
 
 In the primary research checkout's ignored `.env.local`, set
 `STOCK_PRODUCER_DATA_ROOT=D:/StockData/stock-data-downloader` (replacing the
-nonexistent `D:/Project/stock-data-downloader/data`). Read the resolved root back
-with the research resolver; inspect any process/user/machine override first.
+in-repository path). Inspect any process/user/machine override first, then read
+the resolved root back from a linked worktree without the variable set:
+
+```powershell
+Remove-Item Env:STOCK_PRODUCER_DATA_ROOT -ErrorAction SilentlyContinue
+uv run python -c "from research_core.producer_data import producer_data_root; print(producer_data_root())"
+```
+
+Expect `D:\StockData\stock-data-downloader`. Docker's fallback mount
+`./stock-data-downloader/data` is code-only after the move and fails the
+`price_daily.parquet` check; always pass `--env-file .env.local`.
 
 ### 10. Resume and confirm
 
