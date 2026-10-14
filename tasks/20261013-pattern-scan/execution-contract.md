@@ -75,6 +75,57 @@ removes repeated scalar identity lookups. Raw-date normalization uses the same
 daily-date rule in a vector operation. Definitions, clocks and acceptance rules
 are unchanged; the next version requires a new seal and measured profile.
 
+## Resource probe v3: measured gains and limits
+
+`full-2010-20261014-v3` completed at 2026-10-14 08:37 Asia/Taipei, using
+source commit `984eb1a3d103156335736f05ae1de0b94748b177` and the unchanged
+fixed input manifest. Its source ID is
+`7d352dcaa7e7e880e4464c1ad11b5614ad9bad81fff5921d2d1ed503af2c4d21`.
+The [retained reading copy](resource-probe-v3.json.gz) records the original
+request, response, executed source archive and native memory pins. Repeated
+verified reads of the native memory receipt agree. The 1/2/4-worker stock
+artifacts and integer rows agree; the owned Job was empty after teardown.
+
+| Observed phase                        | Wall seconds | CPU seconds |
+| ------------------------------------- | -----------: | ----------: |
+| Fixed input loading                   |         7.56 |        7.22 |
+| Four-stock global barrier             |         3.04 |        2.83 |
+| Four-stock / 48-target event binding  |       789.83 |      715.33 |
+| One-group integer feed                |        10.75 |        9.97 |
+| One-group summary serialization       |         2.40 |        2.30 |
+| Sixteen first-by-date followup events |         2.51 |        2.08 |
+| Corresponding holding context         |         0.11 |        0.08 |
+| Followup summary serialization        |        70.69 |       63.34 |
+
+The coordinator's native Job peak was 2,730,426,368 committed bytes under its
+eight GiB cap. Loading improved, but overall event binding was slower than v2;
+these observations do not establish a full-study speedup. Definitions, clocks,
+strata and acceptance rules remain unchanged.
+
+A separate source-sealed L1 diagnostic compared uncached, cold-memo and warm-memo
+binding on stock 1104. All five tables matched the retained probe after the
+documented Parquet round trip. Instrumented wall times were respectively
+14.61, 15.84 and 9.78 seconds (CPU 13.55, 14.88 and 9.11 seconds).
+Condition-binding cumulative times were 8.27, 4.52 and 1.72 seconds.
+The cold total did not improve; one warm-target observation cannot establish
+benefit across all twelve targets or the full market.
+
+A second sealed diagnostic reproduced every integer summary row for the same
+four-stock H1 union H126 feed. Its 22.66 instrumented seconds included 9.91 in
+`DenseCounts.add_stock`, 9.41 in `stock_memberships`, and 2.05 in
+`aggregate_memberships`. Registry rebuilding was 2.15 seconds within membership
+work; it is not added again to the membership total. These instrumented costs
+locate future optimization work and are not substituted for preflight timings.
+Both diagnostic Jobs had two GiB caps, finite 600-second limits and confirmed
+empty teardown; their receipts and raw file identities are retained.
+
+Storage remains insufficient for a complete run. Approximately 42.2 GB of event
+checkpoints are estimated before other checkpoints, publication and aggregates,
+while the recorded D: free space remains below 13 GB. Full-market publication,
+selection, independent audits, Q1–Q6 and the results report remain pending the
+owner's storage decision. No unrelated data was removed and no external storage
+root was substituted.
+
 ## 唯一固定輸入與共用入口
 
 Owner 指定的 handoff 是 primary `.tmp/claude-kline/20261012-claude-handoff-pattern-scan.md`，
