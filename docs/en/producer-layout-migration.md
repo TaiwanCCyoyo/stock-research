@@ -1,14 +1,31 @@
 # Producer layout correction
 
-> **Owner update 2026-10-15 — data location reversed, code location kept.** The
-> producer code remains the `stock-data-downloader` submodule of the research
-> checkout and the scheduled tasks keep running from
-> `D:/Project/stock-research/stock-data-downloader`. Its live data moves out of the
-> checkout to `D:/StockData/stock-data-downloader`, configured by the producer's
-> `.env` `SHIOAJI_DATA_DIR`, so the repository and its worktrees carry no
-> production data. Step 3 below ("data beneath `data/`") is superseded for the data
-> only; see the [relocation runbook](producer-data-relocation-runbook.md). The
-> record below is kept as history.
+## Decision 2026-10-15: producer data leaves the repository
+
+Decided by the owner on 2026-10-15. The producer's live data moves out of the
+research checkout to `D:/StockData/stock-data-downloader`, selected by the
+producer's own `.env` `SHIOAJI_DATA_DIR`. The reasons:
+
+- **No data in the repository or its worktrees.** A storage audit found the
+  checkout at 90.7 GB, 42.6 GB of it the producer's live data, with worktrees
+  holding further partial copies.
+- **Research worktrees stop needing the submodule or a post-checkout copy.** They
+  read producer data by explicit absolute root instead of seeding snapshots.
+- **Worktree removal and `git clean` cannot reach canonical data.** Data outside
+  every checkout is outside the blast radius of routine Git cleanup.
+
+Scope: this reverses only the data-location part of the correction recorded
+below. The producer code stays the `stock-data-downloader` submodule, and the
+scheduled tasks keep running from `D:/Project/stock-research/stock-data-downloader`.
+Step 3 below ("data beneath `data/`") is superseded for the data only. The target
+is on the same volume, so the move is a rename. Execution follows the
+[relocation runbook](producer-data-relocation-runbook.md), which needs a separate
+owner-approved window. The producer side is
+[stock-data-downloader#2](https://github.com/TaiwanCCyoyo/stock-data-downloader/pull/2).
+
+The record below is kept as history.
+
+## Earlier correction: producer inside the research checkout
 
 The initial clean-repository migration deployed the producer to an independent
 `D:/Project/stock-data-downloader` checkout while research consumers still defaulted

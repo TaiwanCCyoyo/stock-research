@@ -57,15 +57,21 @@ New-Item -ItemType Directory -Force $R | Out-Null
 ### 1. Record and pause the tasks (owner-approved)
 
 ```powershell
+$enabledBefore = @()
 foreach ($n in 'StockProject-DailyUpdate','StockProject-OfficialBackfill') {
   Export-ScheduledTask -TaskName $n | Set-Content -Encoding Unicode "$R\$n.xml"
+  $task = Get-ScheduledTask $n
   $i = Get-ScheduledTaskInfo -TaskName $n
-  '{0} state={1} lastResult={2} next={3}' -f $n, (Get-ScheduledTask $n).State, $i.LastTaskResult, $i.NextRunTime
+  '{0} state={1} lastResult={2} next={3}' -f $n, $task.State, $i.LastTaskResult, $i.NextRunTime
+  if ($task.State -ne 'Disabled') { $enabledBefore += $n }
   Disable-ScheduledTask -TaskName $n | Out-Null
 }
+$enabledBefore | Set-Content "$R\enabled-before.txt"
 ```
 
 Disabling prevents new starts only. It does not stop a running process.
+`enabled-before.txt` lists the tasks that were enabled; step 10 and the rollback
+re-enable only those, so a task the owner had already paused stays paused.
 
 ### 2. Wait for every writer and reader to exit — never kill
 
@@ -196,11 +202,13 @@ uv run --no-project python "$R\inventory.py" $T "$R\after.json"
 import json, sys
 b = json.load(open(sys.argv[1], encoding="utf-8"))["files"]
 a = json.load(open(sys.argv[2], encoding="utf-8"))["files"]
-b.pop("stock_category.json5", None)  # moved back into the checkout on purpose
+for side in (a, b):  # the tracked category file stays with the checkout on purpose
+    side.pop("stock_category.json5", None)
 diff = sorted(set(a) ^ set(b)) + sorted(k for k in a.keys() & b.keys() if a[k] != b[k])
 print("files", len(a), "bytes", sum(e["size"] for e in a.values()), "differences", len(diff))
 sys.exit(f"mismatch: {diff[:20]}" if diff else 0)
-'@ | uv run --no-project python - "$R\before.json" "$R\after.json"
+'@ | Set-Content -Encoding utf8 "$R\compare.py"
+uv run --no-project python "$R\compare.py" "$R\before.json" "$R\after.json"
 Get-ChildItem -Force "$P\data"
 ```
 
@@ -256,8 +264,10 @@ with the research resolver; inspect any process/user/machine override first.
 Re-enable the same two tasks only with the owner's go-ahead:
 
 ```powershell
-Enable-ScheduledTask -TaskName 'StockProject-DailyUpdate','StockProject-OfficialBackfill'
+Get-Content "$R\enabled-before.txt" | ForEach-Object { Enable-ScheduledTask -TaskName $_ | Out-Null; $_ }
 ```
+
+Only tasks recorded as enabled in step 1 are re-enabled.
 
 After the next scheduled runs, each log
 (`$P\logs\run_daily_<date>.log`, `backfill_official_history_<date>.log`) starts
@@ -275,11 +285,24 @@ data to get past a stop.
 
 ## Rollback
 
-While both tasks are paused: remove the `SHIOAJI_DATA_DIR` line from `$P\.env`,
-move `$P\data\stock_category.json5` into `$T`, remove the now-empty `$P\data`
-directory, then `Move-Item $T "$P\data"`. Any files written at `$T` after the move
-travel back with it. Restore `.env.local`, re-run the step 6 comparison against
-the restored path, then re-enable the tasks.
+While both tasks are paused (writers idle, step 3 clean again):
+
+```powershell
+# 1. Remove the SHIOAJI_DATA_DIR line from $P\.env by hand; check key names as in step 7.
+Move-Item -LiteralPath "$P\data\stock_category.json5" -Destination "$T\stock_category.json5"
+uv run --no-project python "$R\inventory.py" $T "$R\rollback-before.json"
+Remove-Item -LiteralPath "$P\data"   # empty directory only; fails if anything is inside
+Move-Item -LiteralPath $T -Destination "$P\data"
+uv run --no-project python "$R\inventory.py" "$P\data" "$R\rollback-after.json"
+uv run --no-project python "$R\compare.py" "$R\rollback-before.json" "$R\rollback-after.json"
+git -C $P status --porcelain
+```
+
+The rollback baseline is taken at rollback time, so files legitimately written at
+`$T` after the move (for example step 8's `data_quality_report.json`) are expected
+and travel back with the directory; comparing against the original `before.json`
+would report them as mismatches. Then restore `.env.local` and re-enable only the
+tasks in `enabled-before.txt`, as in step 10.
 
 ## Execution record
 
