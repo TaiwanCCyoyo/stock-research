@@ -536,6 +536,7 @@ def build_summary(args: argparse.Namespace, code_list: list[str], strategy_cls: 
             "path": data_path,
             "price_file": artifact_path(raw_data_path / "price_daily.parquet"),
             "dividend_file": artifact_path(raw_data_path / "dividends.parquet"),
+            **({"producer_inputs": args.producer_inputs_pin} if getattr(args, "producer_inputs_pin", None) else {}),
         },
         "metrics": {
             "final_value": results["final_value"],
@@ -745,6 +746,7 @@ def main():
             logger.error("[!] %s", e)
             sys.exit(1)
         args.data_path = str(sealed.data_root)
+        args.producer_inputs_pin = {"data_id": "producer-inputs", "version_id": sealed.version_id, "manifest_sha256": sealed.manifest_sha256}
         logger.info("[*] Sealed producer inputs %s at %s", sealed.version_id, sealed.data_root)
     if args.data_path is None:
         try:

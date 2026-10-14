@@ -380,3 +380,21 @@ def test_validator_rejects_quality_peer_tampering_after_hash_and_receipt_refresh
     _replace_chunk(output, "peers", peers, refresh_receipt=True)
     with pytest.raises(CatalogIOError, match=expected_error):
         validate_bundle(output)
+
+
+def test_bundle_builds_and_validates_from_a_sealed_root_outside_the_repo(tmp_path: Path) -> None:
+    from research_core.producer_inputs import open_producer_inputs, seal_producer_inputs
+    from research_core.research_data_paths import DataRoots
+
+    root = _repo(tmp_path)
+    primary = tmp_path / "primary checkout"
+    (primary / ".git").mkdir(parents=True)
+    roots = DataRoots(primary=primary, data=primary / "research_data")
+    version = seal_producer_inputs(root / "stock-data-downloader" / "data", roots, register=False)["version_id"]
+    sealed = open_producer_inputs(roots, version, version)
+    sealed.verify_all()
+    output = root / "tasks" / "20261002-sector-wave-catalog" / "runs" / "sealed"
+    manifest = build_bundle(root, output, "sealed", data_root=sealed.data_root)
+    validate_bundle(output)
+    assert manifest["counts"]["securities"] == 3
+    assert Path(manifest["input_paths"]["price"]) == sealed.data_root / "price_daily.parquet"

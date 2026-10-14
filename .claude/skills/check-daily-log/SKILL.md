@@ -12,10 +12,15 @@ not a duplicate procedure, so the two never drift apart.
 
 ## Procedure
 
+Use the primary checkout's producer, `<primary stock-research checkout>/stock-data-downloader/`
+(here `D:/Project/stock-research/stock-data-downloader/`). Linked worktrees no longer
+initialize the submodule (2026-10-15), so a worktree's own `stock-data-downloader/` is
+empty or stale; never read logs or data from it.
+
 1. Read and follow
-   `stock-data-downloader/.claude/commands/check-daily-log.md` verbatim —
+   `<primary>/stock-data-downloader/.claude/commands/check-daily-log.md` verbatim —
    that file is the source of truth for what to check and how to report it.
-2. Run its steps with a working directory of `stock-data-downloader/`, since
+2. Run its steps with a working directory of that primary `stock-data-downloader/`, since
    all paths in that command (`logs/`, `data/data_quality_report.json`,
    `data/official_daily.sqlite`) are relative to the submodule root, not this
    repo's root.

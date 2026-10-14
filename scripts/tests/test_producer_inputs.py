@@ -268,3 +268,54 @@ def test_sector_catalog_cli_requires_an_explicit_producer_source(monkeypatch: py
     monkeypatch.setattr(sys, "argv", ["build_sector_wave_catalog", "--output-dir", "unused", "--run-id", "one"])
     with pytest.raises(SystemExit):
         build_sector_wave_catalog.main()
+
+
+def test_backtest_summary_records_sealed_pin_and_path_outside_repo(roots: DataRoots, source: Path, tmp_path: Path) -> None:
+    """A sealed root sits outside the worktree; the recorded path must still resolve for queries."""
+    import argparse
+
+    from scripts.stock_research_query import resolve_price_data_root
+    from StockProject.backtest_cli import build_summary
+
+    version = seal_producer_inputs(source, roots, register=False)["version_id"]
+    sealed = open_producer_inputs(roots, version, version)
+    pin = {"data_id": "producer-inputs", "version_id": version, "manifest_sha256": version}
+    args = argparse.Namespace(
+        output=str(tmp_path / "summary.json"),
+        data_path=str(sealed.data_root),
+        producer_inputs_pin=pin,
+        strategy="strategy.py",
+        start="2010-01-01",
+        end="2010-01-31",
+        cash=1000.0,
+        capital_mode="shared",
+        benchmark_code="0050",
+        strategy_params={},
+    )
+
+    class Loader:
+        corporate_action_db = None
+
+        def get_warnings(self) -> list[str]:
+            return []
+
+        def get_stock_data(self, code: str | None, adjust: bool = True) -> pd.DataFrame:
+            return pd.DataFrame([{"Date": pd.Timestamp("2010-01-04"), "Close": 64.9, "RawClose": 64.9, "SplitAdjustedClose": 64.9}])
+
+    class Broker:
+        cash, fee_rate, tax_rate, per_stock_initial_cash, cash_blocked_entry_count = 1000.0, 0.0, 0.0, None, 0
+        positions: dict[str, int] = {}
+        trades: list[dict[str, object]] = []
+
+    class Engine:
+        loader = Loader()
+        data_cache: dict[str, object] = {}
+        equity_curve = [{"date": "2010-01-04", "equity": 1000.0}]
+        price_curve = [{"date": "2010-01-04", "prices": {"2330": 64.9}}]
+
+    class Strategy:
+        __name__ = "Strategy"
+
+    summary = build_summary(args, ["2330"], Strategy, Broker(), Engine(), {"final_value": 1000.0, "total_pnl": 0.0, "return_rate": 0.0})
+    assert summary["data"]["producer_inputs"] == pin
+    assert resolve_price_data_root(summary["data"]["path"]) == sealed.data_root.resolve()
