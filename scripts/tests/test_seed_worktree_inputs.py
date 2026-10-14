@@ -5,6 +5,7 @@ import os
 import sqlite3
 import stat
 import sys
+from contextlib import closing
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -44,10 +45,100 @@ def test_sqlite_snapshot_includes_committed_wal_rows(tmp_path: Path):
         writer.execute("CREATE TABLE evidence(value INTEGER)")
         writer.execute("INSERT INTO evidence VALUES (42)")
         writer.commit()
+        assert (source / "institutional.sqlite-wal").stat().st_size > 0  # The row lives only in the WAL.
         receipt = seed_inputs(primary, worktree)
-        with sqlite3.connect(target / "institutional.sqlite") as copied:
+        with closing(sqlite3.connect(target / "institutional.sqlite")) as copied:
             assert copied.execute("SELECT value FROM evidence").fetchall() == [(42,)]
     assert receipt["files"][0]["mode"].startswith("consistent_sqlite_backup")
+
+
+def wal_source(source: Path, value: int) -> sqlite3.Connection:
+    """Leave a committed row in an open writer's WAL, as a running producer would."""
+    writer = sqlite3.connect(source / "institutional.sqlite")
+    writer.execute("PRAGMA journal_mode=WAL")
+    writer.execute("CREATE TABLE evidence(value INTEGER)")
+    writer.execute("INSERT INTO evidence VALUES (?)", (value,))
+    writer.commit()
+    return writer
+
+
+def sqlite_value(path: Path) -> list[tuple[int]]:
+    with closing(sqlite3.connect(path.as_uri() + "?mode=ro&immutable=1", uri=True)) as database:
+        return database.execute("SELECT value FROM evidence").fetchall()
+
+
+def test_sqlite_success_leaves_no_scratch_or_staging_copy(tmp_path: Path) -> None:
+    primary, worktree, source, target = legacy_layout(tmp_path)
+    with closing(wal_source(source, 42)):
+        receipt = seed_inputs(primary, worktree)
+    scratch = Path(receipt["receipt_path"]).parent
+    assert [path.name for path in scratch.iterdir()] == ["receipt.json"]
+    assert list((worktree / ".tmp").rglob("*.sqlite*")) == []
+    assert sorted(path.name for path in target.iterdir()) == ["institutional.sqlite"]
+    assert sqlite_value(target / "institutional.sqlite") == [(42,)]
+    assert receipt["bytes_copied"] == (target / "institutional.sqlite").stat().st_size
+
+
+@pytest.mark.parametrize("failure", ["quick_check", "publish"])
+def test_failed_sqlite_seed_retains_partial_and_retry_publishes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, failure: str) -> None:
+    primary, worktree, source, target = legacy_layout(tmp_path)
+    outgoing = target / "institutional.sqlite"
+    with closing(wal_source(source, 42)):
+        if failure == "quick_check":
+            original_check = seed_worktree_inputs._closed_sqlite
+
+            def failed_check(path: Path) -> None:
+                original_check(path)
+                raise ValueError("injected quick_check failure")
+
+            monkeypatch.setattr(seed_worktree_inputs, "_closed_sqlite", failed_check)
+            error: type[Exception] = ValueError
+        else:
+
+            def failed_publish(staging: Path, destination: Path) -> None:
+                raise OSError("injected publish failure")
+
+            monkeypatch.setattr(seed_worktree_inputs, "publish_noreplace", failed_publish)
+            error = OSError
+        with pytest.raises(error, match=f"injected {failure}"):
+            seed_inputs(primary, worktree)
+
+        assert not outgoing.exists()
+        partials = list(target.glob(".institutional.sqlite.seed-*.partial"))
+        assert len(partials) == 1 and sqlite_value(partials[0]) == [(42,)]
+        assert not (target / ".institutional.sqlite.seed.lock").exists()
+        assert list((worktree / ".tmp").glob("worktree-seed-*/receipt.json")) == []
+        assert list((worktree / ".tmp").rglob("*.sqlite*")) == []
+        retained = partials[0].read_bytes()
+
+        monkeypatch.undo()
+        receipt = seed_inputs(primary, worktree)
+
+    assert sqlite_value(outgoing) == [(42,)]
+    assert partials[0].read_bytes() == retained
+    assert [row["path"] for row in receipt["files"]] == ["institutional.sqlite"]
+
+
+def test_sqlite_target_created_at_publication_boundary_is_never_overwritten(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    primary, worktree, source, target = legacy_layout(tmp_path)
+    outgoing = target / "institutional.sqlite"
+    original_publish = seed_worktree_inputs.publish_noreplace
+    observed: list[Path] = []
+
+    def foreign_writer_at_publication(staging: Path, destination: Path) -> None:
+        observed.append(staging)
+        assert destination == outgoing and not destination.exists()
+        destination.write_bytes(b"foreign writer snapshot")
+        original_publish(staging, destination)
+
+    monkeypatch.setattr(seed_worktree_inputs, "publish_noreplace", foreign_writer_at_publication)
+    with closing(wal_source(source, 42)), pytest.raises(FileExistsError):
+        seed_inputs(primary, worktree)
+
+    assert outgoing.read_bytes() == b"foreign writer snapshot"
+    assert len(observed) == 1 and sqlite_value(observed[0]) == [(42,)]
+    assert not (target / ".institutional.sqlite.seed.lock").exists()
+    assert list((worktree / ".tmp").glob("worktree-seed-*/receipt.json")) == []
 
 
 def test_stable_inputs_preserve_exact_mtime_and_csv_freshness(tmp_path: Path) -> None:
