@@ -26,15 +26,13 @@ own `.env`, so producer worktrees keep their own `data/`.
 
 ## Preconditions (all must hold; otherwise stop)
 
-1. Producer PR merged; stock-research PR that pins the merged producer commit merged.
-2. The primary producer checkout runs the merged code. Old code ignores
-   `SHIOAJI_DATA_DIR` and would recreate `data/` and start downloading into it.
-    ```powershell
-    git -C D:/Project/stock-research/stock-data-downloader log -1 --format=%H
-    cd D:/Project/stock-research/stock-data-downloader
-    uv run python -c "from config import config; print(config.DATA_DIR_ENV, config.DATA_DIR, config.DATA_DIR_SOURCE)"
-    ```
-    Expect `SHIOAJI_DATA_DIR ...\stock-data-downloader\data default`.
+1. Merge chain complete: producer PR merged → stock-research PR bumps the
+   `stock-data-downloader` gitlink to that merged commit → stock-research PR merged.
+   Deploying that code to the primary checkout happens inside the window (step 2b),
+   after the writers are idle, because it changes production files.
+2. The primary research checkout `D:/Project/stock-research` is on `main` with no
+   uncommitted tracked changes. Another session's work there is never reset,
+   stashed or switched; otherwise stop and coordinate with its owner.
 3. Research readers that seed or read the primary's `stock-data-downloader/data/`
    (owned by the sealed-producer-inputs work) accept `STOCK_PRODUCER_DATA_ROOT`, or
    the owner accepts that new worktree seeding has no source until they do.
@@ -74,14 +72,37 @@ Disabling prevents new starts only. It does not stop a running process.
 ```powershell
 Get-ScheduledTask -TaskName 'StockProject-*' | Select TaskName, State
 Get-CimInstance Win32_Process |
-  Where-Object { $_.CommandLine -match 'stock-data-downloader|official_daily|StockData' } |
+  Where-Object { $_.ProcessId -ne $PID -and $_.CommandLine -match 'stock-data-downloader|stock-research|official_daily|StockData' } |
   Select ProcessId, Name, CommandLine
 ```
 
-Proceed only when neither task is `Running` and no process references the data
-(including other sessions' seeders, research APIs or notebooks). If something
-does not exit by itself, defer the window and ask its owner. Never end a process
-you did not start.
+Proceed only when neither task is `Running` and no listed process can be using the
+data (other sessions' seeders, research APIs, notebooks, editors). A command line
+does not reveal every open file, so the binding gates are step 3 (no SQLite side
+files remain) and step 5 (a directory rename refuses while any handle is open).
+If something does not exit by itself, defer the window and ask its owner. Never
+end a process you did not start.
+
+### 2b. Deploy the merged producer code (writers idle)
+
+Old code ignores `SHIOAJI_DATA_DIR` and would recreate `data/` and start
+downloading into it, so the primary producer must run the merged code before the
+setting exists.
+
+```powershell
+git -C D:\Project\stock-research status --short --branch --untracked-files=no
+git -C D:\Project\stock-research pull --ff-only
+git -C D:\Project\stock-research submodule update -- stock-data-downloader
+git -C $P log -1 --format=%H
+cd $P
+uv run python -c "from config import config; print(config.DATA_DIR_ENV, config.DATA_DIR, config.DATA_DIR_SOURCE)"
+```
+
+Run the pull only when the status shows `## main...origin/main` and nothing else;
+otherwise stop. The producer HEAD must equal the merged commit the gitlink names,
+and the read-back must print `SHIOAJI_DATA_DIR ...\stock-data-downloader\data default`.
+Both task actions already point at this checkout's `cron/` launchers, so no action
+migration is needed.
 
 ### 3. Checkpoint SQLite
 
@@ -145,8 +166,9 @@ uv run --no-project python "$R\inventory.py" "$P\data" "$R\before.json"
 git -C $P status --porcelain
 ```
 
-A reparse point anywhere stops the procedure. Record the printed count and bytes
-(about 4,170 top-level entries and 42.6 GB were observed on 2026-10-15). Note any
+A reparse point anywhere stops the procedure. Record the printed count and bytes;
+expect the magnitude of the 2026-10-09 copy receipt (15,245 files,
+42,570,473,861 bytes) plus later daily growth. Note any
 `*.lock` file: a leftover lock moves with the data and is examined, not deleted.
 
 ### 5. Move (same-volume rename)
@@ -188,16 +210,23 @@ paused, report; do not "fix" by copying.
 
 ### 7. Configure the producer
 
-Append one line to the primary producer's existing private `.env`; leave every
-other line untouched.
+Append one line to the primary producer's existing private `.env` (CRLF, three
+lines, ending in a newline on 2026-10-15); leave every other line untouched. If the
+file no longer ends with a newline, add one first, or the new line would fuse with
+the last credential. Never print values.
 
 ```powershell
-Add-Content -LiteralPath "$P\.env" -Value "SHIOAJI_DATA_DIR=$($T -replace '\\','/')"
+$envFile = "$P\.env"
+$bytes = [IO.File]::ReadAllBytes($envFile)
+if ($bytes.Length -and $bytes[-1] -ne 10) { [IO.File]::AppendAllText($envFile, "`r`n") }
+[IO.File]::AppendAllText($envFile, "SHIOAJI_DATA_DIR=D:/StockData/stock-data-downloader`r`n")
 cd $P
-uv run python -c "from config import config; print(config.DATA_DIR, config.DATA_DIR_SOURCE)"
+uv run python -c "from dotenv import dotenv_values; from config import config; print(sorted(dotenv_values(config.ENV_FILE))); print(config.DATA_DIR, config.DATA_DIR_SOURCE)"
 ```
 
-Expect `D:\StockData\stock-data-downloader  D:\...\stock-data-downloader\.env`.
+The key list must hold every earlier key (`API_KEY`, `SECRET_KEY`,
+`SHIOAJI_BACKUP_DIR`) plus `SHIOAJI_DATA_DIR`, and the second line must read
+`D:\StockData\stock-data-downloader  D:\...\stock-data-downloader\.env`.
 A producer development worktree must still print its own `data` and `default`.
 
 ### 8. Prove reads, writes and backup on the new root
@@ -208,8 +237,9 @@ A producer development worktree must still print its own `data` and `default`.
 2. Backup still covers the data: `uv run scripts/backup_data.py --verify-only`.
    The mirror compares relative path, size and modification time, so the rename
    needs no recopy; this must pass without copying.
-3. A local write, no network: `uv run scripts/check_data_integrity.py` rewrites
-   `data_quality_report.json`. Confirm its new modification time under `$T` and
+3. A local write, no network: `uv run scripts/check_data_integrity.py` reads the
+   local parquet/SQLite and rewrites only `data_quality_report.json` (it imports no
+   network client). Confirm its new modification time under `$T` and
    that nothing new appeared under `$P\data`.
 4. `uv run scripts/backup_data.py` then mirrors that one changed report into
    `D:/StockDataBackup/data`.
