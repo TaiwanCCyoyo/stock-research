@@ -1,5 +1,15 @@
 # Producer layout correction
 
+> **Owner update 2026-10-15 — data location reversed, code location kept.** The
+> producer code remains the `stock-data-downloader` submodule of the research
+> checkout and the scheduled tasks keep running from
+> `D:/Project/stock-research/stock-data-downloader`. Its live data moves out of the
+> checkout to `D:/StockData/stock-data-downloader`, configured by the producer's
+> `.env` `SHIOAJI_DATA_DIR`, so the repository and its worktrees carry no
+> production data. Step 3 below ("data beneath `data/`") is superseded for the data
+> only; see the [relocation runbook](producer-data-relocation-runbook.md). The
+> record below is kept as history.
+
 The initial clean-repository migration deployed the producer to an independent
 `D:/Project/stock-data-downloader` checkout while research consumers still defaulted
 to the old submodule name. This differed from the owner’s intended single live

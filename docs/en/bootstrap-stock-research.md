@@ -242,11 +242,17 @@ format migration does not establish redistribution rights or public readiness.
 
 ## Standalone canonical data configuration
 
-The verified canonical producer copy is `D:/Project/stock-data-downloader/data`.
+Owner update 2026-10-15: the canonical producer data directory is
+`D:/StockData/stock-data-downloader`, outside every checkout, selected by the
+producer's own `.env` (`SHIOAJI_DATA_DIR`). Until the
+[relocation runbook](producer-data-relocation-runbook.md) records its execution,
+the data still lives at `D:/Project/stock-research/stock-data-downloader/data`.
 stock-research does not duplicate this directory into its producer submodule or
 Vite public. The local ignored `.env.local` contains only
-`STOCK_PRODUCER_DATA_ROOT=D:/Project/stock-data-downloader/data`; it contains no
-API credentials and changes no global environment or scheduler.
+`STOCK_PRODUCER_DATA_ROOT=<canonical producer data directory>`, switched to
+`D:/StockData/stock-data-downloader` by runbook step 9 (the earlier value
+`D:/Project/stock-data-downloader/data` no longer exists). It contains no API
+credentials and changes no global environment or scheduler.
 
 Load that configuration explicitly for a local API process:
 
