@@ -7,6 +7,7 @@ import pandas as pd
 import pytest
 
 from research_core.artifact_store import object_digest
+from research_core.pattern_scan_classification_cache_v1 import ConditionClassificationCache
 from research_core.pattern_scan_event_outcomes_v1 import EventIdentity
 from research_core.pattern_scan_event_tables_v1 import EventTables, build_event_tables
 from research_core.pattern_scan_stock_v1 import EVENT_COLUMNS
@@ -98,6 +99,35 @@ def _build(target: str, tables: dict[str, pd.DataFrame], global_values: pd.DataF
         base_label_version_id="base.v1",
         base_label_manifest_sha256=object_digest({"synthetic": True}),
     )
+
+
+def test_shared_stock_classification_cache_preserves_complete_event_tables() -> None:
+    tables, global_values = _inputs()
+    originals = {name: frame.copy(deep=True) for name, frame in tables.items()}
+    global_before = global_values.copy(deep=True)
+    cache = ConditionClassificationCache()
+    for target in ("B1", "L1", "B1"):
+        expected = _build(target, tables, global_values)
+        actual = build_event_tables(
+            target,
+            tables,
+            global_values,
+            security_id="TW:0001",
+            definition_id="def.v1",
+            input_id="input.v1",
+            base_label_version_id="base.v1",
+            base_label_manifest_sha256=object_digest({"synthetic": True}),
+            classification_cache=cache,
+        )
+        for name in ("events", "conditions", "group_memberships"):
+            pd.testing.assert_frame_equal(getattr(actual, name), getattr(expected, name))
+        for name in ("daily_groups", "formula_groups"):
+            assert set(getattr(actual, name)) == set(getattr(expected, name))
+            for group in getattr(actual, name):
+                pd.testing.assert_series_equal(getattr(actual, name)[group], getattr(expected, name)[group])
+    for name, original in originals.items():
+        pd.testing.assert_frame_equal(tables[name], original)
+    pd.testing.assert_frame_equal(global_values, global_before)
 
 
 def test_same_base_b1_l1_scoped_quality_and_conditions() -> None:

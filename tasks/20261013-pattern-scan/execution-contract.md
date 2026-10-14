@@ -23,6 +23,58 @@ Only duplicate metadata comparisons and PAT state assignment are being optimized
 definitions, clocks, strata and acceptance rules are unchanged. A new source seal
 and run identifier are required before another probe.
 
+## Resource probe v2: complete, full study pending storage
+
+`full-2010-20261014-v2` completed at 2026-10-14 07:56 Asia/Taipei,
+using the same fixed input manifest and source commit `c6aff2b04e83a09560d78e9577a247b8d62c3385`.
+[Retained reading copy](resource-probe-v2.json.gz) is gzip-compressed canonical UTF-8 JSON;
+it records resource metadata and raw pins for the complete primary request, response,
+source archive and separate native memory receipt. Its source ID is
+`7a5643f639db3f6a494d5b73b94227be550cc841869de111aac49affb64fac20`.
+Raw quote pairs remain local; the reading copy explicitly lists their omitted fields.
+The retained memory read has identical metrics on repeated verified reads.
+
+| Observed phase                        | Wall seconds | CPU seconds |
+| ------------------------------------- | -----------: | ----------: |
+| Fixed input loading                   |        79.79 |       74.61 |
+| Four-stock global barrier             |         2.39 |        2.31 |
+| Four-stock / 48-target event binding  |       721.83 |      653.33 |
+| One-group integer feed                |        15.26 |       14.44 |
+| One-group summary serialization       |         2.56 |        2.30 |
+| Sixteen first-by-date followup events |         4.90 |        3.88 |
+| Corresponding holding context         |         0.14 |        0.09 |
+| Followup summary serialization        |        78.59 |       71.56 |
+
+The 1/2/4-worker artifacts and integer counts agreed. The measured selection is
+four workers, one stock per process, six GiB child-pool cap and 600-second worker
+timeout. Native worker peak was 229,679,104 committed bytes; the coordinator's
+separate owned Job peak was 2,623,340,544 bytes under its eight GiB cap. The Job
+was confirmed empty after teardown. Native I/O counts include cached transfers;
+process lifetime RSS peaks are not individual phase peaks.
+
+The observed 0050 transition has raw-close ratio 0.25216008481314606 and adjusted-close
+ratio 1.008693808312129, with five suspended/missing calendar slots.
+The fixed action uses `TWSE_REFERENCE_PRICE_RATIO` = 0.2499867479459316,
+with `REFERENCE_PRICE_ONLY` evidence and unknown share factor.
+The strict comparison with a pure 0.25 split factor remains false; the transition
+does not certify factor validity. No source data or price policy was changed.
+
+Four-stock event checkpoints occupy 86,873,011 bytes. Their linear extrapolation
+to 1,942 securities is approximately 42.2 GB, before other checkpoints, formal
+publication and complete aggregates. D: had only 12,747,866,112 bytes available
+at the recorded observation. This is a planning estimate, not a capacity guarantee;
+the full study has not started while the owner chooses adequate storage.
+Existing data, worktrees and incomplete probe evidence are retained.
+
+A separate sealed-source L1 diagnostic confirmed all five retained tables after
+the documented Parquet round trip. It attributed 9.62 of 12.77 instrumented wall
+seconds to condition binding, including 5.10 seconds in classification. Those
+instrumented times are not substituted for the resource profile. The next source
+version memoizes successful typed classification tuples within one stock and
+removes repeated scalar identity lookups. Raw-date normalization uses the same
+daily-date rule in a vector operation. Definitions, clocks and acceptance rules
+are unchanged; the next version requires a new seal and measured profile.
+
 ## 唯一固定輸入與共用入口
 
 Owner 指定的 handoff 是 primary `.tmp/claude-kline/20261012-claude-handoff-pattern-scan.md`，

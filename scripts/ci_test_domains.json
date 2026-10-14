@@ -435,6 +435,7 @@
         "scripts/tests/test_pattern_scan_breakouts_v1.py",
         "scripts/tests/test_pattern_scan_candidate_coverage_v1.py",
         "scripts/tests/test_pattern_scan_candidate_daily_v1.py",
+        "scripts/tests/test_pattern_scan_classification_cache_v1.py",
         "scripts/tests/test_pattern_scan_cohorts_v1.py",
         "scripts/tests/test_pattern_scan_completion_v1.py",
         "scripts/tests/test_pattern_scan_conditions_v1.py",

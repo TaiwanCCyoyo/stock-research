@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 
 from research_core.hhhl_variants_selection import Atom
+from research_core.pattern_scan_classification_cache_v1 import ConditionClassificationCache
 from research_core.pattern_scan_conditions_v1 import FEATURES, PATTERNS, classify_column, selection_atoms
 from research_core.pattern_scan_stock_v1 import h1_values
 
@@ -23,7 +24,14 @@ def atoms_for_pattern(target: str) -> tuple[Atom, ...]:
     return tuple(atom for atom in selection_atoms() if atom.feature_id != f"PAT_other_{target}" and (target == "H1" or atom.feature_id not in H1_FIELDS))
 
 
-def event_conditions(events: pd.DataFrame, indicators: pd.DataFrame, common_values: pd.DataFrame, *, target_pattern: str) -> pd.DataFrame:
+def event_conditions(
+    events: pd.DataFrame,
+    indicators: pd.DataFrame,
+    common_values: pd.DataFrame,
+    *,
+    target_pattern: str,
+    classification_cache: ConditionClassificationCache | None = None,
+) -> pd.DataFrame:
     """Return event-local wide value/bin/status/reason columns.
 
     The caller has already computed complete-pool H/J/K3/MKT and raw PAT union
@@ -58,6 +66,10 @@ def event_conditions(events: pd.DataFrame, indicators: pd.DataFrame, common_valu
         raise ValueError("events require unique nonblank identities")
     if not event_rows.security_id.map(lambda value: isinstance(value, str) and bool(value.strip())).all() or event_rows.security_id.nunique() > 1:
         raise ValueError("events must belong to one explicit stock")
+    source_identities = [
+        (source["security_id"].to_numpy() if "security_id" in source else None, source["t0"].to_numpy() if "t0" in source else None)
+        for source in (common_values, indicators)
+    ]
     positions: list[int] = []
     for supplied in event_rows.itertuples(index=False):
         row = cast(Any, supplied)
@@ -66,10 +78,10 @@ def event_conditions(events: pd.DataFrame, indicators: pd.DataFrame, common_valu
             raise ValueError("event calendar_index must be a valid integer")
         if row.t0 != cast(pd.Timestamp, calendar[int(index)]).strftime("%Y-%m-%d"):
             raise ValueError("event t0 does not match calendar_index")
-        for source in (common_values, indicators):
-            if "security_id" in source and source["security_id"].iloc[int(index)] != row.security_id:
+        for security_ids, source_dates in source_identities:
+            if security_ids is not None and security_ids[int(index)] != row.security_id:
                 raise ValueError("event security differs from supplied stock")
-            if "t0" in source and source["t0"].iloc[int(index)] != row.t0:
+            if source_dates is not None and source_dates[int(index)] != row.t0:
                 raise ValueError("source t0 differs from common calendar")
         positions.append(int(index))
     selected = common_values.iloc[positions].reset_index(drop=True)
@@ -107,9 +119,7 @@ def event_conditions(events: pd.DataFrame, indicators: pd.DataFrame, common_valu
             allowed = is_pattern.copy()
             reasons[:] = None
             values[:] = None
-            for index in event_rows.index:
-                if not allowed.iloc[index]:
-                    continue
+            for index in np.flatnonzero(allowed.to_numpy(dtype=bool)):
                 support = event_rows.support.iloc[index]
                 anchor = indicators["Close"].iloc[positions[index]]
                 if pd.isna(support):
@@ -141,7 +151,8 @@ def event_conditions(events: pd.DataFrame, indicators: pd.DataFrame, common_valu
         if feature == "MKT":
             reasons.loc[values.eq("unknown")] = "market_context_unknown"
         values.loc[~allowed] = None
-        classified = classify_column(feature, values, applicable=allowed, unknown_reason=reasons)
+        classifier = classify_column if classification_cache is None else classification_cache.classify
+        classified = classifier(feature, values, applicable=allowed, unknown_reason=reasons)
         classified = classified.rename(columns={"bin_id": f"{feature}_bin", "status": f"{feature}_status", "reason": f"{feature}_reason"})
         pieces.append(pd.concat([values.rename(feature), classified], axis=1))
     result = pd.concat(pieces, axis=1)

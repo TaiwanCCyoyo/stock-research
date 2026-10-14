@@ -7,8 +7,22 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from research_core.pattern_scan_classification_cache_v1 import ConditionClassificationCache
 from research_core.pattern_scan_conditions_v1 import FEATURES, PATTERNS
 from research_core.pattern_scan_event_conditions_v1 import atoms_for_pattern, event_conditions
+
+
+def test_one_stock_classification_cache_preserves_all_targets_and_inputs() -> None:
+    events, indicators, common = inputs()
+    common["SR_a"] = pd.Series(["none"] * len(common), index=common.index, dtype=object)
+    originals = [frame.copy(deep=True) for frame in (events, indicators, common)]
+    cache = ConditionClassificationCache()
+    for target in PATTERNS:
+        expected = event_conditions(events, indicators, common, target_pattern=target)
+        actual = event_conditions(events, indicators, common, target_pattern=target, classification_cache=cache)
+        pd.testing.assert_frame_equal(actual, expected)
+    for frame, original in zip((events, indicators, common), originals):
+        pd.testing.assert_frame_equal(frame, original)
 
 
 def inputs() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:

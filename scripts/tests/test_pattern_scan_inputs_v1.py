@@ -107,6 +107,23 @@ def test_physical_handoff_verified_reuse_and_full_calendar_reader(tmp_path: Path
     snapshot.verify_after()
 
 
+@pytest.mark.parametrize("bad_date", [pd.Timestamp("2010-01-05 09:30"), pd.Timestamp("2010-01-06")])
+def test_pinned_raw_intraday_or_off_calendar_date_is_rejected(tmp_path: Path, bad_date: pd.Timestamp) -> None:
+    roots, source, pins_path = bundle(tmp_path)
+    raw_path = source / "tasks" / TASK / "inputs" / "observed-v1" / "price_daily.parquet"
+    raw = pd.read_parquet(raw_path)
+    raw.loc[1, "Date"] = bad_date
+    raw.to_parquet(raw_path, index=False)
+    pins = json.loads(gzip.decompress(pins_path.read_bytes()))
+    record = pins["frozen_inputs"]["records"][0]
+    record["snapshot_sha256"] = file_digest(raw_path)
+    record["snapshot_bytes"] = raw_path.stat().st_size
+    pins_path.write_bytes(gzip.compress(canonical(pins), mtime=0))
+    destination = handoff_inputs(roots, source, pins_path)
+    with pytest.raises(ValueError, match="raw dates differ from fixed common daily calendar"):
+        load_snapshot(roots, manifest_sha256=file_digest(destination / "manifest.json"))
+
+
 def test_stale_source_and_existing_canonical_bundle_fail_closed(tmp_path: Path) -> None:
     roots, source, pins = bundle(tmp_path)
     original = source / "tasks" / TASK / "inputs" / "observed-v1" / ROLES[-1]

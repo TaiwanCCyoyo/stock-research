@@ -213,10 +213,11 @@ def load_snapshot(roots: DataRoots, *, manifest_sha256: str) -> ScanSnapshot:
     if not bool(prices["Code"].map(lambda value: isinstance(value, str) and bool(value.strip())).all()):
         raise ValueError("raw code identity must retain its string bytes")
     observed_dates = pd.DatetimeIndex(prices["Date"])
+    raw_dates = observed_dates.to_numpy()
     if (
         observed_dates.hasnans
         or observed_dates.tz is not None
-        or any(day != day.normalize() for day in observed_dates)
+        or not np.equal(raw_dates, raw_dates.astype("datetime64[D]")).all()
         or not observed_dates.isin(calendar).all()
     ):
         raise ValueError("raw dates differ from fixed common daily calendar")

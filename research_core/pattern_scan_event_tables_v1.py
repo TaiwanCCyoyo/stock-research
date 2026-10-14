@@ -9,6 +9,7 @@ from typing import cast
 
 import pandas as pd
 
+from research_core.pattern_scan_classification_cache_v1 import ConditionClassificationCache
 from research_core.pattern_scan_event_conditions_v1 import event_conditions
 from research_core.pattern_scan_groups_v1 import groups_for_pattern
 from research_core.pattern_scan_projection_v1 import project_outcomes
@@ -36,6 +37,7 @@ def build_event_tables(
     input_id: str,
     base_label_version_id: str,
     base_label_manifest_sha256: str,
+    classification_cache: ConditionClassificationCache | None = None,
 ) -> EventTables:
     required = {"prices", "indicators", "pivots", "common_values", "universe", "pattern_states", "cohort_events", "controls", "base_labels"}
     if not required.issubset(tables):
@@ -103,7 +105,7 @@ def build_event_tables(
     )
     if not projected.empty and (not projected.horizon.isin((126, 252)).all() or not projected.groupby("event_id").horizon.nunique().eq(2).all()):
         raise ValueError("events require both fixed horizon base labels")
-    conditions = event_conditions(unique, tables["indicators"], common, target_pattern=target)
+    conditions = event_conditions(unique, tables["indicators"], common, target_pattern=target, classification_cache=classification_cache)
     membership_frame = pd.DataFrame(memberships, columns=pd.Index(("group_id", "event_id"))).drop_duplicates().reset_index(drop=True)
     LOGGER.debug(
         "Bound event tables target=%s stock=%s events=%d projected=%d memberships=%d", target, security_id, len(unique), len(projected), len(membership_frame)

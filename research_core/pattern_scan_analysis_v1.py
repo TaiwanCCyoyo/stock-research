@@ -15,6 +15,7 @@ from research_core.artifact_store import describe_file, file_digest, object_dige
 from research_core.hhhl_variants_selection import Atom, SelectionEvent
 from research_core.pattern_scan_barrier_v1 import metadata
 from research_core.pattern_scan_candidate_coverage_v1 import CandidateCoverage
+from research_core.pattern_scan_classification_cache_v1 import ConditionClassificationCache
 from research_core.pattern_scan_conditions_v1 import PATTERNS
 from research_core.pattern_scan_count_matrix_v1 import aggregate_memberships
 from research_core.pattern_scan_dense_counts_v1 import DenseCounts
@@ -73,6 +74,7 @@ def prepare_event_parts(
             raise ValueError("event global feature part changed")
         tables = {name: read_frame(directory / f"{name}.parquet") if shared is None else shared.read_stock(code, name) for name in STOCK_TABLES}
         global_values = read_frame(global_path) if shared is None else shared.read_global(code)
+        classification_cache = ConditionClassificationCache()
         for target in PATTERNS:
             identity = {
                 "code": code,
@@ -102,6 +104,7 @@ def prepare_event_parts(
                 input_id=input_id,
                 base_label_version_id=entries["labels"]["version_id"],
                 base_label_manifest_sha256=entries["labels"]["manifest"]["sha256"],
+                classification_cache=classification_cache,
             )
             staging = output / f".staging-{destination.name}-{uuid.uuid4().hex}"
             staging.mkdir()
