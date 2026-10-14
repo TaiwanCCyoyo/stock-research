@@ -177,3 +177,16 @@ def test_receipt_refuses_inputs_changed_during_the_run(repo: Path, producer: Pat
     with pytest.raises(ProducerChangedError, match="prices"):
         write_run_receipt(repo / "r2.json", run_id="r", definition="d", parameters={}, inputs=fingerprint, results={"s": result}, repo_root=repo)
     assert not (repo / "r1.json").exists() and not (repo / "r2.json").exists()
+
+
+def test_fingerprint_of_task_inputs_needs_no_producer_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from research_core import run_receipt
+
+    def unconfigured() -> Path:
+        raise RuntimeError("no producer root configured")
+
+    monkeypatch.setattr(run_receipt, "producer_data_root", unconfigured)
+    task_file = tmp_path / "labels.csv"
+    task_file.write_text("a\n1\n", encoding="utf-8")
+    result = fingerprint_inputs([InputSpec("labels", task_file)], now=WEEKDAY_EVENING)
+    assert result["producer_as_of"] is None and result["inputs"]["labels"]["live_producer"] is False

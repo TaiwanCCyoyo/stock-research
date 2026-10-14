@@ -88,8 +88,13 @@ def producer_as_of(root: Path) -> dict[str, Any]:
 
 def fingerprint_inputs(specs: list[InputSpec], *, now: datetime | None = None) -> dict[str, Any]:
     """Fingerprint every input once; refuse live producer reads while a writer may run."""
-    root = producer_data_root()
-    live = [spec for spec in specs if spec.path.resolve().is_relative_to(root.resolve())]
+    try:
+        root: Path | None = producer_data_root()
+    except (ValueError, OSError, RuntimeError) as error:
+        # No configured producer root: no input can be live producer data. Never guess one.
+        LOGGER.warning("Producer root unavailable; treating all inputs as non-producer: %s", error)
+        root = None
+    live = [spec for spec in specs if root is not None and spec.path.resolve().is_relative_to(root.resolve())]
     if live:
         assert_producer_idle(now)
     names = [spec.name for spec in specs]
@@ -102,7 +107,7 @@ def fingerprint_inputs(specs: list[InputSpec], *, now: datetime | None = None) -
     LOGGER.info("Fingerprinted %d inputs (%d live producer)", len(inputs), len(live))
     return {
         "captured_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "producer_as_of": producer_as_of(root) if live else None,
+        "producer_as_of": producer_as_of(root) if live and root is not None else None,
         "inputs": inputs,
     }
 
