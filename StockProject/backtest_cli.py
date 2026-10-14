@@ -718,13 +718,34 @@ def main():
     parser.add_argument(
         "--data-path",
         default=None,
-        help="Directory containing price_daily.parquet and dividends.parquet",
+        help="Directory containing price_daily.parquet and dividends.parquet (default: live producer_data_root())",
     )
+    parser.add_argument(
+        "--producer-inputs",
+        default=None,
+        metavar="VERSION_ID",
+        help="Read a sealed producer-inputs version from STOCK_RESEARCH_DATA_ROOT's primary instead of live data",
+    )
+    parser.add_argument("--producer-inputs-sha256", default=None, help="Manifest SHA-256 pin required with --producer-inputs")
     parser.add_argument("--output", help="Path to save result JSON")
     parser.add_argument("--params-json", default=None, help="Inline strategy params JSON object")
     parser.add_argument("--params-file", default=None, help="Path to a strategy params JSON file")
 
     args = parser.parse_args()
+    if args.producer_inputs is not None or args.producer_inputs_sha256 is not None:
+        if args.data_path is not None or args.producer_inputs is None or args.producer_inputs_sha256 is None:
+            logger.error("[!] --producer-inputs needs --producer-inputs-sha256 and excludes --data-path.")
+            sys.exit(1)
+        from research_core.producer_inputs import open_from_env
+
+        try:
+            sealed = open_from_env(args.producer_inputs, args.producer_inputs_sha256)
+            sealed.verify_all()
+        except (ValueError, FileNotFoundError, KeyError) as e:
+            logger.error("[!] %s", e)
+            sys.exit(1)
+        args.data_path = str(sealed.data_root)
+        logger.info("[*] Sealed producer inputs %s at %s", sealed.version_id, sealed.data_root)
     if args.data_path is None:
         try:
             args.data_path = str(producer_data_root())

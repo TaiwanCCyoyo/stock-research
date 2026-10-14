@@ -6,7 +6,9 @@ description: How to read this repo's Taiwan market data correctly - price_daily.
 # Market data cache
 
 Everything the backtests read lives in `stock-data-downloader/data/`, which this repo
-**consumes and never writes** (the submodule owns acquisition). The facts below were
+**consumes and never writes** (the submodule owns acquisition). A research worktree has no
+copy: it reads a sealed producer-inputs version by pin, or the live root through
+`producer_data_root()` (see `docs/en/stock-agent-operations.md`). The facts below were
 measured, not assumed, and most of them are the kind that fail silently rather than
 loudly — a wrong unit gives you a plausible number, not an exception.
 
@@ -144,9 +146,9 @@ universe.
 
 Reading it: open read-only with a `file:...?mode=ro` URI. Table `official_daily_price`
 (`market, code, date, open, high, low, close, volume, value, transactions, close_missing`),
-**volume in shares** -- not lots, unlike the parquet. From a worktree the file is excluded
-from the data copy by design; resolve the main checkout via
-`git rev-parse --path-format=absolute --git-common-dir`.
+**volume in shares** -- not lots, unlike the parquet. It is excluded from sealed producer-input
+versions by design; from a worktree read it from the live producer root by setting
+`STOCK_PRODUCER_DATA_ROOT`.
 
 **Its survivorship properties are the opposite of what you would guess, and differ by
 market.** The TWSE backfill takes its universe from codes already in the table

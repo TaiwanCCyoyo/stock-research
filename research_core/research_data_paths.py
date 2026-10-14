@@ -78,6 +78,11 @@ def _check_tree(root: Path) -> int:
     return checked
 
 
+def check_tree(root: Path) -> int:
+    """Public form of `_check_tree`: check `root` and its ancestors, then every entry below it."""
+    return _check_tree(_checked_path(root))
+
+
 def _overlaps(left: Path, right: Path) -> bool:
     return left == right or left.is_relative_to(right) or right.is_relative_to(left)
 

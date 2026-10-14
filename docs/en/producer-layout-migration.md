@@ -16,7 +16,7 @@ dashboard metadata/name mapping and nightly preparation share the resolver.
 `STOCK_PRODUCER_DATA_ROOT` remains an explicit absolute override; invalid or
 missing configured roots fail without fallback. Explicit task roots and saved
 snapshots remain explicit; historical paths and input provenance are not rewritten.
-Worktree inputs remain physical snapshots rather than automatically live data.
+Research inputs are sealed producer-input versions read by pin rather than automatically live data.
 
 ## Deployment gates and rollback
 

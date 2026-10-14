@@ -81,6 +81,12 @@ powershell.exe -NoProfile -Command "Get-ScheduledTask -TaskName 'StockProject-*'
 `State=Running` means hands off. `official_daily.sqlite-wal` and `-shm` sitting next to the
 database mean a writer is attached, or was attached and did not exit cleanly.
 
+Sealing producer inputs (`scripts.seal_producer_inputs seal`) reads the live SQLite files,
+so it is bound by the same schedule: the command refuses while a `StockProject-*` task is
+running and inside the weekday 17:50-19:00 window unless told the writers are idle.
+Sealed versions live in stock-research's `research_cache/`, never under the producer's
+`data/`.
+
 ## When to stop and ask
 
 Ask the user before proceeding if a change would rewrite existing data in place, if a task

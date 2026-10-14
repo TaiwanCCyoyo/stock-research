@@ -20,6 +20,8 @@ from typing import Any
 import pandas as pd
 
 from research_core.evidence import finite_json, read_json
+from research_core.producer_data import producer_data_root
+from research_core.producer_inputs import open_from_env
 from research_core.sector_groups import build_groups
 from research_core.sector_waves import DEFINITION_ID, CatalogBar, cluster_waves, compare_peer, detect_episodes, select_wave_winner
 from StockProject.engine.data_loader import CASH_WINDOW_EVENTS, PERMANENT_FACTOR_EVENTS, DataLoader
@@ -94,8 +96,7 @@ def _json(path: Path) -> dict[str, Any]:
     return value
 
 
-def _paths(repo_root: Path) -> dict[str, Path]:
-    data = repo_root / "stock-data-downloader" / "data"
+def _paths(repo_root: Path, data: Path) -> dict[str, Path]:
     task = repo_root / "tasks" / TASK_NAME
     return {
         "price": data / "price_daily.parquet",
@@ -294,13 +295,17 @@ def _bars_for_code(frame: pd.DataFrame, actions: pd.DataFrame, loader: DataLoade
     return tuple(bars), records
 
 
-def build_bundle(repo_root: Path, output_dir: Path, run_id: str) -> dict[str, Any]:
-    """Build one immutable descriptive bundle.  The caller supplies no market paths."""
+def build_bundle(repo_root: Path, output_dir: Path, run_id: str, *, data_root: Path) -> dict[str, Any]:
+    """Build one immutable descriptive bundle from an explicit producer data directory.
+
+    `data_root` is a sealed producer-inputs `data_root` for research, or the live
+    `producer_data_root()` when the caller chose live data explicitly.
+    """
     repo_root, output_dir = repo_root.resolve(), output_dir.resolve()
     task_root = (repo_root / "tasks" / TASK_NAME).resolve()
     if not output_dir.is_relative_to(task_root) or not isinstance(run_id, str) or not run_id:
         raise CatalogIOError("output must be below this task and run_id must be nonempty")
-    paths = _paths(repo_root)
+    paths = _paths(repo_root, data_root.resolve())
     identities = {name: _input_sha(name, path) for name, path in paths.items()}
     try:
         output_dir.mkdir(parents=True, exist_ok=False)
@@ -522,8 +527,22 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-dir", required=True, type=Path)
     parser.add_argument("--run-id", required=True)
+    source = parser.add_mutually_exclusive_group(required=True)
+    source.add_argument("--producer-inputs", metavar="VERSION_ID", help="sealed producer-inputs version (needs --producer-inputs-sha256)")
+    source.add_argument("--live-producer-data", action="store_true", help="read live producer_data_root() instead of a sealed version")
+    parser.add_argument("--producer-inputs-sha256", help="manifest SHA-256 pin of --producer-inputs")
     args = parser.parse_args()
-    build_bundle(Path(__file__).resolve().parents[1], args.output_dir, args.run_id)
+    if args.live_producer_data:
+        if args.producer_inputs_sha256 is not None:
+            parser.error("--producer-inputs-sha256 applies only to --producer-inputs")
+        data_root = producer_data_root()
+    else:
+        if args.producer_inputs_sha256 is None:
+            parser.error("--producer-inputs needs --producer-inputs-sha256")
+        sealed = open_from_env(args.producer_inputs, args.producer_inputs_sha256)
+        sealed.verify_all()
+        data_root = sealed.data_root
+    build_bundle(Path(__file__).resolve().parents[1], args.output_dir, args.run_id, data_root=data_root)
 
 
 if __name__ == "__main__":

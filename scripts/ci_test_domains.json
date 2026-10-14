@@ -44,12 +44,16 @@
                 "research_core/research_data_incremental.py",
                 "research_core/research_data_legacy.py",
                 "research_core/research_data_paths.py",
+                "research_core/producer_inputs.py",
                 "research_core/derived_features_chunk_v2.py",
                 "scripts/research_data.py",
-                "tasks/20261012-research-data-entry/*"
+                "scripts/seal_producer_inputs.py",
+                "tasks/20261012-research-data-entry/*",
+                "tasks/20261015-sealed-producer-inputs/*"
             ],
             "tests": [
                 "scripts/tests/test_derived_features_chunk_v2.py",
+                "scripts/tests/test_producer_inputs.py",
                 "scripts/tests/test_research_data_catalog.py",
                 "scripts/tests/test_research_data_execution.py",
                 "scripts/tests/test_research_data_extension.py",
@@ -431,6 +435,7 @@
         "scripts/tests/test_prepared_stock_input_v1.py",
         "scripts/tests/test_price_basis.py",
         "scripts/tests/test_private_artifacts.py",
+        "scripts/tests/test_producer_inputs.py",
         "scripts/tests/test_publish_hhhl_v4_probability.py",
         "scripts/tests/test_publish_opportunity_history.py",
         "scripts/tests/test_query_opportunity_history.py",
