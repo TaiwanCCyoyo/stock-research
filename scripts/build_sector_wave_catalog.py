@@ -20,7 +20,8 @@ from typing import Any
 import pandas as pd
 
 from research_core.evidence import finite_json, read_json
-from research_core.producer_data import ProducerChangedError, assert_producer_idle, producer_data_root
+from research_core.live_producer import ProducerChangedError, assert_producer_idle
+from research_core.producer_data import producer_data_root
 from research_core.sector_groups import build_groups
 from research_core.sector_waves import DEFINITION_ID, CatalogBar, cluster_waves, compare_peer, detect_episodes, select_wave_winner
 from StockProject.engine.data_loader import CASH_WINDOW_EVENTS, PERMANENT_FACTOR_EVENTS, DataLoader

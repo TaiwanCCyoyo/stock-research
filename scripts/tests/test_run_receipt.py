@@ -12,8 +12,8 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from research_core import producer_data
-from research_core.producer_data import ProducerBusyError, ProducerChangedError, assert_producer_idle, primary_checkout, read_stable, readonly_sqlite
+from research_core import live_producer
+from research_core.live_producer import ProducerBusyError, ProducerChangedError, assert_producer_idle, read_stable, readonly_sqlite
 from research_core.run_receipt import InputSpec, changed_results, fingerprint_inputs, write_run_receipt
 
 WEEKDAY_EVENING = datetime(2026, 10, 15, 18, 10)
@@ -48,40 +48,19 @@ def producer(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     pd.DataFrame({"Code": ["2330"] * 3, "Date": pd.to_datetime(["2010-01-04", "2010-01-05", "2026-10-14"])}).to_parquet(root / "price_daily.parquet")
     (root / "data_quality_report.json").write_text('{"generated_at": "2026-10-14T10:26:14+00:00"}', encoding="utf-8")
     monkeypatch.setenv("STOCK_PRODUCER_DATA_ROOT", str(root))
-    monkeypatch.setattr(producer_data, "running_producer_tasks", lambda: [])
+    monkeypatch.setattr(live_producer, "running_producer_tasks", lambda: [])
     return root
-
-
-def test_linked_worktree_without_submodule_finds_its_primary(repo: Path, tmp_path: Path) -> None:
-    worktree = tmp_path / "linked worktree"
-    _git(["worktree", "add", "-q", "--detach", str(worktree)], repo)
-    assert primary_checkout(worktree) == repo.resolve()
-    assert primary_checkout(repo) == repo
-
-
-def test_checkouts_without_a_linked_worktree_resolve_to_themselves(tmp_path: Path) -> None:
-    container = tmp_path / "app"
-    container.mkdir()
-    assert primary_checkout(container) == container
-    submodule = tmp_path / "submodule"
-    (tmp_path / "modules" / "sub").mkdir(parents=True)
-    submodule.mkdir()
-    (submodule / ".git").write_text(f"gitdir: {tmp_path / 'modules' / 'sub'}\n", encoding="utf-8")
-    assert primary_checkout(submodule) == submodule
-    (submodule / ".git").write_text("garbage\n", encoding="utf-8")
-    with pytest.raises(ValueError, match="unrecognized"):
-        primary_checkout(submodule)
 
 
 @pytest.mark.parametrize(("moment", "busy"), [(WEEKDAY_EVENING, True), (datetime(2026, 10, 15, 18, 45), False), (datetime(2026, 10, 17, 18, 10), False)])
 def test_write_window_refuses_weekday_evening(monkeypatch: pytest.MonkeyPatch, moment: datetime, busy: bool) -> None:
-    monkeypatch.setattr(producer_data, "running_producer_tasks", lambda: [])
+    monkeypatch.setattr(live_producer, "running_producer_tasks", lambda: [])
     if busy:
         with pytest.raises(ProducerBusyError, match="write window"):
             assert_producer_idle(moment)
     else:
         assert_producer_idle(moment)
-    monkeypatch.setattr(producer_data, "running_producer_tasks", lambda: ["StockProject-OfficialBackfill"])
+    monkeypatch.setattr(live_producer, "running_producer_tasks", lambda: ["StockProject-OfficialBackfill"])
     with pytest.raises(ProducerBusyError):
         assert_producer_idle(WEEKDAY_NIGHT)
 
@@ -171,3 +150,30 @@ def test_receipt_hashes_results_and_detects_later_edits(repo: Path, producer: Pa
     assert changed_results(receipt_path, repo) == ["summary"]
     os.remove(result)
     assert changed_results(receipt_path, repo) == ["summary"]
+
+
+def test_receipt_refuses_inputs_changed_during_the_run(repo: Path, producer: Path) -> None:
+    """A writer that ran between the reads and the receipt is caught, including a SQLite WAL commit."""
+    database = producer / "symbol_meta.sqlite"
+    with closing(sqlite3.connect(database)) as setup:
+        setup.execute("PRAGMA journal_mode=WAL")
+        setup.execute("CREATE TABLE symbol_meta (code TEXT)")
+        setup.commit()
+    result = repo / "summary.json"
+    result.write_text("{}\n", encoding="utf-8")
+    specs = [InputSpec("prices", producer / "price_daily.parquet"), InputSpec("meta", database, tables={"symbol_meta": None})]
+    writer = sqlite3.connect(database)
+    try:
+        writer.execute("PRAGMA wal_autocheckpoint=0")
+        fingerprint = fingerprint_inputs(specs, now=WEEKDAY_NIGHT)
+        writer.execute("INSERT INTO symbol_meta VALUES ('2330')")
+        writer.commit()
+        with pytest.raises(ProducerChangedError, match="meta"):
+            write_run_receipt(repo / "r1.json", run_id="r", definition="d", parameters={}, inputs=fingerprint, results={"s": result}, repo_root=repo)
+    finally:
+        writer.close()
+    fingerprint = fingerprint_inputs(specs, now=WEEKDAY_NIGHT)
+    os.utime(producer / "price_daily.parquet", ns=(1, 1))
+    with pytest.raises(ProducerChangedError, match="prices"):
+        write_run_receipt(repo / "r2.json", run_id="r", definition="d", parameters={}, inputs=fingerprint, results={"s": result}, repo_root=repo)
+    assert not (repo / "r1.json").exists() and not (repo / "r2.json").exists()

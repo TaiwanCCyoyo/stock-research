@@ -20,7 +20,8 @@ from pathlib import Path
 from typing import Any
 
 from research_core.artifact_store import file_digest, read_json, write_json
-from research_core.producer_data import REPO_ROOT, assert_producer_idle, producer_data_root, read_stable, readonly_sqlite
+from research_core.live_producer import ProducerChangedError, assert_producer_idle, read_stable, readonly_sqlite, stat_identity
+from research_core.producer_data import REPO_ROOT, producer_data_root
 
 LOGGER = logging.getLogger(__name__)
 SCHEMA = "run-receipt.v1"
@@ -70,7 +71,8 @@ def _sqlite_fingerprint(spec: InputSpec) -> dict[str, Any]:
     finally:
         connection.close()
     info = spec.path.stat()
-    return {"bytes": info.st_size, "mtime_ns": info.st_mtime_ns, "tables": tables}
+    wal = spec.path.with_name(spec.path.name + "-wal")
+    return {"bytes": info.st_size, "mtime_ns": info.st_mtime_ns, "wal": list(stat_identity(wal)) if wal.exists() else None, "tables": tables}
 
 
 def producer_as_of(root: Path) -> dict[str, Any]:
@@ -105,6 +107,25 @@ def fingerprint_inputs(specs: list[InputSpec], *, now: datetime | None = None) -
     }
 
 
+def assert_inputs_unchanged(fingerprint: Mapping[str, Any]) -> None:
+    """Fail if any fingerprinted input (or a SQLite input's WAL) changed since it was fingerprinted.
+
+    Called at the end of a run, this catches a producer writer that ran during the study,
+    which a single idle probe before the reads cannot see.
+    """
+    changed = []
+    for name, row in fingerprint["inputs"].items():
+        path = Path(row["path"])
+        if not path.is_file() or list(stat_identity(path)) != [row["bytes"], row["mtime_ns"]]:
+            changed.append(name)
+        elif "wal" in row:
+            wal = path.with_name(path.name + "-wal")
+            if (list(stat_identity(wal)) if wal.exists() else None) != row["wal"]:
+                changed.append(name)
+    if changed:
+        raise ProducerChangedError(f"inputs changed during the run: {changed}; rerun outside producer writes")
+
+
 def _display_path(path: Path, repo_root: Path) -> str:
     resolved = path.resolve()
     return resolved.relative_to(repo_root.resolve()).as_posix() if resolved.is_relative_to(repo_root.resolve()) else str(resolved)
@@ -128,7 +149,12 @@ def write_run_receipt(
     preregistration: Path | None = None,
     repo_root: Path = REPO_ROOT,
 ) -> dict[str, Any]:
-    """Write a new receipt (never replacing one) with result SHA-256s and the input fingerprint."""
+    """Write a new receipt (never replacing one) with result SHA-256s and the input fingerprint.
+
+    Refuses when an input changed after it was fingerprinted, so a receipt never labels a
+    result with inputs other than those it read.
+    """
+    assert_inputs_unchanged(inputs)
     receipt = {
         "schema": SCHEMA,
         "run_id": run_id,

@@ -45,6 +45,7 @@
                 "research_core/research_data_legacy.py",
                 "research_core/research_data_paths.py",
                 "research_core/run_receipt.py",
+                "research_core/live_producer.py",
                 "research_core/derived_features_chunk_v2.py",
                 "scripts/research_data.py",
                 "tasks/20261012-research-data-entry/*"

@@ -23,7 +23,8 @@ be reacquired, such as the owner's manual labels, is still kept. Caches are
 performance-only and can be rebuilt.
 
 Research worktrees read the live producer root read-only through
-`research_core/producer_data.py::producer_data_root()`. Nothing is copied or linked, and no
+`research_core/producer_data.py::producer_data_root()`, whose root discovery belongs to the
+producer relocation work (PR #19). Nothing is copied or linked, and no
 submodule needs to be initialized. `research_core/run_receipt.py` writes the fingerprint and
 result hashes. It identifies the inputs read and the code commit only. It does not hash
 loaded modules, so a source edit does not invalidate a receipt or force a rebuild.
@@ -81,12 +82,17 @@ Each item below was checked against Git history and the documents cited.
 
 ## Live-read safety
 
-Live files change during the producer's evening runs. A research read calls
-`assert_producer_idle()` once per run. It refuses the weekday 18:00-18:45 window and any
+Live files change during the producer's evening runs. `research_core/live_producer.py`
+holds the guards. A research read calls `assert_producer_idle()` once per run. It refuses the weekday 18:00-18:45 window and any
 running `StockProject-*` scheduled task, which also covers the long first-of-month
 backfill. SQLite is opened with `readonly_sqlite()` (`?mode=ro`). Files are read through
 `read_stable()`, which compares size and mtime before and after, so a parquet rewritten
-mid-read fails instead of being half-read.
+mid-read fails instead of being half-read. The idle check is a point-in-time probe and
+cannot see a writer that starts afterwards, so `write_run_receipt` re-checks the size and
+mtime of every fingerprinted input (and a SQLite input's WAL) before writing. A writer that
+ran during the study fails the run instead of silently mixing old and new files. This
+change check is still not a cross-file transaction: a writer that finished entirely before
+the first read is visible only through the recorded mtimes.
 
 On a WAL database, a read-only connection may still create SQLite's own `-shm`/`-wal`
 files beside the live database. This was observed on 2026-10-15: a 0-byte `-wal` and a

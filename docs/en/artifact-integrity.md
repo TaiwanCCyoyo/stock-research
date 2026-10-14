@@ -57,7 +57,7 @@ version and every result that cites it stay readable. Inside an existing version
 byte change is an error, whoever made it and however well meant, so no judgement
 about intent is needed. Producer live files change daily by design and are not
 hash-protected; a study fingerprints what it read (`research_core/run_receipt.py`) and
-reads only while the producer is idle (`research_core/producer_data.py`).
+reads only while the producer is idle (`research_core/live_producer.py`).
 
 ## 5. Verification cost rules
 
