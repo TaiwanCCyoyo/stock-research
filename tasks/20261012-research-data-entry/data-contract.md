@@ -30,10 +30,9 @@ protection: the Windows deletion test also passes with writable shared files.
 Mutable producer inputs still use physical worktree snapshots. The existing
 post-checkout hook, producer code, producer data and schedules are unchanged.
 
-Update 2026-10-15: per-worktree producer snapshots and the seeding hook are
-retired. Producer inputs are sealed versions in primary `research_cache/producer-inputs/`,
-read by pin through this entry's `DataRoots`; see
-[sealed producer inputs](../20261015-sealed-producer-inputs/data-contract.md).
+Update 2026-10-15: per-worktree producer snapshots and the post-checkout hook are
+retired; worktrees read the live producer root and studies keep an input fingerprint.
+See the [decision record](../../docs/en/decision-records/2026-10-15-drop-input-sealing.md).
 
 ## Catalog and versions
 

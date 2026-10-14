@@ -9,13 +9,15 @@ from typing import Any
 
 import pytest
 
-from research_core.producer_data import REPO_ROOT, producer_data_root
+from research_core.producer_data import REPO_ROOT, primary_checkout, producer_data_root
 from StockProject import backtest_cli
 
+PRIMARY_DATA = primary_checkout() / "stock-data-downloader" / "data"
 
-def test_unconfigured_root_preserves_submodule_default(monkeypatch: pytest.MonkeyPatch) -> None:
+
+def test_unconfigured_root_is_the_primary_checkout_producer_data(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("STOCK_PRODUCER_DATA_ROOT", raising=False)
-    assert producer_data_root() == REPO_ROOT / "stock-data-downloader" / "data"
+    assert producer_data_root() == PRIMARY_DATA
 
 
 def test_explicit_external_root_is_shared_by_query_and_metadata(tmp_path: Path) -> None:
@@ -95,7 +97,7 @@ def test_cli_unconfigured_routes_price_and_metadata_to_submodule(monkeypatch: py
     observed: list[dict[str, Any]] = []
 
     def resolve(value: str, **kwargs: Any) -> tuple[list[str], str | None]:
-        assert kwargs == {"symbol_meta_db": REPO_ROOT / "stock-data-downloader" / "data" / "symbol_meta.sqlite"}
+        assert kwargs == {"symbol_meta_db": PRIMARY_DATA / "symbol_meta.sqlite"}
         return [value], None
 
     def loader(**kwargs: Any) -> None:
@@ -106,7 +108,7 @@ def test_cli_unconfigured_routes_price_and_metadata_to_submodule(monkeypatch: py
     monkeypatch.setattr(backtest_cli, "DataLoader", loader)
     with pytest.raises(RuntimeError, match="stop before loading"):
         backtest_cli.main()
-    assert observed == [{"data_path": str(REPO_ROOT / "stock-data-downloader" / "data")}]
+    assert observed == [{"data_path": str(PRIMARY_DATA)}]
 
 
 @pytest.mark.parametrize("configured", [False, True])
@@ -117,7 +119,7 @@ def test_consumers_resolve_one_producer_root(tmp_path: Path, configured: bool) -
     environment.pop("STOCK_PRODUCER_DATA_ROOT", None)
     if configured:
         environment["STOCK_PRODUCER_DATA_ROOT"] = str(root)
-    expected = root.resolve() if configured else REPO_ROOT / "stock-data-downloader" / "data"
+    expected = root.resolve() if configured else PRIMARY_DATA
     program = (
         "import json; from research_core.producer_data import producer_data_root; "
         "from scripts.stock_research_query import DEFAULT_DATA_PATH; "
@@ -155,7 +157,7 @@ def test_retained_generators_resolve_inputs_without_running_research(tmp_path: P
     environment.pop("STOCK_PRODUCER_DATA_ROOT", None)
     if configured:
         environment["STOCK_PRODUCER_DATA_ROOT"] = str(root)
-    expected = root.resolve() if configured else REPO_ROOT / "stock-data-downloader" / "data"
+    expected = root.resolve() if configured else PRIMARY_DATA
     program = (
         "import json,runpy,sys; m=runpy.run_path(sys.argv[1], run_name='migration_probe'); "
         "print(json.dumps([str(m[k].parent) for k in ('PRICE', 'META') if k in m]))"

@@ -53,18 +53,15 @@ original rows remain available as quality/evidence records.
 
 ## Reproduction and validation
 
-Run with producer inputs whose bytes match the manifest's `input_identities_sha256`
-and the recorded code/config identities. `catalog-v1` was built from a per-worktree
-snapshot taken before sealed producer inputs existed, so a reproduction needs a sealed
-version (or retained snapshot) with those identities; live data will not match. The
-builder takes its producer source explicitly: `--producer-inputs VERSION_ID
---producer-inputs-sha256 SHA256` (sealed, with `STOCK_RESEARCH_DATA_ROOT` set; see
-[sealed producer inputs](stock-agent-operations.md#data-and-worktrees)) or
-`--live-producer-data`. A new output directory is required; the builder refuses to
-overwrite an existing run.
+The builder reads the live producer root (`producer_data_root()`) while the producer is
+idle and fails if an input changes during the build. Byte-identical reproduction needs
+inputs matching the manifest's `input_identities_sha256`; since the owner decision of
+2026-10-15 ([record](decision-records/2026-10-15-drop-input-sealing.md)) a mismatch means
+rerunning on current data, with `catalog-v1` kept as the fingerprinted historical result.
+A new output directory is required; the builder refuses to overwrite an existing run.
 
 ```powershell
-uv run --no-sync python -m scripts.build_sector_wave_catalog --output-dir tasks/20261002-sector-wave-catalog/runs/reproduction-01 --run-id reproduction-01 --producer-inputs VERSION_ID --producer-inputs-sha256 SHA256
+uv run --no-sync python -m scripts.build_sector_wave_catalog --output-dir tasks/20261002-sector-wave-catalog/runs/reproduction-01 --run-id reproduction-01
 uv run --no-sync python -c "from pathlib import Path; from scripts.build_sector_wave_catalog import validate_bundle; validate_bundle(Path('tasks/20261002-sector-wave-catalog/catalog-v1')); print('bundle validation: PASS')"
 ```
 

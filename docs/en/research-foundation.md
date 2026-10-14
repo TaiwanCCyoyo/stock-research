@@ -151,6 +151,16 @@ input/output receipts only check reproducibility of declared files and commands;
 they are not a sandbox, tamper-proof security seal, or evidence of an unseen
 sample. Hashing an incorrectly defined metric does not make it correct.
 
+## Input identity (owner decision 2026-10-15)
+
+Studies keep results, their SHA-256, the code commit, definition, parameters,
+preregistration and an input fingerprint; they do not keep input bytes for exact
+recomputation. `research_core/run_receipt.py` writes that receipt, and a
+`research_result.v1` card's `identities.data_snapshot` names it. When a result cannot
+be reproduced, rerun the study on current data and keep the old result as a
+fingerprinted historical record. Holdout and viewed-period discipline are unchanged.
+See the [decision record](decision-records/2026-10-15-drop-input-sealing.md).
+
 ## Headless evidence and versioning
 
 From the repository root:

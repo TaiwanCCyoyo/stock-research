@@ -30,8 +30,8 @@ Two lessons shaped everything below:
 
 The worktree aliasing that caused the loss is fixed separately. Worktrees first
 received a copy of the read-set rather than a link; since 2026-10-15 they receive
-nothing and read sealed producer-input versions in place by pin. See the worktree
-notes in `docs/en/stock-agent-operations.md`.
+nothing and read the live producer root read-only. See the worktree notes in
+`docs/en/stock-agent-operations.md`.
 
 ## What is worth protecting
 

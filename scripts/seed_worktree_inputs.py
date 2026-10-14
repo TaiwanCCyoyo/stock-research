@@ -1,4 +1,4 @@
-"""Seed producer read inputs and explicit legacy daily snapshots; never link data."""
+"""Legacy manual tool, no longer run by a hook (2026-10-15): seed producer read inputs and legacy daily snapshots; never link data."""
 
 from __future__ import annotations
 

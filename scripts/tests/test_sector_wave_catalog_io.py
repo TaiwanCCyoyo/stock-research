@@ -10,6 +10,7 @@ import pandas as pd
 import pytest
 
 from research_core.sector_waves import compare_peer, detect_episodes, select_wave_winner
+from scripts import build_sector_wave_catalog
 from scripts.build_sector_wave_catalog import (
     CatalogIOError,
     _actions,
@@ -382,19 +383,14 @@ def test_validator_rejects_quality_peer_tampering_after_hash_and_receipt_refresh
         validate_bundle(output)
 
 
-def test_bundle_builds_and_validates_from_a_sealed_root_outside_the_repo(tmp_path: Path) -> None:
-    from research_core.producer_inputs import open_producer_inputs, seal_producer_inputs
-    from research_core.research_data_paths import DataRoots
-
+def test_bundle_reads_the_live_producer_root_by_default(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A worktree without a producer submodule reads the live root, wherever it lives."""
     root = _repo(tmp_path)
-    primary = tmp_path / "primary checkout"
-    (primary / ".git").mkdir(parents=True)
-    roots = DataRoots(primary=primary, data=primary / "research_data")
-    version = seal_producer_inputs(root / "stock-data-downloader" / "data", roots, register=False)["version_id"]
-    sealed = open_producer_inputs(roots, version, version)
-    sealed.verify_all()
-    output = root / "tasks" / "20261002-sector-wave-catalog" / "runs" / "sealed"
-    manifest = build_bundle(root, output, "sealed", data_root=sealed.data_root)
+    external = tmp_path / "external producer data"
+    (root / "stock-data-downloader" / "data").rename(external)
+    monkeypatch.setenv("STOCK_PRODUCER_DATA_ROOT", str(external))
+    monkeypatch.setattr(build_sector_wave_catalog, "assert_producer_idle", lambda: None)
+    output = root / "tasks" / "20261002-sector-wave-catalog" / "runs" / "live"
+    manifest = build_bundle(root, output, "live")
     validate_bundle(output)
-    assert manifest["counts"]["securities"] == 3
-    assert Path(manifest["input_paths"]["price"]) == sealed.data_root / "price_daily.parquet"
+    assert Path(manifest["input_paths"]["price"]) == external.resolve() / "price_daily.parquet"
