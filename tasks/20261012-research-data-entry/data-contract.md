@@ -63,6 +63,15 @@ Registry updates use an exclusive writer lock. Conflicting metadata for an
 already registered version is rejected, with the unsuccessful lock retained for
 diagnosis. No automatic lock removal or overwrite of immutable versions occurs.
 
+Retirement is the only removal. `DataCatalog.retire` (CLI `retire`) needs the exact
+data/version, its manifest SHA256, a reason and the owner's approval date. It checks
+the request before taking the writer lock, so a mistyped version leaves no lock.
+It then publishes a new snapshot without that entry and keeps the full entry, reason
+and date in the snapshot's `retired` list and the README's Retired table. Later
+registrations carry that list forward. Older snapshots stay readable and unchanged.
+Retiring never deletes payload. Deleting the bytes is a separate owner-approved step,
+taken only after the new snapshot no longer advertises them.
+
 ## Interfaces
 
 ```powershell
@@ -72,6 +81,7 @@ uv run python -m scripts.research_data register-existing
 uv run python -m scripts.research_data verify DATA_ID VERSION_ID --manifest-sha256 EXPLICIT_SHA256
 uv run python -m scripts.research_data context VERSION_ID --manifest-sha256 EXPLICIT_SHA256 --layer past_only
 uv run python -m scripts.research_data check-worktree ABSOLUTE_TASK_WORKTREE
+uv run python -m scripts.research_data retire DATA_ID VERSION_ID --manifest-sha256 EXPLICIT_SHA256 --reason "WHY" --retired-on YYYY-MM-DD
 ```
 
 These are per-process settings, not machine/global changes. `DataCatalog.get`
