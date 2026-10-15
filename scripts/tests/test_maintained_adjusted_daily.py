@@ -139,6 +139,24 @@ def test_failed_update_leaves_current_untouched_and_retention_keeps_two(environm
     assert record["generation"] == generations[2] and len(frame) == 7
 
 
+def test_a_prune_failure_does_not_fail_a_published_update(environment: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:
+    producer, shared = environment
+    first = maintained_adjusted_daily.update(producer_root=producer)["generation"]
+    monkeypatch.setattr(maintained_adjusted_daily, "datetime", _Later(1))
+    second = maintained_adjusted_daily.update(producer_root=producer)["generation"]
+    monkeypatch.setattr(maintained_adjusted_daily, "datetime", _Later(2))
+
+    def locked(path: Path) -> None:
+        raise PermissionError(f"in use: {path}")
+
+    monkeypatch.setattr(maintained_adjusted_daily.shutil, "rmtree", locked)
+    third = maintained_adjusted_daily.update(producer_root=producer)
+
+    family = shared / "derived" / maintained_adjusted_daily.FAMILY
+    assert third["pruned"] == [] and read_json(family / "current.json")["generation"] == third["generation"]
+    assert {first, second} <= {path.name for path in (family / "generations").iterdir()}
+
+
 def test_concurrent_writer_is_refused(environment: tuple[Path, Path]) -> None:
     producer, shared = environment
     family = shared / "derived" / maintained_adjusted_daily.FAMILY

@@ -34,7 +34,7 @@
 
 `research_core.derived_features_selective_v1.compute_selected` 延用 `derived-features.v1` 的數值定義與缺價重新暖機，只計算要求欄位及必要依賴；不是原 HHHL v4 的 G／X4 替代品。`feature_identity_v1` 固定輸入、程式、日曆、股票、定義、政策與 runtime 的完整身分；`feature_block_store_v1` 驗證後重用，缺少或毀損只新增 generation，保存舊資料與失敗診斷，不用 mutable latest。
 
-預定正式根目錄為 primary `D:/Project/stock-research/research_cache/feature-blocks-v1/`；本次只用合成資料測試，沒有市場區塊。查詢入口 `uv run python -m scripts.feature_blocks plan/query`、取得與 manifest 外部 pin 規則見 [資料契約](../../tasks/20261012-research-feature-reuse/data-contract.md)。單股 scheduler 使用 `stock_feature_pool_v2`；全重用時不要求 worker admission。它用有限 Windows Job Objects，完整 barrier 後才讓上層做全域運算；橫斷面 rank 與選擇不可拆成單股工作。記憶體限制是 admission estimate 加事後程序峰值核對，不是 OS 記憶體沙箱；小工作可能以直接計算較快，見 [固定合成實測](../../tasks/20261012-research-feature-reuse/report.md)。
+尚未建立任何市場區塊（只用合成資料測試）。依 2026-10-15 決定，第一次建正式市場特徵時應放在共用根目錄的 `derived/` 下，並把 `research_core/research_data_builder.py` 目前寫入 primary `research_cache/feature-blocks-v1/` 的路徑一併改掉（後續工作）；不要再在 `research_cache/` 新增版本。查詢入口 `uv run python -m scripts.feature_blocks plan/query`、取得與 manifest 外部 pin 規則見 [資料契約](../../tasks/20261012-research-feature-reuse/data-contract.md)。單股 scheduler 使用 `stock_feature_pool_v2`；全重用時不要求 worker admission。它用有限 Windows Job Objects，完整 barrier 後才讓上層做全域運算；橫斷面 rank 與選擇不可拆成單股工作。記憶體限制是 admission estimate 加事後程序峰值核對，不是 OS 記憶體沙箱；小工作可能以直接計算較快，見 [固定合成實測](../../tasks/20261012-research-feature-reuse/report.md)。
 
 ## 維護中的共用衍生資料
 
@@ -54,7 +54,7 @@
 - **輸入**：live producer 的 `price_daily.parquet`（只取 OHLCV，忽略舊 SMA／EMA）與 `corporate_actions.sqlite`（唯讀）。as-of 是價格最大日期；之後的除權息事件不納入，數量記在 `actions.after_asof_excluded`。
 - **日曆與列範圍**：日曆是 `price_daily.parquet` 所有日期的聯集，不是交易所公告日曆；每檔從第一筆到最後一筆報價，中間缺的交易日保留為無效列。
 - **更新**：`uv run python -m scripts.maintain_adjusted_daily update`。避開平日 18:00–18:45，producer 有工作在跑時會拒絕。每次建完整新世代：新的除權息會改寫該股整段較早歷史，所以只附加新一天並不正確。建完先核對輸入沒變，再以 `os.replace` 原子切換 `current.json`；保留前一世代以便回退、也讓正在讀的人讀完，更舊的由 updater 刪除。失敗不動 `current.json`，未完成的 staging 會刪除。同時只允許一個 writer（`.writer.lock`）。
-- **實測（2026-10-15，真實資料完整建置一次）**：2,077 檔、4,113 個交易日，每個 basis 6,764,521 列。讀輸入 6.5 秒，計算加寫入 556.6 秒，總共約 9.4 分鐘（單程序）。一個世代 768 MB（raw 223 MB、permanent 250 MB、reference 293 MB）；更新期間新舊兩世代並存，峰值約 1.5 GB。讀一檔 0.12 秒，整個 basis 讀三個欄位 0.31 秒。permanent 與 reference 各有 22,590 列標為 `ambiguous_or_missing_action_factor`，這是價格政策刻意保留的不明列，不是建置錯誤。要不寫入就重測，用 `measure --codes N`。這個耗時目前不需要平行化；若之後成為瓶頸，再依 AGENTS.md 先量測有界的單股平行。
+- **實測（2026-10-15，真實資料完整建置一次）**：2,077 檔、4,113 個交易日，每個 basis 6,764,521 列。讀輸入 6.5 秒，計算加寫入 556.6 秒，總共約 9.4 分鐘（單程序）。一個世代 768 MB（raw 223 MB、permanent 250 MB、reference 293 MB）；更新期間新舊兩世代並存，峰值約 1.5 GB。讀一檔 0.12 秒，整個 basis 讀三個欄位 0.31 秒。permanent 與 reference 各有 22,590 列標為 `ambiguous_or_missing_action_factor`：依上方價格政策，事件因子缺漏或不一致時，該事件日以前的還原歷史標為不明，而不是猜一個因子。這些列的來源分布尚未逐一核對。要不寫入就重測，用 `measure --codes N`。這個耗時目前不需要平行化；若之後成為瓶頸，再依 AGENTS.md 先量測有界的單股平行。
 - **讀取**：`frame, record = read_adjusted_daily("reference_factor_adjusted", codes=["2330"])`（`research_core.maintained_adjusted_daily`）。`record` 有 family、generation、asof、檔案路徑與 SHA-256，請放進研究的 receipt。`uv run python -m scripts.maintain_adjusted_daily status` 可看現行世代。
 - **定義變更**：開新家族 `adjusted-daily-v2`，不在原家族裡改寫。
 

@@ -62,6 +62,9 @@ stay as code for reading any remaining or restored version.
   `STOCK_RESEARCH_DATA_ROOT` without copies. Moving it under the shared root is a
   separate change because `DataRoots` ties it to the primary checkout.
 - Producer acquisition data, its schedule and its backups.
+- No market feature blocks exist yet. When the first formal ones are built they go under
+  the shared root's `derived/` too; `research_data_builder.py` still targets
+  `research_cache/feature-blocks-v1/` and must be changed then.
 - Frozen task evidence and SHA-pinned code.
 
 ## Setup after merge (owner or main session, outside 18:00-18:45)
@@ -73,5 +76,5 @@ uv run python -m scripts.maintain_adjusted_daily update
 uv run python -m scripts.maintain_adjusted_daily status
 ```
 
-Then retire the two `price-bases` catalog entries with `scripts.research_data retire`
-and delete the legacy directories listed above.
+The two `price-bases` catalog entries were retired on 2026-10-15 (catalog snapshot
+`5203cea8…`). Then delete the legacy directories listed above.

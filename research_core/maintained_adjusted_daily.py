@@ -159,10 +159,15 @@ def _write_current(family: Path, generation: str, status_sha256: str) -> None:
 
 
 def _prune(family: Path, keep: list[str]) -> list[str]:
+    """Best effort: a generation still open in a reader (Windows) is left for the next update."""
     removed = []
     for path in sorted((family / "generations").iterdir()):
         if path.is_dir() and path.name not in keep:
-            shutil.rmtree(path)
+            try:
+                shutil.rmtree(path)
+            except OSError as error:
+                LOGGER.warning("Could not prune generation %s, retrying on the next update: %s", path.name, error)
+                continue
             removed.append(path.name)
     LOGGER.info("Pruned generations %s; kept %s", removed, keep)
     return removed
