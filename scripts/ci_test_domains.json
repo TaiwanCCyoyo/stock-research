@@ -489,6 +489,7 @@
         "scripts/tests/test_pattern_scan_reporting_v1.py",
         "scripts/tests/test_pattern_scan_reversals_v1.py",
         "scripts/tests/test_pattern_scan_run_v1.py",
+        "scripts/tests/test_pattern_scan_report_provenance_v2.py",
         "scripts/tests/test_pattern_scan_run_v2.py",
         "scripts/tests/test_pattern_scan_selection_v1.py",
         "scripts/tests/test_pattern_scan_shared_v1.py",

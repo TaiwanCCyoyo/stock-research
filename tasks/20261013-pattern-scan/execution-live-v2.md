@@ -107,6 +107,14 @@ buffers merely to construct a log argument. Differential tests compare every
 table, including dtypes and missing values, against the unchanged batch oracle;
 the new registry test checks that unconsumed table families are not expanded.
 
+The first v2 profile attempt was stopped before derived preparation completed,
+after a static delivery check found that report publication still required the
+legacy source ZIP. Its request remains under
+`.tmp/pattern-scan-execution/profile-2010-20261015-live-v2`; its owned coordinator
+and children were confirmed stopped before source edits. The corrected live
+report publishes Git/request, producer-read receipt and preparation/profile/
+capacity metadata, with no source ZIP. Legacy report inputs remain unchanged.
+
 The shared catalog snapshot
 `68e541007b46afddd68a40e0312cfb3181aea66fc0c17a4286c7385602f12e12`
 contains no completed 2010-onward pattern-scan assets. Its 2019-onward

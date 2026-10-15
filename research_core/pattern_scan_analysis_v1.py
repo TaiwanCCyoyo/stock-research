@@ -361,6 +361,68 @@ def summarize_all(event_parts: dict[str, dict[str, Path]], selections: dict[str,
     }
 
 
+def _report_execution_files(output: Path, source: dict[str, Any], input_id: str) -> dict[str, Path]:
+    """Select existing execution provenance before analysis or publication starts."""
+    run = _checked_path(output.parent)
+    if source.get("schema") != "pattern-scan-source.git.v2":
+        return {"executed-sources.zip": run / "seal" / "executed-sources.zip", "source.json": run / "seal" / "source.json"}
+
+    def metadata_file(path: Path) -> tuple[Path, dict[str, Any]]:
+        checked = _checked_path(path)
+        if not path.is_absolute() or checked.suffix != ".json" or not checked.is_file():
+            raise ValueError(f"required report execution metadata missing or invalid: {path}")
+        return checked, read_json(checked, max_bytes=128_000_000)
+
+    request_path, request = metadata_file(run / "request-all.json")
+    index, prepared = metadata_file(run / "derived-preparation.json")
+    producer_receipt, receipt = metadata_file(run / "producer-read-receipt.json")
+    if (
+        request.get("schema") != "pattern-scan-coordinator-request.v2"
+        or request.get("calculation_authorized") is not True
+        or request.get("mode") != "all"
+        or request.get("source") != source
+        or request.get("run_root") != str(run)
+        or request.get("prepared_path") != str(index)
+        or not isinstance(request.get("run_id"), str)
+        or not request["run_id"]
+        or prepared.get("schema") != "pattern-scan-derived-preparation.v2"
+        or prepared.get("scope") != "full_ordinary_reference"
+        or prepared.get("source") != source
+        or prepared.get("input_id") != input_id
+    ):
+        raise ValueError("report execution request or derived preparation identity differs")
+    result = receipt.get("results", {}).get("derived_preparation", {})
+    if (
+        receipt.get("schema") != "run-receipt.v1"
+        or receipt.get("run_id") != request["run_id"] + ":producer-read"
+        or result.get("path") != str(index)
+        or result.get("bytes") != index.stat().st_size
+        or result.get("sha256") != file_digest(index)
+    ):
+        raise ValueError("report producer-read receipt identity differs")
+    selected = {
+        "execution/request.json": request_path,
+        "execution/derived-preparation.json": index,
+        "execution/producer-read-receipt.json": producer_receipt,
+    }
+    for field, name in (("profile_path", "resource-profile"), ("capacity_path", "capacity-plan")):
+        value = request.get(field)
+        if not isinstance(value, str) or not value:
+            raise ValueError(f"required report execution metadata path missing: {field}")
+        path, record = metadata_file(Path(value))
+        if field == "profile_path":
+            if (
+                record.get("schema") != "pattern-scan-resource-profile.v1"
+                or record.get("source_id") != source["source_id"]
+                or record.get("input_id") != input_id
+            ):
+                raise ValueError("report resource profile source/input identity differs")
+        elif record.get("schema") != "pattern-scan-capacity.v2":
+            raise ValueError("report capacity plan protocol differs")
+        selected[f"execution/{name}.json"] = path
+    return selected
+
+
 def run_analysis(
     roots: DataRoots,
     parts: dict[str, Path],
@@ -374,6 +436,7 @@ def run_analysis(
     """Publish uniquely pinned event projections then complete approved tables."""
     verify_source(source)
     output = _checked_path(output)
+    execution_files = _report_execution_files(output, source, input_id)
     output.mkdir(parents=True, exist_ok=True)
     shared = load_shared(roots, entries, tuple(parts), source, input_id)
     event_parts = prepare_event_parts(parts, barrier, entries, output / "event-parts", source=source, input_id=input_id, shared=shared)
@@ -429,8 +492,7 @@ def run_analysis(
         **{f"q1-q3/{name}": Path(path) for name, path in summaries["files"].items()},
         **{f"q5-q6/{name}": Path(path) for name, path in followup["files"].items()},
         "selection.json": output / "selection.json",
-        "executed-sources.zip": output.parent / "seal" / "executed-sources.zip",
-        "source.json": output.parent / "seal" / "source.json",
+        **execution_files,
         **{f"audits/{name}": Path(path) for name, path in audits["files"].items()},
     }
     result_metadata["parameters"]["artifact_owner"] = "tasks/20261013-pattern-scan"

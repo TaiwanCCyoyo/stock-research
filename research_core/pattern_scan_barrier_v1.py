@@ -202,7 +202,12 @@ def metadata(kind: str, source: dict[str, Any], input_id: str, calendar: pd.Date
         "data_id": f"pattern-scan-full-2010-v1-{kind}",
         "kind": kind,
         "definition_version": "pattern-scan.v1",
-        "parameters": {"cutoff": "2026-10-12", "horizons": [126, 252], "price_basis": "price-basis.v2/reference_factor_adjusted"},
+        "parameters": {
+            "cutoff": "2026-10-12",
+            "horizons": [126, 252],
+            "price_basis": "price-basis.v2/reference_factor_adjusted",
+            **({"code": source["code"], "execution_policy": "live-input-fingerprint.v2"} if source.get("schema") == "pattern-scan-source.git.v2" else {}),
+        },
         "inputs": {"fixed_input_id": input_id, "source_id": source["source_id"], "runtime": source["runtime"]},
         "coverage": {
             "scope": "fixed ordinary-reference universe on full supplied 2010 calendar; current metadata vintage",
@@ -228,7 +233,11 @@ def metadata(kind: str, source: dict[str, Any], input_id: str, calendar: pd.Date
         "backup": {
             "primary_copy": "one physical published cache payload",
             "other_machine": "not_observed",
-            "source_snapshot": "fixed primary task input bundle; retained worktree raw snapshot",
+            "source_snapshot": (
+                "input fingerprint in producer-read receipt; producer bytes are not archived by this run"
+                if source.get("schema") == "pattern-scan-source.git.v2"
+                else "fixed primary task input bundle; retained worktree raw snapshot"
+            ),
         },
     }
 
