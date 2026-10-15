@@ -68,7 +68,9 @@ data/version, its manifest SHA256, a reason and the owner's approval date. It ch
 the request before taking the writer lock, so a mistyped version leaves no lock.
 It then publishes a new snapshot without that entry and keeps the full entry, reason
 and date in the snapshot's `retired` list and the README's Retired table. Later
-registrations carry that list forward. Older snapshots stay readable and unchanged.
+registrations carry that list forward and refuse to re-advertise a retired version,
+before taking the lock, because its payload may already be deleted. Re-enabling one
+needs a separate explicit operation; none exists today. Older snapshots stay readable and unchanged.
 Retiring never deletes payload. Deleting the bytes is a separate owner-approved step,
 taken only after the new snapshot no longer advertises them.
 

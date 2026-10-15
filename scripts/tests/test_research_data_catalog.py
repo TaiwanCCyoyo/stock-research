@@ -160,6 +160,14 @@ def test_retire_stops_advertising_one_version_and_keeps_history(catalog: DataCat
     # A later registration carries the retirement record forward.
     publish_bundle(catalog, metadata(), {"features.json": b"later"})
     assert catalog.read()["retired"] == after["retired"]
+    # Ordinary registration never re-advertises a retired version, and leaves no lock.
+    current = catalog.read()["version_id"]
+    with pytest.raises(ValueError, match="retired"):
+        catalog.register([gone])
+    with pytest.raises(ValueError, match="retired"):
+        publish_bundle(catalog, metadata(), {"features.json": b"gone"})
+    assert catalog.read()["version_id"] == current
+    assert not (catalog.roots.data / ".catalog.lock").exists()
 
 
 def test_retire_refuses_unknown_or_mismatched_versions_without_publishing(catalog: DataCatalog):

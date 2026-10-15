@@ -139,7 +139,20 @@ class DataCatalog:
         for row in additions:
             verify_entry(row, self.roots)
 
+        def refuse_retired(retired: list[dict[str, Any]]) -> None:
+            # A retired version's payload may already be deleted; re-advertising it would
+            # publish a dead pin. Re-enabling needs a separate, explicit operation.
+            gone = {(item["entry"]["data_id"], item["entry"]["version_id"]) for item in retired}
+            for row in additions:
+                if (row["data_id"], row["version_id"]) in gone:
+                    raise ValueError(f"catalog version was retired: {row['data_id']}/{row['version_id']}")
+
+        # Checked before the writer lock too, so a refused request leaves no lock behind.
+        if self.roots.artifact_path("data", "catalog.json").exists():
+            refuse_retired(self.read().get("retired", []))
+
         def add(by_key: dict[tuple[str, str], dict[str, Any]], retired: list[dict[str, Any]]) -> None:
+            refuse_retired(retired)
             for row in additions:
                 key = (row["data_id"], row["version_id"])
                 if key in by_key and by_key[key] != row:
