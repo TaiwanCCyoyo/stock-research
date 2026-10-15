@@ -95,9 +95,10 @@ def _producer(root: Path, *, closes_2330: list[float]) -> Path:
     dates = pd.to_datetime(["2026-10-12", "2026-10-13", "2026-10-14", "2026-10-15"])
     rows = []
     for day, close in zip(dates, closes_2330, strict=True):
-        rows.append({"Code": "2330", "Date": day, "Open": close, "High": close, "Low": close, "Close": close, "Volume": 1000.0})
+        rows.append({"Code": "2330", "Date": day, "Open": close, "High": close, "Low": close, "Close": close, "Volume": 1000.0, "Source": "official"})
     for day in dates[1:]:
-        rows.append({"Code": "6488", "Date": day, "Open": 50.0, "High": 51.0, "Low": 49.0, "Close": 50.0, "Volume": 10.0})
+        source = "shioaji" if day == dates[-1] else "official"
+        rows.append({"Code": "6488", "Date": day, "Open": 50.0, "High": 51.0, "Low": 49.0, "Close": 50.0, "Volume": 10.0, "Source": source})
     pd.DataFrame(rows).to_parquet(root / "price_daily.parquet", index=False)
     database = root / "corporate_actions.sqlite"
     database.unlink(missing_ok=True)
@@ -135,10 +136,12 @@ def test_update_publishes_a_readable_generation_and_flips_current(environment: t
     assert frame["RawClose"].tolist() == [100.0, 100.0, 95.0, 96.0]
     raw, _ = maintained_adjusted_daily.read_adjusted_daily("raw", codes=["6488"])
     assert raw["Date"].min() == pd.Timestamp("2026-10-13"), "rows start at the symbol's first quote"
+    assert raw["Source"].tolist() == ["official", "official", "shioaji"]
     status = maintained_adjusted_daily.current_generation()
     assert status["actions"]["after_asof_excluded"] == 1
     assert status["input_fingerprint"]["inputs"]["price_daily"]["live_producer"] is True
     assert status["previous_generation"] is None
+    assert status["bases"]["raw"]["rows_by_source"] == {"official": 6, "shioaji": 1}
 
 
 def test_failed_update_leaves_current_untouched_and_retention_keeps_two(environment: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:
@@ -194,6 +197,24 @@ def test_a_replaced_parquet_is_refused_before_it_is_read(environment: tuple[Path
 
     with pytest.raises(ValueError, match="does not match the bytes/SHA-256"):
         maintained_adjusted_daily.read_adjusted_daily("raw")
+
+
+def test_a_pinned_generation_survives_an_update_until_pruned(environment: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:
+    producer, _ = environment
+    maintained_adjusted_daily.update(producer_root=producer)
+    _, pinned = maintained_adjusted_daily.read_adjusted_daily("raw")
+    monkeypatch.setattr(maintained_adjusted_daily, "datetime", _Later(1))
+    maintained_adjusted_daily.update(producer_root=producer)
+
+    frame, record = maintained_adjusted_daily.read_adjusted_daily("raw", generation=pinned["generation"])
+    assert record["generation"] == pinned["generation"] and record["sha256"] == pinned["sha256"] and len(frame) == 7
+
+    monkeypatch.setattr(maintained_adjusted_daily, "datetime", _Later(2))
+    maintained_adjusted_daily.update(producer_root=producer)
+    with pytest.raises(FileNotFoundError, match="may have been pruned"):
+        maintained_adjusted_daily.read_adjusted_daily("raw", generation=pinned["generation"])
+    with pytest.raises(FileNotFoundError):
+        maintained_adjusted_daily.read_adjusted_daily("raw", generation="../escape")
 
 
 def test_concurrent_writer_is_refused(environment: tuple[Path, Path]) -> None:

@@ -50,12 +50,12 @@
 | `generations/<asof>-<UTC時間>/status.json`                                    | as-of 日、定義版本（`price-basis.v2`）、日曆、輸入指紋（`run_receipt`）、程式 commit、各 basis 列數／有效列數／品質原因統計、耗時 |
 | `generations/<id>/{raw,permanent_adjusted,reference_factor_adjusted}.parquet` | 依 `Code, Date` 排序，每檔股票一個 row group                                                                                      |
 
-- **欄位**：`Code, Date, Open, High, Low, Close`（研究價，無效為 NaN）、`RawOpen..RawClose`、`VolumeLots`、`Turnover`、`Quality`、`quality_reason`、`volume_status`、`corporate_action_types`、`restatement_factor`；語意同上方 `prepare_prices`。只含價格，不含 SMA／ATR 等特徵，所以特徵定義改了也不會牽動價格資料。
+- **欄位**：`Code, Date, Open, High, Low, Close`（研究價，無效為 NaN）、`RawOpen..RawClose`、`VolumeLots`、`Turnover`、`Quality`、`quality_reason`、`volume_status`、`corporate_action_types`、`restatement_factor`、`Source`；語意同上方 `prepare_prices`。`Source` 是該列報價的 producer 來源：`official`，或 `shioaji`（永豐分 K 轉日 K，2026-10-15 時有 351 檔、152,631 列，2018-12-07 起）；沒有報價的列為空值。研究若只要官方報價，請自行篩選 `Source == "official"`，各來源列數記在 `status.json` 的 `rows_by_source`。只含價格，不含 SMA／ATR 等特徵，所以特徵定義改了也不會牽動價格資料。
 - **輸入**：live producer 的 `price_daily.parquet`（只取 OHLCV，忽略舊 SMA／EMA）與 `corporate_actions.sqlite`（唯讀）。as-of 是價格最大日期；之後的除權息事件不納入，數量記在 `actions.after_asof_excluded`。
 - **日曆與列範圍**：日曆是 `price_daily.parquet` 所有日期的聯集，不是交易所公告日曆；每檔從第一筆到最後一筆報價，中間缺的交易日保留為無效列。
 - **更新**：`uv run python -m scripts.maintain_adjusted_daily update`。避開平日 18:00–18:45，producer 有工作在跑時會拒絕。每次建完整新世代：新的除權息會改寫該股整段較早歷史，所以只附加新一天並不正確。建完先核對輸入沒變，再以 `os.replace` 原子切換 `current.json`；保留前一世代以便回退、也讓正在讀的人讀完，更舊的由 updater 刪除。失敗不動 `current.json`，未完成的 staging 會刪除。同時只允許一個 writer（`.writer.lock`）。
 - **實測（2026-10-15，真實資料完整建置一次）**：2,077 檔、4,113 個交易日，每個 basis 6,764,521 列。讀輸入 6.5 秒，計算加寫入 556.6 秒，總共約 9.4 分鐘（單程序）。一個世代 768 MB（raw 223 MB、permanent 250 MB、reference 293 MB）；更新期間新舊兩世代並存，峰值約 1.5 GB。讀一檔 0.12 秒，整個 basis 讀三個欄位 0.31 秒。permanent 與 reference 各有 22,590 列標為 `ambiguous_or_missing_action_factor`：依上方價格政策，事件因子缺漏或不一致時，該事件日以前的還原歷史標為不明，而不是猜一個因子。這些列的來源分布尚未逐一核對。要不寫入就重測，用 `measure --codes N`。這個耗時目前不需要平行化；若之後成為瓶頸，再依 AGENTS.md 先量測有界的單股平行。
-- **讀取**：`frame, record = read_adjusted_daily("reference_factor_adjusted", codes=["2330"])`（`research_core.maintained_adjusted_daily`）。`record` 有 family、generation、asof、檔案路徑與 SHA-256，請放進研究的 receipt。讀取前會把 parquet 的大小與 SHA-256 跟 `status.json` 核對（每個行程、每個檔案只核對一次），檔案被換掉或損毀時直接拒絕，不會交出未驗證的資料。`uv run python -m scripts.maintain_adjusted_daily status` 可看現行世代。
+- **讀取**：`frame, record = read_adjusted_daily("reference_factor_adjusted", codes=["2330"])`（`research_core.maintained_adjusted_daily`）。`record` 有 family、generation、asof、檔案路徑與 SHA-256，請放進研究的 receipt。同一研究的後續讀取請傳入第一次拿到的 `generation=`，整個研究就會固定在同一版；那一版被刪除後會直接報錯，不會悄悄改讀新版。讀取前會把 parquet 的大小與 SHA-256 跟 `status.json` 核對（每個行程、每個檔案只核對一次），檔案被換掉或損毀時直接拒絕，不會交出未驗證的資料。`uv run python -m scripts.maintain_adjusted_daily status` 可看現行世代。
 - **定義變更**：開新家族 `adjusted-daily-v2`，不在原家族裡改寫。
 
 ## 舊的不可變快取 v1（legacy）

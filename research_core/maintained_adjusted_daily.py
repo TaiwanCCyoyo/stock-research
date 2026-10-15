@@ -55,6 +55,7 @@ ARROW_SCHEMA = pa.schema([
     ("volume_status", pa.string()),
     ("corporate_action_types", pa.string()),
     ("restatement_factor", pa.float64()),
+    ("Source", pa.string()),
 ])
 
 
@@ -69,7 +70,7 @@ def _load_inputs(producer_root: Path) -> tuple[pd.DataFrame, pd.DataFrame, dict[
         InputSpec("price_daily", prices_path, date_column="Date", live_producer=True),
         InputSpec("corporate_actions", actions_path, tables={"corporate_actions": "ex_date"}, live_producer=True),
     ])
-    columns = ["Code", "Date", *price_basis.PRICE_COLUMNS, "Volume"]
+    columns = ["Code", "Date", *price_basis.PRICE_COLUMNS, "Volume", "Source"]
     bars = read_stable(prices_path, lambda path: pd.read_parquet(path, columns=columns))
     connection = readonly_sqlite(actions_path)
     try:
@@ -91,6 +92,9 @@ def _prepare_symbol(
     prepared = prepared.loc[observed.min() : observed.max()]
     frame = prepared.rename_axis("Date").reset_index()
     frame.insert(0, "Code", code)
+    # The producer mixes official quotes with shioaji minute-to-daily rows; keep which one each row is.
+    sources = frame["Date"].map(raw.set_index("Date")["Source"])
+    frame["Source"] = sources.astype(object).where(sources.notna(), None)
     return frame
 
 
@@ -105,7 +109,7 @@ def compute(bars: pd.DataFrame, actions: pd.DataFrame, writers: dict[str, Any] |
     events_by_code: dict[str, pd.DataFrame] = {str(code): frame for code, frame in actions.groupby("code", sort=False)}
     empty_events = cast(pd.DataFrame, actions.iloc[0:0])
     selected = sorted(by_code) if codes is None else list(codes)
-    counts: dict[str, dict[str, Any]] = {basis: {"rows": 0, "valid_rows": 0, "quality_reasons": {}} for basis in BASES}
+    counts: dict[str, dict[str, Any]] = {basis: {"rows": 0, "valid_rows": 0, "rows_by_source": {}, "quality_reasons": {}} for basis in BASES}
     for position, code in enumerate(selected, 1):
         raw, events = by_code[code], events_by_code.get(code, empty_events)
         for basis in BASES:
@@ -113,6 +117,8 @@ def compute(bars: pd.DataFrame, actions: pd.DataFrame, writers: dict[str, Any] |
             tally = counts[basis]
             tally["rows"] += len(frame)
             tally["valid_rows"] += int(frame["Quality"].sum())
+            for source, count in frame["Source"].dropna().value_counts().items():
+                tally["rows_by_source"][str(source)] = tally["rows_by_source"].get(str(source), 0) + int(count)
             for reason, count in frame["quality_reason"].dropna().value_counts().items():
                 tally["quality_reasons"][str(reason)] = tally["quality_reasons"].get(str(reason), 0) + int(count)
             if writers is not None:
@@ -241,9 +247,18 @@ def update(*, producer_root: Path, root: Path | None = None) -> dict[str, Any]:
         lock.unlink()
 
 
-def current_generation(root: Path | None = None) -> dict[str, Any]:
-    """The current generation's status, checked against the pointer's SHA-256."""
+def current_generation(root: Path | None = None, *, generation: str | None = None) -> dict[str, Any]:
+    """The current (or an explicitly pinned) generation's status.
+
+    Pass the `generation` from an earlier read to keep every stage of a study on the same
+    generation; it fails once that generation has been pruned rather than switching.
+    """
     family = family_dir(root)
+    if generation is not None:
+        directory = family / "generations" / generation
+        if generation.startswith(".") or "/" in generation or "\\" in generation or not (directory / "status.json").is_file():
+            raise FileNotFoundError(f"{FAMILY} generation {generation!r} is not available under {family}; it may have been pruned")
+        return {**read_json(directory / "status.json"), "path": str(directory), "status_sha256": file_digest(directory / "status.json")}
     pointer_path = family / "current.json"
     if not pointer_path.is_file():
         raise FileNotFoundError(f"{FAMILY} has no current generation under {family}; run scripts.maintain_adjusted_daily update")
@@ -274,14 +289,16 @@ def read_adjusted_daily(
     codes: Sequence[str] | None = None,
     columns: Sequence[str] | None = None,
     root: Path | None = None,
+    generation: str | None = None,
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
-    """Read one basis of the current generation; return rows and the generation record.
+    """Read one basis of the current generation, or of `generation`; return rows and record.
 
-    Put the record (family, generation, asof, file, sha256) in the study's receipt.
+    Put the record (family, generation, asof, file, sha256) in the study's receipt, and pass
+    its `generation` to later reads so the whole study uses one generation.
     """
     if basis not in BASES:
         raise ValueError(f"unknown basis {basis!r}; choose one of {BASES}")
-    status = current_generation(root)
+    status = current_generation(root, generation=generation)
     path = Path(status["path"]) / f"{basis}.parquet"
     _verify_once(path, status["bases"][basis])
     filters = None if codes is None else [("Code", "in", [str(code) for code in codes])]
