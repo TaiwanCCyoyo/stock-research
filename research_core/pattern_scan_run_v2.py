@@ -162,16 +162,14 @@ def launch(
     run = _checked_path(roots.primary / ".tmp" / "pattern-scan-execution" / run_id)
     run.mkdir(parents=True, exist_ok=True)
     if (run / "cleanup-receipt.json").exists():
-        from research_core.research_data_catalog import verify_entry
+        from research_core.pattern_scan_result_lifecycle_v3 import verify_retained_status
+        from research_core.research_data_catalog import DataCatalog
 
-        retired = read_scan_receipt(run / "cleanup-receipt.json")
-        if retired.get("schema") != "pattern-scan-cleanup.v3" or retired.get("complete") is not True or retired.get("run_root") != str(run):
-            raise ValueError("invalid retained-result cleanup receipt")
-        verify_entry(retired["entry"], roots)
+        retained = verify_retained_status(run, DataCatalog(roots))
         return {
             "complete": True,
-            "source_id": retired["entry"]["inputs"]["source_id"],
-            "result": {"phase": "retained_result_published", "entry": retired["entry"]},
+            "source_id": retained["entry"]["inputs"]["source_id"],
+            "result": {"phase": "retained_result_published", "entry": retained["entry"], "prices_retained": retained["prices_retained"]},
         }
     path, response = run / f"request-{mode}.json", run / f"response-{mode}.json"
     if path.exists():

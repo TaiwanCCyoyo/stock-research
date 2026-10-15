@@ -92,24 +92,47 @@ after the same publication/cleanup gates pass.
 ## Immediate retirement, with completion gates
 
 No cleanup occurs while paused, running, incomplete, unverified or unpublished.
-PR17's prepared prices also require the separately completed shared-reader
-transition: retain `audits/price-reader-equivalence.json` with matching reference
-source/input, all 1,943 securities including 0050, 4,110 sessions, fixed cutoff,
-all-column/calendar/quality equality and the generation tested. Without this
-evidence the retirement gate refuses to delete any run files. This enforces the
-owner's explicit instruction to keep PR17's price copy until that transition;
-the current change performs no transition or real cleanup.
-Cleanup requires the verified final bundle and completed reference handoff, plus
+Both stages require the verified final bundle and completed reference handoff, plus
 the report and exact ten-event/five-candidate audit packet (54,720 comparison
 rows, zero mismatches). Merely computing summary tables does not satisfy this.
 
-After those gates pass, `cleanup_run` immediately removes the explicitly captured
-owned checkpoints, derived prices, expanded rows and temporary files. There is no
-30-day or 7-day recovery period. It preflights the entire run for aliases and
-checks each remaining file against the captured ownership inventory before any
-deletion. Unknown or changed files block cleanup. A handoff pointer and cleanup
-receipt remain; older sibling runs and shared producer/cache data are untouched.
-This addendum does not authorize cleanup of historical runs or shared data.
+1. `cleanup_run` removes explicitly captured non-price checkpoints, expanded rows
+   and temporary files. It always preserves `prepared/`, even if an equality audit
+   was already published. Its `cleanup-receipt.json` records the publication and
+   original source/input identities, plus each preserved price file's SHA-256,
+   size and physical identity. This stage does not wait for the shared reader.
+2. After shared `as_of=cutoff` is merged and tested, callers supply an explicit
+   audit outside the run to `record_price_reader_transition`. It snapshots only
+   that small JSON into `price-reader-transition.json`, binding the exact published
+   entry, handoff hash, first-stage receipt hash, original source/input and price
+   inventory hash. The immutable final bundle is never amended or republished.
+   An audit already retained in that bundle can also supply this evidence.
+3. `retire_prepared_prices` separately verifies the transition and original price
+   files, then retires only registered prices. Required equality is unchanged:
+   all 1,943 securities including 0050, 4,110 sessions, cutoff 2026-10-12,
+   all-column/calendar/quality equality, zero mismatches and the generation tested.
+   `price-retirement-receipt.json` records completion. The first-stage receipt
+   describes its historical phase; read-only `verify_retained_status` reports
+   whether prices currently remain, including through the launcher.
+
+There is no 30-day or 7-day recovery period. Both stages preflight the entire run
+for aliases and compare every remaining file with explicit ownership before any
+deletion. Unknown or changed files block cleanup. Deletion journals make a partial
+unlink retryable without adopting new files. Generated receipts are atomically
+transferred from sibling metadata scratch; an interrupted write stays outside the
+run and final payload for diagnosis, never authorizing deletion or being silently
+adopted. No permanent input snapshots or extra copies of result payloads are made.
+The handoff and small cleanup/transition/retirement receipts remain. The external
+audit's original path is provenance only: later verification uses its retained
+bytes/hash, even if the shared generation or external audit file is subsequently
+retired. This preserves the comparison record and its binding; numerical
+correctness depends on the independent equality audit, not the receipt alone.
+It guarantees neither perpetual input availability nor exact future reproduction.
+
+This implementation is exercised with synthetic fixtures only; no real cleanup
+or reader switch is performed by the review fix. Older sibling runs and shared
+producer/cache data are untouched. This addendum does not authorize cleanup of
+historical runs or shared data.
 
 The producer idle/read-window checks remain in force. Future shared-reader work
 will pin one generation per run/stage; a deleted pinned generation must fail,

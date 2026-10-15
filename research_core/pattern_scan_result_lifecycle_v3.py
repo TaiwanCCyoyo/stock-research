@@ -19,7 +19,7 @@ import pyarrow.parquet as pq
 
 from research_core.artifact_store import canonical, describe_file, file_digest, publish_generated_bytes, relocate_noreplace
 from research_core.pattern_scan_receipt_io_v2 import publish_scan_receipt, read_scan_receipt
-from research_core.research_data_catalog import DataCatalog, verify_entry
+from research_core.research_data_catalog import DataCatalog
 from research_core.research_data_file_bundle_v1 import publish_staged_bundle
 from research_core.research_data_paths import _artifact_name, _check_tree, _checked_path
 from research_core.research_measurement_v1 import phase_receipt, resource_sample
@@ -308,69 +308,28 @@ def handoff_results(
 
 
 def cleanup_run(run: Path, catalog: DataCatalog) -> dict[str, Any]:
-    """Immediately remove only this run after verifying final results and handoff."""
-    run = _run(run)
-    if (run / ACTIVE).exists():
-        raise ValueError("cannot clean an actively executing scan")
-    proof_path, cleanup_path = run / "publication-handoff.json", run / "cleanup-receipt.json"
-    proof = read_scan_receipt(proof_path)
-    if (
-        proof.get("schema") != "pattern-scan-publication-handoff.v3"
-        or proof.get("complete") is not True
-        or proof.get("run_root") != str(run)
-        or proof.get("retention_policy") != POLICY
-    ):
-        raise ValueError("verified formal publication and reference handoff required before cleanup")
-    manifest = verify_entry(proof["entry"], catalog.roots)
-    if (run / "prepared").exists():
-        name = "audits/price-reader-equivalence.json"
-        if name not in {row["path"] for row in manifest["artifacts"]}:
-            raise ValueError("prepared prices require retained shared-reader equivalence before retirement")
-        pin = proof["entry"]["manifest"]
-        final = catalog.roots.artifact_path(pin["scope"], pin["path"]).parent
-        equality = read_scan_receipt(final / name)
-        if (
-            equality.get("schema") != "pattern-scan-price-reader-equivalence.v3"
-            or equality.get("complete") is not True
-            or equality.get("reference_source_id") != proof["entry"]["inputs"]["source_id"]
-            or equality.get("reference_input_id") != proof["entry"]["inputs"]["input_id"]
-            or equality.get("calendar_n") != 4110
-            or equality.get("security_n") != 1943
-            or equality.get("cutoff") != "2026-10-12"
-            or equality.get("all_columns_equal") is not True
-            or equality.get("calendar_equal") is not True
-            or equality.get("quality_equal") is not True
-            or equality.get("mismatch_n") != 0
-            or not isinstance(equality.get("generation"), str)
-            or not equality["generation"].strip()
-        ):
-            raise ValueError("shared-reader equivalence does not authorize prepared-price retirement")
-    _check_tree(run)
-    retained = {proof_path, cleanup_path}
-    files = [path for path in run.rglob("*") if path.is_file() and path not in retained]
-    for path in files:
-        name = path.relative_to(run).as_posix()
-        expected = proof.get("owned_scratch", {}).get(name)
-        if expected is None or _scratch_inventory(run, [path])[name] != expected:
-            raise ValueError(f"unknown file ownership blocks cleanup: {path}")
-    removed_bytes = sum(path.stat().st_size for path in files)
-    for path in files:
-        _checked_path(path).unlink()
-    for path in sorted((path for path in run.rglob("*") if path.is_dir()), key=lambda path: len(path.parts), reverse=True):
-        path.rmdir()
-    receipt = {
-        "schema": "pattern-scan-cleanup.v3",
-        "complete": True,
-        "run_root": str(run),
-        "entry": proof["entry"],
-        "removed_files": len(files),
-        "removed_bytes": removed_bytes,
-        "retention_policy": POLICY,
-        "recovery_period_days": 0,
-    }
-    if not cleanup_path.exists():
-        _retain(cleanup_path, receipt)
-    else:
-        receipt = read_scan_receipt(cleanup_path)
-    LOGGER.info("Retired owned scan scratch files=%d bytes=%d", len(files), removed_bytes)
-    return receipt
+    """Retire non-price scratch after handoff; always preserve prepared prices."""
+    from research_core.pattern_scan_price_retirement_v3 import cleanup_non_price_scratch
+
+    return cleanup_non_price_scratch(run, catalog)
+
+
+def record_price_reader_transition(run: Path, catalog: DataCatalog, *, equivalence: Path) -> dict[str, Any]:
+    """Bind later equivalence evidence without changing the immutable result."""
+    from research_core.pattern_scan_price_retirement_v3 import record_transition
+
+    return record_transition(run, catalog, equivalence=equivalence)
+
+
+def retire_prepared_prices(run: Path, catalog: DataCatalog, *, transition: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Retire only registered prices after the independent transition validates."""
+    from research_core.pattern_scan_price_retirement_v3 import retire_prices
+
+    return retire_prices(run, catalog, transition=transition)
+
+
+def verify_retained_status(run: Path, catalog: DataCatalog) -> dict[str, Any]:
+    """Verify retained publication and current price-retirement state read-only."""
+    from research_core.pattern_scan_price_retirement_v3 import verify_status
+
+    return verify_status(run, catalog)

@@ -12,6 +12,7 @@ import pandas as pd
 import pytest
 
 from research_core import pattern_scan_capacity_v2 as capacity
+from research_core import pattern_scan_result_lifecycle_v3 as lifecycle
 from research_core import pattern_scan_run_v2 as run
 from research_core import run_receipt
 from research_core.artifact_store import canonical, describe_file, file_digest, object_digest, read_json, write_json
@@ -761,3 +762,56 @@ def test_deferred_launch_job_owns_active_marker_until_confirmed_termination(setu
             run.launch(roots, **kwargs)
     assert events[-2:] == ["terminated", "closed"]
     assert not marker.exists()
+
+
+@pytest.mark.parametrize(("receipt_state", "prices_retained"), [("phase_one", True), ("phase_two", False), ("historical", False)])
+@pytest.mark.parametrize("verification_fails", [False, True])
+def test_launch_reports_verified_price_retention_without_mutation_or_restart(
+    setup_run: Any,
+    monkeypatch: pytest.MonkeyPatch,
+    receipt_state: str,
+    prices_retained: bool,
+    verification_fails: bool,
+) -> None:
+    roots, directory, request = setup_run
+    monkeypatch.setattr(DataRoots, "validate_worktree", lambda *args: None)
+    entry: dict[str, Any] = {"version_id": "synthetic-retained", "inputs": {"source_id": "synthetic-source", "input_id": "synthetic-input"}}
+    cleanup: dict[str, Any] = {"schema": "pattern-scan-cleanup.v3", "complete": True, "run_root": str(directory), "entry": entry}
+    if receipt_state != "historical":
+        cleanup.update(phase="non_price_scratch", prices_retained=True)
+    write_json(directory / "cleanup-receipt.json", cleanup)
+    if receipt_state == "phase_two":
+        write_json(directory / "price-retirement-receipt.json", {"schema": "pattern-scan-price-retirement.v3", "complete": True, "published_entry": entry})
+    if prices_retained:
+        (directory / "prepared").mkdir()
+        (directory / "prepared/synthetic.parquet").write_bytes(b"synthetic retained prices")
+    before = {path: (file_digest(path), path.stat().st_mtime_ns) for path in directory.rglob("*") if path.is_file()}
+    calls: list[Path] = []
+
+    def verified(location: Path, catalog: Any) -> dict[str, Any]:
+        # This is a consumer-routing test, not a substitute for the lifecycle
+        # suite's real phase/entry/transition/inventory integrity checks.
+        assert location == directory and catalog.roots == roots
+        calls.append(location)
+        if verification_fails:
+            raise ValueError("synthetic retained-status verification rejected")
+        return {"entry": entry, "prices_retained": prices_retained}
+
+    monkeypatch.setattr(lifecycle, "verify_retained_status", verified)
+    monkeypatch.setattr(lifecycle, "cleanup_run", _forbidden)
+    monkeypatch.setattr(lifecycle, "retire_prepared_prices", _forbidden)
+    for name in ("assert_current_code", "git_source_identity", "producer_data_root", "load_live_inputs", "_capacity", "host_resources", "_MemoryBoundJob"):
+        monkeypatch.setattr(run, name, _forbidden)
+    if verification_fails:
+        with pytest.raises(ValueError, match="retained-status verification rejected"):
+            run.launch(roots, mode="all", run_id=request["run_id"], calculation_authorized=True)
+    else:
+        actual = run.launch(roots, mode="all", run_id=request["run_id"], calculation_authorized=True)
+        assert actual == {
+            "complete": True,
+            "source_id": entry["inputs"]["source_id"],
+            "result": {"phase": "retained_result_published", "entry": entry, "prices_retained": prices_retained},
+        }
+    assert calls == [directory]
+    assert before == {path: (file_digest(path), path.stat().st_mtime_ns) for path in directory.rglob("*") if path.is_file()}
+    assert not (directory / "request-all.json").exists()
