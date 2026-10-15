@@ -82,6 +82,12 @@ result references, verifies the staged bundle, and uses `publish_noreplace` befo
 catalog registration. Immutable journals allow retry after an individual move or
 registration interruption. Cross-volume moves are rejected; there is no copy
 fallback. The destination therefore needs to share the payload's volume.
+Generated snapshots, the result receipt and manifest are fully written, synced
+and verified in journal-owned metadata scratch outside the payload tree before
+atomic no-replace transfer. A half-written metadata temporary therefore cannot
+become a visible destination or enter the final bundle inventory; retry creates
+a fresh temporary. Retained partial metadata is retired with the owned run only
+after the same publication/cleanup gates pass.
 
 ## Immediate retirement, with completion gates
 

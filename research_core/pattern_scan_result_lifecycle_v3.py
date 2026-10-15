@@ -9,13 +9,15 @@ results are verified independently of retired prices and expanded event tables.
 from __future__ import annotations
 
 import logging
+import re
+import uuid
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
 import pyarrow.parquet as pq
 
-from research_core.artifact_store import describe_file, file_digest, relocate_noreplace
+from research_core.artifact_store import canonical, describe_file, file_digest, publish_generated_bytes, relocate_noreplace
 from research_core.pattern_scan_receipt_io_v2 import publish_scan_receipt, read_scan_receipt
 from research_core.research_data_catalog import DataCatalog, verify_entry
 from research_core.research_data_file_bundle_v1 import publish_staged_bundle
@@ -43,12 +45,15 @@ def _run(path: Path) -> Path:
     return path
 
 
-def _retain(path: Path, value: dict[str, Any]) -> None:
+def _retain(path: Path, value: dict[str, Any], *, scratch: Path | None = None) -> None:
     if path.exists():
         if read_scan_receipt(path) != value:
             raise ValueError(f"existing handoff identity differs: {path}")
     else:
-        publish_scan_receipt(path, value)
+        if scratch is None:
+            publish_scan_receipt(path, value)
+        else:
+            publish_generated_bytes(path, canonical(value), scratch=scratch)
 
 
 def _descriptor(name: str, path: Path, run: Path) -> dict[str, Any]:
@@ -234,8 +239,12 @@ def handoff_results(
             "computed": body,
             "artifacts": records,
             "owned_scratch": owned,
+            "metadata_scratch": str(run / f".handoff-metadata-{uuid.uuid4().hex}"),
         }
         _retain(plan_path, plan)
+    metadata_scratch = _checked_path(Path(plan["metadata_scratch"]))
+    if metadata_scratch.parent != run or re.fullmatch(r"\.handoff-metadata-[0-9a-f]{32}", metadata_scratch.name) is None:
+        raise ValueError("handoff metadata scratch must belong to this journaled run")
     if not ready_path.exists():
         stage.mkdir(exist_ok=True)
         for row in plan["artifacts"]:
@@ -243,8 +252,7 @@ def handoff_results(
             target.parent.mkdir(parents=True, exist_ok=True)
             if not target.exists():
                 if row["storage"] == "metadata_snapshot":
-                    with target.open("xb") as stream:
-                        stream.write(row["contents"].encode("utf-8"))
+                    publish_generated_bytes(target, row["contents"].encode("utf-8"), scratch=metadata_scratch)
                 else:
                     source = _checked_path(Path(row["source_path"]))
                     if not source.is_relative_to(run) or file_digest(source) != row["sha256"]:
@@ -263,7 +271,7 @@ def handoff_results(
             "results": {row["path"]: {key: row[key] for key in ("path", "bytes", "sha256")} for row in plan["artifacts"]},
             "transient_ancestors": "consumed; retired only after verified publication and reference handoff",
         }
-        _retain(stage / "run-receipt.json", receipt)
+        _retain(stage / "run-receipt.json", receipt, scratch=metadata_scratch)
     ready = read_scan_receipt(ready_path) if ready_path.exists() else None
     if stage.exists():
         location = stage
@@ -273,12 +281,18 @@ def handoff_results(
         raise ValueError("handoff staging and publication journal are both missing")
 
     def before_publish(entry: dict[str, Any]) -> None:
-        _retain(ready_path, {"entry": entry, "stage": str(stage), "computed_index_sha256": descriptor["sha256"]})
+        _retain(ready_path, {"entry": entry, "stage": str(stage), "computed_index_sha256": descriptor["sha256"]}, scratch=metadata_scratch)
 
-    entry = publish_staged_bundle(catalog, metadata, location, managed_parent=managed_parent, before_publish=before_publish)
+    entry = publish_staged_bundle(catalog, metadata, location, managed_parent=managed_parent, before_publish=before_publish, metadata_scratch=metadata_scratch)
     ready = read_scan_receipt(ready_path)
     if entry != ready["entry"]:
         raise ValueError("published result differs from planned reference handoff")
+    _check_tree(metadata_scratch)
+    metadata_files = [path for path in metadata_scratch.iterdir() if path.is_file()]
+    if len(metadata_files) != len(list(metadata_scratch.iterdir())) or any(
+        re.fullmatch(r"[0-9a-f]{32}\.metadata", path.name) is None for path in metadata_files
+    ):
+        raise ValueError("unknown file ownership in generated metadata scratch")
     proof = {
         "schema": "pattern-scan-publication-handoff.v3",
         "complete": True,
@@ -286,9 +300,9 @@ def handoff_results(
         "entry": entry,
         "run_root": str(run),
         "retention_policy": POLICY,
-        "owned_scratch": {**plan["owned_scratch"], **_scratch_inventory(run, [plan_path, ready_path])},
+        "owned_scratch": {**plan["owned_scratch"], **_scratch_inventory(run, [plan_path, ready_path, *metadata_files])},
     }
-    _retain(done_path, proof)
+    _retain(done_path, proof, scratch=metadata_scratch)
     LOGGER.info("Completed result reference handoff version=%s", entry["version_id"])
     return {**proof, "measurement": phase_receipt("single_copy_result_handoff", before, resource_sample())}
 

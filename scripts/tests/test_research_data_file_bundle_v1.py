@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import os
+import re
 from pathlib import Path
-from typing import Any, BinaryIO
+from typing import Any, BinaryIO, cast
 
 import pytest
 
@@ -423,3 +424,168 @@ def test_staged_callback_failure_preserves_stage_and_retry_identity(catalog: Dat
     assert retried == planned == [entry]
     final = _manifest(catalog, entry).parent
     assert before == {path.relative_to(final): file_digest(path) for path in final.rglob("*") if path.is_file()}
+
+
+def _interrupt_first_metadata_write(monkeypatch: pytest.MonkeyPatch) -> list[Path]:
+    """Write actual partial bytes to the generated workspace file before raising."""
+    original_open = Path.open
+    attempts: list[Path] = []
+
+    class PartialStream:
+        def __init__(self, stream: BinaryIO) -> None:
+            self.stream = stream
+
+        def __enter__(self) -> PartialStream:
+            return self
+
+        def __exit__(self, *args: Any) -> None:
+            self.stream.close()
+
+        def write(self, payload: bytes) -> int:
+            self.stream.write(payload[: len(payload) // 2])
+            self.stream.flush()
+            raise RuntimeError("invented interruption during manifest write")
+
+    def interrupted_open(path: Path, mode: str = "r", *args: Any, **kwargs: Any) -> Any:
+        stream = original_open(path, mode, *args, **kwargs)
+        if mode == "xb" and re.fullmatch(r"[0-9a-f]{32}\.metadata", path.name):
+            attempts.append(path)
+            if len(attempts) == 1:
+                return PartialStream(cast(BinaryIO, stream))
+        return stream
+
+    monkeypatch.setattr(Path, "open", interrupted_open)
+    return attempts
+
+
+@pytest.mark.parametrize("operation", ("prepare", "publish"))
+@pytest.mark.parametrize("explicit_workspace", (False, True))
+def test_partial_manifest_is_outside_payload_and_same_api_retry_succeeds(
+    catalog: DataCatalog,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    operation: str,
+    explicit_workspace: bool,
+) -> None:
+    staging = _staged(catalog)
+    original_inode = (staging / "nested/payload.bin").stat().st_ino
+    workspace = tmp_path / "owned-metadata-workspace" if explicit_workspace else None
+    api = publisher.prepare_staged_bundle if operation == "prepare" else publisher.publish_staged_bundle
+    attempts = _interrupt_first_metadata_write(monkeypatch)
+    with pytest.raises(RuntimeError, match="during manifest write"):
+        api(catalog, _metadata(), staging, managed_parent=MANAGED_PARENT, metadata_scratch=workspace)
+    assert len(attempts) == 1
+    partial = attempts[0]
+    partial_bytes = partial.read_bytes()
+    assert partial_bytes and not partial.is_relative_to(staging)
+    assert not (staging / "manifest.json").exists()
+    assert {path.relative_to(staging).as_posix() for path in staging.rglob("*") if path.is_file()} == {"nested/payload.bin"}
+    assert not (catalog.roots.data / "catalog.json").exists()
+    if workspace is not None:
+        assert partial.parent == workspace
+    else:
+        assert partial.parent.parent == staging.parent and partial.parent.name.startswith(".staging-metadata-")
+    retried = api(catalog, _metadata(), staging, managed_parent=MANAGED_PARENT, metadata_scratch=workspace)
+    assert len(attempts) == 2 and attempts[0] != attempts[1]
+    assert partial.read_bytes() == partial_bytes
+    if operation == "prepare":
+        assert isinstance(retried, tuple)
+        entry, _ = retried
+        assert (staging / "nested/payload.bin").stat().st_ino == original_inode
+        assert publisher.publish_staged_bundle(catalog, _metadata(), staging, managed_parent=MANAGED_PARENT, metadata_scratch=workspace) == entry
+    else:
+        assert isinstance(retried, dict)
+        entry = retried
+    final = _manifest(catalog, entry).parent
+    assert (final / "nested/payload.bin").stat().st_ino == original_inode
+    assert len(partial_bytes) < (final / "manifest.json").stat().st_size
+    assert {path.relative_to(final).as_posix() for path in final.rglob("*") if path.is_file()} == {"nested/payload.bin", "manifest.json"}
+    assert not attempts[1].exists()
+    if explicit_workspace:
+        assert workspace is not None and workspace.is_dir()
+    else:
+        assert not attempts[1].parent.exists()
+
+
+def test_partial_manifest_retry_preserves_identical_existing_final(catalog: DataCatalog, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    first = _staged(catalog)
+    entry = publisher.publish_staged_bundle(catalog, _metadata(), first, managed_parent=MANAGED_PARENT)
+    final = _manifest(catalog, entry).parent
+    before = {path.relative_to(final): file_digest(path) for path in final.rglob("*") if path.is_file()}
+    inode = (final / "nested/payload.bin").stat().st_ino
+    staging = _staged(catalog, ".staging-retry-existing")
+    stage_inode = (staging / "nested/payload.bin").stat().st_ino
+    workspace = tmp_path / "caller-owned-scratch"
+    attempts = _interrupt_first_metadata_write(monkeypatch)
+    with pytest.raises(RuntimeError, match="during manifest write"):
+        publisher.publish_staged_bundle(catalog, _metadata(), staging, managed_parent=MANAGED_PARENT, metadata_scratch=workspace)
+    assert before == {path.relative_to(final): file_digest(path) for path in final.rglob("*") if path.is_file()}
+    assert publisher.publish_staged_bundle(catalog, _metadata(), staging, managed_parent=MANAGED_PARENT, metadata_scratch=workspace) == entry
+    assert before == {path.relative_to(final): file_digest(path) for path in final.rglob("*") if path.is_file()}
+    assert (final / "nested/payload.bin").stat().st_ino == inode
+    assert (staging / "nested/payload.bin").stat().st_ino == stage_inode
+    assert attempts[0].is_file() and not attempts[1].exists()
+
+
+@pytest.mark.parametrize("workspace_kind", ("inside-stage", "inside-final", "relative", "hardlink", "symlink"))
+def test_metadata_workspace_is_physical_absolute_and_outside_bundles(catalog: DataCatalog, tmp_path: Path, workspace_kind: str) -> None:
+    staging = _staged(catalog)
+    entry, _ = publisher.prepare_staged_bundle(catalog, _metadata(), staging, managed_parent=MANAGED_PARENT)
+    if workspace_kind == "inside-stage":
+        workspace = staging / "scratch"
+    elif workspace_kind == "inside-final":
+        workspace = _manifest(catalog, entry).parent / "scratch"
+    elif workspace_kind == "relative":
+        workspace = Path("relative-metadata-scratch")
+    elif workspace_kind == "hardlink":
+        workspace = tmp_path / "hardlinked-workspace"
+        os.link(_source(tmp_path, "metadata-workspace-source.bin"), workspace)
+    else:
+        workspace = tmp_path / "linked-workspace"
+        try:
+            workspace.symlink_to(tmp_path, target_is_directory=True)
+        except OSError as error:
+            if getattr(error, "winerror", None) == 1314:
+                pytest.skip("Windows session lacks symbolic-link privilege")
+            raise
+    with pytest.raises(ValueError, match="outside|absolute|hardlink|linked|reparse"):
+        publisher.publish_staged_bundle(catalog, _metadata(), staging, managed_parent=MANAGED_PARENT, metadata_scratch=workspace)
+    assert staging.is_dir() and not (catalog.roots.data / "catalog.json").exists()
+
+
+def test_generated_metadata_does_not_hide_unknown_payload_or_bad_existing_manifest(catalog: DataCatalog, tmp_path: Path) -> None:
+    staging = _staged(catalog)
+    publisher.prepare_staged_bundle(catalog, _metadata(), staging, managed_parent=MANAGED_PARENT)
+    (staging / "unknown.metadata").write_bytes(b"not caller scratch")
+    with pytest.raises(ValueError, match="identity"):
+        publisher.publish_staged_bundle(catalog, _metadata(), staging, managed_parent=MANAGED_PARENT, metadata_scratch=tmp_path / "scratch")
+    other = _staged(catalog, ".staging-bad-manifest")
+    (other / "manifest.json").write_bytes(b"{partial existing manifest")
+    with pytest.raises(ValueError):
+        publisher.publish_staged_bundle(catalog, _metadata(), other, managed_parent=MANAGED_PARENT, metadata_scratch=tmp_path / "scratch")
+    assert (other / "manifest.json").read_bytes() == b"{partial existing manifest"
+
+
+def test_metadata_workspace_requires_same_filesystem(catalog: DataCatalog, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    staging = _staged(catalog)
+    workspace = tmp_path / "other-device-workspace"
+    workspace.mkdir()
+    original_stat = Path.stat
+
+    class OtherDeviceStat:
+        def __init__(self, info: os.stat_result) -> None:
+            self.original = info
+            self.st_dev = info.st_dev + 1
+
+        def __getattr__(self, name: str) -> Any:
+            return getattr(self.original, name)
+
+    def different_device(path: Path, *args: Any, **kwargs: Any) -> Any:
+        info = original_stat(path, *args, **kwargs)
+        return OtherDeviceStat(info) if path == workspace else info
+
+    monkeypatch.setattr(Path, "stat", different_device)
+    with pytest.raises(ValueError, match="same filesystem"):
+        publisher.prepare_staged_bundle(catalog, _metadata(), staging, managed_parent=MANAGED_PARENT, metadata_scratch=workspace)
+    assert not (staging / "manifest.json").exists()
+    assert list(workspace.iterdir()) == []

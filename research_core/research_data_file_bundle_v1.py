@@ -14,7 +14,18 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from research_core.artifact_store import copy_verified, describe_file, file_digest, object_digest, publish_noreplace, read_json, relative_name, write_json
+from research_core.artifact_store import (
+    canonical,
+    copy_verified,
+    describe_file,
+    file_digest,
+    object_digest,
+    publish_generated_bytes,
+    publish_noreplace,
+    read_json,
+    relative_name,
+    write_json,
+)
 from research_core.research_data_catalog import CATALOG_FIELDS, DataCatalog, read_detached, validate_entry, verify_entry
 from research_core.research_data_paths import _checked_path
 from research_core.research_measurement_v1 import phase_receipt, resource_sample
@@ -51,6 +62,7 @@ def prepare_staged_bundle(
     *,
     managed_parent: str,
     lineage: dict[str, Any] | None = None,
+    metadata_scratch: Path | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """Seal and verify a staged bundle without publishing or registering it.
 
@@ -58,6 +70,8 @@ def prepare_staged_bundle(
     failure, retry with the digest-named final directory as ``staging``; its
     manifest and complete physical inventory are verified again. The returned
     entry can be journaled before publication. No payload is copied or moved.
+    Interrupted generated metadata stays outside the payload in caller-owned
+    scratch, or in a unique sibling workspace when none is supplied.
     """
     parent = catalog.roots.artifact_path("data", managed_parent)
     if not staging.is_absolute():
@@ -83,6 +97,21 @@ def prepare_staged_bundle(
         "manifest": {"scope": "data", "path": f"{name}/manifest.json", "sha256": version},
     }
     validate_entry(entry, catalog.roots)
+    workspace = None
+    if metadata_scratch is not None:
+        if not metadata_scratch.is_absolute():
+            raise ValueError("explicit metadata scratch must be absolute")
+        workspace = _checked_path(metadata_scratch)
+        for bundle in (staging, destination):
+            if workspace == bundle or workspace.is_relative_to(bundle) or bundle.is_relative_to(workspace):
+                raise ValueError("metadata scratch must be outside staging and final payload trees")
+        if workspace.exists() and not workspace.is_dir():
+            raise ValueError("metadata scratch must be a physical directory")
+        existing_parent = workspace
+        while not existing_parent.exists():
+            existing_parent = existing_parent.parent
+        if existing_parent.stat().st_dev != staging.stat().st_dev:
+            raise ValueError("metadata scratch must be on the same filesystem")
     manifest = staging / "manifest.json"
     if manifest.exists():
         if read_json(manifest) != body:
@@ -90,7 +119,12 @@ def prepare_staged_bundle(
     elif staging == destination:
         raise ValueError("existing final bundle lacks its manifest")
     else:
-        write_json(manifest, body)
+        if workspace is None:
+            workspace = catalog.roots.artifact_path("data", f"{relative_name(managed_parent)}/.staging-metadata-{uuid.uuid4().hex}")
+            workspace.mkdir()
+        publish_generated_bytes(manifest, canonical(body), scratch=workspace)
+        if metadata_scratch is None and not any(workspace.iterdir()):
+            workspace.rmdir()
     if file_digest(manifest) != version:
         raise ValueError("staged manifest hash differs from the bundle identity")
     LOGGER.info("Prepared staged bundle data=%s version=%s files=%d", metadata["data_id"], version, len(artifacts))
@@ -105,6 +139,7 @@ def publish_staged_bundle(
     managed_parent: str,
     lineage: dict[str, Any] | None = None,
     before_publish: Callable[[dict[str, Any]], None] | None = None,
+    metadata_scratch: Path | None = None,
 ) -> dict[str, Any]:
     """Publish a verified sibling by one no-replace rename, then register it.
 
@@ -117,12 +152,14 @@ def publish_staged_bundle(
     registration retains its independent full verification trust boundary.
     """
     before = resource_sample()
-    entry, body = prepare_staged_bundle(catalog, metadata, staging, managed_parent=managed_parent, lineage=lineage)
+    entry, body = prepare_staged_bundle(catalog, metadata, staging, managed_parent=managed_parent, lineage=lineage, metadata_scratch=metadata_scratch)
     staging = _checked_path(staging)
     destination = catalog.roots.artifact_path("data", entry["manifest"]["path"]).parent
     existing = destination.exists()
     if existing and destination != staging:
-        final_entry, final_body = prepare_staged_bundle(catalog, metadata, destination, managed_parent=managed_parent, lineage=lineage)
+        final_entry, final_body = prepare_staged_bundle(
+            catalog, metadata, destination, managed_parent=managed_parent, lineage=lineage, metadata_scratch=metadata_scratch
+        )
         if final_entry != entry or final_body != body:
             raise ValueError("existing final bundle identity/inventory mismatch")
     LOGGER.info("Staged publisher verification measurement=%s", phase_receipt("staged_bundle_inventory", before, resource_sample()))

@@ -154,6 +154,70 @@ def _hashes(directory: Path) -> dict[str, str]:
     return {path.relative_to(directory).as_posix(): file_digest(path) for path in directory.rglob("*") if path.is_file()}
 
 
+@pytest.mark.parametrize("kind", ("snapshot", "run_receipt", "manifest"))
+def test_same_handoff_retries_after_actual_partial_metadata_write(case: dict[str, Any], monkeypatch: pytest.MonkeyPatch, kind: str) -> None:
+    needles = {
+        "snapshot": b'"historical":true',
+        "run_receipt": b'"schema":"pattern-scan-result-receipt.v3"',
+        "manifest": b'"schema":"research-data-bundle.v1"',
+    }
+    original_open = Path.open
+    interrupted: list[Path] = []
+    prior = _hashes(case["older"])
+    payload = case["files"]["aggregates/aggregate.parquet"]
+    identity = payload.stat()
+
+    class PartialWriter:
+        def __init__(self, path: Path, stream: Any) -> None:
+            self.path, self.stream = path, stream
+
+        def __enter__(self) -> Any:
+            self.stream.__enter__()
+            return self
+
+        def __exit__(self, *args: Any) -> Any:
+            return self.stream.__exit__(*args)
+
+        def write(self, data: bytes) -> int:
+            if not interrupted and needles[kind] in data:
+                self.stream.write(data[: len(data) // 2])
+                self.stream.flush()
+                os.fsync(self.stream.fileno())
+                interrupted.append(self.path)
+                raise OSError("invented process interruption during metadata write")
+            return self.stream.write(data)
+
+        def __getattr__(self, name: str) -> Any:
+            return getattr(self.stream, name)
+
+    def opened(path: Path, mode: str = "r", *args: Any, **kwargs: Any) -> Any:
+        stream = original_open(path, mode, *args, **kwargs)
+        return PartialWriter(path, stream) if mode == "xb" and path.suffix == ".metadata" else stream
+
+    monkeypatch.setattr(Path, "open", opened)
+    with pytest.raises(OSError, match="interruption during metadata write"):
+        _handoff(case)
+    assert len(interrupted) == 1 and interrupted[0].read_bytes()
+    plan = read_json(case["run"] / "handoff-plan.json")
+    stage = Path(plan["stage"])
+    assert interrupted[0].parent == Path(plan["metadata_scratch"])
+    assert not interrupted[0].is_relative_to(stage)
+    assert not (stage / {"snapshot": "execution/resource-profile.json", "run_receipt": "run-receipt.json", "manifest": "manifest.json"}[kind]).exists()
+    assert _hashes(case["older"]) == prior
+    proof = _handoff(case)
+    final = _final(case, proof)
+    after = (final / "aggregates/aggregate.parquet").stat()
+    assert (identity.st_dev, identity.st_ino) == (after.st_dev, after.st_ino)
+    published = _hashes(final)
+    verify_entry(proof["entry"], case["roots"])
+    _handoff(case)
+    assert _hashes(final) == published and _hashes(case["older"]) == prior
+    assert not any(path.suffix == ".metadata" for path in final.rglob("*"))
+    assert interrupted[0].is_file()
+    lifecycle.cleanup_run(case["run"], case["catalog"])
+    assert not interrupted[0].exists() and _hashes(final) == published
+
+
 @pytest.mark.parametrize("identity", ("source_id", "input_id"))
 def test_publication_metadata_cannot_relabel_computed_results(case: dict[str, Any], identity: str) -> None:
     case["metadata"]["inputs"][identity] = "different"
