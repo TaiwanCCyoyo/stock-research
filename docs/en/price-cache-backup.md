@@ -28,9 +28,10 @@ Two lessons shaped everything below:
    failure while succeeding at deleting. Every tier below verifies its own
    result rather than trusting an exit code.
 
-The worktree aliasing that caused the loss is fixed separately — worktrees
-now receive a copy of the read-set rather than a link. See
-`.githooks/post-checkout` and the worktree notes in `docs/en/stock-agent-operations.md`.
+The worktree aliasing that caused the loss is fixed separately. Worktrees first
+received a copy of the read-set rather than a link; since 2026-10-15 they receive
+nothing and read the live producer root read-only. See the worktree notes in
+`docs/en/stock-agent-operations.md`.
 
 ## What is worth protecting
 

@@ -3,6 +3,11 @@
 Applies to new work from the merge of this document. It changes no sealed hash,
 stored result or published version; frozen evidence keeps the rules it was sealed under.
 
+Owner decision 2026-10-15 ([record](decision-records/2026-10-15-drop-input-sealing.md)): new studies keep results with their
+SHA-256 plus an input **fingerprint**, not input bytes. A result that cannot be
+reproduced later is rerun on current data. The producer-input and sealed-code rows
+below changed accordingly; earlier sealed studies keep the rules they used.
+
 ## 1. What a hash is for
 
 | Risk                            | Does a hash help?                                               | What actually decides it                                                                                           |
@@ -15,15 +20,15 @@ stored result or published version; frozen evidence keeps the rules it was seale
 
 ## 2. Identity per artifact
 
-| Artifact                          | Identity                                                                                                      | Lives in                      |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------- |
-| Producer inputs (parquet, sqlite) | Raw SHA-256 of the **snapshot copy** taken for the study. Never a live file.                                  | `research_data` bundle        |
-| Per-stock derived inputs          | Digest of the normalized content (see below)                                                                  | derived cache / feature block |
-| Parameters                        | Git, plus canonical-JSON digest inside the bundle identity                                                    | `tasks/<id>/params/`          |
-| Code of a sealed run              | Snapshot copied into the bundle; hash the snapshot                                                            | `implementation/` in bundle   |
-| Results and process bundles       | Manifest of member bytes and digests; version id is the digest of the manifest                                | `research_data` bundle        |
-| Public result JSON in Git         | Semantic equality with the sealed result (the study's verifier, e.g. annual `verified_result`), not raw bytes | `tasks/<id>/`                 |
-| Reports and prose                 | Git only                                                                                                      | `tasks/<id>/`                 |
+| Artifact                          | Identity                                                                                                        | Lives in                      |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| Producer inputs (parquet, sqlite) | Fingerprint of the live input read: path, SHA-256 (files) or row counts and date range (SQLite), producer as-of | `run-receipt.v1` receipt      |
+| Per-stock derived inputs          | Digest of the normalized content (see below)                                                                    | derived cache / feature block |
+| Parameters                        | Git, plus canonical-JSON digest inside the bundle identity                                                      | `tasks/<id>/params/`          |
+| Code of a run                     | Git commit plus dirty flag; loaded modules are not hashed                                                       | `run-receipt.v1` receipt      |
+| Results and process bundles       | Manifest of member bytes and digests; version id is the digest of the manifest                                  | `research_data` bundle        |
+| Public result JSON in Git         | Semantic equality with the sealed result (the study's verifier, e.g. annual `verified_result`), not raw bytes   | `tasks/<id>/`                 |
+| Reports and prose                 | Git only                                                                                                        | `tasks/<id>/`                 |
 
 Normalization for content digests must keep every distinction that matters: floats
 by exact value (`float.hex()`), missing distinct from zero, dates with their type,
@@ -51,7 +56,8 @@ New stocks, history or corrected events produce a **new immutable version**; the
 version and every result that cites it stay readable. Inside an existing version any
 byte change is an error, whoever made it and however well meant, so no judgement
 about intent is needed. Producer live files change daily by design and are not
-hash-protected; they are snapshotted when a study consumes them.
+hash-protected; a study fingerprints what it read (`research_core/run_receipt.py`) and
+reads only while the producer is idle (`research_core/live_producer.py`).
 
 ## 5. Verification cost rules
 
@@ -98,7 +104,7 @@ Cold-disk hashing time was not measured. Re-measure before relying on these.
 
 ## 8. Checklist for a new study
 
-1. Inputs are snapshots in a bundle; the pin is small and not nested.
+1. Inputs are fingerprinted in the run receipt; results carry their SHA-256.
 2. Nothing hashed will be touched by a formatter afterwards.
 3. Each bundle is verified once per process; the runner builds its catalog once.
 4. Public JSON in Git is checked semantically against the sealed result.

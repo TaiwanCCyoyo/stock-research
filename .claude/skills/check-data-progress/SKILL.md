@@ -12,10 +12,15 @@ skill is a pointer, not a duplicate procedure, so the two never drift apart.
 
 ## Procedure
 
+Use the primary checkout's producer, `<primary stock-research checkout>/stock-data-downloader/`
+(here `D:/Project/stock-research/stock-data-downloader/`). Linked worktrees no longer
+initialize the submodule (2026-10-15), so a worktree's own `stock-data-downloader/` is
+empty or stale; never read logs or data from it.
+
 1. Read and follow
-   `stock-data-downloader/.claude/commands/check-data-progress.md` verbatim —
+   `<primary>/stock-data-downloader/.claude/commands/check-data-progress.md` verbatim —
    that file is the source of truth for what to check and how to report it.
-2. Run its steps with a working directory of `stock-data-downloader/`, since
+2. Run its steps with a working directory of that primary `stock-data-downloader/`, since
    all paths in that command (`data/official_daily.sqlite`) are relative to
    the submodule root, not this repo's root.
 3. Report back in the format that command specifies (a short Traditional

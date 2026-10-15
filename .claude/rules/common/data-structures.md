@@ -83,6 +83,12 @@ powershell.exe -NoProfile -Command "Get-ScheduledTask -TaskName 'StockProject-*'
 `State=Running` means hands off. `official_daily.sqlite-wal` and `-shm` sitting next to the
 database mean a writer is attached, or was attached and did not exit cleanly.
 
+Research reads of the live data obey the same schedule: `research_core/live_producer.py`'s
+`assert_producer_idle()` refuses the weekday 18:00-18:45 window (Asia/Taipei) and any running
+`StockProject-*` task, SQLite is opened read-only, and `read_stable()` fails a file
+rewritten mid-read. A read-only SQLite connection may still create `-shm`/`-wal` beside a
+WAL database; they belong to SQLite, so do not delete them while anything may be open.
+
 ## When to stop and ask
 
 Ask the user before proceeding if a change would rewrite existing data in place, if a task

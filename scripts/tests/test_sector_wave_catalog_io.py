@@ -10,6 +10,7 @@ import pandas as pd
 import pytest
 
 from research_core.sector_waves import compare_peer, detect_episodes, select_wave_winner
+from scripts import build_sector_wave_catalog
 from scripts.build_sector_wave_catalog import (
     CatalogIOError,
     _actions,
@@ -103,7 +104,7 @@ def _repo(tmp_path: Path) -> Path:
 def test_bundle_filters_future_row_retains_no_bars_and_checks_integrity(tmp_path: Path) -> None:
     root = _repo(tmp_path)
     output = root / "tasks" / "20261002-sector-wave-catalog" / "runs" / "one"
-    manifest = build_bundle(root, output, "one")
+    manifest = build_bundle(root, output, "one", data_root=root / "stock-data-downloader" / "data")
     assert manifest["counts"]["securities"] == 3
     chunks = list((output / "chunks").glob("securities-*.json.gz"))
     with gzip.open(chunks[0], "rt", encoding="utf-8") as handle:
@@ -124,7 +125,7 @@ def test_bundle_filters_future_row_retains_no_bars_and_checks_integrity(tmp_path
     with pytest.raises(CatalogIOError, match="hash"):
         validate_bundle(output)
     with pytest.raises(CatalogIOError, match="already exists"):
-        build_bundle(root, output, "one")
+        build_bundle(root, output, "one", data_root=root / "stock-data-downloader" / "data")
 
 
 def _replace_chunk(output: Path, table: str, rows: list[dict], *, refresh_receipt: bool = False) -> None:
@@ -152,7 +153,7 @@ def _replace_chunk(output: Path, table: str, rows: list[dict], *, refresh_receip
 def test_qualifying_wave_includes_no_bars_peer_and_validator_rejects_semantic_tamper(tmp_path: Path) -> None:
     root = _repo(tmp_path)
     output = root / "tasks" / "20261002-sector-wave-catalog" / "runs" / "wave"
-    manifest = build_bundle(root, output, "wave")
+    manifest = build_bundle(root, output, "wave", data_root=root / "stock-data-downloader" / "data")
     assert manifest["counts"]["waves"] == 1
     assert (output / "completion-receipt.json").is_file()
     wave_chunk = next(output / item["path"] for item in manifest["chunks"] if item["table"] == "waves")
@@ -325,7 +326,7 @@ def test_bundle_window_quality_finding_quarantines_peer_without_backdating_outsi
     root = _repo(tmp_path)
     _add_window_issue_prices(root)
     output = root / "tasks" / "20261002-sector-wave-catalog" / "runs" / "path-quality"
-    manifest = build_bundle(root, output, "path-quality")
+    manifest = build_bundle(root, output, "path-quality", data_root=root / "stock-data-downloader" / "data")
     waves = _read_table(output, manifest, "waves")
     peers = _read_table(output, manifest, "peers")
     assert len(waves) == 1
@@ -366,7 +367,7 @@ def test_validator_rejects_quality_peer_tampering_after_hash_and_receipt_refresh
     else:
         _add_window_issue_prices(root)
     output = root / "tasks" / "20261002-sector-wave-catalog" / "runs" / case
-    manifest = build_bundle(root, output, case)
+    manifest = build_bundle(root, output, case, data_root=root / "stock-data-downloader" / "data")
     peers = _read_table(output, manifest, "peers")
     peer = next(peer for peer in peers if peer["security_id"] == ("TW:C" if case == "unavailable_missing_flag" else "TW:A"))
     assert peer["quality_flags"]
@@ -380,3 +381,16 @@ def test_validator_rejects_quality_peer_tampering_after_hash_and_receipt_refresh
     _replace_chunk(output, "peers", peers, refresh_receipt=True)
     with pytest.raises(CatalogIOError, match=expected_error):
         validate_bundle(output)
+
+
+def test_bundle_reads_the_live_producer_root_by_default(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A worktree without a producer submodule reads the live root, wherever it lives."""
+    root = _repo(tmp_path)
+    external = tmp_path / "external producer data"
+    (root / "stock-data-downloader" / "data").rename(external)
+    monkeypatch.setenv("STOCK_PRODUCER_DATA_ROOT", str(external))
+    monkeypatch.setattr(build_sector_wave_catalog, "assert_producer_idle", lambda: None)
+    output = root / "tasks" / "20261002-sector-wave-catalog" / "runs" / "live"
+    manifest = build_bundle(root, output, "live")
+    validate_bundle(output)
+    assert Path(manifest["input_paths"]["price"]) == external.resolve() / "price_daily.parquet"

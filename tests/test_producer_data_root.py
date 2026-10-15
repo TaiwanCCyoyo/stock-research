@@ -4,11 +4,13 @@ import json
 import os
 import subprocess
 import sys
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
 import pytest
 
+from research_core import live_producer
 from research_core.producer_data import ENV_KEY, REPO_ROOT, SENTINEL, ProducerRootError, primary_checkout, producer_data_root
 from StockProject import backtest_cli
 
@@ -188,6 +190,7 @@ def test_cli_routes_price_and_metadata_to_same_explicit_root(monkeypatch: pytest
     monkeypatch.setattr(backtest_cli, "DataLoader", Loader)
     monkeypatch.setattr(backtest_cli, "resolve_codes", resolve)
     monkeypatch.setattr(backtest_cli, "load_strategy_class", lambda _: object)
+    monkeypatch.setattr(backtest_cli, "fingerprint_inputs", lambda specs: {"inputs": {}})
     monkeypatch.setattr(backtest_cli, "run_backtest_pass", stop)
     with pytest.raises(StopBeforeResearch):
         backtest_cli.main()
@@ -258,6 +261,10 @@ def test_backtest_cli_explicit_data_path_never_consults_the_resolver(monkeypatch
 
     monkeypatch.setattr(backtest_cli, "resolve_codes", resolve)
     monkeypatch.setattr(backtest_cli, "load_strategy_class", lambda _: object)
+    # With no resolvable root the explicit data cannot be classified, so the live-read gate
+    # applies (fail closed); pin its clock and task state so the test is time-independent.
+    monkeypatch.setattr(live_producer, "producer_time", lambda now=None: datetime(2026, 10, 15, 1, 30, tzinfo=timezone(timedelta(hours=8))))
+    monkeypatch.setattr(live_producer, "running_producer_tasks", lambda: [])
     with pytest.raises(StopBeforeResearch):
         backtest_cli.main()
     assert observed == {"metadata": root / "symbol_meta.sqlite"}

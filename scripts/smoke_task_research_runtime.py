@@ -13,7 +13,6 @@ SUMMARY_PATH = TASK_ROOT / "summary.json"
 SWEEP_SUMMARY_PATH = TASK_ROOT / "sweep_summary.json"
 ENGINE_WRITE_TARGET = APP_ROOT / "StockProject" / "engine" / ".write_probe"
 HOST_ENV_TARGET = APP_ROOT / ".env"
-LOCAL_DATA_PATH = "stock-data-downloader/data/adjusted_prices/daily"
 # 2B's initial_allocation_pct (0.18) can't afford a 1000-share 2330 lot at the
 # default 1,000,000 cash (strategy_diagnosis.md documents 2330 as a 0-trade
 # symbol for exactly this reason); the smoke run needs enough cash headroom.
@@ -72,7 +71,10 @@ def assert_host_env_not_mounted():
 def smoke_data_path():
     if RUNNING_IN_CONTAINER:
         return "data"
-    return LOCAL_DATA_PATH
+    sys.path.insert(0, str(APP_ROOT))
+    from research_core.producer_data import producer_data_root
+
+    return str(producer_data_root())
 
 
 def run_task_backtest():

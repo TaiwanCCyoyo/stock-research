@@ -44,6 +44,8 @@
                 "research_core/research_data_incremental.py",
                 "research_core/research_data_legacy.py",
                 "research_core/research_data_paths.py",
+                "research_core/run_receipt.py",
+                "research_core/live_producer.py",
                 "research_core/derived_features_chunk_v2.py",
                 "scripts/research_data.py",
                 "tasks/20261012-research-data-entry/*"
@@ -57,7 +59,8 @@
                 "scripts/tests/test_research_data_incremental.py",
                 "scripts/tests/test_research_data_legacy.py",
                 "scripts/tests/test_research_data_paths.py",
-                "scripts/tests/test_research_data_windows_deletion.py"
+                "scripts/tests/test_research_data_windows_deletion.py",
+                "scripts/tests/test_run_receipt.py"
             ],
             "consumers": ["annual"]
         },
@@ -475,6 +478,7 @@
         "scripts/tests/test_research_signals.py",
         "scripts/tests/test_research_stress_identity.py",
         "scripts/tests/test_rotation_runtime_source_parity.py",
+        "scripts/tests/test_run_receipt.py",
         "scripts/tests/test_run_task_backtest.py",
         "scripts/tests/test_saved_research_studio.py",
         "scripts/tests/test_score_wave_growth.py",
@@ -498,6 +502,7 @@
         "scripts/tests/test_windows_viewer_launcher.py",
         "scripts/tests/test_worktree_inventory.py",
         "tests/test_backtest_capital_mode_comparison.py",
+        "tests/test_backtest_live_inputs.py",
         "tests/test_backtest_metrics.py",
         "tests/test_backtest_universe_cli.py",
         "tests/test_broker_capital_modes.py",
