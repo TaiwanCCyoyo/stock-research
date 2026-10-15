@@ -123,7 +123,12 @@ bundles. One version was produced and registered, and it stays in place under "W
 - registered in the shared catalog as kind `prices`, reader `bundle`. The generic
   catalog reader on `main` verifies it; the sealing code was removed before merge.
 
-No study references it. It is a retirement candidate that needs owner approval.
+No study references it. It was never in the research backup (`D:/StockResearchBackup`).
+The owner approved its retirement and deletion on 2026-10-15. The catalog `retire`
+operation (`tasks/20261012-research-data-entry/data-contract.md`) removes it from the
+current snapshot and records the reason. After that, the payload and its receipt
+directory under `research_cache/producer-inputs/` are deleted. The bytes cannot be
+restored, and under this decision none are needed.
 
 ## Rule changes (old → new)
 

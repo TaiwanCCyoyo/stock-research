@@ -28,6 +28,12 @@ def main() -> int:
     context.add_argument("version_id")
     context.add_argument("--manifest-sha256", required=True)
     context.add_argument("--layer", choices=("past_only", "retrospective"), required=True)
+    retire = sub.add_parser("retire", help="stop advertising one version; payload deletion is a separate step")
+    retire.add_argument("data_id")
+    retire.add_argument("version_id")
+    retire.add_argument("--manifest-sha256", required=True)
+    retire.add_argument("--reason", required=True)
+    retire.add_argument("--retired-on", required=True, help="ISO date of the owner's approval")
     guard = sub.add_parser("check-worktree")
     guard.add_argument("path", type=Path)
     args = parser.parse_args()
@@ -45,6 +51,8 @@ def main() -> int:
         result = catalog.register(read_json(args.packet)["entries"])
     elif args.command == "verify":
         result = catalog.get(args.data_id, args.version_id, manifest_sha256=args.manifest_sha256)
+    elif args.command == "retire":
+        result = catalog.retire(args.data_id, args.version_id, manifest_sha256=args.manifest_sha256, reason=args.reason, retired_on=args.retired_on)
     elif args.command == "context":
         result = read_market_context(catalog, args.version_id, args.manifest_sha256, layer=args.layer)
     else:
