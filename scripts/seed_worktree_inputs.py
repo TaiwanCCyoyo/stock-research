@@ -54,6 +54,24 @@ def _legacy_inputs(source: Path, destination: Path) -> list[Path]:
     )
 
 
+def _sqlite_backup(source: Path, staging: Path) -> None:
+    """Write an online backup, including committed WAL data, into the staging file."""
+    started = time.monotonic()
+
+    def progress(status: int, remaining: int, total: int) -> None:
+        if time.monotonic() - started > 30:
+            raise TimeoutError("SQLite snapshot exceeded 30-second budget")
+
+    with staging.open("xb"):
+        pass  # Create exclusively; SQLite initializes an empty file as a new database.
+    with closing(sqlite3.connect(source.as_uri() + "?mode=ro", uri=True, timeout=5)) as incoming:
+        with closing(sqlite3.connect(staging)) as outgoing:
+            incoming.backup(outgoing, pages=256, progress=progress, sleep=0.05)
+    # Check the closed bytes that will be published; staging must carry no sidecar
+    # because a rename would leave it behind.
+    _closed_sqlite(staging)
+
+
 def _publish_snapshot(source: Path, target: Path) -> None:
     """Publish verified bytes atomically under the worktree's single-writer contract."""
     source, target = safe_path(source), safe_path(target)
@@ -64,12 +82,16 @@ def _publish_snapshot(source: Path, target: Path) -> None:
     try:
         if safe_path(target).exists():
             raise FileExistsError(target)
-        original = source.stat()
-        copy_verified(source, staging, file_digest(source))
-        observed = source.stat()
-        if (observed.st_size, observed.st_mtime_ns) != (original.st_size, original.st_mtime_ns):
-            raise ValueError(f"source metadata changed during worktree copy: {source}")
-        os.utime(staging, ns=(original.st_atime_ns, original.st_mtime_ns))
+        if source.suffix == ".sqlite":
+            # Back up straight into same-directory staging: no scratch copy, one write.
+            _sqlite_backup(source, staging)
+        else:
+            original = source.stat()
+            copy_verified(source, staging, file_digest(source))
+            observed = source.stat()
+            if (observed.st_size, observed.st_mtime_ns) != (original.st_size, original.st_mtime_ns):
+                raise ValueError(f"source metadata changed during worktree copy: {source}")
+            os.utime(staging, ns=(original.st_atime_ns, original.st_mtime_ns))
         if safe_path(target).exists():
             raise FileExistsError(target)
         # Refuse an existing target atomically, including a writer arriving after
@@ -162,24 +184,8 @@ def seed_inputs(primary: Path, worktree: Path) -> dict[str, Any]:
             preserved.append(_preserved_record(source, destination, target))
             continue  # Preserve an existing explicit snapshot, even if older.
         target.parent.mkdir(parents=True, exist_ok=True)
-        mode = "stable_file_copy"
-        if path.suffix == ".sqlite":
-            snapshot = scratch / path.name
-            started = time.monotonic()
-
-            def progress(status: int, remaining: int, total: int) -> None:
-                if time.monotonic() - started > 30:
-                    raise TimeoutError("SQLite snapshot exceeded 30-second budget")
-
-            with closing(sqlite3.connect(path.as_uri() + "?mode=ro", uri=True, timeout=5)) as incoming:
-                with closing(sqlite3.connect(snapshot)) as outgoing:
-                    incoming.backup(outgoing, pages=256, progress=progress, sleep=0.05)
-                    if outgoing.execute("PRAGMA quick_check").fetchone()[0] != "ok":
-                        raise ValueError("SQLite worktree snapshot failed quick_check")
-            _publish_snapshot(snapshot, target)
-            mode = "consistent_sqlite_backup_not_live_db_file_copy"
-        else:
-            _publish_snapshot(path, target)
+        _publish_snapshot(path, target)
+        mode = "consistent_sqlite_backup_not_live_db_file_copy" if path.suffix == ".sqlite" else "stable_file_copy"
         record = _observed_descriptor(destination, target)
         record.update({"source": str(path), "mode": mode})
         records.append(record)
