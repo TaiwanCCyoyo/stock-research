@@ -5,11 +5,12 @@ import sqlite3
 import subprocess
 import sys
 from pathlib import Path
+from typing import cast
 
 import pandas as pd
 import pytest
 
-from research_core import live_producer, maintained_adjusted_daily, run_receipt
+from research_core import live_producer, maintained_adjusted_daily, price_basis, run_receipt
 from research_core.artifact_store import read_json
 from research_core.shared_data import ENV_KEY, SharedRootError, shared_data_root
 
@@ -286,3 +287,124 @@ class _Later:
         from datetime import datetime, timedelta
 
         return datetime.now(tz) + timedelta(seconds=self.offset)  # type: ignore[arg-type]
+
+
+SESSIONS = pd.bdate_range("2026-09-01", periods=12)
+CUTOFF = cast(pd.Timestamp, SESSIONS[6])
+AFTER_ASOF = cast(pd.Timestamp, SESSIONS[-1] + pd.Timedelta(days=1))
+
+
+def _tricky_producer(root: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Quotes and actions that make truncating the latest generation wrong at CUTOFF."""
+    rows = []
+    for position, day in enumerate(SESSIONS):
+        close = 100.0 if position < 3 else 50.0  # an unexplained 50% drop
+        volume = -5.0 if position == 5 else 1000.0
+        rows.append({"Code": "2330", "Date": day, "Open": close, "High": close, "Low": close, "Close": close, "Volume": volume, "Source": "official"})
+    for position in range(2, 11):
+        if position == 6:
+            continue  # a missing session inside the symbol's span
+        high = 9.0 if position == 4 else 21.0  # invalid OHLC on one day
+        rows.append({"Code": "1101", "Date": SESSIONS[position], "Open": 20.0, "High": high, "Low": 19.0, "Close": 20.0, "Volume": 7.0, "Source": "official"})
+    rows.append({"Code": "1101", "Date": SESSIONS[3], "Open": 30.0, "High": 30.0, "Low": 30.0, "Close": 30.0, "Volume": 1.0, "Source": "official"})
+    rows.append({"Code": "1101", "Date": SESSIONS[8], "Open": 1.0, "High": 1.0, "Low": 1.0, "Close": 1.0, "Volume": 1.0, "Source": "shioaji"})
+    rows.append({"Code": "6488", "Date": SESSIONS[9], "Open": 5.0, "High": 5.0, "Low": 5.0, "Close": 5.0, "Volume": 1.0, "Source": "official"})
+    bars = pd.DataFrame(rows)
+    actions = pd.DataFrame(
+        [
+            ("1101", SESSIONS[5], "EX_RIGHT", 0.9),
+            ("1101", SESSIONS[9], "EX_RIGHT", 0.8),  # same-day conflict after the cutoff masks all history
+            ("1101", SESSIONS[9], "CASH_DIVIDEND", 0.95),
+            ("2330", pd.Timestamp("2026-09-05"), "EX_RIGHT", 0.9),  # a Saturday ex-date before the cutoff
+            ("2330", SESSIONS[8], "MYSTERY_EVENT", 0.5),  # unknown kind after the cutoff
+            ("2330", SESSIONS[10], "CASH_DIVIDEND", None),  # missing factor after the cutoff
+            ("2330", SESSIONS[11] + pd.Timedelta(days=30), "CASH_DIVIDEND", 0.9),  # after asof
+            ("6488", SESSIONS[2], "CASH_DIVIDEND", 0.9),
+        ],
+        columns=pd.Index(["code", "ex_date", "event_type", "price_factor"]),
+    )
+    actions["ex_date"] = actions["ex_date"].dt.strftime("%Y-%m-%d")
+    bars.to_parquet(root / "price_daily.parquet", index=False)
+    database = root / "corporate_actions.sqlite"
+    database.unlink(missing_ok=True)
+    with sqlite3.connect(database) as connection:
+        connection.execute("CREATE TABLE corporate_actions (code TEXT, ex_date TEXT, event_type TEXT, price_factor REAL)")
+        connection.executemany("INSERT INTO corporate_actions VALUES (?, ?, ?, ?)", actions.itertuples(index=False, name=None))
+    connection.close()
+    return bars, actions
+
+
+def _oracle(bars: pd.DataFrame, actions: pd.DataFrame, code: str, calendar: pd.DatetimeIndex, basis: str) -> pd.DataFrame:
+    """The contract: official quotes <= cutoff and actions <= cutoff on a fixed calendar."""
+    official = bars.loc[bars["Source"].eq("official") & bars["Code"].eq(code) & bars["Date"].le(CUTOFF)].drop(columns="Source")
+    events = actions.loc[actions["code"].eq(code) & pd.to_datetime(actions["ex_date"]).le(CUTOFF)]
+    prepared = price_basis.prepare_prices(official, events, calendar, basis=basis, cutoff=CUTOFF)  # type: ignore[arg-type]
+    frame = prepared.rename_axis("Date").reset_index()
+    frame.insert(0, "Code", code)
+    return frame
+
+
+@pytest.mark.parametrize("basis", maintained_adjusted_daily.BASES)
+@pytest.mark.parametrize("calendar_kind", ["generation", "fixed"])
+def test_as_of_read_equals_prepare_prices_at_the_cutoff(environment: tuple[Path, Path], basis: str, calendar_kind: str) -> None:
+    producer, _ = environment
+    bars, actions = _tricky_producer(producer)
+    maintained_adjusted_daily.update(producer_root=producer)
+    if calendar_kind == "fixed":
+        # Drop one generation session and add a Sunday no symbol traded on.
+        calendar = cast(pd.DatetimeIndex, SESSIONS[SESSIONS <= CUTOFF].drop(SESSIONS[4]).append(pd.DatetimeIndex(["2026-09-06"])).sort_values())
+    else:
+        calendar = cast(pd.DatetimeIndex, SESSIONS[SESSIONS <= CUTOFF])
+
+    frame, record = maintained_adjusted_daily.read_adjusted_daily(
+        basis, as_of=CUTOFF.date().isoformat(), calendar=calendar if calendar_kind == "fixed" else None
+    )
+
+    assert record["as_of"] == CUTOFF.date().isoformat() and record["calendar"]["source"] == ("caller" if calendar_kind == "fixed" else "generation")
+    assert sorted(frame["Code"].unique()) == ["1101", "2330"], "6488 first quoted after the cutoff"
+    for code in ("1101", "2330"):
+        got = frame.loc[frame["Code"].eq(code)].reset_index(drop=True)
+        pd.testing.assert_frame_equal(got, _oracle(bars, actions, code, calendar, basis), check_exact=True)
+    first_1101 = frame.loc[frame["Code"].eq("1101")].iloc[0]
+    assert bool(first_1101["Date"] == calendar[0]) and first_1101["quality_reason"] == "missing_official_quote", "rows before the first quote are kept"
+
+
+def test_truncating_the_latest_generation_is_not_the_cutoff_state(environment: tuple[Path, Path]) -> None:
+    producer, _ = environment
+    _tricky_producer(producer)
+    maintained_adjusted_daily.update(producer_root=producer)
+
+    latest, _ = maintained_adjusted_daily.read_adjusted_daily("reference_factor_adjusted", codes=["1101"])
+    at_cutoff, _ = maintained_adjusted_daily.read_adjusted_daily("reference_factor_adjusted", codes=["1101"], as_of=CUTOFF)
+
+    truncated = latest.loc[latest["Date"].le(CUTOFF)]
+    assert truncated["restatement_factor"].isna().all(), "the later same-day conflict masks the whole history"
+    assert bool(at_cutoff["restatement_factor"].notna().all())
+    assert bool(at_cutoff.loc[at_cutoff["Date"].lt(SESSIONS[5]), "restatement_factor"].eq(0.9).all())
+
+
+def test_as_of_read_refuses_what_it_cannot_know(environment: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:
+    producer, _ = environment
+    _tricky_producer(producer)
+    maintained_adjusted_daily.update(producer_root=producer)
+
+    with pytest.raises(ValueError, match="after generation"):
+        maintained_adjusted_daily.read_adjusted_daily("raw", as_of=AFTER_ASOF)
+    with pytest.raises(ValueError, match="no official quote on or before"):
+        maintained_adjusted_daily.read_adjusted_daily("raw", codes=["2330", "6488"], as_of=CUTOFF)
+    with pytest.raises(ValueError, match="pass as_of"):
+        maintained_adjusted_daily.read_adjusted_daily("raw", calendar=SESSIONS)
+    with pytest.raises(ValueError, match="Calendar contains dates after cutoff"):
+        maintained_adjusted_daily.read_adjusted_daily("raw", as_of=CUTOFF, calendar=SESSIONS)
+
+    status = maintained_adjusted_daily.current_generation()
+    actions_path = Path(status["path"]) / status["as_of_inputs"]["actions"]["file"]
+    actions_path.write_bytes(actions_path.read_bytes()[:-1] + b"\0")
+    maintained_adjusted_daily._VERIFIED.clear()
+    with pytest.raises(ValueError, match="does not match the bytes/SHA-256"):
+        maintained_adjusted_daily.read_adjusted_daily("raw", as_of=CUTOFF)
+
+    older = {key: value for key, value in status.items() if key != "as_of_inputs"}
+    monkeypatch.setattr(maintained_adjusted_daily, "current_generation", lambda root=None, generation=None: older)
+    with pytest.raises(ValueError, match="no actions snapshot"):
+        maintained_adjusted_daily.read_adjusted_daily("raw", as_of=CUTOFF)

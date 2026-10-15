@@ -10,6 +10,8 @@ Layout under ``<shared root>/derived/adjusted-daily-v1/``::
     current.json                  pointer: generation id + status.json SHA-256
     generations/<id>/status.json  as-of, definition, input fingerprint, counts, timings
     generations/<id>/<basis>.parquet  one file per price basis, sorted by Code, Date
+    generations/<id>/actions.parquet  the corporate actions this generation was built from
+    generations/<id>/calendar.parquet the generation's session calendar
 
 Every new ex-date restates the whole earlier history of that symbol, so an update builds
 a complete new generation and then flips ``current.json`` with ``os.replace`` (atomic on
@@ -17,6 +19,13 @@ Windows, unlike replacing a directory). The previous generation is kept for roll
 for readers still holding it; older ones are pruned. A failed build never touches
 ``current.json``. A definition change gets a new family name (``adjusted-daily-v2``),
 never an in-place rewrite of this one.
+
+``read_adjusted_daily(..., as_of=cutoff, calendar=...)`` recomputes a symbol as it was at
+an earlier cutoff. Truncating the latest generation is not that: later ex-dates restate,
+or (when their factor is missing or ambiguous) mask, the whole earlier history. The
+reader therefore rebuilds the official quotes from the raw basis, takes the generation's
+own actions snapshot, and runs ``price_basis.prepare_prices`` at the cutoff. Rows outside
+a symbol's first..last quote need no stored row: they are calendar positions with no quote.
 """
 
 from __future__ import annotations
@@ -25,22 +34,23 @@ import logging
 import os
 import shutil
 import time
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, TypeVar, cast
 
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 
 from research_core import price_basis
-from research_core.artifact_store import file_digest, publish_noreplace, read_json, write_json
+from research_core.artifact_store import file_digest, object_digest, publish_noreplace, read_json, write_json
 from research_core.live_producer import read_stable, readonly_sqlite
 from research_core.run_receipt import InputSpec, assert_inputs_unchanged, code_identity, fingerprint_inputs
 from research_core.shared_data import shared_data_root
 
 LOGGER = logging.getLogger(__name__)
+T = TypeVar("T")
 SCHEMA = "maintained-adjusted-daily.v1"
 FAMILY = "adjusted-daily-v1"
 BASES: tuple[price_basis.PriceBasis, ...] = ("raw", "permanent_adjusted", "reference_factor_adjusted")
@@ -57,6 +67,10 @@ ARROW_SCHEMA = pa.schema([
     ("corporate_action_types", pa.string()),
     ("restatement_factor", pa.float64()),
 ])
+ACTIONS_FILE, CALENDAR_FILE = "actions.parquet", "calendar.parquet"
+ACTIONS_SCHEMA = pa.schema([("code", pa.string()), ("ex_date", pa.string()), ("event_type", pa.string()), ("price_factor", pa.float64())])
+CALENDAR_SCHEMA = pa.schema([("Date", pa.timestamp("ns"))])
+RAW_QUOTE_COLUMNS = {"RawOpen": "Open", "RawHigh": "High", "RawLow": "Low", "RawClose": "Close", "VolumeLots": "Volume"}
 
 
 def family_dir(root: Path | None = None) -> Path:
@@ -106,12 +120,16 @@ def _prepare_symbol(
     return frame
 
 
+def session_calendar(bars: pd.DataFrame) -> pd.DatetimeIndex:
+    return pd.DatetimeIndex(sorted(bars["Date"].unique()))
+
+
 def compute(bars: pd.DataFrame, actions: pd.DataFrame, writers: dict[str, Any] | None = None, *, codes: Sequence[str] | None = None) -> dict[str, Any]:
     """Prepare every symbol for every basis; stream into `writers` when given.
 
     Returns calendar, cutoff and per-basis counts. Without writers it only measures.
     """
-    calendar = pd.DatetimeIndex(sorted(bars["Date"].unique()))
+    calendar = session_calendar(bars)
     cutoff = cast(pd.Timestamp, calendar.max())
     by_code: dict[str, pd.DataFrame] = {str(code): frame for code, frame in bars.groupby("Code", sort=True)}
     events_by_code: dict[str, pd.DataFrame] = {str(code): frame for code, frame in actions.groupby("code", sort=False)}
@@ -145,6 +163,27 @@ def compute(bars: pd.DataFrame, actions: pd.DataFrame, writers: dict[str, Any] |
         "actions": {"rows": len(actions), "after_asof_excluded": after_cutoff, "unsupported_event_rows": unsupported},
         "bases": counts,
     }
+
+
+def _write_as_of_inputs(directory: Path, bars: pd.DataFrame, actions: pd.DataFrame) -> dict[str, Any]:
+    """Persist what an as_of read needs besides the raw basis: the actions and the calendar.
+
+    Actions keep every row the build saw (including ex-dates after asof); price factors are
+    stored as `prepare_prices` reads them (numeric, unparseable as null).
+    """
+    snapshot = pd.DataFrame({
+        "code": actions["code"].astype(str),
+        "ex_date": actions["ex_date"].map(lambda value: None if value is None else str(value)),
+        "event_type": actions["event_type"].map(lambda value: None if value is None else str(value)),
+        "price_factor": cast(pd.Series, pd.to_numeric(actions["price_factor"], errors="coerce")).astype("float64"),
+    })
+    calendar = pd.DataFrame({"Date": session_calendar(bars)})
+    recorded: dict[str, Any] = {}
+    for name, frame, schema, file in (("actions", snapshot, ACTIONS_SCHEMA, ACTIONS_FILE), ("calendar", calendar, CALENDAR_SCHEMA, CALENDAR_FILE)):
+        path = directory / file
+        pq.write_table(pa.Table.from_pandas(frame, schema=schema, preserve_index=False), path, compression="zstd")
+        recorded[name] = {"file": file, "rows": len(frame), "bytes": path.stat().st_size, "sha256": file_digest(path)}
+    return recorded
 
 
 def _acquire_lock(family: Path) -> Path:
@@ -211,6 +250,7 @@ def update(*, producer_root: Path, root: Path | None = None) -> dict[str, Any]:
         for basis in BASES:
             path = staging / f"{basis}.parquet"
             summary["bases"][basis].update({"file": path.name, "bytes": path.stat().st_size, "sha256": file_digest(path)})
+        as_of_inputs = _write_as_of_inputs(staging, bars, actions)
         status = {
             "schema": SCHEMA,
             "family": FAMILY,
@@ -219,6 +259,7 @@ def update(*, producer_root: Path, root: Path | None = None) -> dict[str, Any]:
             "source_policy": source_policy,
             "row_policy": ROW_POLICY,
             **summary,
+            "as_of_inputs": as_of_inputs,
             "input_fingerprint": fingerprint,
             "code": code_identity(),
             "previous_generation": previous,
@@ -305,31 +346,158 @@ def read_adjusted_daily(
     columns: Sequence[str] | None = None,
     root: Path | None = None,
     generation: str | None = None,
+    as_of: str | pd.Timestamp | None = None,
+    calendar: pd.DatetimeIndex | None = None,
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
     """Read one basis of the current generation, or of `generation`; return rows and record.
 
     Put the record (family, generation, asof, file, sha256) in the study's receipt, and pass
     its `generation` to later reads so the whole study uses one generation.
+
+    `as_of=cutoff` returns each symbol as `price_basis.prepare_prices` computes it at that
+    cutoff on `calendar` (default: the generation's sessions up to the cutoff), with every
+    calendar position, including those before a symbol's first or after its last quote.
+    See `_read_as_of`.
     """
     if basis not in BASES:
         raise ValueError(f"unknown basis {basis!r}; choose one of {BASES}")
     status = current_generation(root, generation=generation)
+    if as_of is not None:
+        return _read_as_of(status, cast(price_basis.PriceBasis, basis), as_of, calendar, codes, columns)
+    if calendar is not None:
+        raise ValueError("calendar= aligns a cutoff read; pass as_of= as well")
     path = Path(status["path"]) / f"{basis}.parquet"
-    key = _verify_once(path, status["bases"][basis])
     filters = None if codes is None else [("Code", "in", [str(code) for code in codes])]
     selected = None if columns is None else list(columns)
-    table = read_stable(path, lambda source: pq.read_table(source, columns=selected, filters=filters))
-    if _file_identity(path) != _VERIFIED.get(key):
-        raise ValueError(f"{path} changed after its SHA-256 was verified")
+    table = _read_verified(path, status["bases"][basis], lambda source: pq.read_table(source, columns=selected, filters=filters))
     frame = cast(pd.DataFrame, table.to_pandas())
-    record = {
+    LOGGER.debug("Read %s %s rows=%d generation=%s", FAMILY, basis, len(frame), status["generation"])
+    return frame, _record(status, basis)
+
+
+def _record(status: dict[str, Any], basis: str) -> dict[str, Any]:
+    return {
         "family": FAMILY,
         "generation": status["generation"],
         "asof": status["asof"],
         "basis": basis,
-        "file": str(path),
+        "file": str(Path(status["path"]) / f"{basis}.parquet"),
         "sha256": status["bases"][basis]["sha256"],
         "status_sha256": status["status_sha256"],
     }
-    LOGGER.debug("Read %s %s rows=%d generation=%s", FAMILY, basis, len(frame), status["generation"])
-    return frame, record
+
+
+def _read_verified(path: Path, expected: dict[str, Any], read: Callable[[Path], T]) -> T:
+    key = _verify_once(path, expected)
+    value = read_stable(path, read)
+    if _file_identity(path) != _VERIFIED.get(key):
+        raise ValueError(f"{path} changed after its SHA-256 was verified")
+    return value
+
+
+def _stored_quotes(stored: pd.DataFrame) -> pd.DataFrame:
+    """Rebuild the official quote rows the build saw from raw-basis rows.
+
+    A `missing_official_quote` row had no quote. A `duplicate_date` row had two or more
+    quotes; `prepare_prices` kept the first and marked the date, so one repeated copy
+    reproduces both.
+    """
+    tokens = stored["quality_reason"].fillna("").str.split("|")
+    observed = ~tokens.map(lambda reasons: "missing_official_quote" in reasons).astype(bool)
+    duplicated = tokens.map(lambda reasons: "duplicate_date" in reasons).astype(bool) & observed
+    quotes = stored.loc[observed, ["Code", "Date", *RAW_QUOTE_COLUMNS]].rename(columns=RAW_QUOTE_COLUMNS)
+    return pd.concat([quotes, quotes.loc[duplicated[observed]]]).sort_values(["Code", "Date"], kind="stable")
+
+
+def _read_as_of(
+    status: dict[str, Any],
+    basis: price_basis.PriceBasis,
+    as_of: str | pd.Timestamp,
+    calendar: pd.DatetimeIndex | None,
+    codes: Sequence[str] | None,
+    columns: Sequence[str] | None,
+) -> tuple[pd.DataFrame, dict[str, Any]]:
+    """Recompute `basis` at `as_of` from this generation's raw quotes and actions snapshot.
+
+    Equal by construction to `prepare_prices(official quotes <= as_of, actions, calendar,
+    basis, as_of)`: actions after the cutoff are excluded, never divided back out of a
+    restated factor. Refuses rather than guesses: a cutoff after the generation's asof
+    (later quotes and actions are unknown to it), a generation without an actions snapshot,
+    and a requested code with no official quote on or before the cutoff. Without `codes`,
+    every symbol with such a quote is returned.
+    """
+    started = time.monotonic()
+    cutoff = cast(pd.Timestamp, pd.Timestamp(as_of))
+    if pd.isna(cutoff) or cutoff.tzinfo is not None or cutoff != cutoff.normalize():
+        raise ValueError(f"as_of must be a naive date, got {as_of!r}")
+    if cutoff > pd.Timestamp(status["asof"]):
+        raise ValueError(f"as_of {cutoff.date()} is after generation {status['generation']} asof {status['asof']}; its later quotes and actions are unknown")
+    inputs = status.get("as_of_inputs")
+    if inputs is None:
+        raise ValueError(f"generation {status['generation']} has no actions snapshot and cannot be read as_of; run scripts.maintain_adjusted_daily update")
+    directory = Path(status["path"])
+    if calendar is None:
+        sessions = _read_verified(directory / inputs["calendar"]["file"], inputs["calendar"], lambda source: pq.read_table(source).to_pandas())
+        calendar = pd.DatetimeIndex(sessions["Date"])
+        calendar = calendar[calendar <= cutoff]
+        calendar_source = "generation"
+    else:
+        calendar_source = "caller"
+    actions = _read_verified(directory / inputs["actions"]["file"], inputs["actions"], lambda source: pq.read_table(source).to_pandas())
+    filters: list[Any] = [("Date", "<=", cutoff)]
+    if codes is not None:
+        filters.append(("Code", "in", [str(code) for code in codes]))
+    stored = _read_verified(
+        directory / "raw.parquet",
+        status["bases"]["raw"],
+        lambda source: pq.read_table(source, columns=["Code", "Date", *RAW_QUOTE_COLUMNS, "quality_reason"], filters=filters).to_pandas(),
+    )
+    quotes = _stored_quotes(stored)
+    by_code = {str(code): frame for code, frame in quotes.groupby("Code", sort=True)}
+    events_by_code = {str(code): frame for code, frame in actions.groupby("code", sort=False)}
+    empty_events = actions.iloc[0:0]
+    if codes is not None:
+        absent = sorted({str(code) for code in codes} - set(by_code))
+        if absent:
+            raise ValueError(f"no official quote on or before {cutoff.date()} in generation {status['generation']} for {absent}")
+        selected = list(dict.fromkeys(str(code) for code in codes))
+    else:
+        selected = sorted(by_code)
+    frames = []
+    for code in selected:
+        prepared = price_basis.prepare_prices(by_code[code], events_by_code.get(code, empty_events), calendar, basis=basis, cutoff=cutoff)
+        frame = prepared.rename_axis("Date").reset_index()
+        frame.insert(0, "Code", code)
+        frames.append(frame)
+    result = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame(columns=ARROW_SCHEMA.names)
+    if columns is not None:
+        result = cast(pd.DataFrame, result[list(columns)])
+    days = [day.date().isoformat() for day in calendar]
+    record = {
+        **_record(status, basis),
+        "as_of": cutoff.date().isoformat(),
+        "as_of_method": "price_basis.prepare_prices at as_of from the generation's raw quotes and actions snapshot",
+        "definition": status["definition"]["prices"],
+        "actions_sha256": inputs["actions"]["sha256"],
+        "calendar": {
+            "source": calendar_source,
+            "sessions": len(days),
+            "first": days[0] if days else None,
+            "last": days[-1] if days else None,
+            "sha256": object_digest(days),
+        },
+        "codes": len(selected),
+    }
+    LOGGER.info(
+        "Read %s %s as_of=%s generation=%s codes=%d calendar=%s/%d rows=%d in %.1fs",
+        FAMILY,
+        basis,
+        record["as_of"],
+        status["generation"],
+        len(selected),
+        calendar_source,
+        len(days),
+        len(result),
+        time.monotonic() - started,
+    )
+    return result, record
