@@ -76,11 +76,13 @@ def test_outside_any_repository_fails_without_fallback(tmp_path: Path) -> None:
 
 
 def test_a_code_only_directory_fails_the_sentinel_check(checkouts: tuple[Path, Path], tmp_path: Path) -> None:
-    """The post-move submodule data/ keeps only the tracked category table."""
+    """Code-owned config does not make an empty post-move data/ a producer root."""
     primary, worktree = checkouts
-    code_only = tmp_path / "code only"
+    checkout = tmp_path / "code only"
+    (checkout / "config").mkdir(parents=True)
+    (checkout / "config" / "stock_category.json5").write_text("{}\n", encoding="utf-8")
+    code_only = checkout / "data"
     code_only.mkdir()
-    (code_only / "stock_category.json5").write_text("{}\n", encoding="utf-8")
     (primary / ".env.local").write_text(f"{ENV_KEY}={code_only}\n", encoding="utf-8")
 
     with pytest.raises(ProducerRootError, match=f"no {SENTINEL}"):

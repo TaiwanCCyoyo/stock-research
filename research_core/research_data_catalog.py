@@ -6,6 +6,7 @@ import logging
 import os
 import re
 import uuid
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -88,6 +89,19 @@ def render_readme(catalog: dict[str, Any]) -> str:
             f"{row['manifest']['scope']}:{row['manifest']['path']}",
         ]
         lines.append("| " + " | ".join(str(x).replace("|", "\\|").replace("\n", " ") for x in cells) + " |")
+    if catalog.get("retired"):
+        lines += [
+            "",
+            "## Retired",
+            "",
+            "No longer advertised; the payload may have been deleted.",
+            "",
+            "| Data | Version | Retired on | Reason |",
+            "| --- | --- | --- | --- |",
+        ]
+        for item in catalog["retired"]:
+            cells = [item["entry"]["data_id"], item["entry"]["version_id"], item["retired_on"], item["reason"]]
+            lines.append("| " + " | ".join(str(x).replace("|", "\\|").replace("\n", " ") for x in cells) + " |")
     return "\n".join(lines) + "\n"
 
 
@@ -114,6 +128,9 @@ class DataCatalog:
         keys = [(row["data_id"], row["version_id"]) for row in entries]
         if len(keys) != len(set(keys)):
             raise ValueError("duplicate catalog version")
+        retired = catalog.get("retired", [])
+        if not isinstance(retired, list) or any(not isinstance(item, dict) or set(item) != {"entry", "reason", "retired_on"} for item in retired):
+            raise ValueError("malformed catalog retirement record")
         return catalog
 
     def register(self, entries: list[dict[str, Any]]) -> dict[str, Any]:
@@ -121,20 +138,82 @@ class DataCatalog:
         additions = [validate_entry(row, self.roots) for row in entries]
         for row in additions:
             verify_entry(row, self.roots)
+
+        def refuse_retired(retired: list[dict[str, Any]]) -> None:
+            # A retired version's payload may already be deleted; re-advertising it would
+            # publish a dead pin. Re-enabling needs a separate, explicit operation.
+            gone = {(item["entry"]["data_id"], item["entry"]["version_id"]) for item in retired}
+            for row in additions:
+                if (row["data_id"], row["version_id"]) in gone:
+                    raise ValueError(f"catalog version was retired: {row['data_id']}/{row['version_id']}")
+
+        # Checked before the writer lock too, so a refused request leaves no lock behind.
+        if self.roots.artifact_path("data", "catalog.json").exists():
+            refuse_retired(self.read().get("retired", []))
+
+        def add(by_key: dict[tuple[str, str], dict[str, Any]], retired: list[dict[str, Any]]) -> None:
+            refuse_retired(retired)
+            for row in additions:
+                key = (row["data_id"], row["version_id"])
+                if key in by_key and by_key[key] != row:
+                    raise ValueError("catalog version already registered with different metadata")
+                by_key[key] = row
+
+        catalog = self._publish(add)
+        LOGGER.info("Registered shared catalog snapshot=%s entries=%d", catalog["version_id"], len(catalog["entries"]))
+        return catalog
+
+    def retire(self, data_id: str, version_id: str, *, manifest_sha256: str, reason: str, retired_on: str) -> dict[str, Any]:
+        """Stop advertising one version in a new snapshot; never deletes payload or old snapshots.
+
+        The removed entry and its reason stay in the snapshot's `retired` list, so the
+        retirement is discoverable. Deleting the payload is a separate, owner-approved step.
+        """
+        if not isinstance(reason, str) or not reason.strip():
+            raise ValueError("nonempty retirement reason required")
+        from datetime import date
+
+        date.fromisoformat(retired_on)
+
+        def matching(rows: list[dict[str, Any]]) -> dict[str, Any] | None:
+            return next((row for row in rows if (row["data_id"], row["version_id"]) == (data_id, version_id)), None)
+
+        # Check before taking the writer lock: a failure inside it retains the lock for
+        # diagnosis, and a mistyped version must not block later catalog writers.
+        current = matching(self.read()["entries"])
+        if current is None:
+            raise KeyError(f"shared version missing: {data_id}/{version_id}")
+        if current["manifest"]["sha256"] != manifest_sha256:
+            raise ValueError("requested shared version identity mismatch")
+
+        def remove(by_key: dict[tuple[str, str], dict[str, Any]], retired: list[dict[str, Any]]) -> None:
+            row = by_key.pop((data_id, version_id), None)
+            if row is None:
+                raise KeyError(f"shared version missing: {data_id}/{version_id}")
+            if row["manifest"]["sha256"] != manifest_sha256:
+                raise ValueError("requested shared version identity mismatch")
+            retired.append({"entry": row, "reason": reason, "retired_on": retired_on})
+
+        catalog = self._publish(remove)
+        LOGGER.info("Retired %s/%s in shared catalog snapshot=%s", data_id, version_id, catalog["version_id"])
+        return catalog
+
+    def _publish(self, change: Callable[[dict[tuple[str, str], dict[str, Any]], list[dict[str, Any]]], None]) -> dict[str, Any]:
+        """Apply `change(by_key, retired)` to the current catalog under the writer lock."""
         self.roots.data.mkdir(parents=True, exist_ok=True)
         lock = self.roots.artifact_path("data", ".catalog.lock")
         token = {"pid": os.getpid(), "token": uuid.uuid4().hex}
         write_json(lock, token)
         succeeded = False
         try:
-            rows = self.read()["entries"] if self.roots.artifact_path("data", "catalog.json").exists() else []
-            by_key = {(row["data_id"], row["version_id"]): row for row in rows}
-            for row in additions:
-                key = (row["data_id"], row["version_id"])
-                if key in by_key and by_key[key] != row:
-                    raise ValueError("catalog version already registered with different metadata")
-                by_key[key] = row
+            current = self.read() if self.roots.artifact_path("data", "catalog.json").exists() else {"entries": []}
+            by_key = {(row["data_id"], row["version_id"]): row for row in current["entries"]}
+            retired = list(current.get("retired", []))
+            change(by_key, retired)
             body: dict[str, Any] = {"schema": SCHEMA, "entries": [by_key[key] for key in sorted(by_key)]}
+            if retired:
+                # Only present once something is retired, so earlier snapshot digests are unchanged.
+                body["retired"] = retired
             catalog: dict[str, Any] = {**body, "version_id": object_digest(body)}
             target = self.roots.artifact_path("data", f"catalog-snapshots/{catalog['version_id']}")
             if not target.exists():
@@ -152,7 +231,6 @@ class DataCatalog:
                     os.fsync(stream.fileno())
                 os.replace(staging, self.roots.artifact_path("data", name))
             succeeded = True
-            LOGGER.info("Registered shared catalog snapshot=%s entries=%d", catalog["version_id"], len(catalog["entries"]))
             return catalog
         finally:
             if succeeded and read_json(lock) == token:

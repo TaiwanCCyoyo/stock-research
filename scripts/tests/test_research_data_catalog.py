@@ -141,6 +141,51 @@ def test_old_catalog_snapshot_survives_later_registration(catalog: DataCatalog):
     assert catalog.read(old["version_id"]) == old
 
 
+def test_retire_stops_advertising_one_version_and_keeps_history(catalog: DataCatalog):
+    kept = publish_bundle(catalog, metadata(), {"features.json": b"kept"})
+    gone = publish_bundle(catalog, metadata(), {"features.json": b"gone"})
+    before = catalog.read()
+    payload = catalog.roots.artifact_path("data", gone["manifest"]["path"])
+
+    after = catalog.retire(gone["data_id"], gone["version_id"], manifest_sha256=gone["manifest"]["sha256"], reason="superseded", retired_on="2026-10-15")
+
+    assert catalog.read() == after
+    assert [row["version_id"] for row in after["entries"]] == [kept["version_id"]]
+    assert after["retired"] == [{"entry": gone, "reason": "superseded", "retired_on": "2026-10-15"}]
+    assert "## Retired" in (catalog.roots.data / "README.md").read_text(encoding="utf-8")
+    assert catalog.read(before["version_id"]) == before
+    assert payload.exists()  # retiring never deletes payload
+    with pytest.raises(KeyError):
+        catalog.get(gone["data_id"], gone["version_id"], manifest_sha256=gone["manifest"]["sha256"])
+    # A later registration carries the retirement record forward.
+    publish_bundle(catalog, metadata(), {"features.json": b"later"})
+    assert catalog.read()["retired"] == after["retired"]
+    # Ordinary registration never re-advertises a retired version, and leaves no lock.
+    current = catalog.read()["version_id"]
+    with pytest.raises(ValueError, match="retired"):
+        catalog.register([gone])
+    with pytest.raises(ValueError, match="retired"):
+        publish_bundle(catalog, metadata(), {"features.json": b"gone"})
+    assert catalog.read()["version_id"] == current
+    assert not (catalog.roots.data / ".catalog.lock").exists()
+
+
+def test_retire_refuses_unknown_or_mismatched_versions_without_publishing(catalog: DataCatalog):
+    entry = publish_bundle(catalog, metadata(), {"features.json": b"only"})
+    snapshot = catalog.read()["version_id"]
+    with pytest.raises(KeyError):
+        catalog.retire(entry["data_id"], "0" * 64, manifest_sha256=entry["manifest"]["sha256"], reason="x", retired_on="2026-10-15")
+    with pytest.raises(ValueError, match="identity mismatch"):
+        catalog.retire(entry["data_id"], entry["version_id"], manifest_sha256="0" * 64, reason="x", retired_on="2026-10-15")
+    with pytest.raises(ValueError, match="reason"):
+        catalog.retire(entry["data_id"], entry["version_id"], manifest_sha256=entry["manifest"]["sha256"], reason=" ", retired_on="2026-10-15")
+    assert catalog.read()["version_id"] == snapshot
+    assert not (catalog.roots.data / ".catalog.lock").exists()  # a bad request never strands the writer lock
+    write_json(catalog.roots.data / ".catalog.lock", {"owner": "other writer"})
+    with pytest.raises(FileExistsError):
+        catalog.retire(entry["data_id"], entry["version_id"], manifest_sha256=entry["manifest"]["sha256"], reason="x", retired_on="2026-10-15")
+
+
 def test_cli_catalog_and_worktree_check(catalog: DataCatalog, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]):
     import sys
 
@@ -155,6 +200,12 @@ def test_cli_catalog_and_worktree_check(catalog: DataCatalog, monkeypatch: pytes
     monkeypatch.setattr(sys, "argv", ["research_data", "check-worktree", str(worktree)])
     assert main() == 0
     assert "verified" in capsys.readouterr().out
+    entry = catalog.read()["entries"][0]
+    retire = ["research_data", "retire", entry["data_id"], entry["version_id"], "--manifest-sha256", entry["manifest"]["sha256"]]
+    monkeypatch.setattr(sys, "argv", [*retire, "--reason", "fixture retired", "--retired-on", "2026-10-15"])
+    assert main() == 0
+    assert '"retired"' in capsys.readouterr().out
+    assert catalog.read()["entries"] == []
 
 
 @pytest.mark.parametrize("key", ["series_id", "calendar_id", "source_manifest_sha256"])

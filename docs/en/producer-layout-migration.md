@@ -19,8 +19,10 @@ below. The producer code stays the `stock-data-downloader` submodule, and the
 scheduled tasks keep running from `D:/Project/stock-research/stock-data-downloader`.
 Step 3 below ("data beneath `data/`") is superseded for the data only. The target
 is on the same volume, so the move is a rename. Execution follows the
-[relocation runbook](producer-data-relocation-runbook.md), which needs a separate
-owner-approved window. The producer side is
+[relocation runbook](producer-data-relocation-runbook.md), whose execution record
+reports the completed 2026-10-15 move. Do not repeat it when adopting a later
+producer gitlink; a new relocation or rollback needs a separate owner-approved
+window. The producer side is
 [stock-data-downloader#2](https://github.com/TaiwanCCyoyo/stock-data-downloader/pull/2).
 The companion research-input policy (live read-only inputs plus an input
 fingerprint, no sealing) is recorded in
