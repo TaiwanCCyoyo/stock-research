@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import sqlite3
 import subprocess
@@ -408,3 +409,18 @@ def test_as_of_read_refuses_what_it_cannot_know(environment: tuple[Path, Path], 
     monkeypatch.setattr(maintained_adjusted_daily, "current_generation", lambda root=None, generation=None: older)
     with pytest.raises(ValueError, match="no actions snapshot"):
         maintained_adjusted_daily.read_adjusted_daily("raw", as_of=CUTOFF)
+
+
+def test_real_data_check_script_reports_equality_and_truncation_damage(environment: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    from scripts import check_adjusted_daily_asof
+
+    producer, shared = environment
+    _tricky_producer(producer)
+    out = tmp_path / "report.json"
+    monkeypatch.setattr(sys, "argv", ["x", "--root", str(shared), "--build", "--cutoff", CUTOFF.date().isoformat(), "--out", str(out)])
+
+    assert check_adjusted_daily_asof.main() == 0
+    entry = json.loads(out.read_text(encoding="utf-8"))["cutoffs"][0]
+    assert entry["codes"] == 2 and all(entry[basis]["equal"] for basis in maintained_adjusted_daily.BASES)
+    assert entry["reference_factor_adjusted"]["truncation_rows_masked_in_latest_known_at_cutoff"] > 0
+    assert entry["situations"]["post_cutoff_multi_kind_days"] == 1 and entry["situations"]["post_cutoff_unknown_kind"] == 1

@@ -77,7 +77,7 @@ def family_dir(root: Path | None = None) -> Path:
     return (shared_data_root() if root is None else root) / "derived" / FAMILY
 
 
-def _load_inputs(producer_root: Path) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, Any], dict[str, Any]]:
+def load_inputs(producer_root: Path) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, Any], dict[str, Any]]:
     """Fingerprint (which refuses a busy producer) and read the two live producer inputs."""
     prices_path, actions_path = producer_root / "price_daily.parquet", producer_root / "corporate_actions.sqlite"
     fingerprint = fingerprint_inputs([
@@ -233,7 +233,7 @@ def update(*, producer_root: Path, root: Path | None = None) -> dict[str, Any]:
     staging: Path | None = None
     try:
         previous = read_json(family / "current.json")["generation"] if (family / "current.json").is_file() else None
-        bars, actions, fingerprint, source_policy = _load_inputs(producer_root)
+        bars, actions, fingerprint, source_policy = load_inputs(producer_root)
         loaded = time.monotonic()
         asof = cast(pd.Timestamp, bars["Date"].max()).date().isoformat()
         generation = f"{asof}-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
