@@ -10,14 +10,133 @@ from __future__ import annotations
 import logging
 import stat
 import uuid
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from research_core.artifact_store import copy_verified, file_digest, object_digest, publish_noreplace, relative_name, write_json
-from research_core.research_data_catalog import CATALOG_FIELDS, DataCatalog, validate_entry, verify_entry
+from research_core.artifact_store import copy_verified, describe_file, file_digest, object_digest, publish_noreplace, read_json, relative_name, write_json
+from research_core.research_data_catalog import CATALOG_FIELDS, DataCatalog, read_detached, validate_entry, verify_entry
 from research_core.research_data_paths import _checked_path
+from research_core.research_measurement_v1 import phase_receipt, resource_sample
 
 LOGGER = logging.getLogger(__name__)
+
+
+def _staged_inventory(catalog: DataCatalog, directory: Path) -> list[dict[str, Any]]:
+    """Inventory physical payloads, excluding only the root bundle manifest."""
+    pending = [directory]
+    artifacts = []
+    while pending:
+        for member in sorted(pending.pop().iterdir()):
+            name = member.relative_to(directory).as_posix()
+            catalog.roots.artifact_path("data", member.relative_to(catalog.roots.data).as_posix())
+            if name == "manifest.json":
+                if not member.is_file():
+                    raise ValueError("manifest path reserved for a regular bundle manifest")
+                continue
+            info = member.lstat()
+            if stat.S_ISDIR(info.st_mode):
+                pending.append(member)
+            elif stat.S_ISREG(info.st_mode):
+                artifacts.append(describe_file(directory, member))
+            else:
+                raise ValueError("bundle payload must contain only regular physical files and directories")
+    return sorted(artifacts, key=lambda record: record["path"])
+
+
+def prepare_staged_bundle(
+    catalog: DataCatalog,
+    metadata: dict[str, Any],
+    staging: Path,
+    *,
+    managed_parent: str,
+    lineage: dict[str, Any] | None = None,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Seal and verify a staged bundle without publishing or registering it.
+
+    New staging directories must be named ``.staging-*``. After a registration
+    failure, retry with the digest-named final directory as ``staging``; its
+    manifest and complete physical inventory are verified again. The returned
+    entry can be journaled before publication. No payload is copied or moved.
+    """
+    parent = catalog.roots.artifact_path("data", managed_parent)
+    if not staging.is_absolute():
+        raise ValueError("explicit absolute staging directory required")
+    staging = _checked_path(staging)
+    if staging.parent != parent or not staging.is_dir():
+        raise ValueError("populated staging must be a sibling under the explicit managed parent")
+    if staging.stat().st_dev != parent.stat().st_dev:
+        raise ValueError("staging and final parent must be on the same filesystem")
+    artifacts = _staged_inventory(catalog, staging)
+    if not artifacts:
+        raise ValueError("nonempty staged payload required")
+    body = {"schema": "research-data-bundle.v1", "complete": True, "metadata": metadata, "lineage": lineage, "artifacts": artifacts}
+    version = object_digest(body)
+    if not staging.name.startswith(".staging-") and staging.name != version:
+        raise ValueError("staging name must be .staging-* or its verified final digest")
+    name = f"{relative_name(managed_parent)}/{version}"
+    destination = catalog.roots.artifact_path("data", name)
+    entry = {
+        **{key: metadata[key] for key in CATALOG_FIELDS},
+        "version_id": version,
+        "reader": "bundle",
+        "manifest": {"scope": "data", "path": f"{name}/manifest.json", "sha256": version},
+    }
+    validate_entry(entry, catalog.roots)
+    manifest = staging / "manifest.json"
+    if manifest.exists():
+        if read_json(manifest) != body:
+            raise ValueError("reserved manifest differs from the staged bundle identity")
+    elif staging == destination:
+        raise ValueError("existing final bundle lacks its manifest")
+    else:
+        write_json(manifest, body)
+    if file_digest(manifest) != version:
+        raise ValueError("staged manifest hash differs from the bundle identity")
+    LOGGER.info("Prepared staged bundle data=%s version=%s files=%d", metadata["data_id"], version, len(artifacts))
+    return entry, body
+
+
+def publish_staged_bundle(
+    catalog: DataCatalog,
+    metadata: dict[str, Any],
+    staging: Path,
+    *,
+    managed_parent: str,
+    lineage: dict[str, Any] | None = None,
+    before_publish: Callable[[dict[str, Any]], None] | None = None,
+) -> dict[str, Any]:
+    """Publish a verified sibling by one no-replace rename, then register it.
+
+    An identical existing final is fully verified; separately supplied staging
+    remains untouched. Registration failure retains the final for a retry using
+    that digest-named directory. No payload is copied or individually moved.
+    The optional callback receives a detached planned entry before any rename
+    or registration, allowing an atomic handoff journal without a second seal.
+    It must only journal metadata, leaving the owned payload unchanged. Catalog
+    registration retains its independent full verification trust boundary.
+    """
+    before = resource_sample()
+    entry, body = prepare_staged_bundle(catalog, metadata, staging, managed_parent=managed_parent, lineage=lineage)
+    staging = _checked_path(staging)
+    destination = catalog.roots.artifact_path("data", entry["manifest"]["path"]).parent
+    existing = destination.exists()
+    if existing and destination != staging:
+        final_entry, final_body = prepare_staged_bundle(catalog, metadata, destination, managed_parent=managed_parent, lineage=lineage)
+        if final_entry != entry or final_body != body:
+            raise ValueError("existing final bundle identity/inventory mismatch")
+    LOGGER.info("Staged publisher verification measurement=%s", phase_receipt("staged_bundle_inventory", before, resource_sample()))
+    if before_publish is not None:
+        before_publish(read_detached(entry))
+    if not existing:
+        publish_noreplace(staging, destination)
+    before = resource_sample()
+    try:
+        catalog.register([entry])
+    finally:
+        LOGGER.info("Catalog registration including independent verification measurement=%s", phase_receipt("catalog_registration", before, resource_sample()))
+    LOGGER.info("Published staged bundle data=%s version=%s files=%d", metadata["data_id"], entry["version_id"], len(body["artifacts"]))
+    return entry
 
 
 def publish_file_bundle(

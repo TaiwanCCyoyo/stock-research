@@ -6,6 +6,7 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+import pyarrow.parquet as pq
 import pytest
 
 from research_core.artifact_store import describe_file, object_digest, write_json
@@ -131,6 +132,16 @@ def test_bounded_phases_scope_work_sizes_and_first_by_date_sample(tmp_path: Path
     assert receipt["extrapolation"]["status"] == "unknown"
     assert "representative" in receipt["scope"] and "not a complete" in receipt["scope"]
     assert receipt["split_audit"]["status"] == "unknown"
+    for artifact in receipt["artifacts"]:
+        metadata = pq.read_metadata(tmp_path / "preflight" / artifact["path"])
+        codecs = {
+            metadata.row_group(row).column(column).compression
+            for row in range(metadata.num_row_groups)
+            for column in range(metadata.row_group(row).num_columns)
+        }
+        assert codecs <= {"ZSTD"}
+        if metadata.num_rows:
+            assert codecs == {"ZSTD"}
     assert (tmp_path / "preflight" / "receipt.json").is_file()
     assert not (tmp_path / "research_data").exists()
 

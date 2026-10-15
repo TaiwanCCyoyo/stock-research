@@ -537,3 +537,227 @@ def test_cli_forwards_explicit_paths_authorization_timeout_and_producer_env(
         "timeout_seconds": 123.0,
     }
     assert json.loads(capsys.readouterr().out) == {"complete": True, "phase": "complete_pattern_scan", "source_id": "synthetic"}
+
+
+def _deferred_stock_case(setup_run: Any, monkeypatch: pytest.MonkeyPatch) -> tuple[DataRoots, Path, dict[str, Any], list[Any]]:
+    from research_core import pattern_scan_analysis_v1 as analysis
+
+    roots, directory, request = setup_run
+    index = _prepared(directory, request)
+    profile_path = directory / "resource-profile.json"
+    profile = {
+        "selected": {
+            "workers": 4,
+            "memory_cap_bytes": 6 * 1024**3,
+            "estimated_worker_bytes": 512 * 1024**2,
+            "stocks_per_process": 1,
+            "timeout_seconds": 600,
+        },
+        "observation_provenance": {"fixture": "retained stock measurement"},
+    }
+    write_json(profile_path, profile)
+    request.update(
+        mode="stock",
+        publication_policy="results-only-deferred.v3",
+        prepared_path=str(index),
+        profile_path=str(profile_path),
+        memory_bytes=6 * 1024**3,
+        job_memory_bytes=8 * 1024**3,
+    )
+    events: list[Any] = []
+
+    def capacity_gate(packet: dict[str, Any], supplied_roots: DataRoots, *, input_id: str | None = None) -> None:
+        assert supplied_roots == roots and packet["source"] == request["source"]
+        assert input_id in {None, "synthetic-input"}
+        events.append(("capacity", input_id))
+
+    def execution_profile(packet: dict[str, Any], prepared: dict[str, Any]) -> dict[str, Any]:
+        assert packet == request and Path(packet["prepared_path"]) == index
+        assert packet["profile_path"] == str(profile_path)
+        assert prepared == read_json(index)
+        events.append("profile")
+        return profile
+
+    def stock_pool(packets: list[dict[str, Any]], **limits: Any) -> dict[str, Any]:
+        assert packets == [{**packet, "run_root": str(directory)} for packet in read_json(index)["requests"]]
+        assert limits == {
+            "workers": 4,
+            "memory_bytes": 6 * 1024**3,
+            "estimated_worker_bytes": 512 * 1024**2,
+            "stocks_per_process": 1,
+            "timeout_seconds": 600,
+        }
+        events.append("pool")
+        return {"results": [{"code": "0001"}]}
+
+    def verified(results: list[dict[str, Any]], *, source: dict[str, Any], input_id: str) -> dict[str, Path]:
+        assert results == [{"code": "0001"}] and source == request["source"] and input_id == "synthetic-input"
+        events.append("verified")
+        return {"0001": directory / "parts/0001"}
+
+    monkeypatch.setattr(run, "_capacity", capacity_gate)
+    monkeypatch.setattr(run, "_execution_profile", execution_profile)
+    monkeypatch.setattr(run, "fingerprint_inputs", _stub_fingerprint)
+    monkeypatch.setattr(run, "read_frame", lambda path: None)
+    monkeypatch.setattr(run, "run_requests", stock_pool)
+    monkeypatch.setattr(run, "verified_parts", verified)
+    monkeypatch.setattr(run, "build_barrier", _forbidden)
+    monkeypatch.setattr(run, "publish_stock_versions", _forbidden)
+    monkeypatch.setattr(analysis, "run_analysis", _forbidden)
+    return roots, directory, request, events
+
+
+def test_deferred_stock_stops_after_verified_parts_without_global_admission(setup_run: Any, monkeypatch: pytest.MonkeyPatch) -> None:
+    roots, directory, request, events = _deferred_stock_case(setup_run, monkeypatch)
+    path = directory / "request-stock.json"
+    write_json(path, request)
+    run.coordinator_main(path)
+    assert events == [("capacity", None), "profile", ("capacity", "synthetic-input"), "pool", "verified"]
+    saved = run.verify_completion(directory / "response-stock.json", request, roots)
+    result = saved["result"]
+    assert result["phase"] == "full_stock_checkpoints" and result["global_analysis_admitted"] is False
+    assert result["resource_observation"] == {"fixture": "retained stock measurement"}
+    assert not {"barrier", "shared_versions", "analysis"}.intersection(result)
+    assert not (directory / "global").exists()
+    assert not (roots.primary / "research_cache").exists()
+
+
+def test_deferred_prepare_actual_input_capacity_mismatch_precedes_any_price_write(setup_run: Any, monkeypatch: pytest.MonkeyPatch) -> None:
+    from types import SimpleNamespace
+
+    from research_core import pattern_scan_capacity_v3 as phase_capacity
+
+    roots, directory, request = setup_run
+    profile = directory / "resource-profile.json"
+    write_json(profile, {"input_id": "planned-input"})
+    plan_path = directory / "capacity-prepare.json"
+    write_json(
+        plan_path,
+        {
+            "schema": phase_capacity.SCHEMA,
+            "phase": "prepare",
+            "publication_policy": "results-only-deferred.v3",
+            "source_id": request["source"]["source_id"],
+            "input_id": "planned-input",
+            "profile": {"path": str(profile), "bytes": profile.stat().st_size, "sha256": file_digest(profile)},
+            "geometry": {"calendar_n": 4110, "ordinary_reference_n": 1942},
+            "reserve_bytes": 32 * 1024**3,
+            "components": {name: {"estimated_bytes": 0, "evidence": "synthetic explicit budget"} for name in phase_capacity.PHASE_COMPONENTS["prepare"]},
+        },
+    )
+    request.update(publication_policy="results-only-deferred.v3", profile_path=str(profile), capacity_path=str(plan_path))
+
+    class Snapshot:
+        inventory = pd.DataFrame({"included": [True] * 1942, "code": [f"{i:04}" for i in range(1942)]})
+        input_id = "actual-changed-input"
+        calendar = list(range(4110))
+
+    events: list[Any] = []
+    original_gate = run._capacity
+
+    def capacity_gate(packet: dict[str, Any], supplied_roots: DataRoots, *, input_id: str | None = None) -> None:
+        events.append(("capacity", input_id))
+        original_gate(packet, supplied_roots, input_id=input_id)
+
+    def execution_profile(packet: dict[str, Any], prepared: dict[str, Any]) -> dict[str, Any]:
+        assert prepared == {"input_id": Snapshot.input_id, "calendar_n": 4110, "ordinary_reference_n": 1942}
+        events.append("actual-input-profile-check")
+        return {}
+
+    monkeypatch.setattr(run, "_capacity", capacity_gate)
+    monkeypatch.setattr(run, "_execution_profile", execution_profile)
+    monkeypatch.setattr(phase_capacity.shutil, "disk_usage", lambda path: SimpleNamespace(free=64 * 1024**3))
+    monkeypatch.setattr(run, "producer_data_root", lambda: Path(request["producer_root"]))
+    monkeypatch.setattr(run, "load_live_inputs", lambda *args, **kwargs: Snapshot())
+    monkeypatch.setattr(run, "representative_codes", lambda snapshot: (("0001",), {}))
+    monkeypatch.setattr(run, "prepare_requests", _forbidden)
+    monkeypatch.setattr(run, "write_frame", _forbidden)
+    monkeypatch.setattr(run, "_derived_inputs", _forbidden)
+    path = directory / "request-prepare.json"
+    write_json(path, request)
+    with pytest.raises(ValueError, match="source/input/phase/publication policy differs"):
+        run.coordinator_main(path)
+    assert events == [("capacity", None), "actual-input-profile-check", ("capacity", Snapshot.input_id)]
+    assert not (directory / "prepared").exists()
+    assert not (directory / "derived-preparation.json").exists()
+    assert not (directory / "producer-read-receipt.json").exists()
+
+
+def test_deferred_launch_existing_active_owner_blocks_job_start(setup_run: Any, monkeypatch: pytest.MonkeyPatch) -> None:
+    roots, directory, request = setup_run
+    monkeypatch.setattr(DataRoots, "validate_worktree", lambda *args: None)
+    monkeypatch.setattr(run, "git_source_identity", lambda root: request["source"])
+    monkeypatch.setattr(run, "_capacity", lambda packet, roots: None)
+    monkeypatch.setattr(run, "host_resources", lambda: {"physical_available_bytes": 16 * 1024**3})
+    monkeypatch.setattr(run, "_MemoryBoundJob", _forbidden)
+    marker = directory / ".scan-active.json"
+    write_json(marker, {"owner": "existing-owner", "request_id": "existing-request"})
+    before = marker.read_bytes()
+    with pytest.raises((ValueError, FileExistsError)):
+        run.launch(roots, mode="stock", run_id="synthetic", calculation_authorized=True)
+    assert marker.read_bytes() == before
+
+
+@pytest.mark.parametrize("child_exit", (0, 5))
+def test_deferred_launch_job_owns_active_marker_until_confirmed_termination(setup_run: Any, monkeypatch: pytest.MonkeyPatch, child_exit: int) -> None:
+    roots, directory, request, events = _deferred_stock_case(setup_run, monkeypatch)
+    marker = directory / ".scan-active.json"
+    monkeypatch.setattr(DataRoots, "validate_worktree", lambda *args: None)
+    monkeypatch.setattr(run, "git_source_identity", lambda root: request["source"])
+    monkeypatch.setattr(run, "host_resources", lambda: {"physical_available_bytes": 16 * 1024**3})
+    write_json(directory / "request-stock.json", request)
+
+    class Job:
+        def __init__(self, limit: int) -> None:
+            assert limit == 8 * 1024**3
+            assert marker.is_file()
+
+        def start(self, command: list[str], cwd: Path) -> Any:
+            assert command[2] == run.GIT_BOOTSTRAP and cwd == run.ROOT
+            packet = read_json(Path(command[-1]))
+            assert read_json(marker)["request_id"] == object_digest(packet)
+            if child_exit == 0:
+                run.coordinator_main(Path(command[-1]))
+
+            class Process:
+                returncode = child_exit
+
+                def poll(self) -> int:
+                    return child_exit
+
+            return Process()
+
+        def memory_receipt(self) -> dict[str, Any]:
+            assert marker.is_file()
+            return {"limit_bytes": 8 * 1024**3, "peak_committed_bytes": 1024, "scope": "virtual memory committed across this owned Windows job"}
+
+        def terminate_and_confirm(self) -> None:
+            assert marker.is_file()
+            events.append("terminated")
+
+        def close(self) -> None:
+            assert marker.is_file()
+            events.append("closed")
+
+    monkeypatch.setattr(run, "_MemoryBoundJob", Job)
+    kwargs: dict[str, Any] = {
+        "mode": "stock",
+        "run_id": "synthetic",
+        "calculation_authorized": True,
+        "prepared_path": Path(request["prepared_path"]),
+        "profile_path": Path(request["profile_path"]),
+        "memory_bytes": 6 * 1024**3,
+        "job_memory_bytes": 8 * 1024**3,
+        "timeout_seconds": 60,
+    }
+    if child_exit == 0:
+        saved = run.launch(roots, **kwargs)
+        assert saved["result"]["phase"] == "full_stock_checkpoints"
+        assert saved["result"]["global_analysis_admitted"] is False
+        assert events[:3] == [("capacity", None), ("capacity", None), "profile"]
+        assert ("capacity", "synthetic-input") in events
+    else:
+        with pytest.raises(ValueError, match="coordinator failed exit=5"):
+            run.launch(roots, **kwargs)
+    assert events[-2:] == ["terminated", "closed"]
+    assert not marker.exists()

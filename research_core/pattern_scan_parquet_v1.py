@@ -81,7 +81,7 @@ def write_frame(frame: pd.DataFrame, stream_or_path: str | Path | BinaryIO, *, i
         {"version": CODEC_VERSION, "columns": names, "numeric": "repr(float), finite binary64", "absence": "none", "unknown": "null"}, sort_keys=True
     ).encode("utf-8")
     table = table.replace_schema_metadata(metadata)
-    pq.write_table(table, stream_or_path)
+    pq.write_table(table, stream_or_path, compression="zstd")
     LOGGER.debug("Wrote scan Parquet rows=%d encoded_columns=%s preserve_index=%s", len(frame), names, index)
 
 

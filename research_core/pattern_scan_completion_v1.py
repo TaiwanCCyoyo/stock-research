@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import logging
 import uuid
+from collections.abc import Iterator
 from dataclasses import fields
+from functools import partial
 from pathlib import Path
 from typing import Any, cast
 
@@ -18,6 +20,7 @@ from research_core.pattern_scan_conditions_v1 import PATTERNS
 from research_core.pattern_scan_episode_run_v1 import run_episodes
 from research_core.pattern_scan_execution_v1 import verify_source
 from research_core.pattern_scan_failure_summary_v1 import FailureAccumulator
+from research_core.pattern_scan_followup_batches_v3 import summarize_followup_batches
 from research_core.pattern_scan_followup_summary_v1 import FollowupAccumulator
 from research_core.pattern_scan_followup_v1 import FollowupTables, followup_values
 from research_core.pattern_scan_holding_v1 import holding_values
@@ -29,6 +32,34 @@ from research_core.research_data_paths import _checked_path
 from research_core.research_measurement_v1 import phase_receipt, resource_sample
 
 LOGGER = logging.getLogger(__name__)
+BOUNDED_SUMMARY_ALGORITHM = "exact-group-horizon-batches.v3"
+
+
+def _retained_batch_feed(
+    group: str,
+    horizon: int,
+    *,
+    target: str,
+    projections: dict[str, tuple[Path, dict[str, set[str]], pd.Series]],
+    holding_path: Path,
+) -> Iterator[tuple[FollowupTables, pd.DataFrame]]:
+    """Replay verified base observations, retaining only one stock's frames."""
+    for code, (directory, memberships, markets) in sorted(projections.items()):
+        ids = memberships[group]
+        if not ids:
+            continue
+        chunks = []
+        for field in fields(FollowupTables):
+            frame = read_frame(directory / f"{field.name}.parquet", filters=[("horizon", "==", horizon)])
+            frame = cast(pd.DataFrame, frame.loc[frame.event_id.isin(ids)].copy())
+            frame["group_id"], frame["target_pattern_id"] = group, target
+            frame["mkt"] = frame.event_id.map(markets)
+            chunks.append(frame)
+        bound = FollowupTables(*chunks)
+        del chunks
+        holding_stock = read_frame(holding_path, filters=[("security_id", "==", f"TW:{code}"), ("horizon", "==", horizon)])
+        yield bound, holding_stock
+        del bound, holding_stock
 
 
 def complete_followup(
@@ -42,8 +73,9 @@ def complete_followup(
     source: dict[str, Any],
     input_id: str,
     shared: SharedInputs | None = None,
+    bounded_batches: bool = False,
 ) -> dict[str, Any]:
-    """Reuse each original union event's observations in retained candidates."""
+    """Reuse union observations; optionally bound exact samples by group/H."""
     verify_source(source)
     if shared is not None:
         shared.validate_scope(tuple(parts), source, input_id)
@@ -119,12 +151,18 @@ def complete_followup(
         staging.mkdir()
         staging_path = staging / holding_path.name
         with staging_path.open("xb") as stream:
-            holding.to_parquet(stream, index=False)
+            holding.to_parquet(stream, index=False, compression="zstd")
         verify_barrier(barrier)
         verify_source(source)
-        publish_scan_receipt(staging / "receipt.json", {"complete": True, "identity": holding_identity, "sha256": file_digest(staging_path)})
+        publish_scan_receipt(
+            staging / "receipt.json",
+            {"complete": True, "identity": holding_identity, "sha256": file_digest(staging_path), "bytes": staging_path.stat().st_size},
+        )
         publish_noreplace(staging, holding_directory)
+        if bounded_batches:
+            del holding
     files: dict[str, str] = {"holding_context.parquet": str(holding_path)}
+    batch_measurements: dict[str, list[dict[str, Any]]] = {}
     for target in PATTERNS:
         selected = {row["candidate_id"]: tuple(Atom(**atom) for atom in row["atoms"]) for row in selections[target]["candidates"]}
         groups = {target: target, **{identifier: target for identifier in top[target]}}
@@ -135,6 +173,7 @@ def complete_followup(
             "top_candidates": list(top[target]),
             "event_receipts": {code: file_digest(directory / "receipt.json") for code, directory in event_parts[target].items()},
             **({"shared_read_pins": shared.pins} if shared is not None else {}),
+            **({"summary_algorithm": BOUNDED_SUMMARY_ALGORITHM} if bounded_batches else {}),
         }
         target_summary = output / f"summary-{object_digest(target_identity)}"
         if target_summary.exists():
@@ -143,15 +182,25 @@ def complete_followup(
                 raise ValueError("existing followup summary differs or incomplete")
             verify_files(output, saved["artifacts"])
             files.update(saved["files"])
+            if bounded_batches:
+                batch_measurements[target] = saved["batch_measurements"]
             continue
         target_files: dict[str, str] = {}
-        accumulator = FollowupAccumulator(groups)
-        failure = FailureAccumulator(groups)
+        projections: dict[str, tuple[Path, dict[str, set[str]], pd.Series]] = {}
+        accumulator: FollowupAccumulator | None = None
+        failure: FailureAccumulator | None = None
+        if not bounded_batches:
+            accumulator = FollowupAccumulator(groups)
+            failure = FailureAccumulator(groups)
         for code, directory in sorted(event_parts[target].items()):
             original = pd.concat([group_frame(directory, "pattern:union", horizon) for horizon in (126, 252)], ignore_index=True)
             stock_directory = parts[code]
-            indicator = read_frame(stock_directory / "indicators.parquet") if shared is None else shared.read_stock(code, "indicators")
-            pivots = read_frame(stock_directory / "pivots.parquet") if shared is None else shared.read_stock(code, "pivots")
+            indicator: pd.DataFrame | None = None
+            pivots: pd.DataFrame | None = None
+            base: FollowupTables | None = None
+            if not bounded_batches:
+                indicator = read_frame(stock_directory / "indicators.parquet") if shared is None else shared.read_stock(code, "indicators")
+                pivots = read_frame(stock_directory / "pivots.parquet") if shared is None else shared.read_stock(code, "pivots")
             identity = {
                 "stock": code,
                 "target": target,
@@ -167,8 +216,13 @@ def complete_followup(
                 if receipt.get("identity") != identity or receipt.get("complete") is not True:
                     raise ValueError("existing followup identity differs or incomplete")
                 verify_files(destination, receipt["artifacts"])
-                base = FollowupTables(*(read_frame(destination / f"{field.name}.parquet") for field in fields(FollowupTables)))
+                if not bounded_batches:
+                    base = FollowupTables(*(read_frame(destination / f"{field.name}.parquet") for field in fields(FollowupTables)))
             else:
+                if bounded_batches:
+                    indicator = read_frame(stock_directory / "indicators.parquet") if shared is None else shared.read_stock(code, "indicators")
+                    pivots = read_frame(stock_directory / "pivots.parquet") if shared is None else shared.read_stock(code, "pivots")
+                assert indicator is not None and pivots is not None
                 base = followup_values(original, indicator, pivots)
                 staging = output / f".staging-{destination.name}-{uuid.uuid4().hex}"
                 staging.mkdir()
@@ -176,7 +230,7 @@ def complete_followup(
                 for field in fields(FollowupTables):
                     path = staging / f"{field.name}.parquet"
                     with path.open("xb") as stream:
-                        getattr(base, field.name).to_parquet(stream, index=False)
+                        getattr(base, field.name).to_parquet(stream, index=False, compression="zstd")
                     artifacts.append(describe_file(staging, path))
                 verify_source(source)
                 verify_files(staging, artifacts)
@@ -184,35 +238,48 @@ def complete_followup(
                     staging / "receipt.json", {"schema": "pattern-scan-followup-part.v1", "complete": True, "identity": identity, "artifacts": artifacts}
                 )
                 publish_noreplace(staging, destination)
+                if bounded_batches:
+                    base, indicator, pivots = None, None, None
             memberships = {target: set(original.event_id)}
             first_horizon = original.loc[original.horizon.eq(126)]
             for identifier in top[target]:
                 matched = candidate_membership(first_horizon, selected[identifier]) == 1
                 memberships[identifier] = set(first_horizon.loc[matched, "event_id"])
-            market_by_id = original.drop_duplicates("event_id").set_index("event_id")["mkt"]
-            chunks: dict[str, list[pd.DataFrame]] = {field.name: [] for field in fields(FollowupTables)}
-            for group, ids in memberships.items():
-                for field in fields(FollowupTables):
-                    frame = getattr(base, field.name)
-                    frame = frame.loc[frame.event_id.isin(ids)].copy()
-                    frame["group_id"], frame["target_pattern_id"] = group, target
-                    frame["mkt"] = frame.event_id.map(market_by_id)
-                    chunks[field.name].append(frame)
-            bound = FollowupTables(*(pd.concat(chunks[field.name], ignore_index=True) for field in fields(FollowupTables)))
-            accumulator.add_stock(bound)
-            holding_stock = read_frame(holding_path, filters=[("security_id", "==", f"TW:{code}")])
-            failure.add_stock(bound, holding_stock)
+            market_by_id = cast(pd.Series, original.drop_duplicates("event_id").set_index("event_id")["mkt"]).copy()
+            if bounded_batches:
+                projections[code] = destination, memberships, market_by_id
+                del original, first_horizon, market_by_id
+            else:
+                assert base is not None and accumulator is not None and failure is not None
+                chunks: dict[str, list[pd.DataFrame]] = {field.name: [] for field in fields(FollowupTables)}
+                for group, ids in memberships.items():
+                    for field in fields(FollowupTables):
+                        frame = getattr(base, field.name)
+                        frame = frame.loc[frame.event_id.isin(ids)].copy()
+                        frame["group_id"], frame["target_pattern_id"] = group, target
+                        frame["mkt"] = frame.event_id.map(market_by_id)
+                        chunks[field.name].append(frame)
+                bound = FollowupTables(*(pd.concat(chunks[field.name], ignore_index=True) for field in fields(FollowupTables)))
+                accumulator.add_stock(bound)
+                holding_stock = read_frame(holding_path, filters=[("security_id", "==", f"TW:{code}")])
+                failure.add_stock(bound, holding_stock)
             for field in fields(FollowupTables):
                 target_files[f"observations/{target}/{object_digest(code)}/{field.name}.parquet"] = str(destination / f"{field.name}.parquet")
-        results = accumulator.finalize()
-        failures = failure.finalize()
+        if bounded_batches:
+            feeds = partial(_retained_batch_feed, target=target, projections=projections, holding_path=holding_path)
+            results, failures, batch_measurements[target] = summarize_followup_batches(groups, feeds)
+            del projections, feeds
+        else:
+            assert accumulator is not None and failure is not None
+            results = accumulator.finalize()
+            failures = failure.finalize()
         summary_tables = {field.name: getattr(result, field.name) for result in (results, failures) for field in fields(result)}
         target_staging = output / f".staging-{target_summary.name}-{uuid.uuid4().hex}"
         target_staging.mkdir()
         for name, table in summary_tables.items():
             path = target_staging / f"{name}.parquet"
             with path.open("xb") as stream:
-                table.to_parquet(stream, index=False)
+                table.to_parquet(stream, index=False, compression="zstd")
             target_files[f"{target}/{name}.parquet"] = str(target_summary / path.name)
         descriptors = [describe_file(output, Path(path)) for path in target_files.values() if Path(path).parent != target_summary]
         for name in summary_tables:
@@ -224,11 +291,20 @@ def complete_followup(
             if file_digest(directory / "receipt.json") != target_identity["event_receipts"][code]:
                 raise ValueError("followup event ancestor changed during computation")
             verify_files(directory, read_json(directory / "receipt.json")["artifacts"])
-        publish_scan_receipt(target_staging / "receipt.json", {"complete": True, "identity": target_identity, "artifacts": descriptors, "files": target_files})
+        publish_scan_receipt(
+            target_staging / "receipt.json",
+            {
+                "complete": True,
+                "identity": target_identity,
+                "artifacts": descriptors,
+                "files": target_files,
+                **({"batch_measurements": batch_measurements[target]} if bounded_batches else {}),
+            },
+        )
         publish_noreplace(target_staging, target_summary)
         verify_files(output, descriptors)
         files.update(target_files)
-        LOGGER.info("Completed bounded Q5/Q6 target=%s groups=%d memory=%d", target, len(groups), accumulator.memory_nbytes)
+        LOGGER.info("Completed Q5/Q6 target=%s groups=%d bounded_batches=%s", target, len(groups), bounded_batches)
     verify_source(source)
     verify_barrier(barrier)
     receipt = {
@@ -241,13 +317,14 @@ def complete_followup(
         "files": files,
         "measurement": phase_receipt("q4_q5_q6_followup", before, resource_sample()),
         **({"shared_read_pins": shared.pins} if shared is not None else {}),
+        **({"summary_algorithm": BOUNDED_SUMMARY_ALGORITHM, "batch_measurements": batch_measurements} if bounded_batches else {}),
     }
     receipt_path = output / "receipt.json"
     if receipt_path.exists():
         saved = read_scan_receipt(receipt_path)
         if any(
             object_digest(saved.get(key)) != object_digest(receipt.get(key))
-            for key in ("source_id", "input_id", "top_candidates", "episodes", "files", "shared_read_pins")
+            for key in ("source_id", "input_id", "top_candidates", "episodes", "files", "shared_read_pins", "summary_algorithm")
         ):
             raise ValueError("existing completed followup differs")
         return saved

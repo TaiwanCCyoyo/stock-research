@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, cast
 
 import pandas as pd
+import pyarrow.parquet as pq
 import pytest
 
 from research_core import pattern_scan_pipeline_v1 as pipeline
@@ -78,6 +79,20 @@ def test_exact_resume_preserves_prepared_bytes_mtime_and_calls(snapshot: FakeSna
     assert all(row["calculation_authorized"] is True for row in requests)
     assert measurement["wall_seconds"] >= 0
     paths = [Path(row["prepared_path"]) for row in requests]
+    for path in paths:
+        metadata = pq.read_metadata(path)
+        codecs = {
+            metadata.row_group(row).column(column).compression
+            for row in range(metadata.num_row_groups)
+            for column in range(metadata.row_group(row).num_columns)
+        }
+        assert codecs == {"ZSTD"}
+        pd.testing.assert_frame_equal(
+            pd.read_parquet(path),
+            pd.DataFrame({"Close": [10.0, 11.0, 12.0]}, index=snapshot.calendar),
+            check_exact=True,
+            check_freq=False,
+        )
     before = {str(path): (file_digest(path), path.stat().st_mtime_ns) for path in paths}
     calls = snapshot.stock_calls
     repeated, _ = _prepare(snapshot)

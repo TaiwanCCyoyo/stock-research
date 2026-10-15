@@ -78,7 +78,7 @@ def split_audit(prepared: pd.DataFrame) -> dict[str, Any]:
 def _save(output: Path, name: str, table: pd.DataFrame, artifacts: list[dict[str, Any]]) -> None:
     path = safe_path(output / name)
     with path.open("xb") as stream:
-        table.to_parquet(stream, index=False)
+        table.to_parquet(stream, index=False, compression="zstd")
     artifacts.append(describe_file(output, path))
 
 

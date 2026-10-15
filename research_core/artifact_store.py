@@ -71,6 +71,24 @@ def publish_noreplace(source: Path, destination: Path) -> None:
         raise OSError(errno.ENOTSUP, "atomic no-replace publication unavailable", str(destination))
 
 
+def relocate_noreplace(source: Path, destination: Path) -> None:
+    """Transfer owned files within one filesystem without copying or replacing.
+
+    Unlike final publication, a journaled handoff can cross parent directories.
+    The native no-replace operation still fails closed and never falls back to
+    copy/delete across filesystems.
+    """
+    source, destination = map(safe_path, (source, destination))
+    if source.stat().st_dev != destination.parent.stat().st_dev:
+        raise OSError(errno.EXDEV, "single-copy handoff requires the same filesystem", str(destination))
+    if sys.platform == "win32":
+        os.rename(source, destination)
+    elif sys.platform == "linux":
+        _linux_publish_noreplace(source, destination)
+    else:
+        raise OSError(errno.ENOTSUP, "atomic no-replace handoff unavailable", str(destination))
+
+
 def publish_new_directory(destination: Path, files: dict[str, bytes]) -> None:
     """Publish `files` as a brand-new directory in one step; never replace or merge into one.
 

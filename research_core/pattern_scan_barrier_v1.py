@@ -145,12 +145,12 @@ def build_barrier(parts: dict[str, Path], benchmark: pd.DataFrame, output: Path)
             frame[name] = values[ordinal]
         path = output / f"{object_digest(code)}.parquet"
         with path.open("xb") as stream:
-            frame.to_parquet(stream)
+            frame.to_parquet(stream, compression="zstd")
         files[code] = path
     del skinny, cross, union, recent
     for name, frame in (("context", context), ("close_matrix", closes), ("jump_matrix", jump_flags), ("benchmark", benchmark)):
         with (output / f"{name}.parquet").open("xb") as stream:
-            frame.to_parquet(stream)
+            frame.to_parquet(stream, compression="zstd")
     receipt = {
         "schema": "pattern-scan-barrier.v1",
         "complete": True,
@@ -239,6 +239,24 @@ def metadata(kind: str, source: dict[str, Any], input_id: str, calendar: pd.Date
                 else "fixed primary task input bundle; retained worktree raw snapshot"
             ),
         },
+    }
+
+
+def checkpoint_label_entry(parts: dict[str, Path], *, source: dict[str, Any], input_id: str) -> dict[str, Any]:
+    """Identify local base labels without pretending they are catalog versions."""
+    verify_source(source)
+    labels = {}
+    for code, directory in sorted(parts.items()):
+        receipt = read_json(directory / "receipt.json")
+        if receipt.get("source_id") != source["source_id"] or receipt.get("input_id") != input_id or receipt.get("complete") is not True:
+            raise ValueError("checkpoint label source/input identity differs")
+        labels[code] = next(record for record in receipt["artifacts"] if record["path"] == "base_labels.parquet")
+    body = {"schema": "pattern-scan-label-checkpoints.v3", "source_id": source["source_id"], "input_id": input_id, "labels": labels}
+    return {
+        "status": "unpublished_checkpoint",
+        "version_id": f"checkpoint-only:{object_digest(body)}",
+        "manifest": {"sha256": object_digest(body)},
+        "provenance": body,
     }
 
 

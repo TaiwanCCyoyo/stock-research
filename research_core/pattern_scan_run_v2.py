@@ -16,7 +16,7 @@ from typing import Any
 
 from research_core.artifact_store import describe_file, file_digest, object_digest, publish_noreplace, read_json, relative_name, verify_files
 from research_core.live_producer import assert_producer_idle
-from research_core.pattern_scan_barrier_v1 import build_barrier, publish_stock_versions, verified_parts
+from research_core.pattern_scan_barrier_v1 import build_barrier, checkpoint_label_entry, publish_stock_versions, verified_parts
 from research_core.pattern_scan_capacity_v2 import require_capacity
 from research_core.pattern_scan_execution_v1 import GIT_BOOTSTRAP, ROOT, _MemoryBoundJob, run_requests
 from research_core.pattern_scan_git_source_v2 import assert_current_code, git_source_identity
@@ -34,6 +34,7 @@ from research_core.run_receipt import InputSpec, changed_results, fingerprint_in
 
 LOGGER = logging.getLogger(__name__)
 TASK = "20261013-pattern-scan"
+PUBLICATION_POLICY = "results-only-deferred.v3"
 
 
 def _retain_json(path: Path, value: dict[str, Any]) -> None:
@@ -42,6 +43,42 @@ def _retain_json(path: Path, value: dict[str, Any]) -> None:
             raise ValueError(f"retained phase identity differs: {path}")
     else:
         publish_scan_receipt(path, value)
+
+
+def _capacity(request: dict[str, Any], roots: DataRoots, *, input_id: str | None = None) -> None:
+    """Admit only the named phase; later global work retains its own gate."""
+    mode = request["mode"]
+    if mode not in {"prepare", "stock", "all"}:
+        return
+    path = None if request.get("capacity_path") is None else Path(request["capacity_path"])
+    if request.get("publication_policy") == PUBLICATION_POLICY and mode in {"prepare", "stock"}:
+        from research_core.pattern_scan_capacity_v3 import require_phase_capacity
+
+        if path is None or request.get("profile_path") is None:
+            raise ValueError("explicit phase capacity and resource observation required")
+        expected_input = read_json(path)["input_id"] if input_id is None else input_id
+        require_phase_capacity(
+            path, roots.primary, phase=mode, source_id=request["source"]["source_id"], input_id=expected_input, profile_path=Path(request["profile_path"])
+        )
+    else:
+        require_capacity(path, roots.primary)
+
+
+def _execution_profile(request: dict[str, Any], prepared: dict[str, Any]) -> dict[str, Any]:
+    path = Path(request["profile_path"])
+    if request.get("publication_policy") == PUBLICATION_POLICY:
+        from research_core.pattern_scan_profile_observation_v3 import load_execution_profile
+
+        return load_execution_profile(
+            path,
+            source=request["source"],
+            input_id=prepared["input_id"],
+            calendar_n=prepared["calendar_n"],
+            ordinary_reference_n=prepared["ordinary_reference_n"],
+        )
+    profile = read_json(path)
+    validate_profile(profile, source=request["source"], input_id=prepared["input_id"])
+    return profile
 
 
 def _receipt(path: Path, **kwargs: Any) -> None:
@@ -92,6 +129,10 @@ def verify_completion(response: Path, request: dict[str, Any], roots: DataRoots)
         if result["phase"] == "complete_pattern_scan":
             for key in ("shared_event_outcomes", "shared_episodes", "shared_report_tables"):
                 verify_entry(result["analysis"][key], roots)
+    elif result["phase"] == "computed_pattern_scan_unpublished":
+        from research_core.pattern_scan_result_lifecycle_v3 import verify_computed_results
+
+        verify_computed_results(result["analysis"]["retained_result"])
     return _attach_memory(saved, response, request)
 
 
@@ -120,6 +161,18 @@ def launch(
     roots.validate_worktree(ROOT)
     run = _checked_path(roots.primary / ".tmp" / "pattern-scan-execution" / run_id)
     run.mkdir(parents=True, exist_ok=True)
+    if (run / "cleanup-receipt.json").exists():
+        from research_core.research_data_catalog import verify_entry
+
+        retired = read_scan_receipt(run / "cleanup-receipt.json")
+        if retired.get("schema") != "pattern-scan-cleanup.v3" or retired.get("complete") is not True or retired.get("run_root") != str(run):
+            raise ValueError("invalid retained-result cleanup receipt")
+        verify_entry(retired["entry"], roots)
+        return {
+            "complete": True,
+            "source_id": retired["entry"]["inputs"]["source_id"],
+            "result": {"phase": "retained_result_published", "entry": retired["entry"]},
+        }
     path, response = run / f"request-{mode}.json", run / f"response-{mode}.json"
     if path.exists():
         request = read_json(path)
@@ -150,6 +203,7 @@ def launch(
             "data": str(roots.data),
             "run_root": str(run),
             "source": git_source_identity(ROOT),
+            "publication_policy": PUBLICATION_POLICY,
             "memory_bytes": memory_bytes,
             "job_memory_bytes": job_memory_bytes,
             "timeout_seconds": timeout_seconds,
@@ -159,14 +213,17 @@ def launch(
             "capacity_path": None if capacity_path is None else str(capacity_path.resolve()),
         }
         _publish_json(path, request)
-    if mode in {"prepare", "stock", "all"}:
-        require_capacity(capacity_path, roots.primary)
+    _capacity(request, roots)
     available = host_resources()["physical_available_bytes"]
     if available is None or available - job_memory_bytes < 4 * 1024**3:
         raise ValueError("cannot establish coordinator cap and four GiB host reserve")
-    job = _MemoryBoundJob(job_memory_bytes)
+    active = run / ".scan-active.json"
+    token = {"request_id": object_digest(request), "owner": uuid.uuid4().hex}
+    _publish_json(active, token)
+    job = None
     started = time.monotonic()
     try:
+        job = _MemoryBoundJob(job_memory_bytes)
         process = job.start([sys.executable, "-c", GIT_BOOTSTRAP, str(ROOT), str(path)], ROOT)
         while process.poll() is None:
             if time.monotonic() - started > timeout_seconds:
@@ -188,8 +245,11 @@ def launch(
             )
         return verify_completion(response, request, roots)
     finally:
-        job.terminate_and_confirm()
-        job.close()
+        if job is not None:
+            job.terminate_and_confirm()
+            job.close()
+        if active.exists() and read_json(active) == token:
+            active.unlink()
 
 
 def _prepare(roots: DataRoots, request: dict[str, Any], run: Path) -> tuple[dict[str, Any], Path]:
@@ -228,7 +288,8 @@ def _prepare(roots: DataRoots, request: dict[str, Any], run: Path) -> tuple[dict
     if request["mode"] == "prepare":
         if request["profile_path"] is None:
             raise ValueError("full-market price preparation requires a measured same-input profile")
-        validate_profile(read_json(Path(request["profile_path"])), source=request["source"], input_id=snapshot.input_id)
+        _execution_profile(request, {"input_id": snapshot.input_id, "calendar_n": len(snapshot.calendar), "ordinary_reference_n": ordinary_n})
+        _capacity(request, roots, input_id=snapshot.input_id)
         codes = tuple(sorted(snapshot.inventory.loc[snapshot.inventory["included"], "code"].astype(str)))
     packets, measurement = prepare_requests(snapshot, codes, request["source"], run, calculation_authorized=True)
     benchmark = run / "prepared" / "benchmark.parquet"
@@ -303,8 +364,7 @@ def coordinator_main(request_path: Path) -> None:
     if run.parent != roots.primary / ".tmp" / "pattern-scan-execution" or request_path.parent != run:
         raise ValueError("coordinator outside primary task scratch")
     mode = request["mode"]
-    if mode in {"prepare", "stock", "all"}:
-        require_capacity(None if request["capacity_path"] is None else Path(request["capacity_path"]), roots.primary)
+    _capacity(request, roots)
     before = resource_sample()
     if mode in {"prepare", "profile"}:
         prepared, index = _prepare(roots, request, run)
@@ -377,8 +437,8 @@ def coordinator_main(request_path: Path) -> None:
     else:
         if request["profile_path"] is None:
             raise ValueError("formal computation requires a measured same-source/input profile")
-        profile = read_json(Path(request["profile_path"]))
-        validate_profile(profile, source=source, input_id=input_id)
+        profile = _execution_profile(request, prepared)
+        _capacity(request, roots, input_id=input_id)
         limits = profile["selected"]
         pool = run_requests(
             packets,
@@ -389,14 +449,44 @@ def coordinator_main(request_path: Path) -> None:
             timeout_seconds=limits["timeout_seconds"],
         )
         parts = verified_parts(pool["results"], source=source, input_id=input_id)
-        barrier = build_barrier(parts, benchmark, run / "global")
-        entries = publish_stock_versions(roots, parts, barrier, source=source, input_id=input_id)
-        result = {"phase": "full_stock_shared_versions", "pool": pool, "barrier": barrier, "shared_versions": entries}
+        deferred = request.get("publication_policy") == PUBLICATION_POLICY
+        bound_barrier: dict[str, Any] | None = None
+        bound_entries: dict[str, dict[str, Any]] | None = None
+        if deferred and mode == "stock":
+            result = {
+                "phase": "full_stock_checkpoints",
+                "pool": pool,
+                "global_analysis_admitted": False,
+                "resource_observation": profile.get("observation_provenance"),
+            }
+        else:
+            bound_barrier = build_barrier(parts, benchmark, run / "global")
+            bound_entries = (
+                {"labels": checkpoint_label_entry(parts, source=source, input_id=input_id)}
+                if deferred
+                else publish_stock_versions(roots, parts, bound_barrier, source=source, input_id=input_id)
+            )
+            result = {
+                "phase": "full_stock_checkpoints" if deferred else "full_stock_shared_versions",
+                "pool": pool,
+                "barrier": bound_barrier,
+                "shared_versions": bound_entries,
+            }
         if mode == "all":
             from research_core.pattern_scan_analysis_v1 import run_analysis
 
-            result["analysis"] = run_analysis(roots, parts, barrier, entries, run / "analysis", source=source, input_id=input_id)
-            result["phase"] = "complete_pattern_scan"
+            assert bound_barrier is not None and bound_entries is not None
+            result["analysis"] = run_analysis(
+                roots,
+                parts,
+                bound_barrier,
+                bound_entries,
+                run / "analysis",
+                source=source,
+                input_id=input_id,
+                **({"defer_publication": True} if deferred else {}),
+            )
+            result["phase"] = "computed_pattern_scan_unpublished" if deferred else "complete_pattern_scan"
     result_path = run / f"phase-{mode}-result.json"
     _retain_json(result_path, result)
     results["phase_result"] = result_path

@@ -78,7 +78,7 @@ def prepare_requests(
             staging.mkdir()
             prepared_file = staging / path.name
             with prepared_file.open("xb") as stream:
-                prices.to_parquet(stream, index=True)
+                prices.to_parquet(stream, index=True, compression="zstd")
             digest = file_digest(prepared_file)
             write_json(
                 staging / receipt_path.name,
@@ -86,6 +86,7 @@ def prepare_requests(
                     **provenance,
                     "identity": logical,
                     "sha256": digest,
+                    "bytes": prepared_file.stat().st_size,
                     "rows": len(prices),
                 },
             )

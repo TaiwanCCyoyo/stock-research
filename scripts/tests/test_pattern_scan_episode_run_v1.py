@@ -5,6 +5,7 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+import pyarrow.parquet as pq
 import pytest
 
 from research_core.artifact_store import canonical, describe_file, file_digest, read_json, write_json
@@ -103,6 +104,16 @@ def test_original_union_controls_quota_daily_and_zero_cells(tmp_path: Path, monk
     assert receipt["complete"] is True
     assert receipt["files"] == {record["path"]: str(output / record["path"]) for record in receipt["artifacts"]}
     assert all(Path(path).is_file() for path in receipt["files"].values())
+    for artifact in receipt["artifacts"]:
+        metadata = pq.read_metadata(output / artifact["path"])
+        codecs = {
+            metadata.row_group(row).column(column).compression
+            for row in range(metadata.num_row_groups)
+            for column in range(metadata.row_group(row).num_columns)
+        }
+        assert codecs <= {"ZSTD"}
+        if metadata.num_rows:
+            assert codecs == {"ZSTD"}
     observed = pd.read_parquet(output / "observations.parquet")
     assert observed.loc[observed.group_id.eq("B1:original"), "observed_coverage_status"].iloc[0] == "matched"
     assert observed.loc[observed.group_id.eq("B1:original:C-52w"), "observed_coverage_status"].iloc[0] == "matched"

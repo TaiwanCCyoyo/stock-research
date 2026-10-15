@@ -1,5 +1,9 @@
 # Pattern-scan v1 資料與存取契約
 
+新 PR17 執行的保留與發布規則以 owner 2026-10-16 核准的
+[execution / retention v3](execution-retention-v3.md) 為準：ZSTD、僅保留彙總與必要稽核、
+單份正式移交後立即清理；下列逐筆永久存取承諾保留為歷史契約，不適用新成果。
+
 新執行入口：[`pattern-scan live-input execution.v2`](execution-live-v2.md)。
 它沿用本頁全部研究欄位／分母，改以 live 唯讀來源、input fingerprint 及
 Git code identity 執行；舊 bundle／manifest reader、packets 與 source archives 保留。

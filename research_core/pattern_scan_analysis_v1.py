@@ -410,7 +410,14 @@ def _report_execution_files(output: Path, source: dict[str, Any], input_id: str)
             raise ValueError(f"required report execution metadata path missing: {field}")
         path, record = metadata_file(Path(value))
         if field == "profile_path":
-            if (
+            if record.get("schema") == "pattern-scan-profile-observation.v3":
+                from research_core.pattern_scan_profile_observation_v3 import load_execution_profile
+
+                load_execution_profile(
+                    path, source=source, input_id=input_id, calendar_n=prepared["calendar_n"], ordinary_reference_n=prepared["ordinary_reference_n"]
+                )
+                selected["execution/historical-resource-profile.json"] = Path(record["historical_profile"]["path"])
+            elif (
                 record.get("schema") != "pattern-scan-resource-profile.v1"
                 or record.get("source_id") != source["source_id"]
                 or record.get("input_id") != input_id
@@ -431,13 +438,14 @@ def run_analysis(
     *,
     source: dict[str, Any],
     input_id: str,
+    defer_publication: bool = False,
 ) -> dict[str, Any]:
-    """Publish uniquely pinned event projections then complete approved tables."""
+    """Compute approved tables; new runs defer publication of retained results."""
     verify_source(source)
     output = _checked_path(output)
     execution_files = _report_execution_files(output, source, input_id)
     output.mkdir(parents=True, exist_ok=True)
-    shared = load_shared(roots, entries, tuple(parts), source, input_id)
+    shared = None if defer_publication else load_shared(roots, entries, tuple(parts), source, input_id)
     event_parts = prepare_event_parts(parts, barrier, entries, output / "event-parts", source=source, input_id=input_id, shared=shared)
     selections = select_all(event_parts)
     selection_path = output / "selection.json"
@@ -459,11 +467,46 @@ def run_analysis(
     event_metadata["data_id"] = "pattern-scan-event-outcomes-full-2010-v1"
     event_metadata["inputs"]["base_label_version"] = entries["labels"]["version_id"]
     event_metadata["inputs"]["base_label_manifest_sha256"] = entries["labels"]["manifest"]["sha256"]
-    overlay = publish_file_bundle(DataCatalog(roots), event_metadata, event_files)
+    overlay = None if defer_publication else publish_file_bundle(DataCatalog(roots), event_metadata, event_files)
     from research_core.pattern_scan_completion_v1 import complete_followup
 
-    followup = complete_followup(parts, barrier, event_parts, selections, summaries, output / "followup", source=source, input_id=input_id, shared=shared)
+    followup = complete_followup(
+        parts,
+        barrier,
+        event_parts,
+        selections,
+        summaries,
+        output / "followup",
+        source=source,
+        input_id=input_id,
+        shared=shared,
+        **({"bounded_batches": True} if defer_publication else {}),
+    )
     verify_source(source)
+    if defer_publication:
+        from research_core.pattern_scan_result_lifecycle_v3 import record_computed_results
+        from research_core.pattern_scan_retained_v3 import collect_retained_files
+
+        retained = collect_retained_files(summaries, followup, audits, selection_path=selection_path, execution_files=execution_files)
+        inventory = record_computed_results(
+            output.parent,
+            retained,
+            source=source,
+            input_id=input_id,
+            provenance={"label_checkpoint": entries["labels"], "selection": selections},
+            transient_files=[path for path in output.parent.rglob("*") if path.is_file() and path.name not in {".scan-active.json", "computed-results.json"}],
+        )
+        return {
+            "status": "computed_unpublished",
+            "catalog_publication": False,
+            "retained_result": inventory,
+            "selection": selections,
+            "summary_receipt": summaries,
+            "followup": followup,
+            "audits": audits,
+            "independent_candidate_reconstruction": "pending",
+        }
+    assert shared is not None and overlay is not None
     episode_metadata = metadata("episodes", source, input_id, calendar)
     episode_metadata["data_id"] = "pattern-scan-episodes-full-2010-v1"
     episode_metadata["inputs"]["base_labels"] = {"version_id": entries["labels"]["version_id"], "manifest_sha256": entries["labels"]["manifest"]["sha256"]}
@@ -520,11 +563,16 @@ def _audits(
     *,
     source: dict[str, Any],
     input_id: str,
-    shared: SharedInputs,
+    shared: SharedInputs | None,
 ) -> dict[str, Any]:
     from research_core.pattern_scan_audit_v1 import build_audit, legacy_overlap_audit, read_legacy_h1
 
-    identity = {"source_id": source["source_id"], "input_id": input_id, "selections": object_digest(selections), "shared_pins": shared.pins}
+    identity = {
+        "source_id": source["source_id"],
+        "input_id": input_id,
+        "selections": object_digest(selections),
+        "shared_pins": {} if shared is None else shared.pins,
+    }
     if output.exists():
         receipt = read_json(output / "receipt.json")
         if receipt.get("identity") != identity or receipt.get("complete") is not True:
@@ -537,7 +585,7 @@ def _audits(
     legacy, descriptor = read_legacy_h1(roots, pins["shared_catalog"]["contents"]["snapshot"])
     rows = []
     for code in sorted(parts):
-        frame = shared.read_stock(code, "raw_events")
+        frame = read_frame(parts[code] / "raw_events.parquet") if shared is None else shared.read_stock(code, "raw_events")
         rows.append(frame.loc[frame.pattern_id.eq("H1"), ["security_id", "t0", "subtype_id", "pivot", "support", "lower"]])
     current = pd.concat(rows, ignore_index=True)
     overlap = legacy_overlap_audit(current, legacy)

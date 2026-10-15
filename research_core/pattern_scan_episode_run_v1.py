@@ -30,6 +30,7 @@ from research_core.pattern_scan_execution_v1 import verify_source
 from research_core.pattern_scan_parquet_v1 import read_frame
 from research_core.pattern_scan_receipt_io_v2 import publish_scan_receipt, read_scan_receipt
 from research_core.pattern_scan_reporting_v1 import ERAS, MARKETS, candidate_membership
+from research_core.pattern_scan_retained_v3 import select_q4_examples
 from research_core.pattern_scan_shared_v1 import SharedInputs
 
 LOGGER = logging.getLogger(__name__)
@@ -55,7 +56,7 @@ def _part(directory: Path, source_id: str, input_id: str, *, event: bool) -> dic
 def _write(directory: Path, name: str, frame: pd.DataFrame, artifacts: list[dict[str, Any]]) -> None:
     path = safe_path(directory / name)
     with path.open("xb") as stream:
-        frame.to_parquet(stream, index=False)
+        frame.to_parquet(stream, index=False, compression="zstd")
     artifacts.append(describe_file(directory, path))
 
 
@@ -259,6 +260,7 @@ def run_episodes(
             _write(staging, f"{stem}-{target}-quotas.parquet", pd.concat(quota_rows, ignore_index=True), artifacts)
         LOGGER.info("Completed Q4 stock=%s episodes=%d", code, len(episodes))
     all_rows = pd.concat(observations, ignore_index=True) if observations else pd.DataFrame(columns=pd.Index(OBSERVATION_COLUMNS))
+    _write(staging, "examples.parquet", select_q4_examples(all_rows), artifacts)
     _write(staging, "observations.parquet", all_rows, artifacts)
     coverage = [row for row in grouped_coverage(all_rows) if row["split"] != "all"]
     observed_groups = set(all_rows.group_id)
