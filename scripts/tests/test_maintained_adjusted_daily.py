@@ -136,12 +136,12 @@ def test_update_publishes_a_readable_generation_and_flips_current(environment: t
     assert frame["RawClose"].tolist() == [100.0, 100.0, 95.0, 96.0]
     raw, _ = maintained_adjusted_daily.read_adjusted_daily("raw", codes=["6488"])
     assert raw["Date"].min() == pd.Timestamp("2026-10-13"), "rows start at the symbol's first quote"
-    assert raw["Source"].tolist() == ["official", "official", "shioaji"]
+    assert raw["Date"].max() == pd.Timestamp("2026-10-14"), "the shioaji row is excluded before calculation"
     status = maintained_adjusted_daily.current_generation()
     assert status["actions"]["after_asof_excluded"] == 1
     assert status["input_fingerprint"]["inputs"]["price_daily"]["live_producer"] is True
     assert status["previous_generation"] is None
-    assert status["bases"]["raw"]["rows_by_source"] == {"official": 6, "shioaji": 1}
+    assert status["source_policy"] == {"kept": "official", "excluded_rows": 1, "excluded_codes": 1, "codes_without_official_rows": []}
 
 
 def test_failed_update_leaves_current_untouched_and_retention_keeps_two(environment: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:
@@ -165,7 +165,7 @@ def test_failed_update_leaves_current_untouched_and_retention_keeps_two(environm
     assert sorted(path.name for path in (family / "generations").iterdir()) == sorted(generations[1:])
     assert not (family / ".writer.lock").exists()
     frame, record = maintained_adjusted_daily.read_adjusted_daily("raw")
-    assert record["generation"] == generations[2] and len(frame) == 7
+    assert record["generation"] == generations[2] and len(frame) == 6
 
 
 def test_a_prune_failure_does_not_fail_a_published_update(environment: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:
@@ -207,7 +207,7 @@ def test_a_pinned_generation_survives_an_update_until_pruned(environment: tuple[
     maintained_adjusted_daily.update(producer_root=producer)
 
     frame, record = maintained_adjusted_daily.read_adjusted_daily("raw", generation=pinned["generation"])
-    assert record["generation"] == pinned["generation"] and record["sha256"] == pinned["sha256"] and len(frame) == 7
+    assert record["generation"] == pinned["generation"] and record["sha256"] == pinned["sha256"] and len(frame) == 6
 
     monkeypatch.setattr(maintained_adjusted_daily, "datetime", _Later(2))
     maintained_adjusted_daily.update(producer_root=producer)
@@ -215,6 +215,20 @@ def test_a_pinned_generation_survives_an_update_until_pruned(environment: tuple[
         maintained_adjusted_daily.read_adjusted_daily("raw", generation=pinned["generation"])
     with pytest.raises(FileNotFoundError):
         maintained_adjusted_daily.read_adjusted_daily("raw", generation="../escape")
+
+
+def test_a_shioaji_row_cannot_mark_neighbouring_official_rows(environment: tuple[Path, Path]) -> None:
+    producer, _ = environment
+    rows = [
+        {"Code": "2330", "Date": pd.Timestamp(day), "Open": close, "High": close, "Low": close, "Close": close, "Volume": 1.0, "Source": source}
+        for day, close, source in (("2026-10-12", 100.0, "official"), ("2026-10-13", 10.0, "shioaji"), ("2026-10-14", 101.0, "official"))
+    ]
+    pd.DataFrame(rows).to_parquet(producer / "price_daily.parquet", index=False)
+    maintained_adjusted_daily.update(producer_root=producer)
+
+    frame, _ = maintained_adjusted_daily.read_adjusted_daily("raw")
+    assert frame["Date"].dt.strftime("%Y-%m-%d").tolist() == ["2026-10-12", "2026-10-14"]
+    assert frame["Quality"].tolist() == [True, True]
 
 
 def test_concurrent_writer_is_refused(environment: tuple[Path, Path]) -> None:

@@ -29,10 +29,13 @@ def main() -> int:
         result = family.update(producer_root=producer_data_root())
     elif args.command == "status":
         status = family.current_generation()
-        result = {key: status[key] for key in ("generation", "asof", "codes", "calendar", "definition", "actions", "bases", "timings_seconds", "path")}
+        result = {
+            key: status[key]
+            for key in ("generation", "asof", "codes", "calendar", "definition", "source_policy", "actions", "bases", "timings_seconds", "path")
+        }
     else:
         started = time.monotonic()
-        bars, actions, _ = family._load_inputs(producer_data_root())
+        bars, actions, _, _ = family._load_inputs(producer_data_root())
         loaded = time.monotonic()
         everything = sorted(bars["Code"].unique())
         step = max(1, len(everything) // args.codes)

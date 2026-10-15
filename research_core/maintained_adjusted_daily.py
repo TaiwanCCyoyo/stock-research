@@ -44,7 +44,8 @@ LOGGER = logging.getLogger(__name__)
 SCHEMA = "maintained-adjusted-daily.v1"
 FAMILY = "adjusted-daily-v1"
 BASES: tuple[price_basis.PriceBasis, ...] = ("raw", "permanent_adjusted", "reference_factor_adjusted")
-CALENDAR_BASIS = "source-date-union: every Date present in the producer price_daily.parquet"
+CALENDAR_BASIS = "source-date-union: every Date of an official row in the producer price_daily.parquet"
+SOURCE_POLICY = "official"
 ROW_POLICY = "each symbol from its first to its last observed quote; missing sessions inside that span are kept as invalid rows"
 ARROW_SCHEMA = pa.schema([
     ("Code", pa.string()),
@@ -55,7 +56,6 @@ ARROW_SCHEMA = pa.schema([
     ("volume_status", pa.string()),
     ("corporate_action_types", pa.string()),
     ("restatement_factor", pa.float64()),
-    ("Source", pa.string()),
 ])
 
 
@@ -63,7 +63,7 @@ def family_dir(root: Path | None = None) -> Path:
     return (shared_data_root() if root is None else root) / "derived" / FAMILY
 
 
-def _load_inputs(producer_root: Path) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, Any]]:
+def _load_inputs(producer_root: Path) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, Any], dict[str, Any]]:
     """Fingerprint (which refuses a busy producer) and read the two live producer inputs."""
     prices_path, actions_path = producer_root / "price_daily.parquet", producer_root / "corporate_actions.sqlite"
     fingerprint = fingerprint_inputs([
@@ -77,11 +77,22 @@ def _load_inputs(producer_root: Path) -> tuple[pd.DataFrame, pd.DataFrame, dict[
         actions = pd.read_sql_query("SELECT code, ex_date, event_type, price_factor FROM corporate_actions", connection)
     finally:
         connection.close()
+    # Official quotes only, filtered before any calculation: shioaji minute-to-daily rows
+    # would otherwise shape neighbouring official rows' jump and quality checks.
+    official = bars["Source"].eq(SOURCE_POLICY)
+    excluded = bars.loc[~official]
+    source_policy = {
+        "kept": SOURCE_POLICY,
+        "excluded_rows": int(len(excluded)),
+        "excluded_codes": int(excluded["Code"].nunique()),
+        "codes_without_official_rows": sorted(set(excluded["Code"].astype(str)) - set(bars.loc[official, "Code"].astype(str))),
+    }
+    bars = bars.loc[official].drop(columns="Source").reset_index(drop=True)
     bars["Code"] = bars["Code"].astype(str)
     bars["Date"] = pd.to_datetime(bars["Date"]).dt.normalize()
     actions["code"] = actions["code"].astype(str)
     LOGGER.info("Loaded %d price rows over %d codes and %d corporate actions", len(bars), bars["Code"].nunique(), len(actions))
-    return bars, actions, fingerprint
+    return bars, actions, fingerprint, source_policy
 
 
 def _prepare_symbol(
@@ -92,9 +103,6 @@ def _prepare_symbol(
     prepared = prepared.loc[observed.min() : observed.max()]
     frame = prepared.rename_axis("Date").reset_index()
     frame.insert(0, "Code", code)
-    # The producer mixes official quotes with shioaji minute-to-daily rows; keep which one each row is.
-    sources = frame["Date"].map(raw.set_index("Date")["Source"])
-    frame["Source"] = sources.astype(object).where(sources.notna(), None)
     return frame
 
 
@@ -109,7 +117,7 @@ def compute(bars: pd.DataFrame, actions: pd.DataFrame, writers: dict[str, Any] |
     events_by_code: dict[str, pd.DataFrame] = {str(code): frame for code, frame in actions.groupby("code", sort=False)}
     empty_events = cast(pd.DataFrame, actions.iloc[0:0])
     selected = sorted(by_code) if codes is None else list(codes)
-    counts: dict[str, dict[str, Any]] = {basis: {"rows": 0, "valid_rows": 0, "rows_by_source": {}, "quality_reasons": {}} for basis in BASES}
+    counts: dict[str, dict[str, Any]] = {basis: {"rows": 0, "valid_rows": 0, "quality_reasons": {}} for basis in BASES}
     for position, code in enumerate(selected, 1):
         raw, events = by_code[code], events_by_code.get(code, empty_events)
         for basis in BASES:
@@ -117,8 +125,6 @@ def compute(bars: pd.DataFrame, actions: pd.DataFrame, writers: dict[str, Any] |
             tally = counts[basis]
             tally["rows"] += len(frame)
             tally["valid_rows"] += int(frame["Quality"].sum())
-            for source, count in frame["Source"].dropna().value_counts().items():
-                tally["rows_by_source"][str(source)] = tally["rows_by_source"].get(str(source), 0) + int(count)
             for reason, count in frame["quality_reason"].dropna().value_counts().items():
                 tally["quality_reasons"][str(reason)] = tally["quality_reasons"].get(str(reason), 0) + int(count)
             if writers is not None:
@@ -188,7 +194,7 @@ def update(*, producer_root: Path, root: Path | None = None) -> dict[str, Any]:
     staging: Path | None = None
     try:
         previous = read_json(family / "current.json")["generation"] if (family / "current.json").is_file() else None
-        bars, actions, fingerprint = _load_inputs(producer_root)
+        bars, actions, fingerprint, source_policy = _load_inputs(producer_root)
         loaded = time.monotonic()
         asof = cast(pd.Timestamp, bars["Date"].max()).date().isoformat()
         generation = f"{asof}-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
@@ -210,6 +216,7 @@ def update(*, producer_root: Path, root: Path | None = None) -> dict[str, Any]:
             "family": FAMILY,
             "generation": generation,
             "definition": {"prices": price_basis.DEFINITION_VERSION, "implementation": "research_core/price_basis.py::prepare_prices"},
+            "source_policy": source_policy,
             "row_policy": ROW_POLICY,
             **summary,
             "input_fingerprint": fingerprint,
