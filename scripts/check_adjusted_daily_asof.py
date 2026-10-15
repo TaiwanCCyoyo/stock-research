@@ -31,6 +31,7 @@ import pandas as pd
 from research_core import maintained_adjusted_daily as family
 from research_core import price_basis
 from research_core.producer_data import producer_data_root
+from research_core.run_receipt import assert_inputs_unchanged
 
 LOGGER = logging.getLogger(__name__)
 CHUNK = 200
@@ -149,6 +150,8 @@ def main() -> int:
         LOGGER.info("Built %s", family.update(producer_root=producer, root=args.root))
     status = family.current_generation(args.root)
     bars, actions, fingerprint, _ = family.load_inputs(producer)
+    # The fingerprint is taken before the reads; recheck so a writer that started in between fails the check.
+    assert_inputs_unchanged(fingerprint)
     if fingerprint["inputs"] != status["input_fingerprint"]["inputs"]:
         raise SystemExit("live producer inputs changed since the generation was built; rebuild with --build")
     sessions = family.session_calendar(bars)
@@ -169,6 +172,7 @@ def main() -> int:
         report["cutoffs"].append(entry)
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    assert_inputs_unchanged(fingerprint)
     equal = all(entry[basis]["equal"] for entry in report["cutoffs"] for basis in family.BASES)
     print(json.dumps({"equal": equal, "out": str(args.out)}))  # noqa: T201 - CLI result on stdout
     return 0 if equal else 1
