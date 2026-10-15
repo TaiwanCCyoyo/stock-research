@@ -18,6 +18,7 @@ import pandas as pd
 from research_core.artifact_store import file_digest, object_digest, publish_noreplace, read_json, write_json
 from research_core.pattern_scan_execution_v1 import run_requests, verify_source
 from research_core.pattern_scan_inputs_v1 import ScanSnapshot
+from research_core.pattern_scan_live_inputs_v2 import LiveScanInputs
 from research_core.research_data_paths import _checked_path
 from research_core.research_measurement_v1 import host_resources, phase_receipt, resource_sample
 
@@ -25,7 +26,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 def prepare_requests(
-    snapshot: ScanSnapshot, codes: tuple[str, ...], source: dict[str, Any], run_root: Path, *, calculation_authorized: bool = False
+    snapshot: ScanSnapshot | LiveScanInputs, codes: tuple[str, ...], source: dict[str, Any], run_root: Path, *, calculation_authorized: bool = False
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """Prepare only explicit fixed codes with hashes and exclusive resume files."""
     if calculation_authorized is not True:
@@ -44,6 +45,11 @@ def prepare_requests(
     directory = _checked_path(run_root / "prepared")
     directory.mkdir(exist_ok=True)
     requests: list[dict[str, Any]] = []
+    provenance = (
+        {"schema": "pattern-scan-prepared.v2", "input_fingerprint_id": snapshot.input_id}
+        if isinstance(snapshot, LiveScanInputs)
+        else {"schema": "pattern-scan-prepared.v1", "input_manifest_sha256": snapshot.manifest_sha256}
+    )
     before = resource_sample()
     for code in sorted(codes):
         logical = {
@@ -59,9 +65,8 @@ def prepare_requests(
         if destination.exists():
             receipt = read_json(receipt_path)
             if (
-                receipt.get("schema") != "pattern-scan-prepared.v1"
+                any(receipt.get(key) != value for key, value in provenance.items())
                 or receipt.get("identity") != logical
-                or receipt.get("input_manifest_sha256") != snapshot.manifest_sha256
                 or type(receipt.get("rows")) is not int
                 or receipt["rows"] != len(snapshot.calendar)
                 or file_digest(path) != receipt.get("sha256")
@@ -78,11 +83,10 @@ def prepare_requests(
             write_json(
                 staging / receipt_path.name,
                 {
-                    "schema": "pattern-scan-prepared.v1",
+                    **provenance,
                     "identity": logical,
                     "sha256": digest,
                     "rows": len(prices),
-                    "input_manifest_sha256": snapshot.manifest_sha256,
                 },
             )
             publish_noreplace(staging, destination)
@@ -105,7 +109,7 @@ def prepare_requests(
     return requests, measurement
 
 
-def representative_codes(snapshot: ScanSnapshot) -> tuple[tuple[str, ...], dict[str, str | None]]:
+def representative_codes(snapshot: ScanSnapshot | LiveScanInputs) -> tuple[tuple[str, ...], dict[str, str | None]]:
     """Deterministic metadata/coverage strata; no event/outcome-based sampling."""
     eligible = snapshot.inventory.loc[snapshot.inventory["included"], "code"].astype(str)
     allowed = tuple(eligible)

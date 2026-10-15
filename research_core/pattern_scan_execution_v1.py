@@ -55,6 +55,21 @@ sys.meta_path.insert(0,module._SourceFinder())
 from research_core.pattern_scan_execution_v1 import worker_main
 worker_main(Path(sys.argv[2]))
 """
+GIT_BOOTSTRAP = """
+import logging,os,sys
+from pathlib import Path
+sys.dont_write_bytecode=True
+for name in ('OPENBLAS_NUM_THREADS','OMP_NUM_THREADS','MKL_NUM_THREADS','BLIS_NUM_THREADS','NUMEXPR_NUM_THREADS'):
+    os.environ[name]='1'
+logging.basicConfig(level=logging.INFO,format='%(asctime)s %(levelname)s %(name)s %(message)s')
+root=Path(sys.argv[1]); sys.path.insert(0,str(root))
+from research_core.pattern_scan_execution_v1 import worker_main
+worker_main(Path(sys.argv[2]))
+"""
+
+
+def _git_source(identity: dict[str, Any]) -> bool:
+    return identity.get("schema") == "pattern-scan-source.git.v2"
 
 
 class _MemoryBoundJob(WindowsProcessJob):
@@ -141,6 +156,11 @@ def source_identity(entry_points: tuple[str, ...]) -> dict[str, Any]:
 
 
 def verify_source(identity: dict[str, Any]) -> None:
+    if _git_source(identity):
+        from research_core.pattern_scan_git_source_v2 import verify_git_source
+
+        verify_git_source(identity)
+        return
     body = {key: value for key, value in identity.items() if key != "source_id"}
     if identity.get("schema") != "pattern-scan-source.v1" or object_digest(body) != identity.get("source_id"):
         raise ValueError("invalid fixed source identity")
@@ -187,6 +207,9 @@ def _request(request: dict[str, Any], *, source_verified: bool = False) -> tuple
 
 
 def _verify_loaded(source: dict[str, Any]) -> None:
+    if _git_source(source):
+        verify_source(source)
+        return
     from research_core.cache_execution import _LOADED_SOURCES, require_loaded
 
     for path in _LOADED_SOURCES:
@@ -202,9 +225,10 @@ def _execute_stock_in_process(request: dict[str, Any]) -> dict[str, Any]:
     from research_core.pattern_scan_stock_v1 import StockPhase, stock_phase
 
     _, prepared, output = _request(request)
-    from research_core.cache_execution import require_loaded
+    if not _git_source(request["source"]):
+        from research_core.cache_execution import require_loaded
 
-    require_loaded({"execution": Path(__file__), "stock": ROOT / "research_core/pattern_scan_stock_v1.py"})
+        require_loaded({"execution": Path(__file__), "stock": ROOT / "research_core/pattern_scan_stock_v1.py"})
     if output.exists():
         receipt = read_json(output / "receipt.json")
         if receipt.get("request_id") != object_digest(request) or receipt.get("complete") is not True:
@@ -263,10 +287,13 @@ def _execute_stock_in_process(request: dict[str, Any]) -> dict[str, Any]:
 
 
 def worker_main(request_path: Path) -> None:
-    """Fixed protocol entry, called only through the raw-source bootstrap."""
-    from research_core.cache_execution import _LOADED_SOURCES
-
+    """Protocol entry for sealed v1 or normally imported Git v2 execution."""
     request = read_json(_checked_path(request_path))
+    if request.get("schema") == "pattern-scan-coordinator-request.v2":
+        from research_core.pattern_scan_run_v2 import coordinator_main
+
+        coordinator_main(request_path)
+        return
     if request.get("schema") == "pattern-scan-coordinator-request.v1":
         from research_core.pattern_scan_run_v1 import coordinator_main
 
@@ -277,6 +304,10 @@ def worker_main(request_path: Path) -> None:
         raise ValueError("exclusive worker response beside owned request required")
     source = request["source"]
     verify_source(source)
+    if _git_source(source):
+        from research_core.pattern_scan_git_source_v2 import assert_current_code
+
+        assert_current_code(source, ROOT)
     if any(os.environ.get(name) != value for name, value in NUMERICAL_THREADS.items()):
         raise ValueError("worker numerical thread environment differs from fixed identity")
     if not request["stocks"] or any(packet["source"] != source for packet in request["stocks"]):
@@ -288,6 +319,14 @@ def worker_main(request_path: Path) -> None:
     results = [_execute_stock_in_process(packet) for packet in request["stocks"]]
     verify_source(source)
     _verify_loaded(source)
+    if _git_source(source):
+        loaded_sources: dict[str, str] = {}
+        source_policy = {"source_verification_policy": "git-commit-and-dirty; normal-import; no-loaded-module-hashes"}
+    else:
+        from research_core.cache_execution import _LOADED_SOURCES
+
+        loaded_sources = {path.relative_to(ROOT).as_posix(): digest for path, digest in _LOADED_SOURCES.items()}
+        source_policy = {}
     write_json(
         output,
         {
@@ -295,7 +334,8 @@ def worker_main(request_path: Path) -> None:
             "complete": True,
             "results": results,
             "measurement": phase_receipt("worker_total", started, resource_sample()),
-            "loaded_project_sources": {path.relative_to(ROOT).as_posix(): digest for path, digest in _LOADED_SOURCES.items()},
+            "loaded_project_sources": loaded_sources,
+            **source_policy,
         },
     )
 
@@ -352,7 +392,8 @@ def run_requests(
                 path, response = packets[next_index]
                 job = _MemoryBoundJob(memory_bytes // workers)
                 try:
-                    process = job.start([sys.executable, "-c", BOOTSTRAP, str(ROOT), str(path)], ROOT)
+                    bootstrap = GIT_BOOTSTRAP if _git_source(source) else BOOTSTRAP
+                    process = job.start([sys.executable, "-c", bootstrap, str(ROOT), str(path)], ROOT)
                 except BaseException:
                     job.close()
                     raise

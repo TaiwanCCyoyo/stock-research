@@ -1,5 +1,9 @@
 # Pattern-scan v1 資料與存取契約
 
+新執行入口：[`pattern-scan live-input execution.v2`](execution-live-v2.md)。
+它沿用本頁全部研究欄位／分母，改以 live 唯讀來源、input fingerprint 及
+Git code identity 執行；舊 bundle／manifest reader、packets 與 source archives 保留。
+
 以下是保留的 preparation public APIs。完整 fixed-input runner 與讀取／封存／續跑規格
 已接線，見 [execution contract](execution-contract.md)；各彙總欄位與分母見
 [data dictionary](data-dictionary-v1.md)。目前正在代表樣本的資源預檢，尚無正式

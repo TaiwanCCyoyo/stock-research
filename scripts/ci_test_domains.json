@@ -107,7 +107,11 @@
                 "scripts/tests/test_file_hygiene.py"
             ]
         },
-        "web": { "paths": ["research_web/*"], "tests": [], "frontend": true },
+        "web": {
+            "paths": ["research_web/*"],
+            "tests": [],
+            "frontend": true
+        },
         "opportunity": {
             "paths": [
                 "research_api/history.py",
@@ -323,7 +327,13 @@
                 "research_core/pattern_scan*.py",
                 "research_core/patterns/*",
                 "scripts/pattern_scan.py",
-                "tasks/20261013-pattern-scan/*"
+                "tasks/20261013-pattern-scan/*",
+                "research_core/pattern_scan_capacity_v2.py",
+                "research_core/pattern_scan_git_source_v2.py",
+                "research_core/pattern_scan_live_inputs_v2.py",
+                "research_core/pattern_scan_run_v2.py",
+                "research_core/pattern_scan_storage_profile_v2.py",
+                "scripts/pattern_scan_live.py"
             ],
             "tests": ["scripts/tests/test_pattern_scan*.py"]
         }
@@ -461,10 +471,12 @@
         "scripts/tests/test_pattern_scan_flags_v1.py",
         "scripts/tests/test_pattern_scan_followup_summary_v1.py",
         "scripts/tests/test_pattern_scan_followup_v1.py",
+        "scripts/tests/test_pattern_scan_git_source_v2.py",
         "scripts/tests/test_pattern_scan_groups_v1.py",
         "scripts/tests/test_pattern_scan_holding_v1.py",
         "scripts/tests/test_pattern_scan_indicators_v1.py",
         "scripts/tests/test_pattern_scan_inputs_v1.py",
+        "scripts/tests/test_pattern_scan_live_inputs_v2.py",
         "scripts/tests/test_pattern_scan_membership_v1.py",
         "scripts/tests/test_pattern_scan_parquet_v1.py",
         "scripts/tests/test_pattern_scan_pipeline_v1.py",
@@ -476,11 +488,13 @@
         "scripts/tests/test_pattern_scan_reporting_v1.py",
         "scripts/tests/test_pattern_scan_reversals_v1.py",
         "scripts/tests/test_pattern_scan_run_v1.py",
+        "scripts/tests/test_pattern_scan_run_v2.py",
         "scripts/tests/test_pattern_scan_selection_v1.py",
         "scripts/tests/test_pattern_scan_shared_v1.py",
         "scripts/tests/test_pattern_scan_snapshot_dispatch_v1.py",
         "scripts/tests/test_pattern_scan_source_snapshot_v1.py",
         "scripts/tests/test_pattern_scan_stock_v1.py",
+        "scripts/tests/test_pattern_scan_storage_profile_v2.py",
         "scripts/tests/test_pattern_scan_summary_store_v1.py",
         "scripts/tests/test_pattern_scan_transport_v1.py",
         "scripts/tests/test_pattern_sources.py",

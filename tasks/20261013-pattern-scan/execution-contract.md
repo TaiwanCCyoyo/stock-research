@@ -1,5 +1,9 @@
 # Pattern-scan 執行與重現契約
 
+2026-10-15 接續：新執行依 [live-input v2 addendum](execution-live-v2.md)，
+使用外置唯讀來源、輸入指紋與分階段衍生 checkpoint。下列 v1–v3 probe、
+sealed inputs／source 與當時容量判斷保留為歷史證據，不作新執行的前提。
+
 Owner 已合併 [mission PR14](https://github.com/TaiwanCCyoyo/stock-research/pull/14)，
 merge commit `d2dea1e70b18b624ee2da0b69a63d5b2638f27f8`。
 本階段接續同一 author worktree，branch 為 `codex/pattern-scan-execution`。
