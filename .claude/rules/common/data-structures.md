@@ -6,8 +6,9 @@ _shape_ is frozen — and a shape that forces every research task to recompute t
 derived facts is a cost paid forever.
 
 Owner update 2026-10-08: source acquisition/normalization stay in the producer;
-research price policies, indicators, support/resistance, patterns and immutable
-derived caches now belong in stock-research. See [derived-data ownership](../../../docs/en/research-derived-data.md).
+research price policies, indicators, support/resistance, patterns and derived
+caches now belong in stock-research (maintained once on the shared root since
+2026-10-15, see its [decision record](../../../docs/en/decision-records/2026-10-15-maintained-shared-data.md)). See [derived-data ownership](../../../docs/en/research-derived-data.md).
 New reusable research derivatives are built in stock-research, not new producer columns.
 Producer SMA/EMA removal and technical_features migration follow a separate
 isolated producer PR after replacement availability and frozen legacy inputs;

@@ -2,15 +2,15 @@
 
 ## 責任邊界（擁有者 2026-10-08 決定）
 
-| 層                      | 正本與寫入責任                                                                                      | 消費方式                                                      |
-| ----------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| `stock-data-downloader` | 下載、永豐分 K 轉日 K、官方行情整合、正規化、公司事件原始事實、股票資料、日曆、法人、月營收及其備份 | stock-research 唯讀；live 檔案不是不可變快照                  |
-| stock-research          | 價格政策、均線／ATR／支撐壓力／型態、新衍生快取與研究資料備份                                       | [型態字典](pattern-definitions.md)與下列明確版本 API          |
-| worktree／網站          | 指定版本消費、任務特有證據；不另定義同名公式                                                        | 不可變快取用絕對路徑唯讀；不複製、不連結、不用 mutable latest |
+| 層                      | 正本與寫入責任                                                                                      | 消費方式                                                     |
+| ----------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `stock-data-downloader` | 下載、永豐分 K 轉日 K、官方行情整合、正規化、公司事件原始事實、股票資料、日曆、法人、月營收及其備份 | stock-research 唯讀；live 檔案不是不可變快照                 |
+| stock-research          | 價格政策、均線／ATR／支撐壓力／型態、新衍生快取與研究資料備份                                       | [型態字典](pattern-definitions.md)與下列明確版本 API         |
+| worktree／網站          | 消費共用資料、任務特有證據；不另定義同名公式                                                        | 經共用根目錄設定唯讀；不複製、不連結；receipt 記錄讀到的世代 |
 
 舊 producer SMA／EMA 欄位與 `technical_features` 暫時保存相容，新研究不得當作 stock-research 的新研究正本。終點是移入 stock-research；刪欄須待替代來源、舊消費者輸入凍結及全面消費者通知，再以隔離 producer PR 發布新版 parquet。不要原地刪旧資料。
 
-尚未遷移的 sample runtime／dashboard help 仍使用 `stock-data-downloader/data/adjusted_prices/daily`。新 worktree 明確保存其既有正式日價檔案為實體快照，連同來源時間與收據，不重算、不改 basis，也不冒充新的 stock-research 快取；其他 producer 衍生目錄及 `research_cache` 仍不複製。
+`stock-data-downloader/data/adjusted_prices/daily` 已不存在（2026-10-15 查證：repo 與 `D:/StockData/stock-data-downloader` 都沒有），舊 sample runtime／dashboard help 對它的引用已失效。全市場還原日價改由下方[維護中的共用衍生資料](#維護中的共用衍生資料)提供。
 
 ## 價格與計算正本
 
@@ -34,9 +34,34 @@
 
 `research_core.derived_features_selective_v1.compute_selected` 延用 `derived-features.v1` 的數值定義與缺價重新暖機，只計算要求欄位及必要依賴；不是原 HHHL v4 的 G／X4 替代品。`feature_identity_v1` 固定輸入、程式、日曆、股票、定義、政策與 runtime 的完整身分；`feature_block_store_v1` 驗證後重用，缺少或毀損只新增 generation，保存舊資料與失敗診斷，不用 mutable latest。
 
-預定正式根目錄為 primary `D:/Project/stock-research/research_cache/feature-blocks-v1/`；本次只用合成資料測試，沒有市場區塊。查詢入口 `uv run python -m scripts.feature_blocks plan/query`、取得與 manifest 外部 pin 規則見 [資料契約](../../tasks/20261012-research-feature-reuse/data-contract.md)。單股 scheduler 使用 `stock_feature_pool_v2`；全重用時不要求 worker admission。它用有限 Windows Job Objects，完整 barrier 後才讓上層做全域運算；橫斷面 rank 與選擇不可拆成單股工作。記憶體限制是 admission estimate 加事後程序峰值核對，不是 OS 記憶體沙箱；小工作可能以直接計算較快，見 [固定合成實測](../../tasks/20261012-research-feature-reuse/report.md)。
+尚未建立任何市場區塊（只用合成資料測試）。依 2026-10-15 決定，第一次建正式市場特徵時應放在共用根目錄的 `derived/` 下，並把 `research_core/research_data_builder.py` 目前寫入 primary `research_cache/feature-blocks-v1/` 的路徑一併改掉（後續工作）；不要再在 `research_cache/` 新增版本。查詢入口 `uv run python -m scripts.feature_blocks plan/query`、取得與 manifest 外部 pin 規則見 [資料契約](../../tasks/20261012-research-feature-reuse/data-contract.md)。單股 scheduler 使用 `stock_feature_pool_v2`；全重用時不要求 worker admission。它用有限 Windows Job Objects，完整 barrier 後才讓上層做全域運算；橫斷面 rank 與選擇不可拆成單股工作。記憶體限制是 admission estimate 加事後程序峰值核對，不是 OS 記憶體沙箱；小工作可能以直接計算較快，見 [固定合成實測](../../tasks/20261012-research-feature-reuse/report.md)。
 
-## 不可變快取 v1
+## 維護中的共用衍生資料
+
+擁有者 2026-10-15 決定（[決策紀錄](decision-records/2026-10-15-maintained-shared-data.md)）：可重用的衍生資料每個定義只維護**一份現行資料**，誰需要較新的資料就去更新；不再為每次輸入變動建立以雜湊命名的不可變版本。
+
+**位置。** 共用根目錄在所有 checkout 之外，由 `STOCK_RESEARCH_SHARED_ROOT` 設定（行程環境變數，否則讀 primary checkout 被忽略的 `.env.local`），解析邏輯在 `research_core/shared_data.py`，沒有 fallback；放在 checkout 或 worktree 裡會被拒絕。根目錄本身或其上層若是 symlink、junction 或 hardlink，或與任何已登記的 worktree 重疊，也會拒絕。選定位置：`D:/StockData/stock-research`。
+
+**`adjusted-daily-v1`：全市場還原日價。** 路徑 `<root>/derived/adjusted-daily-v1/`：
+
+| 檔案                                                                          | 內容                                                                                                                              |
+| ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `current.json`                                                                | 現行世代 id 與其 `status.json` 的 SHA-256                                                                                         |
+| `generations/<asof>-<UTC時間>/status.json`                                    | as-of 日、定義版本（`price-basis.v2`）、日曆、輸入指紋（`run_receipt`）、程式 commit、各 basis 列數／有效列數／品質原因統計、耗時 |
+| `generations/<id>/{raw,permanent_adjusted,reference_factor_adjusted}.parquet` | 依 `Code, Date` 排序，每檔股票一個 row group                                                                                      |
+
+- **欄位**：`Code, Date, Open, High, Low, Close`（研究價，無效為 NaN）、`RawOpen..RawClose`、`VolumeLots`、`Turnover`、`Quality`、`quality_reason`、`volume_status`、`corporate_action_types`、`restatement_factor`；語意同上方 `prepare_prices`。
+- **來源政策**：只用 `Source == "official"` 的報價，**在計算前**就篩掉 `shioaji`（永豐分 K 轉日 K）列；若先混合計算再篩，非官方列仍會影響相鄰官方列的跳幅與品質判斷。2026-10-15 時被排除 152,631 列、351 檔，其中 12 檔完全沒有官方報價，因此不在本家族。排除數量與這些代號記在 `status.json` 的 `source_policy`。日曆也只取官方列的日期。
+- **輸入**：live producer 的 `price_daily.parquet`（只取 OHLCV，忽略舊 SMA／EMA）與 `corporate_actions.sqlite`（唯讀）。as-of 是價格最大日期；之後的除權息事件不納入，數量記在 `actions.after_asof_excluded`。
+- **日曆與列範圍**：日曆是 `price_daily.parquet` 所有日期的聯集，不是交易所公告日曆；每檔從第一筆到最後一筆報價，中間缺的交易日保留為無效列。
+- **更新**：`uv run python -m scripts.maintain_adjusted_daily update`。避開平日 18:00–18:45，producer 有工作在跑時會拒絕。每次建完整新世代：新的除權息會改寫該股整段較早歷史，所以只附加新一天並不正確。建完先核對輸入沒變，再以 `os.replace` 原子切換 `current.json`；保留前一世代以便回退、也讓正在讀的人讀完，更舊的由 updater 刪除。失敗不動 `current.json`，未完成的 staging 會刪除。同時只允許一個 writer（`.writer.lock`）。
+- **實測（2026-10-15，真實資料完整建置一次）**：2,077 檔、4,113 個交易日，每個 basis 6,764,521 列。讀輸入 6.5 秒，計算加寫入 556.6 秒，總共約 9.4 分鐘（單程序）。一個世代 768 MB（raw 223 MB、permanent 250 MB、reference 293 MB）；更新期間新舊兩世代並存，峰值約 1.5 GB。讀一檔 0.12 秒，整個 basis 讀三個欄位 0.31 秒。permanent 與 reference 各有 22,590 列標為 `ambiguous_or_missing_action_factor`：依上方價格政策，事件因子缺漏或不一致時，該事件日以前的還原歷史標為不明，而不是猜一個因子。這些列的來源分布尚未逐一核對。要不寫入就重測，用 `measure --codes N`。這個耗時目前不需要平行化；若之後成為瓶頸，再依 AGENTS.md 先量測有界的單股平行。
+- **讀取**：`frame, record = read_adjusted_daily("reference_factor_adjusted", codes=["2330"])`（`research_core.maintained_adjusted_daily`）。`record` 有 family、generation、asof、檔案路徑與 SHA-256，請放進研究的 receipt。同一研究的後續讀取請傳入第一次拿到的 `generation=`，整個研究就會固定在同一版；那一版被刪除後會直接報錯，不會悄悄改讀新版。擁有者 2026-10-15 決定：舊版可以直接刪除，不做租約或保護標記；長跑研究遇到自己那一版被刪，就用目前的版本重跑。讀取前會把 parquet 的大小與 SHA-256 跟 `status.json` 核對（每個行程、每個檔案只核對一次），檔案被換掉或損毀時直接拒絕，不會交出未驗證的資料。`uv run python -m scripts.maintain_adjusted_daily status` 可看現行世代。
+- **定義變更**：開新家族 `adjusted-daily-v2`，不在原家族裡改寫。
+
+## 舊的不可變快取 v1（legacy）
+
+以下是 2026-10-15 之前的設計，只保留給既有版本讀取；新的共用衍生資料請用上一節。擁有者已同意刪除現有的 `research_cache` 雜湊版本（見決策紀錄）。
 
 2026-10-12：正式共用研究版本由 primary `research_data/` catalog 定位，
 `research_cache/` 保留底層區塊。設定、固定版本讀取、原位 legacy 登記與備份範圍見
