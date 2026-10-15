@@ -36,7 +36,7 @@ import pyarrow.parquet as pq
 
 from research_core import price_basis
 from research_core.artifact_store import file_digest, publish_noreplace, read_json, write_json
-from research_core.live_producer import read_stable, readonly_sqlite
+from research_core.live_producer import read_stable, readonly_sqlite, stat_identity
 from research_core.run_receipt import InputSpec, assert_inputs_unchanged, code_identity, fingerprint_inputs
 from research_core.shared_data import shared_data_root
 
@@ -254,6 +254,20 @@ def current_generation(root: Path | None = None) -> dict[str, Any]:
     return {**read_json(directory / "status.json"), "path": str(directory), "status_sha256": pointer["status_sha256"]}
 
 
+_VERIFIED: dict[Path, tuple[int, int]] = {}
+
+
+def _verify_once(path: Path, expected: dict[str, Any]) -> None:
+    """Hash a generation file against status.json once per process and (size, mtime)."""
+    identity = stat_identity(path)
+    if _VERIFIED.get(path) == identity:
+        return
+    if identity[0] != expected["bytes"] or file_digest(path) != expected["sha256"]:
+        raise ValueError(f"{path} does not match the bytes/SHA-256 recorded in status.json; rebuild with scripts.maintain_adjusted_daily update")
+    _VERIFIED[path] = identity
+    LOGGER.debug("Verified %s sha256=%s", path, expected["sha256"])
+
+
 def read_adjusted_daily(
     basis: str,
     *,
@@ -269,8 +283,13 @@ def read_adjusted_daily(
         raise ValueError(f"unknown basis {basis!r}; choose one of {BASES}")
     status = current_generation(root)
     path = Path(status["path"]) / f"{basis}.parquet"
+    _verify_once(path, status["bases"][basis])
     filters = None if codes is None else [("Code", "in", [str(code) for code in codes])]
-    frame = cast(pd.DataFrame, pq.read_table(path, columns=None if columns is None else list(columns), filters=filters).to_pandas())
+    selected = None if columns is None else list(columns)
+    table = read_stable(path, lambda source: pq.read_table(source, columns=selected, filters=filters))
+    if stat_identity(path) != _VERIFIED.get(path):
+        raise ValueError(f"{path} changed after its SHA-256 was verified")
+    frame = cast(pd.DataFrame, table.to_pandas())
     record = {
         "family": FAMILY,
         "generation": status["generation"],

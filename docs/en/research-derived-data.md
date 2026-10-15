@@ -40,7 +40,7 @@
 
 擁有者 2026-10-15 決定（[決策紀錄](decision-records/2026-10-15-maintained-shared-data.md)）：可重用的衍生資料每個定義只維護**一份現行資料**，誰需要較新的資料就去更新；不再為每次輸入變動建立以雜湊命名的不可變版本。
 
-**位置。** 共用根目錄在所有 checkout 之外，由 `STOCK_RESEARCH_SHARED_ROOT` 設定（行程環境變數，否則讀 primary checkout 被忽略的 `.env.local`），解析邏輯在 `research_core/shared_data.py`，沒有 fallback；放在 checkout 或 worktree 裡會被拒絕。選定位置：`D:/StockData/stock-research`。
+**位置。** 共用根目錄在所有 checkout 之外，由 `STOCK_RESEARCH_SHARED_ROOT` 設定（行程環境變數，否則讀 primary checkout 被忽略的 `.env.local`），解析邏輯在 `research_core/shared_data.py`，沒有 fallback；放在 checkout 或 worktree 裡會被拒絕。根目錄本身或其上層若是 symlink、junction 或 hardlink，或與任何已登記的 worktree 重疊，也會拒絕。選定位置：`D:/StockData/stock-research`。
 
 **`adjusted-daily-v1`：全市場還原日價。** 路徑 `<root>/derived/adjusted-daily-v1/`：
 
@@ -55,7 +55,7 @@
 - **日曆與列範圍**：日曆是 `price_daily.parquet` 所有日期的聯集，不是交易所公告日曆；每檔從第一筆到最後一筆報價，中間缺的交易日保留為無效列。
 - **更新**：`uv run python -m scripts.maintain_adjusted_daily update`。避開平日 18:00–18:45，producer 有工作在跑時會拒絕。每次建完整新世代：新的除權息會改寫該股整段較早歷史，所以只附加新一天並不正確。建完先核對輸入沒變，再以 `os.replace` 原子切換 `current.json`；保留前一世代以便回退、也讓正在讀的人讀完，更舊的由 updater 刪除。失敗不動 `current.json`，未完成的 staging 會刪除。同時只允許一個 writer（`.writer.lock`）。
 - **實測（2026-10-15，真實資料完整建置一次）**：2,077 檔、4,113 個交易日，每個 basis 6,764,521 列。讀輸入 6.5 秒，計算加寫入 556.6 秒，總共約 9.4 分鐘（單程序）。一個世代 768 MB（raw 223 MB、permanent 250 MB、reference 293 MB）；更新期間新舊兩世代並存，峰值約 1.5 GB。讀一檔 0.12 秒，整個 basis 讀三個欄位 0.31 秒。permanent 與 reference 各有 22,590 列標為 `ambiguous_or_missing_action_factor`：依上方價格政策，事件因子缺漏或不一致時，該事件日以前的還原歷史標為不明，而不是猜一個因子。這些列的來源分布尚未逐一核對。要不寫入就重測，用 `measure --codes N`。這個耗時目前不需要平行化；若之後成為瓶頸，再依 AGENTS.md 先量測有界的單股平行。
-- **讀取**：`frame, record = read_adjusted_daily("reference_factor_adjusted", codes=["2330"])`（`research_core.maintained_adjusted_daily`）。`record` 有 family、generation、asof、檔案路徑與 SHA-256，請放進研究的 receipt。`uv run python -m scripts.maintain_adjusted_daily status` 可看現行世代。
+- **讀取**：`frame, record = read_adjusted_daily("reference_factor_adjusted", codes=["2330"])`（`research_core.maintained_adjusted_daily`）。`record` 有 family、generation、asof、檔案路徑與 SHA-256，請放進研究的 receipt。讀取前會把 parquet 的大小與 SHA-256 跟 `status.json` 核對（每個行程、每個檔案只核對一次），檔案被換掉或損毀時直接拒絕，不會交出未驗證的資料。`uv run python -m scripts.maintain_adjusted_daily status` 可看現行世代。
 - **定義變更**：開新家族 `adjusted-daily-v2`，不在原家族裡改寫。
 
 ## 舊的不可變快取 v1（legacy）

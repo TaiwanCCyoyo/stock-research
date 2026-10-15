@@ -50,8 +50,34 @@ def test_shared_root_inside_the_checkout_or_a_worktree_is_refused(checkouts: tup
     candidate = primary / inside
     candidate.mkdir(parents=True, exist_ok=True)
 
-    with pytest.raises(SharedRootError, match="outside the checkout"):
+    with pytest.raises(SharedRootError, match="outside every checkout and worktree"):
         shared_data_root(environ={ENV_KEY: str(candidate)}, repo_root=worktree)
+
+
+def test_shared_root_inside_a_sibling_worktree_is_refused(checkouts: tuple[Path, Path], tmp_path: Path) -> None:
+    primary, worktree = checkouts
+    sibling = tmp_path / "sibling worktree"
+    _git("worktree", "add", "-q", "-b", "sibling", str(sibling), cwd=primary)
+    candidate = sibling / "shared"
+    candidate.mkdir()
+
+    with pytest.raises(SharedRootError, match="outside every checkout and worktree"):
+        shared_data_root(environ={ENV_KEY: str(candidate)}, repo_root=worktree)
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows junction")
+def test_shared_root_through_a_junction_is_refused(checkouts: tuple[Path, Path], tmp_path: Path) -> None:
+    primary, worktree = checkouts
+    outside = tmp_path / "real outside"
+    outside.mkdir()
+    junction = primary / "linked shared"
+    subprocess.run(["cmd", "/c", "mklink", "/J", str(junction), str(outside)], check=True, capture_output=True)
+    try:
+        with pytest.raises(SharedRootError, match="link, junction or hardlink"):
+            shared_data_root(environ={ENV_KEY: str(junction)}, repo_root=worktree)
+    finally:
+        os.rmdir(junction)
+    assert outside.is_dir()
 
 
 def test_shared_root_has_no_fallback(checkouts: tuple[Path, Path], tmp_path: Path) -> None:
@@ -155,6 +181,19 @@ def test_a_prune_failure_does_not_fail_a_published_update(environment: tuple[Pat
     family = shared / "derived" / maintained_adjusted_daily.FAMILY
     assert third["pruned"] == [] and read_json(family / "current.json")["generation"] == third["generation"]
     assert {first, second} <= {path.name for path in (family / "generations").iterdir()}
+
+
+def test_a_replaced_parquet_is_refused_before_it_is_read(environment: tuple[Path, Path]) -> None:
+    producer, _ = environment
+    maintained_adjusted_daily.update(producer_root=producer)
+    status = maintained_adjusted_daily.current_generation()
+    raw_path = Path(status["path"]) / "raw.parquet"
+    adjusted_path = Path(status["path"]) / "reference_factor_adjusted.parquet"
+    raw_path.write_bytes(adjusted_path.read_bytes())
+    maintained_adjusted_daily._VERIFIED.clear()
+
+    with pytest.raises(ValueError, match="does not match the bytes/SHA-256"):
+        maintained_adjusted_daily.read_adjusted_daily("raw")
 
 
 def test_concurrent_writer_is_refused(environment: tuple[Path, Path]) -> None:
