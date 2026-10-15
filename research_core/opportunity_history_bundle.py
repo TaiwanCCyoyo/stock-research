@@ -196,6 +196,36 @@ def _copy_member(source: Path, destination: Path, expected: dict[str, Any]) -> N
         raise ValueError(f"source changed during copy: {expected['path']}")
 
 
+def _require_separate(source: Path, data_root: Path) -> None:
+    """Refuse a source that contains, equals or sits inside the shared root, by physical identity."""
+    source, data_root = source.resolve(), data_root.resolve()
+    if source == data_root or source.is_relative_to(data_root) or data_root.is_relative_to(source):
+        raise ValueError("source and the shared research_data root must be separate directories; nothing was written")
+    for ancestor in (source, *source.parents):
+        if data_root.exists() and ancestor.exists() and ancestor.samefile(data_root):
+            raise ValueError("source and the shared research_data root must be separate directories; nothing was written")
+    for ancestor in (data_root, *data_root.parents):
+        if ancestor.exists() and source.exists() and ancestor.samefile(source):
+            raise ValueError("source and the shared research_data root must be separate directories; nothing was written")
+
+
+def _resume_registration(
+    destination: Path, files: list[dict[str, Any]], entry: dict[str, Any], roots: DataRoots, report: Callable[[str], None]
+) -> dict[str, Any]:
+    """A previous run published the directory but did not register it: verify, then register only."""
+    expected = {item["path"]: item for item in files}
+    present = {path.relative_to(destination).as_posix(): path for path in destination.rglob("*") if path.is_file()}
+    if set(present) - {RECEIPT} != set(expected):
+        raise FileExistsError(f"bundle already present with different contents, existing data is not overwritten: {destination}")
+    for name, item in expected.items():
+        with present[name].open("rb") as stream:
+            if hashlib.file_digest(stream, "sha256").hexdigest() != item["sha256"]:
+                raise FileExistsError(f"bundle already present with different contents, existing data is not overwritten: {destination}")
+    DataCatalog(roots).register([entry])
+    report(f"existing verified bundle registered: {DATA_ID}/{entry['version_id']}")
+    return {"destination": str(destination), "files": len(files), "bytes": sum(item["bytes"] for item in files), "resumed": True}
+
+
 def restore_bundle(
     source: Path,
     roots: DataRoots,
@@ -206,12 +236,15 @@ def restore_bundle(
 ) -> dict[str, Any]:
     """Copy a producer bundle into the shared root, verify it, publish it, register it.
 
-    Nothing is overwritten. Any failure leaves the sibling `.staging-*` directory in
-    place for inspection and the final directory absent.
+    Nothing is overwritten. Any failure before publication leaves the sibling `.staging-*`
+    directory in place for inspection and the final directory absent. If publication succeeded
+    but catalog registration failed, a rerun finds the final directory, verifies it byte for
+    byte against the source and only registers it.
     """
     report = progress or (lambda message: LOGGER.info("%s", message))
     started = time.monotonic()
     source = safe_path(Path(source))
+    _require_separate(source, roots.data)
     files = _inventory(source, report)
     by_path = {item["path"]: item for item in files}
     manifest_item = by_path.get(MANIFEST)
@@ -221,7 +254,7 @@ def restore_bundle(
     entry = catalog_entry(manifest, expected_manifest_sha256)
     destination = roots.artifact_path("data", f"{KIND}/{DATA_ID}/{expected_manifest_sha256}")
     if destination.exists():
-        raise FileExistsError(f"bundle already present, existing data is not overwritten: {destination}")
+        return _resume_registration(destination, files, entry, roots, report)
     staging = roots.artifact_path("data", f"{KIND}/{DATA_ID}/.staging-{expected_manifest_sha256[:12]}-{uuid.uuid4().hex}")
     staging.parent.mkdir(parents=True, exist_ok=True)
     staging.mkdir()

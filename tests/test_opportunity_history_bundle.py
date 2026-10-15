@@ -121,6 +121,37 @@ def test_restore_never_overwrites_an_existing_destination(tmp_path: Path, roots:
     assert tree(destination) == {"keep.json": hashlib.sha256(b"existing evidence").hexdigest()}
 
 
+def test_failed_registration_can_be_resumed_without_rewriting_the_bundle(tmp_path: Path, roots: DataRoots, monkeypatch: pytest.MonkeyPatch) -> None:
+    source, pin = make_source(tmp_path)
+    real = DataCatalog.register
+
+    def refuse(self: DataCatalog, entries: list[dict[str, Any]]) -> dict[str, Any]:
+        raise OSError("catalog writer busy")
+
+    monkeypatch.setattr(DataCatalog, "register", refuse)
+    with pytest.raises(OSError, match="busy"):
+        restore(source, roots, pin)
+    destination = roots.data / "patterns/opportunity-history-web" / pin
+    before = tree(destination)
+    monkeypatch.setattr(DataCatalog, "register", real)
+    assert restore(source, roots, pin)["resumed"] is True
+    assert tree(destination) == before
+    assert bundle.resolve_history_bundle(roots, version_id=pin, manifest_sha256=pin).path == destination
+
+
+@pytest.mark.parametrize("where", ["ancestor", "inside"])
+def test_source_overlapping_the_shared_root_is_rejected_before_any_write(tmp_path: Path, roots: DataRoots, where: str) -> None:
+    if where == "ancestor":
+        source = roots.data.parent
+        roots.data.mkdir()
+    else:
+        source = roots.data / "producer"
+        source.mkdir(parents=True)
+    with pytest.raises(ValueError, match="separate directories"):
+        restore(source, roots, "0" * 64)
+    assert not (roots.data / "patterns").exists()
+
+
 def test_failed_gate_leaves_staging_for_inspection_and_no_final_directory(tmp_path: Path, roots: DataRoots) -> None:
     source, pin = make_source(tmp_path)
 
