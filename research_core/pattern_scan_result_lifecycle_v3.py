@@ -188,6 +188,8 @@ def handoff_results(
             raise ValueError("handoff retry parameters differ")
     else:
         body = verify_computed_results(descriptor)
+        if metadata.get("inputs", {}).get("source_id") != body["source"]["source_id"] or metadata.get("inputs", {}).get("input_id") != body["input_id"]:
+            raise ValueError("publication metadata source/input differs from computed results")
         packet = read_scan_receipt(_checked_path(verification))
         if (
             packet.get("schema") != "pattern-scan-delivery-verification.v3"
@@ -206,6 +208,8 @@ def handoff_results(
         records = [*body["artifacts"], *(_descriptor(name, path, run) for name, path in sorted(extra.items()))]
         if len({row["path"].casefold() for row in records}) != len(records):
             raise ValueError("handoff name collision")
+        if len({row["source_path"].casefold() for row in records}) != len(records):
+            raise ValueError("handoff physical source collision")
         # Only named coordinator envelopes can appear after computed capture.
         # Additional reports/audits are explicit arguments, never whole folders.
         envelopes = [
@@ -303,7 +307,30 @@ def cleanup_run(run: Path, catalog: DataCatalog) -> dict[str, Any]:
         or proof.get("retention_policy") != POLICY
     ):
         raise ValueError("verified formal publication and reference handoff required before cleanup")
-    verify_entry(proof["entry"], catalog.roots)
+    manifest = verify_entry(proof["entry"], catalog.roots)
+    if (run / "prepared").exists():
+        name = "audits/price-reader-equivalence.json"
+        if name not in {row["path"] for row in manifest["artifacts"]}:
+            raise ValueError("prepared prices require retained shared-reader equivalence before retirement")
+        pin = proof["entry"]["manifest"]
+        final = catalog.roots.artifact_path(pin["scope"], pin["path"]).parent
+        equality = read_scan_receipt(final / name)
+        if (
+            equality.get("schema") != "pattern-scan-price-reader-equivalence.v3"
+            or equality.get("complete") is not True
+            or equality.get("reference_source_id") != proof["entry"]["inputs"]["source_id"]
+            or equality.get("reference_input_id") != proof["entry"]["inputs"]["input_id"]
+            or equality.get("calendar_n") != 4110
+            or equality.get("security_n") != 1943
+            or equality.get("cutoff") != "2026-10-12"
+            or equality.get("all_columns_equal") is not True
+            or equality.get("calendar_equal") is not True
+            or equality.get("quality_equal") is not True
+            or equality.get("mismatch_n") != 0
+            or not isinstance(equality.get("generation"), str)
+            or not equality["generation"].strip()
+        ):
+            raise ValueError("shared-reader equivalence does not authorize prepared-price retirement")
     _check_tree(run)
     retained = {proof_path, cleanup_path}
     files = [path for path in run.rglob("*") if path.is_file() and path not in retained]

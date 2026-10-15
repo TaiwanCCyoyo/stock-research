@@ -86,6 +86,13 @@ fallback. The destination therefore needs to share the payload's volume.
 ## Immediate retirement, with completion gates
 
 No cleanup occurs while paused, running, incomplete, unverified or unpublished.
+PR17's prepared prices also require the separately completed shared-reader
+transition: retain `audits/price-reader-equivalence.json` with matching reference
+source/input, all 1,943 securities including 0050, 4,110 sessions, fixed cutoff,
+all-column/calendar/quality equality and the generation tested. Without this
+evidence the retirement gate refuses to delete any run files. This enforces the
+owner's explicit instruction to keep PR17's price copy until that transition;
+the current change performs no transition or real cleanup.
 Cleanup requires the verified final bundle and completed reference handoff, plus
 the report and exact ten-event/five-candidate audit packet (54,720 comparison
 rows, zero mismatches). Merely computing summary tables does not satisfy this.

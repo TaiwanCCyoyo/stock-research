@@ -78,6 +78,24 @@ def case(tmp_path: Path, synthetic_source: dict[str, Any]) -> dict[str, Any]:
         },
     )
     transient = run / "prepared/prices.parquet"
+    equivalence = run / "audits/price-reader-equivalence.json"
+    write_json(
+        equivalence,
+        {
+            "schema": "pattern-scan-price-reader-equivalence.v3",
+            "complete": True,
+            "reference_source_id": synthetic_source["source_id"],
+            "reference_input_id": "synthetic-input",
+            "calendar_n": 4110,
+            "security_n": 1943,
+            "cutoff": "2026-10-12",
+            "all_columns_equal": True,
+            "calendar_equal": True,
+            "quality_equal": True,
+            "mismatch_n": 0,
+            "generation": "synthetic-shared-generation",
+        },
+    )
     pq.write_table(pa.table({"close": [1.0, 2.0]}), transient)
     (run / "parts/stock/events.bin").write_bytes(b"owned expanded event details")
     write_json(run / "global/receipt.json", {"consumed": True})
@@ -108,13 +126,14 @@ def case(tmp_path: Path, synthetic_source: dict[str, Any]) -> dict[str, Any]:
         "descriptor": descriptor,
         "metadata": _metadata(synthetic_source),
         "report": report,
+        "equivalence": equivalence,
         "verification": verification,
         "transient": transient,
         "older": older,
     }
 
 
-def _handoff(case: dict[str, Any]) -> dict[str, Any]:
+def _handoff(case: dict[str, Any], *, retain_equivalence: bool = True) -> dict[str, Any]:
     return lifecycle.handoff_results(
         case["descriptor"],
         case["catalog"],
@@ -122,6 +141,7 @@ def _handoff(case: dict[str, Any]) -> dict[str, Any]:
         managed_parent=MANAGED_PARENT,
         verification=case["verification"],
         report=case["report"],
+        audit_files={"audits/price-reader-equivalence.json": case["equivalence"]} if retain_equivalence else None,
     )
 
 
@@ -132,6 +152,37 @@ def _final(case: dict[str, Any], proof: dict[str, Any]) -> Path:
 
 def _hashes(directory: Path) -> dict[str, str]:
     return {path.relative_to(directory).as_posix(): file_digest(path) for path in directory.rglob("*") if path.is_file()}
+
+
+@pytest.mark.parametrize("identity", ("source_id", "input_id"))
+def test_publication_metadata_cannot_relabel_computed_results(case: dict[str, Any], identity: str) -> None:
+    case["metadata"]["inputs"][identity] = "different"
+    before = _hashes(case["run"])
+    with pytest.raises(ValueError, match="metadata source/input"):
+        _handoff(case)
+    assert _hashes(case["run"]) == before
+
+
+@pytest.mark.parametrize("issue", ("missing", "wrong_input", "latest_only", "different_column", "no_generation"))
+def test_prepared_prices_wait_for_verified_shared_reader_transition(case: dict[str, Any], issue: str) -> None:
+    packet = read_json(case["equivalence"])
+    if issue == "wrong_input":
+        packet["reference_input_id"] = "different-input"
+    elif issue == "latest_only":
+        packet["cutoff"] = "2026-10-15"
+    elif issue == "different_column":
+        packet["all_columns_equal"] = False
+    elif issue == "no_generation":
+        packet["generation"] = ""
+    if issue != "missing":
+        case["equivalence"].unlink()
+        write_json(case["equivalence"], packet)
+    _handoff(case, retain_equivalence=issue != "missing")
+    before = _hashes(case["run"])
+    with pytest.raises(ValueError, match="equivalence"):
+        lifecycle.cleanup_run(case["run"], case["catalog"])
+    assert _hashes(case["run"]) == before
+    assert case["transient"].exists()
 
 
 def test_computed_inventory_records_bytes_footer_and_unpublished_state(case: dict[str, Any]) -> None:
@@ -212,7 +263,7 @@ def test_single_copy_handoff_and_immediate_physical_cleanup(case: dict[str, Any]
     final = _final(case, proof)
     body = verify_entry(proof["entry"], case["roots"])
     names = {row["path"] for row in body["artifacts"]}
-    assert names == {*case["files"], "report.md", "audits/delivery-verification.json", "run-receipt.json"}
+    assert names == {*case["files"], "report.md", "audits/delivery-verification.json", "audits/price-reader-equivalence.json", "run-receipt.json"}
     for name, before in owned.items():
         after = (final / name).stat()
         assert (before.st_dev, before.st_ino) == (after.st_dev, after.st_ino)
