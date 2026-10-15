@@ -116,16 +116,28 @@ report publishes Git/request, producer-read receipt and preparation/profile/
 capacity metadata, with no source ZIP. Legacy report inputs remain unchanged.
 
 The `profile-2010-20261015-live-v2b` attempt completed its producer-read receipt
-and six-stock worker parity before being stopped during event binding. A
-full-scope check found that 4,110 daily events and 92 candidates can exceed the
-existing two-million membership allocation guard. Its owned processes were
-confirmed stopped before edits, and its derived checkpoints remain. Summary
-feeds now split event memberships within that allocation guard, merge compact
-integer cell/stock/year matrices, then feed each complete stock once. Candidate
-selection, exclusion rules and stock denominators do not change.
+and six-stock worker parity before being stopped during event binding. The
+4,110-event/92-candidate fixture can exceed the two-million membership allocation
+guard, but treating it as an approved-study blocker was incorrect: candidate
+groups are cooled to at most 196 events per stock per horizon, and daily
+diagnostic groups have no candidates. Its owned processes were confirmed stopped
+before edits, and its derived checkpoints remain. The generic summary API now
+splits memberships within that guard, merges compact integer cell/stock/year
+matrices, then feeds each complete stock once. Candidate selection, exclusion
+rules and stock denominators do not change.
 `StockCountPlan` compiles the fixed registry once per group/horizon, rather
 than once per stock and chunk. A synthetic 92-candidate registry has 38,232
 cells; its measured build was 0.222 wall seconds and 0.219 CPU seconds.
+
+At source commit `25882a601f44ca357f627825436eda3dddfd5f41`, the v2c six-stock
+1/2/4-worker profile completed with identical payload identities. The subsequent
+four-stock storage profile was stopped at the owner's PR review follow-up so
+the branch could be updated without changing a running calculation's code
+identity. Its 125 completed group/horizon checkpoints and interrupted staging
+remain under `.tmp/pattern-scan-execution/storage-2010-20261015-live-v2c`.
+The owned Windows Job reported empty after teardown; the interruption record is
+`.tmp/pattern-scan-execution/storage-v2c-review-interruption-20261015.json`.
+There is no completed Q1–Q6 storage receipt or full-market capacity verdict.
 
 Four representative stocks cannot meet the fixed thirty-stock candidate-selection
 minimum. Their zero selected candidates therefore do not estimate full-market
