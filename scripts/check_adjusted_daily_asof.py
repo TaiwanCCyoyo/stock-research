@@ -51,13 +51,11 @@ def _situations(actions: pd.DataFrame, sessions: pd.DatetimeIndex, cutoff: pd.Ti
     dates = pd.to_datetime(actions["ex_date"])
     later = actions.loc[dates.gt(cutoff) & dates.le(asof)]
     known = later["event_type"].isin(sorted(price_basis.PERMANENT_FACTOR_EVENTS | price_basis.CASH_WINDOW_EVENTS))
-    factor = cast(pd.Series, pd.to_numeric(later["price_factor"], errors="coerce"))
     kinds_per_day = later.groupby(["code", "ex_date"])["event_type"].nunique()
     return {
         "post_cutoff_actions": len(later),
         "post_cutoff_codes": int(later["code"].nunique()),
         "post_cutoff_unknown_kind": int((~known).sum()),
-        "post_cutoff_missing_or_bad_factor": int((~(factor.gt(0))).sum()),
         "post_cutoff_multi_kind_days": int(kinds_per_day.gt(1).sum()),
         "post_cutoff_noncalendar_ex_dates": int((~pd.to_datetime(later["ex_date"]).isin(sessions)).sum()),
     }
@@ -81,6 +79,7 @@ def check_cutoff(
         mismatches: dict[str, int] = {}
         examples: list[dict[str, Any]] = []
         rows = outside_span = masked_in_latest = differs_from_truncated = 0
+        masked_codes: set[str] = set()
         reader_seconds = 0.0
         calendar_sha256 = None
         for start in range(0, len(codes), CHUNK):
@@ -112,7 +111,9 @@ def check_cutoff(
                             where = int(unequal.to_numpy().nonzero()[0][0])
                             examples.append({"code": str(code), "date": str(frame["Date"].iloc[where].date()), "column": column})
             merged = got.merge(latest, on=["Code", "Date"], suffixes=("", "_latest"))
-            masked_in_latest += int((merged["restatement_factor_latest"].isna() & merged["restatement_factor"].notna()).sum())
+            masked = merged["restatement_factor_latest"].isna() & merged["restatement_factor"].notna()
+            masked_in_latest += int(masked.sum())
+            masked_codes.update(merged.loc[masked, "Code"].astype(str))
             different = ~_same(merged["restatement_factor"], merged["restatement_factor_latest"]) | ~_same(
                 merged["quality_reason"], merged["quality_reason_latest"]
             )
@@ -125,6 +126,7 @@ def check_cutoff(
             "mismatch_examples": examples,
             "equal": not mismatches,
             "truncation_rows_masked_in_latest_known_at_cutoff": masked_in_latest,
+            "truncation_codes_masked_in_latest_known_at_cutoff": len(masked_codes),
             "truncation_rows_with_other_factor_or_reason": differs_from_truncated,
             "reader_seconds": round(reader_seconds, 1),
             "seconds": round(time.monotonic() - started, 1),
