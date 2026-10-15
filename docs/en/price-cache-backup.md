@@ -267,6 +267,11 @@ Owner decision 2026-10-08 adds a separate stock-research scope: `research_cache/
 it. Producer source backups above remain unchanged. This is an explicit command,
 not a new schedule or an extension of `run_daily`.
 
+Maintained shared derived data under `STOCK_RESEARCH_SHARED_ROOT` (owner decision
+2026-10-15, for example `derived/adjusted-daily-v1/`) is not in this scope: it is
+rebuilt from producer data by its maintenance command and keeps the previous
+generation for rollback.
+
 ```powershell
 uv run python -m scripts.backup_research_data backup --project D:/Project/stock-research --destination D:/StockResearchBackup
 uv run python -m scripts.backup_research_data verify D:/StockResearchBackup/snapshots/EXPLICIT_DIGEST.json

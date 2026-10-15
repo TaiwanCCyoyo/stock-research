@@ -50,6 +50,10 @@ def _checked_path(path: Path) -> Path:
     return absolute
 
 
+checked_path = _checked_path
+"""Public name for the alias check: no link, reparse point or hardlink on the path or its ancestors."""
+
+
 def _check_tree(root: Path) -> int:
     """Apply `_reject_alias` to every entry below `root`; return how many were checked.
 

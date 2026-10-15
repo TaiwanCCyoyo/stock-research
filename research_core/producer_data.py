@@ -55,8 +55,8 @@ def primary_checkout(repo_root: Path) -> Path | None:
     return common.parent if common.name == ".git" else None
 
 
-def _read_env_file_value(path: Path) -> str | None:
-    """Return the key's value from path, None when absent; parse no other key."""
+def read_env_file_value(path: Path, key: str = ENV_KEY) -> str | None:
+    """Return key's value from path, None when absent; parse no other key."""
     if not path.is_file():
         return None
     found: list[str] = []
@@ -65,16 +65,16 @@ def _read_env_file_value(path: Path) -> str | None:
         if stripped.startswith("export "):
             stripped = stripped[len("export ") :].lstrip()
         name, separator, value = stripped.partition("=")
-        if name.strip() != ENV_KEY:
+        if name.strip() != key:
             continue
         if not separator:
-            raise ProducerRootError(f"{ENV_KEY} in {path} has no value")
+            raise ProducerRootError(f"{key} in {path} has no value")
         value = value.strip()
         if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
             value = value[1:-1]
         found.append(value)
     if len(found) > 1:
-        raise ProducerRootError(f"{ENV_KEY} is set {len(found)} times in {path}")
+        raise ProducerRootError(f"{key} is set {len(found)} times in {path}")
     return found[0] if found else None
 
 
@@ -111,7 +111,7 @@ def producer_data_root(*, environ: Mapping[str, str] | None = None, repo_root: P
                 f"or to the live root configured in {env_file} (adopt live read-only inputs)"
             )
     if env_file is not None:
-        value = _read_env_file_value(env_file)
+        value = read_env_file_value(env_file)
         if value is not None:
             return _validated(value, str(env_file))
 
