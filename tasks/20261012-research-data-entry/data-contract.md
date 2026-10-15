@@ -206,3 +206,13 @@ research work. Owner merge of its fixed mission is required before any new marke
 feature, event, label or outcome calculation. The handoff's 2010 requirement is
 new scope; existing PR #7 and #9 explicitly fixed a 2019 period, and this work
 does not attribute that choice to migration data loss.
+
+## Owner update 2026-10-15: maintained shared derived data
+
+Reusable derived data that is kept current no longer goes into this catalog or into
+`research_cache/` as hash-named versions. It lives once under the shared root outside
+every checkout (`STOCK_RESEARCH_SHARED_ROOT`), and studies record the generation they
+read. See the [decision record](../../docs/en/decision-records/2026-10-15-maintained-shared-data.md)
+and the [adjusted-daily-v1 contract](../../docs/en/research-derived-data.md#維護中的共用衍生資料).
+The two `price-bases` catalog entries are retired; this catalog keeps study bundles and
+legacy task datasets.
