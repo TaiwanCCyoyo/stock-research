@@ -22,7 +22,7 @@ from research_core import (
 from research_core import (
     pattern_scan_episode_run_v1 as episode_module,
 )
-from research_core.artifact_store import describe_file, file_digest, object_digest, write_json
+from research_core.artifact_store import canonical, describe_file, file_digest, object_digest, read_json, write_json
 from research_core.pattern_scan_followup_summary_v1 import (
     EXCLUSION_COLUMNS,
     FIRST_COLUMNS,
@@ -185,3 +185,50 @@ def test_confirmation_top_id_not_in_selection_rejected(
     monkeypatch.setattr(completion, "run_episodes", episode_module.run_episodes)
     with pytest.raises(ValueError, match="selected candidates"):
         _run(fixture, tmp_path / "invalid-top")
+
+
+def test_large_holding_target_and_final_receipts_resume_through_scan_reader(
+    fixture: tuple[dict[str, Path], dict[str, Any], dict[str, dict[str, Path]], dict[str, Any], dict[str, Any]],
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    output = tmp_path / "large-completion"
+    first = _run(fixture, output)
+    holding_path = next(output.glob("holding-*/receipt.json"))
+    target_path = next(output.glob("summary-*/receipt.json"))
+    final_path = output / "receipt.json"
+    paths = {holding_path, target_path, final_path}
+    for path in paths:
+        receipt = read_json(path)
+        # Reader-size fixture only; identity and payload descriptors are intact.
+        receipt["reader_size_fixture_diagnostic"] = "x" * 8_000_001
+        path.write_bytes(canonical(receipt))
+        assert path.stat().st_size > 8_000_000
+        with pytest.raises(ValueError, match="size limit"):
+            read_json(path)
+    before = {path: (file_digest(path), path.stat().st_mtime_ns) for path in paths}
+    original = completion.read_scan_receipt
+    observed: set[Path] = set()
+
+    def scan_reader(path: Path) -> dict[str, Any]:
+        observed.add(path)
+        return original(path)
+
+    def no_recompute(*args: Any, **kwargs: Any) -> Any:
+        pytest.fail("completed followup metadata resume must not recompute holding or observations")
+
+    monkeypatch.setattr(completion, "read_scan_receipt", scan_reader)
+    monkeypatch.setattr(completion, "holding_values", no_recompute)
+    monkeypatch.setattr(completion, "followup_values", no_recompute)
+    monkeypatch.setattr(TinyAccumulator, "finalize", no_recompute)
+    resumed = _run(fixture, output)
+    assert resumed["files"] == first["files"]
+    assert resumed["reader_size_fixture_diagnostic"] == "x" * 8_000_001
+    assert paths.issubset(observed)
+    assert before == {path: (file_digest(path), path.stat().st_mtime_ns) for path in paths}
+    summary_payload = next(Path(path) for name, path in first["files"].items() if name.startswith("B4/"))
+    with summary_payload.open("ab") as stream:
+        stream.write(b"large receipt fixture payload drift")
+    with pytest.raises(ValueError, match="mismatch"):
+        _run(fixture, output)
+    assert file_digest(final_path) == before[final_path][0]

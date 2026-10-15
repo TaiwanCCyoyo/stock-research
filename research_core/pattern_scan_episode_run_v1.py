@@ -12,7 +12,7 @@ from typing import Any, cast
 import numpy as np
 import pandas as pd
 
-from research_core.artifact_store import describe_file, file_digest, object_digest, publish_noreplace, read_json, safe_path, verify_files, write_json
+from research_core.artifact_store import describe_file, file_digest, object_digest, publish_noreplace, read_json, safe_path, verify_files
 from research_core.hhhl_variants_selection import Atom
 from research_core.pattern_scan_analysis_v1 import group_frame
 from research_core.pattern_scan_candidate_daily_v1 import daily_candidate_states
@@ -28,6 +28,7 @@ from research_core.pattern_scan_episode_tables_v1 import (
 )
 from research_core.pattern_scan_execution_v1 import verify_source
 from research_core.pattern_scan_parquet_v1 import read_frame
+from research_core.pattern_scan_receipt_io_v2 import publish_scan_receipt, read_scan_receipt
 from research_core.pattern_scan_reporting_v1 import ERAS, MARKETS, candidate_membership
 from research_core.pattern_scan_shared_v1 import SharedInputs
 
@@ -124,7 +125,7 @@ def run_episodes(
     }
     output = safe_path(output)
     if output.exists():
-        receipt = read_json(output / "receipt.json")
+        receipt = read_scan_receipt(output / "receipt.json")
         if receipt.get("complete") is not True or receipt.get("identity") != identity:
             raise ValueError("existing episode output is incomplete or has a different identity")
         verify_files(output, receipt["artifacts"])
@@ -293,6 +294,6 @@ def run_episodes(
         "episode_observation_n": len(all_rows),
         "coverage_cell_n": len(coverage_frame),
     }
-    write_json(staging / "receipt.json", receipt)
+    publish_scan_receipt(staging / "receipt.json", receipt)
     publish_noreplace(staging, output)
     return receipt

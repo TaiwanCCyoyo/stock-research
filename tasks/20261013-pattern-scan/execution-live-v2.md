@@ -115,6 +115,43 @@ and children were confirmed stopped before source edits. The corrected live
 report publishes Git/request, producer-read receipt and preparation/profile/
 capacity metadata, with no source ZIP. Legacy report inputs remain unchanged.
 
+The `profile-2010-20261015-live-v2b` attempt completed its producer-read receipt
+and six-stock worker parity before being stopped during event binding. A
+full-scope check found that 4,110 daily events and 92 candidates can exceed the
+existing two-million membership allocation guard. Its owned processes were
+confirmed stopped before edits, and its derived checkpoints remain. Summary
+feeds now split event memberships within that allocation guard, merge compact
+integer cell/stock/year matrices, then feed each complete stock once. Candidate
+selection, exclusion rules and stock denominators do not change.
+`StockCountPlan` compiles the fixed registry once per group/horizon, rather
+than once per stock and chunk. A synthetic 92-candidate registry has 38,232
+cells; its measured build was 0.222 wall seconds and 0.219 CPU seconds.
+
+Four representative stocks cannot meet the fixed thirty-stock candidate-selection
+minimum. Their zero selected candidates therefore do not estimate full-market
+candidate costs. Capacity planning must also use the registered candidate/cell
+caps, and the maximum-candidate path needs a synthetic allocation regression.
+
+Full-market episode inventories contain at least 73,796 payload files at 1,942
+stocks; holding metadata can contain millions of union anchors. Their retained
+JSON can exceed the generic eight-MB reader budget. Scan-specific receipt I/O
+uses a finite 512,000,000-byte budget for these inventories and live phase
+results/responses, retaining the generic reader's default for unrelated files.
+It checks actual serialized bytes before atomic no-replace publication and
+retains interrupted/oversized staging. Tests exercise actual JSON above eight
+MB, without skipping identity or result-hash checks. This is engineering
+headroom, not a proof that arbitrary roots/path lengths or JSON parse memory
+will fit. Full-scope metadata size and process memory remain capacity evidence.
+The local synthetic sizing receipt is
+`.tmp/pattern-scan-execution/metadata-sizing-live-v2.json`: at 1,942 stocks and
+a 64-character run ID it measured episode inventory 47,482,903 bytes, nested
+followup inventory 78,181,094 bytes and holding-anchor upper-count layout
+22,861,499 bytes. These layouts omit small registry/identity fields and read no
+market observations. Construction/encoding/parsing took 2.97 wall seconds with
+a 420,286,464-byte process-lifetime working-set peak. The retained diagnostic
+script and its SHA-256 identify the shape assumptions; these are not complete
+phase/pool bounds or numerical-computation memory measurements.
+
 The shared catalog snapshot
 `68e541007b46afddd68a40e0312cfb3181aea66fc0c17a4286c7385602f12e12`
 contains no completed 2010-onward pattern-scan assets. Its 2019-onward

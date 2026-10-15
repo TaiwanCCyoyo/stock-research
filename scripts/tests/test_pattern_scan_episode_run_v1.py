@@ -195,3 +195,35 @@ def test_midrun_payload_drift_has_no_final_receipt(tmp_path: Path, monkeypatch: 
     assert changed
     assert not output.exists() and not (output / "receipt.json").exists()
     assert not list(tmp_path.glob(".staging-episodes-output-*/receipt.json"))
+
+
+def test_large_completed_receipt_resume_still_verifies_identity_and_payloads(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from research_core import pattern_scan_episode_run_v1 as module
+
+    receipt, output, arguments = execute(tmp_path, monkeypatch)
+    parts, barrier, event_parts, selections, source = arguments
+    # Reader-size fixture only: diagnostic metadata is allowed outside identity.
+    receipt["reader_size_fixture_diagnostic"] = "x" * 8_000_001
+    receipt_path = output / "receipt.json"
+    receipt_path.write_bytes(canonical(receipt))
+    assert receipt_path.stat().st_size > 8_000_000
+    with pytest.raises(ValueError, match="size limit"):
+        read_json(receipt_path)
+    before = file_digest(receipt_path)
+
+    def no_recompute(*args: Any, **kwargs: Any) -> Any:
+        pytest.fail("completed episode resume must not recompute observations")
+
+    monkeypatch.setattr(module, "per_stock_episodes", no_recompute)
+    monkeypatch.setattr(module, "observe_group", no_recompute)
+    monkeypatch.setattr(module, "group_frame", no_recompute)
+    assert run_episodes(parts, barrier, event_parts, selections, {}, output, source=source, input_id="synthetic-input") == receipt
+    with pytest.raises(ValueError, match="identity"):
+        run_episodes(
+            parts, {**barrier, "reader_size_fixture_identity_drift": True}, event_parts, selections, {}, output, source=source, input_id="synthetic-input"
+        )
+    with (output / "coverage.parquet").open("ab") as stream:
+        stream.write(b"reader-size fixture payload drift")
+    with pytest.raises(ValueError, match="mismatch"):
+        run_episodes(parts, barrier, event_parts, selections, {}, output, source=source, input_id="synthetic-input")
+    assert file_digest(receipt_path) == before

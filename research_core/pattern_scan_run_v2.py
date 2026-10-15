@@ -25,6 +25,7 @@ from research_core.pattern_scan_parquet_v1 import read_frame, write_frame
 from research_core.pattern_scan_pipeline_v1 import prepare_requests, profile_requests, representative_codes
 from research_core.pattern_scan_preflight_v1 import profile_global
 from research_core.pattern_scan_profile_v1 import validate_profile
+from research_core.pattern_scan_receipt_io_v2 import publish_scan_receipt, read_scan_receipt
 from research_core.pattern_scan_run_v1 import _attach_memory, _publish_json
 from research_core.producer_data import producer_data_root
 from research_core.research_data_paths import DataRoots, _artifact_name, _checked_path
@@ -37,10 +38,10 @@ TASK = "20261013-pattern-scan"
 
 def _retain_json(path: Path, value: dict[str, Any]) -> None:
     if path.exists():
-        if object_digest(read_json(path, max_bytes=128_000_000)) != object_digest(value):
+        if object_digest(read_scan_receipt(path)) != object_digest(value):
             raise ValueError(f"retained phase identity differs: {path}")
     else:
-        _publish_json(path, value)
+        publish_scan_receipt(path, value)
 
 
 def _receipt(path: Path, **kwargs: Any) -> None:
@@ -61,7 +62,7 @@ def _receipt(path: Path, **kwargs: Any) -> None:
 
 def verify_completion(response: Path, request: dict[str, Any], roots: DataRoots) -> dict[str, Any]:
     """Inspect historical result hashes without opening current producer inputs."""
-    saved = read_json(response, max_bytes=128_000_000)
+    saved = read_scan_receipt(response)
     receipt = _checked_path(Path(saved["run_receipt_path"]))
     record = read_json(receipt)
     if (
@@ -81,7 +82,7 @@ def verify_completion(response: Path, request: dict[str, Any], roots: DataRoots)
     result = saved["result"]
     phase_path = Path(record["results"]["phase_result"]["path"])
     phase_path = _checked_path(phase_path if phase_path.is_absolute() else ROOT / phase_path)
-    if phase_path.parent != response.parent or read_json(phase_path, max_bytes=128_000_000) != result:
+    if phase_path.parent != response.parent or read_scan_receipt(phase_path) != result:
         raise ValueError("historical phase result identity differs from response")
     if result["phase"] in {"full_stock_shared_versions", "complete_pattern_scan"}:
         from research_core.research_data_catalog import verify_entry
@@ -419,7 +420,7 @@ def coordinator_main(request_path: Path) -> None:
         preregistration=ROOT / "tasks" / TASK / "mission.md",
         repo_root=ROOT,
     )
-    _publish_json(
+    publish_scan_receipt(
         request_path.with_name(f"response-{mode}.json"),
         {
             "schema": "pattern-scan-coordinator-receipt.v2",

@@ -22,6 +22,7 @@ from research_core.pattern_scan_followup_summary_v1 import FollowupAccumulator
 from research_core.pattern_scan_followup_v1 import FollowupTables, followup_values
 from research_core.pattern_scan_holding_v1 import holding_values
 from research_core.pattern_scan_parquet_v1 import read_frame
+from research_core.pattern_scan_receipt_io_v2 import publish_scan_receipt, read_scan_receipt
 from research_core.pattern_scan_reporting_v1 import candidate_membership, top_confirmation_candidates
 from research_core.pattern_scan_shared_v1 import SharedInputs
 from research_core.research_data_paths import _checked_path
@@ -97,7 +98,7 @@ def complete_followup(
     holding_path = holding_directory / "holding-context.parquet"
     holding_receipt_path = holding_directory / "receipt.json"
     if holding_directory.exists():
-        holding_receipt = read_json(holding_receipt_path)
+        holding_receipt = read_scan_receipt(holding_receipt_path)
         if (
             holding_receipt.get("identity") != holding_identity
             or holding_receipt.get("complete") is not True
@@ -121,7 +122,7 @@ def complete_followup(
             holding.to_parquet(stream, index=False)
         verify_barrier(barrier)
         verify_source(source)
-        write_json(staging / "receipt.json", {"complete": True, "identity": holding_identity, "sha256": file_digest(staging_path)})
+        publish_scan_receipt(staging / "receipt.json", {"complete": True, "identity": holding_identity, "sha256": file_digest(staging_path)})
         publish_noreplace(staging, holding_directory)
     files: dict[str, str] = {"holding_context.parquet": str(holding_path)}
     for target in PATTERNS:
@@ -137,7 +138,7 @@ def complete_followup(
         }
         target_summary = output / f"summary-{object_digest(target_identity)}"
         if target_summary.exists():
-            saved = read_json(target_summary / "receipt.json")
+            saved = read_scan_receipt(target_summary / "receipt.json")
             if saved.get("identity") != target_identity or saved.get("complete") is not True:
                 raise ValueError("existing followup summary differs or incomplete")
             verify_files(output, saved["artifacts"])
@@ -223,7 +224,7 @@ def complete_followup(
             if file_digest(directory / "receipt.json") != target_identity["event_receipts"][code]:
                 raise ValueError("followup event ancestor changed during computation")
             verify_files(directory, read_json(directory / "receipt.json")["artifacts"])
-        write_json(target_staging / "receipt.json", {"complete": True, "identity": target_identity, "artifacts": descriptors, "files": target_files})
+        publish_scan_receipt(target_staging / "receipt.json", {"complete": True, "identity": target_identity, "artifacts": descriptors, "files": target_files})
         publish_noreplace(target_staging, target_summary)
         verify_files(output, descriptors)
         files.update(target_files)
@@ -243,12 +244,12 @@ def complete_followup(
     }
     receipt_path = output / "receipt.json"
     if receipt_path.exists():
-        saved = read_json(receipt_path, max_bytes=64_000_000)
+        saved = read_scan_receipt(receipt_path)
         if any(
             object_digest(saved.get(key)) != object_digest(receipt.get(key))
             for key in ("source_id", "input_id", "top_candidates", "episodes", "files", "shared_read_pins")
         ):
             raise ValueError("existing completed followup differs")
         return saved
-    write_json(receipt_path, receipt)
+    publish_scan_receipt(receipt_path, receipt)
     return receipt

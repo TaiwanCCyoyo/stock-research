@@ -14,7 +14,7 @@ import pytest
 from research_core import pattern_scan_capacity_v2 as capacity
 from research_core import pattern_scan_run_v2 as run
 from research_core import run_receipt
-from research_core.artifact_store import describe_file, file_digest, object_digest, read_json, write_json
+from research_core.artifact_store import canonical, describe_file, file_digest, object_digest, read_json, write_json
 from research_core.live_producer import ProducerChangedError
 from research_core.research_data_paths import DataRoots
 from scripts import pattern_scan_live as cli
@@ -318,6 +318,61 @@ def test_historical_completion_checks_hashes_without_current_producer(setup_run:
     else:
         with pytest.raises(ValueError, match="identity|incomplete"):
             run.verify_completion(response, request, roots)
+
+
+def test_large_phase_result_and_response_verify_real_hashes_without_producer(setup_run: Any, monkeypatch: pytest.MonkeyPatch) -> None:
+    roots, directory, request = setup_run
+    # Reader-size fixture only: this is metadata, with no market payload or read.
+    result = {"phase": "derived_price_preparation", "reader_size_fixture_diagnostic": "x" * 8_000_001}
+    result_path = directory / "phase-prepare-result.json"
+    write_json(result_path, result)
+    receipt_path = directory / "run-prepare-receipt.json"
+    write_json(
+        receipt_path,
+        {
+            "schema": "run-receipt.v1",
+            "run_id": request["run_id"],
+            "code": request["source"]["code"],
+            "parameters": {"source_id": request["source"]["source_id"], "input_id": "synthetic-input"},
+            "results": {"phase_result": {"path": str(result_path), "bytes": result_path.stat().st_size, "sha256": file_digest(result_path)}},
+        },
+    )
+    response = directory / "response-prepare.json"
+    saved = {
+        "schema": "pattern-scan-coordinator-receipt.v2",
+        "complete": True,
+        "request_id": object_digest(request),
+        "source_id": request["source"]["source_id"],
+        "input_id": "synthetic-input",
+        "run_receipt_path": str(receipt_path),
+        "run_receipt_sha256": file_digest(receipt_path),
+        "result": result,
+    }
+    write_json(response, saved)
+    for path in (result_path, response):
+        assert path.stat().st_size > 8_000_000
+        with pytest.raises(ValueError, match="size limit"):
+            read_json(path)
+    monkeypatch.setattr(run, "assert_current_code", _forbidden)
+    monkeypatch.setattr(run, "fingerprint_inputs", _forbidden)
+    monkeypatch.setattr(run, "load_live_inputs", _forbidden)
+    monkeypatch.setattr(run, "producer_data_root", _forbidden)
+    monkeypatch.setattr(run_receipt, "producer_data_root", _forbidden)
+    original = run.read_scan_receipt
+    observed: set[Path] = set()
+
+    def scan_reader(path: Path) -> dict[str, Any]:
+        observed.add(path)
+        return original(path)
+
+    monkeypatch.setattr(run, "read_scan_receipt", scan_reader)
+    assert run.verify_completion(response, request, roots)["result"] == result
+    assert {result_path, response}.issubset(observed)
+    # Keep the response/result semantically equal while invalidating the real
+    # retained byte hash. Equality checks alone would miss this legal whitespace.
+    result_path.write_bytes(canonical(result) + b" ")
+    with pytest.raises(ValueError, match="identity|incomplete"):
+        run.verify_completion(response, request, roots)
 
 
 @pytest.mark.parametrize("mode", ["prepare", "stock", "all"])

@@ -17,14 +17,13 @@ from research_core.pattern_scan_barrier_v1 import metadata
 from research_core.pattern_scan_candidate_coverage_v1 import CandidateCoverage
 from research_core.pattern_scan_classification_cache_v1 import ConditionClassificationCache
 from research_core.pattern_scan_conditions_v1 import PATTERNS
-from research_core.pattern_scan_count_matrix_v1 import aggregate_memberships
 from research_core.pattern_scan_dense_counts_v1 import DenseCounts
 from research_core.pattern_scan_event_conditions_v1 import atoms_for_pattern
 from research_core.pattern_scan_event_tables_v1 import build_event_tables
 from research_core.pattern_scan_execution_v1 import ROOT, verify_source
 from research_core.pattern_scan_groups_v1 import PRIMARY
 from research_core.pattern_scan_inputs_v1 import read_preparation_pins
-from research_core.pattern_scan_membership_v1 import membership_inventory, stock_memberships
+from research_core.pattern_scan_membership_v1 import StockCountPlan, membership_inventory
 from research_core.pattern_scan_parquet_v1 import read_frame, write_frame
 from research_core.pattern_scan_selection_v1 import select_pattern_candidates
 from research_core.pattern_scan_shared_v1 import SharedInputs, load_shared
@@ -230,10 +229,10 @@ def summarize_all(event_parts: dict[str, dict[str, Path]], selections: dict[str,
                 group_top: list[dict[str, Any]] = []
                 accumulator = DenseCounts(identifiers, horizon)
                 coverage = CandidateCoverage(_group_metadata(target, group, horizon), active_candidates)
+                count_plan = StockCountPlan(inventory, max_membership_rows=2_000_000)
                 for directory in event_parts[target].values():
                     frame = group_frame(directory, group, horizon)
-                    memberships = stock_memberships(frame, inventory, max_membership_rows=2_000_000)
-                    accumulator.add_stock(aggregate_memberships(frame, memberships))
+                    accumulator.add_stock(count_plan.matrix(frame))
                     if active_candidates and not frame.empty:
                         coverage.add_stock(frame)
                 _write_frame(staging / "candidate-coverage.parquet", coverage.finalize())

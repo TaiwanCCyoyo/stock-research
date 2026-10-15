@@ -109,6 +109,15 @@ def candidate_coverage(frame: pd.DataFrame, inventory: Sequence[Mapping[str, Any
     )
 
 
+def _validate_stock_frame(frame: pd.DataFrame, registry: pd.DataFrame) -> None:
+    required = {"event_id", "security_id", "t0", "horizon", "mkt"}
+    if not frame.columns.is_unique or not required.issubset(frame) or frame.event_id.duplicated().any():
+        raise ValueError("stock frame requires unique event IDs and facet fields")
+    tuple(facet_masks(frame))
+    if not frame.empty and int(frame.horizon.iloc[0]) != int(registry.horizon.iloc[0]):
+        raise ValueError("batch horizon differs from inventory")
+
+
 def stock_memberships(frame: pd.DataFrame, inventory: Sequence[Mapping[str, Any]], *, max_membership_rows: int = 500_000) -> pd.DataFrame:
     """Expand only eight actual facets per event/condition and join fixed cells.
 
@@ -119,14 +128,20 @@ def stock_memberships(frame: pd.DataFrame, inventory: Sequence[Mapping[str, Any]
     registry = _registry(inventory)
     if isinstance(max_membership_rows, bool) or not isinstance(max_membership_rows, int) or max_membership_rows < 1:
         raise ValueError("max_membership_rows must be a positive integer")
-    required = {"event_id", "security_id", "t0", "horizon", "mkt"}
-    if not frame.columns.is_unique or not required.issubset(frame) or frame.event_id.duplicated().any():
-        raise ValueError("stock frame requires unique event IDs and facet fields")
     # The public validator fixes year, split and market semantics for this batch.
-    tuple(facet_masks(frame))
-    if not frame.empty and int(frame.horizon.iloc[0]) != int(registry.horizon.iloc[0]):
-        raise ValueError("batch horizon differs from inventory")
+    _validate_stock_frame(frame, registry)
     candidates = _candidates(registry)
+    return _stock_memberships(frame, registry, candidates, max_membership_rows=max_membership_rows)
+
+
+def _stock_memberships(
+    frame: pd.DataFrame,
+    registry: pd.DataFrame,
+    candidates: Mapping[str, Sequence[Atom]],
+    *,
+    max_membership_rows: int,
+) -> pd.DataFrame:
+    """Expand a validated stock slice using the caller's compiled registry."""
     upper_bound = len(frame) * 8 * (1 + len(FEATURES) + len(candidates))
     if upper_bound > max_membership_rows:
         raise ValueError(f"membership allocation bound {upper_bound} exceeds {max_membership_rows}")
@@ -186,3 +201,54 @@ def stock_memberships(frame: pd.DataFrame, inventory: Sequence[Mapping[str, Any]
         raise ValueError("duplicate event/cell membership")
     LOGGER.debug("Built stock memberships events=%d cells=%d rows=%d bound=%d", len(frame), len(registry), len(result), upper_bound)
     return result
+
+
+class StockCountPlan:
+    """One compiled group/horizon registry reused across independent stock feeds."""
+
+    def __init__(self, inventory: Sequence[Mapping[str, Any]], *, max_membership_rows: int = 500_000) -> None:
+        self._registry = _registry(inventory)
+        if isinstance(max_membership_rows, bool) or not isinstance(max_membership_rows, int) or max_membership_rows < 1:
+            raise ValueError("max_membership_rows must be a positive integer")
+        self._candidates = _candidates(self._registry)
+        self._max_membership_rows = max_membership_rows
+        self._rows_per_event = 8 * (1 + len(FEATURES) + len(self._candidates))
+        self._batch_size = max_membership_rows // self._rows_per_event
+
+    def matrix(self, frame: pd.DataFrame) -> pd.DataFrame:
+        """Validate and reduce one entire stock, without retaining stock state."""
+        from research_core.pattern_scan_count_matrix_v1 import GROUP_COLUMNS, aggregate_memberships
+        from research_core.pattern_scan_summary_store_v1 import COUNT_FIELDS
+
+        _validate_stock_frame(frame, self._registry)
+        if frame.empty:
+            return aggregate_memberships(frame, _stock_memberships(frame, self._registry, self._candidates, max_membership_rows=self._max_membership_rows))
+        if self._batch_size < 1:
+            raise ValueError(f"membership allocation bound {self._rows_per_event} exceeds {self._max_membership_rows} for one event")
+        matrix: pd.DataFrame | None = None
+        batch_n = 0
+        for start in range(0, len(frame), self._batch_size):
+            batch = cast(pd.DataFrame, frame.iloc[start : start + self._batch_size])
+            memberships = _stock_memberships(batch, self._registry, self._candidates, max_membership_rows=self._max_membership_rows)
+            counts = aggregate_memberships(batch, memberships)
+            if matrix is None:
+                matrix = counts
+            else:
+                combined = pd.concat([matrix, counts], ignore_index=True)
+                reduced = cast(pd.DataFrame, combined.groupby(list(GROUP_COLUMNS), sort=True, observed=True)[list(COUNT_FIELDS)].sum()).reset_index()
+                reduced = cast(pd.DataFrame, reduced.loc[:, [*GROUP_COLUMNS, *COUNT_FIELDS]])
+                for field in (*COUNT_FIELDS, "year", "horizon"):
+                    reduced[field] = reduced[field].astype("int64")
+                matrix = reduced
+                del combined
+            batch_n += 1
+        assert matrix is not None
+        LOGGER.debug(
+            "Built complete stock count matrix events=%d batches=%d rows=%d allocation_cap=%d", len(frame), batch_n, len(matrix), self._max_membership_rows
+        )
+        return matrix
+
+
+def stock_count_matrix(frame: pd.DataFrame, inventory: Sequence[Mapping[str, Any]], *, max_membership_rows: int = 500_000) -> pd.DataFrame:
+    """Convenience wrapper for one complete stock with a fresh compiled plan."""
+    return StockCountPlan(inventory, max_membership_rows=max_membership_rows).matrix(frame)

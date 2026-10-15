@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from dataclasses import fields
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any, cast
 
 import numpy as np
@@ -15,6 +16,7 @@ from research_core import pattern_scan_analysis_v1 as analysis
 from research_core.artifact_store import describe_file, file_digest, object_digest, write_json
 from research_core.hhhl_variants_selection import SelectionResult, split_for_code
 from research_core.pattern_scan_conditions_v1 import PATTERNS
+from research_core.pattern_scan_count_matrix_v1 import aggregate_memberships
 from research_core.pattern_scan_rates_v1 import REQUIRED_COLUMNS, summarize_events
 from research_core.pattern_scan_stock_v1 import StockPhase, stock_phase
 
@@ -147,6 +149,14 @@ def _summary_setup(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> dict[str,
 
 def test_real_dense_counts_full_annual_dropyear_and_na_null_rates(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     parts = _summary_setup(tmp_path, monkeypatch)
+    feeds: list[pd.DataFrame] = []
+
+    class ObservedCounts(analysis.DenseCounts):
+        def add_stock(self, matrix: pd.DataFrame) -> None:
+            feeds.append(matrix.copy())
+            super().add_stock(matrix)
+
+    monkeypatch.setattr(analysis, "DenseCounts", ObservedCounts)
 
     def inventory(base: dict[str, Any], candidates: Any) -> tuple[dict[str, Any], ...]:
         return tuple(
@@ -177,8 +187,12 @@ def test_real_dense_counts_full_annual_dropyear_and_na_null_rates(tmp_path: Path
 
     monkeypatch.setattr(analysis, "membership_inventory", inventory)
     monkeypatch.setattr(analysis, "group_frame", group_frame)
-    monkeypatch.setattr(analysis, "stock_memberships", members)
+    monkeypatch.setattr(
+        analysis, "StockCountPlan", lambda inventory, **kwargs: SimpleNamespace(matrix=lambda frame: aggregate_memberships(frame, members(frame, inventory)))
+    )
     receipt = analysis.summarize_all(parts, {"B4": {"candidates": []}}, tmp_path / "summaries")
+    assert len(feeds) == 2  # One complete stock feed per group/horizon, not one per event batch.
+    assert all(frame.security_id.nunique() == 1 and not frame.duplicated(["cell_id", "year"]).any() for frame in feeds)
     summaries = pd.concat([pd.read_parquet(path) for name, path in receipt["files"].items() if name.startswith("summary/")])
     known = summaries.loc[summaries.condition_status.eq("known") & summaries.row_kind.eq("full")]
     assert known.known_n.eq(2).all() and known.hit_n.eq(1).all() and known.loss_n.eq(1).all() and known.hit_rate.eq(0.5).all()
@@ -235,8 +249,7 @@ def test_parquet_chunks_keep_late_candidate_and_nullable_year_schema(tmp_path: P
     monkeypatch.setattr(analysis, "DenseCounts", EmptyCounts)
     monkeypatch.setattr(analysis, "membership_inventory", inventory)
     monkeypatch.setattr(analysis, "group_frame", lambda *args: pd.DataFrame())
-    monkeypatch.setattr(analysis, "stock_memberships", lambda *args, **kwargs: pd.DataFrame())
-    monkeypatch.setattr(analysis, "aggregate_memberships", lambda *args: pd.DataFrame())
+    monkeypatch.setattr(analysis, "StockCountPlan", lambda *args, **kwargs: SimpleNamespace(matrix=lambda frame: pd.DataFrame()))
     receipt = analysis.summarize_all(parts, {"B4": {"candidates": []}}, tmp_path / "chunked")
     for name, path in receipt["files"].items():
         if name.startswith("candidate-coverage/"):
@@ -257,7 +270,12 @@ def test_interrupted_summary_publication_retains_staging_and_resumes(tmp_path: P
 
     monkeypatch.setattr(analysis, "membership_inventory", inventory)
     monkeypatch.setattr(analysis, "group_frame", lambda *args: pd.DataFrame(columns=pd.Index(REQUIRED_COLUMNS)))
-    monkeypatch.setattr(analysis, "stock_memberships", lambda *args, **kwargs: pd.DataFrame(columns=pd.Index(("event_id", "cell_id"))))
+
+    def empty_matrix(frame: pd.DataFrame) -> pd.DataFrame:
+        members = pd.DataFrame(columns=pd.Index(["event_id", "cell_id"]))
+        return aggregate_memberships(frame, members)
+
+    monkeypatch.setattr(analysis, "StockCountPlan", lambda *args, **kwargs: SimpleNamespace(matrix=empty_matrix))
     original = analysis.publish_noreplace
 
     def interrupted(source: Path, destination: Path) -> None:
