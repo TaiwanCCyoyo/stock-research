@@ -99,6 +99,25 @@ producer is idle and the original fingerprint still matches.
 Resource observations are not research findings. Full-market Q1–Q6, independent
 event/candidate audits and the final report remain pending.
 
+The streaming followup finalizer now enumerates registered cells lazily instead
+of running the independent batch oracle over empty frames to construct a
+template. It retains the same six tables, order, zero cells, counts and exact
+raw-sample quantiles. DEBUG-disabled feeds no longer traverse accumulated sample
+buffers merely to construct a log argument. Differential tests compare every
+table, including dtypes and missing values, against the unchanged batch oracle;
+the new registry test checks that unconsumed table families are not expanded.
+
+The shared catalog snapshot
+`68e541007b46afddd68a40e0312cfb3181aea66fc0c17a4286c7385602f12e12`
+contains no completed 2010-onward pattern-scan assets. Its 2019-onward
+price/pattern versions, 0050-only context ending 2026-10-02, and annual-rotation
+outputs differ in scope, calendar or definition. They are discovery evidence,
+not interchangeable blocks for this scan. Existing frozen versions remain.
+
+Numerical run receipts also fingerprint the actual phase request and any
+resource profile/capacity plan consumed; memory limits and timeout are retained
+as parameters. These task-owned metadata reads do not reopen the producer.
+
 ## Capacity gate
 
 Takeover measured **182,916,579,328 free bytes** on D:. The old 12.6 GB free

@@ -306,7 +306,8 @@ class FailureAccumulator:
         for key, addition in local.items():
             self._cells.setdefault(key, _Cell()).merge(addition)
         self._feeds.update(feeds)
-        LOGGER.debug("Failure summary feeds=%d sparse_cells=%d numeric_bytes=%d", len(self._feeds), len(self._cells), self.memory_nbytes)
+        if LOGGER.isEnabledFor(logging.DEBUG):
+            LOGGER.debug("Failure summary feeds=%d sparse_cells=%d numeric_bytes=%d", len(self._feeds), len(self._cells), self.memory_nbytes)
 
     def finalize(self) -> FailureSummaryTables:
         paths: list[dict[str, Any]] = []

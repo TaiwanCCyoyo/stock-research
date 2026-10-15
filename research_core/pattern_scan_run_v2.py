@@ -276,11 +276,18 @@ def _derived_inputs(index: Path, request: dict[str, Any]) -> tuple[dict[str, Any
     producer_receipt = index.parent / "producer-read-receipt.json"
     if changed_results(producer_receipt, ROOT):
         raise ValueError("producer-read result identity differs")
-    fingerprint = fingerprint_inputs([
+    specs = [
         InputSpec("derived_preparation", index, live_producer=False),
         InputSpec("producer_read_receipt", producer_receipt, live_producer=False),
         InputSpec("derived_prices", index.parent / "prepared", pattern="**/*.parquet", live_producer=False),
-    ])
+    ]
+    for name, key in (("resource_profile", "profile_path"), ("capacity_plan", "capacity_path")):
+        if request.get(key) is not None:
+            specs.append(InputSpec(name, _checked_path(Path(request[key])), live_producer=False))
+    phase_request = Path(request["run_root"]) / f"request-{request['mode']}.json"
+    if phase_request.is_file():
+        specs.append(InputSpec("phase_request", phase_request, live_producer=False))
+    fingerprint = fingerprint_inputs(specs)
     return record, fingerprint
 
 
@@ -397,7 +404,16 @@ def coordinator_main(request_path: Path) -> None:
         receipt_path,
         run_id=request["run_id"],
         definition="pattern-scan.v1/live-input-execution.v2",
-        parameters={"start": "2010-01-04", "cutoff": "2026-10-12", "mode": mode, "source_id": source["source_id"], "input_id": input_id},
+        parameters={
+            "start": "2010-01-04",
+            "cutoff": "2026-10-12",
+            "mode": mode,
+            "source_id": source["source_id"],
+            "input_id": input_id,
+            "memory_bytes": request["memory_bytes"],
+            "job_memory_bytes": request["job_memory_bytes"],
+            "timeout_seconds": request["timeout_seconds"],
+        },
         inputs=fingerprint,
         results=results,
         preregistration=ROOT / "tasks" / TASK / "mission.md",

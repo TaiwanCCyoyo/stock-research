@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import logging
 from array import array
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import date
 from itertools import product
@@ -476,6 +476,40 @@ class _Cell:
         }
 
 
+def _registered_followup_rows(
+    groups: Mapping[str, str],
+    horizons: Sequence[int],
+    landmarks_at: Sequence[int],
+) -> dict[str, Iterator[dict[str, Any]]]:
+    """Lazily enumerate each table without retaining other tables' row dicts.
+
+    Values are supplied by the accumulator's existing exact count/quantile
+    helpers, including its blank cell. Keep the batch oracle independent.
+    """
+
+    def family_rows(family: str) -> Iterator[dict[str, Any]]:
+        for group, horizon, split, era, market in product(sorted(groups), horizons, SPLITS, ERAS, MARKETS):
+            meta = dict(zip(META, (group, groups[group], horizon, split, era, market), strict=True))
+            if family == "path":
+                for category in PATHS:
+                    yield {**meta, "path_category": category}
+            elif family == "first":
+                for flag, state in product((*FLAG_IDS, "none", "unknown"), FLAG_STATES):
+                    yield {**meta, "flag_id": flag, "first_state": state}
+            elif family in {"flag", "tradeoff"}:
+                for flag in FLAG_IDS:
+                    yield {**meta, "flag_id": flag}
+            elif family == "landmark":
+                for flag, landmark, state, rise in product(FLAG_IDS, (value for value in landmarks_at if value < horizon), FLAG_STATES, ("pooled", *RISE_BINS)):
+                    yield {**meta, "flag_id": flag, "landmark": landmark, "flag_state": state, "return_bin": rise}
+            else:
+                for source in ("paths", "first_flags", "flags", "landmarks"):
+                    for reason in ("effective_label_unknown", "censored", "event_eligibility_excluded", "known_ineligible"):
+                        yield {**meta, "source_table": source, "reason_scope": "population", "reason": reason}
+
+    return {family: family_rows(family) for family in ("path", "first", "flag", "landmark", "tradeoff", "exclusion")}
+
+
 class FollowupAccumulator:
     """One complete feed per stock/group, retaining counts and exact samples.
 
@@ -628,58 +662,31 @@ class FollowupAccumulator:
         for key, addition in local.items():
             self._cells.setdefault(key, _Cell()).merged(addition)
         self._feeds.update(feeds)
-        LOGGER.debug("Followup streaming feeds=%d cells=%d numeric_bytes=%d", len(self._feeds), len(self._cells), self.memory_nbytes)
+        if LOGGER.isEnabledFor(logging.DEBUG):
+            LOGGER.debug("Followup streaming feeds=%d cells=%d numeric_bytes=%d", len(self._feeds), len(self._cells), self.memory_nbytes)
 
     def finalize(self) -> FollowupSummaryTables:
-        columns = {
-            "group_id",
-            "target_pattern_id",
-            "security_id",
-            "event_id",
-            "t0",
-            "horizon",
-            "mkt",
-            "effective_label",
-            "event_main_eligible",
-            "calendar_full",
-            "event_eligibility_excluded",
-            "path_category",
-            "max_return",
-            "first_flag_state",
-            "first_flag_flag_id",
-            "first_flag_offset",
-            "first_flag_all_flag_ids_json",
-            "flag_id",
-            "flag_state",
-            "trigger_return",
-            "landmark",
-            "rise_bin",
-            "riskset_id",
-            "riskset_eligible",
-        }
-        empty = pd.DataFrame(columns=pd.Index(sorted(columns)))
-        template = summarize_followup(empty, empty, empty, empty, groups=self.groups, horizons=self.horizons, landmarks_at=self.landmarks_at)
+        registry = _registered_followup_rows(self.groups, self.horizons, self.landmarks_at)
         blank = _Cell()
 
         def get(family: str, meta: tuple[Any, ...], *tail: Any) -> _Cell:
             return self._cells.get((family, *meta, *tail), blank)
 
         output: list[pd.DataFrame] = []
-        for family, table in zip(
+        for family, columns in zip(
             ("path", "first", "flag", "landmark", "tradeoff", "exclusion"),
             (
-                template.path_summary,
-                template.first_flag_summary,
-                template.flag_summary,
-                template.landmark_summary,
-                template.tradeoff_points,
-                template.exclusions,
+                PATH_COLUMNS,
+                FIRST_COLUMNS,
+                FLAG_COLUMNS,
+                LANDMARK_COLUMNS,
+                TRADEOFF_COLUMNS,
+                EXCLUSION_COLUMNS,
             ),
             strict=True,
         ):
             rows: list[dict[str, Any]] = []
-            for supplied in table.to_dict(orient="records"):
-                row = cast(dict[str, Any], supplied)
+            for row in registry[family]:
                 meta = tuple(row[name] for name in META)
                 if family == "path":
                     selected = get("path", meta, row["path_category"])
@@ -730,7 +737,8 @@ class FollowupAccumulator:
                             "event_n": selected.counts["event_n"],
                         })
                 order = ["group_id", "horizon", "split_id", "era", "mkt", "source_table", "reason_scope", "reason"]
-                output.append(pd.DataFrame(rows, columns=table.columns).sort_values(order, kind="stable").reset_index(drop=True))
+                output.append(pd.DataFrame(rows, columns=pd.Index(columns)).sort_values(order, kind="stable").reset_index(drop=True))
             else:
-                output.append(pd.DataFrame(rows, columns=table.columns))
+                output.append(pd.DataFrame(rows, columns=pd.Index(columns)))
+            del rows
         return FollowupSummaryTables(*output)

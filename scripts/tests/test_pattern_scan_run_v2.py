@@ -91,7 +91,9 @@ def _prepared(directory: Path, request: dict[str, Any], *, scope: str = "full_or
 
 
 def _stub_fingerprint(specs: list[Any]) -> dict[str, Any]:
-    assert {spec.name for spec in specs} == {"derived_preparation", "producer_read_receipt", "derived_prices"}
+    names = {spec.name for spec in specs}
+    assert {"derived_preparation", "producer_read_receipt", "derived_prices"}.issubset(names)
+    assert names.issubset({"derived_preparation", "producer_read_receipt", "derived_prices", "phase_request", "resource_profile", "capacity_plan"})
     assert all(spec.live_producer is False for spec in specs)
     assert all("producer" not in str(spec.path.name) or spec.name == "producer_read_receipt" for spec in specs)
     return {"inputs": {}}
