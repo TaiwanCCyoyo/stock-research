@@ -5,18 +5,30 @@ that the repository and its worktrees carry no production data. Only the data
 moves; the producer code stays the `stock-data-downloader` submodule and the two
 scheduled tasks keep running from `D:/Project/stock-research/stock-data-downloader`.
 
-**Status: not executed.** Executing it needs the owner's approval of a move window
-in chat. Approval of this document or of its PRs is not that approval.
+**Status: relocation completed on 2026-10-15 at 04:11:32 UTC**, as recorded by the
+private delivery receipt summarized in the [execution record](#execution-record).
+Both configured roots were verified as `D:/StockData/stock-data-downloader`.
+This is recorded execution evidence, not a new live-data check. **Do not rerun the
+move on this host.** Adopting a later producer gitlink is a code-only deployment,
+subject to the writer-idle gates; it does not require another data move.
+
+The procedure below is for a separately approved **future relocation only**:
+data must still be in the checkout and the target must be absent. It supports
+producer `7e8bf5ec823dcfe38df9342d927bea24b8a2debc` (PR #3) or a compatible
+descendant, where the tracked category resource lives in `config/`. The completed
+relocation used producer `069205bc27bd309eb9c86e5308328e8a71da3536` (PR #2), with
+the category still in `data/`; see [historical layout](#historical-layout).
+Approval of this document or its PR is not approval of a new move or rollback.
 
 ## Decisions
 
-| Item                                | Decision                                                                                  | Why                                                                                                                                                                                                                        |
-| ----------------------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Target                              | `D:/StockData/stock-data-downloader`                                                      | Same NTFS volume as the source (`D:`), so the move is a directory rename. D: had 45.4 GB free on 2026-10-15; a 42.6 GB copy would nearly fill it. Named after its producer; sits beside the existing `D:/StockDataBackup`. |
-| Producer setting                    | `SHIOAJI_DATA_DIR` in the producer primary checkout's own `.env`                          | The scheduled launchers already run in that checkout; no task-action or machine-environment change. Pairs with the existing `SHIOAJI_BACKUP_DIR`.                                                                          |
-| Not a user/machine env var          | —                                                                                         | It would leak into every producer worktree and research process.                                                                                                                                                           |
-| Tracked `data/stock_category.json5` | Stays in the checkout                                                                     | Code-owned config, anchored to the checkout by the producer change. Moving it would show a deleted tracked file.                                                                                                           |
-| Research setting                    | stock-research `.env.local` `STOCK_PRODUCER_DATA_ROOT=D:/StockData/stock-data-downloader` | Distinct, consumer-owned name. Changed at step 9, not earlier.                                                                                                                                                             |
+| Item                                  | Decision                                                                                  | Why                                                                                                                                                                                                                        |
+| ------------------------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Target                                | `D:/StockData/stock-data-downloader`                                                      | Same NTFS volume as the source (`D:`), so the move is a directory rename. D: had 45.4 GB free on 2026-10-15; a 42.6 GB copy would nearly fill it. Named after its producer; sits beside the existing `D:/StockDataBackup`. |
+| Producer setting                      | `SHIOAJI_DATA_DIR` in the producer primary checkout's own `.env`                          | The scheduled launchers already run in that checkout; no task-action or machine-environment change. Pairs with the existing `SHIOAJI_BACKUP_DIR`.                                                                          |
+| Not a user/machine env var            | —                                                                                         | It would leak into every producer worktree and research process.                                                                                                                                                           |
+| Tracked `config/stock_category.json5` | Stays with the code, outside the mutable-data move, inventory and rollback                | Producer PR #3 moved it byte-identically out of `data/`; no category extraction or comparison exclusion is needed.                                                                                                         |
+| Research setting                      | stock-research `.env.local` `STOCK_PRODUCER_DATA_ROOT=D:/StockData/stock-data-downloader` | Distinct, consumer-owned name. Changed at step 9, not earlier.                                                                                                                                                             |
 
 Producer behaviour this relies on ([stock-data-downloader#2](https://github.com/TaiwanCCyoyo/stock-data-downloader/pull/2),
 `docs/operations.md#data-location` there): a configured value must be an absolute,
@@ -26,21 +38,20 @@ own `.env`, so producer worktrees keep their own `data/`.
 
 ## Preconditions (all must hold; otherwise stop)
 
-1. Merge chain complete: producer PR merged → stock-research PR bumps the
-   `stock-data-downloader` gitlink to that merged commit → stock-research PR merged.
-   Deploying that code to the primary checkout happens inside the window (step 2b),
-   after the writers are idle, because it changes production files.
+1. For a future relocation, the supported producer version above must be merged
+   and selected by a merged stock-research gitlink. Deploy it inside the approved
+   window (step 2b), after writers are idle. This prerequisite does not mean the
+   completed relocation is pending a later gitlink update.
 2. The primary research checkout `D:/Project/stock-research` is on `main` with no
    uncommitted tracked changes. Another session's work there is never reset,
    stashed or switched; otherwise stop and coordinate with its owner.
-3. Research readers resolve the root through `producer_data_root()` (environment,
-   then the primary `.env.local`; no fallback). The primary `.env.local` must read
-   `STOCK_PRODUCER_DATA_ROOT=D:/Project/stock-research/stock-data-downloader/data`
-   before stock-research#19 merges. **Status, last checked 2026-10-15 09:20: not yet
-   corrected** — it still names the nonexistent `D:/Project/stock-data-downloader/data`,
-   on which every research process fails. Verify with a read-back, not a comment:
-   `Get-Content D:\Project\stock-research\.env.local`. There is no worktree seeding
-   or input sealing to migrate (owner re-scope of stock-research#20).
+3. Research readers resolve through `producer_data_root()` (environment, then the
+   primary `.env.local`; no fallback). In a future pre-move setup it must resolve
+   the existing in-repository source; step 9 changes it to the external target.
+   The earlier incorrect-root observation is historical: the completion receipt
+   verifies both producer and research at the external root. Read back the
+   resolved path, not the whole private settings file. There is no worktree
+   seeding or input sealing to migrate (owner re-scope of stock-research#20).
 4. Window: not 17:30–19:00 on a weekday (DailyUpdate 18:00, 19–45 min), not the
    evening of the 1st (OfficialBackfill runs ~1.5 h after a month rollover).
    Budget about 30 minutes; most of it is hashing ~21 GB of SQLite/Parquet twice.
@@ -56,6 +67,7 @@ Run in Windows PowerShell. `$P` is the producer primary checkout, `$T` the targe
 $P = 'D:\Project\stock-research\stock-data-downloader'
 $T = 'D:\StockData\stock-data-downloader'
 $R = 'D:\Project\stock-research\.tmp\producer-data-relocation'
+if (Test-Path -LiteralPath $T) { throw "target exists: relocation already completed or needs separate investigation; stop" }
 New-Item -ItemType Directory -Force $R | Out-Null
 ```
 
@@ -102,16 +114,20 @@ setting exists.
 
 ```powershell
 git -C D:\Project\stock-research status --short --branch --untracked-files=no
-git -C D:\Project\stock-research pull --ff-only
+git -C D:\Project\stock-research -c submodule.recurse=false pull --ff-only
 git -C D:\Project\stock-research submodule update -- stock-data-downloader
 git -C $P log -1 --format=%H
 cd $P
-uv run python -c "from config import config; print(config.DATA_DIR_ENV, config.DATA_DIR, config.DATA_DIR_SOURCE)"
+uv run python -c "from config import config; assert config.STOCK_CATEGORY.is_file(); print(config.DATA_DIR_ENV, config.DATA_DIR, config.DATA_DIR_SOURCE); print(config.STOCK_CATEGORY)"
 ```
 
 Run the pull only when the status shows `## main...origin/main` and nothing else;
 otherwise stop. The producer HEAD must equal the merged commit the gitlink names,
-and the read-back must print `SHIOAJI_DATA_DIR ...\stock-data-downloader\data default`.
+and this future pre-move read-back must print
+`SHIOAJI_DATA_DIR ...\stock-data-downloader\data default`, followed by
+`...\stock-data-downloader\config\stock_category.json5`. Stop if the category
+resource is missing or the producer is still on the earlier layout. On an already
+relocated host the data root is external instead: do not enter this procedure.
 Both task actions already point at this checkout's `cron/` launchers, so no action
 migration is needed.
 
@@ -214,16 +230,17 @@ expect the magnitude of the 2026-10-09 copy receipt (15,245 files,
 if (Test-Path $T) { throw "target exists: stop" }
 if ((Get-Item "$P\data").PSDrive.Name -ne (Split-Path $T -Qualifier).TrimEnd(':')) { throw "different volume: stop" }
 New-Item -ItemType Directory -Force (Split-Path $T) | Out-Null
-Move-Item -LiteralPath "$P\data" -Destination $T
-New-Item -ItemType Directory "$P\data" | Out-Null
-Move-Item -LiteralPath "$T\stock_category.json5" -Destination "$P\data\stock_category.json5"
+Move-Item -LiteralPath "$P\data" -Destination $T -ErrorAction Stop
 git -C $P status --porcelain
 ```
 
-A directory rename either succeeds whole or fails whole. If `Move-Item` fails
-(for example a sharing violation), check that `$P\data` is intact and `$T` absent,
-then return to step 2. No junction, symlink or hardlink is created; the old path
-keeps only the tracked category file, and `git status` stays clean.
+A directory rename either succeeds whole or fails whole. If `Move-Item` fails,
+inspect both paths; return to step 2 only if `$P\data` is intact and `$T` absent.
+If the rename succeeded but a later status, verification or configuration step
+fails, the data is already at `$T`: keep tasks paused, preserve that state and
+report it. Do not rerun the move or assume the old path still exists.
+No junction, symlink or hardlink is created. `$P\data` is absent after success;
+the tracked category remains untouched in `$P\config` and Git stays clean.
 
 ### 6. Verify after the move
 
@@ -233,19 +250,19 @@ uv run --no-project python "$R\inventory.py" $T "$R\after.json"
 import json, sys
 b = json.load(open(sys.argv[1], encoding="utf-8"))["files"]
 a = json.load(open(sys.argv[2], encoding="utf-8"))["files"]
-for side in (a, b):  # the tracked category file stays with the checkout on purpose
-    side.pop("stock_category.json5", None)
 diff = sorted(set(a) ^ set(b)) + sorted(k for k in a.keys() & b.keys() if a[k] != b[k])
 print("files", len(a), "bytes", sum(e["size"] for e in a.values()), "differences", len(diff))
 sys.exit(f"mismatch: {diff[:20]}" if diff else 0)
 '@ | Set-Content -Encoding utf8 "$R\compare.py"
 uv run --no-project python "$R\compare.py" "$R\before.json" "$R\after.json"
-Get-ChildItem -Force "$P\data"
+if (Test-Path -LiteralPath "$P\data") { throw "old data path unexpectedly exists: stop and investigate" }
 ```
 
-Expect zero differences (size, modification time and SHA-256 identical) and only
-`stock_category.json5` left under `$P\data`. Any mismatch: stop, keep tasks
-paused, report; do not "fix" by copying.
+Expect zero differences in every inventoried file (size, modification time and
+the recorded SQLite/Parquet hashes). The code-owned `config/stock_category.json5`
+is outside both inventories; exclude no data-root filename. Any old untracked
+category copy in the source must be preserved, compared and reported like any
+other file. Any mismatch: stop, keep tasks paused, report; do not "fix" by copying.
 
 ### 7. Configure the producer
 
@@ -301,7 +318,7 @@ uv run python -c "from research_core.producer_data import producer_data_root; pr
 ```
 
 Expect `D:\StockData\stock-data-downloader`. Docker's fallback mount
-`./stock-data-downloader/data` is code-only after the move and fails the
+`./stock-data-downloader/data` is absent or empty after the move and fails the
 `price_daily.parquet` check; always pass `--env-file .env.local`.
 
 ### 10. Resume and confirm
@@ -317,7 +334,7 @@ Only tasks recorded as enabled in step 1 are re-enabled.
 After the next scheduled runs, each log
 (`$P\logs\run_daily_<date>.log`, `backfill_official_history_<date>.log`) starts
 with `data directory: D:\StockData\stock-data-downloader (...\.env)`, the run
-exits 0 and `$P\data` still holds only the category file. Record the outcome
+exits 0 and `$P\data` has not been recreated; the category remains in `config/`. Record the outcome
 below.
 
 ## Stop conditions
@@ -330,15 +347,18 @@ data to get past a stop.
 
 ## Rollback
 
-While both tasks are paused, first repeat step 2 (no task `Running`, no process
-using the data) and step 3 (no SQLite side files) at the new location `$T`.
+Rollback requires a separate owner-approved window. While both tasks are paused,
+repeat step 2 (no task `Running`, no process using the data) and step 3 at `$T`
+(pass `$T` instead of `"$P\data"` to that Python block; no SQLite side files).
+Use the supported config-owned category layout above; it never moves on rollback.
 
 ```powershell
-# 1. Remove the SHIOAJI_DATA_DIR line from $P\.env by hand; check key names as in step 7.
-Move-Item -LiteralPath "$P\data\stock_category.json5" -Destination "$T\stock_category.json5"
 uv run --no-project python "$R\inventory.py" $T "$R\rollback-before.json"
-[IO.Directory]::Delete("$P\data", $false)   # nonrecursive: throws unless the directory is empty
-Move-Item -LiteralPath $T -Destination "$P\data"
+if (Test-Path -LiteralPath "$P\data") {
+  if ((Get-Item -LiteralPath "$P\data" -Force).Attributes -band [IO.FileAttributes]::ReparsePoint) { throw "old data path is a reparse point: stop" }
+  [IO.Directory]::Delete("$P\data", $false) # nonrecursive: refuses any existing contents
+}
+Move-Item -LiteralPath $T -Destination "$P\data" -ErrorAction Stop
 uv run --no-project python "$R\inventory.py" "$P\data" "$R\rollback-after.json"
 uv run --no-project python "$R\compare.py" "$R\rollback-before.json" "$R\rollback-after.json"
 git -C $P status --porcelain
@@ -347,11 +367,37 @@ git -C $P status --porcelain
 The rollback baseline is taken at rollback time, so files legitimately written at
 `$T` after the move (for example step 8's `data_quality_report.json`) are expected
 and travel back with the directory; comparing against the original `before.json`
-would report them as mismatches. Then restore `.env.local` and re-enable only the
-tasks in `enabled-before.txt`, as in step 10.
+would report them as mismatches. If the rename or a later verification fails,
+keep tasks paused and inspect both locations; do not repeat or reverse a move
+blindly. After a verified return, remove only `SHIOAJI_DATA_DIR` from `$P\.env`,
+set the research root back to the verified `$P\data` and check both resolvers
+before owner-authorized resumption of only the tasks in `enabled-before.txt`.
+
+## Historical layout
+
+The completed relocation used producer `069205b`, before PR #3. Its tracked
+`data/stock_category.json5` was returned to the checkout after moving the data;
+the old comparison excluded that code file and rollback returned it to the data
+directory first. Those steps apply **only to that earlier layout**, not to the
+`7e8bf5e` layout above. The [original procedure at research `758348d`](https://github.com/TaiwanCCyoyo/stock-research/blob/758348df6c5256e3a19c65908c6704da98d30a3e/docs/en/producer-data-relocation-runbook.md)
+is retained as historical evidence, not a procedure to rerun on the relocated host.
 
 ## Execution record
 
-| Date | Operator | Before (files / bytes) | After | Result       |
-| ---- | -------- | ---------------------- | ----- | ------------ |
-| —    | —        | —                      | —     | not executed |
+The private `relocation-delivery-20261015.json` receipt was read during PR #22's
+runbook correction; its SHA-256 is
+`eacf4b07265715d36127a294308bb825fc2139a29be63d263b4e1bc2f5200771`.
+Only this summary is published; private paths, raw logs and settings remain local.
+
+| Completed (UTC)     | Producer / research versions | Before, including old tracked category | Mutable data after move             | Recorded result                                                                                               |
+| ------------------- | ---------------------------- | -------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| 2026-10-15 04:11:32 | `069205b` / `758348d`        | 14,953 files / 42,625,107,796 bytes    | 14,952 files / 42,625,105,697 bytes | 0 inventory differences after the historical category extraction; logical coverage and both resolvers matched |
+
+The receipt records five SQLite databases passing `quick_check` with no remaining
+side files, unchanged scheduler definitions/restored states, and no downloads or
+research started. Its additive backup refresh exited 0 (2 copied, 14,953 verified);
+the final data check found only the deliberately rewritten
+`data_quality_report.json` changed after relocation, matching its mirror. These
+are receipt-time observations, not a new validation of live data. The next normal
+scheduled runs had not yet occurred and were not manually triggered; that
+post-schedule confirmation remains outside the recorded evidence.
