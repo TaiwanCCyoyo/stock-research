@@ -18,6 +18,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+from research_core.opportunity_history_bundle import ORIGINAL_MANIFEST_SHA256, resolve_history_bundle
 from research_core.opportunity_history_catalog import RULE, _id
 from research_core.opportunity_history_view import GainIndex, build_frame
 from research_core.opportunity_startup_cache import StartupCache, canonical
@@ -34,8 +35,9 @@ from scripts.query_opportunity_history import (
 )
 
 SCHEMA = "opportunity-history-web.v1"
-DEFAULT_SHA = "238e7e4aba59509bb3245ea36e9708d6d8f9b9d7c6dab9f18a9d60bba67aa6ea"
-DEFAULT_BUNDLE = Path(__file__).resolve().parents[1] / "tasks/20261005-market-full-history-web/inputs/producer-preview"
+# The bundle is located through the shared research_data catalog (research_core/opportunity_history_bundle.py),
+# never by a checkout-relative path. Its pin is the predecessor's original manifest bytes.
+DEFAULT_SHA = ORIGINAL_MANIFEST_SHA256
 WEB_RECEIPT_CACHE = Path(__file__).resolve().parents[1] / ".tmp/opportunity-native-verification-cache"
 WEB_STARTUP_CACHE = Path(__file__).resolve().parents[1] / ".tmp/opportunity-web-startup-cache-v1"
 logger = logging.getLogger(__name__)
@@ -46,7 +48,7 @@ class HistoryStore:
 
     def __init__(
         self,
-        bundle: Path = DEFAULT_BUNDLE,
+        bundle: Path,
         expected_sha: str = DEFAULT_SHA,
         *,
         progress: Callable[[str, int, int], None] | None = None,
@@ -431,7 +433,9 @@ class HistoryLoading(RuntimeError):
 class LazyHistoryStore:
     """One initialized snapshot per server process, including startup failures."""
 
-    def __init__(self, bundle: Path = DEFAULT_BUNDLE, expected_sha: str = DEFAULT_SHA) -> None:
+    def __init__(self, bundle: Path | None = None, expected_sha: str = DEFAULT_SHA) -> None:
+        # None means "resolve through the shared catalog on first load". Resolution happens in
+        # get(), never here, so an absent catalog entry is a reported failed state, not an import error.
         self.bundle = bundle
         self.expected_sha = expected_sha
         self.store: HistoryStore | None = None
@@ -454,6 +458,9 @@ class LazyHistoryStore:
                 raise RuntimeError("Saved history snapshot is unavailable") from self.error
             if self.store is None:
                 try:
+                    if self.bundle is None:
+                        self._progress("確認共用資料目錄中的歷史快照", 0, 0)
+                        self.bundle = resolve_history_bundle().path
                     # Only the web reader opts in. Every source byte/hash and
                     # structural gate is still checked on each process startup.
                     with semantic_receipt_cache(WEB_RECEIPT_CACHE):

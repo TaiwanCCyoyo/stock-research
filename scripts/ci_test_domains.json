@@ -527,7 +527,7 @@
         "tests/test_producer_data_root.py",
         "tests/test_research_api.py",
         "tests/test_research_api_security.py",
-        "tests/test_restore_opportunity_history.py",
+        "tests/test_opportunity_history_bundle.py",
         "tests/test_static_report_export.py",
         "tests/test_stock_research_query.py",
         "tests/test_symbol_classification.py",

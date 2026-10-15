@@ -19,10 +19,15 @@ another checkout are reported without terminating them. Logs belong to
 `.tmp/research-web-launcher/`. Stopping the launcher stops only children it started;
 this is not an operating-system startup registration.
 
-The configured physical snapshot at
-`tasks/20261005-market-full-history-web/inputs/producer-preview/` spans
-2010-01-04 through 2026-10-02, with 1,970 eligible saved stocks. Its trusted
-manifest digest and original methods stay unchanged. This universe does not
+The configured physical snapshot is registered in the shared catalog as
+`patterns/opportunity-history-web/<manifest-sha256>/` under `research_data`
+and located through `research_core.opportunity_history_bundle.resolve_history_bundle()`
+(root from `STOCK_RESEARCH_DATA_ROOT`, in the process environment or the primary checkout's
+`.env.local`). It spans 2010-01-04 through 2026-10-02, with 1,970 eligible saved
+stocks. It is pinned by the predecessor's original manifest bytes
+(`c7848ae7…`, not the path-rewritten `238e7e4a…` form that tracked evidence cites); see the
+[decision record](decision-records/2026-10-16-opportunity-history-shared-entry.md). The old task-local
+`inputs/producer-preview/` path no longer exists in this checkout. Its methods stay unchanged. This universe does not
 cover every issuer ever listed; early corporate-action adjustment, delistings,
 historical membership and fine classification remain explicit limitations.
 
