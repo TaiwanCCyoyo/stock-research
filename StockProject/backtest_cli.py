@@ -748,10 +748,14 @@ def main():
         except (ValueError, FileNotFoundError) as e:
             logger.error("[!] %s", e)
             sys.exit(1)
+    # Constructing the loader only resolves paths; it reads nothing. Its resolved
+    # corporate-action DB (data dir, parent or grandparent) is what gets fingerprinted.
+    loader = DataLoader(data_path=args.data_path) if args.data_path else DataLoader()
     try:
         # Live producer data: refuse the write window and running writers, and fingerprint
         # every input before anything reads it; the end of the run re-checks them.
-        args.input_fingerprint = fingerprint_inputs(data_directory_inputs(Path(args.data_path)))
+        inputs = data_directory_inputs(Path(args.data_path), corporate_actions=getattr(loader, "corporate_action_db", None))
+        args.input_fingerprint = fingerprint_inputs(inputs)
     except (ProducerBusyError, ProducerChangedError, ValueError) as e:
         logger.error("[!] %s", e)
         sys.exit(1)
@@ -788,7 +792,6 @@ def main():
         logger.info("[*] Initializing Backtest for codes: %s", code_list)
 
     # 2. Load Data
-    loader = DataLoader(data_path=args.data_path) if args.data_path else DataLoader()
     read_sqlite_readonly(loader)
     loader.load_all()  # In a real CLI, we might want to load only needed codes to save time
     if loader._price_df is None:

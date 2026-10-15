@@ -35,6 +35,8 @@ class InputSpec:
     glob `pattern` and is identified by its file listing's sizes and mtimes. `live_producer`
     is inferred from the producer root when it can be resolved. Without a resolvable root an
     input must be declared: `False` for a task-owned input, `True` for live producer data.
+    An `optional` file that is missing is recorded as absent, so one that appears during the
+    run is caught by `assert_inputs_unchanged` instead of being read untracked.
     """
 
     name: str
@@ -43,6 +45,7 @@ class InputSpec:
     tables: Mapping[str, str | None] | None = None
     pattern: str | None = None
     live_producer: bool | None = None
+    optional: bool = False
 
 
 def _file_fingerprint(spec: InputSpec) -> dict[str, Any]:
@@ -139,6 +142,8 @@ def fingerprint_inputs(specs: list[InputSpec], *, now: datetime | None = None) -
     for spec in specs:
         if spec.pattern is not None:
             record = _glob_fingerprint(spec)
+        elif spec.optional and not spec.path.exists():
+            record = {"absent": True}
         elif spec.tables is not None:
             record = _sqlite_fingerprint(spec)
         else:
@@ -153,9 +158,13 @@ def fingerprint_inputs(specs: list[InputSpec], *, now: datetime | None = None) -
     }
 
 
-def data_directory_inputs(data_path: Path) -> list[InputSpec]:
-    """The producer-layout files a `DataLoader`-style reader may open under `data_path`.
+def data_directory_inputs(data_path: Path, *, corporate_actions: Path | None = None) -> list[InputSpec]:
+    """Every file a `DataLoader`-style reader may open for `data_path`, present or not.
 
+    Missing optional files are recorded as absent and the `*_day.csv` listing is always
+    recorded, even empty, so a file that appears mid-run fails the end-of-run check.
+    `corporate_actions` is the database the reader actually resolved (`DataLoader` also
+    accepts the parent and grandparent directories); pass it rather than assuming a location.
     A data directory under the resolvable producer root is inferred live; one that cannot
     be classified (no resolvable root) is declared live, so the idle gate applies.
     """
@@ -164,15 +173,14 @@ def data_directory_inputs(data_path: Path) -> list[InputSpec]:
         declared = None
     except (ValueError, OSError, RuntimeError):
         declared = True
-    candidates = [
-        InputSpec("price_daily", data_path / "price_daily.parquet", date_column="Date", live_producer=declared),
-        InputSpec("dividends", data_path / "dividends.parquet", live_producer=declared),
-        InputSpec("corporate_actions", data_path / "corporate_actions.sqlite", tables={"corporate_actions": "ex_date"}, live_producer=declared),
-        InputSpec("symbol_meta", data_path / "symbol_meta.sqlite", tables={"symbol_meta": None}, live_producer=declared),
+    specs = [
+        InputSpec("price_daily", data_path / "price_daily.parquet", date_column="Date", live_producer=declared, optional=True),
+        InputSpec("dividends", data_path / "dividends.parquet", live_producer=declared, optional=True),
+        InputSpec("symbol_meta", data_path / "symbol_meta.sqlite", tables={"symbol_meta": None}, live_producer=declared, optional=True),
+        InputSpec("day_csv", data_path, pattern="*_day.csv", live_producer=declared),
     ]
-    specs = [spec for spec in candidates if spec.path.is_file()]
-    if any(data_path.glob("*_day.csv")):
-        specs.append(InputSpec("day_csv", data_path, pattern="*_day.csv", live_producer=declared))
+    if corporate_actions is not None:
+        specs.append(InputSpec("corporate_actions", corporate_actions, tables={"corporate_actions": "ex_date"}, live_producer=declared))
     return specs
 
 
@@ -187,6 +195,9 @@ def assert_inputs_unchanged(fingerprint: Mapping[str, Any]) -> None:
         path = Path(row["path"])
         if "pattern" in row:
             if object_digest(_listing(InputSpec(name, path, pattern=row["pattern"]))) != row["listing_sha256"]:
+                changed.append(name)
+        elif row.get("absent"):
+            if path.exists():
                 changed.append(name)
         elif not path.is_file() or list(stat_identity(path)) != [row["bytes"], row["mtime_ns"]]:
             changed.append(name)

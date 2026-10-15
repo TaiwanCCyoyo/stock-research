@@ -99,7 +99,9 @@ saving). Aware timestamps are converted and naive ones refused. Input classifica
 fails closed: an input that cannot be classified because no producer root resolves must
 be declared, and a task-owned declaration under the producer root is rejected.
 `StockProject.backtest_cli` enforces the contract at its entry point. It fingerprints
-before reading, refuses the window, makes the SHA-pinned `DataLoader`'s and
+before reading (including the corporate-action database the loader actually resolves,
+missing optional inputs as absent and an always-recorded `*_day.csv` listing, so a file
+that appears mid-run is caught), refuses the window, makes the SHA-pinned `DataLoader`'s and
 `universe.py`'s SQLite reads read-only, and re-checks the inputs before writing results.
 A read-write connection is not harmless here: on a WAL database, the last connection to
 close checkpoints the WAL into the main file, which writes producer data.
