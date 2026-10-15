@@ -35,7 +35,7 @@ def main() -> int:
         }
     else:
         started = time.monotonic()
-        bars, actions, _, _ = family._load_inputs(producer_data_root())
+        bars, actions, _, _ = family.load_inputs(producer_data_root())
         loaded = time.monotonic()
         everything = sorted(bars["Code"].unique())
         step = max(1, len(everything) // args.codes)
