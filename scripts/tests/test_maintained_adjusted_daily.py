@@ -231,6 +231,24 @@ def test_a_shioaji_row_cannot_mark_neighbouring_official_rows(environment: tuple
     assert frame["Quality"].tolist() == [True, True]
 
 
+def test_a_same_size_replacement_after_a_cached_read_is_refused(environment: tuple[Path, Path]) -> None:
+    producer, _ = environment
+    maintained_adjusted_daily.update(producer_root=producer)
+    maintained_adjusted_daily.read_adjusted_daily("raw")
+    path = Path(maintained_adjusted_daily.current_generation()["path"]) / "raw.parquet"
+    original = path.stat()
+    data = bytearray(path.read_bytes())
+    data[len(data) // 2] ^= 0xFF
+    replacement = path.with_name("replacement.tmp")
+    replacement.write_bytes(bytes(data))
+    os.utime(replacement, ns=(original.st_atime_ns, original.st_mtime_ns))
+    os.replace(replacement, path)
+    assert (path.stat().st_size, path.stat().st_mtime_ns) == (original.st_size, original.st_mtime_ns)
+
+    with pytest.raises(ValueError, match="does not match the bytes/SHA-256"):
+        maintained_adjusted_daily.read_adjusted_daily("raw")
+
+
 def test_concurrent_writer_is_refused(environment: tuple[Path, Path]) -> None:
     producer, shared = environment
     family = shared / "derived" / maintained_adjusted_daily.FAMILY

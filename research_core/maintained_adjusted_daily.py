@@ -36,7 +36,7 @@ import pyarrow.parquet as pq
 
 from research_core import price_basis
 from research_core.artifact_store import file_digest, publish_noreplace, read_json, write_json
-from research_core.live_producer import read_stable, readonly_sqlite, stat_identity
+from research_core.live_producer import read_stable, readonly_sqlite
 from research_core.run_receipt import InputSpec, assert_inputs_unchanged, code_identity, fingerprint_inputs
 from research_core.shared_data import shared_data_root
 
@@ -276,18 +276,26 @@ def current_generation(root: Path | None = None, *, generation: str | None = Non
     return {**read_json(directory / "status.json"), "path": str(directory), "status_sha256": pointer["status_sha256"]}
 
 
-_VERIFIED: dict[Path, tuple[int, int]] = {}
+_VERIFIED: dict[tuple[Path, str], tuple[int, int, int, int]] = {}
 
 
-def _verify_once(path: Path, expected: dict[str, Any]) -> None:
-    """Hash a generation file against status.json once per process and (size, mtime)."""
-    identity = stat_identity(path)
-    if _VERIFIED.get(path) == identity:
-        return
+def _file_identity(path: Path) -> tuple[int, int, int, int]:
+    """Size, mtime and the file's own id: a same-size copy restored with the old mtime still differs."""
+    info = path.stat()
+    return info.st_size, info.st_mtime_ns, info.st_dev, info.st_ino
+
+
+def _verify_once(path: Path, expected: dict[str, Any]) -> tuple[Path, str]:
+    """Hash a generation file against status.json once per process per (file identity, expected digest)."""
+    key = (path, expected["sha256"])
+    identity = _file_identity(path)
+    if _VERIFIED.get(key) == identity:
+        return key
     if identity[0] != expected["bytes"] or file_digest(path) != expected["sha256"]:
         raise ValueError(f"{path} does not match the bytes/SHA-256 recorded in status.json; rebuild with scripts.maintain_adjusted_daily update")
-    _VERIFIED[path] = identity
+    _VERIFIED[key] = identity
     LOGGER.debug("Verified %s sha256=%s", path, expected["sha256"])
+    return key
 
 
 def read_adjusted_daily(
@@ -307,11 +315,11 @@ def read_adjusted_daily(
         raise ValueError(f"unknown basis {basis!r}; choose one of {BASES}")
     status = current_generation(root, generation=generation)
     path = Path(status["path"]) / f"{basis}.parquet"
-    _verify_once(path, status["bases"][basis])
+    key = _verify_once(path, status["bases"][basis])
     filters = None if codes is None else [("Code", "in", [str(code) for code in codes])]
     selected = None if columns is None else list(columns)
     table = read_stable(path, lambda source: pq.read_table(source, columns=selected, filters=filters))
-    if stat_identity(path) != _VERIFIED.get(path):
+    if _file_identity(path) != _VERIFIED.get(key):
         raise ValueError(f"{path} changed after its SHA-256 was verified")
     frame = cast(pd.DataFrame, table.to_pandas())
     record = {

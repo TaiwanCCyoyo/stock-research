@@ -48,10 +48,14 @@
                 "research_core/live_producer.py",
                 "research_core/derived_features_chunk_v2.py",
                 "scripts/research_data.py",
+                "research_core/shared_data.py",
+                "research_core/maintained_adjusted_daily.py",
+                "scripts/maintain_adjusted_daily.py",
                 "tasks/20261012-research-data-entry/*"
             ],
             "tests": [
                 "scripts/tests/test_derived_features_chunk_v2.py",
+                "scripts/tests/test_maintained_adjusted_daily.py",
                 "scripts/tests/test_research_data_catalog.py",
                 "scripts/tests/test_research_data_execution.py",
                 "scripts/tests/test_research_data_extension.py",
@@ -402,6 +406,7 @@
         "scripts/tests/test_history_title_origins_export.py",
         "scripts/tests/test_industry_role_comparison.py",
         "scripts/tests/test_industry_role_runner.py",
+        "scripts/tests/test_maintained_adjusted_daily.py",
         "scripts/tests/test_market_context.py",
         "scripts/tests/test_market_context_artifact.py",
         "scripts/tests/test_method_environment_interactions.py",
