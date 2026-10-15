@@ -10,16 +10,27 @@ submodule's own tooling.
 from __future__ import annotations
 
 import json
-import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from research_core.live_producer import readonly_connect
 from research_core.producer_data import producer_data_root
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_UNIVERSES_DIR = REPO_ROOT / "universes"
-DEFAULT_SYMBOL_META_DB = producer_data_root() / "symbol_meta.sqlite"
+# Resolved on first use, not at import: a caller with an explicit data path must
+# not need a configured producer root (research_core/producer_data.py has no fallback).
+
+
+def default_symbol_meta_db() -> Path:
+    return producer_data_root() / "symbol_meta.sqlite"
+
+
+def __getattr__(name: str) -> Any:
+    if name == "DEFAULT_SYMBOL_META_DB":
+        return default_symbol_meta_db()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 class UniverseError(Exception):
@@ -50,7 +61,7 @@ def resolve_universe(
     name: str,
     *,
     universes_dir: Path = DEFAULT_UNIVERSES_DIR,
-    symbol_meta_db: Path = DEFAULT_SYMBOL_META_DB,
+    symbol_meta_db: Path | None = None,
 ) -> ResolvedUniverse:
     definition = load_universe_definition(name, universes_dir)
     has_codes = "codes" in definition
@@ -74,10 +85,11 @@ def resolve_universe(
     return ResolvedUniverse(name=name, codes=codes)
 
 
-def resolve_industry_rule(industry: str, symbol_meta_db: Path = DEFAULT_SYMBOL_META_DB) -> list[str]:
+def resolve_industry_rule(industry: str, symbol_meta_db: Path | None = None) -> list[str]:
+    symbol_meta_db = symbol_meta_db if symbol_meta_db is not None else default_symbol_meta_db()
     if not symbol_meta_db.is_file():
         raise UniverseError(f"symbol_meta.sqlite not found at {symbol_meta_db}; run stock-data-downloader/scripts/fetch_symbol_meta.py fetch first")
-    conn = sqlite3.connect(symbol_meta_db)
+    conn = readonly_connect(symbol_meta_db)
     try:
         rows = conn.execute(
             "SELECT code FROM symbol_meta WHERE industry_category = ? ORDER BY code",
@@ -92,7 +104,7 @@ def resolve_codes(
     value: str,
     *,
     universes_dir: Path = DEFAULT_UNIVERSES_DIR,
-    symbol_meta_db: Path = DEFAULT_SYMBOL_META_DB,
+    symbol_meta_db: Path | None = None,
 ) -> tuple[list[str], str | None]:
     """Resolve a `--codes` value to `(code_list, universe_name)`.
 

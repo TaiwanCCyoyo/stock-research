@@ -35,8 +35,10 @@ particular artifact shape. If a change would make an existing `runs/` summary or
 committed table unreadable or differently interpreted, it is a destructive change for this
 purpose even though no bytes are lost.
 
-**Check the schedule before writing anything under `stock-data-downloader/data/`.** Two
-Windows tasks write there:
+**Check the schedule before writing anything in the producer's data directory**
+(`stock-data-downloader/data/`, or `D:/StockData/stock-data-downloader` once the
+[relocation runbook](../../../docs/en/producer-data-relocation-runbook.md) has run).
+Two Windows tasks write there:
 
 | task                            | trigger        | duration                                                                 |
 | ------------------------------- | -------------- | ------------------------------------------------------------------------ |
@@ -80,6 +82,12 @@ powershell.exe -NoProfile -Command "Get-ScheduledTask -TaskName 'StockProject-*'
 
 `State=Running` means hands off. `official_daily.sqlite-wal` and `-shm` sitting next to the
 database mean a writer is attached, or was attached and did not exit cleanly.
+
+Research reads of the live data obey the same schedule: `research_core/live_producer.py`'s
+`assert_producer_idle()` refuses the weekday 18:00-18:45 window (Asia/Taipei) and any running
+`StockProject-*` task, SQLite is opened read-only, and `read_stable()` fails a file
+rewritten mid-read. A read-only SQLite connection may still create `-shm`/`-wal` beside a
+WAL database; they belong to SQLite, so do not delete them while anything may be open.
 
 ## When to stop and ask
 

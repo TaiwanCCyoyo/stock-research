@@ -20,6 +20,8 @@ from typing import Any
 import pandas as pd
 
 from research_core.evidence import finite_json, read_json
+from research_core.live_producer import ProducerChangedError, assert_producer_idle
+from research_core.producer_data import producer_data_root
 from research_core.sector_groups import build_groups
 from research_core.sector_waves import DEFINITION_ID, CatalogBar, cluster_waves, compare_peer, detect_episodes, select_wave_winner
 from StockProject.engine.data_loader import CASH_WINDOW_EVENTS, PERMANENT_FACTOR_EVENTS, DataLoader
@@ -94,8 +96,7 @@ def _json(path: Path) -> dict[str, Any]:
     return value
 
 
-def _paths(repo_root: Path) -> dict[str, Path]:
-    data = repo_root / "stock-data-downloader" / "data"
+def _paths(repo_root: Path, data: Path) -> dict[str, Path]:
     task = repo_root / "tasks" / TASK_NAME
     return {
         "price": data / "price_daily.parquet",
@@ -294,13 +295,18 @@ def _bars_for_code(frame: pd.DataFrame, actions: pd.DataFrame, loader: DataLoade
     return tuple(bars), records
 
 
-def build_bundle(repo_root: Path, output_dir: Path, run_id: str) -> dict[str, Any]:
-    """Build one immutable descriptive bundle.  The caller supplies no market paths."""
+def build_bundle(repo_root: Path, output_dir: Path, run_id: str, *, data_root: Path | None = None) -> dict[str, Any]:
+    """Build one immutable descriptive bundle from the live producer root, or an explicit `data_root`."""
     repo_root, output_dir = repo_root.resolve(), output_dir.resolve()
     task_root = (repo_root / "tasks" / TASK_NAME).resolve()
     if not output_dir.is_relative_to(task_root) or not isinstance(run_id, str) or not run_id:
         raise CatalogIOError("output must be below this task and run_id must be nonempty")
-    paths = _paths(repo_root)
+    if data_root is None:
+        assert_producer_idle()
+        data_root = producer_data_root()
+    paths = _paths(repo_root, data_root.resolve())
+    data_files = [path for path in paths.values() if path.is_relative_to(data_root.resolve())]
+    observed = {path: (path.stat().st_size, path.stat().st_mtime_ns) for path in data_files}
     identities = {name: _input_sha(name, path) for name, path in paths.items()}
     try:
         output_dir.mkdir(parents=True, exist_ok=False)
@@ -434,6 +440,8 @@ def build_bundle(repo_root: Path, output_dir: Path, run_id: str) -> dict[str, An
         },
         "chunks": chunks,
     }
+    if any((path.stat().st_size, path.stat().st_mtime_ns) != stat for path, stat in observed.items()):
+        raise ProducerChangedError("producer inputs changed during the catalog build; rebuild outside the write window")
     (output_dir / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, sort_keys=True, allow_nan=False, indent=2) + "\n", encoding="utf-8")
     validate_bundle(output_dir)
     canonical_hash = hashlib.sha256(json.dumps(manifest, sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode("utf-8")).hexdigest()

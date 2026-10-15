@@ -53,9 +53,12 @@ original rows remain available as quality/evidence records.
 
 ## Reproduction and validation
 
-Run from a physical task worktree with the manifest's producer snapshot and
-recorded code/config identities. A new output directory is required; the builder
-refuses to overwrite an existing run.
+The builder reads the live producer root (`producer_data_root()`) while the producer is
+idle and fails if an input changes during the build. Byte-identical reproduction needs
+inputs matching the manifest's `input_identities_sha256`; since the owner decision of
+2026-10-15 ([record](decision-records/2026-10-15-drop-input-sealing.md)) a mismatch means
+rerunning on current data, with `catalog-v1` kept as the fingerprinted historical result.
+A new output directory is required; the builder refuses to overwrite an existing run.
 
 ```powershell
 uv run --no-sync python -m scripts.build_sector_wave_catalog --output-dir tasks/20261002-sector-wave-catalog/runs/reproduction-01 --run-id reproduction-01
