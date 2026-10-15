@@ -35,8 +35,10 @@ particular artifact shape. If a change would make an existing `runs/` summary or
 committed table unreadable or differently interpreted, it is a destructive change for this
 purpose even though no bytes are lost.
 
-**Check the schedule before writing anything under `stock-data-downloader/data/`.** Two
-Windows tasks write there:
+**Check the schedule before writing anything in the producer's data directory**
+(`stock-data-downloader/data/`, or `D:/StockData/stock-data-downloader` once the
+[relocation runbook](../../../docs/en/producer-data-relocation-runbook.md) has run).
+Two Windows tasks write there:
 
 | task                            | trigger        | duration                                                                 |
 | ------------------------------- | -------------- | ------------------------------------------------------------------------ |

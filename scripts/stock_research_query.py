@@ -16,7 +16,14 @@ from research_core.producer_data import producer_data_root  # noqa: E402
 from StockProject.engine.data_loader import DataLoader  # noqa: E402
 
 TASKS_ROOT = REPO_ROOT / "tasks"
-DEFAULT_DATA_PATH = producer_data_root()
+
+
+# Resolved on first use, not at import: a caller with an explicit data path must
+# not need a configured producer root (research_core/producer_data.py has no fallback).
+def __getattr__(name: str) -> Any:
+    if name == "DEFAULT_DATA_PATH":
+        return producer_data_root()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 class QueryError(ValueError):
