@@ -38,7 +38,7 @@ receipt stores `context.producer_identity`, which still carries the original
 `input_receipt_sha256` (`584add41…`); the `238e7e4a…` manifest carries the rewritten
 `ddef1c66…`. `HistoryStore.detail()` requires the two to be equal, so a
 `238e7e4a…` manifest over these bytes would load at startup and fail on every stock
-detail page. Making them consistent would mean rewriting ~2,000 receipts and
+detail page (all 1,970 receipts carry `584add41…`, checked). Making them consistent would mean rewriting 1,970 receipts and
 re-deriving digests with no original left to compare against. The bytes are kept
 verbatim, registered as status `legacy`.
 
