@@ -83,6 +83,7 @@ def test_cli_routes_price_and_metadata_to_same_explicit_root(monkeypatch: pytest
     monkeypatch.setattr(backtest_cli, "DataLoader", Loader)
     monkeypatch.setattr(backtest_cli, "resolve_codes", resolve)
     monkeypatch.setattr(backtest_cli, "load_strategy_class", lambda _: object)
+    monkeypatch.setattr(backtest_cli, "fingerprint_inputs", lambda specs: {"inputs": {}})
     monkeypatch.setattr(backtest_cli, "run_backtest_pass", stop)
     with pytest.raises(StopBeforeResearch):
         backtest_cli.main()
@@ -104,6 +105,7 @@ def test_cli_unconfigured_routes_price_and_metadata_to_submodule(monkeypatch: py
 
     monkeypatch.setattr(backtest_cli, "resolve_codes", resolve)
     monkeypatch.setattr(backtest_cli, "DataLoader", loader)
+    monkeypatch.setattr(backtest_cli, "fingerprint_inputs", lambda specs: {"inputs": {}})
     with pytest.raises(RuntimeError, match="stop before loading"):
         backtest_cli.main()
     assert observed == [{"data_path": str(REPO_ROOT / "stock-data-downloader" / "data")}]

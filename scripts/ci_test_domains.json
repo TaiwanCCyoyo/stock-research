@@ -502,6 +502,7 @@
         "scripts/tests/test_windows_viewer_launcher.py",
         "scripts/tests/test_worktree_inventory.py",
         "tests/test_backtest_capital_mode_comparison.py",
+        "tests/test_backtest_live_inputs.py",
         "tests/test_backtest_metrics.py",
         "tests/test_backtest_universe_cli.py",
         "tests/test_broker_capital_modes.py",

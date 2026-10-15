@@ -24,7 +24,9 @@ current_dir = Path(__file__).resolve().parent
 sys.path.append(str(current_dir))
 sys.path.insert(0, str(current_dir.parent))
 
+from research_core.live_producer import ProducerBusyError, ProducerChangedError, sqlite_reads_readonly  # noqa: E402
 from research_core.producer_data import producer_data_root  # noqa: E402
+from research_core.run_receipt import assert_inputs_unchanged, data_directory_inputs, fingerprint_inputs  # noqa: E402
 
 try:
     from engine.backtest_engine import BacktestEngine
@@ -36,6 +38,20 @@ except ImportError as e:
     sys.stderr.write("Error: Could not import engine modules. Make sure you are running from the StockProject directory.\n")
     sys.stderr.write(f"Details: {e}\n")
     sys.exit(1)
+
+
+def read_sqlite_readonly(loader: Any) -> None:
+    """Make a DataLoader's corporate-action SQLite read read-only without editing its pinned bytes."""
+    load = getattr(loader, "_load_corporate_actions", None)
+    module = sys.modules.get(type(loader).__module__)
+    if load is None or module is None or not hasattr(module, "sqlite3"):
+        return
+
+    def readonly_load(*args: Any, **kwargs: Any) -> Any:
+        with sqlite_reads_readonly(module):
+            return load(*args, **kwargs)
+
+    loader._load_corporate_actions = readonly_load
 
 
 def load_strategy_class(file_path: Path | str):
@@ -536,6 +552,7 @@ def build_summary(args: argparse.Namespace, code_list: list[str], strategy_cls: 
             "path": data_path,
             "price_file": artifact_path(raw_data_path / "price_daily.parquet"),
             "dividend_file": artifact_path(raw_data_path / "dividends.parquet"),
+            **({"input_fingerprint": args.input_fingerprint} if getattr(args, "input_fingerprint", None) else {}),
         },
         "metrics": {
             "final_value": results["final_value"],
@@ -731,6 +748,13 @@ def main():
         except (ValueError, FileNotFoundError) as e:
             logger.error("[!] %s", e)
             sys.exit(1)
+    try:
+        # Live producer data: refuse the write window and running writers, and fingerprint
+        # every input before anything reads it; the end of the run re-checks them.
+        args.input_fingerprint = fingerprint_inputs(data_directory_inputs(Path(args.data_path)))
+    except (ProducerBusyError, ProducerChangedError, ValueError) as e:
+        logger.error("[!] %s", e)
+        sys.exit(1)
     metadata_args = {"symbol_meta_db": Path(args.data_path) / "symbol_meta.sqlite"} if args.data_path else {}
     try:
         args.strategy_params = load_strategy_params(args.params_json, args.params_file)
@@ -765,6 +789,7 @@ def main():
 
     # 2. Load Data
     loader = DataLoader(data_path=args.data_path) if args.data_path else DataLoader()
+    read_sqlite_readonly(loader)
     loader.load_all()  # In a real CLI, we might want to load only needed codes to save time
     if loader._price_df is None:
         data_hint = args.data_path or "/app/data/processed"
@@ -812,6 +837,12 @@ def main():
             logger.error("[!] Backtest returned no results. Check codes, date range, and data availability.")
             sys.exit(1)
         summary = result
+
+    try:
+        assert_inputs_unchanged(args.input_fingerprint)
+    except ProducerChangedError as e:
+        logger.error("[!] %s", e)
+        sys.exit(1)
 
     # 5. Output Results
     logger.info("\n" + "=" * 30)

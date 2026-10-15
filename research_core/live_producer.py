@@ -14,16 +14,21 @@ import logging
 import sqlite3
 import subprocess
 import sys
-from collections.abc import Callable
-from datetime import datetime
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
+from datetime import datetime, timedelta, timezone
 from datetime import time as clock_time
 from pathlib import Path
-from typing import TypeVar
+from types import ModuleType, SimpleNamespace
+from typing import Any, TypeVar
 
 LOGGER = logging.getLogger(__name__)
 # StockProject-DailyUpdate holds 18:00-18:45 on weekdays; OfficialBackfill starts at 18:25
 # and, after a month rollover, runs longer, which the running-task check covers.
 WRITE_WINDOW = (clock_time(18, 0), clock_time(18, 45))
+# The scheduled tasks run on Taiwan time. Taiwan has no daylight saving, so a fixed
+# UTC+08:00 offset is exact and needs no tz database on Windows.
+PRODUCER_TZ = timezone(timedelta(hours=8), "Asia/Taipei")
 TASK_QUERY = "Get-ScheduledTask -TaskName 'StockProject-*' | Where-Object State -eq 'Running' | ForEach-Object TaskName"
 T = TypeVar("T")
 
@@ -36,9 +41,19 @@ class ProducerChangedError(RuntimeError):
     """A live producer file changed while a run was reading it."""
 
 
+def producer_time(now: datetime | None = None) -> datetime:
+    """`now` on the producer schedule's clock; a naive timestamp is ambiguous and refused."""
+    if now is None:
+        return datetime.now(PRODUCER_TZ)
+    if now.tzinfo is None or now.utcoffset() is None:
+        raise ValueError("timezone-aware timestamp required; the producer schedule runs on Asia/Taipei (UTC+08:00)")
+    return now.astimezone(PRODUCER_TZ)
+
+
 def in_write_window(now: datetime) -> bool:
     start, end = WRITE_WINDOW
-    return now.weekday() < 5 and start <= now.time() < end
+    local = producer_time(now)
+    return local.weekday() < 5 and start <= local.time() < end
 
 
 def running_producer_tasks() -> list[str]:
@@ -56,7 +71,7 @@ def assert_producer_idle(now: datetime | None = None) -> None:
 
     A point-in-time probe: pair it with an end-of-run check of the inputs read.
     """
-    moment = datetime.now() if now is None else now
+    moment = producer_time(now)
     if in_write_window(moment):
         raise ProducerBusyError("inside the weekday producer write window 18:00-18:45; read live producer data outside it")
     running = running_producer_tasks()
@@ -84,3 +99,29 @@ def read_stable(path: Path, read: Callable[[Path], T]) -> T:
     if stat_identity(path) != before:
         raise ProducerChangedError(f"producer file changed during read: {path}")
     return value
+
+
+def readonly_connect(database: str | Path, timeout: float = 30.0, **_: Any) -> sqlite3.Connection:
+    """Drop-in for `sqlite3.connect` that opens an existing database read-only.
+
+    A read-write connection is not harmless on a live WAL database: the last connection to
+    close checkpoints the WAL into the main file, which writes producer data.
+    """
+    return sqlite3.connect(Path(database).resolve().as_uri() + "?mode=ro", uri=True, timeout=timeout)
+
+
+@contextmanager
+def sqlite_reads_readonly(module: ModuleType) -> Iterator[None]:
+    """Route `module.sqlite3.connect` to `readonly_connect` for the duration of the block.
+
+    For code whose bytes are SHA-pinned evidence (for example `StockProject.engine.data_loader`),
+    so its reads become read-only without editing the file.
+    """
+    original = getattr(module, "sqlite3")  # noqa: B009 - attribute named by the pinned module
+    shim = SimpleNamespace(**{name: getattr(sqlite3, name) for name in dir(sqlite3) if not name.startswith("__")})
+    shim.connect = readonly_connect
+    setattr(module, "sqlite3", shim)  # noqa: B010
+    try:
+        yield
+    finally:
+        setattr(module, "sqlite3", original)  # noqa: B010

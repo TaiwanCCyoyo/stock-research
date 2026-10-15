@@ -10,11 +10,11 @@ submodule's own tooling.
 from __future__ import annotations
 
 import json
-import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from research_core.live_producer import readonly_connect
 from research_core.producer_data import producer_data_root
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -77,7 +77,7 @@ def resolve_universe(
 def resolve_industry_rule(industry: str, symbol_meta_db: Path = DEFAULT_SYMBOL_META_DB) -> list[str]:
     if not symbol_meta_db.is_file():
         raise UniverseError(f"symbol_meta.sqlite not found at {symbol_meta_db}; run stock-data-downloader/scripts/fetch_symbol_meta.py fetch first")
-    conn = sqlite3.connect(symbol_meta_db)
+    conn = readonly_connect(symbol_meta_db)
     try:
         rows = conn.execute(
             "SELECT code FROM symbol_meta WHERE industry_category = ? ORDER BY code",

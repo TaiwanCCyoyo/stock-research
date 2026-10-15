@@ -19,7 +19,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from research_core.artifact_store import file_digest, read_json, write_json
+from research_core.artifact_store import file_digest, object_digest, read_json, write_json
 from research_core.live_producer import ProducerChangedError, assert_producer_idle, read_stable, readonly_sqlite, stat_identity
 from research_core.producer_data import REPO_ROOT, producer_data_root
 
@@ -29,12 +29,20 @@ SCHEMA = "run-receipt.v1"
 
 @dataclass(frozen=True)
 class InputSpec:
-    """One input a run read. SQLite inputs name the tables (and optional date column) read."""
+    """One input a run read.
+
+    SQLite inputs name the tables (and optional date column) read; a directory input names a
+    glob `pattern` and is identified by its file listing's sizes and mtimes. `live_producer`
+    is inferred from the producer root when it can be resolved. Without a resolvable root an
+    input must be declared: `False` for a task-owned input, `True` for live producer data.
+    """
 
     name: str
     path: Path
     date_column: str | None = None
     tables: Mapping[str, str | None] | None = None
+    pattern: str | None = None
+    live_producer: bool | None = None
 
 
 def _file_fingerprint(spec: InputSpec) -> dict[str, Any]:
@@ -75,6 +83,23 @@ def _sqlite_fingerprint(spec: InputSpec) -> dict[str, Any]:
     return {"bytes": info.st_size, "mtime_ns": info.st_mtime_ns, "wal": list(stat_identity(wal)) if wal.exists() else None, "tables": tables}
 
 
+def _listing(spec: InputSpec) -> list[list[Any]]:
+    assert spec.pattern is not None
+    return [[path.name, *stat_identity(path)] for path in sorted(spec.path.glob(spec.pattern)) if path.is_file()]
+
+
+def _glob_fingerprint(spec: InputSpec) -> dict[str, Any]:
+    """Identity of many files without hashing them: count, bytes, newest mtime and a listing digest."""
+    listing = _listing(spec)
+    return {
+        "pattern": spec.pattern,
+        "files": len(listing),
+        "total_bytes": sum(row[1] for row in listing),
+        "newest_mtime_ns": max((row[2] for row in listing), default=None),
+        "listing_sha256": object_digest(listing),
+    }
+
+
 def producer_as_of(root: Path) -> dict[str, Any]:
     """The producer's own report time, plus the newest mtime among top-level files."""
     report = root / "data_quality_report.json"
@@ -87,29 +112,68 @@ def producer_as_of(root: Path) -> dict[str, Any]:
 
 
 def fingerprint_inputs(specs: list[InputSpec], *, now: datetime | None = None) -> dict[str, Any]:
-    """Fingerprint every input once; refuse live producer reads while a writer may run."""
-    try:
-        root: Path | None = producer_data_root()
-    except (ValueError, OSError, RuntimeError) as error:
-        # No configured producer root: no input can be live producer data. Never guess one.
-        LOGGER.warning("Producer root unavailable; treating all inputs as non-producer: %s", error)
-        root = None
-    live = [spec for spec in specs if root is not None and spec.path.resolve().is_relative_to(root.resolve())]
-    if live:
-        assert_producer_idle(now)
+    """Fingerprint every input once; refuse live producer reads while a writer may run.
+
+    Classification fails closed: an input that cannot be classified (no resolvable producer
+    root and no declaration) is an error, never silently treated as task-owned.
+    """
     names = [spec.name for spec in specs]
     if len(names) != len(set(names)):
         raise ValueError("input names must be unique")
+    try:
+        root: Path | None = producer_data_root().resolve()
+        root_error = None
+    except (ValueError, OSError, RuntimeError) as error:
+        root, root_error = None, error
+    live: dict[str, bool] = {}
+    for spec in specs:
+        inferred = None if root is None else spec.path.resolve().is_relative_to(root)
+        if spec.live_producer is None and inferred is None:
+            raise ValueError(f"cannot classify input {spec.name!r}: producer root unavailable ({root_error}); declare live_producer explicitly")
+        if spec.live_producer is False and inferred:
+            raise ValueError(f"input {spec.name!r} is declared task-owned but lies under the producer root {root}")
+        live[spec.name] = bool(spec.live_producer) or bool(inferred)
+    if any(live.values()):
+        assert_producer_idle(now)
     inputs = {}
     for spec in specs:
-        record = _sqlite_fingerprint(spec) if spec.tables is not None else _file_fingerprint(spec)
-        inputs[spec.name] = {"path": str(spec.path.resolve()), "live_producer": spec in live, **record}
-    LOGGER.info("Fingerprinted %d inputs (%d live producer)", len(inputs), len(live))
+        if spec.pattern is not None:
+            record = _glob_fingerprint(spec)
+        elif spec.tables is not None:
+            record = _sqlite_fingerprint(spec)
+        else:
+            record = _file_fingerprint(spec)
+        inputs[spec.name] = {"path": str(spec.path.resolve()), "live_producer": live[spec.name], **record}
+    LOGGER.info("Fingerprinted %d inputs (%d live producer)", len(inputs), sum(live.values()))
+    under_root = root is not None and any(live[spec.name] and spec.path.resolve().is_relative_to(root) for spec in specs)
     return {
         "captured_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "producer_as_of": producer_as_of(root) if live and root is not None else None,
+        "producer_as_of": producer_as_of(root) if under_root and root is not None else None,
         "inputs": inputs,
     }
+
+
+def data_directory_inputs(data_path: Path) -> list[InputSpec]:
+    """The producer-layout files a `DataLoader`-style reader may open under `data_path`.
+
+    A data directory under the resolvable producer root is inferred live; one that cannot
+    be classified (no resolvable root) is declared live, so the idle gate applies.
+    """
+    try:
+        producer_data_root()
+        declared = None
+    except (ValueError, OSError, RuntimeError):
+        declared = True
+    candidates = [
+        InputSpec("price_daily", data_path / "price_daily.parquet", date_column="Date", live_producer=declared),
+        InputSpec("dividends", data_path / "dividends.parquet", live_producer=declared),
+        InputSpec("corporate_actions", data_path / "corporate_actions.sqlite", tables={"corporate_actions": "ex_date"}, live_producer=declared),
+        InputSpec("symbol_meta", data_path / "symbol_meta.sqlite", tables={"symbol_meta": None}, live_producer=declared),
+    ]
+    specs = [spec for spec in candidates if spec.path.is_file()]
+    if any(data_path.glob("*_day.csv")):
+        specs.append(InputSpec("day_csv", data_path, pattern="*_day.csv", live_producer=declared))
+    return specs
 
 
 def assert_inputs_unchanged(fingerprint: Mapping[str, Any]) -> None:
@@ -121,7 +185,10 @@ def assert_inputs_unchanged(fingerprint: Mapping[str, Any]) -> None:
     changed = []
     for name, row in fingerprint["inputs"].items():
         path = Path(row["path"])
-        if not path.is_file() or list(stat_identity(path)) != [row["bytes"], row["mtime_ns"]]:
+        if "pattern" in row:
+            if object_digest(_listing(InputSpec(name, path, pattern=row["pattern"]))) != row["listing_sha256"]:
+                changed.append(name)
+        elif not path.is_file() or list(stat_identity(path)) != [row["bytes"], row["mtime_ns"]]:
             changed.append(name)
         elif "wal" in row:
             wal = path.with_name(path.name + "-wal")

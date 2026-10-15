@@ -6,7 +6,7 @@ import os
 import sqlite3
 import subprocess
 from contextlib import closing
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pandas as pd
@@ -16,8 +16,9 @@ from research_core import live_producer
 from research_core.live_producer import ProducerBusyError, ProducerChangedError, assert_producer_idle, read_stable, readonly_sqlite
 from research_core.run_receipt import InputSpec, changed_results, fingerprint_inputs, write_run_receipt
 
-WEEKDAY_EVENING = datetime(2026, 10, 15, 18, 10)
-WEEKDAY_NIGHT = datetime(2026, 10, 15, 1, 30)
+TAIPEI = timezone(timedelta(hours=8))
+WEEKDAY_EVENING = datetime(2026, 10, 15, 18, 10, tzinfo=TAIPEI)
+WEEKDAY_NIGHT = datetime(2026, 10, 15, 1, 30, tzinfo=TAIPEI)
 
 
 def _git(args: list[str], cwd: Path) -> str:
@@ -52,7 +53,16 @@ def producer(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     return root
 
 
-@pytest.mark.parametrize(("moment", "busy"), [(WEEKDAY_EVENING, True), (datetime(2026, 10, 15, 18, 45), False), (datetime(2026, 10, 17, 18, 10), False)])
+@pytest.mark.parametrize(
+    ("moment", "busy"),
+    [
+        (WEEKDAY_EVENING, True),
+        (datetime(2026, 10, 15, 10, 10, tzinfo=timezone.utc), True),
+        (datetime(2026, 10, 15, 18, 10, tzinfo=timezone.utc), False),
+        (datetime(2026, 10, 15, 18, 45, tzinfo=TAIPEI), False),
+        (datetime(2026, 10, 17, 18, 10, tzinfo=TAIPEI), False),
+    ],
+)
 def test_write_window_refuses_weekday_evening(monkeypatch: pytest.MonkeyPatch, moment: datetime, busy: bool) -> None:
     monkeypatch.setattr(live_producer, "running_producer_tasks", lambda: [])
     if busy:
@@ -188,5 +198,53 @@ def test_fingerprint_of_task_inputs_needs_no_producer_root(tmp_path: Path, monke
     monkeypatch.setattr(run_receipt, "producer_data_root", unconfigured)
     task_file = tmp_path / "labels.csv"
     task_file.write_text("a\n1\n", encoding="utf-8")
-    result = fingerprint_inputs([InputSpec("labels", task_file)], now=WEEKDAY_EVENING)
+    with pytest.raises(ValueError, match="cannot classify"):
+        fingerprint_inputs([InputSpec("labels", task_file)], now=WEEKDAY_EVENING)
+    result = fingerprint_inputs([InputSpec("labels", task_file, live_producer=False)], now=WEEKDAY_EVENING)
     assert result["producer_as_of"] is None and result["inputs"]["labels"]["live_producer"] is False
+
+
+def test_naive_timestamps_are_refused() -> None:
+    with pytest.raises(ValueError, match="timezone-aware"):
+        assert_producer_idle(datetime(2026, 10, 15, 1, 30))
+
+
+def test_task_input_declared_under_the_producer_root_is_rejected(producer: Path) -> None:
+    with pytest.raises(ValueError, match="declared task-owned"):
+        fingerprint_inputs([InputSpec("prices", producer / "price_daily.parquet", live_producer=False)], now=WEEKDAY_NIGHT)
+
+
+def test_directory_listing_fingerprint_detects_a_rewritten_csv(repo: Path, producer: Path) -> None:
+    day_csv = producer / "2330_day.csv"
+    day_csv.write_text("Date,Close\n2010-01-04,64.9\n", encoding="utf-8")
+    fingerprint = fingerprint_inputs([InputSpec("day_csv", producer, pattern="*_day.csv")], now=WEEKDAY_NIGHT)
+    assert fingerprint["inputs"]["day_csv"]["files"] == 1 and fingerprint["inputs"]["day_csv"]["live_producer"]
+    result = repo / "summary.json"
+    result.write_text("{}\n", encoding="utf-8")
+    day_csv.write_text("Date,Close\n2010-01-04,64.9\n2010-01-05,65.0\n", encoding="utf-8")
+    with pytest.raises(ProducerChangedError, match="day_csv"):
+        write_run_receipt(repo / "r.json", run_id="r", definition="d", parameters={}, inputs=fingerprint, results={"s": result}, repo_root=repo)
+
+
+PINNED_READER = """
+def write(path):
+    with sqlite3.connect(path) as conn:
+        conn.execute("INSERT INTO corporate_actions VALUES ('2330')")
+"""
+
+
+def test_sqlite_reads_readonly_routes_a_modules_connect(tmp_path: Path) -> None:
+    import types
+
+    from research_core.live_producer import sqlite_reads_readonly
+
+    database = tmp_path / "corporate_actions.sqlite"
+    with closing(sqlite3.connect(database)) as setup:
+        setup.execute("CREATE TABLE corporate_actions (code TEXT)")
+        setup.commit()
+    module = types.ModuleType("pinned_reader")
+    module.sqlite3 = sqlite3  # type: ignore[attr-defined]
+    exec(PINNED_READER, module.__dict__)  # noqa: S102 - stands in for a pinned module that calls sqlite3.connect
+    with sqlite_reads_readonly(module), pytest.raises(sqlite3.OperationalError, match="readonly"):
+        module.write(database)
+    assert module.sqlite3 is sqlite3

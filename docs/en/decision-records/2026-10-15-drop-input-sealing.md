@@ -94,6 +94,16 @@ ran during the study fails the run instead of silently mixing old and new files.
 change check is still not a cross-file transaction: a writer that finished entirely before
 the first read is visible only through the recorded mtimes.
 
+The window uses the producer schedule's clock, Asia/Taipei (UTC+08:00, no daylight
+saving). Aware timestamps are converted and naive ones refused. Input classification
+fails closed: an input that cannot be classified because no producer root resolves must
+be declared, and a task-owned declaration under the producer root is rejected.
+`StockProject.backtest_cli` enforces the contract at its entry point. It fingerprints
+before reading, refuses the window, makes the SHA-pinned `DataLoader`'s and
+`universe.py`'s SQLite reads read-only, and re-checks the inputs before writing results.
+A read-write connection is not harmless here: on a WAL database, the last connection to
+close checkpoints the WAL into the main file, which writes producer data.
+
 On a WAL database, a read-only connection may still create SQLite's own `-shm`/`-wal`
 files beside the live database. This was observed on 2026-10-15: a 0-byte `-wal` and a
 32 KB `-shm` were left beside `institutional.sqlite` and `monthly_revenue.sqlite`. They
