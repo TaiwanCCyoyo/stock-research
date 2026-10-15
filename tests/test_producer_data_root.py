@@ -211,10 +211,27 @@ def test_consumers_resolve_one_producer_root(tmp_path: Path) -> None:
     assert [Path(value) for value in json.loads(result.stdout)] == [root.resolve()] * 6
 
 
-def test_an_unconfigured_consumer_import_fails_loudly(tmp_path: Path) -> None:
-    """No silent fallback at import: the error names the setting instead of returning no files."""
-    environment = {**os.environ, ENV_KEY: str(tmp_path / "missing")}
-    result = subprocess.run(
+def _without_usable_root(tmp_path: Path, mode: str) -> dict[str, str]:
+    """A child environment where resolving the default must fail, independent of conftest.py.
+
+    "missing" guarantees failure on any machine. "unset" removes the variable; in a
+    checkout without a valid primary `.env.local` (CI) resolution fails too, and in
+    either case these callers must not resolve anything before they need it.
+    """
+    environment = {key: value for key, value in os.environ.items() if key != ENV_KEY}
+    if mode == "missing":
+        environment[ENV_KEY] = str(tmp_path / "missing")
+    return environment
+
+
+@pytest.mark.parametrize("mode", ["missing", "unset"])
+def test_cli_modules_resolve_the_default_only_when_used(tmp_path: Path, mode: str) -> None:
+    """An explicit --data-path must work without a configured producer root."""
+    environment = _without_usable_root(tmp_path, mode)
+    program = "import StockProject.backtest_cli, StockProject.universe, scripts.stock_research_query, scripts.prepare_nightly_research"
+    result = subprocess.run([sys.executable, "-c", program], cwd=REPO_ROOT, env=environment, capture_output=True, text=True, check=False)
+    assert result.returncode == 0, result.stderr
+    help_run = subprocess.run(
         [sys.executable, str(REPO_ROOT / "scripts" / "prepare_nightly_research.py"), "--help"],
         cwd=REPO_ROOT,
         env=environment,
@@ -222,8 +239,37 @@ def test_an_unconfigured_consumer_import_fails_loudly(tmp_path: Path) -> None:
         text=True,
         check=False,
     )
-    assert result.returncode != 0
-    assert ENV_KEY in result.stderr
+    assert help_run.returncode == 0, help_run.stderr
+
+
+def test_backtest_cli_explicit_data_path_never_consults_the_resolver(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.setenv(ENV_KEY, str(tmp_path / "missing"))
+    root = tmp_path / "explicit"
+    root.mkdir()
+    monkeypatch.setattr(sys, "argv", ["backtest_cli", "--strategy", "unused.py", "--codes", "@semis", "--data-path", str(root)])
+    observed: dict[str, Any] = {}
+
+    class StopBeforeResearch(Exception):
+        pass
+
+    def resolve(value: str, **kwargs: Any) -> tuple[list[str], str | None]:
+        observed["metadata"] = kwargs["symbol_meta_db"]
+        raise StopBeforeResearch
+
+    monkeypatch.setattr(backtest_cli, "resolve_codes", resolve)
+    monkeypatch.setattr(backtest_cli, "load_strategy_class", lambda _: object)
+    with pytest.raises(StopBeforeResearch):
+        backtest_cli.main()
+    assert observed == {"metadata": root / "symbol_meta.sqlite"}
+
+
+def test_an_unconfigured_default_fails_loudly_when_used(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """No silent fallback on use: the error names the setting instead of returning no files."""
+    from StockProject import universe
+
+    monkeypatch.setenv(ENV_KEY, str(tmp_path / "missing"))
+    with pytest.raises(ProducerRootError, match=ENV_KEY):
+        universe.resolve_industry_rule("Semiconductor")
 
 
 def test_nightly_direct_script_can_resolve_producer_root(tmp_path: Path) -> None:

@@ -17,7 +17,16 @@ if str(REPO_ROOT) not in sys.path:
 from research_core.producer_data import producer_data_root  # noqa: E402
 
 TASKS_ROOT = REPO_ROOT / "tasks"
-DEFAULT_DATA_PATH = producer_data_root()
+
+
+# Resolved on first use, not at import: a caller with an explicit data path must
+# not need a configured producer root (research_core/producer_data.py has no fallback).
+def __getattr__(name: str) -> Any:
+    if name == "DEFAULT_DATA_PATH":
+        return producer_data_root()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
 TASK_NAME_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]*$")
 ELECTRONICS_LARGE_CODES = [
     "2330",
@@ -214,7 +223,7 @@ def create_nightly_task(args: argparse.Namespace):
     validate_date(args.start, "--start")
     validate_date(args.end, "--end")
     codes = parse_codes(args.codes)
-    data_path = Path(args.data_path).resolve()
+    data_path = Path(args.data_path).resolve() if args.data_path else producer_data_root()
 
     task_root = TASKS_ROOT / args.task
     if task_root.exists() and not args.force:
@@ -259,7 +268,7 @@ def main():
     )
     parser.add_argument("--start", default="2022-01-01", help="Research start date (YYYY-MM-DD)")
     parser.add_argument("--end", default=None, help="Research end date (YYYY-MM-DD)")
-    parser.add_argument("--data-path", default=str(DEFAULT_DATA_PATH), help="Directory containing price_daily.parquet")
+    parser.add_argument("--data-path", default=None, help="Directory containing price_daily.parquet (default: the configured producer root)")
     parser.add_argument("--objective", default=None, help="Research objective written into mission.md")
     parser.add_argument("--name", default=None, help="Human-readable task title shown in the dashboard")
     parser.add_argument(

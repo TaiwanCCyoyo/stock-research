@@ -30,7 +30,7 @@ SENTINEL = "price_daily.parquet"
 _GIT_LOCATION_VARIABLES = ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_COMMON_DIR")
 
 
-class ProducerRootError(RuntimeError):
+class ProducerRootError(ValueError):
     """The producer data root is not configured or not usable; there is no fallback."""
 
 

@@ -34,12 +34,13 @@ own `.env`, so producer worktrees keep their own `data/`.
    uncommitted tracked changes. Another session's work there is never reset,
    stashed or switched; otherwise stop and coordinate with its owner.
 3. Research readers resolve the root through `producer_data_root()` (environment,
-   then the primary `.env.local`; no fallback). Before stock-research#19 merged, the
-   primary `.env.local` was corrected to
-   `STOCK_PRODUCER_DATA_ROOT=D:/Project/stock-research/stock-data-downloader/data`;
-   with the stale `D:/Project/stock-data-downloader/data` every research process
-   fails. Readers use the live root through `producer_data_root()`; there is no
-   worktree seeding or input sealing to migrate (owner re-scope of stock-research#20).
+   then the primary `.env.local`; no fallback). The primary `.env.local` must read
+   `STOCK_PRODUCER_DATA_ROOT=D:/Project/stock-research/stock-data-downloader/data`
+   before stock-research#19 merges. **Status, last checked 2026-10-15 09:20: not yet
+   corrected** — it still names the nonexistent `D:/Project/stock-data-downloader/data`,
+   on which every research process fails. Verify with a read-back, not a comment:
+   `Get-Content D:\Project\stock-research\.env.local`. There is no worktree seeding
+   or input sealing to migrate (owner re-scope of stock-research#20).
 4. Window: not 17:30–19:00 on a weekday (DailyUpdate 18:00, 19–45 min), not the
    evening of the 1st (OfficialBackfill runs ~1.5 h after a month rollover).
    Budget about 30 minutes; most of it is hashing ~21 GB of SQLite/Parquet twice.
@@ -113,6 +114,32 @@ otherwise stop. The producer HEAD must equal the merged commit the gitlink names
 and the read-back must print `SHIOAJI_DATA_DIR ...\stock-data-downloader\data default`.
 Both task actions already point at this checkout's `cron/` launchers, so no action
 migration is needed.
+
+### 2c. Preflight: links and volume
+
+Check before touching any file. A junction or mount point anywhere on either path
+can put the data on another volume while the drive letters look equal, and would
+make the rename follow a link.
+
+```powershell
+function Test-Reparse([string]$path) {
+  $item = Get-Item -LiteralPath $path -Force -ErrorAction SilentlyContinue
+  while ($item) {
+    if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) { return $item.FullName }
+    $item = $item.Parent
+  }
+}
+foreach ($path in "$P\data", $P, (Split-Path $T)) {
+  if (Test-Path -LiteralPath $path) { $hit = Test-Reparse $path; if ($hit) { throw "reparse point at $($hit): stop" } }
+}
+if (Test-Path -LiteralPath $T) { throw "target exists: stop" }
+$sourceVolume = (Get-Volume -FilePath "$P\data").UniqueId
+$targetVolume = (Get-Volume -DriveLetter (Split-Path $T -Qualifier).TrimEnd(':')).UniqueId
+if ($sourceVolume -ne $targetVolume) { throw "different volume: stop" }
+```
+
+`D:\StockData` may not exist yet; its drive root is then checked through the
+volume comparison. Step 4 additionally rejects reparse points inside the data tree.
 
 ### 3. Checkpoint SQLite
 
@@ -246,15 +273,20 @@ A producer development worktree must still print its own `data` and `default`.
 1. Read-only coverage: follow the producer's `docs/data-progress.md` from `$P`.
    It prints the database path (now under `$T`) and the same per-market coverage
    as before the move.
-2. Backup still covers the data: `uv run scripts/backup_data.py --verify-only`.
-   The mirror compares relative path, size and modification time, so the rename
-   needs no recopy; this must pass without copying.
+2. Backup still covers every file at the new root:
+   `uv run scripts/backup_data.py --verify-only`. It copies nothing and fails on a
+   file missing from the mirror or a same-age size mismatch. It deliberately
+   tolerates a stale copy (source newer than mirror) as "one snapshot behind", so a
+   pass proves coverage by name, not that the mirror is current.
 3. A local write, no network: `uv run scripts/check_data_integrity.py` reads the
    local parquet/SQLite and rewrites only `data_quality_report.json` (it imports no
    network client). Confirm its new modification time under `$T` and
    that nothing new appeared under `$P\data`.
-4. `uv run scripts/backup_data.py` then mirrors that one changed report into
-   `D:/StockDataBackup/data`.
+4. `uv run scripts/backup_data.py` then copies every file whose size or
+   modification time differs from the mirror (at least the rewritten report, plus
+   anything that changed since the last nightly backup) and verifies the result.
+   Record the logged copied/verified counts; this run is the proof that the mirror
+   is current from the new root.
 
 ### 9. Point research at the new root
 
@@ -298,13 +330,14 @@ data to get past a stop.
 
 ## Rollback
 
-While both tasks are paused (writers idle, step 3 clean again):
+While both tasks are paused, first repeat step 2 (no task `Running`, no process
+using the data) and step 3 (no SQLite side files) at the new location `$T`.
 
 ```powershell
 # 1. Remove the SHIOAJI_DATA_DIR line from $P\.env by hand; check key names as in step 7.
 Move-Item -LiteralPath "$P\data\stock_category.json5" -Destination "$T\stock_category.json5"
 uv run --no-project python "$R\inventory.py" $T "$R\rollback-before.json"
-Remove-Item -LiteralPath "$P\data"   # empty directory only; fails if anything is inside
+[IO.Directory]::Delete("$P\data", $false)   # nonrecursive: throws unless the directory is empty
 Move-Item -LiteralPath $T -Destination "$P\data"
 uv run --no-project python "$R\inventory.py" "$P\data" "$R\rollback-after.json"
 uv run --no-project python "$R\compare.py" "$R\rollback-before.json" "$R\rollback-after.json"
