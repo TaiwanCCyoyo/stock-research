@@ -225,3 +225,74 @@ def test_cli_fingerprints_before_data_reads_and_formats_before_receipt(tmp_path:
     assert performance["input_copy_bytes"] == 0
     with pytest.raises(FileExistsError):
         completion.main(["--params", str(params_path), "--report", str(report), "--output", str(output)])
+
+
+@pytest.mark.parametrize("event_date", ["2014-01-01", "2014-01-02"])
+def test_cross_year_uncertainty_affects_the_held_position_through_its_exit(event_date: str):
+    prices, actions, dates, selections, admission, params = fixture()
+    selections[1]["code"] = "1234"
+    admission.unresolved = [{"code": "1234", "year": 2014, "event_dates": [event_date], "reasons": ["unresolved_cross_year_event"]}]
+    result = completion.complete_fixed_sequence(prices, actions, dates, selections, admission, params)
+    assert result["rows"][0]["lapse"]["status"] == "unknown"
+    assert result["rows"][1]["lapse"]["status"] == "modeled"
+
+
+@pytest.mark.parametrize("event_date", ["2012-12-31", "2013-01-02", "2015-10-12"])
+def test_event_outside_a_holding_or_on_its_entry_does_not_block_it(event_date: str):
+    prices, actions, dates, selections, admission, params = fixture()
+    admission.unresolved = [{"code": "1234", "year": 2013, "event_dates": [event_date], "reasons": ["outside_holding"]}]
+    result = completion.complete_fixed_sequence(prices, actions, dates, selections, admission, params)
+    assert result["rows"][0]["lapse"]["status"] == "modeled"
+
+
+@pytest.mark.parametrize("event_dates", [None, [], ["not-a-date"]])
+def test_missing_or_unusable_event_dates_block_same_issuer_without_guessing_year(event_dates: list[str] | None):
+    prices, actions, dates, selections, admission, params = fixture()
+    selections[1]["code"] = "1234"
+    event: dict[str, Any] = {"code": "1234", "year": 1999, "reasons": ["economic_date_unknown"]}
+    if event_dates is not None:
+        event["event_dates"] = event_dates
+    admission.unresolved = [event]
+    result = completion.complete_fixed_sequence(prices, actions, dates, selections, admission, params)
+    assert result["rows"][0]["lapse"]["status"] == "unknown"
+    assert result["rows"][1]["lapse"]["status"] == "unknown"
+    assert result["rows"][2]["lapse"]["status"] == "modeled"
+
+
+def test_uncertain_effective_date_inside_holding_is_kept_when_original_date_precedes_entry():
+    prices, actions, dates, selections, admission, params = fixture()
+    admission.unresolved = [{"code": "1234", "year": 2012, "event_dates": ["2012-12-31", "2013-06-03"], "reasons": ["ownership_unresolved"]}]
+    result = completion.complete_fixed_sequence(prices, actions, dates, selections, admission, params)
+    assert result["rows"][0]["lapse"]["status"] == "unknown"
+
+
+def test_old_zip_without_expanded_files_is_rejected_before_fingerprinting(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    output = tmp_path / "publication"
+    output.mkdir()
+    (output / completion.ARCHIVE).write_bytes(b"old immutable publication")
+    (output / "preregistration.md").write_text("existing allowed source", encoding="utf-8")
+
+    def forbidden(*_: Any, **__: Any) -> Any:
+        pytest.fail("existing archive must be rejected before source checks or fingerprinting")
+
+    monkeypatch.setattr(completion, "fingerprint_inputs", forbidden)
+    monkeypatch.setattr(completion, "_require_committed_sources", forbidden)
+    with pytest.raises(FileExistsError):
+        completion.main(["--output", str(output)])
+    assert not any((output / name).exists() for name in completion.OUTPUT_NAMES)
+
+
+def test_dangling_output_link_is_rejected_before_fingerprinting(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    output = tmp_path / "publication"
+    output.mkdir()
+    target = output / "results.json"
+    original = Path.is_symlink
+    monkeypatch.setattr(Path, "is_symlink", lambda path: path == target or original(path))
+
+    def forbidden(*_: Any, **__: Any) -> Any:
+        pytest.fail("output links must be rejected before source checks or fingerprinting")
+
+    monkeypatch.setattr(completion, "fingerprint_inputs", forbidden)
+    monkeypatch.setattr(completion, "_require_committed_sources", forbidden)
+    with pytest.raises(FileExistsError):
+        completion.main(["--output", str(output)])

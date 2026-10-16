@@ -70,3 +70,14 @@ and verifies its three result identities against the consumed bytes exactly once
 It never extracts files or rehashes live producer inputs. An invalid archive fails
 closed even if expanded files are present. This uses the established binary
 transport for public checksum metadata without changing the secret-scanner baseline.
+
+After a fresh computation, package its small result files with:
+
+```text
+python -m scripts.package_annual_completion --publication <new-publication-directory>
+```
+
+Commit the result publication before building the reading page. Pass that full
+commit to `scripts.build_annual_completion_report --publication-ref` so deployed
+source links survive branch deletion. The committed v2 page points at publication
+commit `98476d7`; a default `main` link is also supported for local previews.

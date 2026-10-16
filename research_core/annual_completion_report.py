@@ -492,6 +492,7 @@ def render_report(
 </section>
 <footer>
 <p>這是已存 v2 結果的呈現，不是一次新評估。保留 <a href="v1.html">v1 原版</a> 供歷史比較。</p>
+<p>在網站內嵌閱讀時，可先用上方「在新分頁開啟」查看外部來源。</p>
 <div class="source-list">{sources}</div>
 </footer>
 </main>

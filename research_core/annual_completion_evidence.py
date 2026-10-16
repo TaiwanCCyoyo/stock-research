@@ -7,6 +7,7 @@ research entitlements; unsupported or conflicting terms block that holding.
 
 from __future__ import annotations
 
+import datetime as dt
 import hashlib
 import json
 import re
@@ -262,6 +263,30 @@ def _entitlement(evidence: Evidence, event: dict[str, Any], prices: pd.DataFrame
     )
 
 
+def _unresolved_event(event: dict[str, Any], reason: str) -> dict[str, Any]:
+    economic_roles = {
+        "study_input_ex_date",
+        "announced_ex_date",
+        "price_adjustment_trading_date",
+        "effective_date",
+        "resumption_date",
+        "new_shares_start_trading",
+    }
+    dates: list[str] = []
+    for role in event.get("date_roles", []):
+        value = role.get("date")
+        if role.get("role") not in economic_roles or not isinstance(value, str):
+            continue
+        try:
+            parsed = dt.date.fromisoformat(value)
+        except ValueError:
+            continue
+        if parsed.isoformat() == value and value not in dates:
+            dates.append(value)
+    dates.sort()
+    return {"code": event["code"], "year": int(dates[0][:4]) if dates else None, "event_dates": dates, "reasons": [reason]}
+
+
 def build_admission(evidence: Evidence, prices: pd.DataFrame, actions: pd.DataFrame, calendar: pd.DatetimeIndex) -> Admission:
     """Fail affected holdings closed when a term gate fails; never default it."""
     del actions  # The economic kernel binds exact source types/dates itself.
@@ -277,9 +302,9 @@ def build_admission(evidence: Evidence, prices: pd.DataFrame, actions: pd.DataFr
         if event["event_type"] not in types:
             if event["event_type"] not in {"TRADING_METHOD_CHANGE", "MARKET_CLOSURE", "TRADING_SUSPENSION"}:
                 reason = f"unsupported supplement economic event: {event['event_type']}"
-                if event["code"] is None or not event["date_roles"]:
+                if event["code"] is None:
                     raise ValueError(reason)
-                unresolved.append({"code": event["code"], "year": int(event["date_roles"][0]["date"][:4]), "reasons": [reason]})
+                unresolved.append(_unresolved_event(event, reason))
                 audit.append({"event_id": event["event_id"], "status": "unresolved", "reason": reason})
             continue
         try:
@@ -289,9 +314,8 @@ def build_admission(evidence: Evidence, prices: pd.DataFrame, actions: pd.DataFr
             terms.append(entitlement)
             audit.append({"event_id": event["event_id"], "status": "admitted", "entitlement": entitlement.__dict__})
         except (KeyError, ValueError, ZeroDivisionError) as error:
-            year = int(event["date_roles"][0]["date"][:4])
             reason = str(error)
-            unresolved.append({"code": event["code"], "year": year, "reasons": [reason]})
+            unresolved.append(_unresolved_event(event, reason))
             audit.append({"event_id": event["event_id"], "status": "unresolved", "reason": reason})
     for gap in candidate["daily_gap_observations"]:
         if gap["code"] is None or not gap["evidence_ids"] or not set(gap["evidence_ids"]).issubset(source_ids):

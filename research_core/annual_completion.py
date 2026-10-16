@@ -22,6 +22,7 @@ from typing import Any, Protocol
 
 import pandas as pd
 
+from research_core.annual_completion_publication import ARCHIVE
 from research_core.annual_rotation import economic_path
 from research_core.annual_rotation_v2 import Entitlement, economic_path_v2
 from research_core.annual_statistics import equity_drawdown, summarize_annual_excess
@@ -79,6 +80,20 @@ def _unknown(reasons: Sequence[str]) -> dict[str, Any]:
         "complete_equity": False,
         "carried_days": 0,
     }
+
+
+def _unresolved_applies(event: dict[str, Any], start: pd.Timestamp | None, end: pd.Timestamp | None) -> bool:
+    """Associate an economic uncertainty with held dates, never its label year."""
+    supplied = event.get("event_dates")
+    if not isinstance(supplied, list) or not supplied or start is None or end is None:
+        return True
+    dates: list[pd.Timestamp] = []
+    for value in supplied:
+        try:
+            dates.append(_daily_date(value))
+        except (TypeError, ValueError):
+            continue
+    return not dates or any(start < date <= end for date in dates)
 
 
 def _compact(path: dict[str, Any]) -> dict[str, Any]:
@@ -207,7 +222,9 @@ def complete_fixed_sequence(
         start, end = _date_string(selection["entry_date"]), _date_string(selection["exit_date"])
         start_day = None if start is None else _daily_date(start)
         end_day = None if end is None else _daily_date(end)
-        reasons = [reason for row in admission.unresolved if str(row["code"]) == code and row["year"] == year for reason in row["reasons"]]
+        reasons = [
+            reason for row in admission.unresolved if str(row["code"]) == code and _unresolved_applies(row, start_day, end_day) for reason in row["reasons"]
+        ]
         if start_day is None or end_day is None or start_day not in calendar or end_day not in calendar or start_day >= end_day:
             reasons.append("missing_or_unordered_fixed_endpoints")
         if by_code[code].empty:
@@ -403,7 +420,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     output = safe_path(args.output)
-    if any((output / name).exists() for name in OUTPUT_NAMES):
+    if any((output / name).exists() or (output / name).is_symlink() for name in (*OUTPUT_NAMES, ARCHIVE)):
         raise FileExistsError("publication result filenames already exist; choose a fresh --output directory")
     _require_committed_sources(
         REPO_ROOT,

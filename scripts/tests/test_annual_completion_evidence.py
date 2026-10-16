@@ -392,7 +392,7 @@ def test_unsupported_supplement_economic_event_is_unresolved_not_silently_ignore
     event = base_event("1234", "MERGER")
     result = admit(evidence_for({"events": [event]}), "1234")
     assert result.entitlements == ()
-    assert result.unresolved == [{"code": "1234", "year": 2020, "reasons": ["unsupported supplement economic event: MERGER"]}]
+    assert result.unresolved == [{"code": "1234", "year": 2020, "event_dates": ["2020-01-07"], "reasons": ["unsupported supplement economic event: MERGER"]}]
     assert result.audit[0]["status"] == "unresolved"
 
 
@@ -441,3 +441,38 @@ def test_r6_rejects_a_later_session_or_inconsistent_date_derivation(failure: str
     result = adapter.build_admission(evidence_for({"events": [event]}), prices, pd.DataFrame(), calendar)
     assert result.entitlements == ()
     assert "official closure/date rule evidence required" in result.unresolved[0]["reasons"][0]
+
+
+def test_unresolved_event_exports_only_economic_role_dates_for_holding_matching():
+    event = base_event("1234", "MERGER")
+    event["date_roles"] = [
+        {"role": "notice_publication_date", "date": "2019-12-01"},
+        {"role": "study_input_ex_date", "date": "2019-12-31"},
+        {"role": "announced_ex_date", "date": "2019-12-31"},
+        {"role": "price_adjustment_trading_date", "date": "2020-01-06"},
+        {"role": "effective_date", "date": "2020-01-07"},
+        {"role": "resumption_date", "date": "2020-01-08"},
+        {"role": "new_shares_start_trading", "date": "2020-01-09"},
+    ]
+    result = admit(evidence_for({"events": [event]}), "1234")
+    assert result.unresolved[0]["event_dates"] == ["2019-12-31", "2020-01-06", "2020-01-07", "2020-01-08", "2020-01-09"]
+    assert result.unresolved[0]["year"] == 2019
+
+
+@pytest.mark.parametrize("date_roles", [[], [{"role": "notice_publication_date", "date": "2020-01-07"}], [{"role": "effective_date", "date": "invalid"}]])
+def test_undated_economic_uncertainty_retains_empty_dates_instead_of_guessing_a_year(date_roles: list[dict[str, str]]):
+    event = base_event("1234", "MERGER")
+    event["date_roles"] = date_roles
+    result = admit(evidence_for({"events": [event]}), "1234")
+    assert result.unresolved[0]["event_dates"] == []
+    assert result.unresolved[0]["year"] is None
+
+
+def test_supported_term_failure_also_keeps_all_economic_dates():
+    evidence = rights_evidence(cash=None)
+    candidate = evidence.json(adapter.CANDIDATE)
+    candidate["events"][0]["date_roles"].append({"role": "effective_date", "date": "2020-01-08"})
+    evidence.members[adapter.CANDIDATE] = encoded(candidate)
+    result = admit(evidence, "3205")
+    assert result.entitlements == ()
+    assert result.unresolved[0]["event_dates"] == ["2020-01-07", "2020-01-08"]
