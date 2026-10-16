@@ -19,14 +19,12 @@
         <meta name="report:kit" content="v1" />
         <style>
             /* ============================================================
-               STOCK research report kit v1 — shared look for AI-written reports.
-               A report copies this file into its own kit/ folder, so a later kit
-               change never restyles a published report. Tokens mirror the studio
-               (research_web/src/app/studio.css): same palettes, appearance and
-               Taiwan market colours (red = up / gain, green = down / loss).
-               ============================================================ */
-
-            500;600;700&family=Noto+Serif+TC:wght@500;600;700&display=swap");
+   STOCK research report kit v1 — shared look for AI-written reports.
+   A report copies this file into its own kit/ folder, so a later kit
+   change never restyles a published report. Tokens mirror the studio
+   (research_web/src/app/studio.css): same palettes, appearance and
+   Taiwan market colours (red = up / gain, green = down / loss).
+   ============================================================ */
 
             :root {
                 --gain: #c84c50;
@@ -51,10 +49,11 @@
                 --compare: #7b8794;
                 --compare-soft: rgba(123, 135, 148, 0.18);
                 --font-ui:
-                    "Noto Sans TC", "Microsoft JhengHei", -apple-system, "Segoe UI",
-                    sans-serif;
+                    "Noto Sans TC", "Microsoft JhengHei", -apple-system,
+                    "Segoe UI", sans-serif;
                 --font-serif: "Noto Serif TC", "PMingLiU", Georgia, serif;
-                --font-mono: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+                --font-mono:
+                    "JetBrains Mono", "Cascadia Code", Consolas, monospace;
                 --radius: 10px;
                 --radius-sm: 6px;
                 color-scheme: light;
@@ -490,170 +489,296 @@
                 }
             }
 
-
-            :root{--font-ui:system-ui,"Microsoft JhengHei",sans-serif;
-            --font-serif:var(--font-ui)}
-
-            body{font-size:15px;
-            overflow-wrap:anywhere}
-            .rk-page{max-width:1180px}
-            h3{margin:0;
-            font-size:21px}
-
-            .scenario-radio{position:absolute;
-            width:1px;
-            height:1px;
-            opacity:0}
-            .scenario-switch{display:flex;
-            flex-wrap:wrap;
-            gap:8px;
-            margin:18px 0}
-
-            .scenario-switch label{padding:9px 15px;
-            border:1px solid var(--line-strong);
-            border-radius:7px;
-            cursor:pointer;
-            background:var(--surface)}
-
-            #lapse:checked~main label[for=lapse],#realize:checked~main label[for=realize]{background:var(--accent);
-            color:var(--paper)}
-
-            #lapse:focus-visible~main label[for=lapse],#realize:focus-visible~main label[for=realize]{outline:3px solid var(--accent);
-            outline-offset:3px}
-
-            #lapse:checked~main [data-scenario=realize],#realize:checked~main [data-scenario=lapse]{display:none}
-
-            .window-grid{display:grid;
-            grid-template-columns:repeat(3,minmax(0,1fr));
-            gap:12px}
-            .metrics{display:grid;
-            gap:8px;
-            margin:16px 0}
-
-            .metrics div{display:flex;
-            align-items:baseline;
-            justify-content:space-between;
-            gap:10px}
-            .metrics dt{font-size:12px;
-            color:var(--muted)}
-
-            .metrics dd{margin:0;
-            font-size:20px;
-            font-variant-numeric:tabular-nums;
-            font-weight:600}
-            .comparison{border-top:1px solid var(--line);
-            padding-top:12px}
-
-            .comparison dd{font-size:16px}
-            .rk-details{font-size:13px}
-            summary{padding:6px 0}
-            summary:focus-visible{outline:3px solid var(--accent)}
-
-            .annual{table-layout:fixed}
-            .annual caption{text-align:left;
-            padding:8px 0;
-            color:var(--muted);
-            font-size:12px}
-
-            .annual th,.annual td{white-space:normal;
-            padding:8px 5px;
-            font-size:11px;
-            vertical-align:top}
-            .annual thead th{position:static}
-
-            .annual th:nth-child(2){width:16%}
-            .annual th:last-child{width:16%}
-            .annual td:last-child{text-align:left}
-
-            .annual tbody th{color:var(--ink);
-            font-weight:600;
-            background:transparent;
-            font-size:13px}
-            .annual th span{display:block;
-            font-size:12px;
-            font-weight:400;
-            color:var(--muted)}
-
-            footer{border-top:1px solid var(--line);
-            padding-top:18px;
-            color:var(--muted);
-            font-size:13px}
-            .source-list{display:flex;
-            flex-wrap:wrap;
-            gap:10px 18px}
-
-            @media(max-width:980px){.window-grid{grid-template-columns:1fr}
-            .metrics{grid-template-columns:repeat(3,minmax(0,1fr))}
-            .metrics div{display:block}
-            .metrics dd{margin-top:4px}
-
-            .annual,.annual tbody,.annual caption{display:block}
-            .annual thead{position:absolute;
-            width:1px;
-            height:1px;
-            overflow:hidden;
-            clip-path:inset(50%)}
-
-            .annual tr{display:block;
-            padding:10px 12px;
-            border:1px solid var(--line);
-            border-radius:8px;
-            background:var(--surface);
-            margin-bottom:12px}
-
-            .annual tbody th{display:flex;
-            gap:12px;
-            align-items:baseline;
-            width:100%;
-            font-size:21px;
-            padding:0 0 8px}
-
-            .annual tbody th span{font-size:14px}
-            .annual td{display:grid;
-            grid-template-columns:minmax(115px,40%) minmax(0,1fr);
-            gap:10px;
-            padding:6px 0;
-            text-align:right;
-            font-size:13px}
-
-            .annual td::before{content:attr(data-label);
-            text-align:left;
-            color:var(--muted);
-            font-size:12px}
-            .annual td:last-child{text-align:right;
-            border:0}
+            :root {
+                --font-ui: system-ui, "Microsoft JhengHei", sans-serif;
+                --font-serif: var(--font-ui);
             }
 
-            @media(max-width:540px){.metrics{grid-template-columns:1fr}
-            .metrics div{display:flex}
-            .metrics dd{margin:0}
-            .rk-hero h1{font-size:29px}
-            .rk-lede{font-size:16px}
+            body {
+                font-size: 15px;
+                overflow-wrap: anywhere;
+            }
+            .rk-page {
+                max-width: 1180px;
+            }
+            h3 {
+                margin: 0;
+                font-size: 21px;
             }
 
-            @page{size:A4 landscape;
-            margin:12mm}
-            @media print{.scenario-switch{display:none}
-            #lapse:checked~main [data-scenario],#realize:checked~main [data-scenario]{display:block}
+            .scenario-radio {
+                position: absolute;
+                width: 1px;
+                height: 1px;
+                opacity: 0;
+            }
+            .scenario-switch {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                margin: 18px 0;
+            }
 
-            :root{--paper:white;
-            --surface:white;
-            --ink:#111;
-            --muted:#444;
-            --line:#ccc;
-            --accent:#234e3d;
-            --warn:#765000;
-            --warn-soft:white;
-            color-scheme:light}
+            .scenario-switch label {
+                padding: 9px 15px;
+                border: 1px solid var(--line-strong);
+                border-radius: 7px;
+                cursor: pointer;
+                background: var(--surface);
+            }
 
-            .rk-page{padding:0}
-            .rk-section{margin-bottom:18px}
-            .window-card,tr{break-inside:avoid}
-            .window-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+            #lapse:checked ~ main label[for="lapse"],
+            #realize:checked ~ main label[for="realize"] {
+                background: var(--accent);
+                color: var(--paper);
+            }
 
-            details::details-content{display:block;
-            content-visibility:visible}
-            .rk-toc{display:none}
+            #lapse:focus-visible ~ main label[for="lapse"],
+            #realize:focus-visible ~ main label[for="realize"] {
+                outline: 3px solid var(--accent);
+                outline-offset: 3px;
+            }
+
+            #lapse:checked ~ main [data-scenario="realize"],
+            #realize:checked ~ main [data-scenario="lapse"] {
+                display: none;
+            }
+
+            .window-grid {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 12px;
+            }
+            .metrics {
+                display: grid;
+                gap: 8px;
+                margin: 16px 0;
+            }
+
+            .metrics div {
+                display: flex;
+                align-items: baseline;
+                justify-content: space-between;
+                gap: 10px;
+            }
+            .metrics dt {
+                font-size: 12px;
+                color: var(--muted);
+            }
+
+            .metrics dd {
+                margin: 0;
+                font-size: 20px;
+                font-variant-numeric: tabular-nums;
+                font-weight: 600;
+            }
+            .comparison {
+                border-top: 1px solid var(--line);
+                padding-top: 12px;
+            }
+
+            .comparison dd {
+                font-size: 16px;
+            }
+            .rk-details {
+                font-size: 13px;
+            }
+            summary {
+                padding: 6px 0;
+            }
+            summary:focus-visible {
+                outline: 3px solid var(--accent);
+            }
+
+            .annual {
+                table-layout: fixed;
+            }
+            .annual caption {
+                text-align: left;
+                padding: 8px 0;
+                color: var(--muted);
+                font-size: 12px;
+            }
+
+            .annual th,
+            .annual td {
+                white-space: normal;
+                padding: 8px 5px;
+                font-size: 11px;
+                vertical-align: top;
+            }
+            .annual thead th {
+                position: static;
+            }
+
+            .annual th:nth-child(2) {
+                width: 16%;
+            }
+            .annual th:last-child {
+                width: 16%;
+            }
+            .annual td:last-child {
+                text-align: left;
+            }
+
+            .annual tbody th {
+                color: var(--ink);
+                font-weight: 600;
+                background: transparent;
+                font-size: 13px;
+            }
+            .annual th span {
+                display: block;
+                font-size: 12px;
+                font-weight: 400;
+                color: var(--muted);
+            }
+
+            footer {
+                border-top: 1px solid var(--line);
+                padding-top: 18px;
+                color: var(--muted);
+                font-size: 13px;
+            }
+            .source-list {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px 18px;
+            }
+
+            @media (max-width: 980px) {
+                .window-grid {
+                    grid-template-columns: 1fr;
+                }
+                .metrics {
+                    grid-template-columns: repeat(3, minmax(0, 1fr));
+                }
+                .metrics div {
+                    display: block;
+                }
+                .metrics dd {
+                    margin-top: 4px;
+                }
+
+                .annual,
+                .annual tbody,
+                .annual caption {
+                    display: block;
+                }
+                .annual thead {
+                    position: absolute;
+                    width: 1px;
+                    height: 1px;
+                    overflow: hidden;
+                    clip-path: inset(50%);
+                }
+
+                .annual tr {
+                    display: block;
+                    padding: 10px 12px;
+                    border: 1px solid var(--line);
+                    border-radius: 8px;
+                    background: var(--surface);
+                    margin-bottom: 12px;
+                }
+
+                .annual tbody th {
+                    display: flex;
+                    gap: 12px;
+                    align-items: baseline;
+                    width: 100%;
+                    font-size: 21px;
+                    padding: 0 0 8px;
+                }
+
+                .annual tbody th span {
+                    font-size: 14px;
+                }
+                .annual td {
+                    display: grid;
+                    grid-template-columns: minmax(115px, 40%) minmax(0, 1fr);
+                    gap: 10px;
+                    padding: 6px 0;
+                    text-align: right;
+                    font-size: 13px;
+                }
+
+                .annual td::before {
+                    content: attr(data-label);
+                    text-align: left;
+                    color: var(--muted);
+                    font-size: 12px;
+                }
+                .annual td:last-child {
+                    text-align: right;
+                    border: 0;
+                }
+            }
+
+            @media (max-width: 540px) {
+                .metrics {
+                    grid-template-columns: 1fr;
+                }
+                .metrics div {
+                    display: flex;
+                }
+                .metrics dd {
+                    margin: 0;
+                }
+                .rk-hero h1 {
+                    font-size: 29px;
+                }
+                .rk-lede {
+                    font-size: 16px;
+                }
+            }
+
+            @page {
+                size: A4 landscape;
+                margin: 12mm;
+            }
+            @media print {
+                .scenario-switch {
+                    display: none;
+                }
+                #lapse:checked ~ main [data-scenario],
+                #realize:checked ~ main [data-scenario] {
+                    display: block;
+                }
+
+                :root {
+                    --paper: white;
+                    --surface: white;
+                    --ink: #111;
+                    --muted: #444;
+                    --line: #ccc;
+                    --accent: #234e3d;
+                    --warn: #765000;
+                    --warn-soft: white;
+                    color-scheme: light;
+                }
+
+                .rk-page {
+                    padding: 0;
+                }
+                .rk-section {
+                    margin-bottom: 18px;
+                }
+                .window-card,
+                tr {
+                    break-inside: avoid;
+                }
+                .window-grid {
+                    grid-template-columns: repeat(3, minmax(0, 1fr));
+                }
+
+                details::details-content {
+                    display: block;
+                    content-visibility: visible;
+                }
+                .rk-toc {
+                    display: none;
+                }
             }
         </style>
     </head>

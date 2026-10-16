@@ -539,3 +539,29 @@ def test_nested_sources_can_be_registered_cross_sources_not_listed_at_event_top(
     assert not result.unresolved
     assert len(result.entitlements) == 1
     assert result.entitlements[0].share_multiplier == expected_multiplier
+
+
+@pytest.mark.parametrize("kind", ["EX_RIGHT_AND_DIVIDEND", "LOSS_OFFSET_CAPITAL_REDUCTION", "PAR_VALUE_CHANGE", "MERGER"])
+@pytest.mark.parametrize("invalid_code", [None, "", " ", " 1234", "1234 ", 1234, False, "unknown", "１２３４"])
+def test_unassignable_economic_event_raises_globally_before_supported_type_admission(kind: str, invalid_code: Any):
+    event = base_event("1234", kind)
+    event["code"] = invalid_code
+    with pytest.raises(ValueError, match="valid four-digit issuer code"):
+        admit(evidence_for({"events": [event]}), "1234")
+
+
+def test_market_wide_noneconomic_event_can_have_no_issuer():
+    event = base_event("1234", "MARKET_CLOSURE")
+    event["code"] = None
+    result = admit(evidence_for({"events": [event]}), "1234")
+    assert result.entitlements == ()
+    assert result.unresolved == []
+
+
+def test_missing_economic_issuer_is_not_hidden_by_a_previously_valid_event():
+    valid = share_event()
+    unassignable = base_event("1234", "EX_RIGHT")
+    unassignable["event_id"] = "unassignable-event"
+    unassignable.pop("code")
+    with pytest.raises(ValueError, match="issuer code"):
+        admit(evidence_for({"events": [valid, unassignable]}), "1234")

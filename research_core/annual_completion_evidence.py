@@ -321,12 +321,18 @@ def build_admission(evidence: Evidence, prices: pd.DataFrame, actions: pd.DataFr
     availability: dict[str, dict[str, str]] = {}
     events = {item["event_id"]: item for item in candidate["events"]}
     types = {"EX_RIGHT", "EX_RIGHT_AND_DIVIDEND", "LOSS_OFFSET_CAPITAL_REDUCTION", "PAR_VALUE_CHANGE"}
+    noneconomic_types = {"TRADING_METHOD_CHANGE", "MARKET_CLOSURE", "TRADING_SUSPENSION"}
     for event in events.values():
+        if event["event_type"] not in noneconomic_types:
+            # These fixed Taiwan ordinary-share/0050 studies use four-digit
+            # issuer identifiers. An unassignable economic event cannot become
+            # a per-issuer unresolved row that every holding then ignores.
+            code = event.get("code")
+            if not isinstance(code, str) or re.fullmatch(r"[0-9]{4}", code) is None:
+                raise ValueError("economic event requires a valid four-digit issuer code")
         if event["event_type"] not in types:
-            if event["event_type"] not in {"TRADING_METHOD_CHANGE", "MARKET_CLOSURE", "TRADING_SUSPENSION"}:
+            if event["event_type"] not in noneconomic_types:
                 reason = f"unsupported supplement economic event: {event['event_type']}"
-                if event["code"] is None:
-                    raise ValueError(reason)
                 unresolved.append(_unresolved_event(event, reason))
                 audit.append({"event_id": event["event_id"], "status": "unresolved", "reason": reason})
             continue

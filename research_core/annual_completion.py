@@ -107,6 +107,27 @@ def _compact(path: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _endpoint_volume_reasons(raw: pd.DataFrame, start: pd.Timestamp, end: pd.Timestamp) -> list[str]:
+    """Require observable trades on the fixed dates; never seek a replacement."""
+    if "Volume" not in raw.columns:
+        return ["missing_endpoint_volume_column"]
+    reasons = []
+    for label, day in (("entry", start), ("exit", end)):
+        observations = raw.loc[raw.Date.eq(day), "Volume"]
+        valid = False
+        if len(observations) == 1 and not pd.api.types.is_bool_dtype(observations.dtype):
+            value = observations.iloc[0]
+            if not isinstance(value, bool):
+                try:
+                    volume = float(value)
+                    valid = math.isfinite(volume) and volume > 0
+                except (TypeError, ValueError, OverflowError):
+                    pass
+        if not valid:
+            reasons.append(f"{day.date()}:invalid_{label}_endpoint_volume")
+    return reasons
+
+
 def _policy(parameters: dict[str, Any], *, benchmark: bool = False) -> dict[str, Any]:
     return {
         "commission": parameters["commission"],
@@ -204,6 +225,8 @@ def complete_fixed_sequence(
             raw = by_code["0050"]
             if raw.empty:
                 benchmark_cache[key] = _unknown(["missing_benchmark_history"])
+            elif volume_reasons := _endpoint_volume_reasons(raw, start_day, end_day):
+                benchmark_cache[key] = _unknown(volume_reasons)
             else:
                 counts["benchmark_calls"] += 1
                 benchmark_cache[key] = economic_path_v2(
@@ -229,6 +252,8 @@ def complete_fixed_sequence(
             reasons.append("missing_or_unordered_fixed_endpoints")
         if by_code[code].empty:
             reasons.append("missing_fixed_issuer_history")
+        elif start_day is not None and end_day is not None:
+            reasons.extend(_endpoint_volume_reasons(by_code[code], start_day, end_day))
         if reasons:
             lapse = realize = _unknown(reasons)
         else:

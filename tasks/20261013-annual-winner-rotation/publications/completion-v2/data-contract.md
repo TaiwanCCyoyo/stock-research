@@ -70,6 +70,8 @@ and verifies its three result identities against the consumed bytes exactly once
 It never extracts files or rehashes live producer inputs. An invalid archive fails
 closed even if expanded files are present. This uses the established binary
 transport for public checksum metadata without changing the secret-scanner baseline.
+Each result's full repository-relative receipt path must match the actual
+publication directory, so moving an old ZIP into a new version fails closed.
 
 After a fresh computation, package its small result files with:
 

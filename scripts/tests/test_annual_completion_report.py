@@ -6,6 +6,7 @@ from typing import Any
 
 import pytest
 
+from research_core import annual_completion_publication as publication_store
 from research_core import annual_completion_report as report
 from research_core.annual_completion_report import main, render_report
 
@@ -21,7 +22,8 @@ def _write_publication(root: Path, result: dict, companion: dict) -> None:
     ):
         raw = json.dumps(value).encode("utf-8")
         (root / name).write_bytes(raw)
-        identities[key] = {"path": name, "bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest()}
+        relative_path = (root / name).relative_to(publication_store.REPO_ROOT).as_posix()
+        identities[key] = {"path": relative_path, "bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest()}
     (root / "run-receipt.json").write_text(json.dumps(receipt), encoding="utf-8")
 
 
@@ -119,11 +121,18 @@ def test_saved_report_renderer_preserves_unknowns_scenarios_and_safe_embedded_da
     assert 'type="radio" name="scenario" id="realize"' in output
     assert 'href="v1.html"' in output
     assert "@import" not in output and 'src="' not in output and 'rel="stylesheet"' not in output
+    kit_css = (report.KIT / "report-kit.css").read_text(encoding="utf-8")
+    font_import = next(line for line in kit_css.splitlines() if line.startswith("@import"))
+    assert font_import.count(";") > 1
+    assert kit_css.replace(font_import, "") in output
+    assert "--gain: #c84c50;" in output and "--paper: #f5f7f4;" in output
+    assert "fonts.googleapis.com" not in output and "wght@400;500" not in output
     embedded = output.split('id="report-data">', 1)[1].split("</script>", 1)[0]
     assert json.loads(embedded) == result
     assert len(output.encode("utf-8")) < 500 * 1024
 
     monkeypatch.setattr(report, "ROOT", tmp_path)
+    monkeypatch.setattr(publication_store, "REPO_ROOT", tmp_path)
     publication = tmp_path / report.DEFAULT_PUBLICATION_PATH
     _write_publication(publication, result, companion)
     index = tmp_path / "index.html"

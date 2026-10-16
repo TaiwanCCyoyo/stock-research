@@ -16,6 +16,11 @@ def encoded(value: Any) -> bytes:
     return json.dumps(value, indent=3).encode("utf-8") + b"\n"
 
 
+@pytest.fixture(autouse=True)
+def synthetic_repo_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(publication, "REPO_ROOT", tmp_path.parent)
+
+
 def fixture(tmp_path: Path) -> dict[str, bytes]:
     members = {name: encoded({"run_id": "synthetic-run", "name": name, "value": 1.25}) for name in publication.RESULT_NAMES.values()}
     receipt = {
@@ -23,7 +28,11 @@ def fixture(tmp_path: Path) -> dict[str, bytes]:
         "run_id": "synthetic-run",
         "input_fingerprint": {"inputs": {"never_open": {"path": "Z:/unavailable/huge-input.parquet", "sha256": "0" * 64}}},
         "results": {
-            key: {"path": "tasks/synthetic/" + name, "bytes": len(members[name]), "sha256": hashlib.sha256(members[name]).hexdigest()}
+            key: {
+                "path": (tmp_path.relative_to(publication.REPO_ROOT) / name).as_posix(),
+                "bytes": len(members[name]),
+                "sha256": hashlib.sha256(members[name]).hexdigest(),
+            }
             for key, name in publication.RESULT_NAMES.items()
         },
     }
@@ -188,3 +197,49 @@ def test_cli_packages_synthetic_publication(tmp_path: Path, capsys: pytest.Captu
     assert publication.main(["--publication", str(tmp_path)]) == 0
     assert str(tmp_path / publication.ARCHIVE) in capsys.readouterr().out
     assert publication.load_publication(tmp_path)["run-receipt.json"]["run_id"] == "synthetic-run"
+
+
+@pytest.mark.parametrize("packed", [False, True])
+def test_result_paths_bind_the_full_publication_directory(tmp_path: Path, packed: bool):
+    members = fixture(tmp_path)
+    other_version = tmp_path.parent / (tmp_path.name + "-other-version")
+    other_version.mkdir()
+    if packed:
+        (other_version / publication.ARCHIVE).write_bytes(archive_bytes(members))
+        # Valid-looking expanded results must not hide the wrongly bound ZIP.
+        for name in publication.MEMBERS:
+            (other_version / name).write_bytes(members[name])
+    else:
+        for name, raw in members.items():
+            (other_version / name).write_bytes(raw)
+    with pytest.raises(ValueError, match="publication path mismatch"):
+        publication.load_publication(other_version)
+    if not packed:
+        with pytest.raises(ValueError, match="publication path mismatch"):
+            publication.pack_publication(other_version)
+
+
+@pytest.mark.parametrize("key", list(publication.RESULT_NAMES))
+@pytest.mark.parametrize("invalid", ["other-version", "../escape", "C:/absolute", "back\\slash"])
+def test_every_receipt_result_requires_its_exact_portable_path(tmp_path: Path, key: str, invalid: str):
+    members = fixture(tmp_path)
+    receipt = json.loads(members["run-receipt.json"])
+    receipt["results"][key]["path"] = invalid + "/" + publication.RESULT_NAMES[key]
+    (tmp_path / "run-receipt.json").write_bytes(encoded(receipt))
+    with pytest.raises(ValueError):
+        publication.load_publication(tmp_path)
+
+
+def test_a_new_publication_version_accepts_its_own_receipt_paths(tmp_path: Path):
+    new_version = tmp_path / "completion-v3"
+    new_version.mkdir()
+    fixture(new_version)
+    publication.pack_publication(new_version)
+    assert publication.load_publication(new_version)["results.json"]["run_id"] == "synthetic-run"
+
+
+def test_publication_outside_repository_root_is_rejected(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    fixture(tmp_path)
+    monkeypatch.setattr(publication, "REPO_ROOT", tmp_path / "a-different-repository")
+    with pytest.raises(ValueError, match="repository-relative"):
+        publication.load_publication(tmp_path)

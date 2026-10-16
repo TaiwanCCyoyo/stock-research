@@ -1,4 +1,5 @@
 import json
+import math
 import sys
 from pathlib import Path
 from types import SimpleNamespace
@@ -296,3 +297,47 @@ def test_dangling_output_link_is_rejected_before_fingerprinting(tmp_path: Path, 
     monkeypatch.setattr(completion, "_require_committed_sources", forbidden)
     with pytest.raises(FileExistsError):
         completion.main(["--output", str(output)])
+
+
+@pytest.mark.parametrize("endpoint", ["entry_date", "exit_date"])
+@pytest.mark.parametrize("volume", [0.0, -1.0, None, math.nan, math.inf, "invalid"])
+@pytest.mark.parametrize("code", ["1234", "0050"])
+def test_fixed_strategy_and_benchmark_endpoints_require_positive_finite_volume(endpoint: str, volume: Any, code: str):
+    prices, actions, dates, selections, admission, params = fixture()
+    day = pd.Timestamp(str(selections[0][endpoint]))
+    prices["Volume"] = prices.Volume.astype(object)
+    prices.loc[prices.Code.eq(code) & prices.Date.eq(day), "Volume"] = volume
+    result = completion.complete_fixed_sequence(prices, actions, dates, selections, admission, params)
+    row = result["rows"][0]
+    affected = row["benchmark"] if code == "0050" else row["lapse"]
+    assert affected["status"] == "unknown"
+    assert affected["gross_return"] is None
+    assert affected["net_return"] is None
+    assert any("endpoint_volume" in reason for reason in affected["reasons"])
+    assert row["entry_date"] == selections[0]["entry_date"]
+    assert row["exit_date"] == selections[0]["exit_date"]
+    if code == "1234":
+        assert row["realize"]["status"] == "unknown"
+        assert row["benchmark"]["status"] == "modeled"
+    else:
+        assert row["lapse"]["status"] == "modeled"
+        if endpoint == "entry_date":
+            assert result["windows"][0]["benchmark"]["status"] == "unknown"
+
+
+def test_missing_volume_column_keeps_all_fixed_trades_unknown_without_kernel_calls():
+    prices, actions, dates, selections, admission, params = fixture()
+    result = completion.complete_fixed_sequence(prices.drop(columns="Volume"), actions, dates, selections, admission, params)
+    assert all(row[scenario]["status"] == "unknown" for row in result["rows"] for scenario in ("lapse", "realize", "benchmark"))
+    assert result["execution"]["kernel_calls"] == 0
+    assert result["windows"][0]["benchmark"]["status"] == "unknown"
+
+
+def test_ytd_close_mark_also_requires_positive_volume():
+    prices, actions, dates, selections, admission, params = fixture()
+    day = pd.Timestamp(str(selections[-1]["exit_date"]))
+    prices.loc[prices.Date.eq(day), "Volume"] = 0
+    result = completion.complete_fixed_sequence(prices, actions, dates, selections, admission, params)
+    assert result["rows"][-1]["lapse"]["status"] == "unknown"
+    assert result["rows"][-1]["benchmark"]["status"] == "unknown"
+    assert result["windows"][0]["scenarios"]["lapse"]["complete"] is True

@@ -17,7 +17,7 @@ import stat
 import uuid
 import zipfile
 from collections.abc import Sequence
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 from typing import Any
 
 from research_core.artifact_store import publish_noreplace, relative_name, safe_path
@@ -101,7 +101,11 @@ def _invalid_constant(value: str) -> None:
     raise ValueError(f"nonfinite JSON constant: {value}")
 
 
-def _verified(members: dict[str, bytes]) -> dict[str, dict[str, Any]]:
+def _verified(members: dict[str, bytes], root: Path) -> dict[str, dict[str, Any]]:
+    try:
+        publication_path = relative_name(root.relative_to(safe_path(REPO_ROOT)).as_posix())
+    except ValueError as error:
+        raise ValueError("publication root must be a repository-relative directory") from error
     if set(members) != set(MEMBERS):
         raise ValueError("exact publication member names required")
     parsed: dict[str, dict[str, Any]] = {}
@@ -124,8 +128,8 @@ def _verified(members: dict[str, bytes]) -> dict[str, dict[str, Any]]:
         if not isinstance(identity, dict):
             raise ValueError(f"receipt result identity required: {key}")
         source_path = identity.get("path")
-        if not isinstance(source_path, str) or PurePosixPath(source_path.replace("\\", "/")).name != name:
-            raise ValueError(f"receipt result filename mismatch: {key}")
+        if not isinstance(source_path, str) or relative_name(source_path) != f"{publication_path}/{name}":
+            raise ValueError(f"receipt result publication path mismatch: {key}")
         size = identity.get("bytes")
         digest = identity.get("sha256")
         if isinstance(size, bool) or not isinstance(size, int) or size != len(members[name]):
@@ -145,7 +149,7 @@ def load_publication(root: Path) -> dict[str, dict[str, Any]]:
     root = safe_path(root)
     archive = safe_path(root / ARCHIVE)
     members = _archive_members(archive) if archive.exists() else _plain_members(root)
-    return _verified(members)
+    return _verified(members, root)
 
 
 def pack_publication(root: Path) -> Path:
@@ -155,7 +159,7 @@ def pack_publication(root: Path) -> Path:
     if destination.exists():
         raise FileExistsError(f"publication archive already exists: {destination}")
     members = _plain_members(root)
-    _verified(members)
+    _verified(members, root)
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
         for name in MEMBERS:

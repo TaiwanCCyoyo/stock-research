@@ -382,7 +382,7 @@ def render_report(
             ("data-contract.md", "資料契約"),
         )
     )
-    css = re.sub(r"@import\s+url\([^;]+;", "", (KIT / "report-kit.css").read_text(encoding="utf-8"))
+    css = re.sub(r"@import\s+url\([^)]*\)\s*;", "", (KIT / "report-kit.css").read_text(encoding="utf-8"))
     kit_script = (KIT / "report-kit.js").read_text(encoding="utf-8")
     panels = []
     for scenario, label in SCENARIOS.items():
