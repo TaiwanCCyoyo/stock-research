@@ -52,6 +52,7 @@
                 "research_core/shared_data.py",
                 "research_core/maintained_adjusted_daily.py",
                 "scripts/maintain_adjusted_daily.py",
+                "scripts/check_adjusted_daily_asof.py",
                 "tasks/20261012-research-data-entry/*"
             ],
             "tests": [
