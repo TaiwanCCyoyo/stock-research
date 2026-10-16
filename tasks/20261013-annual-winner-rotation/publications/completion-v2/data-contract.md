@@ -58,3 +58,15 @@ The source batch is immutable; disagreement, absent units, missing event prices
 and unsupported actions remain unknown. H/N marks are reference marks, not
 observed executions or a complete daily drawdown series. Both rights scenarios
 must remain visible.
+
+## Git transport
+
+`publication.zip` losslessly retains the four original JSON members, including
+`run-receipt.json` and `admission-audit.json`. Git also keeps `results.json` and
+`performance.json` as small readable projections. Expanded receipt/audit files
+remain local; they are not required for clean-clone report generation. The shared
+`annual_completion_publication.load_publication` reads the bounded archive in memory
+and verifies its three result identities against the consumed bytes exactly once.
+It never extracts files or rehashes live producer inputs. An invalid archive fails
+closed even if expanded files are present. This uses the established binary
+transport for public checksum metadata without changing the secret-scanner baseline.

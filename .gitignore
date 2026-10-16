@@ -287,3 +287,8 @@ verify-*.png
 !tasks/20261013-pattern-scan/synthetic-evidence-v1.json.gz
 !tasks/20261013-pattern-scan/cohort-evidence-v2.json.gz
 !tasks/20261013-pattern-scan/event-overlay-evidence-v3.json.gz
+
+# Public checksum metadata travels losslessly in a bounded annual publication.
+/tasks/20261013-annual-winner-rotation/publications/completion-v2/admission-audit.json
+/tasks/20261013-annual-winner-rotation/publications/completion-v2/run-receipt.json
+!tasks/20261013-annual-winner-rotation/publications/completion-v2/publication.zip

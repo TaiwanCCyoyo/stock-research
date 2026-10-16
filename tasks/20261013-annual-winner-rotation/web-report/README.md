@@ -1,4 +1,19 @@
-# 年度冠軍輪動：HTML 報告契約與放置盤點
+# 年度領先股輪動：HTML 報告契約與放置盤點
+
+## 最新版 completion-v2
+
+`index.html` 現在呈現 [補全後的結論](../publications/completion-v2/report.md)，由已存小型 JSON 生成；原 v1 HTML 原樣保存在 `v1.html`。
+15 個完整年度均可計，兩種認股權情境分別呈現；v1 原選股序列與全市場未知候選的限制仍保留。
+
+```text
+python -m scripts.build_annual_completion_report
+```
+
+新版自含 CSS／JS／結果，不依賴行情 API；可直接開啟、適合 Git 保存與 diff。資料／執行契約和實測成本見
+[新版 data contract](../publications/completion-v2/data-contract.md) 與 [storage audit](../publications/completion-v2/storage-audit.md)。
+`#reports` 會由 index metadata 發現最新版，`#history` 的舊展示包並未因此自動重建。
+
+## v1 歷史放置盤點（以下保存當時狀態）
 
 盤點日期：2026-10-16。這是既有 PR #15 結果的閱讀版，不是新實驗；觀測終點仍為
 2026-10-12。原有 mission、報告、結果與凍結資料均不改寫。
