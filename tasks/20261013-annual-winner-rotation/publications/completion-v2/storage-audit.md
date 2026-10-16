@@ -44,11 +44,20 @@ receipt 和結論一起保存。報告首頁展示最新版，提供歷史版連
 有無變動，不重 hash 全部輸入。沒有載入模組原碼的逐檔複製／雜湊鏈。
 `performance.json` 保留實際階段時間、可得記憶體觀測與未量測項目。
 
-## 尚未解決的交接
+## 備份與交接
 
-canonical batch 已放在 producer recursive mirror 的涵蓋範圍，但**本次沒有觀測到它已完成備份**；
-producer 的分類季度封存清單尚不包含這個新 family。不能把「被備份程式涵蓋」寫成「已有備份」。
-原始資料備份仍由 producer 維護，這次沒有更改 scheduler 或偷偷複製整個 producer。
+canonical batch 已由 producer 的本機 recursive mirror 備份。既有
+`stock-data-downloader/logs/run_daily_20261016.log:4154` 記錄 2026-10-16
+18:22:25.642（臺北）mirror 成功，18:22:25.661 作業結束；此批次實際位於
+`D:/StockDataBackup/data/corporate_action_supplements/annual-winner-20261013-v1/`。
+僅對此批次比對來源與備份的 metadata：兩邊均為 **185 檔、26,706,236 bytes**，
+相對路徑、大小與 mtime 完全一致。備份檔建立於 18:20:21，晚於來源最後修改的
+17:15:00，與日誌時間順序一致。
+
+本次證據範圍是成功日誌及批次 metadata 對照，沒有再做內容 checksum 或還原演練，
+也沒有啟動備份或遞迴掃描整個 producer。分類季度封存清單仍不包含這個 family，
+目前沒有已觀測的季度或異地備份。原始資料備份仍由 producer 維護，這次沒有更改
+scheduler 或偷偷複製整個 producer。
 
 舊 v1 完整結果仍透過 primary 的固定 bundle／catalog 取得；新版小型閱讀結果則直接在 Git。
 這個調整提升新版可攜性，並未補出完整全市場排名、退市資料或所有候選的公司事件。

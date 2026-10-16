@@ -21,8 +21,13 @@ producer's normalized corporate-action database. Stale candidate labels stay in
 the original capture; the new admission audit states which gates passed. Original
 capture paths in provenance are historical, never runtime dependencies.
 
-The producer's recursive mirror includes this family; its category-specific
-quarterly archives do not. Publication does not itself prove a completed backup.
+The producer's local recursive mirror completed on 2026-10-16 at 18:22 Taipei,
+according to `stock-data-downloader/logs/run_daily_20261016.log:4154`. The batch
+exists at `D:/StockDataBackup/data/corporate_action_supplements/annual-winner-20261013-v1/`:
+all 185 relative file paths, sizes and mtimes match the source (26,706,236 bytes).
+This is a successful backup log plus batch metadata comparison, not a repeated
+content-checksum pass or restore exercise. Category-specific quarterly archives
+still do not include this family; no quarterly or offsite backup was observed.
 
 ## Reproduction and update
 
