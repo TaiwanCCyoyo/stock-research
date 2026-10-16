@@ -108,7 +108,9 @@ def _source_metadata(event: pd.Series) -> dict[str, Any]:
     return result
 
 
-def _quality_diagnostics(entitlement: Entitlement, sources: pd.DataFrame, frame: pd.DataFrame, day: pd.Timestamp) -> list[dict[str, Any]]:
+def _quality_diagnostics(
+    entitlement: Entitlement, sources: pd.DataFrame, frame: pd.DataFrame, day: pd.Timestamp, *, previous_close: float | None = None
+) -> list[dict[str, Any]]:
     """Explain a jump only from stated source factors or exact share-only terms."""
     factors: list[tuple[str, float]] = []
     if entitlement.cash_per_old_share == 0 and entitlement.rights_per_old_share == 0:
@@ -121,7 +123,7 @@ def _quality_diagnostics(entitlement: Entitlement, sources: pd.DataFrame, frame:
         if math.isfinite(factor) and factor > 0:
             factors.append(("source_price_factor", factor))
     position = int(frame.index.get_indexer([day])[0])
-    previous = float(frame.RawClose.iloc[position - 1]) if position else np.nan
+    previous = previous_close if previous_close is not None else float(frame.RawClose.iloc[position - 1]) if position else np.nan
     close = float(frame.loc[day, "RawClose"])
     change = close / previous - 1 if np.isfinite(previous) and previous > 0 and np.isfinite(close) and close > 0 else np.nan
     return [
@@ -135,6 +137,34 @@ def _quality_diagnostics(entitlement: Entitlement, sources: pd.DataFrame, frame:
         }
         for source, factor in factors
     ]
+
+
+def _recovery_terms_diagnostic(
+    *, anchor_day: pd.Timestamp, day: pd.Timestamp, previous: float, close: float, share: float, cash: float, rights: float = 0, subscription: float = 0
+) -> dict[str, Any]:
+    """Diagnose a resumed quote from explicit terms, without changing units.
+
+    The theoretical ex-right ratio is independent of the holder's rights
+    scenario. It expresses mechanical dilution, not an exercise assumption.
+    """
+    denominator = previous * (share + rights)
+    factor = (previous - cash + rights * subscription) / denominator if math.isfinite(denominator) and denominator > 0 else np.nan
+    valid = math.isfinite(factor) and factor > 0
+    change = close / previous - 1
+    residual = (1 + change) / factor - 1 if valid else None
+    source = "recovery_theoretical_ex_right_terms" if rights > 0 else "recovery_cash_share_terms" if cash > 0 else "recovery_exact_share_terms"
+    return {
+        "source": source,
+        "diagnostic_only": True,
+        "date": str(day.date()),
+        "anchor_date": str(anchor_day.date()),
+        "anchor_raw_close": previous,
+        "factor": factor if math.isfinite(factor) else None,
+        "factor_valid": valid,
+        "raw_close_change": change,
+        "residual": residual,
+        "explains_jump": bool(valid and (factor - 1) * change > 0 and residual is not None and abs(residual) < 0.4),
+    }
 
 
 def economic_path_v2(
@@ -232,6 +262,76 @@ def economic_path_v2(
                 carried.add(day)
             else:
                 unknowns.append(f"{day.date()}:{row.quality_reason}")
+    # pct_change(fill_method=None) deliberately leaves the session after a
+    # missing quote untested. Recheck only bridges over admitted H/N carry;
+    # an arbitrary action or source factor alone is never an explanation.
+    recovery_diagnostics: dict[pd.Timestamp, dict[str, Any]] = {}
+    previous_observed_day: pd.Timestamp | None = None
+    previous_observed_close: float | None = None
+    after_carry = False
+    for raw_day, row in frame.iterrows():
+        day = cast(pd.Timestamp, raw_day)
+        if day in carried:
+            after_carry = True
+            binding = bindings.get(day)
+            if binding is not None and binding[0].share_multiplier != 1:
+                unknowns.append(f"{day.date()}:share_change_requires_observed_effective_quote")
+            continue
+        if not bool(row.Quality):
+            after_carry = False
+            continue
+        close = float(row.RawClose)
+        if after_carry and previous_observed_close is not None and previous_observed_day is not None and abs(close / previous_observed_close - 1) >= 0.4:
+            bridge_diagnostic: dict[str, Any] | None = None
+            binding = bindings.get(day)
+            if binding is not None:
+                item, sources = binding
+                bridge_diagnostic = _recovery_terms_diagnostic(
+                    anchor_day=previous_observed_day,
+                    day=day,
+                    previous=previous_observed_close,
+                    close=close,
+                    share=item.share_multiplier,
+                    cash=item.cash_per_old_share,
+                    rights=item.rights_per_old_share,
+                    subscription=item.subscription_price or 0,
+                )
+                if item.rights_per_old_share > 0:
+                    source_diagnostics = _quality_diagnostics(item, sources, frame, day, previous_close=previous_observed_close)
+                    source_explains = any(value["source"] == "source_price_factor" and value["explains_jump"] for value in source_diagnostics)
+                    bridge_diagnostic["source_factor_explains_jump"] = source_explains
+                    bridge_diagnostic["explains_jump"] = bridge_diagnostic["explains_jump"] and source_explains
+                diagnostics[day].append(bridge_diagnostic)
+            else:
+                current = remaining.loc[pd.to_datetime(remaining.ex_date).eq(day)]
+                if len(current) == 1:
+                    event = current.iloc[0]
+                    share, cash = 1.0, 0.0
+                    try:
+                        if event.event_type == "CASH_DIVIDEND":
+                            cash = float(event.cash_dividend_estimate)
+                        elif event.event_type in {"ETF_SPLIT", "ETF_REVERSE_SPLIT"}:
+                            share = float((split_ratios or {}).get(str(day.date()), np.nan))
+                        else:
+                            share = np.nan
+                    except (TypeError, ValueError):
+                        share = np.nan
+                    if math.isfinite(share) and share > 0 and math.isfinite(cash) and cash >= 0:
+                        bridge_diagnostic = _recovery_terms_diagnostic(
+                            anchor_day=previous_observed_day, day=day, previous=previous_observed_close, close=close, share=share, cash=cash
+                        )
+            if bridge_diagnostic is not None:
+                recovery_diagnostics[day] = bridge_diagnostic
+            LOGGER.debug("Recovery quality code=%s date=%s diagnostic=%s", code, day.date(), bridge_diagnostic)
+            if bridge_diagnostic is None or not bridge_diagnostic["explains_jump"]:
+                reason = (
+                    "invalid_recovery_economic_factor"
+                    if bridge_diagnostic is not None and not bridge_diagnostic["factor_valid"]
+                    else "unexplained_raw_jump_after_carry"
+                )
+                unknowns.append(f"{day.date()}:{reason}")
+        previous_observed_day, previous_observed_close = day, close
+        after_carry = False
     entry = float(frame.loc[start, f"Raw{start_field}"])
     exit_price = float(frame.loc[end, f"Raw{end_field}"])
     if start in carried or end in carried or not np.isfinite(entry) or not np.isfinite(exit_price) or min(entry, exit_price) <= 0:
@@ -252,6 +352,7 @@ def economic_path_v2(
             "events": applied,
             "complete_equity": False,
             "carried_days": len(carried),
+            "recovery_quality_diagnostics": list(recovery_diagnostics.values()),
         }
 
     if unknowns:
@@ -322,6 +423,8 @@ def economic_path_v2(
             event = day_events.iloc[0]
             kind = str(event.event_type)
             audit: dict[str, Any] = {"date": str(day.date()), "type": kind, "source_actions": [_source_metadata(event)]}
+            if day in recovery_diagnostics:
+                audit["recovery_quality_diagnostic"] = recovery_diagnostics[day]
             if kind == "CASH_DIVIDEND":
                 dividend = float(event.cash_dividend_estimate)
                 if not np.isfinite(dividend) or dividend < 0:
@@ -372,4 +475,5 @@ def economic_path_v2(
         "events": applied,
         "complete_equity": not carried,
         "carried_days": len(carried),
+        "recovery_quality_diagnostics": list(recovery_diagnostics.values()),
     }

@@ -368,3 +368,119 @@ def test_synthetic_share_entitlement_requires_source_evidence():
     result = economic_path_v2(raw, actions.iloc[:0], days, start=day_at(days, 0), end=day_at(days, -1), entitlements=[item])
     assert result["status"] == "unknown"
     assert any("synthetic_share_entitlement_requires_evidence" in reason for reason in result["reasons"])
+
+
+def recovery_fixture(gap_count: int, restored: float, availability: str) -> tuple[pd.DatetimeIndex, pd.DataFrame, pd.DataFrame, dict[str, str]]:
+    days = pd.bdate_range("2020-01-06", periods=gap_count + 3)
+    prices = [100.0, *([np.nan] * gap_count), restored, restored]
+    raw = pd.DataFrame({"Code": "1234", "Date": days, "Open": prices, "High": prices, "Low": prices, "Close": prices, "Volume": 1.0})
+    actions = pd.DataFrame(columns=pd.Index(["code", "ex_date", "event_type", "price_factor", "cash_dividend_estimate"]))
+    missing = {str(day_at(days, position).date()): availability for position in range(1, gap_count + 1)}
+    return days, raw, actions, missing
+
+
+@pytest.mark.parametrize("gap_count", [1, 2])
+@pytest.mark.parametrize("availability", ["H", "N"])
+@pytest.mark.parametrize("restored", [5.0, 200.0])
+def test_recovery_after_carried_days_cannot_hide_an_unexplained_large_jump(gap_count: int, availability: str, restored: float):
+    days, raw, actions, missing = recovery_fixture(gap_count, restored, availability)
+    result = economic_path_v2(raw, actions, days, start=day_at(days, 0), end=day_at(days, -1), unavailable_days=missing)
+    assert result["status"] == "unknown"
+    assert result["gross_multiplier"] is None
+    assert any("unexplained_raw_jump_after_carry" in reason for reason in result["reasons"])
+
+
+@pytest.mark.parametrize("gap_count", [1, 2])
+@pytest.mark.parametrize("availability", ["H", "N"])
+def test_small_recovery_change_keeps_terminal_model_and_incomplete_equity(gap_count: int, availability: str):
+    days, raw, actions, missing = recovery_fixture(gap_count, 90.0, availability)
+    result = economic_path_v2(raw, actions, days, start=day_at(days, 0), end=day_at(days, -1), unavailable_days=missing)
+    assert result["status"] == "modeled"
+    assert result["gross_multiplier"] == pytest.approx(0.9)
+    assert result["carried_days"] == gap_count
+    assert result["complete_equity"] is False
+
+
+@pytest.mark.parametrize("gap_count", [1, 2])
+@pytest.mark.parametrize("availability", ["H", "N"])
+def test_exact_admitted_share_terms_explain_the_bridge_from_last_observed_close(gap_count: int, availability: str):
+    days, raw, actions, missing = recovery_fixture(gap_count, 5.0, availability)
+    restored = day_at(days, gap_count + 1)
+    result = economic_path_v2(
+        raw, actions, days, start=day_at(days, 0), end=day_at(days, -1), unavailable_days=missing, entitlements=[entitlement(restored, share_multiplier=20)]
+    )
+    assert result["status"] == "modeled"
+    assert result["gross_multiplier"] == pytest.approx(1.0)
+    diagnostic = result["recovery_quality_diagnostics"][0]
+    assert diagnostic["source"] == "recovery_exact_share_terms"
+    assert diagnostic["anchor_date"] == str(day_at(days, 0).date())
+    assert diagnostic["anchor_raw_close"] == 100
+    assert diagnostic["factor"] == pytest.approx(0.05)
+    assert diagnostic["explains_jump"] is True
+
+
+@pytest.mark.parametrize("event_kind", ["native_cash", "tiny_entitlement", "foreign_entitlement"])
+def test_an_unrelated_event_or_source_factor_is_not_a_recovery_pass(event_kind: str):
+    days, raw, actions, missing = recovery_fixture(1, 5.0, "H")
+    restored = day_at(days, 2)
+    terms = []
+    if event_kind == "foreign_entitlement":
+        terms = [replace(entitlement(restored, share_multiplier=20), code="9999")]
+    else:
+        actions.loc[0] = ["1234", restored, "CASH_DIVIDEND" if event_kind == "native_cash" else "EX_RIGHT", 0.05, 1.0]
+        if event_kind == "tiny_entitlement":
+            terms = [entitlement(restored, cash_per_old_share=1)]
+    result = economic_path_v2(raw, actions, days, start=day_at(days, 0), end=day_at(days, -1), unavailable_days=missing, entitlements=terms)
+    assert result["status"] == "unknown"
+    assert any("unexplained_raw_jump_after_carry" in reason for reason in result["reasons"])
+
+
+@pytest.mark.parametrize("event_kind", ["ETF_SPLIT", "CASH_DIVIDEND"])
+def test_supported_native_exact_economic_terms_can_explain_recovery(event_kind: str):
+    days, raw, actions, missing = recovery_fixture(2, 25.0, "H")
+    restored = day_at(days, 3)
+    actions.loc[0] = ["1234", restored, event_kind, 0.25, 75.0]
+    ratios = {str(restored.date()): 4.0} if event_kind == "ETF_SPLIT" else {}
+    result = economic_path_v2(raw, actions, days, start=day_at(days, 0), end=day_at(days, -1), unavailable_days=missing, split_ratios=ratios)
+    assert result["status"] == "modeled"
+    assert result["gross_multiplier"] == pytest.approx(1.0)
+    assert result["recovery_quality_diagnostics"][0]["factor"] == pytest.approx(0.25)
+
+
+@pytest.mark.parametrize("scenario,expected", [("lapse", 0.1), ("realize", 1.0)])
+def test_recovery_rights_quote_quality_is_independent_of_the_holders_scenario(scenario: str, expected: float):
+    days, raw, actions, missing = recovery_fixture(1, 10.0, "N")
+    restored = day_at(days, 2)
+    actions.loc[0] = ["1234", restored, "EX_RIGHT", 0.1, 0.0]
+    term = entitlement(restored, rights_per_old_share=9.0, subscription_price=0.0)
+    result = economic_path_v2(
+        raw, actions, days, start=day_at(days, 0), end=day_at(days, -1), unavailable_days=missing, entitlements=[term], rights_scenario=scenario
+    )
+    assert result["status"] == "modeled"
+    assert result["gross_multiplier"] == pytest.approx(expected)
+    diagnostic = result["recovery_quality_diagnostics"][0]
+    assert diagnostic["source"] == "recovery_theoretical_ex_right_terms"
+    assert diagnostic["factor"] == pytest.approx(0.1)
+    assert diagnostic["source_factor_explains_jump"] is True
+
+
+@pytest.mark.parametrize("rights,source_factor", [(9.0, 0.9), (0.1, 0.1)])
+def test_recovery_rights_requires_both_terms_and_source_factor_to_explain(rights: float, source_factor: float):
+    days, raw, actions, missing = recovery_fixture(1, 10.0, "N")
+    restored = day_at(days, 2)
+    actions.loc[0] = ["1234", restored, "EX_RIGHT", source_factor, 0.0]
+    term = entitlement(restored, rights_per_old_share=rights, subscription_price=0.0)
+    result = economic_path_v2(raw, actions, days, start=day_at(days, 0), end=day_at(days, -1), unavailable_days=missing, entitlements=[term])
+    assert result["status"] == "unknown"
+    assert any("unexplained_raw_jump_after_carry" in reason for reason in result["reasons"])
+
+
+@pytest.mark.parametrize("cash", [100.0, 101.0])
+def test_invalid_zero_or_negative_theoretical_recovery_factor_is_unknown(cash: float):
+    days, raw, actions, missing = recovery_fixture(1, 5.0, "H")
+    restored = day_at(days, 2)
+    actions.loc[0] = ["1234", restored, "CASH_DIVIDEND", 0.05, cash]
+    result = economic_path_v2(raw, actions, days, start=day_at(days, 0), end=day_at(days, -1), unavailable_days=missing)
+    assert result["status"] == "unknown"
+    assert any("invalid_recovery_economic_factor" in reason for reason in result["reasons"])
+    assert result["recovery_quality_diagnostics"][0]["factor_valid"] is False

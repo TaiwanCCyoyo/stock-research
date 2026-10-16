@@ -404,14 +404,28 @@ def parse_fixed_selections(text: str) -> list[dict[str, Any]]:
     return selected
 
 
-def _require_committed_sources(repo: Path, paths: Sequence[Path]) -> None:
-    if code_identity(repo)["dirty"]:
+def _require_code_identity(repo: Path, expected: dict[str, Any]) -> None:
+    current = code_identity(repo)
+    if current.get("dirty") is not False or current != expected:
+        raise ValueError("run source identity changed; require the starting commit and a clean tracked tree")
+
+
+def _require_committed_sources(repo: Path, paths: Sequence[Path]) -> dict[str, Any]:
+    identity = dict(code_identity(repo))
+    if identity["dirty"]:
         raise ValueError("commit the run's source and parameters before real-data execution")
     for path in paths:
         relative = path.resolve().relative_to(repo.resolve()).as_posix()
-        result = subprocess.run(["git", "-C", str(repo), "cat-file", "-e", f"HEAD:{relative}"], capture_output=True, text=True, check=False)
+        result = subprocess.run(
+            ["git", "-C", str(repo), "cat-file", "-e", f"{identity['commit']}:{relative}"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
         if result.returncode:
             raise ValueError(f"run source is not committed: {relative}")
+    _require_code_identity(repo, identity)
+    return identity
 
 
 def _format_outputs(paths: Sequence[Path], repo: Path) -> float:
@@ -453,7 +467,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     report = safe_path(args.report)
     if report.resolve() != safe_path(TASK / "report.md").resolve():
         raise ValueError("fixed PR15 selections require the canonical task report.md")
-    _require_committed_sources(
+    starting_identity = _require_committed_sources(
         REPO_ROOT,
         [
             Path(__file__),
@@ -480,7 +494,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     before = _sample()
     params = read_json(args.params)
     preregistration = REPO_ROOT / params["preregistration"]
-    _require_committed_sources(REPO_ROOT, [preregistration])
+    if _require_committed_sources(REPO_ROOT, [preregistration]) != starting_identity:
+        raise ValueError("run source identity changed before preregistration admission")
     selections = parse_fixed_selections(report.read_text(encoding="utf-8"))
     codes = sorted({row["code"] for row in selections} | {"0050"})
     cutoff = _daily_date(params.get("cutoff", "2026-10-12"))
@@ -536,7 +551,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     for key, value in (("results", result), ("admission", audit), ("performance", performance)):
         write_json(outputs[key], value)
     formatting_seconds = _format_outputs(list(outputs.values()), REPO_ROOT)
-    write_run_receipt(
+    _require_code_identity(REPO_ROOT, starting_identity)
+    receipt = write_run_receipt(
         output / "run-receipt.json",
         run_id=params["run_id"],
         definition=result["definition"],
@@ -546,6 +562,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         preregistration=preregistration,
         repo_root=REPO_ROOT,
     )
+    if receipt.get("code") != starting_identity:
+        raise ValueError("run receipt code identity differs from the starting source identity")
+    _require_code_identity(REPO_ROOT, starting_identity)
     packing_started = time.perf_counter()
     archive = pack_publication(output)
     packing_seconds = time.perf_counter() - packing_started

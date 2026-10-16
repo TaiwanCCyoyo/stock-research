@@ -165,9 +165,30 @@ def test_original_report_parser_keeps_unknowns_and_fixed_dates():
     assert rows[-1]["exit_date"] == "2015-10-12"
 
 
-@pytest.mark.parametrize("inject_foreign_zip", [False, True])
+def test_committed_source_gate_returns_detached_identity_and_pins_git_lookup(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    current: dict[str, Any] = {"commit": "a" * 40, "dirty": False}
+    commands = []
+    monkeypatch.setattr(completion, "code_identity", lambda _repo: current)
+
+    def git(arguments: list[str], **_kwargs: Any) -> Any:
+        commands.append(arguments)
+        return SimpleNamespace(returncode=0)
+
+    monkeypatch.setattr(completion.subprocess, "run", git)
+    captured = completion._require_committed_sources(tmp_path, [tmp_path / "runner.py"])
+    assert commands[0][-1] == "a" * 40 + ":runner.py"
+    current["commit"] = "b" * 40
+    assert captured == {"commit": "a" * 40, "dirty": False}
+    with pytest.raises(ValueError, match="source identity changed"):
+        completion._require_code_identity(tmp_path, captured)
+
+
+@pytest.mark.parametrize(
+    "change",
+    ["stable", "foreign_zip", "formatter_dirty", "formatter_head", "receipt_code", "receipt_dirty", "post_receipt_head"],
+)
 def test_cli_fingerprints_then_formats_and_receipts_before_authoritative_zip(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], inject_foreign_zip: bool
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], change: str
 ):
     prices, actions, dates, _, admission, params = fixture()
     producer = tmp_path / "producer"
@@ -181,10 +202,26 @@ def test_cli_fingerprints_then_formats_and_receipts_before_authoritative_zip(
     events = []
     specs_seen = []
     committed_checks: list[Path] = []
+    starting_identity = {"commit": "a" * 40, "dirty": False}
+    current_identity = dict(starting_identity)
+    packed: list[Path] = []
+
+    def committed_sources(_repo: Path, paths: list[Path]) -> dict[str, Any]:
+        committed_checks.extend(paths)
+        return dict(current_identity)
+
+    original_pack = completion.pack_publication
+
+    def pack(root: Path) -> Path:
+        packed.append(root)
+        return original_pack(root)
+
     monkeypatch.setattr(completion, "REPO_ROOT", tmp_path)
     monkeypatch.setattr(completion, "TASK", tmp_path)
     monkeypatch.setattr(publication, "REPO_ROOT", tmp_path)
-    monkeypatch.setattr(completion, "_require_committed_sources", lambda _repo, paths: committed_checks.extend(paths))
+    monkeypatch.setattr(completion, "_require_committed_sources", committed_sources)
+    monkeypatch.setattr(completion, "code_identity", lambda _repo: dict(current_identity))
+    monkeypatch.setattr(completion, "pack_publication", pack)
     monkeypatch.setattr(completion, "producer_data_root", lambda: producer)
 
     def fingerprint(specs: list[Any]) -> dict[str, Any]:
@@ -203,11 +240,15 @@ def test_cli_fingerprints_then_formats_and_receipts_before_authoritative_zip(
     def format_outputs(paths: list[Path], _repo: Path) -> float:
         events.append("format")
         assert len(paths) == 3 and all(path.exists() for path in paths)
-        if inject_foreign_zip:
+        if change == "foreign_zip":
             (output / publication.ARCHIVE).write_bytes(b"foreign authoritative archive")
+        elif change == "formatter_dirty":
+            current_identity["dirty"] = True
+        elif change == "formatter_head":
+            current_identity["commit"] = "b" * 40
         return 0.1
 
-    def receipt(path: Path, **kwargs: Any) -> None:
+    def receipt(path: Path, **kwargs: Any) -> dict[str, Any]:
         assert events[-1] == "format"
         assert kwargs["inputs"] == {"inputs": {}}
         events.append("receipt")
@@ -215,7 +256,16 @@ def test_cli_fingerprints_then_formats_and_receipts_before_authoritative_zip(
         for key, result_path in kwargs["results"].items():
             raw = result_path.read_bytes()
             identities[key] = {"path": result_path.relative_to(tmp_path).as_posix(), "bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest()}
-        path.write_text(json.dumps({"schema": "run-receipt.v1", "run_id": kwargs["run_id"], "results": identities}), encoding="utf-8")
+        receipt_code = dict(starting_identity)
+        if change == "receipt_code":
+            receipt_code["commit"] = "b" * 40
+        elif change == "receipt_dirty":
+            receipt_code["dirty"] = True
+        saved = {"schema": "run-receipt.v1", "run_id": kwargs["run_id"], "results": identities, "code": receipt_code}
+        path.write_text(json.dumps(saved), encoding="utf-8")
+        if change == "post_receipt_head":
+            current_identity["commit"] = "b" * 40
+        return saved
 
     monkeypatch.setattr(completion, "fingerprint_inputs", fingerprint)
     monkeypatch.setattr(completion, "read_stable", lambda path, read: read(path))
@@ -231,7 +281,14 @@ def test_cli_fingerprints_then_formats_and_receipts_before_authoritative_zip(
         SimpleNamespace(load_verified_evidence=lambda _: evidence, build_admission=lambda *_: admission),
     )
     arguments = ["--params", str(params_path), "--report", str(report), "--output", str(output)]
-    if inject_foreign_zip:
+    if change not in {"stable", "foreign_zip"}:
+        with pytest.raises(ValueError, match="identity"):
+            completion.main(arguments)
+        assert packed == []
+        assert not (output / publication.ARCHIVE).exists()
+        assert events.count("receipt") == (0 if change.startswith("formatter_") else 1)
+        assert capsys.readouterr().out == ""
+    elif change == "foreign_zip":
         with pytest.raises(FileExistsError):
             completion.main(arguments)
         assert (output / publication.ARCHIVE).read_bytes() == b"foreign authoritative archive"
@@ -243,9 +300,12 @@ def test_cli_fingerprints_then_formats_and_receipts_before_authoritative_zip(
         summary = json.loads(capsys.readouterr().out)
         assert summary["packing_seconds"] >= 0
         assert summary["archive_bytes"] == (output / publication.ARCHIVE).stat().st_size
+    if change in {"stable", "foreign_zip"}:
+        assert packed == [output]
     assert events.count("fingerprint") == 1
     assert events.count("parquet") == 2
-    assert events[-2:] == ["format", "receipt"]
+    if not change.startswith("formatter_"):
+        assert events[-2:] == ["format", "receipt"]
     assert report in committed_checks
     assert next(spec for spec in specs_seen if spec.name == "price_daily").date_column is None
     assert next(spec for spec in specs_seen if spec.name == "corporate_actions").tables == {"corporate_actions": "ex_date"}
