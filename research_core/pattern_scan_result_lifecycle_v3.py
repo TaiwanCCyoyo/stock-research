@@ -264,7 +264,7 @@ def handoff_results(
             "schema": "pattern-scan-result-receipt.v3",
             "complete": True,
             "retention_policy": POLICY,
-            "code": plan["computed"]["source"]["code"],
+            "code": plan["computed"]["provenance"].get("executor", plan["computed"]["source"])["code"],
             "source": plan["computed"]["source"],
             "input_id": plan["computed"]["input_id"],
             "provenance": plan["computed"]["provenance"],

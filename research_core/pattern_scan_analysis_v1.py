@@ -25,6 +25,7 @@ from research_core.pattern_scan_groups_v1 import PRIMARY
 from research_core.pattern_scan_inputs_v1 import read_preparation_pins
 from research_core.pattern_scan_membership_v1 import StockCountPlan, membership_inventory
 from research_core.pattern_scan_parquet_v1 import read_frame, write_frame
+from research_core.pattern_scan_price_references_v4 import read_stock_prices, verify_stock_artifacts
 from research_core.pattern_scan_selection_v1 import select_pattern_candidates
 from research_core.pattern_scan_shared_v1 import SharedInputs, load_shared
 from research_core.pattern_scan_summary_store_v1 import YEARS
@@ -66,12 +67,17 @@ def prepare_event_parts(
         part_receipt = read_json(directory / "receipt.json")
         if part_receipt["source_id"] != source["source_id"] or part_receipt["input_id"] != input_id:
             raise ValueError("event stock part source/input differs")
-        verify_files(directory, part_receipt["artifacts"])
+        verify_stock_artifacts(directory, part_receipt)
         global_record = barrier["global_files"][code]
         global_path = _checked_path(Path(global_record["path"]))
         if file_digest(global_path) != global_record["sha256"]:
             raise ValueError("event global feature part changed")
-        tables = {name: read_frame(directory / f"{name}.parquet") if shared is None else shared.read_stock(code, name) for name in STOCK_TABLES}
+        tables = {
+            name: (read_stock_prices(directory) if name == "prices" else read_frame(directory / f"{name}.parquet"))
+            if shared is None
+            else shared.read_stock(code, name)
+            for name in STOCK_TABLES
+        }
         global_values = read_frame(global_path) if shared is None else shared.read_global(code)
         classification_cache = ConditionClassificationCache()
         for target in PATTERNS:
@@ -360,8 +366,171 @@ def summarize_all(event_parts: dict[str, dict[str, Path]], selections: dict[str,
     }
 
 
-def _report_execution_files(output: Path, source: dict[str, Any], input_id: str) -> dict[str, Path]:
+def _continuation_execution_provenance(
+    output: Path,
+    source: dict[str, Any],
+    input_id: str,
+    continuation_request: Path,
+) -> tuple[dict[str, Path], dict[str, Any]]:
+    """Validate one active executor against immutable stock/price ancestry."""
+    from research_core.pattern_scan_git_source_v2 import assert_current_code
+    from research_core.pattern_scan_price_references_v4 import EQUALITY, HANDOFF, RETIRED, retired_preparation_reference
+    from research_core.pattern_scan_result_lifecycle_v3 import _run
+
+    run = _run(_checked_path(output.parent))
+    if output != run / "analysis":
+        raise ValueError("continuation analysis must use the original run analysis directory")
+    pins: dict[Path, dict[str, Any]] = {}
+    records: dict[Path, dict[str, Any]] = {}
+
+    def pin(path: Path) -> dict[str, Any]:
+        if not path.is_absolute() or path.suffix != ".json":
+            raise ValueError("explicit absolute execution JSON metadata required")
+        path = _checked_path(path)
+        if not path.is_file() or not path.is_relative_to(run.parent):
+            raise ValueError("execution metadata must belong to this run or its control sibling")
+        if path not in pins:
+            pins[path] = {**describe_file(path.parent, path), "path": str(path)}
+        return pins[path]
+
+    def load(path: Path) -> dict[str, Any]:
+        pin(path)
+        if path not in records:
+            records[path] = read_json(path, max_bytes=128_000_000)
+        return records[path]
+
+    def matches_pin(path: Path, expected: dict[str, Any]) -> None:
+        if not isinstance(expected, dict) or set(expected) != {"path", "bytes", "sha256"} or object_digest(pin(path)) != object_digest(expected):
+            raise ValueError("continuation execution metadata descriptor differs")
+
+    request = load(continuation_request)
+    control = continuation_request.parent
+    if (
+        request.get("schema") != "pattern-scan-continuation.v4"
+        or request.get("phase") != "analysis"
+        or request.get("calculation_authorized") is not True
+        or request.get("run_root") != str(run)
+        or continuation_request.name != "request-analysis.json"
+        or control == run
+        or control.parent != run.parent
+        or request.get("control_root") != str(control)
+        or request.get("primary") != str(run.parent.parent.parent)
+        or request.get("data") != str(run.parent.parent.parent / "research_data")
+        or request.get("source") != source
+        or request.get("input_id") != input_id
+    ):
+        raise ValueError("continuation analysis request ownership/source/input differs")
+    executor = request["executor"]
+    assert_current_code(executor, ROOT)
+    prepared = load(run / "derived-preparation.json")
+    if (
+        prepared.get("schema") != "pattern-scan-derived-preparation.v2"
+        or prepared.get("scope") != "full_ordinary_reference"
+        or prepared.get("source") != source
+        or prepared.get("input_id") != input_id
+        or type(prepared.get("calendar_n")) is not int
+        or prepared["calendar_n"] != 4110
+        or type(prepared.get("ordinary_reference_n")) is not int
+        or prepared["ordinary_reference_n"] != 1942
+    ):
+        raise ValueError("continuation preparation numerical ancestry differs")
+    reference = retired_preparation_reference(run)
+    if reference.get("source") != source or reference.get("input_id") != input_id or reference.get("reference") != request["reference"]:
+        raise ValueError("continuation shared price reference differs from verified handoff")
+    matches_pin(run / HANDOFF, request["price_handoff"])
+    names = (
+        "derived-preparation.json",
+        "producer-read-receipt.json",
+        "phase-stock-result.json",
+        "request-stock.json",
+        "response-stock.json",
+        "response-stock.job-memory.json",
+        "run-stock-receipt.json",
+    )
+    for name in names:
+        matches_pin(run / name, reference["ancestors"][name])
+    matches_pin(run / "phase-stock-result.json", request["stock_reference"])
+    stock = load(run / "phase-stock-result.json")
+    rows = stock.get("pool", {}).get("results", [])
+    expected_codes = [row["code"] for row in prepared["requests"]]
+    codes = [row.get("code") for row in rows]
+    if (
+        stock.get("phase") != "full_stock_checkpoints"
+        or stock.get("global_analysis_admitted") is not False
+        or any(not isinstance(code, str) or not code.strip() for code in codes)
+        or any(not isinstance(code, str) or not code.strip() for code in expected_codes)
+        or len(rows) != 1942
+        or len(set(codes)) != 1942
+        or len(expected_codes) != 1942
+        or set(codes) != set(expected_codes)
+        or any(row.get("complete") is not True or row.get("source_id") != source["source_id"] or row.get("input_id") != input_id for row in rows)
+    ):
+        raise ValueError("continuation requires the complete original 1942-stock pool")
+    capacity_path = Path(request["capacity_path"])
+    capacity = load(capacity_path)
+    if (
+        pin(capacity_path)["sha256"] != request["capacity_sha256"]
+        or capacity.get("schema") != "pattern-scan-continuation-capacity.v4"
+        or capacity.get("phase") != "analysis"
+        or capacity.get("executor_source_id") != executor["source_id"]
+        or capacity.get("ancestral_source_id") != source["source_id"]
+        or capacity.get("input_id") != input_id
+    ):
+        raise ValueError("continuation capacity metadata identity differs")
+    equality = load(run / EQUALITY)
+    matches_pin(run / EQUALITY, reference["audit"])
+    retirement = load(run / RETIRED)
+    if (
+        equality.get("schema") != "pattern-scan-price-reader-equivalence.v3"
+        or equality.get("complete") is not True
+        or equality.get("reference_source_id") != source["source_id"]
+        or equality.get("reference_input_id") != input_id
+        or equality.get("reference") != request["reference"]
+        or equality.get("generation") != request["reference"]["generation"]
+        or equality.get("calendar_n") != 4110
+        or equality.get("security_n") != 1943
+        or equality.get("cutoff") != "2026-10-12"
+        or any(equality.get(name) is not True for name in ("all_columns_equal", "calendar_equal", "quality_equal"))
+        or type(equality.get("mismatch_n")) is not int
+        or equality["mismatch_n"] != 0
+        or retirement.get("schema") != "pattern-scan-own-price-retirement.v4"
+        or retirement.get("complete") is not True
+        or retirement.get("run_root") != str(run)
+        or retirement.get("original_source_id") != source["source_id"]
+        or retirement.get("original_input_id") != input_id
+        or retirement.get("generation") != request["reference"]["generation"]
+        or retirement.get("handoff") != {"path": str(run / HANDOFF), "sha256": request["price_handoff"]["sha256"]}
+        or retirement.get("other_stock_artifacts_retained") is not True
+    ):
+        raise ValueError("continuation equality or own-price retirement identity differs")
+    # The phase and response duplicate the whole stock pool. Their pins remain
+    # in provenance/run receipts; expanded per-stock metadata is not permanent.
+    files = {f"execution/{name}": run / name for name in names if name not in {"phase-stock-result.json", "response-stock.json"}}
+    files.update({
+        "execution/continuation-request.json": continuation_request,
+        "execution/continuation-capacity.json": capacity_path,
+        "execution/shared-price-equivalence.json": run / EQUALITY,
+        "execution/own-price-retirement.json": run / RETIRED,
+    })
+    provenance = {
+        "stock_reference": pin(run / "phase-stock-result.json"),
+        "executor": executor,
+        "ancestral_stock_source": source,
+        "shared_price_reference": request["reference"],
+        "price_handoff": pin(run / HANDOFF),
+    }
+    return files, provenance
+
+
+def _report_execution_files(
+    output: Path,
+    source: dict[str, Any],
+    input_id: str,
+    continuation_request: Path | None = None,
+) -> dict[str, Path]:
     """Select existing execution provenance before analysis or publication starts."""
+    if continuation_request is not None:
+        return _continuation_execution_provenance(output, source, input_id, continuation_request)[0]
     run = _checked_path(output.parent)
     if source.get("schema") != "pattern-scan-source.git.v2":
         return {"executed-sources.zip": run / "seal" / "executed-sources.zip", "source.json": run / "seal" / "source.json"}
@@ -439,11 +608,18 @@ def run_analysis(
     source: dict[str, Any],
     input_id: str,
     defer_publication: bool = False,
+    continuation_request: Path | None = None,
 ) -> dict[str, Any]:
     """Compute approved tables; new runs defer publication of retained results."""
     verify_source(source)
     output = _checked_path(output)
-    execution_files = _report_execution_files(output, source, input_id)
+    execution_provenance: dict[str, Any] = {}
+    if continuation_request is not None:
+        if not defer_publication:
+            raise ValueError("continuation analysis requires deferred result publication")
+        execution_files, execution_provenance = _continuation_execution_provenance(output, source, input_id, continuation_request)
+    else:
+        execution_files = _report_execution_files(output, source, input_id)
     output.mkdir(parents=True, exist_ok=True)
     shared = None if defer_publication else load_shared(roots, entries, tuple(parts), source, input_id)
     event_parts = prepare_event_parts(parts, barrier, entries, output / "event-parts", source=source, input_id=input_id, shared=shared)
@@ -493,7 +669,7 @@ def run_analysis(
             retained,
             source=source,
             input_id=input_id,
-            provenance={"label_checkpoint": entries["labels"], "selection": selections},
+            provenance={"label_checkpoint": entries["labels"], "selection": selections, **execution_provenance},
             transient_files=[path for path in output.parent.rglob("*") if path.is_file() and path.name not in {".scan-active.json", "computed-results.json"}],
         )
         return {

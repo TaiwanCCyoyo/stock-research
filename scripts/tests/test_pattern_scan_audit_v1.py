@@ -129,6 +129,32 @@ def test_deterministic_non_outcome_samples_conditions_and_candidate_loop(
         assert (pd.to_datetime(result.pivots.confirmed_at) <= pd.to_datetime(result.pivots.t0)).all()
 
 
+def test_audit_stock_verification_delegates_to_reference_seam_but_events_remain_generic(
+    inputs: tuple[dict[str, Path], dict[str, dict[str, Path]], dict[str, Any], dict[str, Any]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    stock = inputs[0]["0001"]
+    original_stock, original_files = barrier_module.verify_stock_artifacts, audit.verify_files
+    verified = []
+    generic = []
+
+    def verify_stock(directory: Path, receipt: dict[str, Any]) -> None:
+        assert directory == stock and receipt["source_id"] == SOURCE["source_id"]
+        verified.append(directory)
+        original_stock(directory, receipt)
+
+    def verify_events(directory: Path, artifacts: Any) -> None:
+        assert directory != stock
+        generic.append(directory)
+        original_files(directory, artifacts)
+
+    monkeypatch.setattr(barrier_module, "verify_stock_artifacts", verify_stock)
+    monkeypatch.setattr(audit, "verify_files", verify_events)
+    result = _build(inputs)
+    assert verified == [stock] and generic == [inputs[1]["B4"]["0001"]]
+    assert result.conditions.matches.all() and result.candidates.matches.all()
+
+
 @pytest.mark.parametrize("damage", ("condition", "future_confirmation"))
 def test_wrong_condition_or_future_confirmation_rejected(
     inputs: tuple[dict[str, Path], dict[str, dict[str, Path]], dict[str, Any], dict[str, Any]], damage: str

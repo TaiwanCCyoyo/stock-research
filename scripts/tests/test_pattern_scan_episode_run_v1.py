@@ -238,3 +238,38 @@ def test_large_completed_receipt_resume_still_verifies_identity_and_payloads(tmp
     with pytest.raises(ValueError, match="mismatch"):
         run_episodes(parts, barrier, event_parts, selections, {}, output, source=source, input_id="synthetic-input")
     assert file_digest(receipt_path) == before
+
+
+def test_episode_stock_price_reference_routing_keeps_event_ancestor_verification(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from research_core import pattern_scan_episode_run_v1 as module
+
+    parts, barrier, event_parts, selections, source = fixture(tmp_path, monkeypatch)
+    stock = parts["0050"]
+    original_verify, original_read, original_files = module.verify_stock_artifacts, module.read_stock_prices, module.verify_files
+    verified = []
+    reads = []
+    generic = []
+
+    def verify_stock(directory: Path, receipt: dict[str, Any]) -> None:
+        assert directory == stock
+        verified.append(directory)
+        original_verify(directory, receipt)
+
+    def read_prices(directory: Path, *, columns: list[str] | None = None) -> pd.DataFrame:
+        assert directory == stock and columns is None
+        reads.append(directory)
+        return original_read(directory, columns=columns)
+
+    def generic_files(directory: Path, artifacts: Any) -> None:
+        assert directory != stock
+        generic.append(directory)
+        original_files(directory, artifacts)
+
+    monkeypatch.setattr(module, "verify_stock_artifacts", verify_stock)
+    monkeypatch.setattr(module, "read_stock_prices", read_prices)
+    monkeypatch.setattr(module, "verify_files", generic_files)
+    receipt = run_episodes(parts, barrier, event_parts, selections, {}, tmp_path / "reference-episodes", source=source, input_id="synthetic-input")
+    assert receipt["complete"] is True and verified == [stock, stock] and reads == [stock]
+    assert {stocks["0050"] for stocks in event_parts.values()}.issubset(set(generic))
+    observed = pd.read_parquet(receipt["files"]["observations.parquet"])
+    assert observed.loc[observed.group_id.eq("B1:original"), "observed_coverage_status"].iloc[0] == "matched"

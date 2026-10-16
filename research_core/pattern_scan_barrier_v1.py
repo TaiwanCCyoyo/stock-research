@@ -16,6 +16,7 @@ from research_core.pattern_scan_context_v1 import build_context
 from research_core.pattern_scan_cross_section_v1 import cross_section, recent_pattern_values
 from research_core.pattern_scan_execution_v1 import verify_source
 from research_core.pattern_scan_parquet_v1 import read_frame
+from research_core.pattern_scan_price_references_v4 import read_stock_prices, verify_stock_artifacts
 from research_core.research_data_catalog import DataCatalog
 from research_core.research_data_file_bundle_v1 import publish_file_bundle
 from research_core.research_data_paths import DataRoots, _checked_path
@@ -45,7 +46,7 @@ def verified_parts(results: list[dict[str, Any]], *, source: dict[str, Any], inp
         current = read_json(directory / "receipt.json")
         if current != result or current.get("complete") is not True or current.get("source_id") != source["source_id"] or current.get("input_id") != input_id:
             raise ValueError("stock barrier receipt/source/input differs")
-        verify_files(directory, current["artifacts"])
+        verify_stock_artifacts(directory, current)
         parts[result["code"]] = directory
     return parts
 
@@ -62,7 +63,7 @@ def build_barrier(parts: dict[str, Path], benchmark: pd.DataFrame, output: Path)
         part_receipt = read_json(_checked_path(directory / "receipt.json"))
         if part_receipt.get("complete") is not True:
             raise ValueError("incomplete stock part before global barrier")
-        verify_files(directory, part_receipt["artifacts"])
+        verify_stock_artifacts(directory, part_receipt)
         identities.add((part_receipt["source_id"], part_receipt["input_id"]))
         parent_pins[code] = file_digest(directory / "receipt.json")
     if len(identities) != 1:
@@ -114,7 +115,7 @@ def build_barrier(parts: dict[str, Path], benchmark: pd.DataFrame, output: Path)
     jump_flags = pd.DataFrame(index=benchmark.index, columns=pd.Index(expected), dtype=bool)
     for ordinal, code in enumerate(codes):
         states = read_frame(parts[code] / "pattern_states.parquet")
-        prices = read_frame(parts[code] / "prices.parquet", columns=["Close", "quality_reason"])
+        prices = read_stock_prices(parts[code], columns=["Close", "quality_reason"])
         if not states.index.equals(benchmark.index) or not prices.index.equals(benchmark.index):
             raise ValueError("stock part calendar differs at full barrier")
         for pattern in PATTERNS:
@@ -172,7 +173,7 @@ def build_barrier(parts: dict[str, Path], benchmark: pd.DataFrame, output: Path)
     for code, directory in parts.items():
         if file_digest(directory / "receipt.json") != parent_pins[code]:
             raise ValueError("stock ancestor changed during global calculation")
-        verify_files(directory, read_json(directory / "receipt.json")["artifacts"])
+        verify_stock_artifacts(directory, read_json(directory / "receipt.json"))
     write_json(output / "receipt.json", receipt)
     publish_noreplace(output, destination)
     LOGGER.info("Completed global scan barrier stocks=%d sessions=%d", len(codes), n)
@@ -271,7 +272,7 @@ def publish_stock_versions(
         receipt = read_json(_checked_path(directory / "receipt.json"))
         if receipt.get("source_id") != source["source_id"] or receipt.get("input_id") != input_id or receipt.get("complete") is not True:
             raise ValueError("shared publication source/input differs from stock part")
-        verify_files(directory, receipt["artifacts"])
+        verify_stock_artifacts(directory, receipt)
     verify_barrier(barrier)
     calendar = pd.DatetimeIndex(pd.to_datetime(barrier["calendar"]))
     catalog = DataCatalog(roots)

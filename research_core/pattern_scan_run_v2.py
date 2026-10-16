@@ -482,7 +482,7 @@ def coordinator_main(request_path: Path) -> None:
                 run / "analysis",
                 source=source,
                 input_id=input_id,
-                **({"defer_publication": True} if deferred else {}),
+                defer_publication=deferred,
             )
             result["phase"] = "computed_pattern_scan_unpublished" if deferred else "complete_pattern_scan"
     result_path = run / f"phase-{mode}-result.json"

@@ -169,3 +169,37 @@ def test_barrier_exact_resume_and_legal_parquet_sidecar_tamper_rejected(
         barrier.verify_barrier(receipt)
     with pytest.raises(ValueError):
         barrier.build_barrier(parts, benchmark, output)
+
+
+def test_stock_reference_seams_preserve_legacy_barrier_values_and_global_verification(
+    supplied: tuple[DataRoots, list[dict[str, Any]], pd.DataFrame, list[dict[str, Any]]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    roots, results, benchmark, _ = supplied
+    stock_directories = {Path(row["output_path"]) for row in results}
+    original_verify, original_read = barrier.verify_stock_artifacts, barrier.read_stock_prices
+    verified: list[Path] = []
+    reads: list[tuple[Path, list[str] | None]] = []
+
+    def verify_stock(directory: Path, receipt: dict[str, Any]) -> None:
+        assert directory in stock_directories
+        assert receipt == next(row for row in results if row["output_path"] == str(directory))
+        verified.append(directory)
+        original_verify(directory, receipt)
+
+    def read_prices(directory: Path, *, columns: list[str] | None = None) -> pd.DataFrame:
+        reads.append((directory, columns))
+        return original_read(directory, columns=columns)
+
+    monkeypatch.setattr(barrier, "verify_stock_artifacts", verify_stock)
+    monkeypatch.setattr(barrier, "read_stock_prices", read_prices)
+    parts = barrier.verified_parts(results, source=SOURCE, input_id="synthetic-input")
+    receipt = barrier.build_barrier(parts, benchmark, roots.primary / ".tmp/reference-routing")
+    assert reads == [(parts[code], ["Close", "quality_reason"]) for code in sorted(parts)]
+    assert all(verified.count(directory) == 3 for directory in stock_directories)
+    closes = pd.read_parquet(Path(receipt["sidecars"]["close_matrix"]["path"]))
+    for code, directory in parts.items():
+        assert closes[f"TW:{code}"].tolist() == pd.read_parquet(directory / "prices.parquet").Close.tolist()
+    before = list(verified)
+    barrier.verify_barrier(receipt)
+    assert verified == before  # Global payloads retain their generic verifier.

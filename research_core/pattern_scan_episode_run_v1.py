@@ -28,6 +28,7 @@ from research_core.pattern_scan_episode_tables_v1 import (
 )
 from research_core.pattern_scan_execution_v1 import verify_source
 from research_core.pattern_scan_parquet_v1 import read_frame
+from research_core.pattern_scan_price_references_v4 import read_stock_prices, verify_stock_artifacts
 from research_core.pattern_scan_receipt_io_v2 import publish_scan_receipt, read_scan_receipt
 from research_core.pattern_scan_reporting_v1 import ERAS, MARKETS, candidate_membership
 from research_core.pattern_scan_retained_v3 import select_q4_examples
@@ -49,7 +50,10 @@ def _part(directory: Path, source_id: str, input_id: str, *, event: bool) -> dic
     identity = receipt.get("identity", {}) if event else receipt
     if identity.get("source_id") != source_id or identity.get("input_id") != input_id:
         raise ValueError("episode ancestor source/input differs")
-    verify_files(directory, receipt["artifacts"])
+    if event:
+        verify_files(directory, receipt["artifacts"])
+    else:
+        verify_stock_artifacts(directory, receipt)
     return _pin(directory / "receipt.json")
 
 
@@ -148,7 +152,7 @@ def run_episodes(
                 groups[identifier + suffix] = {"pattern_id": target, "candidate_id": candidate, "control_id": control}
     for code, directory in sorted(parts.items()):
         security_id = f"TW:{code}"
-        prices = read_frame(directory / "prices.parquet") if shared is None else shared.read_stock(code, "prices")
+        prices = read_stock_prices(directory) if shared is None else shared.read_stock(code, "prices")
         labels = read_frame(directory / "base_labels.parquet") if shared is None else shared.read_stock(code, "base_labels")
         dates = tuple(barrier["calendar"])
         if not isinstance(prices.index, pd.DatetimeIndex) or prices.index.strftime("%Y-%m-%d").tolist() != list(dates):

@@ -290,3 +290,45 @@ def test_interrupted_summary_publication_retains_staging_and_resumes(tmp_path: P
     receipt = analysis.summarize_all(parts, {"B4": {"candidates": []}}, output)
     assert all(Path(path).is_file() for path in receipt["files"].values())
     assert any(path.name.startswith(".staging-") for path in output.iterdir())
+
+
+def test_event_parts_route_only_stock_prices_and_stock_verification_through_reference_seams(
+    stock_parts: tuple[dict[str, Path], dict[str, Any], dict[str, Any]],
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    parts, barrier, entries = stock_parts
+    stock = parts["0001"]
+    original_verify, original_read = analysis.verify_stock_artifacts, analysis.read_stock_prices
+    original_frame, original_files = analysis.read_frame, analysis.verify_files
+    verified = []
+    reads = []
+    generic = []
+
+    def verify_stock(directory: Path, receipt: dict[str, Any]) -> None:
+        assert directory == stock
+        verified.append(directory)
+        original_verify(directory, receipt)
+
+    def read_prices(directory: Path, *, columns: list[str] | None = None) -> pd.DataFrame:
+        assert directory == stock and columns is None
+        reads.append(directory)
+        return original_read(directory, columns=columns)
+
+    def frame(path: Path, **kwargs: Any) -> pd.DataFrame:
+        assert path != stock / "prices.parquet"
+        return original_frame(path, **kwargs)
+
+    def generic_files(directory: Path, artifacts: Any) -> None:
+        assert directory != stock
+        generic.append(directory)
+        original_files(directory, artifacts)
+
+    monkeypatch.setattr(analysis, "verify_stock_artifacts", verify_stock)
+    monkeypatch.setattr(analysis, "read_stock_prices", read_prices)
+    monkeypatch.setattr(analysis, "read_frame", frame)
+    monkeypatch.setattr(analysis, "verify_files", generic_files)
+    result = analysis.prepare_event_parts(parts, barrier, entries, tmp_path / "reference-events", source=SOURCE, input_id="synthetic-input")
+    assert set(result) == set(PATTERNS)
+    assert verified == [stock] and reads == [stock] and generic
+    assert all(stocks["0001"].is_dir() for stocks in result.values())
