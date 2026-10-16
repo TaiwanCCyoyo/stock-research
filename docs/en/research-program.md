@@ -21,6 +21,12 @@
 
 ## 固定入口與權責
 
+2026-10-16 PR17 本機特徵候選：[feature preview contract](../../tasks/20261013-pattern-scan/feature-preview-v1.md)。
+`scripts.preview_pattern_scan_features` 從既有已完成逐股產物整理均線／布林／已確認高低點／每日條件，
+僅寫 owner 指定 worktree 的 `.tmp/pr17-feature-preview-20261016/`；原始數值來源與投影 executor 分開記錄。
+共用 root、catalog 與維護入口不變；待 owner／Claude 討論更新 SOP 後才決定移交。
+此候選不含未來結果與事件展開，也不代表 PR17 Q1–Q6 已完成。
+
 2026-10-16 PR17 共用價格接續：[shared-price continuation v4](../../tasks/20261013-pattern-scan/execution-shared-v4.md)。
 PR26 已合併；以固定 generation 逐欄比較實際價格，引用移交後可先清除 PR17 自有價格副本。
 直接重用已完成的 1,942 股 checkpoint，後續階段另記 executor 與容量證據；非價格清理仍須正式成果驗證及移交。
