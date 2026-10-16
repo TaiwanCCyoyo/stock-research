@@ -81,3 +81,7 @@ Commit the result publication before building the reading page. Pass that full
 commit to `scripts.build_annual_completion_report --publication-ref` so deployed
 source links survive branch deletion. The committed v2 page points at publication
 commit `98476d7`; a default `main` link is also supported for local previews.
+When a different named publication is selected with `--publication`, the builder
+derives all evidence URLs from its validated repository-relative directory and
+checks the study ID. Inputs outside `tasks/<study-id>/publications/<version>/`
+are rejected for report publication instead of silently linking to v2.

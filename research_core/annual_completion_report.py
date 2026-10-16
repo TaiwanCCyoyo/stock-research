@@ -14,13 +14,24 @@ from pathlib import Path
 from typing import Any
 
 from research_core.annual_completion_publication import load_publication
+from research_core.artifact_store import relative_name, safe_path
 
 LOGGER = logging.getLogger(__name__)
 ROOT = Path(__file__).resolve().parents[1]
+KIT = ROOT / "research_web/report-kit/v1"
 TASK = ROOT / "tasks/20261013-annual-winner-rotation"
+DEFAULT_PUBLICATION_PATH = "tasks/20261013-annual-winner-rotation/publications/completion-v2"
 SCHEMA = "annual-completion-result.v2"
 MAX_BYTES = 500 * 1024
 SCENARIOS = {"lapse": "認股權放棄", "realize": "認股權價值實現"}
+
+
+def _publication_path(value: str) -> tuple[str, str]:
+    validated = relative_name(value)
+    match = re.fullmatch(r"tasks/([a-z0-9][a-z0-9_-]*)/publications/([a-z0-9][a-z0-9_-]*)", validated)
+    if match is None:
+        raise ValueError("publication_path must be tasks/<safe-task-id>/publications/<safe-version>")
+    return validated, match[1]
 
 
 def _text(value: Any) -> str:
@@ -344,6 +355,7 @@ def render_report(
     performance: dict[str, Any],
     presentation_date: str,
     publication_ref: str = "main",
+    publication_path: str = DEFAULT_PUBLICATION_PATH,
 ) -> str:
     """Format saved metrics only; never reconstruct returns, rankings or equity."""
     if result.get("schema") != SCHEMA:
@@ -354,9 +366,10 @@ def render_report(
     date.fromisoformat(presentation_date)
     if re.fullmatch(r"main|[0-9a-fA-F]{40}", publication_ref) is None:
         raise ValueError("publication_ref must be main or a full 40-hex commit")
-    publication_url = (
-        f"https://github.com/TaiwanCCyoyo/stock-research/blob/{publication_ref.lower()}/tasks/20261013-annual-winner-rotation/publications/completion-v2/"
-    )
+    publication_path, task_id = _publication_path(publication_path)
+    if result.get("study_id") != task_id:
+        raise ValueError("publication_path task must match result study_id")
+    publication_url = f"https://github.com/TaiwanCCyoyo/stock-research/blob/{publication_ref.lower()}/{publication_path}/"
     sources = "".join(
         f'<a href="{publication_url}{name}">{label}</a>'
         for name, label in (
@@ -369,9 +382,8 @@ def render_report(
             ("data-contract.md", "資料契約"),
         )
     )
-    kit = ROOT / "research_web/report-kit/v1"
-    css = re.sub(r"@import\s+url\([^;]+;", "", (kit / "report-kit.css").read_text(encoding="utf-8"))
-    kit_script = (kit / "report-kit.js").read_text(encoding="utf-8")
+    css = re.sub(r"@import\s+url\([^;]+;", "", (KIT / "report-kit.css").read_text(encoding="utf-8"))
+    kit_script = (KIT / "report-kit.js").read_text(encoding="utf-8")
     panels = []
     for scenario, label in SCENARIOS.items():
         windows = "".join(_window(window, scenario) for window in result["windows"])
@@ -515,7 +527,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
     LOGGER.info("Reading saved completion publication from %s", args.publication)
-    publication = load_publication(args.publication)
+    source = safe_path(args.publication).resolve()
+    try:
+        source_relative = source.relative_to(safe_path(ROOT).resolve()).as_posix()
+    except ValueError as error:
+        raise ValueError("publication must be inside the repository root") from error
+    publication_path, _ = _publication_path(source_relative)
+    publication = load_publication(source)
     rendered = render_report(
         publication["results.json"],
         receipt=publication["run-receipt.json"],
@@ -523,6 +541,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         performance=publication["performance.json"],
         presentation_date=args.date,
         publication_ref=args.publication_ref,
+        publication_path=publication_path,
     )
     if args.output.name == "index.html" and not (args.output.parent / "v1.html").is_file():
         raise ValueError("preserve the original report as v1.html before replacing index.html")

@@ -2,13 +2,30 @@ import hashlib
 import json
 from copy import deepcopy
 from pathlib import Path
+from typing import Any
 
 import pytest
 
+from research_core import annual_completion_report as report
 from research_core.annual_completion_report import main, render_report
 
 
-def test_saved_report_renderer_preserves_unknowns_scenarios_and_safe_embedded_data(tmp_path: Path):
+def _write_publication(root: Path, result: dict, companion: dict) -> None:
+    root.mkdir(parents=True)
+    identities: dict[str, dict[str, str | int]] = {}
+    receipt = {**companion, "schema": "run-receipt.v1", "results": identities}
+    for key, name, value in (
+        ("results", "results.json", result),
+        ("admission", "admission-audit.json", companion),
+        ("performance", "performance.json", companion),
+    ):
+        raw = json.dumps(value).encode("utf-8")
+        (root / name).write_bytes(raw)
+        identities[key] = {"path": name, "bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest()}
+    (root / "run-receipt.json").write_text(json.dumps(receipt), encoding="utf-8")
+
+
+def test_saved_report_renderer_preserves_unknowns_scenarios_and_safe_embedded_data(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     modeled = {
         "status": "modeled",
         "gross_return": 0.25,
@@ -32,6 +49,7 @@ def test_saved_report_renderer_preserves_unknowns_scenarios_and_safe_embedded_da
     result = {
         "schema": "annual-completion-result.v2",
         "run_id": "synthetic-report",
+        "study_id": "20261013-annual-winner-rotation",
         "definition": "synthetic.v2",
         "selection_scope": "fixed-v1 <script>unsafe</script>",
         "cutoff": "2026-10-12",
@@ -105,19 +123,9 @@ def test_saved_report_renderer_preserves_unknowns_scenarios_and_safe_embedded_da
     assert json.loads(embedded) == result
     assert len(output.encode("utf-8")) < 500 * 1024
 
-    publication = tmp_path / "publication"
-    publication.mkdir()
-    identities: dict[str, dict[str, str | int]] = {}
-    receipt = {**companion, "schema": "run-receipt.v1", "results": identities}
-    for key, name, value in (
-        ("results", "results.json", result),
-        ("admission", "admission-audit.json", companion),
-        ("performance", "performance.json", companion),
-    ):
-        raw = json.dumps(value).encode("utf-8")
-        (publication / name).write_bytes(raw)
-        identities[key] = {"path": name, "bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest()}
-    (publication / "run-receipt.json").write_text(json.dumps(receipt), encoding="utf-8")
+    monkeypatch.setattr(report, "ROOT", tmp_path)
+    publication = tmp_path / report.DEFAULT_PUBLICATION_PATH
+    _write_publication(publication, result, companion)
     index = tmp_path / "index.html"
     index.write_text("original-report", encoding="utf-8")
     with pytest.raises(ValueError, match="preserve the original"):
@@ -129,3 +137,55 @@ def test_saved_report_renderer_preserves_unknowns_scenarios_and_safe_embedded_da
     assert (tmp_path / "v1.html").read_text(encoding="utf-8") == "original-report"
     with pytest.raises(ValueError, match="run_id mismatch"):
         render_report(result, receipt={"run_id": "other"}, audit=companion, performance=companion, presentation_date="2026-10-16")
+
+    next_result: dict[str, Any] = deepcopy(result)
+    next_result["run_id"] = "synthetic-report-v3"
+    next_result["windows"][0]["scenarios"]["lapse"]["net_terminal_multiple"] = 1.52
+    next_result["rows"][0]["lapse"]["net_return"] = 0.52
+    next_companion = {**companion, "run_id": next_result["run_id"]}
+    next_publication = publication.with_name("completion-v3")
+    _write_publication(next_publication, next_result, next_companion)
+    assert (
+        main([
+            "--publication",
+            str(next_publication),
+            "--output",
+            str(index),
+            "--date",
+            "2026-10-16",
+            "--publication-ref",
+            commit_ref,
+        ])
+        == 0
+    )
+    next_output = index.read_text(encoding="utf-8")
+    next_embedded = next_output.split('id="report-data">', 1)[1].split("</script>", 1)[0]
+    assert json.loads(next_embedded) == next_result
+    assert "1.5200 倍" in next_output and "+52.00%" in next_output
+    next_prefix = publication_prefix.replace("/main/", f"/{commit_ref}/").replace("completion-v2", "completion-v3")
+    for name in ("results.json", "publication.zip", "report.md"):
+        assert f'href="{next_prefix}{name}"' in next_output
+    assert "completion-v2" not in next_output
+    assert 'href="v1.html"' in next_output
+    assert (tmp_path / "v1.html").read_text(encoding="utf-8") == "original-report"
+
+    for invalid_path in (
+        "../completion-v3",
+        "https://example.com/publication",
+        "tasks/other/publications/completion-v3/extra",
+        "tasks/other/publications/completion-v3",
+        "tasks/other/publications/completion.v3",
+    ):
+        with pytest.raises(ValueError):
+            render_report(
+                result,
+                receipt=companion,
+                audit=companion,
+                performance=companion,
+                presentation_date="2026-10-16",
+                publication_path=invalid_path,
+            )
+    for invalid_source in (tmp_path.parent / "outside-publication", tmp_path / "wrong-layer"):
+        with pytest.raises(ValueError, match="repository root|publication_path"):
+            main(["--publication", str(invalid_source), "--output", str(index)])
+    assert index.read_text(encoding="utf-8") == next_output
