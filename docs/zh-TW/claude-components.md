@@ -2,7 +2,7 @@
 
 現行契約為 `AGENTS.md`；擁有者已要求刪除 `CLAUDE.md`。Claude Code 使用 2.1.281 以上版本並啟用內建 `agents-md` 支援，且專案或祖先目錄沒有優先載入的 `CLAUDE.md`／`CLAUDE.local.md` 時，會原生載入根契約；本專案不新增 import 或注入 hook。本機 implementation／security review 前先在 `/context` 或 `/memory` 確認根契約；若原生載入不可用或被覆蓋，先明確讀取根目錄 `AGENTS.md`，再依其嚴重程度、secret 分類與授權邊界審查。詳見[官方載入規則](https://code.claude.com/docs/en/memory#agentsmd)。下方舊移除紀錄不代表目前的規則載入方式。
 
-本文件列出 `.claude/` 目錄中所有啟用的 agents、commands、skills、hooks 與 rules。
+本文件列出 `.claude/` 目錄中所有啟用的 commands、skills、hooks 與 rules。
 
 **ECC 來源**：[affaan-m/ECC](https://github.com/affaan-m/ECC) v2.0.0-rc.1
 **ECC 整合日期**：2026-06-02
@@ -12,28 +12,22 @@
 
 ---
 
-## Agents
+## 委派
 
-Agents 是由主要 Claude 工作階段呼叫的專用子代理，用於執行特定任務。
+有界工作使用 Claude 內建 general-purpose subagent；聚焦程式碼探索使用 Explore。一般工作使用內建代理；stock-research 保留以下領域角色。共用委派原則由 `AGENTS.md` 管理：當大量輸入、輸出、雜訊或重複作業使交接有具體效益時，委派簡單工作。使用 Claude 可用的最低成本合適模型；Codex 專屬的 Luna 偏好不代表 Claude 支援該模型。
 
-Claude 的自動分派主要由各 agent 的 description 與目前任務脈絡決定。`signal-miner` 是最低成本的原生唯讀工具，負責有界的高輸出指令；tests、benchmarks、廣泛搜尋、verbose diagnostics、dependency traces 或大型 diff/log inspections 的輸出隔離值得一次委派時才使用。短小且聚焦的檢查由 main session 直接執行，一般程式碼定位使用內建 Explore agent。`task-worker` 則是只供高階 main session 降級執行有界修改的中價選項，任務必須有明確目標、範圍、驗收條件與驗證方式。最低階 main session 應自行處理簡單工作，或視情況使用內建 Explore 或 general-purpose，不升級到 `task-worker`。模糊、跨領域、security-sensitive、architecture 與 planning 工作應留給 main session 或適合的內建 agent。
+長篇翻譯、文件同步、大型 diff/log 檢視與機械式 hook 修復皆遵循此原則。只使用目前 runtime 實際支援的控制選擇模型。若只能繼承主模型，明確回報限制並直接執行；或只在隔離 context、平行處理有具體效益時委派，不宣稱已切換模型或降低成本。需要較多判斷的實作選用合適模型；短工作留在本地；架構、產品、安全敏感與模糊決策由 main session 負責。提供明確範圍與驗收條件，並收集精簡證據而非原始輸出。唯讀指示本身不會限制工具權限。
 
-Claude 在 `.claude/settings.json` 維持 `model: "opusplan"`：原生 Plan Mode 使用 opus，執行階段使用 sonnet。自訂 agents 不用於把計畫傳回 main session。
+文件翻譯或同步由 main session 選定權威來源與明確目標。保留結構、連結、程式碼與識別字；遇到來源衝突或術語不明時回報。
 
-### 工作流程（原創——非來自 ECC）
+Claude 在 `.claude/settings.json` 保留 `model: "opusplan"`：原生 Plan Mode 使用 `opus`，執行使用 `sonnet`。委派不會改變 main session 的模型選擇，也不會轉移規劃權責。
 
-| Agent               | 模型            | 工具                                | 用途                                                                                                                                            |
-| ------------------- | --------------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `commit-specialist` | haiku           | Bash, Read                          | 審查已暫存的變更並草擬 commit 訊息                                                                                                              |
-| `doc-translator`    | haiku           | Read, Write, Edit                   | 低階文件翻譯與同步者：將任何需寫入檔案的翻譯處理到單一明確的非 canonical 目標；main session 決定來源與目標，衝突時以其維護的 canonical 文件為準 |
-| `signal-miner`      | haiku           | Read, Grep, Glob, Bash              | 以最低成本隔離預期會產生大量 log 或 stdout 的指令，僅回傳精簡訊號而非原始輸出                                                                   |
-| `task-worker`       | sonnet (medium) | Read, Grep, Glob, Write, Edit, Bash | 執行已有明確範圍、驗收條件與驗證方式的低至中風險修改；當範圍或風險擴大時停止並回報                                                              |
+### stock-research 領域角色
 
-### stock-research 專屬（非來自 ECC，upstream 沒有對應項目）
-
-| Agent                    | 模型 | 工具                    | 用途                                                        |
-| ------------------------ | ---- | ----------------------- | ----------------------------------------------------------- |
-| `strategy-diagnostician` | opus | Read, Grep, Glob, Write | 依 mission 與既有證據診斷；不自訂門檻、不依保留期結果調參。 |
+| Agent                    | 用途                                                            |
+| ------------------------ | --------------------------------------------------------------- |
+| `strategy-diagnostician` | 依擁有者契約診斷既有證據；不授權新研究或變更驗收規則。          |
+| `study-runner`           | 只執行主代理已設計且明確授權的研究，遵守固定 gates 與執行預算。 |
 
 ### 未從 ECC 移植（含原因）
 
@@ -56,7 +50,7 @@ Claude 在 `.claude/settings.json` 維持 `model: "opusplan"`：原生 Plan Mode
 
 - 互動工作：進入 Native Plan Mode，核准計畫後再回到執行模式。
 - 無人值守工作：使用分離的 planning 與 execution sessions。planning session 寫入受維護的 plan artifact；execution session 讀取已核准 artifact。不要以 planner subagent 作為 main-session handoff。
-- Claude-only 公司移植：保留 instructions、rules、agents、skills 與 hygiene hooks。使用公司核准的固定模型 ID 或 alias mapping，不依賴本 repo 個人 Pro 的預設。
+- Claude-only 公司移植：保留 instructions、rules、skills 與 hygiene hooks。使用公司核准的固定模型 ID 或 alias mapping，不依賴本 repo 個人 Pro 的預設。
 
 `REVIEW.md` 不屬於本地基準線的一部分，僅在 repo 註冊 Claude 的 managed Team 或 Enterprise Code Review 服務時才新增。
 
@@ -66,10 +60,10 @@ Claude 在 `.claude/settings.json` 維持 `model: "opusplan"`：原生 Plan Mode
 
 ### 工作流程（原創——非來自 ECC）
 
-| Command       | 用途                                                            |
-| ------------- | --------------------------------------------------------------- |
-| `/gen-commit` | 透過 `commit-specialist` 產生符合 Conventional Commits 格式訊息 |
-| `/worktree`   | 建立、接續與完成隔離的任務 worktree                             |
+| Command       | 用途                                       |
+| ------------- | ------------------------------------------ |
+| `/gen-commit` | 透過 `commit-helper` 準備或執行有界 commit |
+| `/worktree`   | 建立、接續與完成隔離的任務 worktree        |
 
 原生 Git／GitHub 操作遵守[共用 Git 工作契約](../en/git-workflow.md)。預設只做本地交付；擁有者啟用 PR 交付後，可推送任務分支與更新 PR，合併仍需另外授權。
 
@@ -87,12 +81,12 @@ Claude 在 `.claude/settings.json` 維持 `model: "opusplan"`：原生 Plan Mode
 
 | Command          | 替代方案                                                              |
 | ---------------- | --------------------------------------------------------------------- |
-| `/build-fix`     | 原生 evidence-driven debugging + `python-testing` skill               |
+| `/build-fix`     | 原生 evidence-driven debugging                                        |
 | `/code-review`   | 內建 `/code-review`（含 `ultra` 雲端 review）+ hosted Codex PR review |
-| `/feature-dev`   | Native Plan Mode + 原生 test-first workflow + `signal-miner` agent    |
-| `/python-review` | `python-testing` skill 與內建 `/code-review`                          |
+| `/feature-dev`   | Native Plan Mode + 原生 test-first workflow + 內建 delegation         |
+| `/python-review` | 內建 `/code-review` 與 repository checks                              |
 | `/security-scan` | 內建 `/security-review` + `detect-secrets` gate                       |
-| `/test-coverage` | `python-testing` skill（`pytest --cov`）                              |
+| `/test-coverage` | 標準 pytest-cov 用法                                                  |
 
 ### 未從 ECC 移植（含原因）
 
@@ -120,12 +114,6 @@ Skills 是內部工作流程文件，在對應的 command 或 agent 需要時載
 | ------------------------ | ------------------------------------------------- |
 | `commit-helper`          | Conventional Commits 格式、限定範圍的 commit 執行 |
 | `dependabot-remediation` | 唯讀警示擷取、最小安全升級與完成證據              |
-
-### 開發（從 ECC v2.0.0-rc.1 移植）
-
-| Skill            | 用途                                                                                                         |
-| ---------------- | ------------------------------------------------------------------------------------------------------------ |
-| `python-testing` | Repository-specific 行為測試、hook JSON fixtures 與 Windows path 行為。Test-first 決策使用 Claude 原生能力。 |
 
 ### 已移除（2026-08-23 清理——原生 GitHub 操作與聚焦的安全工作流）
 
@@ -193,7 +181,7 @@ Hooks 是由 Claude Code harness 自動執行的 Python 腳本。
 
 Workspace editor defaults 放在 `.vscode/settings.json`：移除行尾空白、保留單一 final newline、使用 Ruff 進行 Python formatting 與 explicit code actions，並將產生的 cache 與本機 agent state 排除於 search、watchers 與 local history 之外。
 
-驗證依變更行為選擇既有測試並重用證據；正常 commit 執行 `.githooks/pre-commit`，Python skills 提供測試命令。
+驗證依變更行為選擇既有測試並重用證據；正常 commit 執行 `.githooks/pre-commit`，README 與 CI 提供測試命令。
 
 Claude Code 使用官方 Pyright plugin 提供即時型別導覽與 diagnostics；其 PostToolUse hook 額外對修改後的 Python 檔案執行唯讀的 Ruff `E722`、`F601`、`F602`、`F634` check，補足 Pyright 不負責的問題並避免重複回報 undefined-name 與 unused-symbol diagnostics。hook 指令本身與其內部的 Ruff 呼叫都使用 `uv run --no-sync`，避免每次編輯都觸發環境 resync。完整 Ruff linting 與 formatting 延後由 pre-commit 負責，因此正常編輯期間不會觸發 repository-wide formatting。Installed commit hooks 與 PR CI 負責自動化檢查；skills 與 reviewers 不要求另外執行一次手動。
 
@@ -212,7 +200,7 @@ Rules 是依路徑範圍載入的 Markdown 檔案，當 Claude 處理符合的�
 
 | 規則集                            | 路徑                  | 來源                      | 備註                                                                   |
 | --------------------------------- | --------------------- | ------------------------- | ---------------------------------------------------------------------- |
-| `rules/python/`                   | `**/*.py`、`**/*.pyi` | ECC v2.0.0-rc.1（已修改） | Logging 與以 log 輔助除錯、pytest 指引                                 |
+| `rules/python/`                   | `**/*.py`、`**/*.pyi` | ECC v2.0.0-rc.1（已修改） | 安全且有用的腳本診斷日誌                                               |
 | `rules/common/data-structures.md` | 所有檔案              | stock-research 專屬       | `stock-data-downloader` 資料形狀變更、排程與不可破壞既有研究結果的邊界 |
 
 詳細流程放在 skills 或 agent definitions。
@@ -241,7 +229,7 @@ Rules 是依路徑範圍載入的 Markdown 檔案，當 Claude 處理符合的�
 | `rules/common/coding-style`               | 通用工程常識，與 CLAUDE.md `Engineering Discipline` 重複；結構性 review heuristic 已移至 `rules/common/code-review.md` |
 | `development-workflow` §Research & Reuse  | 與 CLAUDE.md `Engineering Discipline` 逐字重複                                                                         |
 | `development-workflow` §Pre-Review Checks | 通用 pre-merge 常識，由 CI 與原生 GitHub 操作負責                                                                      |
-| `testing` §AAA 與 §Test Naming            | 通用 pytest 結構與命名範例，由 `skill: python-testing` 擁有                                                            |
+| `testing` §AAA 與 §Test Naming            | 通用 pytest 結構與命名範例已移除，由原生能力處理                                                                       |
 | `code-review` §Security Review Triggers   | 純指標區塊；reviewer routing 清單已連結 `security.md`                                                                  |
 
 ### 未從 ECC 移植（含原因）

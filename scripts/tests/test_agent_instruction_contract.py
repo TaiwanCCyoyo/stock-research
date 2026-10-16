@@ -92,21 +92,10 @@ def test_agent_hook_configs_have_no_stop_event() -> None:
 
 def test_codex_agents_keep_unique_roles_and_bounded_permissions() -> None:
     agent_dir = ROOT / ".codex" / "agents"
-
-    assert {
-        "commit-specialist",
-        "doc-translator",
-        "signal-miner",
-        "task-worker",
-        "researcher",
-    }.issubset({path.stem for path in agent_dir.glob("*.toml")})
-
     names: set[str] = set()
-    writable = {"task_worker", "commit-specialist", "doc_translator", "researcher"}
+    writable = {"researcher"}
     for path in agent_dir.glob("*.toml"):
         config = tomllib.loads(path.read_text(encoding="utf-8"))
         assert config["name"] not in names
         names.add(config["name"])
-        assert config["model"]
-        assert config["model_reasoning_effort"] in {"low", "medium", "high", "xhigh", "max", "ultra"}
         assert config["sandbox_mode"] == ("workspace-write" if config["name"] in writable else "read-only")

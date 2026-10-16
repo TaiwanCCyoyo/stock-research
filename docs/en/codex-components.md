@@ -1,6 +1,6 @@
 # Codex Components Reference
 
-Codex uses Native Plan Mode, native local memories, repo-scoped skills, specialist subagents, project hooks, and installed plugins. It reads the shared root `AGENTS.md`, which Codex discovers natively; repository-wide rules live there and nested `AGENTS.md` files scope rules to their own directory.
+Codex uses Native Plan Mode, native local memories, repo-scoped skills, built-in subagents, project hooks, and installed plugins. It reads the shared root `AGENTS.md`, which Codex discovers natively; repository-wide rules live there and nested `AGENTS.md` files scope rules to their own directory.
 
 ## Native And Plugin Equivalents
 
@@ -15,51 +15,39 @@ Codex uses Native Plan Mode, native local memories, repo-scoped skills, speciali
 
 Codex keeps planning and implementation authority in the main agent. Read-only agents provide context-isolated evidence summaries from broad searches, logs, test output, diffs, or commands whose stdout would overwhelm the main context; they do not replace Codex Native Plan Mode or own publication and integration. The main agent follows the [shared Git workflow contract](git-workflow.md).
 
-## Agents
+## Delegation
 
-| Agent               | Access        | Purpose                                                                                                                                                                                         |
-| :------------------ | :------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `signal_miner`      | Read-only     | Low-cost utility for substantial output isolation; returns concise evidence when delegation has a concrete benefit                                                                              |
-| `task_worker`       | Bounded write | Implement explicit low-to-medium-risk tasks with acceptance criteria and verification; stop when scope or risk expands                                                                          |
-| `doc_translator`    | Bounded write | Low-tier translator and synchronizer for any file-based translation into one explicit non-canonical target; the main agent selects source and target, and its canonical document wins conflicts |
-| `commit-specialist` | Bounded write | Optional delegate for mode-dependent staged review and commits; sandbox failures return to the main agent                                                                                       |
-| `researcher`        | Bounded write | Executes a parent-registered stock experiment in an isolated worktree; no direction changes, downloads, or gate tuning                                                                          |
+Use the built-in general-purpose subagent for bounded work and the native `explorer` for focused code discovery. Ordinary work uses built-in agents; the registered stock-research role below remains project-specific. `AGENTS.md` owns the shared delegation principles; skills retain task-specific workflow details.
 
-### Model routing
+Prefer `gpt-6-luna` for straightforward work with substantial input, output, noise, or repetitive cycles. Long translations, document synchronization, large diff/log inspection, and mechanical hook fixes share this routing rule; they do not need separate roles or translation skills. Short checks run directly when a handoff offers no benefit. Choose a suitable model for implementation that needs more judgment, preserving the user's main-model choice.
 
-| Tier                          | Model                  | Roles                                                                          |
-| ----------------------------- | ---------------------- | ------------------------------------------------------------------------------ |
-| Bounded implementation        | `gpt-6.1-sol` / medium | Routine, explicitly scoped implementation through `task_worker`                |
-| High-volume mechanical work   | `gpt-6-luna` / medium  | Signal mining and commits                                                      |
-| Translation                   | `gpt-6-luna` / low     | One explicit non-canonical document                                            |
-| Registered research execution | `gpt-6-luna` / max     | Fixed commands, deterministic gates and metric extraction through `researcher` |
+Inspect the actual runtime's model controls; local Codex clients and API orchestration need not expose the same interface. The [local Codex subagent documentation](https://learn.chatgpt.com/docs/agent-configuration/subagents#choosing-models-and-reasoning) describes explicit spawn model settings and configured defaults. Use supported controls to select Luna. If only parent-model inheritance is available, report that limit and run directly, or delegate for a concrete context-isolation or parallelism benefit without claiming model or cost reduction. If model selection requires a fresh context, supply the task, relevant instructions, scope, and evidence explicitly. Return concise results rather than copying raw output into the main context. Request actual platform restrictions when needed; describing a task as read-only does not enforce a sandbox boundary. Keep the configured concurrency and depth limits unless actual workloads justify changing them.
 
-Use `explorer` for ordinary code location and `signal_miner` when substantial output isolation saves context. Run short checks locally; avoid same-tier handoffs without a concrete benefit. `task_worker` lets a higher-tier main agent downshift bounded implementation to Sol, while Luna handles mechanical work. Keep ambiguous, architectural, and security-sensitive judgment with the main agent; pull requests also receive hosted Codex review.
+For document translation or synchronization, the main agent selects the authoritative source and explicit target. Preserve structure, links, code, and identifiers; report source conflicts or ambiguous terminology. This is an application of the shared rule for derived outputs.
 
-The shared four roles, built-in explorer, and stock-research researcher cover current recurring work. Add a role only for a demonstrated gap. The main model remains user-selected; role model defaults do not establish measured cost savings or quality. Keep the bounded concurrency and depth defaults unless actual workloads justify changing them.
+### Registered stock research
 
-The main agent owns research direction, owner constraints and final acceptance. `researcher` keeps its existing model and bounded preregistered execution; shared helper updates do not change its authorization. Keep research enforcement and point-in-time validation. Delegate with exact paths, commands, stop conditions and compact context; reuse passing evidence and existing agents. If a helper hits a usage limit, complete safe work locally and report the remaining dependency. Model/config changes apply to newly loaded agents; already-running helpers may retain earlier settings.
+`researcher` remains a project-specific bounded execution role (`gpt-6-luna`, max, workspace-write). The main agent owns research direction, preregistration, authorization and acceptance; the role cannot download, tune gates, publish or integrate changes. Its existing instructions and point-in-time validation remain unchanged.
 
 ## Skills
 
-| Skill                | Purpose                                                                                        |
-| :------------------- | :--------------------------------------------------------------------------------------------- |
-| `python-development` | Python logging and log-driven debugging                                                        |
-| `python-testing`     | Targeted behavioral tests, optional coverage, hook fixtures, and Windows-path requirements     |
-| `gen-commit`         | Scoped local commits, optional specialist review and execution, sandbox handoff, and reporting |
+| Skill                | Purpose                                                                                                 |
+| :------------------- | :------------------------------------------------------------------------------------------------------ |
+| `python-development` | Python logging and log-driven debugging                                                                 |
+| `gen-commit`         | Scoped local commits, built-in delegation for substantial diff reading and hook recovery, and reporting |
 
 ## Claude Capability Decisions
 
 | Claude capability                                               | Codex decision                       | Reason                                                                                                                                                                                                   |
 | :-------------------------------------------------------------- | :----------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `/plan`                                                         | Native/optional artifact replacement | Conversational planning is provided by native Plan Mode. Durable cross-session handoff uses a maintained plan artifact.                                                                                  |
-| `plan-reviewer`, `implementation-reviewer`, `security-reviewer` | Removed 2026-10-02                   | Native Plan Mode, current model capability, hosted Codex PR review, and pre-commit gates cover them; remaining agents exist to save cost.                                                                |
+| `plan-reviewer`, `implementation-reviewer`, `security-reviewer` | Removed 2026-10-02                   | Native Plan Mode, current model capability, hosted Codex PR review, and pre-commit gates cover them; ordinary delegation now uses built-in agents.                                                       |
 | `/feature-dev`                                                  | Native replacement                   | Brainstorming, Plan Mode, test-first development, verification, and review already form the workflow.                                                                                                    |
 | `/build-fix`                                                    | Native replacement                   | Evidence-driven debugging plus repository verification covers incremental diagnosis and repair.                                                                                                          |
 | `/code-review`                                                  | Native/plugin replacement            | Local review uses the native Codex review stance; PR review uses the GitHub plugin.                                                                                                                      |
-| `/python-review`                                                | Skill replacement                    | `python-testing` provides repository-specific behavioral tests and optional coverage guidance.                                                                                                           |
+| `/python-review`                                                | Native replacement                   | Native Python review and existing repository checks cover this workflow.                                                                                                                                 |
 | `/security-scan`                                                | Agent and gate replacement           | detect-secrets, hooks, pre-commit, and hosted PR review are installed; AgentShield is not.                                                                                                               |
-| `/test-coverage`                                                | Skill replacement                    | Optional coverage is part of `python-testing`; Codex does not need a command wrapper.                                                                                                                    |
+| `/test-coverage`                                                | Native replacement                   | Standard pytest-cov usage needs no dedicated skill or command wrapper.                                                                                                                                   |
 | `github-ops`                                                    | Plugin replacement                   | The GitHub plugin supplies repository, issue, PR, CI, comment, and publishing workflows with current connector semantics.                                                                                |
 | `cost-aware-llm-pipeline`                                       | Not ported                           | It is application-domain guidance with provider-specific model names and volatile pricing, not a Codex workflow. Create a shared, vendor-verified skill when this repository builds an LLM API pipeline. |
 | `eval-harness`                                                  | Removed/deferred                     | It referenced nonexistent `/eval` commands and lacked a runner, grader implementation, baseline format, Python commands, and CI integration. Restore only after those capabilities exist.                |
@@ -75,9 +63,8 @@ The main agent owns research direction, owner constraints and final acceptance. 
 | Operating contract, scoped changes                                | `AGENTS.md`                                               |
 | Project conventions and tool preferences                          | `AGENTS.md` project conventions                           |
 | Review severity and CRITICAL/HIGH completion policy               | `AGENTS.md` review and security section                   |
-| Risk-based test scope                                             | `AGENTS.md` verification section                          |
+| Verification scope                                                | `AGENTS.md` verification section                          |
 | Python development rules                                          | `python-development`                                      |
-| Repository Python verification                                    | `python-testing`                                          |
 | Planning, TDD, debugging, review, verification, branch completion | Native Codex, project agents, and repository verification |
 
 Shared development behavior now mirrors the Claude common-rule routing layer: plan through Native Plan Mode; test and debug through native workflows, task-specific tests, and project skills; delivery review through the hosted PR integration; prepare PRs through the GitHub plugin when available; and follow the [shared Git workflow contract](git-workflow.md) for delivery and integration authority.
@@ -97,11 +84,9 @@ Shared development behavior now mirrors the Claude common-rule routing layer: pl
 | `.pre-commit-config.yaml`                     | Formatting, file hygiene, detect-secrets, Ruff including T201, and targeted mypy/Pyright (including both hook trees) |
 | `.vscode/settings.json`                       | Final-newline and trailing-whitespace hygiene plus Ruff formatter defaults for Python                                |
 
-Python verification follows changed behavior and reuses unchanged evidence. Normal commits run `.githooks/pre-commit`; Python skills describe the available test commands.
+Python verification follows changed behavior and reuses unchanged evidence. Normal commits run `.githooks/pre-commit`; the README and CI define the available test commands.
 
-`gen-commit` uses `commit-specialist` for substantial review, rough or missing messages, and explicitly requested independent checks. The main agent may commit small verified agent-owned changes directly with a complete message and no unrelated staged files, using the same verification and normal hooks. If a delegated step fails on a sandbox or cache permission boundary, the specialist returns the exact error without retries or environment changes; the main agent resumes only the blocked step in its authorized context.
-
-Diff inspection is mode-dependent rather than automatic. Missing or rough intent asks the specialist to inspect the staged diff and write the message. A complete message for a clean, well-understood scope skips diff inspection and focuses the specialist on commit execution and bounded hook recovery. A complete message receives an additional diff check only when the main agent explicitly requests it for a concrete concern; the specialist cannot promote itself into that review mode.
+`gen-commit` applies the shared delegation principles: a built-in Luna agent can read substantial diffs and handle bounded simple hook recovery, while the main agent owns scope and the final result. A complete supplied message skips repeated diff reading unless a concrete concern calls for review; rough intent requires reading the approved diff. Delegates return concise verification evidence and stop immediately on sandbox or permission failures. See the skill for editable-path boundaries and recovery limits.
 
 ## Deferred Capabilities
 
