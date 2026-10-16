@@ -210,9 +210,22 @@ def _require_separate(source: Path, data_root: Path) -> None:
 
 
 def _resume_registration(
-    destination: Path, files: list[dict[str, Any]], entry: dict[str, Any], roots: DataRoots, report: Callable[[str], None]
+    destination: Path,
+    files: list[dict[str, Any]],
+    entry: dict[str, Any],
+    roots: DataRoots,
+    gate: Callable[[Path, str], Any],
+    report: Callable[[str], None],
 ) -> dict[str, Any]:
-    """A previous run published the directory but did not register it: verify, then register only."""
+    """A previous run published the directory but did not register it.
+
+    Existence proves nothing, so the whole destination gets the checks a fresh copy gets: no
+    link, reparse point or hardlink anywhere in it, the exact source file set and bytes, and
+    the full reader gate. Only then is it registered.
+    """
+    checked_path(destination)
+    for path in destination.rglob("*"):
+        _reject_alias(path, path.lstat())
     expected = {item["path"]: item for item in files}
     present = {path.relative_to(destination).as_posix(): path for path in destination.rglob("*") if path.is_file()}
     if set(present) - {RECEIPT} != set(expected):
@@ -221,6 +234,7 @@ def _resume_registration(
         with present[name].open("rb") as stream:
             if hashlib.file_digest(stream, "sha256").hexdigest() != item["sha256"]:
                 raise FileExistsError(f"bundle already present with different contents, existing data is not overwritten: {destination}")
+    gate(destination, entry["version_id"])
     DataCatalog(roots).register([entry])
     report(f"existing verified bundle registered: {DATA_ID}/{entry['version_id']}")
     return {"destination": str(destination), "files": len(files), "bytes": sum(item["bytes"] for item in files), "resumed": True}
@@ -238,8 +252,8 @@ def restore_bundle(
 
     Nothing is overwritten. Any failure before publication leaves the sibling `.staging-*`
     directory in place for inspection and the final directory absent. If publication succeeded
-    but catalog registration failed, a rerun finds the final directory, verifies it byte for
-    byte against the source and only registers it.
+    but catalog registration failed, a rerun finds the final directory, applies the same alias,
+    byte and reader-gate checks as a fresh copy and only then registers it.
     """
     report = progress or (lambda message: LOGGER.info("%s", message))
     started = time.monotonic()
@@ -254,7 +268,7 @@ def restore_bundle(
     entry = catalog_entry(manifest, expected_manifest_sha256)
     destination = roots.artifact_path("data", f"{KIND}/{DATA_ID}/{expected_manifest_sha256}")
     if destination.exists():
-        return _resume_registration(destination, files, entry, roots, report)
+        return _resume_registration(destination, files, entry, roots, gate, report)
     staging = roots.artifact_path("data", f"{KIND}/{DATA_ID}/.staging-{expected_manifest_sha256[:12]}-{uuid.uuid4().hex}")
     staging.parent.mkdir(parents=True, exist_ok=True)
     staging.mkdir()

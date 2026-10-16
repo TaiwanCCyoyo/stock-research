@@ -3,6 +3,7 @@
 import hashlib
 import json
 import os
+import shutil
 from pathlib import Path
 from typing import Any
 
@@ -137,6 +138,36 @@ def test_failed_registration_can_be_resumed_without_rewriting_the_bundle(tmp_pat
     assert restore(source, roots, pin)["resumed"] is True
     assert tree(destination) == before
     assert bundle.resolve_history_bundle(roots, version_id=pin, manifest_sha256=pin).path == destination
+
+
+def preplaced_destination(tmp_path: Path, roots: DataRoots) -> tuple[Path, str, Path]:
+    """An identical copy already in the final place, never registered."""
+    source, pin = make_source(tmp_path)
+    destination = roots.data / "patterns/opportunity-history-web" / pin
+    shutil.copytree(source, destination)
+    return source, pin, destination
+
+
+def test_resume_runs_the_reader_gate_and_leaves_the_catalog_unchanged(tmp_path: Path, roots: DataRoots) -> None:
+    source, pin, destination = preplaced_destination(tmp_path, roots)
+
+    def reject(*_: object) -> None:
+        raise ValueError("Configured catalog manifest hash mismatch")
+
+    with pytest.raises(ValueError, match="hash mismatch"):
+        restore(source, roots, pin, gate=reject)
+    assert not (roots.data / "catalog.json").exists()
+    seen: list[Path] = []
+    assert restore(source, roots, pin, gate=lambda path, sha: seen.append(path))["resumed"] is True
+    assert seen == [destination]
+
+
+def test_resume_rejects_a_hardlink_in_runs_native(tmp_path: Path, roots: DataRoots) -> None:
+    source, pin, destination = preplaced_destination(tmp_path, roots)
+    os.link(destination / "runs/native/1101.json.gz", tmp_path / "alias.json.gz")
+    with pytest.raises(ValueError, match="hardlinked"):
+        restore(source, roots, pin)
+    assert not (roots.data / "catalog.json").exists()
 
 
 @pytest.mark.parametrize("where", ["ancestor", "inside"])
