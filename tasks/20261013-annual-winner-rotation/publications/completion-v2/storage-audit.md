@@ -89,3 +89,19 @@ fingerprint、乾淨 code commit 與比較用結果；它是可丟棄的驗證�
 資料位置。正式原結果、效能與收據 ZIP bytes 均保留不動。重現入口為
 `python -m scripts.complete_annual_rotation --output <fresh-directory-inside-repository>`；
 須依 writer-idle 規則執行，並用原 publication 的已驗結果物件作完整比較。
+
+隨後再以乾淨的 [67abbcf 程式版本](https://github.com/TaiwanCCyoyo/stock-research/commit/67abbcf8c0af7e27148f216da991033a8409e926)
+驗證 carry 恢復跳幅與執行 identity 修正。整份結果物件仍完全相同，無 unresolved；
+跨缺值後達到原 40% 品質門檻的大跳幅只有下列三組，均由明示股數條款解釋：
+
+| 股票／恢復日     | 跨缺值原始收盤變動 | 明示條款                        | 去除機械變動後殘差 |
+| ---------------- | -----------------: | ------------------------------- | -----------------: |
+| 0050／2025-06-18 |            −74.78% | 精確 1:4 分割                   |             +0.86% |
+| 5314／2025-03-31 |            −94.55% | 面額 10 → 0.5，每舊股換 20 新股 |             +9.06% |
+| 6276／2012-07-27 |           +104.60% | 無退款減資，剩 0.4715310958 股  |             −3.52% |
+
+其他已准許的 H/N carry 恢復日沒有達到 40% 原始跳幅；未用任意同日事件或價格
+factor 推回股數。診斷來自同次實際 kernel 呼叫；結果在原則下可計，不代表完整每日
+行情或實際最大回撤已知。本次診斷仍只有一次 input fingerprint，沒有全市場排名或
+行情副本；完整診斷保留於本 session 的 `.tmp/annual-review-recovery-reproduction-20261016/`
+及同名 log，作可丟棄驗證輸出。
