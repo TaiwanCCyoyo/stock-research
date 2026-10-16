@@ -76,15 +76,17 @@ These rules govern requested local reviews and hosted pull request reviews. See 
 ## Verification
 
 - Verify what you changed and show the output as evidence; state plainly when verification was skipped or insufficient and what risk remains.
-- Focus local verification on changed behavior. Use normal commit hooks and hosted PR checks without a separate manual pass; investigate their failures when reported.
+- Choose verification proportional to the change and its concrete risks; use available evidence and avoid redundant checks.
+- Use normal commit hooks and hosted PR checks without a duplicate manual pass; investigate reported failures.
 - Follow `docs/en/artifact-integrity.md` for hashes, pins and verification cost: format before hashing, hash results and fingerprint inputs rather than copying them, verify each bundle once per process, and record phase timings before adding a verification pass.
-- Match coverage to the risk of the change rather than a fixed repository-wide target; do not add tests that only freeze prose, model names, or configuration values.
-- A changed hook or script needs one functional regression test, because these fail silently.
 - The test suite does not read the real published artifacts. After a change that rewrites stored evidence or the code that reads it, run `uv run python -m scripts.verify_published_artifacts` and compare it with the run before the change.
 
 ## Delegation
 
-- Prefer a lower-cost model or subagent whenever it can usefully carry part of the work; do not keep everything in the main session. Give a delegated agent one objective, exact scope, acceptance criteria, and verification.
+- Use built-in general-purpose subagents rather than maintaining custom roles for ordinary work. Prefer Luna (`gpt-6-luna`) in Codex, or the lowest-cost suitable model available in another client, for straightforward work with substantial input, output, noise, or repetitive cycles: long translations, documentation synchronization, large diff/log inspection, and mechanical hook fixes. Run short tasks directly when delegation would cost more than it saves; use the native explorer for focused code discovery.
+- Select a model appropriate to the required judgment for bounded implementation; preserve the user's main-model choice. Inspect the actual runtime's supported model controls: if a delegate can only inherit the parent model, report that limit and run directly, or delegate only for a concrete context-isolation or parallelism benefit without claiming model or cost reduction. A lowest-cost main session follows the same rule. When model selection requires a fresh context, supply the necessary background explicitly instead of copying the entire conversation.
+- Give each delegate one objective, relevant instructions, explicit read/write scope, acceptance criteria, verification, and a finite retry budget. For derived outputs, identify the authoritative source and target. Preserve concurrent work, serialize writes to shared files and the Git index, and restrict read-only tasks to evidence gathering; prompt instructions alone do not enforce sandbox permissions.
+- Delegates return concise results, changed paths, verification evidence, and blockers rather than raw logs or full diffs. Do not duplicate completed delegated reading or checks unless changed files or unresolved evidence warrants it.
 - Treat sandbox or permission failures as execution-boundary handoffs: subagents must stop and return the exact error, attempted step, and affected paths to the parent; they must not retry, debug permissions, alter caches or environment variables, change ACLs, or seek escalated access.
 - Keep ambiguous, architectural, product, and security-sensitive judgment with the main session, which owns canonical documents and final changes to repository guidance.
 
