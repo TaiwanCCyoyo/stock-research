@@ -86,6 +86,8 @@ Codex 將 planning 與 implementation 權責保留在 main agent。Read-only age
 
 Repository 驗證依變更行為選擇既有測試，重用未受影響的證據。正常 commit 透過 `.githooks/pre-commit` 執行設定的檢查。
 
+[CI scope selector](../../scripts/ci_scope.py) 與[測試 manifest](../../scripts/ci_test_domains.json) 是正式測試入口；manifest 包含 `.codex/hooks/tests` 與 `.claude/hooks/tests`，selector 使用 `python -m pytest` 執行明確選取的測試路徑。
+
 `gen-commit` 沿用共用委派原則：內建 Luna agent 可協助檢視大量 diff，並處理範圍明確的簡單 hook 修復；main agent 負責範圍與最終結果。若提供的 commit 訊息完整，除非有具體疑慮要求檢視，否則不重複讀取 diff；若只有粗略意圖，則檢視核准範圍內的 diff。代理回報精簡驗證證據，遇到 sandbox 或權限失敗立即停止。可編輯路徑範圍與復原限制詳見 skill。
 
 ## 延後能力

@@ -50,7 +50,7 @@ Claude 在 `.claude/settings.json` 保留 `model: "opusplan"`：原生 Plan Mode
 
 - 互動工作：進入 Native Plan Mode，核准計畫後再回到執行模式。
 - 無人值守工作：使用分離的 planning 與 execution sessions。planning session 寫入受維護的 plan artifact；execution session 讀取已核准 artifact。不要以 planner subagent 作為 main-session handoff。
-- Claude-only 公司移植：保留 instructions、rules、skills 與 hygiene hooks。使用公司核准的固定模型 ID 或 alias mapping，不依賴本 repo 個人 Pro 的預設。
+- 僅用 Claude 的公司副本：保留 instructions、rules、領域 agents（`strategy-diagnostician` 與 `study-runner`）、skills 與 hygiene hooks。模型 ID 或 alias mapping 使用組織核准值，不沿用本專案的個人 Pro 預設。
 
 `REVIEW.md` 不屬於本地基準線的一部分，僅在 repo 註冊 Claude 的 managed Team 或 Enterprise Code Review 服務時才新增。
 
@@ -184,6 +184,8 @@ Workspace editor defaults 放在 `.vscode/settings.json`：移除行尾空白、
 驗證依變更行為選擇既有測試並重用證據；正常 commit 執行 `.githooks/pre-commit`，README 與 CI 提供測試命令。
 
 Claude Code 使用官方 Pyright plugin 提供即時型別導覽與 diagnostics；其 PostToolUse hook 額外對修改後的 Python 檔案執行唯讀的 Ruff `E722`、`F601`、`F602`、`F634` check，補足 Pyright 不負責的問題並避免重複回報 undefined-name 與 unused-symbol diagnostics。hook 指令本身與其內部的 Ruff 呼叫都使用 `uv run --no-sync`，避免每次編輯都觸發環境 resync。完整 Ruff linting 與 formatting 延後由 pre-commit 負責，因此正常編輯期間不會觸發 repository-wide formatting。Installed commit hooks 與 PR CI 負責自動化檢查；skills 與 reviewers 不要求另外執行一次手動。
+
+[CI scope selector](../../scripts/ci_scope.py) 與[測試 manifest](../../scripts/ci_test_domains.json) 是正式測試入口；manifest 包含 `.codex/hooks/tests` 與 `.claude/hooks/tests`，selector 使用 `python -m pytest` 執行明確選取的測試路徑。
 
 ### 已注意但未從 ECC 移植的 hook 概念
 

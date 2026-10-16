@@ -51,7 +51,7 @@ Claude keeps `model: "opusplan"` in `.claude/settings.json`: native Plan Mode us
 
 - Interactive work: enter Native Plan Mode, approve the plan, then return to execution mode.
 - Unattended work: use separate planning and execution sessions. The planning session writes a maintained plan artifact; the execution session reads the approved artifact. Do not use a planner subagent as the main-session handoff.
-- Claude-only company copy: retain instructions, rules, skills, and hygiene hooks as-is. Use organization-approved model IDs or alias mappings rather than this repository's personal-Pro defaults.
+- Claude-only company copy: retain instructions, rules, the domain agents (`strategy-diagnostician` and `study-runner`), skills, and hygiene hooks as-is. Use organization-approved model IDs or alias mappings rather than this repository's personal-Pro defaults.
 
 `REVIEW.md` is not part of the local baseline. Add it only when the repository is enrolled in Claude's managed Team or Enterprise Code Review service.
 
@@ -160,6 +160,8 @@ Hooks are Python scripts executed automatically by the Claude Code harness.
 Workspace editor defaults live in `.vscode/settings.json`: trim trailing whitespace, keep one final newline, use Ruff for Python formatting and explicit code actions, and exclude generated caches plus local agent state from search, watchers, and local history.
 
 Claude Code uses the official Pyright plugin for immediate type-aware navigation and diagnostics. Its PostToolUse hook adds a read-only targeted Ruff check for `E722,F601,F602,F634`, which complements Pyright without repeating its common undefined-name and unused-symbol diagnostics. Both the hook command and its internal Ruff invocation use `uv run --no-sync` so an edit never triggers an environment resync. Complete Ruff linting and formatting are deferred to pre-commit, so normal edits do not trigger repository-wide formatting. Normal commits run `.githooks/pre-commit` for formatting and validation.
+
+The [CI scope selector](../../scripts/ci_scope.py) and [test manifest](../../scripts/ci_test_domains.json) are the canonical test entry points; the manifest includes both `.codex/hooks/tests` and `.claude/hooks/tests`. The selector executes its explicit test paths with `python -m pytest`.
 
 ### ECC hook concepts noted but not ported
 

@@ -86,6 +86,8 @@ Shared development behavior now mirrors the Claude common-rule routing layer: pl
 
 Python verification follows changed behavior and reuses unchanged evidence. Normal commits run `.githooks/pre-commit`; the README and CI define the available test commands.
 
+The [CI scope selector](../../scripts/ci_scope.py) and [test manifest](../../scripts/ci_test_domains.json) are the canonical test entry points; the manifest includes both `.codex/hooks/tests` and `.claude/hooks/tests`. The selector executes its explicit test paths with `python -m pytest`.
+
 `gen-commit` applies the shared delegation principles: a built-in Luna agent can read substantial diffs and handle bounded simple hook recovery, while the main agent owns scope and the final result. A complete supplied message skips repeated diff reading unless a concrete concern calls for review; rough intent requires reading the approved diff. Delegates return concise verification evidence and stop immediately on sandbox or permission failures. See the skill for editable-path boundaries and recovery limits.
 
 ## Deferred Capabilities
