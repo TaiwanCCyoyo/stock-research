@@ -65,3 +65,27 @@ producer 的分類季度封存清單尚不包含這個新 family。不能把「�
 公開 SHA 清單觸發既有高熵字串檢查，因此使用既有的無損 ZIP 交付方式；未修改 scanner、baseline 或 formatter 例外。
 `publication.zip` 保存原始四份 JSON，純讀呈現時在記憶體驗證，不解壓出另一份資料。
 Git 另保留無大量雜湊的 results/performance 作閱讀與 diff；這個小型呈現副本有明確用途，不是行情或原始資料副本。
+
+## Review 後的真實來源影響核對
+
+2026-10-16 19:11（臺北）先確認 producer idle，再以穩定唯讀核對：64 個固定
+股票／0050 端點要求，共 49 組不同股票日期，全部都有唯一觀測、有限且正值的
+成交量。官方補證 manifest 與原 run 的 SHA-256 相同；184 個成員驗證一次。
+43 個 source ID、11 個 event ID 均非空且唯一，6 個經濟事件的 issuer 皆有效。
+
+價格檔已因日更換世代，SHA-256 與原 run 不同，不能把這次端點檢查說成讀到原始
+輸入 bytes。因此 19:14 另以已提交、乾淨的 [c19a5c4 程式版本](https://github.com/TaiwanCCyoyo/stock-research/commit/c19a5c4060f5cd2134967d5bc4eafe28f9869ab9)
+重跑相同參數、固定選股與 2026-10-12 截止日，做結果重現驗證：
+
+- 16 列年度／YTD、3 個完整期間，以及整份 parsed `results.json` 物件與原
+  publication **完全相同**，沒有改變的結果欄位；admission unresolved 仍為空。
+- 只讀 17 檔的必要欄位，45 次 kernel，沒有全市場重新排名；本次驗證仍只有
+  一次 input fingerprint，input copy bytes 為 0。
+- Runner 已實際完成 no-replace ZIP；打包約 0.019 秒，沒有第二次 producer
+  fingerprint。這是重現檢查，不是改寫或新增一版研究結論。
+
+診斷輸出放在本 session 的 `.tmp/annual-review-reproduction-20261016/`，含本次
+fingerprint、乾淨 code commit 與比較用結果；它是可丟棄的驗證輸出，不是新的共用
+資料位置。正式原結果、效能與收據 ZIP bytes 均保留不動。重現入口為
+`python -m scripts.complete_annual_rotation --output <fresh-directory-inside-repository>`；
+須依 writer-idle 規則執行，並用原 publication 的已驗結果物件作完整比較。
