@@ -20,6 +20,7 @@ MAX_JOB_BYTES = 8 * 1024**3
 PHASE_COMPONENTS = {
     "prices": ("comparison_metadata",),
     "barrier": ("global_tables", "phase_metadata"),
+    "events": ("event_parts", "phase_metadata"),
     "analysis": ("event_parts", "summary_tables", "q4_draws", "followup_observations", "phase_metadata"),
 }
 SHA256 = re.compile(r"[0-9a-f]{64}")
@@ -55,7 +56,7 @@ def assess_continuation_capacity(
     Evidence descriptors are shape-checked here, physically verified by require.
     """
     if not isinstance(phase, str) or phase not in PHASE_COMPONENTS:
-        raise ValueError("only prices, barrier or analysis continuation phase can be admitted")
+        raise ValueError("only prices, barrier, events or analysis continuation phase can be admitted")
     if not isinstance(executor, dict):
         raise ValueError("actual executor source identity required")
     executor_id = _text(executor.get("source_id"), "executor.source_id")

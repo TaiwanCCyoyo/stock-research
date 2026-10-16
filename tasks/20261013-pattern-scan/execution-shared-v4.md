@@ -43,14 +43,23 @@ remain available. This authorizes no cleanup of another run or shared family.
 
 ## One admitted continuation phase
 
-`scripts.continue_pattern_scan` launches `prices`, `retire-prices`, `barrier` or
-`analysis` in the existing owned Windows Job, with a finite timeout, at most
+`scripts.continue_pattern_scan` launches `prices`, `retire-prices`, `barrier`,
+`events` or `analysis` in the existing owned Windows Job, with a finite timeout, at most
 8 GiB committed Job memory and at least 4 GiB available host reserve. A separate
 capacity plan admits only that phase, with explicit additional disk components,
 pinned evidence and at least 32 GiB disk reserve. Existing shared and stock bytes
 are not additional allocation. Estimates, native Job measurements and disk
 observations are distinct. A four-stock historical profile does not certify a
 full-market barrier, candidate pool or Q4-Q6 memory requirement.
+
+The `events` boundary consumes the verified full-market barrier and all original
+stocks, writes the same reusable per-stock/target event checkpoints used by
+analysis, then stops before candidate selection or summary/followup allocation.
+Its inventory binds every target/code receipt, original labels and global table
+pins. It admits only event projection. Later analysis verifies and reuses these
+completed checkpoints, while its capacity plan can use their actual row counts
+and representative accumulator observations rather than treating unknown later
+memory as zero.
 
 Control requests and responses live in an explicitly named sibling control run,
 outside the original completed run's ownership inventory. An active marker blocks

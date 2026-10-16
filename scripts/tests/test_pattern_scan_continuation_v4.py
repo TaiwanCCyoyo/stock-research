@@ -52,7 +52,7 @@ def case(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
 
     def admission(path: Path, **kwargs: Any) -> dict[str, Any]:
         assert path == capacity and kwargs["run"] == run
-        assert kwargs["phase"] in {"prices", "barrier", "analysis"}
+        assert kwargs["phase"] in {"prices", "barrier", "events", "analysis"}
         assert kwargs["executor"] == executor
         assert kwargs["source_id"] == source["source_id"] and kwargs["input_id"] == "original-input"
         calls.append(kwargs)
@@ -316,14 +316,34 @@ def _coordinator_request(case: dict[str, Any], phase: str) -> Path:
     return path
 
 
+def _full_events_case(case: dict[str, Any]) -> tuple[dict[str, Path], dict[str, Any]]:
+    codes = [f"{index:04d}" for index in range(1, 1943)]
+    calendar = [*pd.bdate_range("2010-01-04", periods=4109).strftime("%Y-%m-%d"), "2026-10-12"]
+    case["reference"]["calendar"] = {"dates": calendar}
+    (case["run"] / continuation.HANDOFF).write_bytes(canonical({"reference": case["reference"]}))
+    (case["run"] / "phase-stock-result.json").write_bytes(canonical({"pool": {"results": [{"code": code} for code in codes]}}))
+    parts = {code: case["run"] / "original-stock" / code for code in codes}
+    barrier = {
+        "synthetic_barrier": True,
+        "source_id": case["source"]["source_id"],
+        "input_id": "original-input",
+        "calendar": calendar,
+        "global_files": {code: {"synthetic_global_pin": code} for code in codes},
+    }
+    return parts, barrier
+
+
 @pytest.mark.parametrize("phase", continuation.PHASES)
 def test_coordinator_dispatches_exactly_one_phase_with_original_ancestry_and_current_executor(
     case: dict[str, Any], monkeypatch: pytest.MonkeyPatch, phase: str
 ) -> None:
+    if phase == "events":
+        parts, full_barrier = _full_events_case(case)
+    else:
+        parts, full_barrier = {"0001": case["run"] / "synthetic-stock-part"}, {"synthetic_barrier": True}
     request_path = _coordinator_request(case, phase)
     request = read_json(request_path)
     called: list[str] = []
-    parts = {"0001": case["run"] / "synthetic-stock-part"}
     original_stock = file_digest(case["run"] / "phase-stock-result.json")
 
     def price_handoff(run: Path, reference: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
@@ -342,8 +362,44 @@ def test_coordinator_dispatches_exactly_one_phase_with_original_ancestry_and_cur
         return {"complete": True}
 
     def verified(results: list[dict[str, Any]], **kwargs: Any) -> dict[str, Path]:
-        assert results == [{"code": "0001"}] and kwargs == {"source": case["source"], "input_id": "original-input"}
+        assert results == [{"code": code} for code in parts] and kwargs == {"source": case["source"], "input_id": "original-input"}
         return parts
+
+    event_maps: dict[str, dict[str, Path]] = {}
+    event_pins: dict[Path, dict[str, Any]] = {}
+    original_descriptor = continuation._descriptor
+    original_checked_path = continuation._checked_path
+    event_root = case["run"] / "analysis/event-parts"
+
+    def prepare_events(
+        actual_parts: dict[str, Path], barrier: dict[str, Any], entries: dict[str, Any], output: Path, **kwargs: Any
+    ) -> dict[str, dict[str, Path]]:
+        assert phase == "events" and actual_parts == parts and barrier == full_barrier
+        assert entries == {"labels": {"synthetic_labels": True}} and output == case["run"] / "analysis/event-parts"
+        assert kwargs == {"source": case["source"], "input_id": "original-input"}
+        called.append("events")
+        # Full logical scope, but no synthetic 23k directory/payload creation.
+        # Only explicitly expected event-receipt descriptors are mocked.
+        for target in analysis.PATTERNS:
+            event_maps[target] = {}
+            for code in parts:
+                directory = output / object_digest({"target": target, "code": code})
+                event_maps[target][code] = directory
+                path = directory / "receipt.json"
+                event_pins[path] = {"path": str(path), "bytes": 1, "sha256": object_digest({"synthetic_event_receipt": target, "code": code})}
+        return event_maps
+
+    def event_descriptor(path: Path) -> dict[str, Any]:
+        if path in event_pins:
+            return event_pins[path]
+        return original_descriptor(path)
+
+    def checked_path(path: Path) -> Path:
+        # These nonexistent paths already have exact synthetic descriptors.
+        # Keep all real paths and the coordinator's containment checks intact.
+        if path != event_root and path.is_relative_to(event_root) and (path in event_pins or path / "receipt.json" in event_pins):
+            return path.absolute()
+        return original_checked_path(path)
 
     benchmark = pd.DataFrame({"Close": [1.0]})
 
@@ -376,9 +432,13 @@ def test_coordinator_dispatches_exactly_one_phase_with_original_ancestry_and_cur
     monkeypatch.setattr(barrier_module, "verify_barrier", lambda value: None)
     monkeypatch.setattr(barrier_module, "checkpoint_label_entry", lambda actual, **kwargs: {"synthetic_labels": True})
     monkeypatch.setattr(analysis, "run_analysis", analyze)
-    if phase == "analysis":
+    monkeypatch.setattr(analysis, "prepare_event_parts", prepare_events)
+    monkeypatch.setattr(continuation, "_descriptor", event_descriptor)
+    if phase == "events":
+        monkeypatch.setattr(continuation, "_checked_path", checked_path)
+    if phase in {"events", "analysis"}:
         (case["run"] / "global").mkdir()
-        write_json(case["run"] / "global/receipt.json", {"synthetic_barrier": True})
+        write_json(case["run"] / "global/receipt.json", full_barrier)
     continuation.coordinator_main(request_path)
     assert called == [phase]
     response = read_json(case["control"] / f"response-{phase}.json")
@@ -391,6 +451,24 @@ def test_coordinator_dispatches_exactly_one_phase_with_original_ancestry_and_cur
     assert file_digest(case["run"] / "phase-stock-result.json") == original_stock
     assert read_json(case["run"] / continuation.ACTIVE)["owner"] == request["active_owner"]
     assert not (case["control"] / f"response-{phase}.job-memory.json").exists()  # Parent native Job owns this evidence.
+    if phase == "events":
+        checkpoint_path = case["run"] / "event-checkpoint.json"
+        checkpoint = continuation.read_scan_receipt(checkpoint_path)
+        assert checkpoint["schema"] == "pattern-scan-event-checkpoint.v4" and checkpoint["complete"] is True
+        assert checkpoint["phase_only"] is True and checkpoint["full_study_admitted"] is False
+        assert checkpoint["source"] == case["source"] and checkpoint["executor"] == case["executor"] and checkpoint["input_id"] == "original-input"
+        assert checkpoint["stock_reference"] == request["stock_reference"] and checkpoint["price_handoff"] == request["price_handoff"]
+        assert checkpoint["barrier_receipt"] == _pin(case["run"] / "global/receipt.json")
+        assert checkpoint["label_checkpoint"] == {"synthetic_labels": True}
+        assert set(checkpoint["event_parts"]) == set(analysis.PATTERNS)
+        assert all(set(by_code) == set(parts) for by_code in checkpoint["event_parts"].values())
+        assert checkpoint["event_receipts"] == {
+            target: {code: event_pins[directory / "receipt.json"] for code, directory in by_code.items()} for target, by_code in event_maps.items()
+        }
+        assert response["results"] == {"event_checkpoint": _pin(checkpoint_path)}
+        assert response["result"]["stock_n"] == 1942 and response["result"]["target_n"] == len(analysis.PATTERNS)
+        assert response["result"]["full_study_admitted"] is False
+        assert not (case["run"] / "analysis/selection.json").exists()
 
 
 @pytest.mark.parametrize("damage", ["active_owner", "capacity", "stock_reference", "response_exists"])
@@ -526,3 +604,43 @@ def test_cli_preserves_configured_shared_root_without_override(
     monkeypatch.setattr(sys, "argv", _argv(case, "barrier"))
     cli.main()
     assert os.environ[cli.ENV_KEY] == configured and json.loads(capsys.readouterr().out)["phase"] == "barrier"
+
+
+@pytest.mark.parametrize("damage", ["stock_scope", "duplicate_stock", "global_codes", "source", "input", "calendar"])
+def test_events_requires_the_original_complete_full_market_barrier_before_projection(
+    case: dict[str, Any],
+    monkeypatch: pytest.MonkeyPatch,
+    damage: str,
+) -> None:
+    parts, barrier = _full_events_case(case)
+    if damage == "stock_scope":
+        parts.pop(next(iter(parts)))
+    elif damage == "duplicate_stock":
+        stock_path = case["run"] / "phase-stock-result.json"
+        stock = read_json(stock_path)
+        stock["pool"]["results"][1] = stock["pool"]["results"][0]
+        stock_path.write_bytes(canonical(stock))
+    elif damage == "global_codes":
+        barrier["global_files"].pop(next(iter(parts)))
+    elif damage == "source":
+        barrier["source_id"] = "different-source"
+    elif damage == "input":
+        barrier["input_id"] = "different-input"
+    else:
+        barrier["calendar"] = list(reversed(barrier["calendar"]))
+    (case["run"] / "global").mkdir()
+    write_json(case["run"] / "global/receipt.json", barrier)
+    request_path = _coordinator_request(case, "events")
+    verified: list[dict[str, Any]] = []
+    monkeypatch.setattr(barrier_module, "verified_parts", lambda *args, **kwargs: parts)
+    monkeypatch.setattr(barrier_module, "verify_barrier", lambda body: verified.append(body))
+    monkeypatch.setattr(barrier_module, "checkpoint_label_entry", _forbidden)
+    monkeypatch.setattr(analysis, "prepare_event_parts", _forbidden)
+    monkeypatch.setattr(analysis, "run_analysis", _forbidden)
+    before = {path: file_digest(path) for path in case["run"].rglob("*") if path.is_file()}
+    with pytest.raises(ValueError, match="full-market"):
+        continuation.coordinator_main(request_path)
+    assert verified == [barrier]
+    assert before == {path: file_digest(path) for path in case["run"].rglob("*") if path.is_file()}
+    assert not (case["run"] / "event-checkpoint.json").exists()
+    assert not (case["control"] / "response-events.json").exists()

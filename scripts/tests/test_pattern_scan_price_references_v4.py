@@ -457,3 +457,93 @@ def test_handoff_inventory_cannot_be_rewritten_without_audit(case: dict[str, Any
     with pytest.raises(ValueError):
         prices.read_benchmark(case["run"])
     assert all(path.exists() for path in case["original"])
+
+
+def test_formal_publication_cleanup_after_early_shared_price_retirement(case: dict[str, Any]) -> None:
+    """Early v4 price transfer must compose with the later v3 result lifecycle."""
+    from research_core import pattern_scan_result_lifecycle_v3 as lifecycle
+    from research_core.research_data_catalog import DataCatalog, verify_entry
+    from research_core.research_data_paths import DataRoots
+
+    run = case["run"]
+    handoff = _create(case)
+    _retire(case, handoff)
+    assert not (run / "prepared").exists()
+    assert not (case["directory"] / "prices.parquet").exists()
+    retained_prices_evidence = {name: (run / name).read_bytes() for name in (prices.EQUALITY, prices.RETIRED)}
+    source = read_json(run / "derived-preparation.json")["source"]
+    input_id = case["part"]["input_id"]
+    analysis = run / "analysis"
+    analysis.mkdir()
+    aggregate = analysis / "aggregate.parquet"
+    write_frame(pd.DataFrame({"cell_id": ["synthetic"], "known_n": [3], "unknown_n": [1]}), aggregate, index=False)
+    aggregate_bytes = aggregate.read_bytes()
+    report = analysis / "report.md"
+    report.write_text("# Synthetic retained result\n\nInvented values for lifecycle verification.\n", encoding="utf-8")
+    verification = run / "delivery-verification.json"
+    write_json(
+        verification,
+        {
+            "schema": "pattern-scan-delivery-verification.v3",
+            "complete": True,
+            "source_id": source["source_id"],
+            "input_id": input_id,
+            "event_audit_n": 10,
+            "candidate_audit_n": 5,
+            "candidate_comparison_rows": 54_720,
+            "mismatch_n": 0,
+        },
+    )
+    descriptor = lifecycle.record_computed_results(
+        run,
+        {
+            "aggregates/aggregate.parquet": aggregate,
+            "execution/shared-price-equivalence.json": run / prices.EQUALITY,
+            "execution/own-price-retirement-receipt.json": run / prices.RETIRED,
+        },
+        source=source,
+        input_id=input_id,
+        provenance={"synthetic": True, "early_shared_price_handoff": handoff},
+        transient_files=[path for path in run.rglob("*") if path.is_file()],
+    )
+    primary = run.parent.parent.parent
+    roots = DataRoots(primary, primary / "research_data")
+    catalog = DataCatalog(roots)
+    unavailable = {"start": None, "end": None, "reason": "synthetic only"}
+    metadata = {
+        "data_id": "synthetic-early-price-retirement-results",
+        "kind": "patterns",
+        "definition_version": "fixture.v1",
+        "parameters": {"fixture": True},
+        "inputs": {"source_id": source["source_id"], "input_id": input_id},
+        "coverage": {"scope": "invented", "raw_input_period": unavailable, "valid_indicator_period": unavailable, "complete_label_period": unavailable},
+        "status": "complete",
+        "limitations": ["synthetic fixture"],
+        "backup": {"status": "not_backed_up", "off_machine": False},
+    }
+    proof = lifecycle.handoff_results(
+        descriptor,
+        catalog,
+        metadata,
+        managed_parent="bundles/synthetic-early-price-retirement-results",
+        verification=verification,
+        report=report,
+    )
+    entry = proof["entry"]
+    final = roots.artifact_path(entry["manifest"]["scope"], entry["manifest"]["path"]).parent
+    verify_entry(entry, roots)
+    final_hashes = {path.relative_to(final).as_posix(): file_digest(path) for path in final.rglob("*") if path.is_file()}
+    assert (final / "aggregates/aggregate.parquet").read_bytes() == aggregate_bytes
+    for original_name, retained_name in (
+        (prices.EQUALITY, "execution/shared-price-equivalence.json"),
+        (prices.RETIRED, "execution/own-price-retirement-receipt.json"),
+    ):
+        assert (final / retained_name).read_bytes() == retained_prices_evidence[original_name]
+    cleanup = lifecycle.cleanup_run(run, catalog)
+    assert cleanup["complete"] is True and cleanup["prices_retained"] is False
+    assert lifecycle.verify_retained_status(run, catalog) == {"entry": entry, "prices_retained": False}
+    assert not (case["directory"] / "events.bin").exists()
+    assert not (run / "prepared").exists()
+    assert {path.relative_to(final).as_posix(): file_digest(path) for path in final.rglob("*") if path.is_file()} == final_hashes
+    verify_entry(entry, roots)
+    assert all(path.read_bytes() == content for path, content in case["external_original"].items())

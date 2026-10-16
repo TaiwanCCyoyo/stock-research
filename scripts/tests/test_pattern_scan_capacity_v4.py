@@ -16,7 +16,7 @@ from research_core.artifact_store import canonical, file_digest, write_json
 GIB = 1024**3
 
 
-@pytest.fixture(params=("prices", "barrier", "analysis"))
+@pytest.fixture(params=("prices", "barrier", "events", "analysis"))
 def supplied(tmp_path: Path, request: pytest.FixtureRequest) -> dict[str, Any]:
     run = tmp_path / "run"
     run.mkdir()
@@ -297,3 +297,18 @@ def test_require_refuses_relative_locations_before_resource_probe(supplied: dict
     supplied[field] = Path("relative")
     with pytest.raises(ValueError, match="absolute"):
         _require(supplied)
+
+
+def test_events_component_boundary_never_admits_summary_or_followup_work(supplied: dict[str, Any]) -> None:
+    plan, arguments = supplied["plan"], supplied["arguments"]
+    plan["phase"], arguments["phase"] = "events", "events"
+    plan["components"] = {
+        "event_parts": {"estimated_bytes": 100, "evidence": "synthetic event-only incremental projection"},
+        "phase_metadata": {"estimated_bytes": 0, "evidence": "synthetic small metadata already reserved"},
+    }
+    result = capacity.assess_continuation_capacity(plan, **arguments)
+    assert result["sufficient"] is True and result["phase"] == "events"
+    assert result["phase_only"] is True and result["full_study_admitted"] is False
+    plan["components"]["summary_tables"] = {"estimated_bytes": 0, "evidence": "not admitted in this phase"}
+    with pytest.raises(ValueError, match="phase-specific"):
+        capacity.assess_continuation_capacity(plan, **arguments)

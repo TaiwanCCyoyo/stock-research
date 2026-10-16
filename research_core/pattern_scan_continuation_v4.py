@@ -30,7 +30,7 @@ from research_core.shared_data import shared_data_root
 
 LOGGER = logging.getLogger(__name__)
 SCHEMA = "pattern-scan-continuation.v4"
-PHASES = ("prices", "retire-prices", "barrier", "analysis")
+PHASES = ("prices", "retire-prices", "barrier", "events", "analysis")
 BOOTSTRAP = """
 import logging,os,sys
 from pathlib import Path
@@ -277,6 +277,75 @@ def coordinator_main(path: Path) -> None:
         if phase == "barrier":
             result = build_barrier(parts, read_benchmark(run), run / "global")
             outputs = {"barrier": run / "global/receipt.json"}
+        elif phase == "events":
+            from research_core.pattern_scan_analysis_v1 import prepare_event_parts
+            from research_core.pattern_scan_conditions_v1 import PATTERNS
+
+            barrier_path = run / "global/receipt.json"
+            barrier = read_scan_receipt(barrier_path)
+            verify_barrier(barrier)
+            original_codes = [row["code"] for row in stock["pool"]["results"]]
+            calendar = request["reference"]["calendar"]["dates"]
+            if (
+                len(parts) != 1942
+                or len(original_codes) != 1942
+                or len(set(original_codes)) != 1942
+                or set(parts) != set(original_codes)
+                or set(barrier["global_files"]) != set(parts)
+                or barrier.get("source_id") != request["source"]["source_id"]
+                or barrier.get("input_id") != request["input_id"]
+                or len(calendar) != 4110
+                or object_digest(barrier["calendar"]) != object_digest(calendar)
+            ):
+                raise ValueError("events continuation requires the original full-market 1942-stock/4110-session barrier")
+            label_checkpoint = checkpoint_label_entry(parts, source=request["source"], input_id=request["input_id"])
+            event_parts = prepare_event_parts(
+                parts,
+                barrier,
+                {"labels": label_checkpoint},
+                run / "analysis/event-parts",
+                source=request["source"],
+                input_id=request["input_id"],
+            )
+            if set(event_parts) != set(PATTERNS) or any(set(by_code) != set(parts) for by_code in event_parts.values()):
+                raise ValueError("event checkpoint must cover every registered target and original stock")
+            event_root = _checked_path(run / "analysis/event-parts")
+            event_receipts: dict[str, dict[str, Any]] = {}
+            for target, by_code in sorted(event_parts.items()):
+                event_receipts[target] = {}
+                for code, directory in sorted(by_code.items()):
+                    directory = _checked_path(directory)
+                    if not directory.is_relative_to(event_root) or directory == event_root:
+                        raise ValueError("new event receipts must remain under this run's event checkpoint root")
+                    event_receipts[target][code] = _descriptor(_checked_path(directory / "receipt.json"))
+            checkpoint = {
+                "schema": "pattern-scan-event-checkpoint.v4",
+                "complete": True,
+                "phase_only": True,
+                "full_study_admitted": False,
+                "source": request["source"],
+                "input_id": request["input_id"],
+                "executor": executor,
+                "stock_reference": request["stock_reference"],
+                "price_handoff": handoff,
+                "barrier_receipt": _descriptor(barrier_path),
+                "label_checkpoint": label_checkpoint,
+                "event_parts": {
+                    target: {code: str(directory) for code, directory in sorted(by_code.items())} for target, by_code in sorted(event_parts.items())
+                },
+                "event_receipts": event_receipts,
+            }
+            checkpoint_path = run / "event-checkpoint.json"
+            _save(run, checkpoint_path.name, checkpoint)
+            result = {
+                "phase": "event_parts_checkpoint",
+                "phase_only": True,
+                "full_study_admitted": False,
+                "target_n": len(event_parts),
+                "stock_n": len(parts),
+                "event_checkpoint_path": str(checkpoint_path),
+            }
+            outputs = {"event_checkpoint": checkpoint_path}
         elif phase == "analysis":
             from research_core.pattern_scan_analysis_v1 import run_analysis
 
