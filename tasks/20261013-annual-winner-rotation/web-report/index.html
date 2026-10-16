@@ -1,669 +1,3012 @@
 <!doctype html>
-<html lang="zh-Hant" data-palette="forest">
+<html lang="zh-Hant">
     <head>
         <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>每年買進前一年領先股：持有期補全 v2</title>
         <meta
             name="report:title"
-            content="每年買進前一年領先股，台股結果如何？"
+            content="每年買進前一年領先股：持有期補全 v2"
         />
         <meta
             name="report:summary"
-            content="2011–2025 共 15 年僅 8 年可計、7 年未解決；完整策略總報酬仍未知。2026 YTD 另列。"
+            content="已存 v2 固定選股持有期結果；認股權雙情境、完整窗口與 v1 原值分開呈現。"
         />
         <meta name="report:date" content="2026-10-16" />
         <meta name="report:status" content="exploratory" />
         <meta name="report:period" content="2011-2025" />
-        <meta
-            name="report:tags"
-            content="台股,年度輪動,前一年領先股,0050,資料不完整"
-        />
+        <meta name="report:tags" content="台股,固定領先股,持有期補全,0050" />
         <meta name="report:kit" content="v1" />
-        <meta
-            name="description"
-            content="台股前一年領先股輪動研究的已存結果閱讀版。完整策略終值、CAGR、回撤與顯著性仍未知。"
-        />
-        <title>每年買進前一年領先股，台股結果如何？</title>
-        <link rel="stylesheet" href="kit/report-kit.css" />
-        <link rel="stylesheet" href="report.css" />
-        <script src="kit/report-kit.js" defer></script>
+        <style>
+            /* ============================================================
+               STOCK research report kit v1 — shared look for AI-written reports.
+               A report copies this file into its own kit/ folder, so a later kit
+               change never restyles a published report. Tokens mirror the studio
+               (research_web/src/app/studio.css): same palettes, appearance and
+               Taiwan market colours (red = up / gain, green = down / loss).
+               ============================================================ */
+
+            500;600;700&family=Noto+Serif+TC:wght@500;600;700&display=swap");
+
+            :root {
+                --gain: #c84c50;
+                --gain-soft: rgba(200, 76, 80, 0.14);
+                --loss: #238568;
+                --loss-soft: rgba(35, 133, 104, 0.14);
+                --paper: #f5f7f4;
+                --surface: #fff;
+                --surface-2: #f9faf8;
+                --ink: #16352f;
+                --muted: #65736c;
+                --faint: #98a39d;
+                --line: #e5eae4;
+                --line-strong: #cfd8d1;
+                --accent: #2c6753;
+                --accent-soft: #e8eee8;
+                --warn: #a86a12;
+                --warn-soft: #fbf1df;
+                --cell-light: #e3ebd8;
+                --cell-mid: #a9c9af;
+                --cell-deep: #6eaa91;
+                --compare: #7b8794;
+                --compare-soft: rgba(123, 135, 148, 0.18);
+                --font-ui:
+                    "Noto Sans TC", "Microsoft JhengHei", -apple-system, "Segoe UI",
+                    sans-serif;
+                --font-serif: "Noto Serif TC", "PMingLiU", Georgia, serif;
+                --font-mono: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+                --radius: 10px;
+                --radius-sm: 6px;
+                color-scheme: light;
+            }
+            :root[data-palette="ocean"] {
+                --accent: #396879;
+                --accent-soft: #e5edf0;
+                --cell-light: #dcecef;
+                --cell-mid: #a8ccd2;
+                --cell-deep: #74a7b8;
+            }
+            :root[data-palette="plum"] {
+                --accent: #71596f;
+                --accent-soft: #eee8ed;
+                --cell-light: #e9e0ea;
+                --cell-mid: #c8b3d2;
+                --cell-deep: #a484b0;
+            }
+            :root[data-palette="sand"] {
+                --accent: #85693e;
+                --accent-soft: #f1eadf;
+                --cell-light: #f0e7cf;
+                --cell-mid: #d7c29e;
+                --cell-deep: #b59a6f;
+            }
+            :root[data-appearance="dark"] {
+                --gain: #f39293;
+                --gain-soft: rgba(243, 146, 147, 0.16);
+                --loss: #8ad2b3;
+                --loss-soft: rgba(138, 210, 179, 0.16);
+                --paper: #111e1b;
+                --surface: #1b2b26;
+                --surface-2: #17251f;
+                --ink: #e3ece3;
+                --muted: #a9b8ad;
+                --faint: #75867c;
+                --line: #35483d;
+                --line-strong: #4a6153;
+                --accent: #a6cbae;
+                --accent-soft: #2b4135;
+                --warn: #f0c27a;
+                --warn-soft: #3a3322;
+                --cell-light: #425e4d;
+                --cell-mid: #355345;
+                --cell-deep: #234537;
+                --compare: #9aa7b2;
+                --compare-soft: rgba(154, 167, 178, 0.2);
+                color-scheme: dark;
+            }
+            :root[data-appearance="dark"][data-palette="ocean"] {
+                --accent: #add2df;
+            }
+            :root[data-appearance="dark"][data-palette="plum"] {
+                --accent: #d0b9d5;
+            }
+            :root[data-appearance="dark"][data-palette="sand"] {
+                --accent: #dac4a2;
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+            html,
+            body {
+                margin: 0;
+                background: var(--paper);
+                color: var(--ink);
+            }
+            body {
+                font: 14px/1.7 var(--font-ui);
+                -webkit-font-smoothing: antialiased;
+            }
+            a {
+                color: var(--accent);
+            }
+            button,
+            input,
+            select {
+                font: inherit;
+                color: inherit;
+            }
+            button:focus-visible,
+            a:focus-visible,
+            [tabindex]:focus-visible {
+                outline: 3px solid var(--accent);
+                outline-offset: 3px;
+            }
+            .rk-num {
+                font-variant-numeric: tabular-nums;
+            }
+            .rk-mono {
+                font-family: var(--font-mono);
+                font-size: 12px;
+            }
+            code,
+            .rk-mono {
+                overflow-wrap: anywhere;
+            }
+
+            /* ---------- page skeleton ---------- */
+            .rk-page {
+                max-width: 1120px;
+                margin: 0 auto;
+                padding: 28px 24px 64px;
+            }
+            .rk-hero {
+                padding: 8px 0 22px;
+                border-bottom: 1px solid var(--line);
+                margin-bottom: 26px;
+            }
+            .rk-eyebrow {
+                color: var(--muted);
+                font-size: 12px;
+                letter-spacing: 0.08em;
+            }
+            .rk-hero h1 {
+                font: 600 clamp(26px, 3vw, 36px)/1.45 var(--font-serif);
+                margin: 6px 0 10px;
+                letter-spacing: 0.02em;
+            }
+            .rk-lede {
+                font-size: 16px;
+                color: var(--ink);
+                max-width: 62em;
+                margin: 0;
+            }
+            .rk-meta {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px 8px;
+                margin-top: 14px;
+            }
+            .rk-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                border: 1px solid var(--line-strong);
+                border-radius: 4px;
+                padding: 1px 8px;
+                font-size: 12px;
+                color: var(--muted);
+                background: var(--surface);
+                white-space: nowrap;
+            }
+            .rk-badge.is-warn {
+                color: var(--warn);
+                border-color: currentColor;
+                background: var(--warn-soft);
+            }
+            .rk-badge.is-accent {
+                color: var(--accent);
+                border-color: currentColor;
+                background: var(--accent-soft);
+            }
+
+            /* ---------- callouts ---------- */
+            .rk-banner {
+                border: 1px solid var(--warn);
+                background: var(--warn-soft);
+                border-radius: var(--radius);
+                padding: 12px 16px;
+                margin: 0 0 24px;
+                font-size: 13.5px;
+            }
+            .rk-banner strong {
+                color: var(--warn);
+            }
+            .rk-note {
+                background: var(--accent-soft);
+                border-radius: var(--radius-sm);
+                padding: 10px 14px;
+                font-size: 13px;
+                color: var(--ink);
+            }
+            .rk-foot {
+                color: var(--muted);
+                font-size: 12px;
+                margin-top: 8px;
+            }
+
+            /* ---------- key findings ---------- */
+            .rk-findings {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+                gap: 12px;
+                margin: 0 0 30px;
+                padding: 0;
+                list-style: none;
+            }
+            .rk-finding {
+                background: var(--surface);
+                border: 1px solid var(--line);
+                border-radius: var(--radius);
+                padding: 14px 16px;
+            }
+            .rk-finding b {
+                display: block;
+                font: 600 24px/1.35 var(--font-serif);
+                margin-bottom: 4px;
+            }
+            .rk-finding p {
+                margin: 0;
+                color: var(--muted);
+                font-size: 13px;
+            }
+
+            /* ---------- sections ---------- */
+            .rk-section {
+                margin: 0 0 40px;
+                scroll-margin-top: 16px;
+            }
+            .rk-section > header {
+                display: flex;
+                align-items: flex-end;
+                justify-content: space-between;
+                gap: 16px;
+                flex-wrap: wrap;
+                margin-bottom: 12px;
+            }
+            .rk-q {
+                color: var(--accent);
+                font-size: 12px;
+                letter-spacing: 0.06em;
+                font-weight: 600;
+            }
+            .rk-section h2 {
+                font: 600 21px/1.5 var(--font-serif);
+                margin: 2px 0 0;
+            }
+            .rk-answer {
+                margin: 0 0 14px;
+                max-width: 62em;
+            }
+            .rk-card {
+                background: var(--surface);
+                border: 1px solid var(--line);
+                border-radius: var(--radius);
+                padding: 16px;
+            }
+            .rk-grid-2 {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+                gap: 14px;
+            }
+            .rk-toc {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+                margin: 0 0 26px;
+                padding: 0;
+                list-style: none;
+                font-size: 13px;
+            }
+            .rk-toc a {
+                display: inline-block;
+                padding: 3px 10px;
+                border-radius: 999px;
+                border: 1px solid var(--line);
+                background: var(--surface);
+                text-decoration: none;
+            }
+            details.rk-details {
+                margin-top: 12px;
+                border-top: 1px dashed var(--line);
+                padding-top: 10px;
+            }
+            details.rk-details > summary {
+                cursor: pointer;
+                color: var(--accent);
+                font-size: 13px;
+            }
+
+            /* ---------- controls ---------- */
+            .rk-controls {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px 16px;
+                align-items: center;
+                margin: 0 0 12px;
+                font-size: 12.5px;
+                color: var(--muted);
+            }
+            .rk-control {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+            }
+            .rk-seg {
+                display: inline-flex;
+                border: 1px solid var(--line-strong);
+                border-radius: 7px;
+                overflow: hidden;
+                background: var(--surface);
+            }
+            .rk-seg button {
+                border: 0;
+                background: transparent;
+                padding: 3px 10px;
+                cursor: pointer;
+                color: var(--muted);
+                font-size: 12.5px;
+            }
+            .rk-seg button + button {
+                border-left: 1px solid var(--line);
+            }
+            .rk-seg button[aria-pressed="true"] {
+                background: var(--accent);
+                color: var(--surface);
+            }
+            :root[data-appearance="dark"] .rk-seg button[aria-pressed="true"] {
+                color: var(--paper);
+            }
+
+            /* ---------- tables ---------- */
+            .rk-table-wrap {
+                overflow-x: auto;
+            }
+            table.rk-table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 13px;
+                font-variant-numeric: tabular-nums;
+            }
+            .rk-table th,
+            .rk-table td {
+                padding: 6px 10px;
+                border-bottom: 1px solid var(--line);
+                text-align: right;
+                white-space: nowrap;
+            }
+            .rk-table th:first-child,
+            .rk-table td:first-child {
+                text-align: left;
+            }
+            .rk-table th {
+                color: var(--muted);
+                font-weight: 500;
+                font-size: 12px;
+                background: var(--surface-2);
+                position: sticky;
+                top: 0;
+            }
+            .rk-table tr.is-strong td {
+                font-weight: 600;
+            }
+            .rk-table td.is-na {
+                color: var(--faint);
+            }
+            .rk-gain {
+                color: var(--gain);
+            }
+            .rk-loss {
+                color: var(--loss);
+            }
+
+            /* ---------- charts ---------- */
+            .rk-chart {
+                width: 100%;
+                overflow-x: auto;
+            }
+            .rk-chart svg {
+                display: block;
+                max-width: 100%;
+                height: auto;
+                font-family: var(--font-ui);
+            }
+            .rk-chart text {
+                fill: var(--muted);
+                font-size: 11px;
+            }
+            .rk-chart .rk-label {
+                fill: var(--ink);
+                font-size: 12px;
+            }
+            .rk-chart .rk-gridline {
+                stroke: var(--line);
+                stroke-width: 1;
+            }
+            .rk-chart .rk-axis {
+                stroke: var(--line-strong);
+            }
+            .rk-legend {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px 16px;
+                font-size: 12px;
+                color: var(--muted);
+                margin: 6px 0 0;
+            }
+            .rk-legend i {
+                display: inline-block;
+                width: 10px;
+                height: 10px;
+                border-radius: 2px;
+                margin-right: 5px;
+                vertical-align: -1px;
+            }
+
+            /* ---------- tooltip ---------- */
+            .rk-tooltip {
+                position: fixed;
+                z-index: 50;
+                pointer-events: none;
+                max-width: 320px;
+                background: var(--surface);
+                color: var(--ink);
+                border: 1px solid var(--line-strong);
+                border-radius: 8px;
+                padding: 8px 10px;
+                font-size: 12px;
+                line-height: 1.55;
+                box-shadow: 0 6px 24px rgba(0, 0, 0, 0.14);
+                opacity: 0;
+                transition: opacity 0.08s;
+            }
+            .rk-tooltip.is-visible {
+                opacity: 1;
+            }
+            .rk-tooltip b {
+                display: block;
+                margin-bottom: 2px;
+            }
+
+            @media (max-width: 640px) {
+                .rk-page {
+                    padding: 18px 14px 48px;
+                }
+            }
+            @media print {
+                .rk-controls,
+                .rk-toc {
+                    display: none;
+                }
+            }
+
+
+            :root{--font-ui:system-ui,"Microsoft JhengHei",sans-serif;
+            --font-serif:var(--font-ui)}
+
+            body{font-size:15px;
+            overflow-wrap:anywhere}
+            .rk-page{max-width:1180px}
+            h3{margin:0;
+            font-size:21px}
+
+            .scenario-radio{position:absolute;
+            width:1px;
+            height:1px;
+            opacity:0}
+            .scenario-switch{display:flex;
+            flex-wrap:wrap;
+            gap:8px;
+            margin:18px 0}
+
+            .scenario-switch label{padding:9px 15px;
+            border:1px solid var(--line-strong);
+            border-radius:7px;
+            cursor:pointer;
+            background:var(--surface)}
+
+            #lapse:checked~main label[for=lapse],#realize:checked~main label[for=realize]{background:var(--accent);
+            color:var(--paper)}
+
+            #lapse:focus-visible~main label[for=lapse],#realize:focus-visible~main label[for=realize]{outline:3px solid var(--accent);
+            outline-offset:3px}
+
+            #lapse:checked~main [data-scenario=realize],#realize:checked~main [data-scenario=lapse]{display:none}
+
+            .window-grid{display:grid;
+            grid-template-columns:repeat(3,minmax(0,1fr));
+            gap:12px}
+            .metrics{display:grid;
+            gap:8px;
+            margin:16px 0}
+
+            .metrics div{display:flex;
+            align-items:baseline;
+            justify-content:space-between;
+            gap:10px}
+            .metrics dt{font-size:12px;
+            color:var(--muted)}
+
+            .metrics dd{margin:0;
+            font-size:20px;
+            font-variant-numeric:tabular-nums;
+            font-weight:600}
+            .comparison{border-top:1px solid var(--line);
+            padding-top:12px}
+
+            .comparison dd{font-size:16px}
+            .rk-details{font-size:13px}
+            summary{padding:6px 0}
+            summary:focus-visible{outline:3px solid var(--accent)}
+
+            .annual{table-layout:fixed}
+            .annual caption{text-align:left;
+            padding:8px 0;
+            color:var(--muted);
+            font-size:12px}
+
+            .annual th,.annual td{white-space:normal;
+            padding:8px 5px;
+            font-size:11px;
+            vertical-align:top}
+            .annual thead th{position:static}
+
+            .annual th:nth-child(2){width:16%}
+            .annual th:last-child{width:16%}
+            .annual td:last-child{text-align:left}
+
+            .annual tbody th{color:var(--ink);
+            font-weight:600;
+            background:transparent;
+            font-size:13px}
+            .annual th span{display:block;
+            font-size:12px;
+            font-weight:400;
+            color:var(--muted)}
+
+            footer{border-top:1px solid var(--line);
+            padding-top:18px;
+            color:var(--muted);
+            font-size:13px}
+            .source-list{display:flex;
+            flex-wrap:wrap;
+            gap:10px 18px}
+
+            @media(max-width:980px){.window-grid{grid-template-columns:1fr}
+            .metrics{grid-template-columns:repeat(3,minmax(0,1fr))}
+            .metrics div{display:block}
+            .metrics dd{margin-top:4px}
+
+            .annual,.annual tbody,.annual caption{display:block}
+            .annual thead{position:absolute;
+            width:1px;
+            height:1px;
+            overflow:hidden;
+            clip-path:inset(50%)}
+
+            .annual tr{display:block;
+            padding:10px 12px;
+            border:1px solid var(--line);
+            border-radius:8px;
+            background:var(--surface);
+            margin-bottom:12px}
+
+            .annual tbody th{display:flex;
+            gap:12px;
+            align-items:baseline;
+            width:100%;
+            font-size:21px;
+            padding:0 0 8px}
+
+            .annual tbody th span{font-size:14px}
+            .annual td{display:grid;
+            grid-template-columns:minmax(115px,40%) minmax(0,1fr);
+            gap:10px;
+            padding:6px 0;
+            text-align:right;
+            font-size:13px}
+
+            .annual td::before{content:attr(data-label);
+            text-align:left;
+            color:var(--muted);
+            font-size:12px}
+            .annual td:last-child{text-align:right;
+            border:0}
+            }
+
+            @media(max-width:540px){.metrics{grid-template-columns:1fr}
+            .metrics div{display:flex}
+            .metrics dd{margin:0}
+            .rk-hero h1{font-size:29px}
+            .rk-lede{font-size:16px}
+            }
+
+            @page{size:A4 landscape;
+            margin:12mm}
+            @media print{.scenario-switch{display:none}
+            #lapse:checked~main [data-scenario],#realize:checked~main [data-scenario]{display:block}
+
+            :root{--paper:white;
+            --surface:white;
+            --ink:#111;
+            --muted:#444;
+            --line:#ccc;
+            --accent:#234e3d;
+            --warn:#765000;
+            --warn-soft:white;
+            color-scheme:light}
+
+            .rk-page{padding:0}
+            .rk-section{margin-bottom:18px}
+            .window-card,tr{break-inside:avoid}
+            .window-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+
+            details::details-content{display:block;
+            content-visibility:visible}
+            .rk-toc{display:none}
+            }
+        </style>
     </head>
     <body>
-        <a class="skip-link" href="#overview">跳至研究結論</a>
+        <input
+            class="scenario-radio"
+            type="radio"
+            name="scenario"
+            id="lapse"
+            checked
+            aria-label="認股權放棄情境"
+        />
+        <input
+            class="scenario-radio"
+            type="radio"
+            name="scenario"
+            id="realize"
+            aria-label="認股權價值實現情境"
+        />
         <main class="rk-page">
             <header class="rk-hero">
-                <div class="rk-eyebrow">台股研究筆記 · 年度輪動 v1</div>
-                <h1>
-                    每年買進前一年領先股，<br
-                        class="wide-break"
-                    />總報酬會贏過大盤嗎？
-                </h1>
+                <div class="rk-eyebrow">已存結果閱讀版 · 持有期補全 v2</div>
+                <h1>每年買進前一年領先股，<br />補齊持有期後結果如何？</h1>
                 <p class="rk-lede">
-                    目前無法判定。15 年中有 7 年報酬未解，不能拼成完整長期績效。
+                    2011-2025 的固定選股序列，兩種情境扣成本後均落後連續持有
+                    0050。
                 </p>
                 <div class="rk-meta">
-                    <span class="rk-badge is-warn">探索研究 · 資料不完整</span>
-                    <span class="rk-badge">完整持有年 2011–2025</span>
+                    <span class="rk-badge is-warn"
+                        >探索研究 · 固定 v1 選股</span
+                    >
+                    <span class="rk-badge">2011–2025 · YTD 另列</span>
                     <span class="rk-badge">閱讀版 2026-10-16</span>
                 </div>
             </header>
-
-            <section
-                class="rk-section"
-                id="overview"
-                aria-labelledby="overview-title"
-            >
-                <header>
-                    <div>
-                        <div class="rk-q">先看結論</div>
-                        <h2 id="overview-title">總報酬仍是未知，不是 0%</h2>
-                    </div>
-                </header>
-                <div class="rk-banner">
-                    <strong>證據不足以支持「顯著勝過大盤」。</strong
-                    >這也不代表已證明策略無效。完整策略的終值、年化複利報酬（CAGR）、最大回撤與顯著性，均無法由目前資料確定。
-                </div>
+            <section class="rk-section" aria-labelledby="overview-title">
+                <h2 id="overview-title">2011-2025 · 扣成本後的答案</h2>
                 <ul class="rk-findings">
                     <li class="rk-finding">
-                        <b>8 / 15 年</b>
-                        <p>
-                            完整持有年度中，只有 8 年能依模型計算報酬；其餘 7
-                            年未知。
-                        </p>
-                    </li>
-                    <li class="rk-finding">
-                        <b>2 / 8 年</b>
-                        <p>
-                            已知年份中，2019、2021 的策略淨報酬勝過同日期
-                            0050；不能推論長期複利勝負。
-                        </p>
-                    </li>
-                    <li class="rk-finding">
-                        <b class="rk-loss">−69.43%</b>
-                        <p>
-                            2022
-                            年策略淨報酬，是已知年度中最差的一年；完整歷史的最差年仍未知。
-                        </p>
-                    </li>
-                </ul>
-                <p class="rk-answer">
-                    這裡的「領先股」是<strong>資料覆蓋範圍內，報酬算得出的第一名</strong>，不是已確認的全市場冠軍。未知候選也可能比所選股票漲得更多。
-                </p>
-            </section>
-
-            <nav aria-label="報告導覽">
-                <ul class="rk-toc">
-                    <li><a href="#method">怎麼做</a></li>
-                    <li><a href="#annual">15 年逐年結果</a></li>
-                    <li><a href="#ytd">2026 YTD</a></li>
-                    <li><a href="#limits">資料與模型限制</a></li>
-                    <li><a href="#sources">來源</a></li>
-                </ul>
-            </nav>
-
-            <section
-                class="rk-section"
-                id="method"
-                aria-labelledby="method-title"
-            >
-                <header>
-                    <div>
-                        <div class="rk-q">方法</div>
-                        <h2 id="method-title">
-                            每年選 1 檔，持有到下一次年度輪動
-                        </h2>
-                    </div>
-                </header>
-                <ol class="method-steps">
-                    <li>
-                        <b>看前一年</b
-                        ><span
-                            >用前一年整年含息模型報酬排名，選報酬可計者中的最高
-                            1 檔。</span
-                        >
-                    </li>
-                    <li>
-                        <b>隔年買進</b
-                        ><span
-                            >於次年第一個有效且有成交量的觀測開盤買入，配置集中度
-                            100%。</span
-                        >
-                    </li>
-                    <li>
-                        <b>次年換股</b
-                        ><span
-                            >在下一年度邊界後第一個有效觀測開盤退出，與相同進出日期的
-                            0050 配對。</span
-                        >
-                    </li>
-                </ol>
-                <p class="rk-note">
-                    含息是<strong>估算情境</strong>：現金股利估值於除息日收盤立即再投入分數單位，並非實際付款日再投入。觀測開盤也不是保證能成交的價格。
-                </p>
-                <details class="rk-details">
-                    <summary>成本與報酬口徑</summary>
-                    <div class="detail-body">
-                        <p>
-                            <strong>未扣成本（原報告 gross）</strong
-                            >：含息模型、未扣交易成本。<strong
-                                >扣成本（原報告 net）</strong
-                            >：策略與 0050
-                            皆扣除下列固定情境成本，股利再投入另收佣金。
-                        </p>
-                        <dl class="fee-list">
+                        <p>認股權放棄</p>
+                        <b>0.3111 倍</b>
+                        <dl class="metrics">
                             <div>
-                                <dt>買、賣佣金</dt>
-                                <dd>各 0.1425%</dd>
-                            </div>
-                            <div>
-                                <dt>不利滑價</dt>
-                                <dd>買、賣各 0.10%</dd>
-                            </div>
-                            <div>
-                                <dt>股票賣方證交稅</dt>
-                                <dd>0.30%</dd>
-                            </div>
-                            <div>
-                                <dt>ETF 賣方證交稅</dt>
-                                <dd>0.10%</dd>
+                                <dt>總報酬</dt>
+                                <dd class="rk-loss">-68.89%</dd>
                             </div>
                         </dl>
-                        <p>
-                            這些是研究固定假設，並非實際費用或成交紀錄。未充分納入個人稅負、補充保費、最小佣金與整股資金限制。表內
-                            0050 每年各自進出一次，不等於連續長抱 0050。
-                        </p>
-                        <p>
-                            排名通常以前一年年底收盤至該年底收盤計算；2010 年缺
-                            2009 錨點，改用 2010 首個觀測交易日收盤，因此 2011
-                            持有結果另有初始窗限制。
-                        </p>
-                    </div>
-                </details>
-            </section>
-
-            <section
-                class="rk-section"
-                id="annual"
-                aria-labelledby="annual-title"
-            >
-                <header>
-                    <div>
-                        <div class="rk-q">完整持有年度 · 2011–2025</div>
-                        <h2 id="annual-title">保留每一年，也保留未知</h2>
-                    </div>
-                    <span class="rk-badge">紅為正報酬 · 綠為負報酬</span>
-                </header>
-                <p id="annual-note" class="rk-answer">
-                    每列是一段獨立持有期，從該年買入至次年退出；報酬已包含同一股利再投入模型。「未解決」不等於零報酬。<strong
-                        >只有 2019、2021 的已知策略扣成本報酬高於同期
-                        0050。</strong
-                    >
-                </p>
-                <table
-                    class="rk-table annual-table"
-                    aria-describedby="annual-note"
-                >
-                    <caption>
-                        完整年度獨立持有期；數值照錄已存研究報告，未串接財富曲線
-                    </caption>
-                    <thead>
-                        <tr>
-                            <th scope="col">持有年／代碼</th>
-                            <th scope="col">買入 → 退出</th>
-                            <th scope="col">前一年排名報酬</th>
-                            <th scope="col">策略未扣成本</th>
-                            <th scope="col">策略扣成本</th>
-                            <th scope="col">同期0050扣成本</th>
-                            <th scope="col">狀態／首要缺口</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <th scope="row">2011 <span>3406</span></th>
-                            <td data-label="買入 → 退出">
-                                2011-01-03 → 2012-01-02
-                            </td>
-                            <td data-label="前一年排名報酬" class="rk-gain">
-                                +595.65%
-                            </td>
-                            <td data-label="策略未扣成本" class="unknown">
-                                未解決
-                            </td>
-                            <td data-label="策略扣成本" class="unknown">
-                                未解決
-                            </td>
-                            <td data-label="同期0050扣成本" class="rk-loss">
-                                -17.21%
-                            </td>
-                            <td data-label="狀態／首要缺口">
-                                2011-03-17 除權事件的股數／權利尚未重建。
-                            </td>
-                        </tr>
-                        <tr>
-                            <th scope="row">2012 <span>6276</span></th>
-                            <td data-label="買入 → 退出">
-                                2012-01-02 → 2013-01-02
-                            </td>
-                            <td data-label="前一年排名報酬" class="rk-gain">
-                                +202.84%
-                            </td>
-                            <td data-label="策略未扣成本" class="unknown">
-                                未解決
-                            </td>
-                            <td data-label="策略扣成本" class="unknown">
-                                未解決
-                            </td>
-                            <td data-label="同期0050扣成本" class="rk-gain">
-                                +12.50%
-                            </td>
-                            <td data-label="狀態／首要缺口">
-                                缺 2012-07-16、07-17 官方報價。
-                            </td>
-                        </tr>
-                        <tr>
-                            <th scope="row">2013 <span>1781</span></th>
-                            <td data-label="買入 → 退出">
-                                2013-01-02 → 2014-01-02
-                            </td>
-                            <td data-label="前一年排名報酬" class="rk-gain">
-                                +253.60%
-                            </td>
-                            <td data-label="策略未扣成本" class="rk-loss">
-                                -13.65%
-                            </td>
-                            <td data-label="策略扣成本" class="rk-loss">
-                                -14.32%
-                            </td>
-                            <td data-label="同期0050扣成本" class="rk-gain">
-                                +10.60%
-                            </td>
-                            <td data-label="狀態／首要缺口">模型可計</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">2014 <span>3229</span></th>
-                            <td data-label="買入 → 退出">
-                                2014-01-02 → 2015-01-05
-                            </td>
-                            <td data-label="前一年排名報酬" class="rk-gain">
-                                +433.89%
-                            </td>
-                            <td data-label="策略未扣成本" class="rk-loss">
-                                -6.77%
-                            </td>
-                            <td data-label="策略扣成本" class="rk-loss">
-                                -7.50%
-                            </td>
-                            <td data-label="同期0050扣成本" class="rk-gain">
-                                +15.22%
-                            </td>
-                            <td data-label="狀態／首要缺口">模型可計</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">2015 <span>3520</span></th>
-                            <td data-label="買入 → 退出">
-                                2015-01-05 → 2016-01-04
-                            </td>
-                            <td data-label="前一年排名報酬" class="rk-gain">
-                                +379.37%
-                            </td>
-                            <td data-label="策略未扣成本" class="rk-loss">
-                                -22.88%
-                            </td>
-                            <td data-label="策略扣成本" class="rk-loss">
-                                -23.48%
-                            </td>
-                            <td data-label="同期0050扣成本" class="rk-loss">
-                                -6.15%
-                            </td>
-                            <td data-label="狀態／首要缺口">模型可計</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">2016 <span>3205</span></th>
-                            <td data-label="買入 → 退出">
-                                2016-01-04 → 2017-01-03
-                            </td>
-                            <td data-label="前一年排名報酬" class="rk-gain">
-                                +952.08%
-                            </td>
-                            <td data-label="策略未扣成本" class="unknown">
-                                未解決
-                            </td>
-                            <td data-label="策略扣成本" class="unknown">
-                                未解決
-                            </td>
-                            <td data-label="同期0050扣成本" class="rk-gain">
-                                +18.68%
-                            </td>
-                            <td data-label="狀態／首要缺口">
-                                2016-08-17 混合除權息事件的權利尚未重建。
-                            </td>
-                        </tr>
-                        <tr>
-                            <th scope="row">2017 <span>3522</span></th>
-                            <td data-label="買入 → 退出">
-                                2017-01-03 → 2018-01-02
-                            </td>
-                            <td data-label="前一年排名報酬" class="rk-gain">
-                                +361.03%
-                            </td>
-                            <td data-label="策略未扣成本" class="rk-loss">
-                                -16.41%
-                            </td>
-                            <td data-label="策略扣成本" class="rk-loss">
-                                -17.07%
-                            </td>
-                            <td data-label="同期0050扣成本" class="rk-gain">
-                                +17.60%
-                            </td>
-                            <td data-label="狀態／首要缺口">模型可計</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">2018 <span>3162</span></th>
-                            <td data-label="買入 → 退出">
-                                2018-01-02 → 2019-01-02
-                            </td>
-                            <td data-label="前一年排名報酬" class="rk-gain">
-                                +542.97%
-                            </td>
-                            <td data-label="策略未扣成本" class="unknown">
-                                未解決
-                            </td>
-                            <td data-label="策略扣成本" class="unknown">
-                                未解決
-                            </td>
-                            <td data-label="同期0050扣成本" class="rk-loss">
-                                -5.07%
-                            </td>
-                            <td data-label="狀態／首要缺口">
-                                缺 2018-09-26、10-08 官方報價。
-                            </td>
-                        </tr>
-                        <tr class="beats-benchmark">
-                            <th scope="row">2019 <span>2388</span></th>
-                            <td data-label="買入 → 退出">
-                                2019-01-02 → 2020-01-02
-                            </td>
-                            <td data-label="前一年排名報酬" class="rk-gain">
-                                +148.11%
-                            </td>
-                            <td data-label="策略未扣成本" class="rk-gain">
-                                +37.24%
-                            </td>
-                            <td data-label="策略扣成本" class="rk-gain">
-                                +36.17%
-                            </td>
-                            <td data-label="同期0050扣成本" class="rk-gain">
-                                +32.25%
-                            </td>
-                            <td data-label="狀態／首要缺口">
-                                模型可計 · 淨報酬勝配對 0050
-                            </td>
-                        </tr>
-                        <tr>
-                            <th scope="row">2020 <span>6538</span></th>
-                            <td data-label="買入 → 退出">
-                                2020-01-02 → 2021-01-04
-                            </td>
-                            <td data-label="前一年排名報酬" class="rk-gain">
-                                +590.32%
-                            </td>
-                            <td data-label="策略未扣成本" class="unknown">
-                                未解決
-                            </td>
-                            <td data-label="策略扣成本" class="unknown">
-                                未解決
-                            </td>
-                            <td data-label="同期0050扣成本" class="rk-gain">
-                                +30.12%
-                            </td>
-                            <td data-label="狀態／首要缺口">
-                                2020-08-27 混合除權息事件的權利尚未重建。
-                            </td>
-                        </tr>
-                        <tr class="beats-benchmark">
-                            <th scope="row">2021 <span>3228</span></th>
-                            <td data-label="買入 → 退出">
-                                2021-01-04 → 2022-01-03
-                            </td>
-                            <td data-label="前一年排名報酬" class="rk-gain">
-                                +498.59%
-                            </td>
-                            <td data-label="策略未扣成本" class="rk-gain">
-                                +122.02%
-                            </td>
-                            <td data-label="策略扣成本" class="rk-gain">
-                                +120.28%
-                            </td>
-                            <td data-label="同期0050扣成本" class="rk-gain">
-                                +21.72%
-                            </td>
-                            <td data-label="狀態／首要缺口">
-                                模型可計 · 淨報酬勝配對 0050
-                            </td>
-                        </tr>
-                        <tr>
-                            <th scope="row">2022 <span>3141</span></th>
-                            <td data-label="買入 → 退出">
-                                2022-01-03 → 2023-01-03
-                            </td>
-                            <td data-label="前一年排名報酬" class="rk-gain">
-                                +516.17%
-                            </td>
-                            <td data-label="策略未扣成本" class="rk-loss">
-                                -69.18%
-                            </td>
-                            <td data-label="策略扣成本" class="rk-loss">
-                                -69.43%
-                            </td>
-                            <td data-label="同期0050扣成本" class="rk-loss">
-                                -22.50%
-                            </td>
-                            <td data-label="狀態／首要缺口">模型可計</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">2023 <span>8996</span></th>
-                            <td data-label="買入 → 退出">
-                                2023-01-03 → 2024-01-02
-                            </td>
-                            <td data-label="前一年排名報酬" class="rk-gain">
-                                +199.77%
-                            </td>
-                            <td data-label="策略未扣成本" class="rk-gain">
-                                +21.60%
-                            </td>
-                            <td data-label="策略扣成本" class="rk-gain">
-                                +20.65%
-                            </td>
-                            <td data-label="同期0050扣成本" class="rk-gain">
-                                +27.48%
-                            </td>
-                            <td data-label="狀態／首要缺口">模型可計</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">2024 <span>1519</span></th>
-                            <td data-label="買入 → 退出">
-                                2024-01-02 → 2025-01-02
-                            </td>
-                            <td data-label="前一年排名報酬" class="rk-gain">
-                                +584.54%
-                            </td>
-                            <td data-label="策略未扣成本" class="unknown">
-                                未解決
-                            </td>
-                            <td data-label="策略扣成本" class="unknown">
-                                未解決
-                            </td>
-                            <td data-label="同期0050扣成本" class="rk-gain">
-                                +47.56%
-                            </td>
-                            <td data-label="狀態／首要缺口">
-                                2024-07-25
-                                事件落在研究交易日曆之外，處理仍待釐清。
-                            </td>
-                        </tr>
-                        <tr>
-                            <th scope="row">2025 <span>5314</span></th>
-                            <td data-label="買入 → 退出">
-                                2025-01-02 → 2026-01-02
-                            </td>
-                            <td data-label="前一年排名報酬" class="rk-gain">
-                                +924.38%
-                            </td>
-                            <td data-label="策略未扣成本" class="unknown">
-                                未解決
-                            </td>
-                            <td data-label="策略扣成本" class="unknown">
-                                未解決
-                            </td>
-                            <td data-label="同期0050扣成本" class="rk-gain">
-                                +36.95%
-                            </td>
-                            <td data-label="狀態／首要缺口">
-                                缺 2025-03-20、03-21 官方報價。
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                    </li>
+                    <li class="rk-finding">
+                        <p>認股權價值實現</p>
+                        <b>0.3177 倍</b>
+                        <dl class="metrics">
+                            <div>
+                                <dt>總報酬</dt>
+                                <dd class="rk-loss">-68.23%</dd>
+                            </div>
+                        </dl>
+                    </li>
+                    <li class="rk-finding">
+                        <p>連續持有 0050</p>
+                        <b>6.6991 倍</b>
+                        <dl class="metrics">
+                            <div>
+                                <dt>總報酬</dt>
+                                <dd class="rk-gain">+569.91%</dd>
+                            </div>
+                        </dl>
+                    </li>
+                </ul>
                 <p class="rk-foot">
-                    表列缺口是首要已知原因，不代表該年所有行情都缺。持有期依實際觀測日對齊；未知年度沒有以次名替換，也沒有當成空手。
+                    倍數包含初始本金；總報酬為終值倍數減一。這是原固定選股序列的模型結果，不推論所有追漲策略，也不代表完整每日風險已知。
                 </p>
             </section>
-
-            <section class="rk-section" id="ytd" aria-labelledby="ytd-title">
-                <header>
-                    <div>
-                        <div class="rk-q">獨立列示 · 非完整年度</div>
-                        <h2 id="ytd-title">2026 YTD，截至 10 月 12 日</h2>
-                    </div>
-                    <span class="rk-badge is-warn">不年化 · 不併入 15 年</span>
-                </header>
-                <div class="rk-card ytd-card">
-                    <p>
-                        <strong>5475</strong> · 2026-01-02 買入 → 2026-10-12
-                        收盤估值<br />前一年排名報酬
-                        <span class="rk-gain">+686.07%</span>
-                    </p>
-                    <dl class="ytd-values">
-                        <div>
-                            <dt>策略扣成本</dt>
-                            <dd class="rk-gain">+115.06%</dd>
-                        </div>
-                        <div>
-                            <dt>同期0050扣成本</dt>
-                            <dd class="rk-gain">+76.35%</dd>
-                        </div>
-                        <div>
-                            <dt>策略未扣成本</dt>
-                            <dd class="rk-gain">+116.75%</dd>
-                        </div>
-                    </dl>
-                    <p class="rk-foot">
-                        模型可計；退出端是截至日收盤的假設清算。這段亮眼表現不能填補
-                        7 個未知歷史年度。
-                    </p>
+            <div class="rk-banner">
+                <strong>這是補全原選股的持有期，不是重新選全市場冠軍。</strong
+                >未知排名候選仍未重建。終值模型可計不等於完整每日回撤可知，也不構成策略優越或顯著勝出的認證。
+            </div>
+            <p>
+                每年仍持有 v1
+                選定的同一股票與同一交易日期。完整期間比較採連續長抱
+                0050；逐年表則採同日期各自進出 0050。倍數包含初始本金，CAGR
+                是扣成本後的年化複利報酬。
+            </p>
+            <nav aria-label="報告導覽">
+                <ul class="rk-toc">
+                    <li>
+                        <a href="#explore">情境與結果</a>
+                    </li>
+                    <li>
+                        <a href="#details">限制與來源</a>
+                    </li>
+                    <li>
+                        <a href="v1.html">閱讀 v1 原版</a>
+                    </li>
+                </ul>
+            </nav>
+            <section id="explore" aria-labelledby="scenario-title">
+                <h2 id="scenario-title">切換認股權情境</h2>
+                <div class="scenario-switch">
+                    <label for="lapse">認股權放棄</label>
+                    <label for="realize">認股權價值實現</label>
                 </div>
-            </section>
-
-            <section
-                class="rk-section"
-                id="limits"
-                aria-labelledby="limits-title"
-            >
-                <header>
-                    <div>
-                        <div class="rk-q">理解結論的邊界</div>
-                        <h2 id="limits-title">
-                            缺的是完整證據，不只是表格上的數字
-                        </h2>
-                    </div>
-                </header>
-                <details class="rk-details">
-                    <summary>範圍：為什麼不能稱為「全市場冠軍」？</summary>
-                    <div class="detail-body">
-                        <p>
-                            以歷史報價出現的四碼普通股代碼為候選，1–9 開頭、排除
-                            91xx
-                            TDR；不是台灣50成分股研究，也不是完整全市場普查。缺完整歷史上市櫃資格與下市資料，目前證券類型不能證明歷史資格，不能宣稱無存活偏誤。
-                        </p>
-                        <p>
-                            2010–2025 排名年合計觀測 25,883 個股票年，其中 1,173
-                            個缺初始錨點、不具候選資格。其餘 24,710
-                            個候選股票年中，8,413
-                            個因事件或報價問題而排名未知。選股只取報酬可計者的第一名，未知者不是落敗者。0050
-                            是大型股 ETF 的含息模型代理，並非全台股總報酬指數。
-                        </p>
-                    </div>
-                </details>
-                <details class="rk-details">
-                    <summary>模型：含息、成交與權利事件有哪些限制？</summary>
-                    <div class="detail-body">
-                        <p>
-                            股利來自估值，假設除息日立刻收到並於收盤買入分數單位；未建立實際付款與歷史零股可成交性。未釐清的除權、混合除權息、減資與非交易日事件維持未知，不用還原價格因子替代股數權利。
-                        </p>
-                        <p>
-                            每日開高低收與正成交量只能找到有效觀測開盤，不能證明漲停買得到、跌停賣得掉。0050
-                            的 2025 分割採官方 1:4
-                            比例與五個停牌交易日。單一持股固定 100%
-                            集中；前一年大漲不會降低這項風險。
-                        </p>
-                    </div>
-                </details>
-                <details class="rk-details">
-                    <summary>推論：已知 8 年為什麼不能串成總報酬？</summary>
-                    <div class="detail-body">
-                        <p>
-                            8 年之間穿插 7
-                            個未知持有期，缺少時間連續的財富路徑。將已知年相乘，或把空白當
-                            0%，都不能得到完整策略終值、CAGR、最大回撤或顯著性。2
-                            年勝過配對 0050
-                            只是已知樣本描述，不是長期勝率或複利勝負的證明。
-                        </p>
-                        <p>
-                            本研究也不能核實原社群圖片的美股金額。母體不同、歷史已被看過，補資料後仍需保留本次結果與規則，不能將同一期間當成新的未見測試。
-                        </p>
-                    </div>
-                </details>
-                <details class="rk-details">
-                    <summary>保存與重現：這份閱讀版交付了什麼？</summary>
-                    <div class="detail-body">
-                        <p>
-                            本頁只整理已存結果，沒有重新計算。公開報告與研究設計可供閱讀，但部分輸入識別與過程結果只保留在作者本機，另需外部研究資料目錄。乾淨
-                            checkout
-                            目前無法直接完整重現，因此本頁也不宣稱完成可完整重現的交付。
-                        </p>
-                    </div>
-                </details>
-            </section>
-
-            <footer id="sources" class="report-footer">
-                <h2>來源與版本</h2>
-                <p>
-                    本頁呈現已存於
-                    <a
-                        href="https://github.com/TaiwanCCyoyo/stock-research/pull/15"
-                        >PR15</a
-                    >
-                    的結果，並非新評估或完整可重現的交付。數字與結論以固定版本的
-                    <a
-                        href="https://github.com/TaiwanCCyoyo/stock-research/blob/4706cc4b26ba77e1c6d059adb307173d059f9194/tasks/20261013-annual-winner-rotation/report.md"
-                        >原始報告</a
-                    >
-                    為準；另見
-                    <a
-                        href="https://github.com/TaiwanCCyoyo/stock-research/blob/4706cc4b26ba77e1c6d059adb307173d059f9194/tasks/20261013-annual-winner-rotation/mission.md"
-                        >事前研究設計</a
-                    >
-                    與
-                    <a
-                        href="https://github.com/TaiwanCCyoyo/stock-research/blob/4706cc4b26ba77e1c6d059adb307173d059f9194/tasks/20261013-annual-winner-rotation/verification.md"
-                        >驗證與交付限制</a
-                    >。
-                </p>
                 <p class="rk-foot">
-                    資料截止 2026-10-12 · 閱讀版日期 2026-10-16 ·
-                    本研究不構成交易建議。
+                    兩者是事前列明的情境，不是實際行使紀錄，也不是報酬上下界。無認股權的持有期會共用同一結果。列印時同時保留兩種情境。
                 </p>
+            </section>
+            <div data-scenario="lapse">
+                <section class="rk-section">
+                    <h2>認股權放棄 · 完整期間</h2>
+                    <div class="window-grid">
+                        <article class="rk-card window-card">
+                            <h3>2011-2025</h3>
+                            <p class="rk-foot">
+                                2011-01-03 → 2026-01-02 · 完整持有期模型可計
+                            </p>
+                            <dl class="metrics">
+                                <div>
+                                    <dt>策略扣成本後</dt>
+                                    <dd>0.3111 倍</dd>
+                                </div>
+                                <div>
+                                    <dt>策略未扣成本</dt>
+                                    <dd>0.3501 倍</dd>
+                                </div>
+                                <div>
+                                    <dt>策略扣成本後 CAGR</dt>
+                                    <dd class="rk-loss">-7.49%</dd>
+                                </div>
+                            </dl>
+                            <dl class="metrics comparison">
+                                <div>
+                                    <dt>連續持有 0050 扣成本後</dt>
+                                    <dd>6.6991 倍</dd>
+                                </div>
+                                <div>
+                                    <dt>連續持有 0050 未扣成本</dt>
+                                    <dd>6.7427 倍</dd>
+                                </div>
+                                <div>
+                                    <dt>0050 扣成本後 CAGR</dt>
+                                    <dd class="rk-gain">+13.52%</dd>
+                                </div>
+                            </dl>
+                            <details class="rk-details">
+                                <summary>回撤與配對診斷</summary>
+                                <dl class="metrics">
+                                    <div>
+                                        <dt>完整每日最大回撤</dt>
+                                        <dd>未知</dd>
+                                    </div>
+                                    <div>
+                                        <dt>沿用前值標記的參考回撤</dt>
+                                        <dd class="rk-loss">-95.43%</dd>
+                                    </div>
+                                </dl>
+                                <p>
+                                    若有停牌／無報價資訊日沿用前值（carry），終值仍可能可計，但完整每日實際回撤仍未知。參考回撤不能當作完整最大回撤。
+                                </p>
+                                <p>配對年數 15；勝過同期年度 0050 4 年。</p>
+                                <p>
+                                    單側 sign-flip p
+                                    值：0.9461；年化幾何相對超額的 bootstrap 95%
+                                    區間：-34.05% 至 +2.06%。
+                                </p>
+                                <p>
+                                    這些配對診斷比較每年同日期進出，不是上方連續長抱基準。對稱／可交換與年度獨立同分布假設、已看過的歷史及選股範圍限制仍成立，不能據此認證無偏顯著勝出。
+                                </p>
+                            </details>
+                        </article>
+                        <article class="rk-card window-card">
+                            <h3>2012-2025</h3>
+                            <p class="rk-foot">
+                                2012-01-02 → 2026-01-02 · 完整持有期模型可計
+                            </p>
+                            <dl class="metrics">
+                                <div>
+                                    <dt>策略扣成本後</dt>
+                                    <dd>0.5305 倍</dd>
+                                </div>
+                                <div>
+                                    <dt>策略未扣成本</dt>
+                                    <dd>0.5923 倍</dd>
+                                </div>
+                                <div>
+                                    <dt>策略扣成本後 CAGR</dt>
+                                    <dd class="rk-loss">-4.43%</dd>
+                                </div>
+                            </dl>
+                            <dl class="metrics comparison">
+                                <div>
+                                    <dt>連續持有 0050 扣成本後</dt>
+                                    <dd>8.0447 倍</dd>
+                                </div>
+                                <div>
+                                    <dt>連續持有 0050 未扣成本</dt>
+                                    <dd>8.0967 倍</dd>
+                                </div>
+                                <div>
+                                    <dt>0050 扣成本後 CAGR</dt>
+                                    <dd class="rk-gain">+16.06%</dd>
+                                </div>
+                            </dl>
+                            <details class="rk-details">
+                                <summary>回撤與配對診斷</summary>
+                                <dl class="metrics">
+                                    <div>
+                                        <dt>完整每日最大回撤</dt>
+                                        <dd>未知</dd>
+                                    </div>
+                                    <div>
+                                        <dt>沿用前值標記的參考回撤</dt>
+                                        <dd class="rk-loss">-93.16%</dd>
+                                    </div>
+                                </dl>
+                                <p>
+                                    若有停牌／無報價資訊日沿用前值（carry），終值仍可能可計，但完整每日實際回撤仍未知。參考回撤不能當作完整最大回撤。
+                                </p>
+                                <p>配對年數 14；勝過同期年度 0050 4 年。</p>
+                                <p>
+                                    單側 sign-flip p
+                                    值：0.9238；年化幾何相對超額的 bootstrap 95%
+                                    區間：-34.37% 至 +4.58%。
+                                </p>
+                                <p>
+                                    這些配對診斷比較每年同日期進出，不是上方連續長抱基準。對稱／可交換與年度獨立同分布假設、已看過的歷史及選股範圍限制仍成立，不能據此認證無偏顯著勝出。
+                                </p>
+                            </details>
+                        </article>
+                        <article class="rk-card window-card">
+                            <h3>2013-2025</h3>
+                            <p class="rk-foot">
+                                2013-01-02 → 2026-01-02 · 完整持有期模型可計
+                            </p>
+                            <dl class="metrics">
+                                <div>
+                                    <dt>策略扣成本後</dt>
+                                    <dd>0.6706 倍</dd>
+                                </div>
+                                <div>
+                                    <dt>策略未扣成本</dt>
+                                    <dd>0.7428 倍</dd>
+                                </div>
+                                <div>
+                                    <dt>策略扣成本後 CAGR</dt>
+                                    <dd class="rk-loss">-3.03%</dd>
+                                </div>
+                            </dl>
+                            <dl class="metrics comparison">
+                                <div>
+                                    <dt>連續持有 0050 扣成本後</dt>
+                                    <dd>7.1094 倍</dd>
+                                </div>
+                                <div>
+                                    <dt>連續持有 0050 未扣成本</dt>
+                                    <dd>7.1549 倍</dd>
+                                </div>
+                                <div>
+                                    <dt>0050 扣成本後 CAGR</dt>
+                                    <dd class="rk-gain">+16.29%</dd>
+                                </div>
+                            </dl>
+                            <details class="rk-details">
+                                <summary>回撤與配對診斷</summary>
+                                <dl class="metrics">
+                                    <div>
+                                        <dt>完整每日最大回撤</dt>
+                                        <dd>未知</dd>
+                                    </div>
+                                    <div>
+                                        <dt>沿用前值標記的參考回撤</dt>
+                                        <dd class="rk-loss">-92.35%</dd>
+                                    </div>
+                                </dl>
+                                <p>
+                                    若有停牌／無報價資訊日沿用前值（carry），終值仍可能可計，但完整每日實際回撤仍未知。參考回撤不能當作完整最大回撤。
+                                </p>
+                                <p>配對年數 13；勝過同期年度 0050 4 年。</p>
+                                <p>
+                                    單側 sign-flip p
+                                    值：0.8943；年化幾何相對超額的 bootstrap 95%
+                                    區間：-34.53% 至 +7.19%。
+                                </p>
+                                <p>
+                                    這些配對診斷比較每年同日期進出，不是上方連續長抱基準。對稱／可交換與年度獨立同分布假設、已看過的歷史及選股範圍限制仍成立，不能據此認證無偏顯著勝出。
+                                </p>
+                            </details>
+                        </article>
+                    </div>
+                </section>
+                <section class="rk-section">
+                    <h2>逐年比較 · 認股權放棄</h2>
+                    <table class="rk-table annual">
+                        <caption>
+                            每列獨立持有期；v1 原值與本次輸入版本分開保留
+                        </caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">持有年／代碼</th>
+                                <th scope="col">買入 → 退出／估值</th>
+                                <th scope="col">前一年排名報酬</th>
+                                <th scope="col">策略扣成本後</th>
+                                <th scope="col">策略未扣成本</th>
+                                <th scope="col">同期 0050 扣成本後</th>
+                                <th scope="col">v1 原扣成本後</th>
+                                <th scope="col">v1 原未扣成本</th>
+                                <th scope="col">沿用前值標記</th>
+                                <th scope="col">狀態／缺口</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th scope="row">2011<span>3406</span></th>
+                                <td data-label="買入 → 退出／估值">
+                                    2011-01-03 → 2012-01-02
+                                </td>
+                                <td data-label="前一年排名報酬">+595.65%</td>
+                                <td data-label="策略扣成本後">-41.36%</td>
+                                <td data-label="策略未扣成本">-40.89%</td>
+                                <td data-label="同期 0050 扣成本後">-17.21%</td>
+                                <td data-label="v1 原扣成本後">未知</td>
+                                <td data-label="v1 原未扣成本">未知</td>
+                                <td data-label="沿用前值標記">0 日</td>
+                                <td data-label="狀態／缺口">模型可計</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2012<span>6276</span></th>
+                                <td data-label="買入 → 退出／估值">
+                                    2012-01-02 → 2013-01-02
+                                </td>
+                                <td data-label="前一年排名報酬">+202.84%</td>
+                                <td data-label="策略扣成本後">-20.88%</td>
+                                <td data-label="策略未扣成本">-20.26%</td>
+                                <td data-label="同期 0050 扣成本後">+12.50%</td>
+                                <td data-label="v1 原扣成本後">未知</td>
+                                <td data-label="v1 原未扣成本">未知</td>
+                                <td data-label="沿用前值標記">9 日</td>
+                                <td data-label="狀態／缺口">模型可計</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2013<span>1781</span></th>
+                                <td data-label="買入 → 退出／估值">
+                                    2013-01-02 → 2014-01-02
+                                </td>
+                                <td data-label="前一年排名報酬">+253.60%</td>
+                                <td data-label="策略扣成本後">-14.32%</td>
+                                <td data-label="策略未扣成本">-13.65%</td>
+                                <td data-label="同期 0050 扣成本後">+10.60%</td>
+                                <td data-label="v1 原扣成本後">-14.32%</td>
+                                <td data-label="v1 原未扣成本">-13.65%</td>
+                                <td data-label="沿用前值標記">0 日</td>
+                                <td data-label="狀態／缺口">模型可計</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2014<span>3229</span></th>
+                                <td data-label="買入 → 退出／估值">
+                                    2014-01-02 → 2015-01-05
+                                </td>
+                                <td data-label="前一年排名報酬">+433.89%</td>
+                                <td data-label="策略扣成本後">-7.50%</td>
+                                <td data-label="策略未扣成本">-6.77%</td>
+                                <td data-label="同期 0050 扣成本後">+15.22%</td>
+                                <td data-label="v1 原扣成本後">-7.50%</td>
+                                <td data-label="v1 原未扣成本">-6.77%</td>
+                                <td data-label="沿用前值標記">0 日</td>
+                                <td data-label="狀態／缺口">模型可計</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2015<span>3520</span></th>
+                                <td data-label="買入 → 退出／估值">
+                                    2015-01-05 → 2016-01-04
+                                </td>
+                                <td data-label="前一年排名報酬">+379.37%</td>
+                                <td data-label="策略扣成本後">-23.48%</td>
+                                <td data-label="策略未扣成本">-22.88%</td>
+                                <td data-label="同期 0050 扣成本後">-6.15%</td>
+                                <td data-label="v1 原扣成本後">-23.48%</td>
+                                <td data-label="v1 原未扣成本">-22.88%</td>
+                                <td data-label="沿用前值標記">0 日</td>
+                                <td data-label="狀態／缺口">模型可計</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2016<span>3205</span></th>
+                                <td data-label="買入 → 退出／估值">
+                                    2016-01-04 → 2017-01-03
+                                </td>
+                                <td data-label="前一年排名報酬">+952.08%</td>
+                                <td data-label="策略扣成本後">-55.29%</td>
+                                <td data-label="策略未扣成本">-54.94%</td>
+                                <td data-label="同期 0050 扣成本後">+18.68%</td>
+                                <td data-label="v1 原扣成本後">未知</td>
+                                <td data-label="v1 原未扣成本">未知</td>
+                                <td data-label="沿用前值標記">0 日</td>
+                                <td data-label="狀態／缺口">模型可計</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2017<span>3522</span></th>
+                                <td data-label="買入 → 退出／估值">
+                                    2017-01-03 → 2018-01-02
+                                </td>
+                                <td data-label="前一年排名報酬">+361.03%</td>
+                                <td data-label="策略扣成本後">-17.07%</td>
+                                <td data-label="策略未扣成本">-16.41%</td>
+                                <td data-label="同期 0050 扣成本後">+17.60%</td>
+                                <td data-label="v1 原扣成本後">-17.07%</td>
+                                <td data-label="v1 原未扣成本">-16.41%</td>
+                                <td data-label="沿用前值標記">0 日</td>
+                                <td data-label="狀態／缺口">模型可計</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2018<span>3162</span></th>
+                                <td data-label="買入 → 退出／估值">
+                                    2018-01-02 → 2019-01-02
+                                </td>
+                                <td data-label="前一年排名報酬">+542.97%</td>
+                                <td data-label="策略扣成本後">-42.83%</td>
+                                <td data-label="策略未扣成本">-42.37%</td>
+                                <td data-label="同期 0050 扣成本後">-5.07%</td>
+                                <td data-label="v1 原扣成本後">未知</td>
+                                <td data-label="v1 原未扣成本">未知</td>
+                                <td data-label="沿用前值標記">6 日</td>
+                                <td data-label="狀態／缺口">模型可計</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2019<span>2388</span></th>
+                                <td data-label="買入 → 退出／估值">
+                                    2019-01-02 → 2020-01-02
+                                </td>
+                                <td data-label="前一年排名報酬">+148.11%</td>
+                                <td data-label="策略扣成本後">+36.17%</td>
+                                <td data-label="策略未扣成本">+37.24%</td>
+                                <td data-label="同期 0050 扣成本後">+32.25%</td>
+                                <td data-label="v1 原扣成本後">+36.17%</td>
+                                <td data-label="v1 原未扣成本">+37.24%</td>
+                                <td data-label="沿用前值標記">0 日</td>
+                                <td data-label="狀態／缺口">模型可計</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2020<span>6538</span></th>
+                                <td data-label="買入 → 退出／估值">
+                                    2020-01-02 → 2021-01-04
+                                </td>
+                                <td data-label="前一年排名報酬">+590.32%</td>
+                                <td data-label="策略扣成本後">+3.11%</td>
+                                <td data-label="策略未扣成本">+3.92%</td>
+                                <td data-label="同期 0050 扣成本後">+30.12%</td>
+                                <td data-label="v1 原扣成本後">未知</td>
+                                <td data-label="v1 原未扣成本">未知</td>
+                                <td data-label="沿用前值標記">0 日</td>
+                                <td data-label="狀態／缺口">模型可計</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2021<span>3228</span></th>
+                                <td data-label="買入 → 退出／估值">
+                                    2021-01-04 → 2022-01-03
+                                </td>
+                                <td data-label="前一年排名報酬">+498.59%</td>
+                                <td data-label="策略扣成本後">+120.28%</td>
+                                <td data-label="策略未扣成本">+122.02%</td>
+                                <td data-label="同期 0050 扣成本後">+21.72%</td>
+                                <td data-label="v1 原扣成本後">+120.28%</td>
+                                <td data-label="v1 原未扣成本">+122.02%</td>
+                                <td data-label="沿用前值標記">0 日</td>
+                                <td data-label="狀態／缺口">模型可計</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2022<span>3141</span></th>
+                                <td data-label="買入 → 退出／估值">
+                                    2022-01-03 → 2023-01-03
+                                </td>
+                                <td data-label="前一年排名報酬">+516.17%</td>
+                                <td data-label="策略扣成本後">-69.43%</td>
+                                <td data-label="策略未扣成本">-69.18%</td>
+                                <td data-label="同期 0050 扣成本後">-22.50%</td>
+                                <td data-label="v1 原扣成本後">-69.43%</td>
+                                <td data-label="v1 原未扣成本">-69.18%</td>
+                                <td data-label="沿用前值標記">0 日</td>
+                                <td data-label="狀態／缺口">模型可計</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2023<span>8996</span></th>
+                                <td data-label="買入 → 退出／估值">
+                                    2023-01-03 → 2024-01-02
+                                </td>
+                                <td data-label="前一年排名報酬">+199.77%</td>
+                                <td data-label="策略扣成本後">+20.65%</td>
+                                <td data-label="策略未扣成本">+21.60%</td>
+                                <td data-label="同期 0050 扣成本後">+27.48%</td>
+                                <td data-label="v1 原扣成本後">+20.65%</td>
+                                <td data-label="v1 原未扣成本">+21.60%</td>
+                                <td data-label="沿用前值標記">0 日</td>
+                                <td data-label="狀態／缺口">模型可計</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2024<span>1519</span></th>
+                                <td data-label="買入 → 退出／估值">
+                                    2024-01-02 → 2025-01-02
+                                </td>
+                                <td data-label="前一年排名報酬">+584.54%</td>
+                                <td data-label="策略扣成本後">+89.90%</td>
+                                <td data-label="策略未扣成本">+91.40%</td>
+                                <td data-label="同期 0050 扣成本後">+47.56%</td>
+                                <td data-label="v1 原扣成本後">未知</td>
+                                <td data-label="v1 原未扣成本">未知</td>
+                                <td data-label="沿用前值標記">0 日</td>
+                                <td data-label="狀態／缺口">模型可計</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2025<span>5314</span></th>
+                                <td data-label="買入 → 退出／估值">
+                                    2025-01-02 → 2026-01-02
+                                </td>
+                                <td data-label="前一年排名報酬">+924.38%</td>
+                                <td data-label="策略扣成本後">+140.79%</td>
+                                <td data-label="策略未扣成本">+142.69%</td>
+                                <td data-label="同期 0050 扣成本後">+36.95%</td>
+                                <td data-label="v1 原扣成本後">未知</td>
+                                <td data-label="v1 原未扣成本">未知</td>
+                                <td data-label="沿用前值標記">10 日</td>
+                                <td data-label="狀態／缺口">模型可計</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+                <section class="rk-section">
+                    <h2>另列 YTD · 認股權放棄</h2>
+                    <table class="rk-table annual">
+                        <caption>
+                            未完成年度：截止日收盤假設清算，不年化、不併入完整年度
+                        </caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">持有年／代碼</th>
+                                <th scope="col">買入 → 退出／估值</th>
+                                <th scope="col">前一年排名報酬</th>
+                                <th scope="col">策略扣成本後</th>
+                                <th scope="col">策略未扣成本</th>
+                                <th scope="col">同期 0050 扣成本後</th>
+                                <th scope="col">v1 原扣成本後</th>
+                                <th scope="col">v1 原未扣成本</th>
+                                <th scope="col">沿用前值標記</th>
+                                <th scope="col">狀態／缺口</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th scope="row">2026 YTD<span>5475</span></th>
+                                <td data-label="買入 → 退出／估值">
+                                    2026-01-02 → 2026-10-12
+                                </td>
+                                <td data-label="前一年排名報酬">+686.07%</td>
+                                <td data-label="策略扣成本後">+115.06%</td>
+                                <td data-label="策略未扣成本">+116.75%</td>
+                                <td data-label="同期 0050 扣成本後">+76.35%</td>
+                                <td data-label="v1 原扣成本後">+115.06%</td>
+                                <td data-label="v1 原未扣成本">+116.75%</td>
+                                <td data-label="沿用前值標記">0 日</td>
+                                <td data-label="狀態／缺口">模型可計</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+            </div>
+            <div data-scenario="realize">
+                <section class="rk-section">
+                    <h2>認股權價值實現 · 完整期間</h2>
+                    <div class="window-grid">
+                        <article class="rk-card window-card">
+                            <h3>2011-2025</h3>
+                            <p class="rk-foot">
+                                2011-01-03 → 2026-01-02 · 完整持有期模型可計
+                            </p>
+                            <dl class="metrics">
+                                <div>
+                                    <dt>策略扣成本後</dt>
+                                    <dd>0.3177 倍</dd>
+                                </div>
+                                <div>
+                                    <dt>策略未扣成本</dt>
+                                    <dd>0.3575 倍</dd>
+                                </div>
+                                <div>
+                                    <dt>策略扣成本後 CAGR</dt>
+                                    <dd class="rk-loss">-7.36%</dd>
+                                </div>
+                            </dl>
+                            <dl class="metrics comparison">
+                                <div>
+                                    <dt>連續持有 0050 扣成本後</dt>
+                                    <dd>6.6991 倍</dd>
+                                </div>
+                                <div>
+                                    <dt>連續持有 0050 未扣成本</dt>
+                                    <dd>6.7427 倍</dd>
+                                </div>
+                                <div>
+                                    <dt>0050 扣成本後 CAGR</dt>
+                                    <dd class="rk-gain">+13.52%</dd>
+                                </div>
+                            </dl>
+                            <details class="rk-details">
+                                <summary>回撤與配對診斷</summary>
+                                <dl class="metrics">
+                                    <div>
+                                        <dt>完整每日最大回撤</dt>
+                                        <dd>未知</dd>
+                                    </div>
+                                    <div>
+                                        <dt>沿用前值標記的參考回撤</dt>
+                                        <dd class="rk-loss">-95.33%</dd>
+                                    </div>
+                                </dl>
+                                <p>
+                                    若有停牌／無報價資訊日沿用前值（carry），終值仍可能可計，但完整每日實際回撤仍未知。參考回撤不能當作完整最大回撤。
+                                </p>
+                                <p>配對年數 15；勝過同期年度 0050 4 年。</p>
+                                <p>
+                                    單側 sign-flip p
+                                    值：0.9455；年化幾何相對超額的 bootstrap 95%
+                                    區間：-33.90% 至 +2.12%。
+                                </p>
+                                <p>
+                                    這些配對診斷比較每年同日期進出，不是上方連續長抱基準。對稱／可交換與年度獨立同分布假設、已看過的歷史及選股範圍限制仍成立，不能據此認證無偏顯著勝出。
+                                </p>
+                            </details>
+                        </article>
+                        <article class="rk-card window-card">
+                            <h3>2012-2025</h3>
+                            <p class="rk-foot">
+                                2012-01-02 → 2026-01-02 · 完整持有期模型可計
+                            </p>
+                            <dl class="metrics">
+                                <div>
+                                    <dt>策略扣成本後</dt>
+                                    <dd>0.5354 倍</dd>
+                                </div>
+                                <div>
+                                    <dt>策略未扣成本</dt>
+                                    <dd>0.5977 倍</dd>
+                                </div>
+                                <div>
+                                    <dt>策略扣成本後 CAGR</dt>
+                                    <dd class="rk-loss">-4.36%</dd>
+                                </div>
+                            </dl>
+                            <dl class="metrics comparison">
+                                <div>
+                                    <dt>連續持有 0050 扣成本後</dt>
+                                    <dd>8.0447 倍</dd>
+                                </div>
+                                <div>
+                                    <dt>連續持有 0050 未扣成本</dt>
+                                    <dd>8.0967 倍</dd>
+                                </div>
+                                <div>
+                                    <dt>0050 扣成本後 CAGR</dt>
+                                    <dd class="rk-gain">+16.06%</dd>
+                                </div>
+                            </dl>
+                            <details class="rk-details">
+                                <summary>回撤與配對診斷</summary>
+                                <dl class="metrics">
+                                    <div>
+                                        <dt>完整每日最大回撤</dt>
+                                        <dd>未知</dd>
+                                    </div>
+                                    <div>
+                                        <dt>沿用前值標記的參考回撤</dt>
+                                        <dd class="rk-loss">-93.10%</dd>
+                                    </div>
+                                </dl>
+                                <p>
+                                    若有停牌／無報價資訊日沿用前值（carry），終值仍可能可計，但完整每日實際回撤仍未知。參考回撤不能當作完整最大回撤。
+                                </p>
+                                <p>配對年數 14；勝過同期年度 0050 4 年。</p>
+                                <p>
+                                    單側 sign-flip p
+                                    值：0.9237；年化幾何相對超額的 bootstrap 95%
+                                    區間：-34.27% 至 +4.61%。
+                                </p>
+                                <p>
+                                    這些配對診斷比較每年同日期進出，不是上方連續長抱基準。對稱／可交換與年度獨立同分布假設、已看過的歷史及選股範圍限制仍成立，不能據此認證無偏顯著勝出。
+                                </p>
+                            </details>
+                        </article>
+                        <article class="rk-card window-card">
+                            <h3>2013-2025</h3>
+                            <p class="rk-foot">
+                                2013-01-02 → 2026-01-02 · 完整持有期模型可計
+                            </p>
+                            <dl class="metrics">
+                                <div>
+                                    <dt>策略扣成本後</dt>
+                                    <dd>0.6767 倍</dd>
+                                </div>
+                                <div>
+                                    <dt>策略未扣成本</dt>
+                                    <dd>0.7496 倍</dd>
+                                </div>
+                                <div>
+                                    <dt>策略扣成本後 CAGR</dt>
+                                    <dd class="rk-loss">-2.96%</dd>
+                                </div>
+                            </dl>
+                            <dl class="metrics comparison">
+                                <div>
+                                    <dt>連續持有 0050 扣成本後</dt>
+                                    <dd>7.1094 倍</dd>
+                                </div>
+                                <div>
+                                    <dt>連續持有 0050 未扣成本</dt>
+                                    <dd>7.1549 倍</dd>
+                                </div>
+                                <div>
+                                    <dt>0050 扣成本後 CAGR</dt>
+                                    <dd class="rk-gain">+16.29%</dd>
+                                </div>
+                            </dl>
+                            <details class="rk-details">
+                                <summary>回撤與配對診斷</summary>
+                                <dl class="metrics">
+                                    <div>
+                                        <dt>完整每日最大回撤</dt>
+                                        <dd>未知</dd>
+                                    </div>
+                                    <div>
+                                        <dt>沿用前值標記的參考回撤</dt>
+                                        <dd class="rk-loss">-92.28%</dd>
+                                    </div>
+                                </dl>
+                                <p>
+                                    若有停牌／無報價資訊日沿用前值（carry），終值仍可能可計，但完整每日實際回撤仍未知。參考回撤不能當作完整最大回撤。
+                                </p>
+                                <p>配對年數 13；勝過同期年度 0050 4 年。</p>
+                                <p>
+                                    單側 sign-flip p
+                                    值：0.8942；年化幾何相對超額的 bootstrap 95%
+                                    區間：-34.46% 至 +7.22%。
+                                </p>
+                                <p>
+                                    這些配對診斷比較每年同日期進出，不是上方連續長抱基準。對稱／可交換與年度獨立同分布假設、已看過的歷史及選股範圍限制仍成立，不能據此認證無偏顯著勝出。
+                                </p>
+                            </details>
+                        </article>
+                    </div>
+                </section>
+                <section class="rk-section">
+                    <h2>逐年比較 · 認股權價值實現</h2>
+                    <table class="rk-table annual">
+                        <caption>
+                            每列獨立持有期；v1 原值與本次輸入版本分開保留
+                        </caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">持有年／代碼</th>
+                                <th scope="col">買入 → 退出／估值</th>
+                                <th scope="col">前一年排名報酬</th>
+                                <th scope="col">策略扣成本後</th>
+                                <th scope="col">策略未扣成本</th>
+                                <th scope="col">同期 0050 扣成本後</th>
+                                <th scope="col">v1 原扣成本後</th>
+                                <th scope="col">v1 原未扣成本</th>
+                                <th scope="col">沿用前值標記</th>
+                                <th scope="col">狀態／缺口</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th scope="row">2011<span>3406</span></th>
+                                <td data-label="買入 → 退出／估值">
+                                    2011-01-03 → 2012-01-02
+                                </td>
+                                <td data-label="前一年排名報酬">+595.65%</td>
+                                <td data-label="策略扣成本後">-40.66%</td>
+                                <td data-label="策略未扣成本">-40.19%</td>
+                                <td data-label="同期 0050 扣成本後">-17.21%</td>
+                                <td data-label="v1 原扣成本後">未知</td>
+                                <td data-label="v1 原未扣成本">未知</td>
+                                <td data-label="沿用前值標記">0 日</td>
+                                <td data-label="狀態／缺口">模型可計</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2012<span>6276</span></th>
+                                <td data-label="買入 → 退出／估值">
+                                    2012-01-02 → 2013-01-02
+                                </td>
+                                <td data-label="前一年排名報酬">+202.84%</td>
+                                <td data-label="策略扣成本後">-20.88%</td>
+                                <td data-label="策略未扣成本">-20.26%</td>
+                                <td data-label="同期 0050 扣成本後">+12.50%</td>
+                                <td data-label="v1 原扣成本後">未知</td>
+                                <td data-label="v1 原未扣成本">未知</td>
+                                <td data-label="沿用前值標記">9 日</td>
+                                <td data-label="狀態／缺口">模型可計</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2013<span>1781</span></th>
+                                <td data-label="買入 → 退出／估值">
+                                    2013-01-02 → 2014-01-02
+                                </td>
+                                <td data-label="前一年排名報酬">+253.60%</td>
+                                <td data-label="策略扣成本後">-14.32%</td>
+                                <td data-label="策略未扣成本">-13.65%</td>
+                                <td data-label="同期 0050 扣成本後">+10.60%</td>
+                                <td data-label="v1 原扣成本後">-14.32%</td>
+                                <td data-label="v1 原未扣成本">-13.65%</td>
+                                <td data-label="沿用前值標記">0 日</td>
+                                <td data-label="狀態／缺口">模型可計</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2014<span>3229</span></th>
+                                <td data-label="買入 → 退出／估值">
+                                    2014-01-02 → 2015-01-05
+                                </td>
+                                <td data-label="前一年排名報酬">+433.89%</td>
+                                <td data-label="策略扣成本後">-7.50%</td>
+                                <td data-label="策略未扣成本">-6.77%</td>
+                                <td data-label="同期 0050 扣成本後">+15.22%</td>
+                                <td data-label="v1 原扣成本後">-7.50%</td>
+                                <td data-label="v1 原未扣成本">-6.77%</td>
+                                <td data-label="沿用前值標記">0 日</td>
+                                <td data-label="狀態／缺口">模型可計</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2015<span>3520</span></th>
+                                <td data-label="買入 → 退出／估值">
+                                    2015-01-05 → 2016-01-04
+                                </td>
+                                <td data-label="前一年排名報酬">+379.37%</td>
+                                <td data-label="策略扣成本後">-23.48%</td>
+                                <td data-label="策略未扣成本">-22.88%</td>
+                                <td data-label="同期 0050 扣成本後">-6.15%</td>
+                                <td data-label="v1 原扣成本後">-23.48%</td>
+                                <td data-label="v1 原未扣成本">-22.88%</td>
+                                <td data-label="沿用前值標記">0 日</td>
+                                <td data-label="狀態／缺口">模型可計</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2016<span>3205</span></th>
+                                <td data-label="買入 → 退出／估值">
+                                    2016-01-04 → 2017-01-03
+                                </td>
+                                <td data-label="前一年排名報酬">+952.08%</td>
+                                <td data-label="策略扣成本後">-54.88%</td>
+                                <td data-label="策略未扣成本">-54.53%</td>
+                                <td data-label="同期 0050 扣成本後">+18.68%</td>
+                                <td data-label="v1 原扣成本後">未知</td>
+                                <td data-label="v1 原未扣成本">未知</td>
+                                <td data-label="沿用前值標記">0 日</td>
+                                <td data-label="狀態／缺口">模型可計</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2017<span>3522</span></th>
+                                <td data-label="買入 → 退出／估值">
+                                    2017-01-03 → 2018-01-02
+                                </td>
+                                <td data-label="前一年排名報酬">+361.03%</td>
+                                <td data-label="策略扣成本後">-17.07%</td>
+                                <td data-label="策略未扣成本">-16.41%</td>
+                                <td data-label="同期 0050 扣成本後">+17.60%</td>
+                                <td data-label="v1 原扣成本後">-17.07%</td>
+                                <td data-label="v1 原未扣成本">-16.41%</td>
+                                <td data-label="沿用前值標記">0 日</td>
+                                <td data-label="狀態／缺口">模型可計</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2018<span>3162</span></th>
+                                <td data-label="買入 → 退出／估值">
+                                    2018-01-02 → 2019-01-02
+                                </td>
+                                <td data-label="前一年排名報酬">+542.97%</td>
+                                <td data-label="策略扣成本後">-42.83%</td>
+                                <td data-label="策略未扣成本">-42.37%</td>
+                                <td data-label="同期 0050 扣成本後">-5.07%</td>
+                                <td data-label="v1 原扣成本後">未知</td>
+                                <td data-label="v1 原未扣成本">未知</td>
+                                <td data-label="沿用前值標記">6 日</td>
+                                <td data-label="狀態／缺口">模型可計</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2019<span>2388</span></th>
+                                <td data-label="買入 → 退出／估值">
+                                    2019-01-02 → 2020-01-02
+                                </td>
+                                <td data-label="前一年排名報酬">+148.11%</td>
+                                <td data-label="策略扣成本後">+36.17%</td>
+                                <td data-label="策略未扣成本">+37.24%</td>
+                                <td data-label="同期 0050 扣成本後">+32.25%</td>
+                                <td data-label="v1 原扣成本後">+36.17%</td>
+                                <td data-label="v1 原未扣成本">+37.24%</td>
+                                <td data-label="沿用前值標記">0 日</td>
+                                <td data-label="狀態／缺口">模型可計</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2020<span>6538</span></th>
+                                <td data-label="買入 → 退出／估值">
+                                    2020-01-02 → 2021-01-04
+                                </td>
+                                <td data-label="前一年排名報酬">+590.32%</td>
+                                <td data-label="策略扣成本後">+3.11%</td>
+                                <td data-label="策略未扣成本">+3.92%</td>
+                                <td data-label="同期 0050 扣成本後">+30.12%</td>
+                                <td data-label="v1 原扣成本後">未知</td>
+                                <td data-label="v1 原未扣成本">未知</td>
+                                <td data-label="沿用前值標記">0 日</td>
+                                <td data-label="狀態／缺口">模型可計</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2021<span>3228</span></th>
+                                <td data-label="買入 → 退出／估值">
+                                    2021-01-04 → 2022-01-03
+                                </td>
+                                <td data-label="前一年排名報酬">+498.59%</td>
+                                <td data-label="策略扣成本後">+120.28%</td>
+                                <td data-label="策略未扣成本">+122.02%</td>
+                                <td data-label="同期 0050 扣成本後">+21.72%</td>
+                                <td data-label="v1 原扣成本後">+120.28%</td>
+                                <td data-label="v1 原未扣成本">+122.02%</td>
+                                <td data-label="沿用前值標記">0 日</td>
+                                <td data-label="狀態／缺口">模型可計</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2022<span>3141</span></th>
+                                <td data-label="買入 → 退出／估值">
+                                    2022-01-03 → 2023-01-03
+                                </td>
+                                <td data-label="前一年排名報酬">+516.17%</td>
+                                <td data-label="策略扣成本後">-69.43%</td>
+                                <td data-label="策略未扣成本">-69.18%</td>
+                                <td data-label="同期 0050 扣成本後">-22.50%</td>
+                                <td data-label="v1 原扣成本後">-69.43%</td>
+                                <td data-label="v1 原未扣成本">-69.18%</td>
+                                <td data-label="沿用前值標記">0 日</td>
+                                <td data-label="狀態／缺口">模型可計</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2023<span>8996</span></th>
+                                <td data-label="買入 → 退出／估值">
+                                    2023-01-03 → 2024-01-02
+                                </td>
+                                <td data-label="前一年排名報酬">+199.77%</td>
+                                <td data-label="策略扣成本後">+20.65%</td>
+                                <td data-label="策略未扣成本">+21.60%</td>
+                                <td data-label="同期 0050 扣成本後">+27.48%</td>
+                                <td data-label="v1 原扣成本後">+20.65%</td>
+                                <td data-label="v1 原未扣成本">+21.60%</td>
+                                <td data-label="沿用前值標記">0 日</td>
+                                <td data-label="狀態／缺口">模型可計</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2024<span>1519</span></th>
+                                <td data-label="買入 → 退出／估值">
+                                    2024-01-02 → 2025-01-02
+                                </td>
+                                <td data-label="前一年排名報酬">+584.54%</td>
+                                <td data-label="策略扣成本後">+89.90%</td>
+                                <td data-label="策略未扣成本">+91.40%</td>
+                                <td data-label="同期 0050 扣成本後">+47.56%</td>
+                                <td data-label="v1 原扣成本後">未知</td>
+                                <td data-label="v1 原未扣成本">未知</td>
+                                <td data-label="沿用前值標記">0 日</td>
+                                <td data-label="狀態／缺口">模型可計</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2025<span>5314</span></th>
+                                <td data-label="買入 → 退出／估值">
+                                    2025-01-02 → 2026-01-02
+                                </td>
+                                <td data-label="前一年排名報酬">+924.38%</td>
+                                <td data-label="策略扣成本後">+140.79%</td>
+                                <td data-label="策略未扣成本">+142.69%</td>
+                                <td data-label="同期 0050 扣成本後">+36.95%</td>
+                                <td data-label="v1 原扣成本後">未知</td>
+                                <td data-label="v1 原未扣成本">未知</td>
+                                <td data-label="沿用前值標記">10 日</td>
+                                <td data-label="狀態／缺口">模型可計</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+                <section class="rk-section">
+                    <h2>另列 YTD · 認股權價值實現</h2>
+                    <table class="rk-table annual">
+                        <caption>
+                            未完成年度：截止日收盤假設清算，不年化、不併入完整年度
+                        </caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">持有年／代碼</th>
+                                <th scope="col">買入 → 退出／估值</th>
+                                <th scope="col">前一年排名報酬</th>
+                                <th scope="col">策略扣成本後</th>
+                                <th scope="col">策略未扣成本</th>
+                                <th scope="col">同期 0050 扣成本後</th>
+                                <th scope="col">v1 原扣成本後</th>
+                                <th scope="col">v1 原未扣成本</th>
+                                <th scope="col">沿用前值標記</th>
+                                <th scope="col">狀態／缺口</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th scope="row">2026 YTD<span>5475</span></th>
+                                <td data-label="買入 → 退出／估值">
+                                    2026-01-02 → 2026-10-12
+                                </td>
+                                <td data-label="前一年排名報酬">+686.07%</td>
+                                <td data-label="策略扣成本後">+115.06%</td>
+                                <td data-label="策略未扣成本">+116.75%</td>
+                                <td data-label="同期 0050 扣成本後">+76.35%</td>
+                                <td data-label="v1 原扣成本後">+115.06%</td>
+                                <td data-label="v1 原未扣成本">+116.75%</td>
+                                <td data-label="沿用前值標記">0 日</td>
+                                <td data-label="狀態／缺口">模型可計</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+            </div>
+            <section id="details" class="rk-section">
+                <h2>理解結果的邊界</h2>
+                <details class="rk-details">
+                    <summary>固定選股與 v1 比較</summary>
+                    <p>
+                        選股範圍：fixed-v1-known-return-leaders。只補全 v1
+                        報酬可計候選中的原領先股，沒有重排全市場；未知候選仍可能更好。
+                    </p>
+                    <p>
+                        表內 v1 是原報告的四捨五入值；v2
+                        使用本次資料版本。兩者不是同一批輸入的精確相等測試。原來未知的值仍以「未知」保留，不補成零。
+                    </p>
+                    <p>
+                        <a href="v1.html">開啟未改寫的 v1 閱讀版</a>
+                    </p>
+                </details>
+                <details class="rk-details">
+                    <summary>股利、認股權與成本假設</summary>
+                    <p>
+                        現金股利仍為估值，假設除息日收盤立刻再投入分數單位；不代表實際付款日或歷史零股可成交性。認股權價值實現屬模型情境，並非實際行使或外部資金注入。
+                    </p>
+                    <p>
+                        雙邊各收佣金 0.1425%；各邊不利滑價 0.1%；股票賣方稅
+                        0.3%；ETF 賣方稅
+                        0.1%。再投入另收佣金；未充分處理個人稅負、最小佣金及整股資金限制。未扣成本／扣成本後分別對應原資料
+                        gross／net。
+                    </p>
+                </details>
+                <details class="rk-details">
+                    <summary>沿用前值標記與資料缺口</summary>
+                    <p>
+                        沿用前值標記僅支援終值建模；停牌或無報價資訊日不代表能以該價成交。無報價資訊（N）表示缺少開高低收，不據此推論成交筆數一定為零。只要每日路徑不完整，完整每日最大回撤便維持未知，參考回撤另列。
+                    </p>
+                    <ul>
+                        <li>
+                            來源准入稽核未列未解決項目；仍以各期模型狀態為準。
+                        </li>
+                    </ul>
+                </details>
+                <details class="rk-details">
+                    <summary>保存、版本與執行範圍</summary>
+                    <p>
+                        本頁只讀取已存小型 JSON 排版，未觸發市場計算。 定義
+                        annual-holding-completion.v2；執行
+                        annual-completion-v2-20261016； 資料截止
+                        2026-10-12；運算程式版本
+                        <a
+                            href="https://github.com/TaiwanCCyoyo/stock-research/commit/db7c6cc40f7b8f99b3c47867b579068e35aa83f5"
+                            >db7c6cc4</a
+                        >。
+                    </p>
+                    <p>已存執行紀錄：全市場重新排名呼叫 0；載入股票數 17。</p>
+                    <p>
+                        來源價格與權利證據仍在
+                        producer；本頁不攜帶原始資料或私有輸入指紋。
+                        完整重現仍需資料來源與收據所列輸入，不能只靠 HTML。
+                    </p>
+                </details>
+            </section>
+            <footer>
+                <p>
+                    這是已存 v2 結果的呈現，不是一次新評估。保留
+                    <a href="v1.html">v1 原版</a> 供歷史比較。
+                </p>
+                <div class="source-list">
+                    <a
+                        href="https://github.com/TaiwanCCyoyo/stock-research/blob/98476d7558fb977ec6dec7ab8e7c60807411a64f/tasks/20261013-annual-winner-rotation/publications/completion-v2/report.md"
+                        >研究結論</a
+                    ><a
+                        href="https://github.com/TaiwanCCyoyo/stock-research/blob/98476d7558fb977ec6dec7ab8e7c60807411a64f/tasks/20261013-annual-winner-rotation/publications/completion-v2/results.json"
+                        >已存結果</a
+                    ><a
+                        href="https://github.com/TaiwanCCyoyo/stock-research/blob/98476d7558fb977ec6dec7ab8e7c60807411a64f/tasks/20261013-annual-winner-rotation/publications/completion-v2/publication.zip"
+                        >收據與來源稽核 ZIP</a
+                    ><a
+                        href="https://github.com/TaiwanCCyoyo/stock-research/blob/98476d7558fb977ec6dec7ab8e7c60807411a64f/tasks/20261013-annual-winner-rotation/publications/completion-v2/storage-audit.md"
+                        >儲存與保留稽核</a
+                    ><a
+                        href="https://github.com/TaiwanCCyoyo/stock-research/blob/98476d7558fb977ec6dec7ab8e7c60807411a64f/tasks/20261013-annual-winner-rotation/publications/completion-v2/performance.json"
+                        >效能紀錄</a
+                    ><a
+                        href="https://github.com/TaiwanCCyoyo/stock-research/blob/98476d7558fb977ec6dec7ab8e7c60807411a64f/tasks/20261013-annual-winner-rotation/publications/completion-v2/preregistration.md"
+                        >事前規則</a
+                    ><a
+                        href="https://github.com/TaiwanCCyoyo/stock-research/blob/98476d7558fb977ec6dec7ab8e7c60807411a64f/tasks/20261013-annual-winner-rotation/publications/completion-v2/data-contract.md"
+                        >資料契約</a
+                    >
+                </div>
             </footer>
         </main>
+        <script type="application/json" id="report-data">
+            {
+                "compatibility": [
+                    {
+                        "code": "1781",
+                        "common_multipliers_match": true,
+                        "comparison_scope": "same current inputs; original rounded report values remain in rows.v1",
+                        "current_v1": {
+                            "carried_days": 0,
+                            "complete_equity": false,
+                            "gross_return": -0.1364599893574967,
+                            "net_return": -0.14322251456917823,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "current_v2": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": -0.1364599893574967,
+                            "net_return": -0.14322251456917823,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "max_absolute_difference": 0.0,
+                        "year": 2013
+                    },
+                    {
+                        "code": "3229",
+                        "common_multipliers_match": true,
+                        "comparison_scope": "same current inputs; original rounded report values remain in rows.v1",
+                        "current_v1": {
+                            "carried_days": 0,
+                            "complete_equity": false,
+                            "gross_return": -0.0676883780332056,
+                            "net_return": -0.07498651893923103,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "current_v2": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": -0.0676883780332056,
+                            "net_return": -0.07498651893923103,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "max_absolute_difference": 0.0,
+                        "year": 2014
+                    },
+                    {
+                        "code": "3520",
+                        "common_multipliers_match": true,
+                        "comparison_scope": "same current inputs; original rounded report values remain in rows.v1",
+                        "current_v1": {
+                            "carried_days": 0,
+                            "complete_equity": false,
+                            "gross_return": -0.2287581699346405,
+                            "net_return": -0.2347954555544035,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "current_v2": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": -0.2287581699346405,
+                            "net_return": -0.2347954555544035,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "max_absolute_difference": 0.0,
+                        "year": 2015
+                    },
+                    {
+                        "code": "3522",
+                        "common_multipliers_match": true,
+                        "comparison_scope": "same current inputs; original rounded report values remain in rows.v1",
+                        "current_v1": {
+                            "carried_days": 0,
+                            "complete_equity": false,
+                            "gross_return": -0.1641304347826087,
+                            "net_return": -0.17067362669642994,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "current_v2": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": -0.1641304347826087,
+                            "net_return": -0.17067362669642994,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "max_absolute_difference": 0.0,
+                        "year": 2017
+                    },
+                    {
+                        "code": "2388",
+                        "common_multipliers_match": true,
+                        "comparison_scope": "same current inputs; original rounded report values remain in rows.v1",
+                        "current_v1": {
+                            "carried_days": 0,
+                            "complete_equity": false,
+                            "gross_return": 0.3724007561436673,
+                            "net_return": 0.3616575948852643,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "current_v2": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": 0.3724007561436673,
+                            "net_return": 0.3616575948852643,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "max_absolute_difference": 0.0,
+                        "year": 2019
+                    },
+                    {
+                        "code": "3228",
+                        "common_multipliers_match": true,
+                        "comparison_scope": "same current inputs; original rounded report values remain in rows.v1",
+                        "current_v1": {
+                            "carried_days": 0,
+                            "complete_equity": false,
+                            "gross_return": 1.2201834862385321,
+                            "net_return": 1.2028038767409934,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "current_v2": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": 1.2201834862385321,
+                            "net_return": 1.2028038767409934,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "max_absolute_difference": 0.0,
+                        "year": 2021
+                    },
+                    {
+                        "code": "3141",
+                        "common_multipliers_match": true,
+                        "comparison_scope": "same current inputs; original rounded report values remain in rows.v1",
+                        "current_v1": {
+                            "carried_days": 0,
+                            "complete_equity": false,
+                            "gross_return": -0.6918384770017434,
+                            "net_return": -0.6942658400049727,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "current_v2": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": -0.6918384770017434,
+                            "net_return": -0.6942658400049727,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "max_absolute_difference": 0.0,
+                        "year": 2022
+                    },
+                    {
+                        "code": "8996",
+                        "common_multipliers_match": true,
+                        "comparison_scope": "same current inputs; original rounded report values remain in rows.v1",
+                        "current_v1": {
+                            "carried_days": 0,
+                            "complete_equity": false,
+                            "gross_return": 0.21600423953365144,
+                            "net_return": 0.20647420311408515,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "current_v2": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": 0.21600423953365144,
+                            "net_return": 0.20647420311408515,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "max_absolute_difference": 0.0,
+                        "year": 2023
+                    }
+                ],
+                "cutoff": "2026-10-12",
+                "definition": "annual-holding-completion.v2",
+                "execution": {
+                    "benchmark_calls": 19,
+                    "full_ranking_calls": 0,
+                    "kernel_calls": 45,
+                    "scenario_reuses": 14,
+                    "strategy_v2_calls": 18,
+                    "v1_comparison_calls": 8
+                },
+                "limitations": [
+                    "Fixed v1 calculable leaders are reused; historical universe and unknown ranking candidates are not reconstructed.",
+                    "Current input vintage and original rounded report values are distinct observations.",
+                    "Cash dividends use the original immediate ex-date close fractional reinvestment estimate.",
+                    "Rights lapse and realize are stated scenarios, not actual exercise or return bounds.",
+                    "Carried marks permit terminal modeling only; actual complete daily drawdown remains unknown.",
+                    "Paired diagnostics assume symmetric exchangeable log excesses and iid bootstrap years; they do not certify significance or unseen data."
+                ],
+                "rows": [
+                    {
+                        "benchmark": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": -0.16722335670082566,
+                            "net_return": -0.17212494099210962,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "code": "3406",
+                        "entry_date": "2011-01-03",
+                        "exit_date": "2012-01-02",
+                        "is_ytd": false,
+                        "lapse": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": -0.4089237166160242,
+                            "net_return": -0.4135558377955698,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "ranking_return": 5.9565,
+                        "realize": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": -0.4018831634634322,
+                            "net_return": -0.40658039974614113,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "v1": { "gross_return": null, "net_return": null },
+                        "year": 2011
+                    },
+                    {
+                        "benchmark": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": 0.13162433830964138,
+                            "net_return": 0.12496545069793585,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "code": "6276",
+                        "entry_date": "2012-01-02",
+                        "exit_date": "2013-01-02",
+                        "is_ytd": false,
+                        "lapse": {
+                            "carried_days": 9,
+                            "complete_equity": false,
+                            "gross_return": -0.20259401076753936,
+                            "net_return": -0.2088361095804343,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "ranking_return": 2.0284,
+                        "realize": {
+                            "carried_days": 9,
+                            "complete_equity": false,
+                            "gross_return": -0.20259401076753936,
+                            "net_return": -0.2088361095804343,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "v1": { "gross_return": null, "net_return": null },
+                        "year": 2012
+                    },
+                    {
+                        "benchmark": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": 0.11253660263217191,
+                            "net_return": 0.10600905366551028,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "code": "1781",
+                        "entry_date": "2013-01-02",
+                        "exit_date": "2014-01-02",
+                        "is_ytd": false,
+                        "lapse": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": -0.1364599893574967,
+                            "net_return": -0.14322251456917823,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "ranking_return": 2.536,
+                        "realize": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": -0.1364599893574967,
+                            "net_return": -0.14322251456917823,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "v1": {
+                            "gross_return": -0.1365,
+                            "net_return": -0.1432
+                        },
+                        "year": 2013
+                    },
+                    {
+                        "benchmark": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": 0.15898390585336264,
+                            "net_return": 0.15218207791175953,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "code": "3229",
+                        "entry_date": "2014-01-02",
+                        "exit_date": "2015-01-05",
+                        "is_ytd": false,
+                        "lapse": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": -0.0676883780332056,
+                            "net_return": -0.07498651893923103,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "ranking_return": 4.3389,
+                        "realize": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": -0.0676883780332056,
+                            "net_return": -0.07498651893923103,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "v1": { "gross_return": -0.0677, "net_return": -0.075 },
+                        "year": 2014
+                    },
+                    {
+                        "benchmark": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": -0.055966701818894626,
+                            "net_return": -0.06151512222703881,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "code": "3520",
+                        "entry_date": "2015-01-05",
+                        "exit_date": "2016-01-04",
+                        "is_ytd": false,
+                        "lapse": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": -0.2287581699346405,
+                            "net_return": -0.2347954555544035,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "ranking_return": 3.7937,
+                        "realize": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": -0.2287581699346405,
+                            "net_return": -0.2347954555544035,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "v1": {
+                            "gross_return": -0.2288,
+                            "net_return": -0.2348
+                        },
+                        "year": 2015
+                    },
+                    {
+                        "benchmark": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": 0.1937931133046229,
+                            "net_return": 0.1868069824074654,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "code": "3205",
+                        "entry_date": "2016-01-04",
+                        "exit_date": "2017-01-03",
+                        "is_ytd": false,
+                        "lapse": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": -0.5493887491035325,
+                            "net_return": -0.5529268852821063,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "ranking_return": 9.520800000000001,
+                        "realize": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": -0.545263098482174,
+                            "net_return": -0.5488393550089192,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "v1": { "gross_return": null, "net_return": null },
+                        "year": 2016
+                    },
+                    {
+                        "benchmark": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": 0.1829852643275145,
+                            "net_return": 0.1760297209931927,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "code": "3522",
+                        "entry_date": "2017-01-03",
+                        "exit_date": "2018-01-02",
+                        "is_ytd": false,
+                        "lapse": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": -0.1641304347826087,
+                            "net_return": -0.17067362669642994,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "ranking_return": 3.6102999999999996,
+                        "realize": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": -0.1641304347826087,
+                            "net_return": -0.17067362669642994,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "v1": {
+                            "gross_return": -0.1641,
+                            "net_return": -0.1707
+                        },
+                        "year": 2017
+                    },
+                    {
+                        "benchmark": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": -0.04510437327533079,
+                            "net_return": -0.05072099804852481,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "code": "3162",
+                        "entry_date": "2018-01-02",
+                        "exit_date": "2019-01-02",
+                        "is_ytd": false,
+                        "lapse": {
+                            "carried_days": 6,
+                            "complete_equity": false,
+                            "gross_return": -0.42374999999999996,
+                            "net_return": -0.42826088841757126,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "ranking_return": 5.4297,
+                        "realize": {
+                            "carried_days": 6,
+                            "complete_equity": false,
+                            "gross_return": -0.42374999999999996,
+                            "net_return": -0.42826088841757126,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "v1": { "gross_return": null, "net_return": null },
+                        "year": 2018
+                    },
+                    {
+                        "benchmark": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": 0.3303664950609706,
+                            "net_return": 0.3225315823508308,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "code": "2388",
+                        "entry_date": "2019-01-02",
+                        "exit_date": "2020-01-02",
+                        "is_ytd": false,
+                        "lapse": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": 0.3724007561436673,
+                            "net_return": 0.3616575948852643,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "ranking_return": 1.4811,
+                        "realize": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": 0.3724007561436673,
+                            "net_return": 0.3616575948852643,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "v1": { "gross_return": 0.3724, "net_return": 0.3617 },
+                        "year": 2019
+                    },
+                    {
+                        "benchmark": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": 0.3089577786502833,
+                            "net_return": 0.3012493409194581,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "code": "6538",
+                        "entry_date": "2020-01-02",
+                        "exit_date": "2021-01-04",
+                        "is_ytd": false,
+                        "lapse": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": 0.039245086923658246,
+                            "net_return": 0.03109779813857605,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "ranking_return": 5.903200000000001,
+                        "realize": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": 0.039245086923658246,
+                            "net_return": 0.03109779813857605,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "v1": { "gross_return": null, "net_return": null },
+                        "year": 2020
+                    },
+                    {
+                        "benchmark": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": 0.22440122447794253,
+                            "net_return": 0.21721501192480974,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "code": "3228",
+                        "entry_date": "2021-01-04",
+                        "exit_date": "2022-01-03",
+                        "is_ytd": false,
+                        "lapse": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": 1.2201834862385321,
+                            "net_return": 1.2028038767409934,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "ranking_return": 4.9859,
+                        "realize": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": 1.2201834862385321,
+                            "net_return": 1.2028038767409934,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "v1": { "gross_return": 1.2202, "net_return": 1.2028 },
+                        "year": 2021
+                    },
+                    {
+                        "benchmark": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": -0.22037772129182365,
+                            "net_return": -0.22496800599392774,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "code": "3141",
+                        "entry_date": "2022-01-03",
+                        "exit_date": "2023-01-03",
+                        "is_ytd": false,
+                        "lapse": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": -0.6918384770017434,
+                            "net_return": -0.6942658400049727,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "ranking_return": 5.1617,
+                        "realize": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": -0.6918384770017434,
+                            "net_return": -0.6942658400049727,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "v1": {
+                            "gross_return": -0.6918000000000001,
+                            "net_return": -0.6943
+                        },
+                        "year": 2022
+                    },
+                    {
+                        "benchmark": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": 0.28237077451230297,
+                            "net_return": 0.27482392798119504,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "code": "8996",
+                        "entry_date": "2023-01-03",
+                        "exit_date": "2024-01-02",
+                        "is_ytd": false,
+                        "lapse": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": 0.21600423953365144,
+                            "net_return": 0.20647420311408515,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "ranking_return": 1.9977,
+                        "realize": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": 0.21600423953365144,
+                            "net_return": 0.20647420311408515,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "v1": {
+                            "gross_return": 0.21600000000000003,
+                            "net_return": 0.2065
+                        },
+                        "year": 2023
+                    },
+                    {
+                        "benchmark": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": 0.48431146433788896,
+                            "net_return": 0.47559183838588903,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "code": "1519",
+                        "entry_date": "2024-01-02",
+                        "exit_date": "2025-01-02",
+                        "is_ytd": false,
+                        "lapse": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": 0.9139883594751899,
+                            "net_return": 0.8989867615217424,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "ranking_return": 5.8454,
+                        "realize": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": 0.9139883594751899,
+                            "net_return": 0.8989867615217424,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "v1": { "gross_return": null, "net_return": null },
+                        "year": 2024
+                    },
+                    {
+                        "benchmark": {
+                            "carried_days": 5,
+                            "complete_equity": false,
+                            "gross_return": 0.37758267075523255,
+                            "net_return": 0.36950456556504174,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "code": "5314",
+                        "entry_date": "2025-01-02",
+                        "exit_date": "2026-01-02",
+                        "is_ytd": false,
+                        "lapse": {
+                            "carried_days": 10,
+                            "complete_equity": false,
+                            "gross_return": 1.4268838045654904,
+                            "net_return": 1.4078786396065395,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "ranking_return": 9.2438,
+                        "realize": {
+                            "carried_days": 10,
+                            "complete_equity": false,
+                            "gross_return": 1.4268838045654904,
+                            "net_return": 1.4078786396065395,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "v1": { "gross_return": null, "net_return": null },
+                        "year": 2025
+                    },
+                    {
+                        "benchmark": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": 0.7739431079598211,
+                            "net_return": 0.7635433538862528,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "code": "5475",
+                        "entry_date": "2026-01-02",
+                        "exit_date": "2026-10-12",
+                        "is_ytd": true,
+                        "lapse": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": 1.167539267015707,
+                            "net_return": 1.1505717567784624,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "ranking_return": 6.8607000000000005,
+                        "realize": {
+                            "carried_days": 0,
+                            "complete_equity": true,
+                            "gross_return": 1.167539267015707,
+                            "net_return": 1.1505717567784624,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "v1": { "gross_return": 1.1675, "net_return": 1.1506 },
+                        "year": 2026
+                    }
+                ],
+                "run_id": "annual-completion-v2-20261016",
+                "schema": "annual-completion-result.v2",
+                "selection_scope": "fixed-v1-known-return-leaders",
+                "study_id": "20261013-annual-winner-rotation",
+                "windows": [
+                    {
+                        "benchmark": {
+                            "cagr": 0.13520481262898576,
+                            "complete_equity": false,
+                            "gross_terminal_multiple": 6.742724397163348,
+                            "net_terminal_multiple": 6.699111817701591,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "end_date": "2026-01-02",
+                        "end_year": 2025,
+                        "id": "2011-2025",
+                        "scenarios": {
+                            "lapse": {
+                                "cagr": -0.07489124866378982,
+                                "carried_mark_reference_drawdown": -0.9542865203998906,
+                                "complete": true,
+                                "complete_equity": false,
+                                "gross_terminal_multiple": 0.35010492612195954,
+                                "max_drawdown": null,
+                                "net_terminal_multiple": 0.31113641783590346,
+                                "paired_diagnostics": {
+                                    "annual_geometric_relative_excess": -0.18059060557830697,
+                                    "bootstrap_ci_95": [
+                                        -0.3405066136057, 0.020558697458868957
+                                    ],
+                                    "leave_best_one_relative_terminal_multiple": 0.02785515307207481,
+                                    "leave_best_two_relative_terminal_multiple": 0.015842891198600068,
+                                    "n_years": 15,
+                                    "net_log_contribution": -2.987571734013647,
+                                    "sign_flip_p_value": 0.946136474609375,
+                                    "win_count": 4
+                                },
+                                "reason": null
+                            },
+                            "realize": {
+                                "cagr": -0.07359963370279787,
+                                "carried_mark_reference_drawdown": -0.9533198595276006,
+                                "complete": true,
+                                "complete_equity": false,
+                                "gross_terminal_multiple": 0.35751879882837356,
+                                "max_drawdown": null,
+                                "net_terminal_multiple": 0.3177157332522192,
+                                "paired_diagnostics": {
+                                    "annual_geometric_relative_excess": -0.17944669877435804,
+                                    "bootstrap_ci_95": [
+                                        -0.3389637104229589,
+                                        0.021155597201101717
+                                    ],
+                                    "leave_best_one_relative_terminal_multiple": 0.028444180352473706,
+                                    "leave_best_two_relative_terminal_multiple": 0.0161779062348564,
+                                    "n_years": 15,
+                                    "net_log_contribution": -2.966646130172141,
+                                    "sign_flip_p_value": 0.945526123046875,
+                                    "win_count": 4
+                                },
+                                "reason": null
+                            }
+                        },
+                        "start_date": "2011-01-03",
+                        "start_year": 2011
+                    },
+                    {
+                        "benchmark": {
+                            "cagr": 0.1605709696725155,
+                            "complete_equity": false,
+                            "gross_terminal_multiple": 8.096678084595407,
+                            "net_terminal_multiple": 8.04472061930827,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "end_date": "2026-01-02",
+                        "end_year": 2025,
+                        "id": "2012-2025",
+                        "scenarios": {
+                            "lapse": {
+                                "cagr": -0.04425998920922558,
+                                "carried_mark_reference_drawdown": -0.9316309358683159,
+                                "complete": true,
+                                "complete_equity": false,
+                                "gross_terminal_multiple": 0.5923176685715943,
+                                "max_drawdown": null,
+                                "net_terminal_multiple": 0.5305473869265724,
+                                "paired_diagnostics": {
+                                    "annual_geometric_relative_excess": -0.1720234912113663,
+                                    "bootstrap_ci_95": [
+                                        -0.3436705771927916, 0.04578547801927568
+                                    ],
+                                    "leave_best_one_relative_terminal_multiple": 0.039322731778134765,
+                                    "leave_best_two_relative_terminal_multiple": 0.022365188932215008,
+                                    "n_years": 14,
+                                    "net_log_contribution": -2.6427869443858776,
+                                    "sign_flip_p_value": 0.92376708984375,
+                                    "win_count": 4
+                                },
+                                "reason": null
+                            },
+                            "realize": {
+                                "cagr": -0.04363853932748574,
+                                "carried_mark_reference_drawdown": -0.9310058465704187,
+                                "complete": true,
+                                "complete_equity": false,
+                                "gross_terminal_multiple": 0.5977407372422552,
+                                "max_drawdown": null,
+                                "net_terminal_multiple": 0.5353981114144252,
+                                "paired_diagnostics": {
+                                    "annual_geometric_relative_excess": -0.1714850531457608,
+                                    "bootstrap_ci_95": [
+                                        -0.3427186102577148,
+                                        0.046149490101921486
+                                    ],
+                                    "leave_best_one_relative_terminal_multiple": 0.039682254306500096,
+                                    "leave_best_two_relative_terminal_multiple": 0.02256967089236075,
+                                    "n_years": 14,
+                                    "net_log_contribution": -2.6336856198263336,
+                                    "sign_flip_p_value": 0.9237060546875,
+                                    "win_count": 4
+                                },
+                                "reason": null
+                            }
+                        },
+                        "start_date": "2012-01-02",
+                        "start_year": 2012
+                    },
+                    {
+                        "benchmark": {
+                            "cagr": 0.1628602192631028,
+                            "complete_equity": false,
+                            "gross_terminal_multiple": 7.1549168840693,
+                            "net_terminal_multiple": 7.109356948736255,
+                            "reasons": [],
+                            "status": "modeled"
+                        },
+                        "end_date": "2026-01-02",
+                        "end_year": 2025,
+                        "id": "2013-2025",
+                        "scenarios": {
+                            "lapse": {
+                                "cagr": -0.030271487266011143,
+                                "carried_mark_reference_drawdown": -0.9234778575587164,
+                                "complete": true,
+                                "complete_equity": false,
+                                "gross_terminal_multiple": 0.7428056430096881,
+                                "max_drawdown": null,
+                                "net_terminal_multiple": 0.6705910031424909,
+                                "paired_diagnostics": {
+                                    "annual_geometric_relative_excess": -0.1615616217210093,
+                                    "bootstrap_ci_95": [
+                                        -0.3453075883393947, 0.07189622638328586
+                                    ],
+                                    "leave_best_one_relative_terminal_multiple": 0.05591346522906149,
+                                    "leave_best_two_relative_terminal_multiple": 0.031801331117034405,
+                                    "n_years": 13,
+                                    "net_log_contribution": -2.290784480972076,
+                                    "sign_flip_p_value": 0.894287109375,
+                                    "win_count": 4
+                                },
+                                "reason": null
+                            },
+                            "realize": {
+                                "cagr": -0.029592318973117315,
+                                "carried_mark_reference_drawdown": -0.9227782257457069,
+                                "complete": true,
+                                "complete_equity": false,
+                                "gross_terminal_multiple": 0.7496065308182697,
+                                "max_drawdown": null,
+                                "net_terminal_multiple": 0.6767221278646777,
+                                "paired_diagnostics": {
+                                    "annual_geometric_relative_excess": -0.16097442390323546,
+                                    "bootstrap_ci_95": [
+                                        -0.34458649812372266,
+                                        0.07218658012700474
+                                    ],
+                                    "leave_best_one_relative_terminal_multiple": 0.05642467463593177,
+                                    "leave_best_two_relative_terminal_multiple": 0.0320920864753622,
+                                    "n_years": 13,
+                                    "net_log_contribution": -2.281683156412532,
+                                    "sign_flip_p_value": 0.8941650390625,
+                                    "win_count": 4
+                                },
+                                "reason": null
+                            }
+                        },
+                        "start_date": "2013-01-02",
+                        "start_year": 2013
+                    }
+                ]
+            }
+        </script>
+        <script>
+            /* ============================================================
+   STOCK research report kit v1 — small helpers for AI-written reports.
+   Optional: a report may use any of these or draw everything itself.
+   Works standalone (file://) and inside the studio's sandboxed iframe,
+   where the origin is opaque, so storage access is always guarded.
+   ============================================================ */
+            (function () {
+                "use strict";
+
+                const root = document.documentElement;
+                const inFrame = window.parent !== window;
+                const PALETTES = new Set(["forest", "ocean", "plum", "sand"]);
+                const APPEARANCES = new Set(["light", "dark"]);
+
+                /* ---------- theme ---------- */
+                function applyTheme(theme) {
+                    if (theme && PALETTES.has(theme.palette))
+                        root.dataset.palette = theme.palette;
+                    if (theme && APPEARANCES.has(theme.appearance))
+                        root.dataset.appearance = theme.appearance;
+                    document.dispatchEvent(new CustomEvent("rk:theme"));
+                }
+                function themeFromHash() {
+                    const params = new URLSearchParams(
+                        location.hash.replace(/^#/, ""),
+                    );
+                    return {
+                        palette: params.get("palette"),
+                        appearance: params.get("appearance"),
+                    };
+                }
+                const initial = themeFromHash();
+                if (!APPEARANCES.has(initial.appearance))
+                    initial.appearance = matchMedia(
+                        "(prefers-color-scheme: dark)",
+                    ).matches
+                        ? "dark"
+                        : "light";
+                if (!PALETTES.has(initial.palette)) initial.palette = "forest";
+                applyTheme(initial);
+
+                window.addEventListener("message", (event) => {
+                    // The sandboxed frame sees an opaque origin; trust only the host window.
+                    if (event.source !== window.parent || !event.data) return;
+                    if (event.data.type === "rk:theme") applyTheme(event.data);
+                });
+
+                /* ---------- height reporting for the studio frame ---------- */
+                if (inFrame && "ResizeObserver" in window) {
+                    let last = 0;
+                    const report = () => {
+                        const height = Math.ceil(
+                            document.documentElement.getBoundingClientRect()
+                                .height,
+                        );
+                        if (Math.abs(height - last) < 2) return;
+                        last = height;
+                        window.parent.postMessage(
+                            { type: "rk:height", height },
+                            "*",
+                        );
+                    };
+                    new ResizeObserver(report).observe(
+                        document.documentElement,
+                    );
+                    window.addEventListener("load", report);
+                }
+
+                /* ---------- storage (opaque origins throw) ---------- */
+                const store = {
+                    get(key) {
+                        try {
+                            return localStorage.getItem(key);
+                        } catch {
+                            return null;
+                        }
+                    },
+                    set(key, value) {
+                        try {
+                            localStorage.setItem(key, value);
+                        } catch {
+                            /* Storage is unavailable in sandboxed frames. */
+                        }
+                    },
+                };
+
+                /* ---------- formatting ---------- */
+                const isNum = (v) =>
+                    typeof v === "number" && Number.isFinite(v);
+                const fmt = {
+                    pct(value, digits = 1) {
+                        return isNum(value)
+                            ? `${(value * 100).toFixed(digits)}%`
+                            : "—";
+                    },
+                    pp(delta, digits = 1) {
+                        if (!isNum(delta)) return "—";
+                        const v = delta * 100;
+                        return `${v > 0 ? "+" : v < 0 ? "−" : "±"}${Math.abs(v).toFixed(digits)} pp`;
+                    },
+                    int(value) {
+                        return isNum(value)
+                            ? Math.round(value).toLocaleString("zh-TW")
+                            : "—";
+                    },
+                    ratio(numerator, denominator) {
+                        return isNum(numerator) &&
+                            isNum(denominator) &&
+                            denominator > 0
+                            ? numerator / denominator
+                            : null;
+                    },
+                };
+
+                /* ---------- data ---------- */
+                /** Convert a {columns, rows} table into an array of objects. */
+                function records(table) {
+                    if (!table) return [];
+                    const { columns, rows } = table;
+                    return rows.map((row) => {
+                        const item = {};
+                        columns.forEach((name, i) => (item[name] = row[i]));
+                        return item;
+                    });
+                }
+
+                /* ---------- DOM / SVG ---------- */
+                const SVG_NS = "http://www.w3.org/2000/svg";
+                function svg(tag, attrs = {}, children = []) {
+                    const node = document.createElementNS(SVG_NS, tag);
+                    for (const [key, value] of Object.entries(attrs))
+                        if (value !== null && value !== undefined)
+                            node.setAttribute(key, value);
+                    for (const child of [].concat(children))
+                        if (child !== null && child !== undefined)
+                            node.append(
+                                typeof child === "string"
+                                    ? document.createTextNode(child)
+                                    : child,
+                            );
+                    return node;
+                }
+                function html(tag, attrs = {}, children = []) {
+                    const node = document.createElement(tag);
+                    for (const [key, value] of Object.entries(attrs)) {
+                        if (value === null || value === undefined) continue;
+                        if (key === "class") node.className = value;
+                        else if (key.startsWith("on"))
+                            node.addEventListener(key.slice(2), value);
+                        else node.setAttribute(key, value);
+                    }
+                    for (const child of [].concat(children))
+                        if (child !== null && child !== undefined)
+                            node.append(
+                                typeof child === "string"
+                                    ? document.createTextNode(child)
+                                    : child,
+                            );
+                    return node;
+                }
+                /** Read a design token, e.g. token("--gain"). */
+                function token(name) {
+                    return getComputedStyle(root).getPropertyValue(name).trim();
+                }
+
+                /* ---------- segmented control ---------- */
+                function segmented(
+                    container,
+                    { label, options, value, onChange },
+                ) {
+                    const group = html("span", {
+                        class: "rk-seg",
+                        role: "group",
+                        "aria-label": label,
+                    });
+                    let current = value;
+                    const buttons = options.map((option) =>
+                        html(
+                            "button",
+                            {
+                                type: "button",
+                                "aria-pressed": String(
+                                    option.value === current,
+                                ),
+                                onclick: () => {
+                                    current = option.value;
+                                    buttons.forEach((b, i) =>
+                                        b.setAttribute(
+                                            "aria-pressed",
+                                            String(
+                                                options[i].value === current,
+                                            ),
+                                        ),
+                                    );
+                                    onChange(current);
+                                },
+                            },
+                            option.label,
+                        ),
+                    );
+                    group.append(...buttons);
+                    const wrapper = html(
+                        "span",
+                        { class: "rk-control" },
+                        label ? [label, group] : [group],
+                    );
+                    container.append(wrapper);
+                    return {
+                        get value() {
+                            return current;
+                        },
+                    };
+                }
+
+                /* ---------- tooltip ---------- */
+                let tip = null;
+                const tooltip = {
+                    show(event, content) {
+                        if (!tip) {
+                            tip = html("div", {
+                                class: "rk-tooltip",
+                                role: "tooltip",
+                            });
+                            document.body.append(tip);
+                        }
+                        tip.innerHTML = content;
+                        tip.classList.add("is-visible");
+                        const pad = 14;
+                        const { innerWidth, innerHeight } = window;
+                        const rect = tip.getBoundingClientRect();
+                        let x = event.clientX + pad;
+                        let y = event.clientY + pad;
+                        if (x + rect.width > innerWidth - 8)
+                            x = event.clientX - rect.width - pad;
+                        if (y + rect.height > innerHeight - 8)
+                            y = event.clientY - rect.height - pad;
+                        tip.style.left = `${Math.max(8, x)}px`;
+                        tip.style.top = `${Math.max(8, y)}px`;
+                    },
+                    hide() {
+                        tip?.classList.remove("is-visible");
+                    },
+                };
+
+                /* ---------- colour scales ---------- */
+                function mix(a, b, t) {
+                    const pa = parse(a);
+                    const pb = parse(b);
+                    if (!pa || !pb) return b;
+                    const c = pa.map((v, i) => Math.round(v + (pb[i] - v) * t));
+                    return `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
+                }
+                const parsed = new Map();
+                function parse(color) {
+                    if (parsed.has(color)) return parsed.get(color);
+                    const probe = document.createElement("span");
+                    probe.style.color = color;
+                    document.body.append(probe);
+                    const value = getComputedStyle(probe).color;
+                    probe.remove();
+                    const match = value.match(/\d+(\.\d+)?/g);
+                    const rgb = match ? match.slice(0, 3).map(Number) : null;
+                    parsed.set(color, rgb);
+                    return rgb;
+                }
+                /**
+                 * Diverging scale around zero: positive → --gain, negative → --loss.
+                 * `limit` is the absolute value that reaches full colour.
+                 */
+                function diverging(limit) {
+                    const base = token("--surface");
+                    const up = token("--gain");
+                    const down = token("--loss");
+                    return (value) => {
+                        if (!isNum(value)) return token("--surface-2");
+                        const t = Math.min(1, Math.abs(value) / limit);
+                        return mix(
+                            base,
+                            value >= 0 ? up : down,
+                            0.12 + 0.78 * t,
+                        );
+                    };
+                }
+
+                window.ReportKit = {
+                    version: "v1",
+                    applyTheme,
+                    store,
+                    fmt,
+                    records,
+                    svg,
+                    html,
+                    token,
+                    segmented,
+                    tooltip,
+                    diverging,
+                    mix,
+                };
+            })();
+        </script>
     </body>
 </html>
