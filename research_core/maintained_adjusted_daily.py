@@ -12,6 +12,9 @@ Layout under ``<shared root>/derived/adjusted-daily-v1/``::
     generations/<id>/<basis>.parquet  one file per price basis, sorted by Code, Date
     generations/<id>/actions.parquet  the corporate actions this generation was built from
     generations/<id>/calendar.parquet the generation's session calendar
+    generations/<id>/technical_daily.parquet   technical-daily.v1 indicators, one row per
+                                               reference_factor_adjusted row
+    generations/<id>/technical_pivots.parquet  confirmed 1.5/4 ATR highs and lows
 
 Every new ex-date restates the whole earlier history of that symbol, so an update builds
 a complete new generation and then flips ``current.json`` with ``os.replace`` (atomic on
@@ -43,7 +46,7 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from research_core import price_basis
+from research_core import price_basis, technical_daily_v1
 from research_core.artifact_store import file_digest, object_digest, publish_noreplace, read_json, write_json
 from research_core.live_producer import read_stable, readonly_sqlite
 from research_core.run_receipt import InputSpec, assert_inputs_unchanged, code_identity, fingerprint_inputs
@@ -70,6 +73,10 @@ ARROW_SCHEMA = pa.schema([
 ACTIONS_FILE, CALENDAR_FILE = "actions.parquet", "calendar.parquet"
 ACTIONS_SCHEMA = pa.schema([("code", pa.string()), ("ex_date", pa.string()), ("event_type", pa.string()), ("price_factor", pa.float64())])
 CALENDAR_SCHEMA = pa.schema([("Date", pa.timestamp("ns"))])
+TECHNICAL_TABLES = {
+    "daily": ("technical_daily.parquet", technical_daily_v1.DAILY_SCHEMA),
+    "pivots": ("technical_pivots.parquet", technical_daily_v1.PIVOTS_SCHEMA),
+}
 RAW_QUOTE_COLUMNS = {"RawOpen": "Open", "RawHigh": "High", "RawLow": "Low", "RawClose": "Close", "VolumeLots": "Volume"}
 
 
@@ -125,9 +132,11 @@ def session_calendar(bars: pd.DataFrame) -> pd.DatetimeIndex:
 
 
 def compute(bars: pd.DataFrame, actions: pd.DataFrame, writers: dict[str, Any] | None = None, *, codes: Sequence[str] | None = None) -> dict[str, Any]:
-    """Prepare every symbol for every basis; stream into `writers` when given.
+    """Prepare every symbol for every basis and its technical tables; stream into `writers`.
 
-    Returns calendar, cutoff and per-basis counts. Without writers it only measures.
+    `writers` maps each basis and each `TECHNICAL_TABLES` name to an open ParquetWriter.
+    Returns calendar, cutoff and per-basis and per-table counts. Without writers it only
+    measures.
     """
     calendar = session_calendar(bars)
     cutoff = cast(pd.Timestamp, calendar.max())
@@ -136,6 +145,7 @@ def compute(bars: pd.DataFrame, actions: pd.DataFrame, writers: dict[str, Any] |
     empty_events = cast(pd.DataFrame, actions.iloc[0:0])
     selected = sorted(by_code) if codes is None else list(codes)
     counts: dict[str, dict[str, Any]] = {basis: {"rows": 0, "valid_rows": 0, "quality_reasons": {}} for basis in BASES}
+    technical: dict[str, dict[str, Any]] = {name: {"rows": 0} for name in TECHNICAL_TABLES}
     for position, code in enumerate(selected, 1):
         raw, events = by_code[code], events_by_code.get(code, empty_events)
         for basis in BASES:
@@ -147,6 +157,12 @@ def compute(bars: pd.DataFrame, actions: pd.DataFrame, writers: dict[str, Any] |
                 tally["quality_reasons"][str(reason)] = tally["quality_reasons"].get(str(reason), 0) + int(count)
             if writers is not None:
                 writers[basis].write_table(pa.Table.from_pandas(frame, schema=ARROW_SCHEMA, preserve_index=False))
+            if basis == technical_daily_v1.BASIS:
+                tables = dict(zip(TECHNICAL_TABLES, technical_daily_v1.compute_technical(code, frame.set_index("Date"))))
+                for name, table in tables.items():
+                    technical[name]["rows"] += len(table)
+                    if writers is not None:
+                        writers[name].write_table(pa.Table.from_pandas(table, schema=TECHNICAL_TABLES[name][1], preserve_index=False))
         if position % 250 == 0:
             LOGGER.info("Prepared %d/%d symbols", position, len(selected))
     after_cutoff = int(pd.to_datetime(actions["ex_date"]).gt(cutoff).sum())
@@ -162,6 +178,7 @@ def compute(bars: pd.DataFrame, actions: pd.DataFrame, writers: dict[str, Any] |
         "codes": len(selected),
         "actions": {"rows": len(actions), "after_asof_excluded": after_cutoff, "unsupported_event_rows": unsupported},
         "bases": counts,
+        "technical": {"definition": technical_daily_v1.definition_metadata(), "tables": technical},
     }
 
 
@@ -240,6 +257,7 @@ def update(*, producer_root: Path, root: Path | None = None) -> dict[str, Any]:
         staging = family / "generations" / f".staging-{generation}"
         staging.mkdir()
         writers: dict[str, Any] = {basis: pq.ParquetWriter(staging / f"{basis}.parquet", ARROW_SCHEMA, compression="zstd") for basis in BASES}
+        writers.update({name: pq.ParquetWriter(staging / file, schema, compression="zstd") for name, (file, schema) in TECHNICAL_TABLES.items()})
         try:
             summary = compute(bars, actions, writers)
         finally:
@@ -250,6 +268,9 @@ def update(*, producer_root: Path, root: Path | None = None) -> dict[str, Any]:
         for basis in BASES:
             path = staging / f"{basis}.parquet"
             summary["bases"][basis].update({"file": path.name, "bytes": path.stat().st_size, "sha256": file_digest(path)})
+        for name, (file, _) in TECHNICAL_TABLES.items():
+            path = staging / file
+            summary["technical"]["tables"][name].update({"file": file, "bytes": path.stat().st_size, "sha256": file_digest(path)})
         as_of_inputs = _write_as_of_inputs(staging, bars, actions)
         status = {
             "schema": SCHEMA,
@@ -373,6 +394,57 @@ def read_adjusted_daily(
     frame = cast(pd.DataFrame, table.to_pandas())
     LOGGER.debug("Read %s %s rows=%d generation=%s", FAMILY, basis, len(frame), status["generation"])
     return frame, _record(status, basis)
+
+
+def read_technical(
+    table: str = "daily",
+    *,
+    codes: Sequence[str] | None = None,
+    columns: Sequence[str] | None = None,
+    prices: Sequence[str] | None = None,
+    root: Path | None = None,
+    generation: str | None = None,
+) -> tuple[pd.DataFrame, dict[str, Any]]:
+    """Read a `technical-daily.v1` table of the current generation, or of `generation`.
+
+    `table="daily"` has one row per `reference_factor_adjusted` row; `prices=["Close", ...]`
+    joins those columns of that basis from the same generation on `Code, Date`, so the
+    indicators and the prices they were computed from always match. `table="pivots"` is
+    one row per confirmed high/low; it is known from `confirmed_at`, not `extreme_date`.
+    These values are computed at the generation's asof. For an earlier cutoff, read the
+    prices with `read_adjusted_daily(..., as_of=)` and call
+    `technical_daily_v1.compute_technical` on them instead of truncating this table.
+    """
+    if table not in TECHNICAL_TABLES:
+        raise ValueError(f"unknown technical table {table!r}; choose one of {tuple(TECHNICAL_TABLES)}")
+    if prices is not None and table != "daily":
+        raise ValueError("prices= joins daily rows; the pivots table has one row per pivot")
+    status = current_generation(root, generation=generation)
+    technical = status.get("technical")
+    if technical is None:
+        raise ValueError(f"generation {status['generation']} has no technical tables; run scripts.maintain_adjusted_daily update")
+    expected = technical["tables"][table]
+    path = Path(status["path"]) / expected["file"]
+    filters = None if codes is None else [("Code", "in", [str(code) for code in codes])]
+    selected = None if columns is None else list(dict.fromkeys(["Code", *(["Date"] if table == "daily" else []), *columns]))
+    frame = cast(pd.DataFrame, _read_verified(path, expected, lambda source: pq.read_table(source, columns=selected, filters=filters)).to_pandas())
+    record = {
+        "family": FAMILY,
+        "generation": status["generation"],
+        "asof": status["asof"],
+        "definition": technical["definition"]["version"],
+        "table": table,
+        "file": str(path),
+        "sha256": expected["sha256"],
+        "status_sha256": status["status_sha256"],
+    }
+    if prices:
+        basis = technical["definition"]["basis"]
+        quotes, price_record = read_adjusted_daily(basis, codes=codes, columns=["Code", "Date", *prices], root=root, generation=status["generation"])
+        frame = frame.merge(quotes, on=["Code", "Date"], how="left", validate="one_to_one")
+        record["prices"] = price_record
+    LOGGER.debug("Read %s technical %s rows=%d generation=%s", FAMILY, table, len(frame), status["generation"])
+    return frame, record
 
 
 def _record(status: dict[str, Any], basis: str) -> dict[str, Any]:

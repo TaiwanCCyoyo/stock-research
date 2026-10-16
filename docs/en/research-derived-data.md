@@ -51,6 +51,8 @@
 | `generations/<id>/{raw,permanent_adjusted,reference_factor_adjusted}.parquet` | 依 `Code, Date` 排序，每檔股票一個 row group                                                                                                      |
 | `generations/<id>/actions.parquet`                                            | 建置當下讀到的全部除權息事件（`code, ex_date, event_type, price_factor`，含 asof 之後的），供截止日讀取重算                                       |
 | `generations/<id>/calendar.parquet`                                           | 該世代的交易日曆（官方報價日期聯集）                                                                                                              |
+| `generations/<id>/technical_daily.parquet`                                    | `technical-daily.v1` 每日指標，與 `reference_factor_adjusted.parquet` 一列對一列（同 `Code, Date`），見下方「技術指標」                           |
+| `generations/<id>/technical_pivots.parquet`                                   | 已確認的 1.5／4 ATR 高低點，一個轉折一列                                                                                                          |
 
 - **欄位**：`Code, Date, Open, High, Low, Close`（研究價，無效為 NaN）、`RawOpen..RawClose`、`VolumeLots`、`Turnover`、`Quality`、`quality_reason`、`volume_status`、`corporate_action_types`、`restatement_factor`；語意同上方 `prepare_prices`。
 - **來源政策**：只用 `Source == "official"` 的報價，**在計算前**就篩掉 `shioaji`（永豐分 K 轉日 K）列；若先混合計算再篩，非官方列仍會影響相鄰官方列的跳幅與品質判斷。2026-10-15 時被排除 152,631 列、351 檔，其中 12 檔完全沒有官方報價，因此不在本家族。排除數量與這些代號記在 `status.json` 的 `source_policy`。日曆也只取官方列的日期。
@@ -75,6 +77,34 @@
 
         較早的截止日各有 6,707–8,534 列在最新世代裡因子已是 NaN、但在截止日其實可知：依 `prepare_prices` 的規則離線核對 `actions.parquet`，這來自截止日後 1 筆未知種類事件，以及 4（2023-06-30）、5（2020-12-31）、10（2015-12-31）檔股票的不可用因子事件（方向不符或值不一致）。PR17 的截止日離 asof 只有三天，之後只有 6 筆可用事件，所以它單獨相等證明不了多少，較早截止日才是主要證據。真實資料裡沒有截止日後同日多種事件、截止日當天沒有可用因子，或日曆與世代不同的例子；這些由 `scripts/tests/test_maintained_adjusted_daily.py` 的合成資料覆蓋。
 - **定義變更**：開新家族 `adjusted-daily-v2`，不在原家族裡改寫。
+
+**技術指標（`technical-daily.v1`，2026-10-17 起每個新世代都有）。** 由同一次 `update` 從該世代的 `reference_factor_adjusted` 列計算（`research_core/technical_daily_v1.py`），所以指標與價格永遠出自同一世代、同一 as-of，且每次都從 2010-01-04（每檔第一筆報價）完整重算，不是只附加新的一天。公式全部沿用既有正本，不另定義：
+
+| 欄位                                                                             | 定義來源                                                                    | 何時可知                                                                |
+| -------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `ATR14`, `atr14_pct`, `SMA5..SMA120`, `EMA5..EMA60`, `BB20_Middle/Upper/Lower`   | `derived_features.compute_features`（`derived-features.v1`）                | 當日收盤                                                                |
+| `SMA240`, `MACDHist`（原始價格單位）                                             | 同上的分段重置規則，配 atlas EMA kernel；與 PR17 pattern-scan 指標同算法    | 當日收盤                                                                |
+| `BBWidth`, `RSI14`, `ADX14`                                                      | `feature_atlas_features.compute_features` 的 `bb_width20`／`rsi14`／`adx14` | 當日收盤                                                                |
+| `ConfirmedHigh_k15`, `ConfirmedLow_k15`, `ConfirmedHigh_k40`, `ConfirmedLow_k40` | 當天是否**確認**了一個 1.5／4 ATR 高／低點（布林，沒有就是 False）          | 當日收盤                                                                |
+| `LastHigh_k15`, `LastLow_k15`, `LastHigh_k40`, `LastLow_k40`                     | 截至當天最近一個已確認高／低點的價格；第一次確認前為 NaN                    | 當日收盤                                                                |
+| `technical_pivots`：`Code, k, kind, extreme_date, confirmed_at, price`           | `derived_features` 的轉折                                                   | **只能從 `confirmed_at` 起使用**；`extreme_date` 是事後才知道的極值位置 |
+
+- **缺值**：任何無效列（`Quality` 為 False、OHLC 不合理）讓所有指標重新暖機；無效列本身是 NaN，不補值、不刪列。`Last*` 例外：已確認的轉折是既成事實，跨過缺口仍保留。NaN 是「未知／暖機中」，不是 0 或 False。
+- **讀取**：`daily, record = read_technical(codes=["2330"], columns=["SMA20", "BB20_Upper", "LastLow_k15"], prices=["Close", "Quality"])` 回傳指標並在 `Code, Date` 併入同世代的價格欄，就是一張「每天一列：價格＋指標」的寬表；`read_technical("pivots", codes=[...])` 讀轉折長表。`record` 記 generation、`technical-daily.v1`、檔案 SHA-256（`prices=` 時另含價格的 record），放進 receipt；`generation=` 用法同上。本功能之前建的世代沒有這兩個檔，讀取會直接報錯，請 `update`。
+- **截止日**：表內數值以世代 asof 計算。需要較早截止日時，用 `read_adjusted_daily(..., as_of=)` 取價格再呼叫 `technical_daily_v1.compute_technical`，不要截斷本表（截止日後的除權息會改寫整段還原價，指標跟著變）。
+- **實測（2026-10-17，真實資料 `measure --codes 100`，不寫入）**：3 個 basis 加技術指標每檔約 0.46 秒，全市場 2,065 檔估計計算約 16 分鐘（單程序，只算價格時約 9 分鐘）。`derived_features` 的 EMA 迴圈改用 numpy 陣列取值，52 檔實際資料逐位元相同。平行化未評估；update 若在平日 17:30 後開始可能撞到 18:00 的 producer 寫入，請提早或改到收盤更新後執行。
+
+### 共用資料的擴充規則
+
+這些規則適用於所有維護中的共用家族；新 session 要放資料到共用區、或幫既有家族加欄位時照做。
+
+1. **一份正本、一個更新指令。** 共用資料只由家族自己的 `update` 寫入（單一 writer、完整新世代、驗證後原子切換 `current.json`），研究只讀。不要在 worktree、`.tmp/` 或 `research_cache/` 另存一份當正本。
+2. **每次從頭算，標記算到哪天。** 還原價格會因新的除權息改寫整段歷史，依賴它的指標也一樣；所以每個世代都從起始日完整重算，`status.json` 的 `asof` 就是算到哪天。
+3. **加欄位可以，改欄位不行。** 新增欄位就是在計算模組加一欄、遞增 `DEFINITION_VERSION`、更新上表；下次 `update` 起就有。既有欄位的公式、單位、暖機或缺值意義一旦發布就不改：要不同算法就用新欄名，或為價格本身開新家族（`adjusted-daily-v2`）。刪除欄位需要擁有者同意。
+4. **每欄寫清楚四件事**：公式（或指向的正本函式）、單位、缺值／暖機規則、何時可知。會偷看未來的值（例如極值日）不放成每日欄位。
+5. **每天一列放寬表，事件放長表。** 一檔股票每天一個值的放在 `technical_daily` 這類寬表；數量不固定的事件（轉折）放長表，以 `Code` 與可知日期對齊。格式一律 Parquet（zstd、依 `Code, Date` 排序、每檔一個 row group），JSON 只放小型 metadata。
+6. **研究專用的定義不進共用家族。** 帶有特定研究假設的條件、型態旗標、未來報酬標籤留在該研究自己的資料裡。
+7. **同一個 PR 更新文件與索引**：本節表格、`docs/en/research-program.md` 資產索引列、測試。
 
 ## 舊的不可變快取 v1（legacy）
 
