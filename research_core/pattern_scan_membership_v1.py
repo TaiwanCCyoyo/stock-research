@@ -69,6 +69,8 @@ def _registry(inventory: Sequence[Mapping[str, Any]]) -> pd.DataFrame:
     if not records or any(not required.issubset(row) for row in records):
         raise ValueError("inventory requires canonical condition metadata")
     table = pd.DataFrame(records)
+    if not table.feature_id.isin((*FEATURES, "unconditional", "candidate")).all():
+        raise ValueError("inventory feature is outside the approved condition inventory")
     if any(cast(pd.Series, table[column]).nunique(dropna=False) != 1 for column in BASE_COLUMNS):
         raise ValueError("inventory requires one target/group/horizon")
     if table.duplicated(list(MATCH_COLUMNS)).any():
@@ -142,12 +144,14 @@ def _stock_memberships(
     max_membership_rows: int,
 ) -> pd.DataFrame:
     """Expand a validated stock slice using the caller's compiled registry."""
-    upper_bound = len(frame) * 8 * (1 + len(FEATURES) + len(candidates))
+    requested = set(registry.feature_id)
+    features = tuple(feature for feature in FEATURES if feature in requested)
+    upper_bound = len(frame) * 8 * (int("unconditional" in requested) + len(features) + len(candidates))
     if upper_bound > max_membership_rows:
         raise ValueError(f"membership allocation bound {upper_bound} exceeds {max_membership_rows}")
     if frame.empty:
         return pd.DataFrame({"event_id": pd.Series(dtype=object), "cell_id": pd.Series(dtype=object)})
-    for feature in FEATURES:
+    for feature in features:
         if not {f"{feature}_bin", f"{feature}_status"}.issubset(frame):
             raise ValueError(f"missing wide condition columns for {feature}")
     codes = cast(pd.Series, frame["security_id"]).map(lambda value: value[3:] if value.startswith("TW:") else value[2:] if value.startswith("TW") else value)
@@ -181,8 +185,10 @@ def _stock_memberships(
             raise ValueError(f"condition state/bin has no registered cell: {feature}")
         chunks.append(cast(pd.DataFrame, matched.loc[matched.cell_id.notna(), ["event_id", "cell_id"]]))
 
-    append("unconditional", np.full(len(frame), "all", dtype=object), np.full(len(frame), "known", dtype=object))
-    for feature, definition in FEATURES.items():
+    if "unconditional" in requested:
+        append("unconditional", np.full(len(frame), "all", dtype=object), np.full(len(frame), "known", dtype=object))
+    for feature in features:
+        definition = FEATURES[feature]
         statuses = frame[f"{feature}_status"].to_numpy(dtype=object)
         if not np.isin(statuses, ("known", "feature_unknown", "not_applicable")).all():
             raise ValueError("invalid condition status")
@@ -212,7 +218,8 @@ class StockCountPlan:
             raise ValueError("max_membership_rows must be a positive integer")
         self._candidates = _candidates(self._registry)
         self._max_membership_rows = max_membership_rows
-        self._rows_per_event = 8 * (1 + len(FEATURES) + len(self._candidates))
+        requested = set(self._registry.feature_id)
+        self._rows_per_event = 8 * (int("unconditional" in requested) + len(requested.intersection(FEATURES)) + len(self._candidates))
         self._batch_size = max_membership_rows // self._rows_per_event
 
     def matrix(self, frame: pd.DataFrame) -> pd.DataFrame:

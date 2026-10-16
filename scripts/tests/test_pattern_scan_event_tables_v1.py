@@ -9,8 +9,48 @@ import pytest
 from research_core.artifact_store import object_digest
 from research_core.pattern_scan_classification_cache_v1 import ConditionClassificationCache
 from research_core.pattern_scan_event_outcomes_v1 import EventIdentity
-from research_core.pattern_scan_event_tables_v1 import EventTables, build_event_tables
+from research_core.pattern_scan_event_tables_v1 import EventTables, build_event_tables, project_group_outcomes
+from research_core.pattern_scan_groups_v1 import groups_for_pattern
 from research_core.pattern_scan_stock_v1 import EVENT_COLUMNS
+
+
+def test_q1_projection_is_exact_without_condition_calculation(monkeypatch: pytest.MonkeyPatch) -> None:
+    tables, global_values = _inputs()
+    expected = build_event_tables(
+        "B1",
+        tables,
+        global_values,
+        security_id="TW:0001",
+        definition_id="def.v1",
+        input_id="input.v1",
+        base_label_version_id="labels.v1",
+        base_label_manifest_sha256="a" * 64,
+    )
+    groups = groups_for_pattern(
+        "B1",
+        tables["cohort_events"],
+        tables["controls"],
+        tables["pattern_states"],
+        tables["universe"],
+        cast(pd.DatetimeIndex, tables["prices"].index),
+        "def.v1",
+        "input.v1",
+        security_id="TW:0001",
+    )
+
+    def forbidden(*args: Any, **kwargs: Any) -> None:
+        raise AssertionError("Q1 must not calculate condition columns")
+
+    monkeypatch.setattr("research_core.pattern_scan_event_tables_v1.event_conditions", forbidden)
+    actual = project_group_outcomes(
+        groups,
+        tables["base_labels"],
+        cast(pd.Series, tables["prices"]["quality_reason"]),
+        base_label_version_id="labels.v1",
+        base_label_manifest_sha256="a" * 64,
+    )
+    pd.testing.assert_frame_equal(actual.events, expected.events, check_exact=True)
+    pd.testing.assert_frame_equal(actual.group_memberships, expected.group_memberships, check_exact=True)
 
 
 def _inputs() -> tuple[dict[str, pd.DataFrame], pd.DataFrame]:

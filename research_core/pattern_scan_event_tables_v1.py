@@ -11,7 +11,7 @@ import pandas as pd
 
 from research_core.pattern_scan_classification_cache_v1 import ConditionClassificationCache
 from research_core.pattern_scan_event_conditions_v1 import event_conditions
-from research_core.pattern_scan_groups_v1 import groups_for_pattern
+from research_core.pattern_scan_groups_v1 import PatternGroups, groups_for_pattern
 from research_core.pattern_scan_projection_v1 import project_outcomes
 from research_core.pattern_scan_stock_v1 import EVENT_COLUMNS
 
@@ -25,6 +25,54 @@ class EventTables:
     group_memberships: pd.DataFrame
     daily_groups: Mapping[str, pd.Series]
     formula_groups: Mapping[str, pd.Series]
+
+
+@dataclass(frozen=True)
+class ProjectedGroups:
+    raw_events: pd.DataFrame
+    events: pd.DataFrame
+    group_memberships: pd.DataFrame
+
+
+def project_group_outcomes(
+    groups: PatternGroups,
+    base_labels: pd.DataFrame,
+    quality_reason: pd.Series,
+    *,
+    base_label_version_id: str,
+    base_label_manifest_sha256: str,
+) -> ProjectedGroups:
+    """Bind existing groups/outcomes without calculating any condition columns.
+
+    This is the same canonical binding used by full EventTables. Q1 may reduce
+    it immediately in memory instead of retaining expanded event/condition files.
+    """
+    memberships: list[dict[str, str]] = []
+    pieces = []
+    for group_id, supplied in groups.events.items():
+        rows = supplied.copy(deep=True)
+        is_control = rows.pattern_id.str.startswith("C-") if not rows.empty else pd.Series(False, index=rows.index)
+        rows.loc[is_control, "cohort_id"] = rows.loc[is_control, "pattern_id"]
+        pieces.append(rows)
+        memberships.extend({"group_id": group_id, "event_id": event_id} for event_id in rows.event_id)
+    combined = pd.concat(pieces, ignore_index=True) if pieces else pd.DataFrame(columns=pd.Index(EVENT_COLUMNS))
+    duplicates = combined.loc[combined.event_id.duplicated(keep=False)]
+    for _, copies in duplicates.groupby("event_id", sort=False):
+        first = copies.iloc[0]
+        if not cast(pd.Series, copies.eq(first).fillna(False).where(copies.notna() | first.notna(), True).all()).all():
+            raise ValueError("duplicate canonical event identity has differing metadata")
+    unique = combined.drop_duplicates("event_id", keep="first").reset_index(drop=True)
+    projected = project_outcomes(
+        unique,
+        base_labels,
+        quality_reason,
+        base_label_version_id=base_label_version_id,
+        base_label_manifest_sha256=base_label_manifest_sha256,
+    )
+    if not projected.empty and (not projected.horizon.isin((126, 252)).all() or not projected.groupby("event_id").horizon.nunique().eq(2).all()):
+        raise ValueError("events require both fixed horizon base labels")
+    membership_frame = pd.DataFrame(memberships, columns=pd.Index(("group_id", "event_id"))).drop_duplicates().reset_index(drop=True)
+    return ProjectedGroups(unique, projected, membership_frame)
 
 
 def build_event_tables(
@@ -81,33 +129,20 @@ def build_event_tables(
         input_id,
         security_id=security_id,
     )
-    memberships: list[dict[str, str]] = []
-    pieces = []
-    for group_id, supplied in groups.events.items():
-        rows = supplied.copy(deep=True)
-        is_control = rows.pattern_id.str.startswith("C-") if not rows.empty else pd.Series(False, index=rows.index)
-        rows.loc[is_control, "cohort_id"] = rows.loc[is_control, "pattern_id"]
-        pieces.append(rows)
-        memberships.extend({"group_id": group_id, "event_id": event_id} for event_id in rows.event_id)
-    combined = pd.concat(pieces, ignore_index=True) if pieces else pd.DataFrame(columns=pd.Index(EVENT_COLUMNS))
-    duplicates = combined.loc[combined.event_id.duplicated(keep=False)]
-    for _, copies in duplicates.groupby("event_id", sort=False):
-        first = copies.iloc[0]
-        if not cast(pd.Series, copies.eq(first).fillna(False).where(copies.notna() | first.notna(), True).all()).all():
-            raise ValueError("duplicate canonical event identity has differing metadata")
-    unique = combined.drop_duplicates("event_id", keep="first").reset_index(drop=True)
-    projected = project_outcomes(
-        unique,
+    projected = project_group_outcomes(
+        groups,
         tables["base_labels"],
         cast(pd.Series, tables["prices"]["quality_reason"]),
         base_label_version_id=base_label_version_id,
         base_label_manifest_sha256=base_label_manifest_sha256,
     )
-    if not projected.empty and (not projected.horizon.isin((126, 252)).all() or not projected.groupby("event_id").horizon.nunique().eq(2).all()):
-        raise ValueError("events require both fixed horizon base labels")
-    conditions = event_conditions(unique, tables["indicators"], common, target_pattern=target, classification_cache=classification_cache)
-    membership_frame = pd.DataFrame(memberships, columns=pd.Index(("group_id", "event_id"))).drop_duplicates().reset_index(drop=True)
+    conditions = event_conditions(projected.raw_events, tables["indicators"], common, target_pattern=target, classification_cache=classification_cache)
     LOGGER.debug(
-        "Bound event tables target=%s stock=%s events=%d projected=%d memberships=%d", target, security_id, len(unique), len(projected), len(membership_frame)
+        "Bound event tables target=%s stock=%s events=%d projected=%d memberships=%d",
+        target,
+        security_id,
+        len(projected.raw_events),
+        len(projected.events),
+        len(projected.group_memberships),
     )
-    return EventTables(projected, conditions, membership_frame, groups.daily_states, groups.formula_states)
+    return EventTables(projected.events, conditions, projected.group_memberships, groups.daily_states, groups.formula_states)

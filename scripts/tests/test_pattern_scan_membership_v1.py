@@ -8,7 +8,7 @@ import pytest
 from research_core.artifact_store import object_digest
 from research_core.hhhl_variants_selection import Atom, split_for_code
 from research_core.pattern_scan_conditions_v1 import FEATURES
-from research_core.pattern_scan_membership_v1 import candidate_coverage, membership_inventory, stock_memberships
+from research_core.pattern_scan_membership_v1 import StockCountPlan, candidate_coverage, membership_inventory, stock_memberships
 from research_core.pattern_scan_reporting_v1 import candidate_membership, facet_masks
 
 BASE = {"pattern_id": "B1", "control_id": "pattern", "cohort_id": "union", "horizon": 126}
@@ -142,3 +142,55 @@ def test_inventory_metadata_and_candidate_definition_reject_invalid_overrides() 
     duplicated = (*inventory, cast(dict[str, Any], inventory[0]))
     with pytest.raises(ValueError):
         stock_memberships(frame(), duplicated)
+
+
+def test_unconditional_matrix_matches_full_inventory_without_condition_columns() -> None:
+    source = frame().assign(
+        effective_label=["hit", "unknown", "loss", "flat-win"],
+        calendar_full=[True, True, True, False],
+        event_main_eligible=[True, False, True, False],
+        event_eligibility_excluded=False,
+    )
+    inventory = membership_inventory(BASE)
+    unconditional = tuple(row for row in inventory if row["feature_id"] == "unconditional")
+    ids = {object_digest(row) for row in unconditional}
+    full = StockCountPlan(inventory).matrix(source)
+    expected = full.loc[full.cell_id.isin(ids)].reset_index(drop=True)
+    stripped = source.drop(columns=[f"{feature}_{suffix}" for feature in FEATURES for suffix in ("bin", "status")])
+    actual = StockCountPlan(unconditional, max_membership_rows=8).matrix(stripped)
+    pd.testing.assert_frame_equal(actual, expected)
+    members = stock_memberships(stripped, unconditional, max_membership_rows=8 * len(source))
+    assert len(members) == 8 * len(source)
+    with pytest.raises(ValueError, match="allocation bound"):
+        stock_memberships(stripped, unconditional, max_membership_rows=8 * len(source) - 1)
+    with pytest.raises(ValueError, match="allocation bound"):
+        StockCountPlan(unconditional, max_membership_rows=7).matrix(stripped)
+
+
+def test_selected_feature_only_and_candidate_dependencies_are_preserved() -> None:
+    source = frame()
+    inventory = membership_inventory(BASE, {"candidate-1": ATOMS})
+    selected = tuple(row for row in inventory if row["feature_id"] == "MA_a")
+    narrow = source.loc[:, ["event_id", "security_id", "t0", "horizon", "mkt", "MA_a_bin", "MA_a_status"]]
+    full = stock_memberships(source, inventory)
+    ids = {object_digest(row) for row in selected}
+    expected = full.loc[full.cell_id.isin(ids)].reset_index(drop=True)
+    pd.testing.assert_frame_equal(stock_memberships(narrow, selected, max_membership_rows=8 * len(source)), expected)
+    candidates = tuple(row for row in inventory if row["feature_id"] == "candidate")
+    candidate_ids = {object_digest(row) for row in candidates}
+    candidate_expected = full.loc[full.cell_id.isin(candidate_ids)].reset_index(drop=True)
+    candidate_source = source.loc[:, [*narrow.columns, "MACD_bin", "MACD_status"]]
+    pd.testing.assert_frame_equal(stock_memberships(candidate_source, candidates, max_membership_rows=8 * len(source)), candidate_expected)
+    with pytest.raises(ValueError, match="missing condition schema for MACD"):
+        stock_memberships(narrow, candidates, max_membership_rows=8 * len(source))
+
+
+@pytest.mark.parametrize("invalid", ["unknown", "duplicate"])
+def test_requested_inventory_rejects_unknown_or_duplicate_cells(invalid: str) -> None:
+    inventory = tuple(row for row in membership_inventory(BASE) if row["feature_id"] == "unconditional")
+    malformed = ({**inventory[0], "feature_id": "unregistered"},) if invalid == "unknown" else (*inventory, inventory[0])
+    message = "outside the approved" if invalid == "unknown" else "duplicate inventory"
+    with pytest.raises(ValueError, match=message):
+        StockCountPlan(malformed)
+    with pytest.raises(ValueError, match=message):
+        stock_memberships(frame(), malformed)
