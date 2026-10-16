@@ -287,6 +287,29 @@ def _unresolved_event(event: dict[str, Any], reason: str) -> dict[str, Any]:
     return {"code": event["code"], "year": int(dates[0][:4]) if dates else None, "event_dates": dates, "reasons": [reason]}
 
 
+def _validate_entitlement_sources(event: dict[str, Any], source_ids: set[str]) -> None:
+    """Require every supplied economic fact/derivation to cite captured sources."""
+
+    def require_ids(value: object, label: str) -> None:
+        if (
+            not isinstance(value, list)
+            or not value
+            or any(not isinstance(item, str) or not item.strip() for item in value)
+            or not set(value).issubset(source_ids)
+        ):
+            raise ValueError(f"nonempty registered evidence identifiers required: {label}")
+
+    require_ids(event.get("source_evidence_ids"), "source_evidence_ids")
+    for field in ("source_facts", "derivations", "date_derivations", "market_intervals"):
+        records = event.get(field, [])
+        if not isinstance(records, list):
+            raise ValueError(f"source metadata records must be a list: {field}")
+        for record in records:
+            if not isinstance(record, dict):
+                raise ValueError(f"source metadata record required: {field}")
+            require_ids(record.get("evidence_ids"), field)
+
+
 def build_admission(evidence: Evidence, prices: pd.DataFrame, actions: pd.DataFrame, calendar: pd.DatetimeIndex) -> Admission:
     """Fail affected holdings closed when a term gate fails; never default it."""
     del actions  # The economic kernel binds exact source types/dates itself.
@@ -308,8 +331,7 @@ def build_admission(evidence: Evidence, prices: pd.DataFrame, actions: pd.DataFr
                 audit.append({"event_id": event["event_id"], "status": "unresolved", "reason": reason})
             continue
         try:
-            if not set(event["source_evidence_ids"]).issubset(source_ids):
-                raise ValueError("event source identity missing")
+            _validate_entitlement_sources(event, source_ids)
             entitlement = _entitlement(evidence, event, prices, calendar)
             terms.append(entitlement)
             audit.append({"event_id": event["event_id"], "status": "admitted", "entitlement": entitlement.__dict__})

@@ -438,7 +438,8 @@ def test_r6_rejects_a_later_session_or_inconsistent_date_derivation(failure: str
     if failure != "announced_is_session":
         calendar = calendar.delete(1)
         prices = prices.loc[prices.Date.isin(calendar)]
-    result = adapter.build_admission(evidence_for({"events": [event]}), prices, pd.DataFrame(), calendar)
+    registered = [{"evidence_id": item} for item in ["official-1", "ev-twse-close-0723", "ev-twse-close-0724", "ev-twse-disaster-faq", "ev-twse-report-0726"]]
+    result = adapter.build_admission(evidence_for({"events": [event], "sources": registered}), prices, pd.DataFrame(), calendar)
     assert result.entitlements == ()
     assert "official closure/date rule evidence required" in result.unresolved[0]["reasons"][0]
 
@@ -476,3 +477,65 @@ def test_supported_term_failure_also_keeps_all_economic_dates():
     result = admit(evidence, "3205")
     assert result.entitlements == ()
     assert result.unresolved[0]["event_dates"] == ["2020-01-07", "2020-01-08"]
+
+
+def share_event(kind: str = "LOSS_OFFSET_CAPITAL_REDUCTION") -> dict[str, Any]:
+    event = base_event("1234", kind)
+    if kind == "PAR_VALUE_CHANGE":
+        event["date_roles"] = [{"role": "new_shares_start_trading", "date": "2020-01-07"}]
+        event["source_facts"] = [
+            source_fact("new_shares_per_old_share", "20", "new_shares_per_old_share"),
+            source_fact("old_par_value", "10", "NTD_per_share"),
+            source_fact("new_par_value", "0.5", "NTD_per_share"),
+        ]
+    else:
+        event["date_roles"] = [{"role": "resumption_date", "date": "2020-01-07"}]
+        event["source_facts"] = [source_fact("shares_reduced_per_1000_existing", "600", "shares_per_1000_existing_shares")]
+    return event
+
+
+@pytest.mark.parametrize("invalid_ids", [[], None, "official-1", [""], [1], ["unregistered-source"]])
+def test_recognized_event_requires_nonempty_registered_top_level_ids(invalid_ids: Any):
+    event = share_event()
+    event["source_evidence_ids"] = invalid_ids
+    result = admit(evidence_for({"events": [event]}), "1234")
+    assert result.entitlements == ()
+    assert result.unresolved[0]["event_dates"] == ["2020-01-07"]
+    assert "source_evidence_ids" in result.unresolved[0]["reasons"][0]
+
+
+@pytest.mark.parametrize("kind", ["LOSS_OFFSET_CAPITAL_REDUCTION", "PAR_VALUE_CHANGE"])
+def test_share_quantity_fact_cannot_reference_an_unregistered_source(kind: str):
+    event = share_event(kind)
+    event["source_facts"][0]["evidence_ids"] = ["unregistered-source"]
+    result = admit(evidence_for({"events": [event]}), "1234")
+    assert result.entitlements == ()
+    assert result.unresolved[0]["event_dates"] == ["2020-01-07"]
+    assert "source_facts" in result.unresolved[0]["reasons"][0]
+
+
+@pytest.mark.parametrize("field", ["source_facts", "derivations", "date_derivations", "market_intervals"])
+@pytest.mark.parametrize("invalid_ids", [[], ["unregistered-source"]])
+def test_all_present_nested_metadata_require_registered_evidence(field: str, invalid_ids: list[str]):
+    event = share_event()
+    if field == "source_facts":
+        event[field][0]["evidence_ids"] = invalid_ids
+    else:
+        event[field] = [{"evidence_ids": invalid_ids}]
+    result = admit(evidence_for({"events": [event]}), "1234")
+    assert result.entitlements == ()
+    assert field in result.unresolved[0]["reasons"][0]
+
+
+@pytest.mark.parametrize("kind,expected_multiplier", [("LOSS_OFFSET_CAPITAL_REDUCTION", 0.4), ("PAR_VALUE_CHANGE", 20.0)])
+def test_nested_sources_can_be_registered_cross_sources_not_listed_at_event_top(kind: str, expected_multiplier: float):
+    event = share_event(kind)
+    for fact in event["source_facts"]:
+        fact["evidence_ids"] = ["official-2"]
+    for field in ("derivations", "date_derivations", "market_intervals"):
+        event[field] = [{"evidence_ids": ["official-2"]}]
+    registered = [{"evidence_id": "official-1"}, {"evidence_id": "official-2"}]
+    result = admit(evidence_for({"events": [event], "sources": registered}), "1234")
+    assert not result.unresolved
+    assert len(result.entitlements) == 1
+    assert result.entitlements[0].share_multiplier == expected_multiplier
