@@ -1,0 +1,60 @@
+# Fixed-sequence holding completion v2
+
+Definition: `annual-holding-completion.v2`. The [preregistration](preregistration.md)
+defines the economics and claim boundary. This is a later publication of the
+same study, with fixed v1 selected issuers and execution dates. Original root
+reports, parameters, byte-pinned source and local bundles remain historical.
+
+## Access and ownership
+
+| Asset                                          | Single home                                                                                    | Reader / identity                                                                                                                             |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Source prices and actions                      | Configured canonical producer root, `price_daily.parquet`, `corporate_actions.sqlite`          | `producer_data_root()`, read-only stable reads, input fingerprint in `run-receipt.json`                                                       |
+| Captured official event and daily-gap evidence | Producer root `corporate_action_supplements/annual-winner-20261013-v1/`                        | `publication.json` lists every member's size and SHA-256; `load_verified_evidence` verifies once per process while loading the bytes consumed |
+| Research economic rules                        | `research_core/annual_rotation_v2.py`, `annual_completion_evidence.py`, `annual_completion.py` | Code commit in the run receipt; synthetic tests in `scripts/tests/`                                                                           |
+| Parameters                                     | `../../params/completion-v2.json`                                                              | Recorded values and input identity in receipt                                                                                                 |
+| Small results                                  | This `publications/completion-v2/` directory                                                   | `results.json`, `admission-audit.json`, `performance.json`, `run-receipt.json`; Markdown conclusions and a Git-portable HTML reading view     |
+
+The canonical evidence batch preserves 182 captured files and adds the producer's
+existing MOPS projection, publication manifest and README. It does not update the
+producer's normalized corporate-action database. Stale candidate labels stay in
+the original capture; the new admission audit states which gates passed. Original
+capture paths in provenance are historical, never runtime dependencies.
+
+The producer's recursive mirror includes this family; its category-specific
+quarterly archives do not. Publication does not itself prove a completed backup.
+
+## Reproduction and update
+
+Run from a committed task branch while the producer is idle and outside its
+weekday write window:
+
+```text
+python -m scripts.complete_annual_rotation
+```
+
+The default is a new publication in this directory. Existing output filenames
+are rejected. For another run choose a new named publication with `--output`,
+a separately registered parameter/run identity, and preserve this version.
+No input databases, full price tables, adjusted series or source-code snapshots
+are copied into this directory. Daily equity vectors are used in memory and
+omitted from the compact publication; carry counts and limitations are retained.
+
+No legacy input bundle or source pin is replaced. Whole-market selection gaps
+remain a limitation: a seven-winner supplement cannot repair every unknown
+ranking candidate. The adjusted-daily shared family is not substituted for an
+economic holding model with cash and share entitlements.
+
+## Cost and integrity
+
+One input fingerprint pass, one official calendar scan, bounded selected-issuer
+reads, one supplement verification per process, and result-byte hashes after
+formatting. Receipt finalization checks input stat/WAL stability rather than
+hashing all large files again. No-rights scenarios and benchmark intervals are
+reused in memory. Phase wall/CPU and available process-memory observations are
+saved in `performance.json`; unavailable I/O/isolated peak measures are explicit.
+
+The source batch is immutable; disagreement, absent units, missing event prices
+and unsupported actions remain unknown. H/N marks are reference marks, not
+observed executions or a complete daily drawdown series. Both rights scenarios
+must remain visible.

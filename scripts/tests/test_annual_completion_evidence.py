@@ -1,0 +1,443 @@
+import hashlib
+import json
+from copy import deepcopy
+from decimal import Decimal
+from pathlib import Path
+from typing import Any
+
+import numpy as np
+import pandas as pd
+import pytest
+
+from research_core import annual_completion_evidence as adapter
+from research_core.annual_rotation_v2 import economic_path_v2
+
+
+def encoded(value: Any) -> bytes:
+    return json.dumps(value, ensure_ascii=False).encode("utf-8")
+
+
+def identity(raw: bytes) -> dict[str, Any]:
+    return {"bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest()}
+
+
+def publication(tmp_path: Path, *, body_path: str = "facts.json", bound_digest: str | None = None) -> dict[str, bytes]:
+    body = encoded({"amount": "100", "unit": "shares_per_1000"})
+    body_identity = identity(body)
+    candidate = {
+        "sources": [{"evidence_id": "official-1", "raw_body": {"path": body_path, **body_identity, **({"sha256": bound_digest} if bound_digest else {})}}],
+        "events": [],
+        "daily_gap_observations": [],
+    }
+    members = {adapter.CANDIDATE: encoded(candidate), "captured/facts.json": body, "captured/rows.jsonl": b'{"row":1}\n{"row":2}\n'}
+    for name, raw in members.items():
+        path = tmp_path / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(raw)
+    (tmp_path / "publication.json").write_bytes(
+        encoded({"schema": "annual-source-evidence.v1", "members": {name: identity(raw) for name, raw in members.items()}})
+    )
+    return members
+
+
+def test_loader_hashes_each_consumed_member_once_and_keeps_the_same_bytes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    members = publication(tmp_path)
+    original_hash = hashlib.sha256
+    original_open = Path.open
+    hashed = []
+    opened: dict[str, int] = {}
+
+    def sha256(raw: bytes = b"") -> Any:
+        hashed.append(raw)
+        return original_hash(raw)
+
+    def opened_once(path: Path, mode: str = "r", *args: Any, **kwargs: Any) -> Any:
+        if mode == "rb" and path.is_relative_to(tmp_path) and path.relative_to(tmp_path).as_posix() in members:
+            name = path.relative_to(tmp_path).as_posix()
+            opened[name] = opened.get(name, 0) + 1
+        return original_open(path, mode, *args, **kwargs)
+
+    monkeypatch.setattr(adapter.hashlib, "sha256", sha256)
+    monkeypatch.setattr(Path, "open", opened_once)
+    evidence = adapter.load_verified_evidence(tmp_path)
+    assert len(hashed) == len(members)
+    assert opened == dict.fromkeys(members, 1)
+    assert evidence.retained_bytes == sum(map(len, members.values()))
+    assert evidence.verification_seconds >= 0
+    (tmp_path / "captured/facts.json").write_bytes(b"changed after verification")
+    assert evidence.json("captured/facts.json") == {"amount": "100", "unit": "shares_per_1000"}
+    assert evidence.jsonl("captured/rows.jsonl") == [{"row": 1}, {"row": 2}]
+    assert len(hashed) == len(members)
+    assert opened == dict.fromkeys(members, 1)
+
+
+def test_loader_rejects_member_tampering_and_unbound_source_facts(tmp_path: Path):
+    publication(tmp_path)
+    (tmp_path / "captured/facts.json").write_bytes(b"tampered")
+    with pytest.raises(ValueError, match="identity mismatch"):
+        adapter.load_verified_evidence(tmp_path)
+    publication(tmp_path, bound_digest="0" * 64)
+    with pytest.raises(ValueError, match="unbound source fact"):
+        adapter.load_verified_evidence(tmp_path)
+
+
+@pytest.mark.parametrize("name", ["../outside.json", "/outside.json", "C:/outside.json", "captured\\outside.json"])
+def test_loader_rejects_unsafe_member_paths(tmp_path: Path, name: str):
+    publication(tmp_path)
+    manifest = json.loads((tmp_path / "publication.json").read_bytes())
+    manifest["members"] = {name: {"bytes": 0, "sha256": "0" * 64}}
+    (tmp_path / "publication.json").write_bytes(encoded(manifest))
+    with pytest.raises(ValueError, match="unsafe artifact name"):
+        adapter.load_verified_evidence(tmp_path)
+
+
+def test_loader_rejects_unsafe_fact_locator_and_oversized_member(tmp_path: Path):
+    publication(tmp_path, body_path="../facts.json")
+    with pytest.raises(ValueError, match="unsafe artifact name"):
+        adapter.load_verified_evidence(tmp_path)
+    publication(tmp_path)
+    manifest = json.loads((tmp_path / "publication.json").read_bytes())
+    manifest["members"][adapter.CANDIDATE]["bytes"] = 32_000_001
+    (tmp_path / "publication.json").write_bytes(encoded(manifest))
+    with pytest.raises(ValueError, match="size limit"):
+        adapter.load_verified_evidence(tmp_path)
+
+
+@pytest.mark.parametrize(
+    "left,right,expected", [("100.00000041", "100.00000049", "100.000000"), ("1.2345665", "1.2345664", "1.234566"), ("1.2345675", "1.2345676", "1.234568")]
+)
+def test_r8_agreement_uses_six_decimals_in_source_units(left: str, right: str, expected: str):
+    assert adapter.agreed(Decimal(left), Decimal(right)) == Decimal(expected)
+
+
+def test_r8_conflict_is_not_averaged():
+    with pytest.raises(ValueError, match="source term conflict"):
+        adapter.agreed(Decimal("100.0000001"), Decimal("100.0000009"))
+
+
+def prices_for(code: str) -> tuple[pd.DataFrame, pd.DatetimeIndex]:
+    dates = pd.DatetimeIndex(["2020-01-06", "2020-01-07", "2020-01-08", "2020-01-09"])
+    return pd.DataFrame({"Code": code, "Date": dates, "Open": 100.0, "High": 100.0, "Low": 100.0, "Close": 100.0, "Volume": 1.0}), dates
+
+
+def source_fact(attribute: str, value: str, unit: str) -> dict[str, Any]:
+    return {"attribute": attribute, "raw_value": value, "unit": unit, "fact_status": "source_explicit", "evidence_ids": ["official-1"]}
+
+
+def base_event(code: str, kind: str = "EX_RIGHT_AND_DIVIDEND") -> dict[str, Any]:
+    return {
+        "event_id": "event-1",
+        "code": code,
+        "event_type": kind,
+        "source_evidence_ids": ["official-1"],
+        "date_roles": [{"role": "study_input_ex_date", "date": "2020-01-07"}],
+        "source_facts": [],
+        "market_intervals": [],
+    }
+
+
+def evidence_for(candidate: dict[str, Any], members: dict[str, bytes] | None = None) -> adapter.Evidence:
+    payloads = {
+        adapter.CANDIDATE: encoded({"sources": [{"evidence_id": "official-1"}], "events": [], "daily_gap_observations": [], **candidate}),
+        **(members or {}),
+    }
+    return adapter.Evidence({"members": {name: identity(raw) for name, raw in payloads.items()}}, payloads, sum(map(len, payloads.values())), 0.0)
+
+
+def stated(value: Any) -> dict[str, Any]:
+    return {"status": "stated", "value": value}
+
+
+def rights_evidence(code: str = "3205", *, cash: Any = "2", exchange_bonus: str = "100") -> adapter.Evidence:
+    body = b"captured issuer page"
+    date = "2020-01-07"
+    record = {
+        "company_id": code,
+        "capture_relative_path": f"issuer-{code}.html",
+        "body_sha256": identity(body)["sha256"],
+        "fields": {"stated_ex_date": stated(date), "cash_per_share": stated(cash)},
+        "rights_fields": {
+            key: stated(value)
+            for key, value in {
+                "subscription_class": "普通股",
+                "earnings_free_per_thousand": "100",
+                "reserves_free_per_thousand": "0",
+                "subscription_per_thousand": "50",
+                "subscription_price": "30",
+            }.items()
+        },
+    }
+    exchange = {
+        "tables": [
+            {
+                "fields": ["代號", "除權息日期", "每仟股無償配股", "現金股利", "按持股比例仟股認購", "現金增資認購價"],
+                "data": [[code, "109/01/07", exchange_bonus, "2", "50", "30"]],
+            }
+        ]
+    }
+    return evidence_for(
+        {"events": [base_event(code)]},
+        {
+            "rights-projections-v2.json": encoded({"records": [record]}),
+            f"captured/issuer-{code}.html": body,
+            f"captured/tpex-current/exdailyq-{code}-{date}.json": encoded(exchange),
+        },
+    )
+
+
+def admit(evidence: adapter.Evidence, code: str, prices: pd.DataFrame | None = None) -> adapter.Admission:
+    frame, dates = prices_for(code)
+    return adapter.build_admission(evidence, frame if prices is None else prices, pd.DataFrame(), dates)
+
+
+def test_rights_terms_are_linked_without_factor_to_share_inference():
+    result = admit(rights_evidence(), "3205")
+    assert not result.unresolved
+    assert len(result.entitlements) == 1
+    term = result.entitlements[0]
+    assert term.share_multiplier == 1.1
+    assert term.cash_per_old_share == 2
+    assert term.rights_per_old_share == 0.05
+    assert term.subscription_price == 30
+    assert term.announced_date == term.effective_date == "2020-01-07"
+    assert term.source_event_type == "EX_RIGHT_AND_DIVIDEND"
+
+
+@pytest.mark.parametrize("failure", ["missing_cash", "r8_conflict", "unbound_projection", "wrong_projection_date", "wrong_exchange_code"])
+def test_term_failure_blocks_holding_instead_of_defaulting_cash_or_rights_to_zero(failure: str):
+    evidence = rights_evidence(cash=None if failure == "missing_cash" else "2", exchange_bonus="100.000002" if failure == "r8_conflict" else "100")
+    if failure in {"unbound_projection", "wrong_projection_date"}:
+        projection = evidence.json("rights-projections-v2.json")
+        if failure == "unbound_projection":
+            projection["records"][0]["body_sha256"] = "0" * 64
+        else:
+            projection["records"][0]["fields"]["stated_ex_date"] = stated("2020-01-08")
+        evidence.members["rights-projections-v2.json"] = encoded(projection)
+    if failure == "wrong_exchange_code":
+        name = "captured/tpex-current/exdailyq-3205-2020-01-07.json"
+        exchange = evidence.json(name)
+        exchange["tables"][0]["data"][0][0] = "9999"
+        evidence.members[name] = encoded(exchange)
+    result = admit(evidence, "3205")
+    assert result.entitlements == ()
+    assert result.unresolved[0]["code"] == "3205"
+    assert result.unresolved[0]["year"] == 2020
+    assert result.unresolved[0]["reasons"]
+    assert result.audit[0]["status"] == "unresolved"
+
+
+def literal_evidence() -> adapter.Evidence:
+    evidence = rights_evidence("3406", cash=None)
+    literal = {
+        "effective_date_from_annual_row": "2020-01-07",
+        "literal_fields": {
+            "股票代號": "3406",
+            "A. 按普通股股東持股比例每千股無償配股": "100 股",
+            "(每股配發現金股利)除息": "0 元／股",
+            "按股東持股比例每千股認購": "20 股",
+            "每股認購金額": "50 元／股",
+        },
+    }
+    evidence.members["captured/capture-3406/events.jsonl"] = encoded(literal) + b"\n"
+    return evidence
+
+
+def test_twse_literal_uses_explicit_units_when_older_issuer_projection_is_unsupported():
+    result = admit(literal_evidence(), "3406")
+    assert not result.unresolved
+    assert result.entitlements[0].share_multiplier == 1.1
+    assert result.entitlements[0].cash_per_old_share == 0
+    assert result.entitlements[0].rights_per_old_share == 0.02
+    assert result.entitlements[0].subscription_price == 50
+
+
+@pytest.mark.parametrize("failure", ["unit", "date", "code", "duplicate"])
+def test_twse_literal_requires_exact_units_code_and_date(failure: str):
+    evidence = literal_evidence()
+    name = "captured/capture-3406/events.jsonl"
+    row = evidence.jsonl(name)[0]
+    if failure == "unit":
+        row["literal_fields"]["按股東持股比例每千股認購"] = "20 %"
+    elif failure == "date":
+        row["effective_date_from_annual_row"] = "2020-01-08"
+    elif failure == "code":
+        row["literal_fields"]["股票代號"] = "9999"
+    evidence.members[name] = encoded(row) + b"\n" + (encoded(row) + b"\n" if failure == "duplicate" else b"")
+    result = admit(evidence, "3406")
+    assert not result.entitlements
+    assert result.unresolved[0]["reasons"]
+
+
+@pytest.mark.parametrize("failure", ["missing", "duplicate", "zero", "nan", "bad_geometry"])
+def test_cash_and_rights_require_an_actual_valid_same_day_ohlc(failure: str):
+    prices, _ = prices_for("3205")
+    if failure == "missing":
+        prices = prices.drop(index=1)
+    elif failure == "duplicate":
+        prices = pd.concat([prices, prices.iloc[[1]]], ignore_index=True)
+    elif failure == "zero":
+        prices.loc[1, "Close"] = 0
+    elif failure == "nan":
+        prices.loc[1, "Close"] = np.nan
+    else:
+        prices.loc[1, "Low"] = 101
+    result = admit(rights_evidence(), "3205", prices)
+    assert result.entitlements == ()
+    assert result.unresolved[0]["reasons"]
+
+
+def test_share_change_uses_first_actual_resumption_quote_and_preserves_original_date():
+    event = base_event("6276", "LOSS_OFFSET_CAPITAL_REDUCTION")
+    event["date_roles"] = [{"role": "resumption_date", "date": "2020-01-07"}]
+    event["source_facts"] = [source_fact("shares_reduced_per_1000_existing", "600", "shares_per_1000_existing_shares")]
+    prices, _ = prices_for("6276")
+    result = admit(evidence_for({"events": [event]}), "6276", prices.drop(index=1))
+    assert not result.unresolved
+    assert result.entitlements[0].announced_date == "2020-01-07"
+    assert result.entitlements[0].effective_date == "2020-01-08"
+    assert result.entitlements[0].share_multiplier == 0.4
+
+
+def gap(day: str = "2020-01-07", *, evidence_ids: list[str] | None = None, event_ids: list[str] | None = None) -> dict[str, Any]:
+    return {
+        "gap_id": "gap-" + day,
+        "code": "1234",
+        "date": day,
+        "evidence_ids": ["official-1"] if evidence_ids is None else evidence_ids,
+        "event_ids": event_ids or [],
+        "observation_kind": "missing_close",
+        "source_observation": {"open": None, "high": None, "low": None, "close": None},
+        "cause_status": "cause_unknown",
+    }
+
+
+def test_source_bound_all_null_ohlc_can_be_n_without_inventing_a_halt_cause():
+    observation = gap()
+    result = admit(evidence_for({"daily_gap_observations": [observation]}), "1234")
+    assert result.unavailable_by_code == {"1234": {"2020-01-07": "N"}}
+    assert result.audit[-1]["cause_status"] == "cause_unknown"
+    assert result.audit[-1]["source_observation"] == observation["source_observation"]
+
+
+@pytest.mark.parametrize("evidence_ids", [[], ["unregistered-source"]])
+def test_missing_or_unregistered_source_cannot_admit_h_or_n(evidence_ids: list[str]):
+    result = admit(evidence_for({"daily_gap_observations": [gap(evidence_ids=evidence_ids)]}), "1234")
+    assert not result.unavailable_by_code
+
+
+def test_partial_ohlc_or_missing_null_fields_cannot_be_n():
+    observations = [gap("2020-01-07"), gap("2020-01-08")]
+    observations[0]["source_observation"]["open"] = 100
+    observations[1]["source_observation"].pop("high")
+    result = admit(evidence_for({"daily_gap_observations": observations}), "1234")
+    assert not result.unavailable_by_code
+    assert [row["class"] for row in result.audit] == ["U", "U"]
+
+
+def test_open_ended_halt_proves_only_its_documented_start_day():
+    event = base_event("1234", "TRADING_SUSPENSION")
+    event["market_intervals"] = [
+        {
+            "type": "trading_suspension",
+            "evidence_ids": ["official-1"],
+            "start_date": "2020-01-07",
+            "end_date": None,
+            "start_inclusive": True,
+            "end_inclusive": False,
+        }
+    ]
+    observations = [gap("2020-01-07", event_ids=["event-1"]), gap("2020-01-08", event_ids=["event-1"])]
+    for observation in observations:
+        observation["observation_kind"] = "halt_announcement"
+    result = admit(evidence_for({"events": [event], "daily_gap_observations": observations}), "1234")
+    assert result.unavailable_by_code == {"1234": {"2020-01-07": "H"}}
+    assert [row["class"] for row in result.audit] == ["H", "U"]
+
+
+def test_trade_conflict_observation_is_preserved_and_does_not_replace_valid_quote():
+    event = base_event("1234", "TRADING_SUSPENSION")
+    event["market_intervals"] = [
+        {
+            "type": "trading_suspension",
+            "evidence_ids": ["official-1"],
+            "start_date": "2020-01-07",
+            "end_date": None,
+            "start_inclusive": True,
+            "end_inclusive": False,
+        }
+    ]
+    observation = gap(event_ids=["event-1"])
+    observation.update(
+        observation_kind="observed_trade_conflict",
+        cause_status="official_halt_but_quote_observed",
+        source_observation={"open": 100, "high": 100, "low": 100, "close": 100, "volume": 10},
+    )
+    original = deepcopy(observation)
+    prices, calendar = prices_for("1234")
+    result = admit(evidence_for({"events": [event], "daily_gap_observations": [observation]}), "1234", prices)
+    audit = result.audit[-1]
+    assert audit["source_observation"] == original["source_observation"]
+    assert audit["cause_status"] == original["cause_status"]
+    assert audit["evidence_ids"] == ["official-1"]
+    actions = pd.DataFrame(columns=pd.Index(["code", "ex_date", "event_type", "price_factor", "cash_dividend_estimate"]))
+    start, end = calendar[0], calendar[-1]
+    assert isinstance(start, pd.Timestamp) and isinstance(end, pd.Timestamp)
+    path = economic_path_v2(prices, actions, calendar, start=start, end=end, unavailable_days=result.unavailable_by_code.get("1234", {}))
+    assert path["status"] == "modeled"
+    assert path["complete_equity"] is True
+    assert path["carried_days"] == 0
+
+
+def test_unsupported_supplement_economic_event_is_unresolved_not_silently_ignored():
+    event = base_event("1234", "MERGER")
+    result = admit(evidence_for({"events": [event]}), "1234")
+    assert result.entitlements == ()
+    assert result.unresolved == [{"code": "1234", "year": 2020, "reasons": ["unsupported supplement economic event: MERGER"]}]
+    assert result.audit[0]["status"] == "unresolved"
+
+
+@pytest.mark.parametrize("conflict", ["different_code", "exclusive_end", "wrong_interval_type"])
+def test_halt_interval_must_match_issuer_and_include_the_observed_day(conflict: str):
+    event = base_event("9999" if conflict == "different_code" else "1234", "TRADING_SUSPENSION")
+    event["market_intervals"] = [
+        {
+            "type": "trading_method_change" if conflict == "wrong_interval_type" else "trading_suspension",
+            "evidence_ids": ["official-1"],
+            "start_date": "2020-01-06",
+            "end_date": "2020-01-07",
+            "start_inclusive": True,
+            "end_inclusive": conflict != "exclusive_end",
+        }
+    ]
+    observation = gap(event_ids=["event-1"])
+    observation["observation_kind"] = "halt_announcement"
+    result = admit(evidence_for({"events": [event], "daily_gap_observations": [observation]}), "1234")
+    assert not result.unavailable_by_code
+    assert result.audit[-1]["class"] == "U"
+
+
+@pytest.mark.parametrize("failure", ["later_session", "derivation_date", "announced_is_session"])
+def test_r6_rejects_a_later_session_or_inconsistent_date_derivation(failure: str):
+    event = base_event("1519")
+    event["date_roles"] = [
+        {"role": "announced_ex_date", "date": "2020-01-07"},
+        {"role": "price_adjustment_trading_date", "date": "2020-01-09" if failure == "later_session" else "2020-01-08"},
+    ]
+    event["source_facts"] = [
+        source_fact("new_shares_per_1000_old_shares", "100", "new_shares_per_1000_old_shares"),
+        source_fact("cash_dividend_per_share", "2", "NTD_per_share"),
+    ]
+    event["date_derivations"] = [
+        {
+            "status": "inferred_official_rule",
+            "date": "2020-01-09" if failure == "derivation_date" else event["date_roles"][1]["date"],
+            "evidence_ids": ["ev-twse-close-0723", "ev-twse-close-0724", "ev-twse-disaster-faq", "ev-twse-report-0726"],
+        }
+    ]
+    prices, calendar = prices_for("1519")
+    if failure != "announced_is_session":
+        calendar = calendar.delete(1)
+        prices = prices.loc[prices.Date.isin(calendar)]
+    result = adapter.build_admission(evidence_for({"events": [event]}), prices, pd.DataFrame(), calendar)
+    assert result.entitlements == ()
+    assert "official closure/date rule evidence required" in result.unresolved[0]["reasons"][0]

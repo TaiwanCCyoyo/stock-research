@@ -36,8 +36,8 @@ unverified revision completeness, actual payment, exercise and delivery.
 Admit only source-linked ordinary-share terms with explicit units and ex-dates.
 For cross-source terms use the issuer value only after agreement at the fixed
 precision in `holding-policy-v2.md` R8. Never average source values, infer stock
-rights from a price factor, or map missing terms to zero. Check the R3/R6
-reference-price corroboration before admitting a distribution. Noncalendar
+rights from a price factor, or map missing terms to zero. Check R3 corroboration (an explicit exchange share ratio or reference price)
+and R6 date-shift evidence before admitting a distribution. Noncalendar
 date shifting requires the documented market closure and exchange rule.
 
 ## Holding economics
