@@ -124,7 +124,7 @@ def test_variants_portable_publication_passes_and_tampered_chunk_fails(tmp_path:
     assert "fail" in output and "hash/size mismatch" in output
 
 
-@pytest.mark.parametrize("failure", [None, "tampered-result", "wrong-version"])
+@pytest.mark.parametrize("failure", [None, "tampered-result", "wrong-version", "projection-results", "projection-performance"])
 def test_annual_completion_inventory_uses_its_reader_without_live_inputs(tmp_path: Path, capsys: pytest.CaptureFixture[str], failure: str | None) -> None:
     root = tmp_path / "synthetic checkout"
     relative = "tasks/20261013-annual-winner-rotation/publications/completion-v2"
@@ -150,6 +150,9 @@ def test_annual_completion_inventory_uses_its_reader_without_live_inputs(tmp_pat
     with zipfile.ZipFile(publication / "publication.zip", "w") as archive:
         for name, raw in members.items():
             archive.writestr(name, raw)
+    if failure is not None and failure.startswith("projection-"):
+        name = "results.json" if failure == "projection-results" else "performance.json"
+        (publication / name).write_bytes(b'{"changed":"reading copy"}')
     status = inventory.main(["--root", str(root), "--only", "annual-holding-completion"])
     assert status == (0 if failure is None else 1)
     output = capsys.readouterr().out

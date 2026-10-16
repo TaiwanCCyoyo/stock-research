@@ -136,12 +136,19 @@ def load_publication(root: Path, *, repo_root: Path | None = None) -> dict[str, 
     """Load verified JSON keyed by the four exact filenames, without extraction.
 
     An existing ZIP always takes precedence, including a corrupt ZIP. Expanded
-    local files are accepted only when no ZIP exists; callers retain this return
-    value instead of repeatedly loading and verifying within one operation.
+    local files are accepted only when no ZIP exists. Present public reading
+    projections must match the already consumed ZIP bytes; callers retain this
+    return value instead of repeatedly loading and verifying within one operation.
     """
     root = safe_path(root)
     archive = safe_path(root / ARCHIVE)
-    members = _archive_members(archive) if archive.exists() else _plain_members(root)
+    has_archive = archive.exists()
+    members = _archive_members(archive) if has_archive else _plain_members(root)
+    if has_archive:
+        for name in ("results.json", "performance.json"):
+            projection = safe_path(root / name)
+            if projection.exists() and _bounded_file(projection, MAX_MEMBER_BYTES) != members[name]:
+                raise ValueError(f"publication projection byte mismatch: {name}")
     return _verified(members, root, repo_root)
 
 

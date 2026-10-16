@@ -258,6 +258,27 @@ def test_members_cannot_masquerade_as_another_schema(tmp_path: Path, name: str):
     key = next(key for key, filename in publication.RESULT_NAMES.items() if filename == name)
     receipt["results"][key].update(bytes=len(members[name]), sha256=hashlib.sha256(members[name]).hexdigest())
     members["run-receipt.json"] = encoded(receipt)
+    (tmp_path / name).write_bytes(members[name])
     (tmp_path / publication.ARCHIVE).write_bytes(archive_bytes(members))
     with pytest.raises(ValueError, match="schema mismatch"):
         publication.load_publication(tmp_path)
+
+
+@pytest.mark.parametrize("name", ["results.json", "performance.json"])
+def test_public_reading_projections_must_match_the_authoritative_zip(tmp_path: Path, name: str):
+    fixture(tmp_path)
+    archive = publication.pack_publication(tmp_path)
+    archive_before = archive.read_bytes()
+    (tmp_path / name).write_bytes(b'{"changed":"public projection"}')
+    with pytest.raises(ValueError, match="projection byte mismatch"):
+        publication.load_publication(tmp_path)
+    assert archive.read_bytes() == archive_before
+
+
+def test_archive_only_publication_does_not_extract_reading_copies(tmp_path: Path):
+    fixture(tmp_path)
+    publication.pack_publication(tmp_path)
+    for name in publication.MEMBERS:
+        (tmp_path / name).unlink()
+    assert publication.load_publication(tmp_path)["results.json"]["value"] == 1.25
+    assert not any((tmp_path / name).exists() for name in publication.MEMBERS)
