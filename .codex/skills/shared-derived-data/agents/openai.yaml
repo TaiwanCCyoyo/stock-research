@@ -1,0 +1,4 @@
+interface:
+    display_name: "Shared Derived Data"
+    short_description: "Read, refresh or extend shared prices, indicators and pivots."
+    default_prompt: "Use this skill before reading, updating or adding columns to shared derived research data."

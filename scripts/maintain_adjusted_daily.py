@@ -1,8 +1,8 @@
-"""Maintain the shared full-market adjusted daily prices (no downloads).
+"""Maintain the shared full-market adjusted daily prices and their technical tables (no downloads).
 
-update   build a new generation from live producer data and make it current
+update   build a new generation (3 price bases + technical-daily.v1) from live producer data and make it current
 status   print the current generation's status
-measure  time N symbols x 3 bases without writing anything
+measure  time N symbols x 3 bases + technical tables without writing anything
 """
 
 from __future__ import annotations
@@ -33,6 +33,8 @@ def main() -> int:
             key: status[key]
             for key in ("generation", "asof", "codes", "calendar", "definition", "source_policy", "actions", "bases", "timings_seconds", "path")
         }
+        technical = status.get("technical")
+        result["technical"] = None if technical is None else {"definition": technical["definition"]["version"], "tables": technical["tables"]}
     else:
         started = time.monotonic()
         bars, actions, _, _ = family.load_inputs(producer_data_root())
@@ -49,6 +51,7 @@ def main() -> int:
             "compute_seconds": round(elapsed, 1),
             "estimated_full_compute_seconds": round(elapsed / len(chosen) * len(everything), 0),
             "rows_per_basis": {basis: tally["rows"] for basis, tally in summary["bases"].items()},
+            "technical_rows": {name: tally["rows"] for name, tally in summary["technical"]["tables"].items()},
         }
     print(json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False))  # noqa: T201 - CLI receipt on stdout
     return 0

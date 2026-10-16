@@ -50,6 +50,7 @@
                 "scripts/research_data.py",
                 "research_core/shared_data.py",
                 "research_core/maintained_adjusted_daily.py",
+                "research_core/technical_daily_v1.py",
                 "scripts/maintain_adjusted_daily.py",
                 "scripts/check_adjusted_daily_asof.py",
                 "tasks/20261012-research-data-entry/*"
@@ -65,7 +66,8 @@
                 "scripts/tests/test_research_data_legacy.py",
                 "scripts/tests/test_research_data_paths.py",
                 "scripts/tests/test_research_data_windows_deletion.py",
-                "scripts/tests/test_run_receipt.py"
+                "scripts/tests/test_run_receipt.py",
+                "scripts/tests/test_technical_daily_v1.py"
             ],
             "consumers": ["annual"]
         },
@@ -502,6 +504,7 @@
         "scripts/tests/test_studio_review_coverage.py",
         "scripts/tests/test_supplement_hhhl_v4_audit.py",
         "scripts/tests/test_supplement_hhhl_v4_diagnostics.py",
+        "scripts/tests/test_technical_daily_v1.py",
         "scripts/tests/test_validate_hhhl_v4_source.py",
         "scripts/tests/test_verify_opportunity_history.py",
         "scripts/tests/test_verify_published_artifacts.py",
