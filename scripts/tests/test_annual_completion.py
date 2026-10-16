@@ -175,8 +175,10 @@ def test_cli_fingerprints_before_data_reads_and_formats_before_receipt(tmp_path:
     report.write_text(report_text(), encoding="utf-8")
     events = []
     specs_seen = []
+    committed_checks: list[Path] = []
     monkeypatch.setattr(completion, "REPO_ROOT", tmp_path)
-    monkeypatch.setattr(completion, "_require_committed_sources", lambda *_: None)
+    monkeypatch.setattr(completion, "TASK", tmp_path)
+    monkeypatch.setattr(completion, "_require_committed_sources", lambda _repo, paths: committed_checks.extend(paths))
     monkeypatch.setattr(completion, "producer_data_root", lambda: producer)
 
     def fingerprint(specs: list[Any]) -> dict[str, Any]:
@@ -220,6 +222,7 @@ def test_cli_fingerprints_before_data_reads_and_formats_before_receipt(tmp_path:
     assert events.count("fingerprint") == 1
     assert events.count("parquet") == 2
     assert events[-2:] == ["format", "receipt"]
+    assert report in committed_checks
     assert next(spec for spec in specs_seen if spec.name == "price_daily").date_column is None
     assert next(spec for spec in specs_seen if spec.name == "corporate_actions").tables == {"corporate_actions": "ex_date"}
     performance = json.loads((output / "performance.json").read_text(encoding="utf-8"))
@@ -341,3 +344,52 @@ def test_ytd_close_mark_also_requires_positive_volume():
     assert result["rows"][-1]["lapse"]["status"] == "unknown"
     assert result["rows"][-1]["benchmark"]["status"] == "unknown"
     assert result["windows"][0]["scenarios"]["lapse"]["complete"] is True
+
+
+@pytest.mark.parametrize("location", ["external", "different_task", "untracked_alternative", "traversal"])
+def test_custom_report_paths_are_rejected_before_any_producer_read(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, location: str):
+    task = tmp_path / "tasks" / "canonical"
+    task.mkdir(parents=True)
+    (task / "report.md").write_text(report_text(), encoding="utf-8")
+    if location == "external":
+        report = tmp_path / "external.md"
+    elif location == "different_task":
+        report = tmp_path / "tasks" / "other" / "report.md"
+    elif location == "untracked_alternative":
+        report = task / "custom-selections.md"
+    else:
+        report = task / ".." / "canonical" / "report.md"
+    if location != "traversal":
+        report.parent.mkdir(parents=True, exist_ok=True)
+        report.write_text(report_text(), encoding="utf-8")
+    monkeypatch.setattr(completion, "TASK", task)
+
+    def forbidden(*_: Any, **__: Any) -> Any:
+        pytest.fail("custom report must be rejected before source/data operations")
+
+    monkeypatch.setattr(completion, "producer_data_root", forbidden)
+    monkeypatch.setattr(completion, "fingerprint_inputs", forbidden)
+    monkeypatch.setattr(completion, "_require_committed_sources", forbidden)
+    with pytest.raises(ValueError, match="canonical task report|traversal forbidden"):
+        completion.main(["--report", str(report), "--output", str(tmp_path / "output")])
+
+
+def test_uncommitted_canonical_report_is_part_of_the_pre_read_source_gate(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    task = tmp_path / "task"
+    task.mkdir()
+    report = task / "report.md"
+    report.write_text(report_text(), encoding="utf-8")
+    monkeypatch.setattr(completion, "TASK", task)
+
+    def reject_uncommitted(_repo: Path, paths: list[Path]) -> None:
+        assert report in paths
+        raise ValueError("run source is not committed: report.md")
+
+    def forbidden(*_: Any, **__: Any) -> Any:
+        pytest.fail("uncommitted report must be rejected before producer access")
+
+    monkeypatch.setattr(completion, "_require_committed_sources", reject_uncommitted)
+    monkeypatch.setattr(completion, "producer_data_root", forbidden)
+    monkeypatch.setattr(completion, "fingerprint_inputs", forbidden)
+    with pytest.raises(ValueError, match="source is not committed"):
+        completion.main(["--report", str(report), "--output", str(tmp_path / "output")])

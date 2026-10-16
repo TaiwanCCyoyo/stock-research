@@ -565,3 +565,122 @@ def test_missing_economic_issuer_is_not_hidden_by_a_previously_valid_event():
     unassignable.pop("code")
     with pytest.raises(ValueError, match="issuer code"):
         admit(evidence_for({"events": [valid, unassignable]}), "1234")
+
+
+@pytest.mark.parametrize("invalid_id", [None, "", " ", 1234, False, []])
+def test_event_ids_must_be_nonempty_strings_before_building_the_index(invalid_id: Any):
+    event = share_event()
+    event["event_id"] = invalid_id
+    with pytest.raises(ValueError, match="event_id must be a nonempty string"):
+        admit(evidence_for({"events": [event]}), "1234")
+
+
+@pytest.mark.parametrize("hidden_event", ["economic", "no_issuer", "noneconomic"])
+@pytest.mark.parametrize("reverse", [False, True])
+def test_duplicate_event_id_cannot_overwrite_economic_or_invalid_issuer_events(hidden_event: str, reverse: bool):
+    earlier = share_event()
+    if hidden_event == "no_issuer":
+        earlier["code"] = None
+    elif hidden_event == "noneconomic":
+        earlier["event_type"] = "TRADING_SUSPENSION"
+    later = base_event("1234", "TRADING_METHOD_CHANGE")
+    records = [later, earlier] if reverse else [earlier, later]
+    with pytest.raises(ValueError, match="duplicate supplement event_id"):
+        admit(evidence_for({"events": records}), "1234")
+
+
+def test_distinct_event_ids_keep_each_unresolved_economic_event():
+    first = base_event("1234", "MERGER")
+    second = base_event("5678", "MERGER")
+    second["event_id"] = "event-2"
+    result = admit(evidence_for({"events": [first, second]}), "1234")
+    assert [row["code"] for row in result.unresolved] == ["1234", "5678"]
+    assert [row["event_id"] for row in result.audit] == ["event-1", "event-2"]
+
+
+def rewrite_candidate(tmp_path: Path, members: dict[str, bytes], raw: bytes) -> None:
+    members[adapter.CANDIDATE] = raw
+    (tmp_path / adapter.CANDIDATE).write_bytes(raw)
+    (tmp_path / "publication.json").write_bytes(
+        encoded({"schema": "annual-source-evidence.v1", "members": {name: identity(value) for name, value in members.items()}})
+    )
+
+
+@pytest.mark.parametrize("sources", [None, {}, [None], [{"evidence_id": None}], [{"evidence_id": ""}], [{"evidence_id": " "}], [{"evidence_id": 1}]])
+def test_source_registry_shape_and_identifiers_fail_globally_in_loader_and_admission(tmp_path: Path, sources: Any):
+    members = publication(tmp_path)
+    candidate = json.loads(members[adapter.CANDIDATE])
+    candidate["sources"] = sources
+    rewrite_candidate(tmp_path, members, encoded(candidate))
+    with pytest.raises(ValueError, match="source"):
+        adapter.load_verified_evidence(tmp_path)
+    with pytest.raises(ValueError, match="source"):
+        admit(evidence_for(candidate), "1234")
+
+
+def test_duplicate_source_id_cannot_fold_distinct_captured_bodies_into_one_identity(tmp_path: Path):
+    members = publication(tmp_path)
+    candidate = json.loads(members[adapter.CANDIDATE])
+    other_body = b"a distinct verified source"
+    members["captured/other.json"] = other_body
+    (tmp_path / "captured/other.json").write_bytes(other_body)
+    candidate["sources"].append({"evidence_id": "official-1", "raw_body": {"path": "other.json", **identity(other_body)}})
+    rewrite_candidate(tmp_path, members, encoded(candidate))
+    with pytest.raises(ValueError, match="duplicate source evidence_id"):
+        adapter.load_verified_evidence(tmp_path)
+    with pytest.raises(ValueError, match="duplicate source evidence_id"):
+        admit(evidence_for(candidate), "1234")
+
+
+def test_distinct_verified_sources_remain_available_under_distinct_ids(tmp_path: Path):
+    members = publication(tmp_path)
+    candidate = json.loads(members[adapter.CANDIDATE])
+    second = deepcopy(candidate["sources"][0])
+    second["evidence_id"] = "official-2"
+    candidate["sources"].append(second)
+    rewrite_candidate(tmp_path, members, encoded(candidate))
+    evidence = adapter.load_verified_evidence(tmp_path)
+    result = admit(evidence, "1234")
+    assert not result.unresolved
+    assert len(evidence.json(adapter.CANDIDATE)["sources"]) == 2
+
+
+@pytest.mark.parametrize("raw", [b'{"value":1,"value":2}', b'{"nested":{"value":1,"value":2}}', b'{"value":NaN}', b'{"value":Infinity}', b"[]", b"null"])
+@pytest.mark.parametrize("format", ["json", "jsonl"])
+def test_evidence_json_and_jsonl_reject_ambiguous_nonfinite_or_nonobject_records(raw: bytes, format: str):
+    name = "member." + format
+    evidence = adapter.Evidence({}, {name: raw}, len(raw), 0)
+    with pytest.raises(ValueError):
+        evidence.json(name) if format == "json" else evidence.jsonl(name)
+
+
+def test_candidate_duplicate_event_key_is_rejected_before_identity_validation(tmp_path: Path):
+    members = publication(tmp_path)
+    rewrite_candidate(tmp_path, members, b'{"sources":[],"events":[{"event_id":"one","code":null,"code":"1234"}],"daily_gap_observations":[]}')
+    with pytest.raises(ValueError, match="duplicate"):
+        adapter.load_verified_evidence(tmp_path)
+    evidence = adapter.Evidence({}, members, 0, 0)
+    with pytest.raises(ValueError, match="duplicate"):
+        admit(evidence, "1234")
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        b'{"schema":"other","schema":"annual-source-evidence.v1","members":{}}',
+        b'{"schema":"annual-source-evidence.v1","members":{},"members":{}}',
+        b"[]",
+        b"null",
+        b'{"value":Infinity}',
+    ],
+)
+def test_manifest_is_strictly_parsed_before_any_duplicate_key_can_be_lost(tmp_path: Path, raw: bytes):
+    (tmp_path / "publication.json").write_bytes(raw)
+    with pytest.raises(ValueError):
+        adapter.load_verified_evidence(tmp_path)
+
+
+def test_manifest_read_retains_eight_megabyte_bound(tmp_path: Path):
+    (tmp_path / "publication.json").write_bytes(b" " * 8_000_001)
+    with pytest.raises(ValueError, match="manifest exceeds size limit"):
+        adapter.load_verified_evidence(tmp_path)

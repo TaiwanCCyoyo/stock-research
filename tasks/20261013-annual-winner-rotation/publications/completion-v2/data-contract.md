@@ -72,6 +72,12 @@ closed even if expanded files are present. This uses the established binary
 transport for public checksum metadata without changing the secret-scanner baseline.
 Each result's full repository-relative receipt path must match the actual
 publication directory, so moving an old ZIP into a new version fails closed.
+The reader validates each named member's schema and preserves explicit admission
+unknowns. The standard artifact inventory includes this Git publication:
+
+```text
+uv run python -m scripts.verify_published_artifacts --only annual-holding-completion
+```
 
 After a fresh computation, package its small result files with:
 

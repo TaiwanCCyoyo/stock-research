@@ -13,7 +13,7 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-from research_core.annual_completion_publication import load_publication
+from research_core.annual_completion_publication import MEMBER_SCHEMAS, load_publication
 from research_core.artifact_store import relative_name, safe_path
 
 LOGGER = logging.getLogger(__name__)
@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 KIT = ROOT / "research_web/report-kit/v1"
 TASK = ROOT / "tasks/20261013-annual-winner-rotation"
 DEFAULT_PUBLICATION_PATH = "tasks/20261013-annual-winner-rotation/publications/completion-v2"
-SCHEMA = "annual-completion-result.v2"
+SCHEMA = MEMBER_SCHEMAS["results.json"]
 MAX_BYTES = 500 * 1024
 SCENARIOS = {"lapse": "認股權放棄", "realize": "認股權價值實現"}
 
@@ -360,9 +360,17 @@ def render_report(
     """Format saved metrics only; never reconstruct returns, rankings or equity."""
     if result.get("schema") != SCHEMA:
         raise ValueError(f"expected {SCHEMA}")
-    for companion in (receipt, audit, performance):
+    for name, companion in (
+        ("run-receipt.json", receipt),
+        ("admission-audit.json", audit),
+        ("performance.json", performance),
+    ):
+        if companion.get("schema") != MEMBER_SCHEMAS[name]:
+            raise ValueError(f"expected {name} schema {MEMBER_SCHEMAS[name]}")
         if companion.get("run_id") != result["run_id"]:
             raise ValueError("publication companion run_id mismatch")
+    if not isinstance(audit.get("unresolved"), list):
+        raise ValueError("admission-audit.json unresolved must be an explicit list")
     date.fromisoformat(presentation_date)
     if re.fullmatch(r"main|[0-9a-fA-F]{40}", publication_ref) is None:
         raise ValueError("publication_ref must be main or a full 40-hex commit")
@@ -404,9 +412,7 @@ def render_report(
     if re.fullmatch(r"[0-9a-f]{40}", commit):
         code_link = f'<a href="https://github.com/TaiwanCCyoyo/stock-research/commit/{commit}">{commit[:8]}</a>'
     unresolved = (
-        "".join(
-            f"<li>{_text(row.get('year', ''))} · {_text(row.get('code', ''))}：{_reasons(row.get('reasons', []))}</li>" for row in audit.get("unresolved", [])
-        )
+        "".join(f"<li>{_text(row.get('year', ''))} · {_text(row.get('code', ''))}：{_reasons(row.get('reasons', []))}</li>" for row in audit["unresolved"])
         or "<li>來源准入稽核未列未解決項目；仍以各期模型狀態為準。</li>"
     )
     execution = performance.get("execution", {})

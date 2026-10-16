@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import datetime as dt
 import hashlib
-import json
 import re
 import time
 from dataclasses import dataclass
@@ -21,7 +20,8 @@ import numpy as np
 import pandas as pd
 
 from research_core.annual_rotation_v2 import Entitlement
-from research_core.artifact_store import read_json, relative_name, safe_path
+from research_core.artifact_store import relative_name, safe_path
+from research_core.json_integrity import strict_json_object
 
 CANDIDATE = "captured/annual-winner-supplement-candidate.v1.json"
 PRECISION = Decimal("0.000001")
@@ -35,13 +35,10 @@ class Evidence:
     verification_seconds: float
 
     def json(self, name: str) -> dict[str, Any]:
-        value = json.loads(self.members[relative_name(name)])
-        if not isinstance(value, dict):
-            raise ValueError(f"object required: {name}")
-        return value
+        return strict_json_object(self.members[relative_name(name)])
 
     def jsonl(self, name: str) -> list[dict[str, Any]]:
-        return [json.loads(line) for line in self.members[relative_name(name)].splitlines() if line.strip()]
+        return [strict_json_object(line) for line in self.members[relative_name(name)].splitlines() if line.strip()]
 
 
 @dataclass
@@ -52,11 +49,32 @@ class Admission:
     unresolved: list[dict[str, Any]]
 
 
+def _validated_sources(candidate: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    records = candidate.get("sources")
+    if not isinstance(records, list):
+        raise ValueError("candidate sources must be a list")
+    sources: dict[str, dict[str, Any]] = {}
+    for source in records:
+        if not isinstance(source, dict):
+            raise ValueError("candidate source must be an object")
+        identifier = source.get("evidence_id")
+        if not isinstance(identifier, str) or not identifier.strip():
+            raise ValueError("source evidence_id must be a nonempty string")
+        if identifier in sources:
+            raise ValueError(f"duplicate source evidence_id: {identifier}")
+        sources[identifier] = source
+    return sources
+
+
 def load_verified_evidence(root: Path) -> Evidence:
     """Read/hash each bounded member once, then consume those same bytes."""
     started = time.perf_counter()
     root = safe_path(root)
-    manifest = read_json(root / "publication.json")
+    with safe_path(root / "publication.json").open("rb") as stream:
+        manifest_raw = stream.read(8_000_001)
+    if len(manifest_raw) > 8_000_000:
+        raise ValueError("manifest exceeds size limit")
+    manifest = strict_json_object(manifest_raw)
     if manifest.get("schema") != "annual-source-evidence.v1":
         raise ValueError("unsupported source publication")
     members: dict[str, bytes] = {}
@@ -73,7 +91,7 @@ def load_verified_evidence(root: Path) -> Evidence:
             raise ValueError(f"source member identity mismatch: {name}")
         members[name] = raw
     evidence = Evidence(manifest, members, total, time.perf_counter() - started)
-    for source in evidence.json(CANDIDATE)["sources"]:
+    for source in _validated_sources(evidence.json(CANDIDATE)).values():
         body = source["raw_body"]
         identity = manifest["members"].get("captured/" + relative_name(body["path"]))
         if identity is None or any(identity[key] != body[key] for key in ("bytes", "sha256")):
@@ -314,12 +332,24 @@ def build_admission(evidence: Evidence, prices: pd.DataFrame, actions: pd.DataFr
     """Fail affected holdings closed when a term gate fails; never default it."""
     del actions  # The economic kernel binds exact source types/dates itself.
     candidate = evidence.json(CANDIDATE)
-    source_ids = {item["evidence_id"] for item in candidate["sources"]}
+    source_ids = set(_validated_sources(candidate))
     audit: list[dict[str, Any]] = []
     unresolved: list[dict[str, Any]] = []
     terms: list[Entitlement] = []
     availability: dict[str, dict[str, str]] = {}
-    events = {item["event_id"]: item for item in candidate["events"]}
+    events: dict[str, dict[str, Any]] = {}
+    records = candidate["events"]
+    if not isinstance(records, list):
+        raise ValueError("supplement events must be a list")
+    for item in records:
+        if not isinstance(item, dict):
+            raise ValueError("supplement event must be an object")
+        event_id = item.get("event_id")
+        if not isinstance(event_id, str) or not event_id.strip():
+            raise ValueError("supplement event_id must be a nonempty string")
+        if event_id in events:
+            raise ValueError(f"duplicate supplement event_id: {event_id}")
+        events[event_id] = item
     types = {"EX_RIGHT", "EX_RIGHT_AND_DIVIDEND", "LOSS_OFFSET_CAPITAL_REDUCTION", "PAR_VALUE_CHANGE"}
     noneconomic_types = {"TRADING_METHOD_CHANGE", "MARKET_CLOSURE", "TRADING_SUSPENSION"}
     for event in events.values():

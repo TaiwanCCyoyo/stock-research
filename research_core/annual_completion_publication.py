@@ -10,7 +10,6 @@ from __future__ import annotations
 import argparse
 import hashlib
 import io
-import json
 import logging
 import os
 import stat
@@ -21,6 +20,7 @@ from pathlib import Path
 from typing import Any
 
 from research_core.artifact_store import publish_noreplace, relative_name, safe_path
+from research_core.json_integrity import strict_json_object
 from research_core.producer_data import REPO_ROOT
 
 LOGGER = logging.getLogger(__name__)
@@ -30,6 +30,12 @@ MAX_MEMBER_BYTES = 500 * 1024
 MAX_TOTAL_BYTES = 2 * 1024 * 1024
 RESULT_NAMES = {"results": "results.json", "admission": "admission-audit.json", "performance": "performance.json"}
 MEMBERS = (*RESULT_NAMES.values(), "run-receipt.json")
+MEMBER_SCHEMAS = {
+    "results.json": "annual-completion-result.v2",
+    "admission-audit.json": "annual-completion-admission.v2",
+    "performance.json": "annual-completion-performance.v2",
+    "run-receipt.json": "run-receipt.v1",
+}
 
 
 def _bounded_file(path: Path, limit: int) -> bytes:
@@ -88,35 +94,22 @@ def _archive_members(path: Path) -> dict[str, bytes]:
         raise ValueError("invalid publication ZIP") from error
 
 
-def _unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
-    value: dict[str, Any] = {}
-    for name, member in pairs:
-        if name in value:
-            raise ValueError(f"duplicate JSON key: {name}")
-        value[name] = member
-    return value
-
-
-def _invalid_constant(value: str) -> None:
-    raise ValueError(f"nonfinite JSON constant: {value}")
-
-
-def _verified(members: dict[str, bytes], root: Path) -> dict[str, dict[str, Any]]:
+def _verified(members: dict[str, bytes], root: Path, repo_root: Path | None = None) -> dict[str, dict[str, Any]]:
     try:
-        publication_path = relative_name(root.relative_to(safe_path(REPO_ROOT)).as_posix())
+        publication_path = relative_name(root.relative_to(safe_path(REPO_ROOT if repo_root is None else repo_root)).as_posix())
     except ValueError as error:
         raise ValueError("publication root must be a repository-relative directory") from error
     if set(members) != set(MEMBERS):
         raise ValueError("exact publication member names required")
     parsed: dict[str, dict[str, Any]] = {}
     for name, raw in members.items():
-        value = json.loads(raw, object_pairs_hook=_unique_object, parse_constant=_invalid_constant)
-        if not isinstance(value, dict):
-            raise ValueError(f"publication JSON object required: {name}")
+        value = strict_json_object(raw)
+        if value.get("schema") != MEMBER_SCHEMAS[name]:
+            raise ValueError(f"publication schema mismatch: {name}")
         parsed[name] = value
     receipt = parsed["run-receipt.json"]
-    if receipt.get("schema") != "run-receipt.v1":
-        raise ValueError("unsupported publication receipt schema")
+    if not isinstance(parsed["admission-audit.json"].get("unresolved"), list):
+        raise ValueError("publication admission unresolved list required")
     run_id = receipt.get("run_id")
     if not isinstance(run_id, str) or not run_id or any(value.get("run_id") != run_id for value in parsed.values()):
         raise ValueError("publication run_id mismatch")
@@ -139,7 +132,7 @@ def _verified(members: dict[str, bytes], root: Path) -> dict[str, dict[str, Any]
     return parsed
 
 
-def load_publication(root: Path) -> dict[str, dict[str, Any]]:
+def load_publication(root: Path, *, repo_root: Path | None = None) -> dict[str, dict[str, Any]]:
     """Load verified JSON keyed by the four exact filenames, without extraction.
 
     An existing ZIP always takes precedence, including a corrupt ZIP. Expanded
@@ -149,7 +142,7 @@ def load_publication(root: Path) -> dict[str, dict[str, Any]]:
     root = safe_path(root)
     archive = safe_path(root / ARCHIVE)
     members = _archive_members(archive) if archive.exists() else _plain_members(root)
-    return _verified(members, root)
+    return _verified(members, root, repo_root)
 
 
 def pack_publication(root: Path) -> Path:

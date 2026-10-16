@@ -22,7 +22,10 @@ def synthetic_repo_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None
 
 
 def fixture(tmp_path: Path) -> dict[str, bytes]:
-    members = {name: encoded({"run_id": "synthetic-run", "name": name, "value": 1.25}) for name in publication.RESULT_NAMES.values()}
+    members = {
+        name: encoded({"schema": publication.MEMBER_SCHEMAS[name], "run_id": "synthetic-run", "name": name, "value": 1.25, "unresolved": []})
+        for name in publication.RESULT_NAMES.values()
+    }
     receipt = {
         "schema": "run-receipt.v1",
         "run_id": "synthetic-run",
@@ -242,4 +245,19 @@ def test_publication_outside_repository_root_is_rejected(tmp_path: Path, monkeyp
     fixture(tmp_path)
     monkeypatch.setattr(publication, "REPO_ROOT", tmp_path / "a-different-repository")
     with pytest.raises(ValueError, match="repository-relative"):
+        publication.load_publication(tmp_path)
+
+
+@pytest.mark.parametrize("name", list(publication.RESULT_NAMES.values()))
+def test_members_cannot_masquerade_as_another_schema(tmp_path: Path, name: str):
+    members = fixture(tmp_path)
+    value = json.loads(members[name])
+    value["schema"] = "wrong-schema"
+    members[name] = encoded(value)
+    receipt = json.loads(members["run-receipt.json"])
+    key = next(key for key, filename in publication.RESULT_NAMES.items() if filename == name)
+    receipt["results"][key].update(bytes=len(members[name]), sha256=hashlib.sha256(members[name]).hexdigest())
+    members["run-receipt.json"] = encoded(receipt)
+    (tmp_path / publication.ARCHIVE).write_bytes(archive_bytes(members))
+    with pytest.raises(ValueError, match="schema mismatch"):
         publication.load_publication(tmp_path)

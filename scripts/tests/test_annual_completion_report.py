@@ -14,17 +14,52 @@ from research_core.annual_completion_report import main, render_report
 def _write_publication(root: Path, result: dict, companion: dict) -> None:
     root.mkdir(parents=True)
     identities: dict[str, dict[str, str | int]] = {}
-    receipt = {**companion, "schema": "run-receipt.v1", "results": identities}
+    receipt = {**companion, "schema": publication_store.MEMBER_SCHEMAS["run-receipt.json"], "results": identities}
     for key, name, value in (
         ("results", "results.json", result),
-        ("admission", "admission-audit.json", companion),
-        ("performance", "performance.json", companion),
+        ("admission", "admission-audit.json", {**companion, "schema": publication_store.MEMBER_SCHEMAS["admission-audit.json"], "unresolved": []}),
+        ("performance", "performance.json", {**companion, "schema": publication_store.MEMBER_SCHEMAS["performance.json"]}),
     ):
         raw = json.dumps(value).encode("utf-8")
         (root / name).write_bytes(raw)
         relative_path = (root / name).relative_to(publication_store.REPO_ROOT).as_posix()
         identities[key] = {"path": relative_path, "bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest()}
     (root / "run-receipt.json").write_text(json.dumps(receipt), encoding="utf-8")
+
+
+@pytest.mark.parametrize("role", ["receipt", "audit", "performance"])
+@pytest.mark.parametrize("damage", ["swapped_same_run", "missing_schema", "wrong_schema"])
+def test_renderer_rejects_wrong_companion_schemas(role: str, damage: str):
+    companions: dict[str, Any] = {
+        "receipt": {"schema": "run-receipt.v1", "run_id": "same-run"},
+        "audit": {"schema": "annual-completion-admission.v2", "run_id": "same-run", "unresolved": []},
+        "performance": {"schema": "annual-completion-performance.v2", "run_id": "same-run"},
+    }
+    if damage == "swapped_same_run":
+        other = {"receipt": "audit", "audit": "performance", "performance": "receipt"}[role]
+        companions[role] = dict(companions[other])
+    elif damage == "missing_schema":
+        companions[role].pop("schema")
+    else:
+        companions[role]["schema"] = "unrelated.v1"
+    result = {"schema": "annual-completion-result.v2", "run_id": "same-run"}
+    with pytest.raises(ValueError, match="expected .* schema"):
+        render_report(result, **companions, presentation_date="2026-10-16")
+
+
+@pytest.mark.parametrize("invalid", [None, {}, "", (), 0, False, "missing"])
+def test_renderer_requires_explicit_unresolved_list(invalid: Any):
+    audit = {"schema": "annual-completion-admission.v2", "run_id": "same-run"}
+    if invalid != "missing":
+        audit["unresolved"] = invalid
+    with pytest.raises(ValueError, match="unresolved must be an explicit list"):
+        render_report(
+            {"schema": "annual-completion-result.v2", "run_id": "same-run"},
+            receipt={"schema": "run-receipt.v1", "run_id": "same-run"},
+            audit=audit,
+            performance={"schema": "annual-completion-performance.v2", "run_id": "same-run"},
+            presentation_date="2026-10-16",
+        )
 
 
 def test_saved_report_renderer_preserves_unknowns_scenarios_and_safe_embedded_data(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
@@ -92,8 +127,11 @@ def test_saved_report_renderer_preserves_unknowns_scenarios_and_safe_embedded_da
         ],
     }
     companion = {"run_id": result["run_id"], "parameters": {"commission": 0.001425}, "input_fingerprint": {"path": "PRIVATE-DO-NOT-EMBED"}}
+    receipt_data = {**companion, "schema": publication_store.MEMBER_SCHEMAS["run-receipt.json"]}
+    audit_data = {**companion, "schema": publication_store.MEMBER_SCHEMAS["admission-audit.json"], "unresolved": []}
+    performance_data = {**companion, "schema": publication_store.MEMBER_SCHEMAS["performance.json"]}
     original = deepcopy(result)
-    output = render_report(result, receipt=companion, audit=companion, performance=companion, presentation_date="2026-10-16")
+    output = render_report(result, receipt=receipt_data, audit=audit_data, performance=performance_data, presentation_date="2026-10-16")
     assert result == original
     assert "<script>unsafe</script>" not in output
     assert "PRIVATE-DO-NOT-EMBED" not in output
@@ -108,12 +146,16 @@ def test_saved_report_renderer_preserves_unknowns_scenarios_and_safe_embedded_da
     assert 'href="' + publication_prefix + 'admission-audit.json"' not in output
     assert "../publications" not in output
     commit_ref = "a" * 40
-    pinned_output = render_report(result, receipt=companion, audit=companion, performance=companion, presentation_date="2026-10-16", publication_ref=commit_ref)
+    pinned_output = render_report(
+        result, receipt=receipt_data, audit=audit_data, performance=performance_data, presentation_date="2026-10-16", publication_ref=commit_ref
+    )
     assert f"/blob/{commit_ref}/tasks/" in pinned_output
     assert "/blob/main/" not in pinned_output
     for invalid_ref in ("feature/report", "../main", "short", 'main" onclick="alert(1)'):
         with pytest.raises(ValueError, match="publication_ref must"):
-            render_report(result, receipt=companion, audit=companion, performance=companion, presentation_date="2026-10-16", publication_ref=invalid_ref)
+            render_report(
+                result, receipt=receipt_data, audit=audit_data, performance=performance_data, presentation_date="2026-10-16", publication_ref=invalid_ref
+            )
     assert "無成交" not in output
     assert "-12.50%" in output and "完整每日最大回撤" in output
     assert output.count('data-label="v1 原扣成本後">未知') == 2
@@ -145,7 +187,13 @@ def test_saved_report_renderer_preserves_unknowns_scenarios_and_safe_embedded_da
     assert index.read_text(encoding="utf-8") == pinned_output
     assert (tmp_path / "v1.html").read_text(encoding="utf-8") == "original-report"
     with pytest.raises(ValueError, match="run_id mismatch"):
-        render_report(result, receipt={"run_id": "other"}, audit=companion, performance=companion, presentation_date="2026-10-16")
+        render_report(
+            result,
+            receipt={**receipt_data, "run_id": "other"},
+            audit=audit_data,
+            performance=performance_data,
+            presentation_date="2026-10-16",
+        )
 
     next_result: dict[str, Any] = deepcopy(result)
     next_result["run_id"] = "synthetic-report-v3"
@@ -188,9 +236,9 @@ def test_saved_report_renderer_preserves_unknowns_scenarios_and_safe_embedded_da
         with pytest.raises(ValueError):
             render_report(
                 result,
-                receipt=companion,
-                audit=companion,
-                performance=companion,
+                receipt=receipt_data,
+                audit=audit_data,
+                performance=performance_data,
                 presentation_date="2026-10-16",
                 publication_path=invalid_path,
             )

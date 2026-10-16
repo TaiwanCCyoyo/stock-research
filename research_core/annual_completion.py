@@ -447,14 +447,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     output = safe_path(args.output)
     if any((output / name).exists() or (output / name).is_symlink() for name in (*OUTPUT_NAMES, ARCHIVE)):
         raise FileExistsError("publication result filenames already exist; choose a fresh --output directory")
+    report = safe_path(args.report)
+    if report.resolve() != safe_path(TASK / "report.md").resolve():
+        raise ValueError("fixed PR15 selections require the canonical task report.md")
     _require_committed_sources(
         REPO_ROOT,
         [
             Path(__file__),
             REPO_ROOT / "research_core/annual_rotation_v2.py",
             REPO_ROOT / "research_core/annual_completion_evidence.py",
+            REPO_ROOT / "research_core/json_integrity.py",
             REPO_ROOT / "scripts/complete_annual_rotation.py",
             args.params,
+            report,
         ],
     )
     producer = producer_data_root()
@@ -465,7 +470,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         InputSpec("price_daily", price_path, live_producer=True),
         InputSpec("corporate_actions", action_path, tables={"corporate_actions": "ex_date"}, live_producer=True),
         InputSpec("supplement_publication", evidence_root / "publication.json", live_producer=True),
-        InputSpec("original_report", args.report, live_producer=False),
+        InputSpec("original_report", report, live_producer=False),
         InputSpec("parameters", args.params, live_producer=False),
     ])
     fingerprint_phase = phase_receipt("fingerprint", before, _sample())
@@ -473,7 +478,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     params = read_json(args.params)
     preregistration = REPO_ROOT / params["preregistration"]
     _require_committed_sources(REPO_ROOT, [preregistration])
-    selections = parse_fixed_selections(args.report.read_text(encoding="utf-8"))
+    selections = parse_fixed_selections(report.read_text(encoding="utf-8"))
     codes = sorted({row["code"] for row in selections} | {"0050"})
     cutoff = _daily_date(params.get("cutoff", "2026-10-12"))
     dates = read_stable(price_path, lambda path: pd.read_parquet(path, columns=["Date", "Source"]))
