@@ -147,15 +147,16 @@ def _fixture(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Q1Fixture:
     }
 
 
-def _run(fixture: Q1Fixture, output: Path, reuse: tuple[Path, ...] = ()) -> dict[str, Any]:
-    return local_q1.run_local_q1(fixture["stock_result"], output, repo_root=fixture["repo"], reuse_event_roots=reuse)
+def _run(fixture: Q1Fixture, output: Path, reuse: tuple[Path, ...] = (), targets: tuple[str, ...] | None = None) -> dict[str, Any]:
+    return local_q1.run_local_q1(fixture["stock_result"], output, repo_root=fixture["repo"], reuse_event_roots=reuse, targets=targets)
 
 
 def test_local_q1_projects_and_reuses_original_event_parts_exactly(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     fixture = _fixture(tmp_path, monkeypatch)
     direct, reused = fixture["repo"] / ".tmp" / "direct", fixture["repo"] / ".tmp" / "reused"
     direct_manifest = _run(fixture, direct)
-    reused_manifest = _run(fixture, reused, (fixture["legacy_root"],))
+    reused_manifest = _run(fixture, reused, (fixture["legacy_root"],), ("B1",))
+    assert direct_manifest["targets"] == reused_manifest["targets"] == ["B1"]
     assert direct_manifest["observations"][0]["new_in_memory_projections"] == 1
     assert direct_manifest["observations"][0]["reused_stock_parts"] == 0
     assert reused_manifest["observations"][0]["new_in_memory_projections"] == 0
@@ -200,13 +201,22 @@ def test_local_q1_rejects_output_outside_repo_tmp(tmp_path: Path, monkeypatch: p
 def test_cli_passes_stock_result_output_and_reuse_roots(monkeypatch: pytest.MonkeyPatch) -> None:
     observed: dict[str, Any] = {}
 
-    def capture(stock_result: Path, output: Path, *, repo_root: Path, reuse_event_roots: tuple[Path, ...]) -> None:
-        observed.update(stock_result=stock_result, output=output, repo_root=repo_root, reuse_event_roots=reuse_event_roots)
+    def capture(stock_result: Path, output: Path, *, repo_root: Path, reuse_event_roots: tuple[Path, ...], targets: tuple[str, ...] | None) -> None:
+        observed.update(stock_result=stock_result, output=output, repo_root=repo_root, reuse_event_roots=reuse_event_roots, targets=targets)
 
     monkeypatch.setattr(cli, "run_local_q1", capture)
-    monkeypatch.setattr("sys.argv", ["run_pattern_scan_local_q1", "--stock-result", "stock.json", "--output", ".tmp/q1", "--reuse-event-root", "legacy"])
+    monkeypatch.setattr(
+        "sys.argv", ["run_pattern_scan_local_q1", "--stock-result", "stock.json", "--output", ".tmp/q1", "--reuse-event-root", "legacy", "--target", "B1"]
+    )
     cli.main()
     assert observed["stock_result"] == Path("stock.json")
     assert observed["output"] == Path(".tmp/q1")
     assert observed["reuse_event_roots"] == (Path("legacy"),)
     assert observed["repo_root"] == Path(cli.__file__).resolve().parents[1]
+    assert observed["targets"] == ("B1",)
+
+
+@pytest.mark.parametrize("targets", [("B1", "B1"), ("unregistered",), ()])
+def test_local_q1_rejects_invalid_family_batch(tmp_path: Path, targets: tuple[str, ...]) -> None:
+    with pytest.raises(ValueError, match="registered"):
+        local_q1.run_local_q1(tmp_path / "stock.json", tmp_path / ".tmp" / "result", repo_root=tmp_path, targets=targets)

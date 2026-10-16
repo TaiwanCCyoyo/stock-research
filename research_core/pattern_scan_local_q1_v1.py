@@ -97,7 +97,9 @@ def _save_table(root: Path, name: str, frame: pd.DataFrame) -> dict[str, Any]:
     return {"path": name, "bytes": path.stat().st_size, "rows": len(frame), "compression": "zstd"}
 
 
-def run_local_q1(stock_result: Path, output: Path, *, repo_root: Path, reuse_event_roots: tuple[Path, ...] = ()) -> dict[str, Any]:
+def run_local_q1(
+    stock_result: Path, output: Path, *, repo_root: Path, reuse_event_roots: tuple[Path, ...] = (), targets: tuple[str, ...] | None = None
+) -> dict[str, Any]:
     """Reduce the unchanged complete stock universe; never publish or delete.
 
     This computes Q1 only. The same original groups, event overlays, fixed
@@ -109,6 +111,9 @@ def run_local_q1(stock_result: Path, output: Path, *, repo_root: Path, reuse_eve
         raise ValueError("Q1 output must be below the calling worktree's .tmp")
     if output.exists():
         raise FileExistsError(output)
+    selected_targets = PATTERNS if targets is None else targets
+    if not selected_targets or len(set(selected_targets)) != len(selected_targets) or not set(selected_targets).issubset(PATTERNS):
+        raise ValueError("Q1 requires unique registered target families")
     executor = code_identity(repo_root)
     if executor["dirty"]:
         raise ValueError("local Q1 requires a clean committed executor")
@@ -160,7 +165,7 @@ def run_local_q1(stock_result: Path, output: Path, *, repo_root: Path, reuse_eve
     observations: list[dict[str, Any]] = []
     reused_receipts: dict[str, dict[str, str]] = {}
     before = resource_sample()
-    for target in PATTERNS:
+    for target in selected_targets:
         target_before = resource_sample()
         counts = None
         reused_n = projected_n = 0
@@ -286,6 +291,8 @@ def run_local_q1(stock_result: Path, output: Path, *, repo_root: Path, reuse_eve
         "complete": True,
         "scope": "Q1 unconditional only; Q2-Q6 incomplete; no formal/shared publication",
         "stock_count": len(rows),
+        "targets": list(selected_targets),
+        "all_registered_q1_targets": set(selected_targets) == set(PATTERNS),
         "calendar": barrier["calendar"],
         "numerical_source": prepared["source"],
         "input_id": prepared["input_id"],
@@ -305,7 +312,7 @@ def run_local_q1(stock_result: Path, output: Path, *, repo_root: Path, reuse_eve
         staging / "run_receipt.json",
         run_id=output.name,
         definition=DEFINITION,
-        parameters={"targets": list(PATTERNS), "mode": "original_q1_integer_reduction"},
+        parameters={"targets": list(selected_targets), "mode": "original_q1_integer_reduction"},
         inputs=inputs,
         results={"manifest": staging / "manifest.json"},
         repo_root=staging,

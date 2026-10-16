@@ -17,7 +17,14 @@ separate unfinished work. This does not claim a strategy or account result.
 preparation and global barrier in place. Its output is restricted to the calling
 checkout's `.tmp/`. For this run the destination is:
 
-`D:/Project/stock-research/.worktrees/pr17-retention-review/.tmp/pr17-q1-local-20261016/`.
+`D:/Project/stock-research/.worktrees/pr17-retention-review/.tmp/pr17-q1-local-20261016/<target>/`.
+The optional `--target` selects an original registered family as an execution
+batch; it does not change the research universe or invent a new pattern. The
+local coordinator visits all twelve serially, with one finite owned Job per
+family. A completed family is already the Q1 result, not another copy of its
+event payload. The batch manifest names its targets explicitly; only a final
+rollup covering all twelve may call Q1 complete. Completed family outputs are
+verified and referenced on continuation rather than recomputed.
 
 Existing event parts are referenced through `--reuse-event-root`; their original
 ancestry and the three Q1-consumed artifacts are checked. Missing event parts
@@ -27,7 +34,7 @@ fields plus the already calculated MKT background, so it does not calculate
 condition columns or save any new expanded event, condition or control table.
 Indicators, prices, base labels and the global barrier are never recomputed.
 
-All 12 families are visited. One family's integer count accumulators live at a
+All 12 families are visited by the coordinator. One family's integer count accumulators live at a
 time; each stock's projected rows are discarded from memory after reduction.
 Existing `StockCountPlan` expands only the inventory it was asked to count;
 Q1 requests only unconditional cells. `DenseCounts` keeps the per-stock/year
