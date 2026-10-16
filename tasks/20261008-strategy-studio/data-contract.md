@@ -122,8 +122,14 @@ as the strategy's original sealed benchmark or as a total-return comparison.
 ## Re-export and maintenance
 
 ```powershell
-uv run --no-sync python -m scripts.export_saved_research_studio --benchmark-manifest tasks/20261005-market-full-history-web/inputs/producer-preview/catalog-v2/manifest.json --benchmark-manifest-sha 238e7e4aba59509bb3245ea36e9708d6d8f9b9d7c6dab9f18a9d60bba67aa6ea --split-output --output .tmp/saved-research-studio-next/saved-research-studio.manifest.json
+uv run --no-sync python -m scripts.export_saved_research_studio --benchmark-manifest D:/Project/stock-research/research_data/patterns/opportunity-history-web/c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140/catalog-v2/manifest.json --benchmark-manifest-sha c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140 --split-output --output .tmp/saved-research-studio-next/saved-research-studio.manifest.json
 ```
+
+Since 2026-10-16 the benchmark catalog is read from the shared `research_data` entry and pinned by the
+predecessor's original manifest bytes (`c7848ae7…`). The `238e7e4a…` form above in the 0050 paragraph is the
+path-rewritten copy that stored exports cite; the two manifests reference identical calendar and series files, so a
+re-export reads the same prices but names its source `benchmark-catalog:c7848ae7…`. See the
+[decision record](../../docs/en/decision-records/2026-10-16-opportunity-history-shared-entry.md).
 
 The output must be new. The producer verifies original SHA receipts, ledger,
 orders, entry/probe traces and frozen price bytes before projecting; it never
