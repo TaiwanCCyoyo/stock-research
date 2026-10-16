@@ -105,3 +105,12 @@ factor 推回股數。診斷來自同次實際 kernel 呼叫；結果在原則�
 行情或實際最大回撤已知。本次診斷仍只有一次 input fingerprint，沒有全市場排名或
 行情副本；完整診斷保留於本 session 的 `.tmp/annual-review-recovery-reproduction-20261016/`
 及同名 log，作可丟棄驗證輸出。
+
+一般認股事件的大跳幅也改用相同的明示條款與來源 factor 雙重品質關卡，
+不以投資人選擇放棄或實現權利改變報價品質判定。以乾淨的
+[dd48d08 程式版本](https://github.com/TaiwanCCyoyo/stock-research/commit/dd48d0842619b166a8cd62b65695c65b822f0afc)
+再跑相同固定序列後，整份 parsed 結果仍與原 publication 完全相同，
+admission unresolved 為空。仍為 45 次 kernel、一次 input fingerprint、
+input copy bytes 0；no-replace ZIP 實際完成，打包約 0.020 秒。
+診斷放在 `.tmp/annual-review-rights-reproduction-20261016/` 及同名 log，
+用途仍是可丟棄的修正影響驗證，沒有增加正式研究版本或改寫原結果。
