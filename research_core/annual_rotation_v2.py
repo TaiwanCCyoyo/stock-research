@@ -139,10 +139,19 @@ def _quality_diagnostics(
     ]
 
 
-def _recovery_terms_diagnostic(
-    *, anchor_day: pd.Timestamp, day: pd.Timestamp, previous: float, close: float, share: float, cash: float, rights: float = 0, subscription: float = 0
+def _theoretical_terms_diagnostic(
+    *,
+    anchor_day: pd.Timestamp,
+    day: pd.Timestamp,
+    previous: float,
+    close: float,
+    share: float,
+    cash: float,
+    rights: float = 0,
+    subscription: float = 0,
+    context: str = "recovery",
 ) -> dict[str, Any]:
-    """Diagnose a resumed quote from explicit terms, without changing units.
+    """Diagnose a quote from explicit terms, without changing economic units.
 
     The theoretical ex-right ratio is independent of the holder's rights
     scenario. It expresses mechanical dilution, not an exercise assumption.
@@ -152,7 +161,7 @@ def _recovery_terms_diagnostic(
     valid = math.isfinite(factor) and factor > 0
     change = close / previous - 1
     residual = (1 + change) / factor - 1 if valid else None
-    source = "recovery_theoretical_ex_right_terms" if rights > 0 else "recovery_cash_share_terms" if cash > 0 else "recovery_exact_share_terms"
+    source = f"{context}_theoretical_ex_right_terms" if rights > 0 else f"{context}_cash_share_terms" if cash > 0 else f"{context}_exact_share_terms"
     return {
         "source": source,
         "diagnostic_only": True,
@@ -165,6 +174,12 @@ def _recovery_terms_diagnostic(
         "residual": residual,
         "explains_jump": bool(valid and (factor - 1) * change > 0 and residual is not None and abs(residual) < 0.4),
     }
+
+
+def _require_source_factor_explanation(diagnostic: dict[str, Any], source_diagnostics: list[dict[str, Any]]) -> None:
+    source_explains = any(value["source"] == "source_price_factor" and value["explains_jump"] for value in source_diagnostics)
+    diagnostic["source_factor_explains_jump"] = source_explains
+    diagnostic["explains_jump"] = diagnostic["explains_jump"] and source_explains
 
 
 def economic_path_v2(
@@ -246,9 +261,29 @@ def economic_path_v2(
             continue
         diagnostic = _quality_diagnostics(item, sources, frame, day)
         diagnostics[day] = diagnostic
-        if frame.loc[day, "quality_reason"] == "unexplained_raw_jump" and any(row["explains_jump"] for row in diagnostic):
-            frame.loc[day, "Quality"] = True
-            frame.loc[day, "quality_reason"] = None
+        if frame.loc[day, "quality_reason"] == "unexplained_raw_jump":
+            explained = any(row["explains_jump"] for row in diagnostic)
+            if item.rights_per_old_share > 0:
+                position = int(frame.index.get_indexer([day])[0])
+                anchor_day = cast(pd.Timestamp, frame.index[position - 1])
+                terms_diagnostic = _theoretical_terms_diagnostic(
+                    anchor_day=anchor_day,
+                    day=day,
+                    previous=float(frame.RawClose.iloc[position - 1]),
+                    close=float(frame.loc[day, "RawClose"]),
+                    share=item.share_multiplier,
+                    cash=item.cash_per_old_share,
+                    rights=item.rights_per_old_share,
+                    subscription=item.subscription_price or 0,
+                    context="event",
+                )
+                _require_source_factor_explanation(terms_diagnostic, diagnostic)
+                diagnostic.append(terms_diagnostic)
+                explained = bool(terms_diagnostic["explains_jump"])
+                LOGGER.debug("Rights quality code=%s date=%s diagnostic=%s", code, day.date(), terms_diagnostic)
+            if explained:
+                frame.loc[day, "Quality"] = True
+                frame.loc[day, "quality_reason"] = None
     availability = {day: "H" for day in known_halts or set()}
     availability.update(unavailable_days or {})
     carried: set[pd.Timestamp] = set()
@@ -286,7 +321,7 @@ def economic_path_v2(
             binding = bindings.get(day)
             if binding is not None:
                 item, sources = binding
-                bridge_diagnostic = _recovery_terms_diagnostic(
+                bridge_diagnostic = _theoretical_terms_diagnostic(
                     anchor_day=previous_observed_day,
                     day=day,
                     previous=previous_observed_close,
@@ -298,9 +333,7 @@ def economic_path_v2(
                 )
                 if item.rights_per_old_share > 0:
                     source_diagnostics = _quality_diagnostics(item, sources, frame, day, previous_close=previous_observed_close)
-                    source_explains = any(value["source"] == "source_price_factor" and value["explains_jump"] for value in source_diagnostics)
-                    bridge_diagnostic["source_factor_explains_jump"] = source_explains
-                    bridge_diagnostic["explains_jump"] = bridge_diagnostic["explains_jump"] and source_explains
+                    _require_source_factor_explanation(bridge_diagnostic, source_diagnostics)
                 diagnostics[day].append(bridge_diagnostic)
             else:
                 current = remaining.loc[pd.to_datetime(remaining.ex_date).eq(day)]
@@ -317,7 +350,7 @@ def economic_path_v2(
                     except (TypeError, ValueError):
                         share = np.nan
                     if math.isfinite(share) and share > 0 and math.isfinite(cash) and cash >= 0:
-                        bridge_diagnostic = _recovery_terms_diagnostic(
+                        bridge_diagnostic = _theoretical_terms_diagnostic(
                             anchor_day=previous_observed_day, day=day, previous=previous_observed_close, close=close, share=share, cash=cash
                         )
             if bridge_diagnostic is not None:

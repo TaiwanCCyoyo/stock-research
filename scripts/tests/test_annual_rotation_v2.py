@@ -484,3 +484,34 @@ def test_invalid_zero_or_negative_theoretical_recovery_factor_is_unknown(cash: f
     assert result["status"] == "unknown"
     assert any("invalid_recovery_economic_factor" in reason for reason in result["reasons"])
     assert result["recovery_quality_diagnostics"][0]["factor_valid"] is False
+
+
+@pytest.mark.parametrize("scenario,expected", [("lapse", 0.1), ("realize", 1.0)])
+def test_ordinary_rights_jump_requires_explicit_terms_and_keeps_scenario_independent_quality(scenario: str, expected: float):
+    days, raw, actions = fixture([100.0, 10.0, 10.0, 10.0])
+    event_day = day_at(days, 1)
+    actions.loc[0, ["event_type", "price_factor", "cash_dividend_estimate"]] = ["EX_RIGHT", 0.1, 0.0]
+    term = entitlement(event_day, rights_per_old_share=9.0, subscription_price=0.0)
+    result = economic_path_v2(raw, actions, days, start=day_at(days, 0), end=day_at(days, -1), entitlements=[term], rights_scenario=scenario)
+    assert result["status"] == "modeled"
+    assert result["gross_multiplier"] == pytest.approx(expected)
+    assert result["complete_equity"] is True
+    diagnostics = result["events"][0]["quality_diagnostics"]
+    terms_diagnostic = next(value for value in diagnostics if value["source"] == "event_theoretical_ex_right_terms")
+    assert terms_diagnostic["factor"] == pytest.approx(0.1)
+    assert terms_diagnostic["source_factor_explains_jump"] is True
+    assert terms_diagnostic["explains_jump"] is True
+
+
+@pytest.mark.parametrize("scenario", ["lapse", "realize"])
+@pytest.mark.parametrize("rights,source_factor", [(0.1, 0.1), (9.0, 0.9)])
+def test_ordinary_rights_jump_rejects_mismatched_terms_or_source_factor_in_both_scenarios(scenario: str, rights: float, source_factor: float):
+    days, raw, actions = fixture([100.0, 10.0, 10.0, 10.0])
+    event_day = day_at(days, 1)
+    actions.loc[0, ["event_type", "price_factor", "cash_dividend_estimate"]] = ["EX_RIGHT", source_factor, 0.0]
+    term = entitlement(event_day, rights_per_old_share=rights, subscription_price=0.0)
+    result = economic_path_v2(raw, actions, days, start=day_at(days, 0), end=day_at(days, -1), entitlements=[term], rights_scenario=scenario)
+    assert result["status"] == "unknown"
+    assert result["gross_multiplier"] is None
+    assert result["net_multiplier"] is None
+    assert any("unexplained_raw_jump" in reason for reason in result["reasons"])
