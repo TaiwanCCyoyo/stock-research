@@ -17,6 +17,35 @@ the latest trading day nor claims the broader shared-price universe or 0050.
 All values retain the original PR17 official-source
 `price-basis.v2/reference_factor_adjusted` preparation at that cutoff.
 
+### 2026-10-16 本機候選實測
+
+13:56 台北完成；原本已算好的數值全部重用，沒有重新計算指標或型態。
+目前僅存於下述 worktree 目的地，未推送 payload、未寫共用 root、未刪原資料。
+
+| 類別           | 股票數 |      列數 |    ZSTD bytes |
+| -------------- | -----: | --------: | ------------: |
+| 每日指標       |  1,942 | 7,981,620 | 1,113,532,088 |
+| 已確認高低點   |  1,942 | 1,297,408 |    61,459,595 |
+| 原定義每日條件 |  1,942 | 7,981,620 | 1,142,988,278 |
+
+Parquet 合計 **2,317,979,961 bytes（2.32 GB）**；含 manifest／run receipt 共
+2,322,735,005 bytes、5,828 檔。原三類表共 2,697,327,651 bytes，投影去掉
+379,347,690 bytes 的重複欄位；原檔仍保留，這次候選是 owner 指定的暫時額外一份。
+這是目前範圍的候選實測，尚不是未來全市場、更新到最新日的共用家族容量。
+
+整批耗時 326.48 秒，所有輸出逐值／dtype／缺值／索引讀回相等。native Windows Job
+committed memory peak 為 1,176,604,672 bytes（約 1.18 GB；不是磁碟用量），
+2 GiB cap，結束後已確認 Job 無程序。共用 `current.json` 前後 SHA 相同；程式未寫共用位置，
+不宣稱另做了一次整個共用 family 的完整 payload 驗 hash。
+
+投影 executor 是 clean commit `00c74325e3b5cc5b6d476ce765fc40c5924ff556`；
+原數值仍是原收據的 `0d1db8f`／dirty=True，不能改標成新 executor 計算。
+27 項合成回歸及正常 hooks 通過；16 項既有發布產物驗證與修改前相同。
+候選的 manifest 與 run receipt 引用在 sibling rename 後已核對，完整檔案數與大小一致；
+沒有再重複掃描全部 payload 雜湊。小型摘要與 native Job 收據分別在同 worktree
+`.tmp/pr17-feature-preview-20261016-summary.json` 與
+`.tmp/pr17-feature-preview-20261016-execution.json`。
+
 The local-only destination for this instruction is
 `D:/Project/stock-research/.worktrees/pr17-retention-review/.tmp/pr17-feature-preview-20261016/`.
 It contains `manifest.json`, `run_receipt.json`, and three ZSTD Parquets per stock:
