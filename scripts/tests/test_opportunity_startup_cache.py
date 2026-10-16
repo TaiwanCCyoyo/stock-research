@@ -124,7 +124,7 @@ def test_failed_memo_replace_and_cleanup_leave_verified_history_ready(tmp_path: 
             cache.save(context, {"series": {"2609": [20]}})
 
     monkeypatch.setattr(history_module, "HistoryStore", VerifiedStore)
-    provider = LazyHistoryStore()
+    provider = LazyHistoryStore(tmp_path)
     provider.start()
     assert provider._worker is not None
     provider._worker.join(2)
@@ -135,7 +135,7 @@ def test_failed_memo_replace_and_cleanup_leave_verified_history_ready(tmp_path: 
     assert cache.load(context) == previous
 
 
-def test_background_initialization_has_one_worker_and_no_partial_store(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_background_initialization_has_one_worker_and_no_partial_store(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     import research_core.opportunity_history_store as module
 
     entered, finish = threading.Event(), threading.Event()
@@ -148,7 +148,7 @@ def test_background_initialization_has_one_worker_and_no_partial_store(monkeypat
             assert finish.wait(5)
 
     monkeypatch.setattr(module, "HistoryStore", SlowStore)
-    provider = LazyHistoryStore()
+    provider = LazyHistoryStore(tmp_path)
     with pytest.raises(HistoryLoading):
         provider.get_ready()
     assert entered.wait(2)

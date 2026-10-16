@@ -27,22 +27,24 @@ listening in the intended checkout. Starting Vite again cannot restore it.
 The saved-run library and retained eight-case preview use bundled static
 artifacts and can be viewed without this API.
 
-The large catalog/native bundle is local evidence, not restored by Git. If it
-is missing, restore **the existing frozen producer task**, from the repository
-root, before starting the API:
+The large catalog/native bundle is local evidence in the shared `research_data` entry
+(`patterns/opportunity-history-web/<manifest-sha256>/`), not in Git. The API locates it through the
+catalog; set `STOCK_RESEARCH_DATA_ROOT` (process environment or the primary checkout's
+`.env.local`) to the primary `research_data` directory. If the catalog has no such entry the API
+reports the history as unavailable and the other pages keep working.
+
+To publish it again from an existing producer copy (`catalog-v2` and `runs/native`), from the
+repository root:
 
 ```powershell
-uv run python -m scripts.restore_opportunity_history --source <existing-producer-task-directory>
+uv run python -m scripts.restore_opportunity_history --source <existing-producer-directory>
 ```
 
-The source must contain `catalog-v2` and `runs/native` for the pinned snapshot.
-For this development handoff, that task is
-`<legacy-checkout>/.worktrees/sector-wave-full-history-preview-20261004/tasks/20261004-sector-wave-full-history-preview`.
-The command verifies all saved evidence before physically copying it to a new
-consumer destination. It refuses an existing destination, links/junctions,
-changed bytes and a different snapshot. It does not download prices, rerun
-methods or alter the producer. Preserve the original producer copy; Git cannot
-recreate it if both copies are lost. A failed copy stays visible for inspection.
+The command hashes the source, copies it into a staging directory, re-reads every copied byte,
+runs the full reader gate on the copy, publishes it without replacing anything and registers it in
+the catalog. It refuses an existing destination, links, hardlinks, changed bytes and a different
+manifest. It does not download prices, rerun methods or alter the source. A failed copy stays in
+its `.staging-*` directory for inspection. Git cannot recreate the data if every copy is lost.
 
 In terminal 1, from the repository root:
 
