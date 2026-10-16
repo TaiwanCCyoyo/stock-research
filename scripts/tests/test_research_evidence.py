@@ -13,6 +13,7 @@ from research_core.evidence import (
     EvidenceError,
     exposure_status,
     task_catalog,
+    task_publications,
     validate_registry,
     validate_result,
 )
@@ -81,6 +82,61 @@ def test_catalog_lists_report_and_legacy_summary_without_reading_json(tmp_path: 
     assert rows[1]["artifacts"]["summary.json"] is True
     assert rows[1]["evidence_state"] == "legacy_unregistered"
     assert rows[2]["artifacts"]["report.md"] is True
+
+
+def publication_fixture(root: Path) -> dict[str, Any]:
+    current = root / "publications/completion-v2"
+    current.mkdir(parents=True)
+    for directory in (root, current):
+        (directory / "report.md").write_text(f"report: {directory.name}", encoding="utf-8")
+        (directory / "research_result.json").write_text("sealed; catalog must not parse this", encoding="utf-8")
+    return {
+        "schema": "research-publications.v1",
+        "study_id": root.name,
+        "current": "completion-v2",
+        "publications": [
+            {"id": "v1", "report": "report.md", "result": "research_result.json"},
+            {"id": "completion-v2", "report": "publications/completion-v2/report.md", "result": "publications/completion-v2/research_result.json"},
+        ],
+    }
+
+
+def test_catalog_uses_explicit_current_and_preserves_history_without_reading_cards(tmp_path: Path):
+    task = tmp_path / "20261013-study"
+    index = publication_fixture(task)
+    originals = {name: (task / name).read_bytes() for name in ("report.md", "research_result.json")}
+    (task / "publications.json").write_text(json.dumps(index), encoding="utf-8")
+    row = task_catalog(tmp_path)[0]
+    assert row["current_publication"] == "completion-v2"
+    assert row["report_path"] == "publications/completion-v2/report.md"
+    assert row["result_path"] == "publications/completion-v2/research_result.json"
+    assert row["publications"][0] == {"id": "v1", "report_path": "report.md", "result_path": "research_result.json"}
+    assert row["outcome"] == "unknown"
+    assert originals == {name: (task / name).read_bytes() for name in originals}
+    (task / "publications.json").unlink()
+    assert task_publications(task) is None
+    assert "current_publication" not in task_catalog(tmp_path)[0]
+
+
+@pytest.mark.parametrize("damage", ["unknown_current", "duplicate", "missing", "escape", "foreign_study", "schema"])
+def test_publication_index_fails_closed(tmp_path: Path, damage: str):
+    task = tmp_path / "20261013-study"
+    index = publication_fixture(task)
+    if damage == "unknown_current":
+        index["current"] = "unlisted"
+    elif damage == "duplicate":
+        index["publications"].append(index["publications"][0])
+    elif damage == "missing":
+        (task / "publications/completion-v2/report.md").unlink()
+    elif damage == "escape":
+        index["publications"][1]["result"] = "../foreign/research_result.json"
+    elif damage == "foreign_study":
+        index["study_id"] = "another-study"
+    else:
+        index["schema"] = "unsupported"
+    (task / "publications.json").write_text(json.dumps(index), encoding="utf-8")
+    with pytest.raises(EvidenceError):
+        task_catalog(tmp_path)
 
 
 @pytest.mark.parametrize(

@@ -104,6 +104,7 @@ def test_instructions_and_prose_keep_contracts_without_market_compute(path: str)
         "research_core/derived_cache.py",
         "research_core/artifact_store.py",
         "research_core/evidence.py",
+        "research_core/json_integrity.py",
         "research_core/jobs.py",
         "uv.lock",
         "stock-data-downloader",
@@ -167,12 +168,30 @@ def test_feature_block_domain_routes_new_execution_contracts() -> None:
 
 
 ANNUAL_TESTS = {
+    "scripts/tests/test_annual_completion.py",
+    "scripts/tests/test_annual_completion_evidence.py",
+    "scripts/tests/test_annual_completion_publication.py",
+    "scripts/tests/test_annual_completion_report.py",
     "scripts/tests/test_annual_rotation.py",
     "scripts/tests/test_annual_statistics.py",
     "scripts/tests/test_annual_ranking_pool.py",
     "scripts/tests/test_annual_rotation_cli.py",
     "scripts/tests/test_annual_publication.py",
+    "scripts/tests/test_annual_rotation_v2.py",
+    "scripts/tests/test_json_integrity.py",
+    "scripts/tests/test_verify_published_artifacts.py",
 }
+
+ANNUAL_COMPLETION_SOURCES = [
+    "research_core/annual_rotation_v2.py",
+    "research_core/annual_completion.py",
+    "research_core/annual_completion_evidence.py",
+    "research_core/annual_completion_publication.py",
+    "research_core/annual_completion_report.py",
+    "scripts/complete_annual_rotation.py",
+    "scripts/package_annual_completion.py",
+    "scripts/build_annual_completion_report.py",
+]
 
 
 @pytest.mark.parametrize(
@@ -192,6 +211,28 @@ def test_annual_sources_select_exact_annual_consumers(source: str) -> None:
     assert not plan["full"]
     assert plan["domains"] == ["annual"]
     assert ANNUAL_TESTS == set(plan["python_tests"])
+
+
+@pytest.mark.parametrize("source", ANNUAL_COMPLETION_SOURCES)
+@pytest.mark.parametrize("status", ["A", "M"])
+def test_annual_completion_sources_include_economics_and_publication_consumers(source: str, status: str) -> None:
+    plan = ci_scope.make_plan([(status, source)])
+
+    assert not plan["full"]
+    assert not plan["frontend"]
+    assert plan["domains"] == ["annual"]
+    assert set(plan["python_tests"]) == ANNUAL_TESTS
+
+
+@pytest.mark.parametrize("status", ["A", "M"])
+def test_shared_json_integrity_preserves_full_fallback(status: str) -> None:
+    manifest = ci_scope.load_manifest()
+    plan = ci_scope.make_plan([(status, "research_core/json_integrity.py")])
+
+    assert plan["full"]
+    assert plan["frontend"]
+    assert plan["python_tests"] == ci_scope.test_inventory(ci_scope.ROOT, manifest)
+    assert "scripts/tests/test_json_integrity.py" in plan["python_tests"]
 
 
 @pytest.mark.parametrize(

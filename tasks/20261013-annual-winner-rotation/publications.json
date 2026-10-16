@@ -1,0 +1,17 @@
+{
+    "schema": "research-publications.v1",
+    "study_id": "20261013-annual-winner-rotation",
+    "current": "completion-v2",
+    "publications": [
+        {
+            "id": "v1",
+            "report": "report.md",
+            "result": "research_result.json"
+        },
+        {
+            "id": "completion-v2",
+            "report": "publications/completion-v2/report.md",
+            "result": "publications/completion-v2/research_result.json"
+        }
+    ]
+}

@@ -31,7 +31,8 @@
         "stock-data-downloader",
         ".gitmodules",
         "research_core/artifact_*",
-        "research_core/evidence.py"
+        "research_core/evidence.py",
+        "research_core/json_integrity.py"
     ],
     "full_path_exceptions": [".github/workflows/ci.yml"],
     "domains": {
@@ -287,7 +288,15 @@
                 "research_core/annual_statistics.py",
                 "research_core/annual_ranking_pool.py",
                 "research_core/annual_publication.py",
+                "research_core/annual_rotation_v2.py",
+                "research_core/annual_completion.py",
+                "research_core/annual_completion_evidence.py",
+                "research_core/annual_completion_publication.py",
+                "research_core/annual_completion_report.py",
                 "research_core/price_basis.py",
+                "scripts/complete_annual_rotation.py",
+                "scripts/package_annual_completion.py",
+                "scripts/build_annual_completion_report.py",
                 "tasks/20261013-annual-winner-rotation/run_study.py",
                 "tasks/20261013-annual-winner-rotation/finalize_delivery.py"
             ],
@@ -296,7 +305,14 @@
                 "scripts/tests/test_annual_statistics.py",
                 "scripts/tests/test_annual_ranking_pool.py",
                 "scripts/tests/test_annual_rotation_cli.py",
-                "scripts/tests/test_annual_publication.py"
+                "scripts/tests/test_annual_publication.py",
+                "scripts/tests/test_annual_rotation_v2.py",
+                "scripts/tests/test_annual_completion.py",
+                "scripts/tests/test_annual_completion_evidence.py",
+                "scripts/tests/test_annual_completion_publication.py",
+                "scripts/tests/test_annual_completion_report.py",
+                "scripts/tests/test_json_integrity.py",
+                "scripts/tests/test_verify_published_artifacts.py"
             ]
         },
         "feature_blocks": {
@@ -331,10 +347,15 @@
         ".codex/hooks/tests/test_post_tool_use_hygiene.py",
         "scripts/tests/test_added_file_size_limits.py",
         "scripts/tests/test_agent_instruction_contract.py",
+        "scripts/tests/test_annual_completion.py",
+        "scripts/tests/test_annual_completion_evidence.py",
+        "scripts/tests/test_annual_completion_publication.py",
+        "scripts/tests/test_annual_completion_report.py",
         "scripts/tests/test_annual_publication.py",
         "scripts/tests/test_annual_ranking_pool.py",
         "scripts/tests/test_annual_rotation.py",
         "scripts/tests/test_annual_rotation_cli.py",
+        "scripts/tests/test_annual_rotation_v2.py",
         "scripts/tests/test_annual_statistics.py",
         "scripts/tests/test_artifact_backup.py",
         "scripts/tests/test_artifact_store.py",
@@ -407,6 +428,7 @@
         "scripts/tests/test_history_title_origins_export.py",
         "scripts/tests/test_industry_role_comparison.py",
         "scripts/tests/test_industry_role_runner.py",
+        "scripts/tests/test_json_integrity.py",
         "scripts/tests/test_maintained_adjusted_daily.py",
         "scripts/tests/test_market_context.py",
         "scripts/tests/test_market_context_artifact.py",

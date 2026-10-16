@@ -13,6 +13,8 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
+from research_core.artifact_store import relative_name, safe_path
+
 RESULT_VERSION = "research-result.v1"
 REGISTRY_VERSION = "research-registry.v1"
 OUTCOMES = {"not_evaluated", "candidate_failed", "candidate_passed", "invalid_measurement", "data_blocked", "incomplete"}
@@ -176,16 +178,27 @@ def task_catalog(tasks_root: Path) -> list[dict[str, Any]]:
         if not path.is_dir() or path.is_symlink() or not path.resolve().is_relative_to(tasks_root.resolve()):
             continue
         available = {name: (path / name).is_file() for name in ("mission.md", "report.md", "summary.json", "research_result.json")}
-        if not any(available.values()):
+        publications = task_publications(path)
+        if not any(available.values()) and publications is None:
             continue
         # Never parse a possibly sealed result merely to list a study.
-        rows.append({
+        row = {
             "task": path.name,
             "mtime": path.stat().st_mtime,
             "artifacts": available,
             "evidence_state": "registered_unread" if available["research_result.json"] else "legacy_unregistered",
             "outcome": "unknown",
-        })
+        }
+        if publications is not None:
+            current = next(item for item in publications["publications"] if item["id"] == publications["current"])
+            row.update(
+                current_publication=publications["current"],
+                publications=publications["publications"],
+                report_path=current["report_path"],
+                result_path=current["result_path"],
+                evidence_state="registered_unread",
+            )
+        rows.append(row)
     return sorted(rows, key=lambda item: (item["mtime"], item["task"]), reverse=True)
 
 
@@ -194,3 +207,51 @@ def safe_identifier(value: Any, name: str) -> str:
     if not re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9_-]{0,95}", result):
         raise EvidenceError(f"{name}: unsafe identifier")
     return result
+
+
+def task_publications(task_root: Path) -> dict[str, Any] | None:
+    """Resolve an explicit small publication index without reading result cards.
+
+    Paths are relative to this task. Absence preserves legacy discovery; malformed
+    indexes never fall back to the root report or infer a newer directory.
+    """
+    try:
+        root = safe_path(task_root)
+        index = safe_path(root / "publications.json")
+        if not index.exists():
+            return None
+        if not index.is_file() or index.stat().st_size > 64 * 1024:
+            raise EvidenceError("publication index must be a small regular JSON file")
+        value = read_json(index)
+        if not isinstance(value, dict) or value.get("schema") != "research-publications.v1":
+            raise EvidenceError("publication index must use research-publications.v1")
+        if value.get("study_id") != root.name:
+            raise EvidenceError("publication index study_id must match its task")
+        current = safe_identifier(value.get("current"), "publication current")
+        entries = value.get("publications")
+        if not isinstance(entries, list) or not entries:
+            raise EvidenceError("publication index needs a nonempty publications list")
+        seen: set[str] = set()
+        resolved = []
+        for entry in entries:
+            if not isinstance(entry, dict):
+                raise EvidenceError("publication entry must be an object")
+            identity = safe_identifier(entry.get("id"), "publication id")
+            if identity in seen:
+                raise EvidenceError("duplicate publication id")
+            seen.add(identity)
+            item = {"id": identity}
+            for key, suffix in (("report", ".md"), ("result", ".json")):
+                relative = relative_name(text_field(entry.get(key), f"publication {key}"))
+                target = safe_path(root / relative)
+                if not target.is_relative_to(root) or target.suffix != suffix or not target.is_file():
+                    raise EvidenceError(f"publication {key} must name an existing task-local {suffix} file")
+                item[f"{key}_path"] = relative
+            resolved.append(item)
+        if current not in seen:
+            raise EvidenceError("publication current does not identify a listed version")
+        return {"current": current, "publications": resolved}
+    except EvidenceError:
+        raise
+    except (OSError, ValueError) as error:
+        raise EvidenceError(f"invalid publication index for {task_root.name}: {error}") from error

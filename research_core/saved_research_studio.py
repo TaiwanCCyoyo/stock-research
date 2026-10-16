@@ -1323,6 +1323,8 @@ def _presentation_metadata(path: Path | None, *, required: bool = False) -> dict
 
 def _apply_history_presentation(item: dict[str, Any], metadata: dict[str, Any]) -> None:
     """Overlay display copy on a projection; formal outcome and saved evidence stay intact."""
+    if item.get("currentPublication") is not None and metadata.get("publicationId") != item["currentPublication"]:
+        return
     if "section" in metadata:
         item["section"] = metadata["section"]
     if "plainTitle" in metadata:
@@ -1413,7 +1415,9 @@ def research_history(tasks_root: Path, registry_path: Path, presentation_path: P
     items = []
     for task in task_catalog(tasks_root):
         root = tasks_root / task["task"]
-        report = root / "report.md"
+        report_relative = task.get("report_path", "report.md")
+        result_relative = task.get("result_path", "research_result.json")
+        report = root / report_relative
         mission = root / "mission.md"
         if not report.is_file() and not mission.is_file():
             continue
@@ -1431,8 +1435,10 @@ def research_history(tasks_root: Path, registry_path: Path, presentation_path: P
         valid_day(day)
         status = "已保存報告" if published else "研究中"
         outcome = None
-        if published and (root / "research_result.json").is_file():
-            result = validate_result(read_json(root / "research_result.json"))
+        if published and (root / result_relative).is_file():
+            result = validate_result(read_json(root / result_relative))
+            if task.get("current_publication") is not None and result["study_id"] != task["task"]:
+                raise EvidenceError("publication result study_id must match its task")
             outcome = result["outcome"]
             status = {
                 "candidate_failed": "行不通",
@@ -1452,7 +1458,7 @@ def research_history(tasks_root: Path, registry_path: Path, presentation_path: P
             "status": status,
             "conclusion": conclusion,
             "originalSummary": summary,
-            "reportPath": f"tasks/{task['task']}/report.md" if published else f"tasks/{task['task']}/mission.md",
+            "reportPath": f"tasks/{task['task']}/{report_relative}" if published else f"tasks/{task['task']}/mission.md",
             "reviewConfirmed": False,
             "outcome": outcome,
             "draftStatus": None,
@@ -1461,6 +1467,17 @@ def research_history(tasks_root: Path, registry_path: Path, presentation_path: P
             "evidenceState": "published_report_not_owner_adoption" if published else "mission_only_not_evaluated",
             "registryEventIds": event_ids,
         }
+        if task.get("current_publication") is not None:
+            item["currentPublication"] = task["current_publication"]
+            item["resultPath"] = f"tasks/{task['task']}/{result_relative}"
+            item["publications"] = [
+                {
+                    "id": version["id"],
+                    "reportPath": f"tasks/{task['task']}/{version['report_path']}",
+                    "resultPath": f"tasks/{task['task']}/{version['result_path']}",
+                }
+                for version in task["publications"]
+            ]
         metadata = presentation.get(task["task"])
         if metadata:
             _apply_history_presentation(item, metadata)

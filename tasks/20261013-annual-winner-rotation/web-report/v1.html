@@ -1,0 +1,669 @@
+<!doctype html>
+<html lang="zh-Hant" data-palette="forest">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta
+            name="report:title"
+            content="每年買進前一年領先股，台股結果如何？"
+        />
+        <meta
+            name="report:summary"
+            content="2011–2025 共 15 年僅 8 年可計、7 年未解決；完整策略總報酬仍未知。2026 YTD 另列。"
+        />
+        <meta name="report:date" content="2026-10-16" />
+        <meta name="report:status" content="exploratory" />
+        <meta name="report:period" content="2011-2025" />
+        <meta
+            name="report:tags"
+            content="台股,年度輪動,前一年領先股,0050,資料不完整"
+        />
+        <meta name="report:kit" content="v1" />
+        <meta
+            name="description"
+            content="台股前一年領先股輪動研究的已存結果閱讀版。完整策略終值、CAGR、回撤與顯著性仍未知。"
+        />
+        <title>每年買進前一年領先股，台股結果如何？</title>
+        <link rel="stylesheet" href="kit/report-kit.css" />
+        <link rel="stylesheet" href="report.css" />
+        <script src="kit/report-kit.js" defer></script>
+    </head>
+    <body>
+        <a class="skip-link" href="#overview">跳至研究結論</a>
+        <main class="rk-page">
+            <header class="rk-hero">
+                <div class="rk-eyebrow">台股研究筆記 · 年度輪動 v1</div>
+                <h1>
+                    每年買進前一年領先股，<br
+                        class="wide-break"
+                    />總報酬會贏過大盤嗎？
+                </h1>
+                <p class="rk-lede">
+                    目前無法判定。15 年中有 7 年報酬未解，不能拼成完整長期績效。
+                </p>
+                <div class="rk-meta">
+                    <span class="rk-badge is-warn">探索研究 · 資料不完整</span>
+                    <span class="rk-badge">完整持有年 2011–2025</span>
+                    <span class="rk-badge">閱讀版 2026-10-16</span>
+                </div>
+            </header>
+
+            <section
+                class="rk-section"
+                id="overview"
+                aria-labelledby="overview-title"
+            >
+                <header>
+                    <div>
+                        <div class="rk-q">先看結論</div>
+                        <h2 id="overview-title">總報酬仍是未知，不是 0%</h2>
+                    </div>
+                </header>
+                <div class="rk-banner">
+                    <strong>證據不足以支持「顯著勝過大盤」。</strong
+                    >這也不代表已證明策略無效。完整策略的終值、年化複利報酬（CAGR）、最大回撤與顯著性，均無法由目前資料確定。
+                </div>
+                <ul class="rk-findings">
+                    <li class="rk-finding">
+                        <b>8 / 15 年</b>
+                        <p>
+                            完整持有年度中，只有 8 年能依模型計算報酬；其餘 7
+                            年未知。
+                        </p>
+                    </li>
+                    <li class="rk-finding">
+                        <b>2 / 8 年</b>
+                        <p>
+                            已知年份中，2019、2021 的策略淨報酬勝過同日期
+                            0050；不能推論長期複利勝負。
+                        </p>
+                    </li>
+                    <li class="rk-finding">
+                        <b class="rk-loss">−69.43%</b>
+                        <p>
+                            2022
+                            年策略淨報酬，是已知年度中最差的一年；完整歷史的最差年仍未知。
+                        </p>
+                    </li>
+                </ul>
+                <p class="rk-answer">
+                    這裡的「領先股」是<strong>資料覆蓋範圍內，報酬算得出的第一名</strong>，不是已確認的全市場冠軍。未知候選也可能比所選股票漲得更多。
+                </p>
+            </section>
+
+            <nav aria-label="報告導覽">
+                <ul class="rk-toc">
+                    <li><a href="#method">怎麼做</a></li>
+                    <li><a href="#annual">15 年逐年結果</a></li>
+                    <li><a href="#ytd">2026 YTD</a></li>
+                    <li><a href="#limits">資料與模型限制</a></li>
+                    <li><a href="#sources">來源</a></li>
+                </ul>
+            </nav>
+
+            <section
+                class="rk-section"
+                id="method"
+                aria-labelledby="method-title"
+            >
+                <header>
+                    <div>
+                        <div class="rk-q">方法</div>
+                        <h2 id="method-title">
+                            每年選 1 檔，持有到下一次年度輪動
+                        </h2>
+                    </div>
+                </header>
+                <ol class="method-steps">
+                    <li>
+                        <b>看前一年</b
+                        ><span
+                            >用前一年整年含息模型報酬排名，選報酬可計者中的最高
+                            1 檔。</span
+                        >
+                    </li>
+                    <li>
+                        <b>隔年買進</b
+                        ><span
+                            >於次年第一個有效且有成交量的觀測開盤買入，配置集中度
+                            100%。</span
+                        >
+                    </li>
+                    <li>
+                        <b>次年換股</b
+                        ><span
+                            >在下一年度邊界後第一個有效觀測開盤退出，與相同進出日期的
+                            0050 配對。</span
+                        >
+                    </li>
+                </ol>
+                <p class="rk-note">
+                    含息是<strong>估算情境</strong>：現金股利估值於除息日收盤立即再投入分數單位，並非實際付款日再投入。觀測開盤也不是保證能成交的價格。
+                </p>
+                <details class="rk-details">
+                    <summary>成本與報酬口徑</summary>
+                    <div class="detail-body">
+                        <p>
+                            <strong>未扣成本（原報告 gross）</strong
+                            >：含息模型、未扣交易成本。<strong
+                                >扣成本（原報告 net）</strong
+                            >：策略與 0050
+                            皆扣除下列固定情境成本，股利再投入另收佣金。
+                        </p>
+                        <dl class="fee-list">
+                            <div>
+                                <dt>買、賣佣金</dt>
+                                <dd>各 0.1425%</dd>
+                            </div>
+                            <div>
+                                <dt>不利滑價</dt>
+                                <dd>買、賣各 0.10%</dd>
+                            </div>
+                            <div>
+                                <dt>股票賣方證交稅</dt>
+                                <dd>0.30%</dd>
+                            </div>
+                            <div>
+                                <dt>ETF 賣方證交稅</dt>
+                                <dd>0.10%</dd>
+                            </div>
+                        </dl>
+                        <p>
+                            這些是研究固定假設，並非實際費用或成交紀錄。未充分納入個人稅負、補充保費、最小佣金與整股資金限制。表內
+                            0050 每年各自進出一次，不等於連續長抱 0050。
+                        </p>
+                        <p>
+                            排名通常以前一年年底收盤至該年底收盤計算；2010 年缺
+                            2009 錨點，改用 2010 首個觀測交易日收盤，因此 2011
+                            持有結果另有初始窗限制。
+                        </p>
+                    </div>
+                </details>
+            </section>
+
+            <section
+                class="rk-section"
+                id="annual"
+                aria-labelledby="annual-title"
+            >
+                <header>
+                    <div>
+                        <div class="rk-q">完整持有年度 · 2011–2025</div>
+                        <h2 id="annual-title">保留每一年，也保留未知</h2>
+                    </div>
+                    <span class="rk-badge">紅為正報酬 · 綠為負報酬</span>
+                </header>
+                <p id="annual-note" class="rk-answer">
+                    每列是一段獨立持有期，從該年買入至次年退出；報酬已包含同一股利再投入模型。「未解決」不等於零報酬。<strong
+                        >只有 2019、2021 的已知策略扣成本報酬高於同期
+                        0050。</strong
+                    >
+                </p>
+                <table
+                    class="rk-table annual-table"
+                    aria-describedby="annual-note"
+                >
+                    <caption>
+                        完整年度獨立持有期；數值照錄已存研究報告，未串接財富曲線
+                    </caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">持有年／代碼</th>
+                            <th scope="col">買入 → 退出</th>
+                            <th scope="col">前一年排名報酬</th>
+                            <th scope="col">策略未扣成本</th>
+                            <th scope="col">策略扣成本</th>
+                            <th scope="col">同期0050扣成本</th>
+                            <th scope="col">狀態／首要缺口</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th scope="row">2011 <span>3406</span></th>
+                            <td data-label="買入 → 退出">
+                                2011-01-03 → 2012-01-02
+                            </td>
+                            <td data-label="前一年排名報酬" class="rk-gain">
+                                +595.65%
+                            </td>
+                            <td data-label="策略未扣成本" class="unknown">
+                                未解決
+                            </td>
+                            <td data-label="策略扣成本" class="unknown">
+                                未解決
+                            </td>
+                            <td data-label="同期0050扣成本" class="rk-loss">
+                                -17.21%
+                            </td>
+                            <td data-label="狀態／首要缺口">
+                                2011-03-17 除權事件的股數／權利尚未重建。
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">2012 <span>6276</span></th>
+                            <td data-label="買入 → 退出">
+                                2012-01-02 → 2013-01-02
+                            </td>
+                            <td data-label="前一年排名報酬" class="rk-gain">
+                                +202.84%
+                            </td>
+                            <td data-label="策略未扣成本" class="unknown">
+                                未解決
+                            </td>
+                            <td data-label="策略扣成本" class="unknown">
+                                未解決
+                            </td>
+                            <td data-label="同期0050扣成本" class="rk-gain">
+                                +12.50%
+                            </td>
+                            <td data-label="狀態／首要缺口">
+                                缺 2012-07-16、07-17 官方報價。
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">2013 <span>1781</span></th>
+                            <td data-label="買入 → 退出">
+                                2013-01-02 → 2014-01-02
+                            </td>
+                            <td data-label="前一年排名報酬" class="rk-gain">
+                                +253.60%
+                            </td>
+                            <td data-label="策略未扣成本" class="rk-loss">
+                                -13.65%
+                            </td>
+                            <td data-label="策略扣成本" class="rk-loss">
+                                -14.32%
+                            </td>
+                            <td data-label="同期0050扣成本" class="rk-gain">
+                                +10.60%
+                            </td>
+                            <td data-label="狀態／首要缺口">模型可計</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">2014 <span>3229</span></th>
+                            <td data-label="買入 → 退出">
+                                2014-01-02 → 2015-01-05
+                            </td>
+                            <td data-label="前一年排名報酬" class="rk-gain">
+                                +433.89%
+                            </td>
+                            <td data-label="策略未扣成本" class="rk-loss">
+                                -6.77%
+                            </td>
+                            <td data-label="策略扣成本" class="rk-loss">
+                                -7.50%
+                            </td>
+                            <td data-label="同期0050扣成本" class="rk-gain">
+                                +15.22%
+                            </td>
+                            <td data-label="狀態／首要缺口">模型可計</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">2015 <span>3520</span></th>
+                            <td data-label="買入 → 退出">
+                                2015-01-05 → 2016-01-04
+                            </td>
+                            <td data-label="前一年排名報酬" class="rk-gain">
+                                +379.37%
+                            </td>
+                            <td data-label="策略未扣成本" class="rk-loss">
+                                -22.88%
+                            </td>
+                            <td data-label="策略扣成本" class="rk-loss">
+                                -23.48%
+                            </td>
+                            <td data-label="同期0050扣成本" class="rk-loss">
+                                -6.15%
+                            </td>
+                            <td data-label="狀態／首要缺口">模型可計</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">2016 <span>3205</span></th>
+                            <td data-label="買入 → 退出">
+                                2016-01-04 → 2017-01-03
+                            </td>
+                            <td data-label="前一年排名報酬" class="rk-gain">
+                                +952.08%
+                            </td>
+                            <td data-label="策略未扣成本" class="unknown">
+                                未解決
+                            </td>
+                            <td data-label="策略扣成本" class="unknown">
+                                未解決
+                            </td>
+                            <td data-label="同期0050扣成本" class="rk-gain">
+                                +18.68%
+                            </td>
+                            <td data-label="狀態／首要缺口">
+                                2016-08-17 混合除權息事件的權利尚未重建。
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">2017 <span>3522</span></th>
+                            <td data-label="買入 → 退出">
+                                2017-01-03 → 2018-01-02
+                            </td>
+                            <td data-label="前一年排名報酬" class="rk-gain">
+                                +361.03%
+                            </td>
+                            <td data-label="策略未扣成本" class="rk-loss">
+                                -16.41%
+                            </td>
+                            <td data-label="策略扣成本" class="rk-loss">
+                                -17.07%
+                            </td>
+                            <td data-label="同期0050扣成本" class="rk-gain">
+                                +17.60%
+                            </td>
+                            <td data-label="狀態／首要缺口">模型可計</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">2018 <span>3162</span></th>
+                            <td data-label="買入 → 退出">
+                                2018-01-02 → 2019-01-02
+                            </td>
+                            <td data-label="前一年排名報酬" class="rk-gain">
+                                +542.97%
+                            </td>
+                            <td data-label="策略未扣成本" class="unknown">
+                                未解決
+                            </td>
+                            <td data-label="策略扣成本" class="unknown">
+                                未解決
+                            </td>
+                            <td data-label="同期0050扣成本" class="rk-loss">
+                                -5.07%
+                            </td>
+                            <td data-label="狀態／首要缺口">
+                                缺 2018-09-26、10-08 官方報價。
+                            </td>
+                        </tr>
+                        <tr class="beats-benchmark">
+                            <th scope="row">2019 <span>2388</span></th>
+                            <td data-label="買入 → 退出">
+                                2019-01-02 → 2020-01-02
+                            </td>
+                            <td data-label="前一年排名報酬" class="rk-gain">
+                                +148.11%
+                            </td>
+                            <td data-label="策略未扣成本" class="rk-gain">
+                                +37.24%
+                            </td>
+                            <td data-label="策略扣成本" class="rk-gain">
+                                +36.17%
+                            </td>
+                            <td data-label="同期0050扣成本" class="rk-gain">
+                                +32.25%
+                            </td>
+                            <td data-label="狀態／首要缺口">
+                                模型可計 · 淨報酬勝配對 0050
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">2020 <span>6538</span></th>
+                            <td data-label="買入 → 退出">
+                                2020-01-02 → 2021-01-04
+                            </td>
+                            <td data-label="前一年排名報酬" class="rk-gain">
+                                +590.32%
+                            </td>
+                            <td data-label="策略未扣成本" class="unknown">
+                                未解決
+                            </td>
+                            <td data-label="策略扣成本" class="unknown">
+                                未解決
+                            </td>
+                            <td data-label="同期0050扣成本" class="rk-gain">
+                                +30.12%
+                            </td>
+                            <td data-label="狀態／首要缺口">
+                                2020-08-27 混合除權息事件的權利尚未重建。
+                            </td>
+                        </tr>
+                        <tr class="beats-benchmark">
+                            <th scope="row">2021 <span>3228</span></th>
+                            <td data-label="買入 → 退出">
+                                2021-01-04 → 2022-01-03
+                            </td>
+                            <td data-label="前一年排名報酬" class="rk-gain">
+                                +498.59%
+                            </td>
+                            <td data-label="策略未扣成本" class="rk-gain">
+                                +122.02%
+                            </td>
+                            <td data-label="策略扣成本" class="rk-gain">
+                                +120.28%
+                            </td>
+                            <td data-label="同期0050扣成本" class="rk-gain">
+                                +21.72%
+                            </td>
+                            <td data-label="狀態／首要缺口">
+                                模型可計 · 淨報酬勝配對 0050
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">2022 <span>3141</span></th>
+                            <td data-label="買入 → 退出">
+                                2022-01-03 → 2023-01-03
+                            </td>
+                            <td data-label="前一年排名報酬" class="rk-gain">
+                                +516.17%
+                            </td>
+                            <td data-label="策略未扣成本" class="rk-loss">
+                                -69.18%
+                            </td>
+                            <td data-label="策略扣成本" class="rk-loss">
+                                -69.43%
+                            </td>
+                            <td data-label="同期0050扣成本" class="rk-loss">
+                                -22.50%
+                            </td>
+                            <td data-label="狀態／首要缺口">模型可計</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">2023 <span>8996</span></th>
+                            <td data-label="買入 → 退出">
+                                2023-01-03 → 2024-01-02
+                            </td>
+                            <td data-label="前一年排名報酬" class="rk-gain">
+                                +199.77%
+                            </td>
+                            <td data-label="策略未扣成本" class="rk-gain">
+                                +21.60%
+                            </td>
+                            <td data-label="策略扣成本" class="rk-gain">
+                                +20.65%
+                            </td>
+                            <td data-label="同期0050扣成本" class="rk-gain">
+                                +27.48%
+                            </td>
+                            <td data-label="狀態／首要缺口">模型可計</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">2024 <span>1519</span></th>
+                            <td data-label="買入 → 退出">
+                                2024-01-02 → 2025-01-02
+                            </td>
+                            <td data-label="前一年排名報酬" class="rk-gain">
+                                +584.54%
+                            </td>
+                            <td data-label="策略未扣成本" class="unknown">
+                                未解決
+                            </td>
+                            <td data-label="策略扣成本" class="unknown">
+                                未解決
+                            </td>
+                            <td data-label="同期0050扣成本" class="rk-gain">
+                                +47.56%
+                            </td>
+                            <td data-label="狀態／首要缺口">
+                                2024-07-25
+                                事件落在研究交易日曆之外，處理仍待釐清。
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">2025 <span>5314</span></th>
+                            <td data-label="買入 → 退出">
+                                2025-01-02 → 2026-01-02
+                            </td>
+                            <td data-label="前一年排名報酬" class="rk-gain">
+                                +924.38%
+                            </td>
+                            <td data-label="策略未扣成本" class="unknown">
+                                未解決
+                            </td>
+                            <td data-label="策略扣成本" class="unknown">
+                                未解決
+                            </td>
+                            <td data-label="同期0050扣成本" class="rk-gain">
+                                +36.95%
+                            </td>
+                            <td data-label="狀態／首要缺口">
+                                缺 2025-03-20、03-21 官方報價。
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="rk-foot">
+                    表列缺口是首要已知原因，不代表該年所有行情都缺。持有期依實際觀測日對齊；未知年度沒有以次名替換，也沒有當成空手。
+                </p>
+            </section>
+
+            <section class="rk-section" id="ytd" aria-labelledby="ytd-title">
+                <header>
+                    <div>
+                        <div class="rk-q">獨立列示 · 非完整年度</div>
+                        <h2 id="ytd-title">2026 YTD，截至 10 月 12 日</h2>
+                    </div>
+                    <span class="rk-badge is-warn">不年化 · 不併入 15 年</span>
+                </header>
+                <div class="rk-card ytd-card">
+                    <p>
+                        <strong>5475</strong> · 2026-01-02 買入 → 2026-10-12
+                        收盤估值<br />前一年排名報酬
+                        <span class="rk-gain">+686.07%</span>
+                    </p>
+                    <dl class="ytd-values">
+                        <div>
+                            <dt>策略扣成本</dt>
+                            <dd class="rk-gain">+115.06%</dd>
+                        </div>
+                        <div>
+                            <dt>同期0050扣成本</dt>
+                            <dd class="rk-gain">+76.35%</dd>
+                        </div>
+                        <div>
+                            <dt>策略未扣成本</dt>
+                            <dd class="rk-gain">+116.75%</dd>
+                        </div>
+                    </dl>
+                    <p class="rk-foot">
+                        模型可計；退出端是截至日收盤的假設清算。這段亮眼表現不能填補
+                        7 個未知歷史年度。
+                    </p>
+                </div>
+            </section>
+
+            <section
+                class="rk-section"
+                id="limits"
+                aria-labelledby="limits-title"
+            >
+                <header>
+                    <div>
+                        <div class="rk-q">理解結論的邊界</div>
+                        <h2 id="limits-title">
+                            缺的是完整證據，不只是表格上的數字
+                        </h2>
+                    </div>
+                </header>
+                <details class="rk-details">
+                    <summary>範圍：為什麼不能稱為「全市場冠軍」？</summary>
+                    <div class="detail-body">
+                        <p>
+                            以歷史報價出現的四碼普通股代碼為候選，1–9 開頭、排除
+                            91xx
+                            TDR；不是台灣50成分股研究，也不是完整全市場普查。缺完整歷史上市櫃資格與下市資料，目前證券類型不能證明歷史資格，不能宣稱無存活偏誤。
+                        </p>
+                        <p>
+                            2010–2025 排名年合計觀測 25,883 個股票年，其中 1,173
+                            個缺初始錨點、不具候選資格。其餘 24,710
+                            個候選股票年中，8,413
+                            個因事件或報價問題而排名未知。選股只取報酬可計者的第一名，未知者不是落敗者。0050
+                            是大型股 ETF 的含息模型代理，並非全台股總報酬指數。
+                        </p>
+                    </div>
+                </details>
+                <details class="rk-details">
+                    <summary>模型：含息、成交與權利事件有哪些限制？</summary>
+                    <div class="detail-body">
+                        <p>
+                            股利來自估值，假設除息日立刻收到並於收盤買入分數單位；未建立實際付款與歷史零股可成交性。未釐清的除權、混合除權息、減資與非交易日事件維持未知，不用還原價格因子替代股數權利。
+                        </p>
+                        <p>
+                            每日開高低收與正成交量只能找到有效觀測開盤，不能證明漲停買得到、跌停賣得掉。0050
+                            的 2025 分割採官方 1:4
+                            比例與五個停牌交易日。單一持股固定 100%
+                            集中；前一年大漲不會降低這項風險。
+                        </p>
+                    </div>
+                </details>
+                <details class="rk-details">
+                    <summary>推論：已知 8 年為什麼不能串成總報酬？</summary>
+                    <div class="detail-body">
+                        <p>
+                            8 年之間穿插 7
+                            個未知持有期，缺少時間連續的財富路徑。將已知年相乘，或把空白當
+                            0%，都不能得到完整策略終值、CAGR、最大回撤或顯著性。2
+                            年勝過配對 0050
+                            只是已知樣本描述，不是長期勝率或複利勝負的證明。
+                        </p>
+                        <p>
+                            本研究也不能核實原社群圖片的美股金額。母體不同、歷史已被看過，補資料後仍需保留本次結果與規則，不能將同一期間當成新的未見測試。
+                        </p>
+                    </div>
+                </details>
+                <details class="rk-details">
+                    <summary>保存與重現：這份閱讀版交付了什麼？</summary>
+                    <div class="detail-body">
+                        <p>
+                            本頁只整理已存結果，沒有重新計算。公開報告與研究設計可供閱讀，但部分輸入識別與過程結果只保留在作者本機，另需外部研究資料目錄。乾淨
+                            checkout
+                            目前無法直接完整重現，因此本頁也不宣稱完成可完整重現的交付。
+                        </p>
+                    </div>
+                </details>
+            </section>
+
+            <footer id="sources" class="report-footer">
+                <h2>來源與版本</h2>
+                <p>
+                    本頁呈現已存於
+                    <a
+                        href="https://github.com/TaiwanCCyoyo/stock-research/pull/15"
+                        >PR15</a
+                    >
+                    的結果，並非新評估或完整可重現的交付。數字與結論以固定版本的
+                    <a
+                        href="https://github.com/TaiwanCCyoyo/stock-research/blob/4706cc4b26ba77e1c6d059adb307173d059f9194/tasks/20261013-annual-winner-rotation/report.md"
+                        >原始報告</a
+                    >
+                    為準；另見
+                    <a
+                        href="https://github.com/TaiwanCCyoyo/stock-research/blob/4706cc4b26ba77e1c6d059adb307173d059f9194/tasks/20261013-annual-winner-rotation/mission.md"
+                        >事前研究設計</a
+                    >
+                    與
+                    <a
+                        href="https://github.com/TaiwanCCyoyo/stock-research/blob/4706cc4b26ba77e1c6d059adb307173d059f9194/tasks/20261013-annual-winner-rotation/verification.md"
+                        >驗證與交付限制</a
+                    >。
+                </p>
+                <p class="rk-foot">
+                    資料截止 2026-10-12 · 閱讀版日期 2026-10-16 ·
+                    本研究不構成交易建議。
+                </p>
+            </footer>
+        </main>
+    </body>
+</html>
