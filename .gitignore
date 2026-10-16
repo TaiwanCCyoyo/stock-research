@@ -111,6 +111,7 @@ tasks/*/**
 !tasks/*/streak_correction_results.json
 !tasks/*/executable_fills_results.json
 !tasks/*/research_result.json
+!tasks/*/publications.json
 # Small versioned study publications; raw inputs and verbose run trees stay ignored.
 !tasks/*/publications/
 !tasks/*/publications/*/

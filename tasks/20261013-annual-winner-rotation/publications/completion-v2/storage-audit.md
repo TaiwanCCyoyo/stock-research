@@ -123,3 +123,17 @@ admission unresolved 為空。仍為 45 次 kernel、一次 input fingerprint、
 input copy bytes 0；no-replace ZIP 實際完成，打包約 0.020 秒。
 診斷放在 `.tmp/annual-review-rights-reproduction-20261016/` 及同名 log，
 用途仍是可丟棄的修正影響驗證，沒有增加正式研究版本或改寫原結果。
+
+依 PR31 的實際影響原則，一般非認股權 share／cash 的跳價關卡也要求明示條款
+能解釋跳幅，不能單靠來源 factor 放行矛盾條款。2026-10-16 22:08（臺北）只核查
+原固定持有序列的 4 個非認股權事件：6538／1519 的相鄰交易日原始收盤變化為
+−11.39%／−17.55%，沒有達到 40% override 門檻；6276／5314 的前交易日缺價，
+走既有、此次未變的 carry 恢復關卡。沒有命中新修改的一般 override 分支，
+因此未啟動策略重算，也未改寫正式結果。
+
+核查只讀 115 列事件附近 OHLC，日曆只讀四個有限日期窗口的 Date 欄位
+（218,792 個日期值），沒有全市場特徵或績效計算。一次價格 fingerprint 與
+先前乾淨 dd48d08 重現紀錄相同；輸入穩定且 input copy bytes 為 0。
+診斷位於 `.tmp/annual-pr31-impact-check.json`，總耗時約 5.97 秒，屬可丟棄核查。
+版本發現另由 task root 小型 `publications.json` 明確選擇 v2，保留 v1 路徑；
+catalog 不讀經濟結果，也不為列目錄重驗大資料。

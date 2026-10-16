@@ -263,24 +263,28 @@ def economic_path_v2(
         diagnostics[day] = diagnostic
         if frame.loc[day, "quality_reason"] == "unexplained_raw_jump":
             explained = any(row["explains_jump"] for row in diagnostic)
+            position = int(frame.index.get_indexer([day])[0])
+            anchor_day = cast(pd.Timestamp, frame.index[position - 1])
+            terms_diagnostic = _theoretical_terms_diagnostic(
+                anchor_day=anchor_day,
+                day=day,
+                previous=float(frame.RawClose.iloc[position - 1]),
+                close=float(frame.loc[day, "RawClose"]),
+                share=item.share_multiplier,
+                cash=item.cash_per_old_share,
+                rights=item.rights_per_old_share,
+                subscription=item.subscription_price or 0,
+                context="event",
+            )
             if item.rights_per_old_share > 0:
-                position = int(frame.index.get_indexer([day])[0])
-                anchor_day = cast(pd.Timestamp, frame.index[position - 1])
-                terms_diagnostic = _theoretical_terms_diagnostic(
-                    anchor_day=anchor_day,
-                    day=day,
-                    previous=float(frame.RawClose.iloc[position - 1]),
-                    close=float(frame.loc[day, "RawClose"]),
-                    share=item.share_multiplier,
-                    cash=item.cash_per_old_share,
-                    rights=item.rights_per_old_share,
-                    subscription=item.subscription_price or 0,
-                    context="event",
-                )
                 _require_source_factor_explanation(terms_diagnostic, diagnostic)
-                diagnostic.append(terms_diagnostic)
-                explained = bool(terms_diagnostic["explains_jump"])
-                LOGGER.debug("Rights quality code=%s date=%s diagnostic=%s", code, day.date(), terms_diagnostic)
+            else:
+                # A producer factor can corroborate explicit economic terms;
+                # it cannot override contradictory share or cash quantities.
+                terms_diagnostic["explains_jump"] = terms_diagnostic["explains_jump"] and explained
+            diagnostic.append(terms_diagnostic)
+            explained = bool(terms_diagnostic["explains_jump"])
+            LOGGER.debug("Entitlement quality code=%s date=%s diagnostic=%s", code, day.date(), terms_diagnostic)
             if explained:
                 frame.loc[day, "Quality"] = True
                 frame.loc[day, "quality_reason"] = None

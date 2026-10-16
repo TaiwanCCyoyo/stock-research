@@ -1079,6 +1079,73 @@ def test_benchmark_reads_fixed_catalog_raw_series_and_checks_pin(tmp_path: Path)
         _catalog_benchmark(path, "0" * 64)
 
 
+def test_versioned_history_reads_current_card_and_report_without_rewriting_v1(tmp_path: Path):
+    tasks = tmp_path / "tasks"
+    task = tasks / "20261013-versioned-study"
+    current = task / "publications/completion-v2"
+    current.mkdir(parents=True)
+    (task / "report.md").write_text("# v1 original\n\nSeven unresolved years.\n", encoding="utf-8")
+    (current / "report.md").write_text("# v2 completion\n\nCompleted fixed sequence trails the benchmark.\n", encoding="utf-8")
+    card = {
+        "schema_version": "research-result.v1",
+        "study_id": task.name,
+        "candidate_id": "fixed-v1",
+        "run_id": "v1-run",
+        "phase": "exploration",
+        "outcome": "incomplete",
+        "identities": {key: "v1" for key in ("owner_contract", "metric_contract", "execution_contract", "data_snapshot", "code", "runtime")},
+        "window": {"start": "2011-01-03", "end": "2026-01-02"},
+        "metrics": {},
+        "artifacts": [],
+        "limitations": [],
+        "supersedes": [],
+    }
+    (task / "research_result.json").write_text(json.dumps(card), encoding="utf-8")
+    current_card = {**card, "run_id": "v2-run", "candidate_id": "completion-v2", "outcome": "candidate_failed"}
+    (current / "research_result.json").write_text(json.dumps(current_card), encoding="utf-8")
+    originals = {name: (task / name).read_bytes() for name in ("report.md", "research_result.json")}
+    index = {
+        "schema": "research-publications.v1",
+        "study_id": task.name,
+        "current": "completion-v2",
+        "publications": [
+            {"id": "v1", "report": "report.md", "result": "research_result.json"},
+            {"id": "completion-v2", "report": "publications/completion-v2/report.md", "result": "publications/completion-v2/research_result.json"},
+        ],
+    }
+    (task / "publications.json").write_text(json.dumps(index), encoding="utf-8")
+    registry = tmp_path / "registry.json"
+    registry.write_text(json.dumps({"schema_version": "research-registry.v1", "history_complete": False, "events": []}), encoding="utf-8")
+    presentation = tmp_path / "presentation.json"
+    metadata = {"schema": "research-presentation.v1", "studies": {task.name: {"plainConclusion": "Old v1 copy: still incomplete."}}}
+    presentation.write_text(json.dumps(metadata), encoding="utf-8")
+    row = research_history(tasks, registry, presentation)["items"][0]
+    assert row["currentPublication"] == "completion-v2"
+    assert row["title"] == "v2 completion"
+    assert row["outcome"] == "candidate_failed" and row["status"] == "行不通"
+    assert row["conclusion"] == "Completed fixed sequence trails the benchmark."
+    assert row["reportPath"] == f"tasks/{task.name}/publications/completion-v2/report.md"
+    assert row["resultPath"] == f"tasks/{task.name}/publications/completion-v2/research_result.json"
+    assert row["publications"][0]["reportPath"] == f"tasks/{task.name}/report.md"
+    assert originals == {name: (task / name).read_bytes() for name in originals}
+    assert json.loads((task / "research_result.json").read_bytes())["run_id"] == "v1-run"
+
+    index["current"] = "not-listed"
+    (task / "publications.json").write_text(json.dumps(index), encoding="utf-8")
+    with pytest.raises(ValueError, match="current"):
+        research_history(tasks, registry, presentation)
+    index["current"] = "completion-v2"
+    (task / "publications.json").write_text(json.dumps(index), encoding="utf-8")
+    current_card["study_id"] = "foreign-study"
+    (current / "research_result.json").write_text(json.dumps(current_card), encoding="utf-8")
+    with pytest.raises(ValueError, match="study_id"):
+        research_history(tasks, registry, presentation)
+    (task / "publications.json").unlink()
+    legacy = research_history(tasks, registry, presentation)["items"][0]
+    assert legacy["outcome"] == "incomplete" and legacy["reportPath"] == f"tasks/{task.name}/report.md"
+    assert legacy["conclusion"] == "Old v1 copy: still incomplete."
+
+
 def test_presentation_metadata_enriches_discovery_but_cannot_override_formal_outcome(tmp_path: Path) -> None:
     tasks = tmp_path / "tasks"
     task = tasks / "20261008-new-study"

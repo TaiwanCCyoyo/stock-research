@@ -515,3 +515,46 @@ def test_ordinary_rights_jump_rejects_mismatched_terms_or_source_factor_in_both_
     assert result["gross_multiplier"] is None
     assert result["net_multiplier"] is None
     assert any("unexplained_raw_jump" in reason for reason in result["reasons"])
+
+
+@pytest.mark.parametrize("scenario", ["lapse", "realize"])
+@pytest.mark.parametrize("share,cash", [(0.5, 0.0), (1.0, 1.0), (2.0, 1.0)])
+def test_ordinary_share_cash_jump_cannot_use_source_factor_to_override_conflicting_terms(scenario: str, share: float, cash: float):
+    days, raw, actions = fixture([100.0, 10.0, 10.0, 10.0])
+    actions.loc[0, ["event_type", "price_factor", "cash_dividend_estimate"]] = ["EX_RIGHT_AND_DIVIDEND", 0.1, cash]
+    term = entitlement(day_at(days, 1), share_multiplier=share, cash_per_old_share=cash, source_event_type="EX_RIGHT_AND_DIVIDEND")
+    result = economic_path_v2(raw, actions, days, start=day_at(days, 0), end=day_at(days, -1), entitlements=[term], rights_scenario=scenario)
+    assert result["status"] == "unknown"
+    assert result["gross_multiplier"] is None
+    assert result["net_multiplier"] is None
+    assert any("unexplained_raw_jump" in reason for reason in result["reasons"])
+
+
+@pytest.mark.parametrize("scenario", ["lapse", "realize"])
+@pytest.mark.parametrize("share,cash,close", [(0.5, 0.0, 200.0), (1.0, 90.0, 10.0), (2.0, 20.0, 40.0)])
+def test_ordinary_share_cash_jump_accepts_compatible_explicit_terms(scenario: str, share: float, cash: float, close: float):
+    days, raw, actions = fixture([100.0, close, close, close])
+    actions.loc[0, ["event_type", "price_factor", "cash_dividend_estimate"]] = ["EX_RIGHT_AND_DIVIDEND", close / 100, cash]
+    term = entitlement(day_at(days, 1), share_multiplier=share, cash_per_old_share=cash, source_event_type="EX_RIGHT_AND_DIVIDEND")
+    result = economic_path_v2(raw, actions, days, start=day_at(days, 0), end=day_at(days, -1), entitlements=[term], rights_scenario=scenario)
+    assert result["status"] == "modeled"
+    assert result["gross_multiplier"] == pytest.approx(1.0)
+    assert result["complete_equity"] is True
+    source = "event_cash_share_terms" if cash > 0 else "event_exact_share_terms"
+    diagnostic = next(value for value in result["events"][0]["quality_diagnostics"] if value["source"] == source)
+    assert diagnostic["factor"] == pytest.approx(close / 100)
+    assert diagnostic["explains_jump"] is True
+
+
+@pytest.mark.parametrize("scenario", ["lapse", "realize"])
+@pytest.mark.parametrize("share,close", [(0.5, 200.0), (20.0, 5.0)])
+def test_ordinary_source_free_share_transformation_keeps_exact_term_quality_explanation(scenario: str, share: float, close: float):
+    days, raw, actions = fixture([100.0, close, close, close])
+    term = entitlement(day_at(days, 1), share_multiplier=share, source_event_type=None)
+    result = economic_path_v2(raw, actions.iloc[:0], days, start=day_at(days, 0), end=day_at(days, -1), entitlements=[term], rights_scenario=scenario)
+    assert result["status"] == "modeled"
+    assert result["gross_multiplier"] == pytest.approx(1.0)
+    event = result["events"][0]
+    assert event["source_actions"] == []
+    assert any(value["source"] == "reciprocal_exact_share_multiplier" and value["explains_jump"] for value in event["quality_diagnostics"])
+    assert any(value["source"] == "event_exact_share_terms" and value["explains_jump"] for value in event["quality_diagnostics"])

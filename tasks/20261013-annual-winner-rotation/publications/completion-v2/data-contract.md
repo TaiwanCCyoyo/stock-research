@@ -67,6 +67,24 @@ and unsupported actions remain unknown. H/N marks are reference marks, not
 observed executions or a complete daily drawdown series. Both rights scenarios
 must remain visible.
 
+## Explicit version discovery
+
+The study root's `publications.json` uses `research-publications.v1`: `study_id`
+matches its task, `current` names one listed publication, and each publication
+has a unique `id` plus task-relative `report` and `result` paths. The index lists
+the unchanged root v1 and `publications/completion-v2/`, selecting completion-v2.
+Paths must name existing task-local files; traversal, linked paths, duplicate
+versions, missing targets and unknown current versions fail closed.
+
+`research_core.evidence.task_catalog` exposes the current publication and all
+listed historical paths without reading result cards or sealed runs.
+`saved_research_studio.research_history` uses that same selection, reads the
+current report/card, checks its study identity and retains v1 access paths.
+Presentation copy for a versioned study requires a matching `publicationId`, so
+an old v1 summary cannot overwrite the new conclusion. Tasks without an index
+retain their existing discovery behavior. Neither reader guesses latest by
+directory date or rewrites an older result.
+
 ## Git transport
 
 `publication.zip` losslessly retains the four original JSON members, including
