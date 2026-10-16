@@ -1,3 +1,4 @@
+import hashlib
 import json
 import math
 import sys
@@ -9,6 +10,7 @@ import pandas as pd
 import pytest
 
 from research_core import annual_completion as completion
+from research_core import annual_completion_publication as publication
 from research_core.annual_rotation_v2 import Entitlement
 
 
@@ -163,7 +165,10 @@ def test_original_report_parser_keeps_unknowns_and_fixed_dates():
     assert rows[-1]["exit_date"] == "2015-10-12"
 
 
-def test_cli_fingerprints_before_data_reads_and_formats_before_receipt(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+@pytest.mark.parametrize("inject_foreign_zip", [False, True])
+def test_cli_fingerprints_then_formats_and_receipts_before_authoritative_zip(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], inject_foreign_zip: bool
+):
     prices, actions, dates, _, admission, params = fixture()
     producer = tmp_path / "producer"
     producer.mkdir()
@@ -178,6 +183,7 @@ def test_cli_fingerprints_before_data_reads_and_formats_before_receipt(tmp_path:
     committed_checks: list[Path] = []
     monkeypatch.setattr(completion, "REPO_ROOT", tmp_path)
     monkeypatch.setattr(completion, "TASK", tmp_path)
+    monkeypatch.setattr(publication, "REPO_ROOT", tmp_path)
     monkeypatch.setattr(completion, "_require_committed_sources", lambda _repo, paths: committed_checks.extend(paths))
     monkeypatch.setattr(completion, "producer_data_root", lambda: producer)
 
@@ -197,13 +203,19 @@ def test_cli_fingerprints_before_data_reads_and_formats_before_receipt(tmp_path:
     def format_outputs(paths: list[Path], _repo: Path) -> float:
         events.append("format")
         assert len(paths) == 3 and all(path.exists() for path in paths)
+        if inject_foreign_zip:
+            (output / publication.ARCHIVE).write_bytes(b"foreign authoritative archive")
         return 0.1
 
     def receipt(path: Path, **kwargs: Any) -> None:
         assert events[-1] == "format"
         assert kwargs["inputs"] == {"inputs": {}}
         events.append("receipt")
-        path.write_text("{}", encoding="utf-8")
+        identities = {}
+        for key, result_path in kwargs["results"].items():
+            raw = result_path.read_bytes()
+            identities[key] = {"path": result_path.relative_to(tmp_path).as_posix(), "bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest()}
+        path.write_text(json.dumps({"schema": "run-receipt.v1", "run_id": kwargs["run_id"], "results": identities}), encoding="utf-8")
 
     monkeypatch.setattr(completion, "fingerprint_inputs", fingerprint)
     monkeypatch.setattr(completion, "read_stable", lambda path, read: read(path))
@@ -218,7 +230,19 @@ def test_cli_fingerprints_before_data_reads_and_formats_before_receipt(tmp_path:
         "research_core.annual_completion_evidence",
         SimpleNamespace(load_verified_evidence=lambda _: evidence, build_admission=lambda *_: admission),
     )
-    assert completion.main(["--params", str(params_path), "--report", str(report), "--output", str(output)]) == 0
+    arguments = ["--params", str(params_path), "--report", str(report), "--output", str(output)]
+    if inject_foreign_zip:
+        with pytest.raises(FileExistsError):
+            completion.main(arguments)
+        assert (output / publication.ARCHIVE).read_bytes() == b"foreign authoritative archive"
+        assert capsys.readouterr().out == ""
+    else:
+        assert completion.main(arguments) == 0
+        loaded = publication.load_publication(output, repo_root=tmp_path)
+        assert loaded["results.json"]["run_id"] == params["run_id"]
+        summary = json.loads(capsys.readouterr().out)
+        assert summary["packing_seconds"] >= 0
+        assert summary["archive_bytes"] == (output / publication.ARCHIVE).stat().st_size
     assert events.count("fingerprint") == 1
     assert events.count("parquet") == 2
     assert events[-2:] == ["format", "receipt"]
@@ -363,6 +387,7 @@ def test_custom_report_paths_are_rejected_before_any_producer_read(tmp_path: Pat
         report.parent.mkdir(parents=True, exist_ok=True)
         report.write_text(report_text(), encoding="utf-8")
     monkeypatch.setattr(completion, "TASK", task)
+    monkeypatch.setattr(completion, "REPO_ROOT", tmp_path)
 
     def forbidden(*_: Any, **__: Any) -> Any:
         pytest.fail("custom report must be rejected before source/data operations")
@@ -380,6 +405,7 @@ def test_uncommitted_canonical_report_is_part_of_the_pre_read_source_gate(tmp_pa
     report = task / "report.md"
     report.write_text(report_text(), encoding="utf-8")
     monkeypatch.setattr(completion, "TASK", task)
+    monkeypatch.setattr(completion, "REPO_ROOT", tmp_path)
 
     def reject_uncommitted(_repo: Path, paths: list[Path]) -> None:
         assert report in paths
@@ -393,3 +419,18 @@ def test_uncommitted_canonical_report_is_part_of_the_pre_read_source_gate(tmp_pa
     monkeypatch.setattr(completion, "fingerprint_inputs", forbidden)
     with pytest.raises(ValueError, match="source is not committed"):
         completion.main(["--report", str(report), "--output", str(tmp_path / "output")])
+
+
+def test_output_outside_repository_is_rejected_before_fingerprinting(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    repo = tmp_path / "repository"
+    repo.mkdir()
+    monkeypatch.setattr(completion, "REPO_ROOT", repo)
+
+    def forbidden(*_: Any, **__: Any) -> Any:
+        pytest.fail("external output must be rejected before source/data operations")
+
+    monkeypatch.setattr(completion, "producer_data_root", forbidden)
+    monkeypatch.setattr(completion, "fingerprint_inputs", forbidden)
+    monkeypatch.setattr(completion, "_require_committed_sources", forbidden)
+    with pytest.raises(ValueError, match="inside the repository"):
+        completion.main(["--output", str(tmp_path / "outside")])

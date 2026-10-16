@@ -22,7 +22,7 @@ from typing import Any, Protocol
 
 import pandas as pd
 
-from research_core.annual_completion_publication import ARCHIVE
+from research_core.annual_completion_publication import ARCHIVE, pack_publication
 from research_core.annual_rotation import economic_path
 from research_core.annual_rotation_v2 import Entitlement, economic_path_v2
 from research_core.annual_statistics import equity_drawdown, summarize_annual_excess
@@ -35,7 +35,7 @@ from research_core.run_receipt import InputSpec, code_identity, fingerprint_inpu
 LOGGER = logging.getLogger(__name__)
 SCHEMA = "annual-completion-result.v2"
 STUDY_ID = "20261013-annual-winner-rotation"
-DEFINITION = "annual-rotation-completion.v2"
+DEFINITION = "annual-holding-completion.v2"
 TASK = REPO_ROOT / "tasks" / STUDY_ID
 OUTPUT_NAMES = ("results.json", "admission-audit.json", "performance.json", "run-receipt.json")
 
@@ -447,6 +447,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     output = safe_path(args.output)
     if any((output / name).exists() or (output / name).is_symlink() for name in (*OUTPUT_NAMES, ARCHIVE)):
         raise FileExistsError("publication result filenames already exist; choose a fresh --output directory")
+    repo = safe_path(REPO_ROOT)
+    if output == repo or not output.is_relative_to(repo):
+        raise ValueError("publication output must be a directory inside the repository")
     report = safe_path(args.report)
     if report.resolve() != safe_path(TASK / "report.md").resolve():
         raise ValueError("fixed PR15 selections require the canonical task report.md")
@@ -543,11 +546,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         preregistration=preregistration,
         repo_root=REPO_ROOT,
     )
+    packing_started = time.perf_counter()
+    archive = pack_publication(output)
+    packing_seconds = time.perf_counter() - packing_started
     print(  # noqa: T201 - CLI publication summary
         canonical({
             "output": str(output),
             "run_id": params["run_id"],
             "formatting_seconds": formatting_seconds,
+            "packing_seconds": packing_seconds,
+            "archive_bytes": archive.stat().st_size,
             "retained_output_bytes": sum((output / name).stat().st_size for name in OUTPUT_NAMES),
             "execution": result["execution"],
         }).decode("utf-8")

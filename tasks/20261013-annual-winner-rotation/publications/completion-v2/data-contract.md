@@ -36,6 +36,9 @@ python -m scripts.complete_annual_rotation
 The default is a new publication in this directory. Existing output filenames
 are rejected. For another run choose a new named publication with `--output`,
 a separately registered parameter/run identity, and preserve this version.
+The runner finishes by publishing its authoritative ZIP with no replacement;
+it reports success only after that atomic publication. A ZIP arriving during
+calculation prevents success rather than hiding the newly calculated run.
 No input databases, full price tables, adjusted series or source-code snapshots
 are copied into this directory. Daily equity vectors are used in memory and
 omitted from the compact publication; carry counts and limitations are retained.
@@ -79,7 +82,8 @@ unknowns. The standard artifact inventory includes this Git publication:
 uv run python -m scripts.verify_published_artifacts --only annual-holding-completion
 ```
 
-After a fresh computation, package its small result files with:
+The runner packages fresh results automatically. For an older, expanded-only
+publication, the independent packaging entry point remains available:
 
 ```text
 python -m scripts.package_annual_completion --publication <new-publication-directory>
