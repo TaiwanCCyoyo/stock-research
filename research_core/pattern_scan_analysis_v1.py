@@ -373,7 +373,7 @@ def _continuation_execution_provenance(
     continuation_request: Path,
 ) -> tuple[dict[str, Path], dict[str, Any]]:
     """Validate one active executor against immutable stock/price ancestry."""
-    from research_core.pattern_scan_continuation_v4 import verify_phase_result
+    from research_core.pattern_scan_continuation_v4 import read_phase_history, verify_phase_result
     from research_core.pattern_scan_git_source_v2 import assert_current_code, verify_git_source
     from research_core.pattern_scan_price_references_v4 import EQUALITY, HANDOFF, RETIRED, retired_preparation_reference
     from research_core.pattern_scan_result_lifecycle_v3 import _run
@@ -528,6 +528,8 @@ def _continuation_execution_provenance(
         "barrier": {"barrier": run / "global/receipt.json"},
         "events": {"event_checkpoint": run / "event-checkpoint.json"},
     }
+    historical_phases, history_files = read_phase_history(request)
+    files.update(history_files)
     for phase, outputs in expected_outputs.items():
         paths = {
             "request": control / f"request-{phase}.json",
@@ -535,6 +537,11 @@ def _continuation_execution_provenance(
             "job-memory": control / f"response-{phase}.job-memory.json",
         }
         present = [_checked_path(path).exists() for path in paths.values()]
+        if phase in historical_phases:
+            if any(present):
+                raise ValueError(f"ambiguous current and historical continuation phase: {phase}")
+            paths = historical_phases[phase]
+            present = [True] * len(paths)
         if not any(present):
             unavailable.append(phase)
             continue
@@ -545,7 +552,8 @@ def _continuation_execution_provenance(
             previous.get("schema") != "pattern-scan-continuation.v4"
             or previous.get("phase") != phase
             or previous.get("calculation_authorized") is not True
-            or any(previous.get(key) != request[key] for key in ("run_root", "control_root", "primary", "data", "source", "input_id"))
+            or previous.get("control_root") != str(paths["request"].parent)
+            or any(previous.get(key) != request[key] for key in ("run_root", "primary", "data", "source", "input_id"))
             or object_digest(previous.get("stock_reference")) != object_digest(request["stock_reference"])
             or object_digest(previous.get("reference")) != object_digest(request["reference"])
             or (phase == "retire-prices" and previous.get("retirement_authorized") is not True)

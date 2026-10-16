@@ -83,6 +83,25 @@ Different historical executors are allowed and recorded as they actually ran;
 they are never relabeled with the analysis commit. An entirely absent phase is
 listed as unavailable; a partial evidence set fails verification.
 
+When a source update requires a new sibling control, `--phase-history` pins a
+small `pattern-scan-phase-history.v4` JSON manifest. It names completed phases'
+original sibling controls and exact request/response/Job/capacity file pins;
+metadata is read in place. The original request bytes and actual executors stay
+unchanged. The new phase request pins this manifest, and retries require the same
+pin. A current phase cannot also be supplied by history, nor can a partial
+current phase fall back to history. Scope, metadata aliases, pins, source/input,
+output locators and native Job evidence remain checked. The manifest and phase
+metadata become retained execution evidence in the formal result.
+
+An interrupted attempt is listed separately with its original request and
+owner-directed cancellation receipt, never as a completed phase. Those small
+records are retained under `execution/interruptions/`; its unavailable native
+peak is not replaced with a later Job's observation. A new executor reuses event
+parts only after checking their original source/input, labels, stock and global
+identity and payload hashes. Such identity checks do not themselves establish
+implementation equivalence: assess the source change before reuse, and change
+the numerical definition or invalidate affected parts if behavior changed.
+
 The analysis Job's native peak is pending when the immutable computed index is
 captured. After `launch` returns and its Job has closed, the CLI calls
 `record_analysis_completion` to retain `analysis/audits/continuation-completion.json`.

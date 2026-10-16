@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import sys
 from copy import deepcopy
 from pathlib import Path
@@ -491,6 +492,179 @@ def _add_phase(case: dict[str, Any], phase: str, executor: dict[str, Any] | None
         },
     )
     return request
+
+
+def _add_historical_phase(case: dict[str, Any], phase: str = "barrier") -> tuple[Path, dict[str, Any]]:
+    """Create complete phase evidence under a distinct sibling control root."""
+    request = _add_phase(case, phase)
+    old_control = case["run"].parent / "historical-continuation"
+    old_control.mkdir()
+    for name in (
+        f"request-{phase}.json",
+        f"response-{phase}.json",
+        f"response-{phase}.job-memory.json",
+        f"capacity-{phase}.json",
+    ):
+        (old_control / name).write_bytes((case["control"] / name).read_bytes())
+        (case["control"] / name).unlink()
+    request_path = old_control / f"request-{phase}.json"
+    request["control_root"] = str(old_control)
+    request["capacity_path"] = str(old_control / f"capacity-{phase}.json")
+    request["capacity_sha256"] = _pin(old_control / f"capacity-{phase}.json")["sha256"]
+    _rewrite(request_path, request)
+    response_path = old_control / f"response-{phase}.json"
+    response = read_json(response_path)
+    response["request_id"] = object_digest(request)
+    _rewrite(response_path, response)
+    memory_path = old_control / f"response-{phase}.job-memory.json"
+    memory = read_json(memory_path)
+    memory.update({"request_id": object_digest(request), "response_sha256": _pin(response_path)["sha256"]})
+    _rewrite(memory_path, memory)
+    history_path = case["run"].parent / "phase-history.json"
+    manifest = {
+        "schema": "pattern-scan-phase-history.v4",
+        "run_root": str(case["run"]),
+        "source_id": case["source"]["source_id"],
+        "input_id": case["input_id"],
+        "phases": {
+            phase: {
+                "control_root": str(old_control),
+                "files": {
+                    "request": _pin(request_path),
+                    "response": _pin(response_path),
+                    "job-memory": _pin(memory_path),
+                    "capacity": _pin(old_control / f"capacity-{phase}.json"),
+                },
+            }
+        },
+        "interrupted": [],
+    }
+    write_json(history_path, manifest)
+    _repin_history(case, history_path)
+    return history_path, manifest
+
+
+def _repin_history(case: dict[str, Any], history_path: Path) -> None:
+    request = read_json(case["request_path"])
+    request["phase_history"] = _pin(history_path)
+    _rewrite(case["request_path"], request)
+
+
+def test_historical_phase_manifest_retains_original_executor_and_all_metadata_bytes(case: dict[str, Any]) -> None:
+    from research_core import pattern_scan_continuation_v4 as continuation
+
+    history_path, manifest = _add_historical_phase(case)
+    old_control = Path(manifest["phases"]["barrier"]["control_root"])
+    old_files = {kind: Path(row["path"]).read_bytes() for kind, row in manifest["phases"]["barrier"]["files"].items()}
+
+    prior_paths, retained = continuation.read_phase_history(read_json(case["request_path"]))
+    files, provenance = _select(case)
+
+    assert prior_paths["barrier"] == {
+        "request": old_control / "request-barrier.json",
+        "response": old_control / "response-barrier.json",
+        "job-memory": old_control / "response-barrier.job-memory.json",
+        "capacity": old_control / "capacity-barrier.json",
+    }
+    assert retained["execution/phase-history.json"] == history_path
+    assert files["execution/phase-history.json"] == history_path
+    for kind, path in prior_paths["barrier"].items():
+        logical = f"execution/phases/barrier/{kind}.json"
+        assert files[logical] == path
+        assert path.read_bytes() == old_files[kind]
+        assert manifest["phases"]["barrier"]["files"][kind]["sha256"] == _pin(path)["sha256"]
+    assert provenance["phase_execution"]["barrier"]["executor"] == read_json(prior_paths["barrier"]["request"])["executor"]
+    assert provenance["phase_execution_unavailable"] == ["prices", "retire-prices", "events"]
+
+
+def test_interrupted_history_retains_cancellation_without_certifying_completed_phase(case: dict[str, Any]) -> None:
+    from research_core import pattern_scan_continuation_v4 as continuation
+
+    history_path, manifest = _add_historical_phase(case)
+    historical = Path(manifest["phases"].pop("barrier")["control_root"])
+    request_path = historical / "request-events.json"
+    request = {
+        **read_json(case["request_path"]),
+        "phase": "events",
+        "control_root": str(historical),
+        "executor": _historical_executor("e" * 40),
+        "capacity_path": str(historical / "capacity-events.json"),
+        "capacity_sha256": "f" * 64,
+        "price_handoff": _pin(case["run"] / prices.HANDOFF),
+    }
+    write_json(request_path, request)
+    cancellation_path = historical / "cancellation-events.json"
+    cancellation = {
+        "schema": "pattern-scan-owner-directed-cancellation.v1",
+        "run_root": str(case["run"]),
+        "control_root": str(historical),
+        "request": _pin(request_path),
+        "complete_response": False,
+        "checkpoints_preserved": True,
+    }
+    write_json(cancellation_path, cancellation)
+    manifest["interrupted"] = [
+        {
+            "control_root": str(historical),
+            "phase": "events",
+            "request": _pin(request_path),
+            "cancellation": _pin(cancellation_path),
+        }
+    ]
+    _rewrite(history_path, manifest)
+    _repin_history(case, history_path)
+
+    current = read_json(case["request_path"])
+    prior_paths, retained = continuation.read_phase_history(current)
+    files, provenance = _select(case)
+    assert "events" not in prior_paths
+    assert retained["execution/interruptions/0/request.json"] == request_path
+    assert retained["execution/interruptions/0/cancellation.json"] == cancellation_path
+    assert files["execution/interruptions/0/request.json"] == request_path
+    assert files["execution/interruptions/0/cancellation.json"] == cancellation_path
+    assert "events" in provenance["phase_execution_unavailable"]
+
+
+@pytest.mark.parametrize("fault", ["history_pin", "request_bytes", "run_root", "source_id", "input_id", "alias", "hardlink_alias", "collision", "partial"])
+def test_historical_phase_manifest_and_current_phase_conflicts_fail_closed(case: dict[str, Any], fault: str) -> None:
+    history_path, manifest = _add_historical_phase(case)
+    if fault == "history_pin":
+        request = read_json(case["request_path"])
+        request["phase_history"]["sha256"] = "0" * 64
+        _rewrite(case["request_path"], request)
+    elif fault == "request_bytes":
+        old_request = Path(manifest["phases"]["barrier"]["files"]["request"]["path"])
+        changed = read_json(old_request)
+        changed["executor"] = {**changed["executor"], "source_id": "changed-after-pin"}
+        _rewrite(old_request, changed)
+    elif fault == "run_root":
+        manifest["run_root"] = str(case["run"].parent)
+        _rewrite(history_path, manifest)
+    elif fault == "source_id":
+        manifest["source_id"] = "different-source"
+        _rewrite(history_path, manifest)
+    elif fault == "input_id":
+        manifest["input_id"] = "different-input"
+        _rewrite(history_path, manifest)
+    elif fault == "alias":
+        manifest["phases"]["barrier"]["control_root"] = str(case["control"])
+        _rewrite(history_path, manifest)
+    elif fault == "hardlink_alias":
+        old_control = Path(manifest["phases"]["barrier"]["control_root"])
+        original = old_control / "request-barrier.json"
+        alias = old_control / "request-alias.json"
+        os.link(original, alias)
+        manifest["phases"]["barrier"]["files"]["request"] = _pin(alias)
+        _rewrite(history_path, manifest)
+    elif fault == "collision":
+        _add_phase(case, "barrier", _historical_executor("d" * 40))
+    else:
+        _add_phase(case, "barrier")
+        (case["control"] / "response-barrier.job-memory.json").unlink()
+    if fault in {"run_root", "source_id", "input_id", "alias", "hardlink_alias"}:
+        _repin_history(case, history_path)
+    with pytest.raises((ValueError, FileNotFoundError)):
+        _select(case)
 
 
 def test_prior_phases_retain_actual_historical_executor_and_job_evidence(case: dict[str, Any]) -> None:

@@ -57,6 +57,109 @@ def _descriptor(path: Path) -> dict[str, Any]:
     return {**describe_file(path.parent, path), "path": str(path)}
 
 
+def read_phase_history(request: dict[str, Any]) -> tuple[dict[str, dict[str, Path]], dict[str, Path]]:
+    """Resolve pinned historical metadata without copying or relabeling phases."""
+    descriptor = request.get("phase_history")
+    if descriptor is None:
+        return {}, {}
+    if request.get("phase") not in {"events", "analysis"}:
+        raise ValueError("historical phase metadata is only used by events or analysis")
+    run, control = _checked_path(Path(request["run_root"])), _checked_path(Path(request["control_root"]))
+
+    def pinned(record: dict[str, Any]) -> Path:
+        if (
+            not isinstance(record, dict)
+            or set(record) != {"path", "bytes", "sha256"}
+            or not isinstance(record["path"], str)
+            or type(record["bytes"]) is not int
+            or record["bytes"] < 0
+        ):
+            raise ValueError("phase history metadata descriptor invalid")
+        path = _checked_path(Path(record["path"]))
+        if not path.is_absolute() or path.suffix != ".json" or not path.is_relative_to(run.parent) or _descriptor(path) != record:
+            raise ValueError("phase history metadata pin or location differs")
+        return path
+
+    def previous_control(value: str) -> Path:
+        path = _checked_path(Path(value))
+        if not path.is_absolute() or path.parent != run.parent or path in {run, control}:
+            raise ValueError("phase history control must be a distinct original sibling")
+        return path
+
+    def previous_request(path: Path, parent: Path, phase: str) -> dict[str, Any]:
+        previous = read_scan_receipt(path)
+        if (
+            path != parent / f"request-{phase}.json"
+            or previous.get("schema") != SCHEMA
+            or previous.get("phase") != phase
+            or previous.get("control_root") != str(parent)
+            or any(previous.get(key) != request[key] for key in ("run_root", "primary", "data", "source", "input_id", "stock_reference", "reference"))
+            or previous.get("calculation_authorized") is not True
+        ):
+            raise ValueError("phase history request ancestry differs")
+        verify_git_source(previous["executor"])
+        return previous
+
+    history_path = pinned(descriptor)
+    history = read_json(history_path)
+    if (
+        set(history) != {"schema", "run_root", "source_id", "input_id", "phases", "interrupted"}
+        or history.get("schema") != "pattern-scan-phase-history.v4"
+        or history.get("run_root") != str(run)
+        or history.get("source_id") != request["source"]["source_id"]
+        or history.get("input_id") != request["input_id"]
+        or not isinstance(history.get("phases"), dict)
+        or not set(history["phases"]) <= {"prices", "retire-prices", "barrier", "events"}
+        or not isinstance(history.get("interrupted"), list)
+        or len(history["interrupted"]) > 8
+    ):
+        raise ValueError("phase history identity or scope differs")
+    phases: dict[str, dict[str, Path]] = {}
+    retained = {"execution/phase-history.json": history_path}
+    for phase, record in history["phases"].items():
+        if not isinstance(record, dict) or set(record) != {"control_root", "files"} or not isinstance(record.get("files"), dict):
+            raise ValueError("phase history phase metadata invalid")
+        parent = previous_control(record["control_root"])
+        if set(record["files"]) != {"request", "response", "job-memory", "capacity"}:
+            raise ValueError("phase history requires complete phase evidence")
+        paths = {kind: pinned(value) for kind, value in record["files"].items()}
+        previous = previous_request(paths["request"], parent, phase)
+        if (
+            paths["response"] != parent / f"response-{phase}.json"
+            or paths["job-memory"] != parent / f"response-{phase}.job-memory.json"
+            or paths["capacity"] != _checked_path(Path(previous["capacity_path"]))
+            or _descriptor(paths["capacity"])["sha256"] != previous["capacity_sha256"]
+        ):
+            raise ValueError("phase history phase locators differ")
+        # Incomplete/cancelled work cannot be adopted as a completed phase.
+        verify_phase_result(paths["response"], previous)
+        phases[phase] = paths
+    for index, record in enumerate(history["interrupted"]):
+        if not isinstance(record, dict) or set(record) != {"control_root", "phase", "request", "cancellation"} or record.get("phase") not in PHASES:
+            raise ValueError("phase history interruption metadata invalid")
+        parent = previous_control(record["control_root"])
+        phase = record["phase"]
+        path, cancellation_path = pinned(record["request"]), pinned(record["cancellation"])
+        previous_request(path, parent, phase)
+        cancellation = read_json(cancellation_path)
+        if (
+            cancellation.get("schema") != "pattern-scan-owner-directed-cancellation.v1"
+            or cancellation.get("run_root") != str(run)
+            or cancellation.get("control_root") != str(parent)
+            or cancellation.get("request") != record["request"]
+            or cancellation.get("complete_response") is not False
+            or cancellation.get("checkpoints_preserved") is not True
+            or (parent / f"response-{phase}.json").exists()
+            or (parent / f"response-{phase}.job-memory.json").exists()
+            or (phase in phases and phases[phase]["request"].parent == parent)
+        ):
+            raise ValueError("phase history interruption cannot certify completion")
+        retained[f"execution/interruptions/{index}/request.json"] = path
+        retained[f"execution/interruptions/{index}/cancellation.json"] = cancellation_path
+    LOGGER.info("Verified historical continuation metadata completed_phases=%d interrupted_attempts=%d", len(phases), len(history["interrupted"]))
+    return phases, retained
+
+
 def verify_phase_result(response: Path, request: dict[str, Any]) -> dict[str, Any]:
     saved = read_scan_receipt(response)
     if saved.get("schema") != SCHEMA or saved.get("complete") is not True or saved.get("request_id") != object_digest(request):
@@ -197,6 +300,7 @@ def launch(
     calculation_authorized: bool = False,
     retirement_authorized: bool = False,
     timeout_seconds: float = 8 * 3600,
+    history_path: Path | None = None,
 ) -> dict[str, Any]:
     """Run exactly one admitted phase under the existing finite native Job."""
     if calculation_authorized is not True:
@@ -215,6 +319,9 @@ def launch(
         raise ValueError("continuation control metadata must be outside the completed stock run")
     control.mkdir(exist_ok=True)
     capacity_path = _checked_path(capacity_path)
+    if history_path is not None and phase not in {"events", "analysis"}:
+        raise ValueError("historical phase metadata is only used by events or analysis")
+    history_pin = _descriptor(_checked_path(history_path)) if history_path is not None else None
     request_path = control / f"request-{phase}.json"
     response = control / f"response-{phase}.json"
     prepared = read_scan_receipt(run / "derived-preparation.json")
@@ -233,9 +340,11 @@ def launch(
             or request.get("timeout_seconds") != timeout_seconds
             or request.get("capacity_path") != str(capacity_path)
             or request.get("retirement_authorized") != retirement_authorized
+            or request.get("phase_history") != history_pin
             or (generation is not None and request.get("reference", {}).get("generation") != generation)
         ):
             raise ValueError("continuation retry parameters differ")
+        read_phase_history(request)
         if response.exists() and response.with_suffix(".job-memory.json").exists():
             return verify_phase_result(response, request)
     else:
@@ -271,6 +380,9 @@ def launch(
             "timeout_seconds": timeout_seconds,
             "active_owner": uuid.uuid4().hex,
         }
+        if history_pin is not None:
+            request["phase_history"] = history_pin
+        read_phase_history(request)
         _save(control, request_path.name, request)
     if (run / ACTIVE).exists():
         raise ValueError("active scan marker blocks a second owned continuation Job")
@@ -338,6 +450,7 @@ def coordinator_main(path: Path) -> None:
         raise ValueError("coordinator response already exists; use parent evidence verification")
     if read_scan_receipt(run / ACTIVE) != {"request_id": object_digest(request), "owner": request["active_owner"]}:
         raise ValueError("continuation does not own the active native Job marker")
+    read_phase_history(request)
     if file_digest(Path(request["capacity_path"])) != request["capacity_sha256"]:
         raise ValueError("continuation capacity identity changed")
     require_continuation_capacity(

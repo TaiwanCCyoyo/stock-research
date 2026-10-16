@@ -333,9 +333,35 @@ def _launch(case: dict[str, Any], phase: str = "barrier", **kwargs: Any) -> dict
         "calculation_authorized": True,
         "retirement_authorized": phase == "retire-prices",
         "timeout_seconds": 60,
+        "history_path": None,
     }
     arguments.update(kwargs)
     return continuation.launch(case["roots"], **arguments)
+
+
+def test_launch_pins_phase_history_and_retry_requires_same_descriptor(case: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    history = case["run"].parent / "phase-history-launch.json"
+    manifest = {
+        "schema": "pattern-scan-phase-history.v4",
+        "run_root": str(case["run"]),
+        "source_id": case["source"]["source_id"],
+        "input_id": "original-input",
+        "phases": {},
+        "interrupted": [],
+    }
+    write_json(history, manifest)
+    _native_job(case, monkeypatch)
+    _launch(case, "events", history_path=history)
+    request = read_json(case["control"] / "request-events.json")
+    assert request["phase_history"] == {**describe_file(history.parent, history), "path": str(history)}
+    assert request["phase_history"]["sha256"] == file_digest(history)
+
+    monkeypatch.setattr(continuation, "_MemoryBoundJob", _forbidden)
+    assert _launch(case, "events", history_path=history)["complete"] is True
+    other = case["run"].parent / "different-phase-history.json"
+    write_json(other, manifest)
+    with pytest.raises(ValueError, match="retry"):
+        _launch(case, "events", history_path=other)
 
 
 def _native_job(case: dict[str, Any], monkeypatch: pytest.MonkeyPatch, *, outcome: str = "success") -> list[Any]:
@@ -726,7 +752,7 @@ def test_coordinator_refuses_unowned_or_changed_inputs_before_data_helpers(case:
         continuation.coordinator_main(path)
 
 
-def _argv(case: dict[str, Any], phase: str) -> list[str]:
+def _argv(case: dict[str, Any], phase: str, history_path: Path | None = None) -> list[str]:
     args = [
         "continue_pattern_scan",
         phase,
@@ -748,6 +774,8 @@ def _argv(case: dict[str, Any], phase: str) -> list[str]:
         args.extend(["--generation", "fixed-generation"])
     if phase == "retire-prices":
         args.append("--retirement-authorized")
+    if history_path is not None:
+        args.extend(["--phase-history", str(history_path)])
     return args
 
 
@@ -790,6 +818,7 @@ def test_cli_forwards_explicit_roots_phase_scope_authorizations_generation_and_t
             "calculation_authorized": True,
             "retirement_authorized": phase == "retire-prices",
             "timeout_seconds": 60.0,
+            "history_path": None,
         }
     ]
     assert json.loads(capsys.readouterr().out) == {
@@ -800,6 +829,21 @@ def test_cli_forwards_explicit_roots_phase_scope_authorizations_generation_and_t
         **({"completion_audit": completion_pin} if phase == "analysis" else {}),
     }
     assert order == (["launch-returned", "completion-audit"] if phase == "analysis" else ["launch-returned"])
+
+
+def test_cli_forwards_phase_history_path(case: dict[str, Any], monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    history = tmp_path / "phase-history.json"
+    write_json(history, {"synthetic_history": True})
+    captured: list[dict[str, Any]] = []
+
+    def launch(_roots: DataRoots, **kwargs: Any) -> dict[str, Any]:
+        captured.append(kwargs)
+        return {"complete": True, "phase": "events", "source": case["source"], "executor": case["executor"]}
+
+    monkeypatch.setattr(cli, "launch", launch)
+    monkeypatch.setattr(sys, "argv", _argv(case, "events", history))
+    cli.main()
+    assert captured[0]["history_path"] == history
 
 
 @pytest.mark.parametrize("failure", ["launch", "completion"])

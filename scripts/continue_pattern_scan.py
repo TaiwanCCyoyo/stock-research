@@ -25,6 +25,7 @@ def main() -> None:
     parser.add_argument("--control-id", required=True)
     parser.add_argument("--capacity-plan", type=Path, required=True)
     parser.add_argument("--generation")
+    parser.add_argument("--phase-history", type=Path, help="Pinned small metadata from completed phases in older sibling controls")
     parser.add_argument("--timeout-seconds", type=float, default=8 * 3600)
     parser.add_argument("--calculation-authorized", action="store_true")
     parser.add_argument("--retirement-authorized", action="store_true")
@@ -52,6 +53,7 @@ def main() -> None:
         calculation_authorized=args.calculation_authorized,
         retirement_authorized=args.retirement_authorized,
         timeout_seconds=args.timeout_seconds,
+        history_path=args.phase_history,
     )
     completion: dict[str, object] = {}
     if args.phase == "analysis":
