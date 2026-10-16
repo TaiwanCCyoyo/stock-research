@@ -1,0 +1,135 @@
+# PR17 shared-price continuation v4
+
+Owner instruction: 2026-10-16, after PR26 merged (`804a765`). This addendum
+supersedes only the v3 requirement to retain PR17's own prices until formal
+publication. Historical receipts and completed numerical work keep their bytes
+and original source identity. Non-price retirement still requires the verified
+formal result and completed reference handoff described in retention v3.
+
+## Reuse and price transition
+
+The completed `full-2010-20261016-retention-v3` stock phase contains 1,942 stocks,
+with the approved 4,110-session calendar and cutoff 2026-10-12. It stops before
+the global barrier. Continuing this run must not call its stock kernels again.
+The stock source commit is numerical ancestry; each new phase independently
+records its actual executor commit/runtime and the unchanged stock-result hash.
+
+`pattern_scan_shared_prices_v4` adapts the existing maintained family's
+`read_adjusted_daily(as_of=cutoff, calendar=..., generation=...)`. It creates no
+private family, price cache, input archive or generation lease. The root comes
+from `STOCK_RESEARCH_SHARED_ROOT`. One explicit generation, its status hash,
+actual raw/actions inputs, price definition, official-source policy and complete
+calendar are pinned. Missing or changed dependencies fail; there is no fallback
+to current data. Metadata and universe remain in PR17's original fingerprint.
+
+`pattern_scan_price_references_v4.create_price_handoff` compares the **actual**
+prepared frames for all 1,943 securities including 0050 and the 1,942 stock-part
+price frames against that reader. Every column, dtype, calendar position, value
+and unknown/quality value must agree exactly. The three stock metadata columns
+are appended by the same defined construction; prices are never coerced to make
+a comparison pass. Original stock receipts remain unchanged. A completed transfer
+journal binds the equality certificate, shared reference, original receipts and
+explicit ownership inventory. Interrupted final metadata publication resumes
+that completed comparison rather than recomputing it.
+
+Only after this certificate and reference transfer validate,
+`retire_own_prices` may remove the registered `prepared/` price Parquets and their
+receipts plus `parts/*/prices.parquet`. It requires explicit retirement authority,
+an available pinned generation, an idle run or its exact owned coordinator, full
+alias/ownership preflight and unchanged prices. Unknown or changed files block
+the entire operation before the first unlink. Its journal permits a partial
+unlink retry. All indicators, patterns, labels and other completed stock work
+remain available. This authorizes no cleanup of another run or shared family.
+
+## One admitted continuation phase
+
+`scripts.continue_pattern_scan` launches `prices`, `retire-prices`, `barrier`,
+`events` or `analysis` in the existing owned Windows Job, with a finite timeout, at most
+8 GiB committed Job memory and at least 4 GiB available host reserve. A separate
+capacity plan admits only that phase, with explicit additional disk components,
+pinned evidence and at least 32 GiB disk reserve. Existing shared and stock bytes
+are not additional allocation. Estimates, native Job measurements and disk
+observations are distinct. A four-stock historical profile does not certify a
+full-market barrier, candidate pool or Q4-Q6 memory requirement.
+
+The `events` boundary consumes the verified full-market barrier and all original
+stocks, writes the same reusable per-stock/target event checkpoints used by
+analysis, then stops before candidate selection or summary/followup allocation.
+Its inventory binds every target/code receipt, original labels and global table
+pins. It admits only event projection. Later analysis verifies and reuses these
+completed checkpoints, while its capacity plan can use their actual row counts
+and representative accumulator observations rather than treating unknown later
+memory as zero.
+
+Control requests and responses live in an explicitly named sibling control run,
+outside the original completed run's ownership inventory. An active marker blocks
+a second Job. Original stock numerical receipts are verified through the explicit
+price replacement seam; generic file verification never accepts an absent file.
+The barrier and analysis consume those completed stocks, with ZSTD for new
+Parquet output and actual bytes/hashes in receipts. Analysis remains unpublished.
+
+## Retained evidence and limits
+
+The computed result keeps the original stock source separately from the actual
+analysis executor, the stock-result pin, shared generation/reference and small
+equality/retirement certificates. Its final result receipt identifies the actual
+executor. Large handoff inventories and expanded event/control tables are
+execution intermediates, not permanent input snapshots.
+
+Completed continuation phases also retain their small request, response, native
+Job and capacity JSON under `execution/phases/<phase>/`. Their source/input,
+stock/reference pins, output locators and Job limits are checked before adoption.
+Different historical executors are allowed and recorded as they actually ran;
+they are never relabeled with the analysis commit. An entirely absent phase is
+listed as unavailable; a partial evidence set fails verification.
+
+When a source update requires a new sibling control, `--phase-history` pins a
+small `pattern-scan-phase-history.v4` JSON manifest. It names completed phases'
+original sibling controls and exact request/response/Job/capacity file pins;
+metadata is read in place. The original request bytes and actual executors stay
+unchanged. The new phase request pins this manifest, and retries require the same
+pin. A current phase cannot also be supplied by history, nor can a partial
+current phase fall back to history. Scope, metadata aliases, pins, source/input,
+output locators and native Job evidence remain checked. The manifest and phase
+metadata become retained execution evidence in the formal result.
+
+An interrupted attempt is listed separately with its original request and
+owner-directed cancellation receipt, never as a completed phase. Those small
+records are retained under `execution/interruptions/`; its unavailable native
+peak is not replaced with a later Job's observation. A new executor reuses event
+parts only after checking their original source/input, labels, stock and global
+identity and payload hashes. Such identity checks do not themselves establish
+implementation equivalence: assess the source change before reuse, and change
+the numerical definition or invalidate affected parts if behavior changed.
+
+The analysis Job's native peak is pending when the immutable computed index is
+captured. After `launch` returns and its Job has closed, the CLI calls
+`record_analysis_completion` to retain `analysis/audits/continuation-completion.json`.
+This bounded audit pins the computed index, contains the small request and Job
+evidence, and retains the expanded response's hash plus identity projection.
+Formal handoff must include it as `audits/continuation-completion.json` through
+`audit_files`; the computed index is not amended. A failed audit write can be
+retried against the completed phase without recomputing results. Sibling control
+metadata remains temporary until these retained records are verified in the
+formal bundle; cleanup of the original run does not implicitly delete siblings.
+
+`scripts.audit_pattern_scan_candidates` independently reconstructs the five
+selected candidates from explicit unpublished computed results and the pinned
+stock/barrier/label ancestors. Its 54,720 comparison rows do not replace the
+separate ten-event audit. A smaller selection is reported as incomplete rather
+than claiming the promised audit passed. Audits retain their actual executor.
+
+Long-term material remains the report, Q1-Q6 tables, selections, denominator/
+unknown/censored counts, bounded promised examples, audits, code commit and run
+receipt. After formal verification and single-copy publication, non-price
+checkpoints and expanded rows are retired immediately without a recovery period.
+The external catalog/payload destination remains the separate catalog task's
+decision; this continuation does not publish new versions to `research_cache/`.
+Receipts retain identities and comparison evidence, not deleted input bytes or a
+guarantee that a removed shared generation can ever be reproduced.
+
+Implementation tests use synthetic data, including a real small maintained
+generation read through the as-of adapter, handoff and retirement without mocked
+price reads. Actual execution, equality, retirement
+counts and resource measurements are reported in their run receipts; passing
+tests alone never establishes any of those facts.

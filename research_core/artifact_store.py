@@ -71,6 +71,24 @@ def publish_noreplace(source: Path, destination: Path) -> None:
         raise OSError(errno.ENOTSUP, "atomic no-replace publication unavailable", str(destination))
 
 
+def relocate_noreplace(source: Path, destination: Path) -> None:
+    """Transfer owned files within one filesystem without copying or replacing.
+
+    Unlike final publication, a journaled handoff can cross parent directories.
+    The native no-replace operation still fails closed and never falls back to
+    copy/delete across filesystems.
+    """
+    source, destination = map(safe_path, (source, destination))
+    if source.stat().st_dev != destination.parent.stat().st_dev:
+        raise OSError(errno.EXDEV, "single-copy handoff requires the same filesystem", str(destination))
+    if sys.platform == "win32":
+        os.rename(source, destination)
+    elif sys.platform == "linux":
+        _linux_publish_noreplace(source, destination)
+    else:
+        raise OSError(errno.ENOTSUP, "atomic no-replace handoff unavailable", str(destination))
+
+
 def publish_new_directory(destination: Path, files: dict[str, bytes]) -> None:
     """Publish `files` as a brand-new directory in one step; never replace or merge into one.
 
@@ -112,6 +130,31 @@ def write_json(path: Path, value: Any) -> None:
         stream.write(canonical(value))
         stream.flush()
         os.fsync(stream.fileno())
+
+
+def publish_generated_bytes(path: Path, payload: bytes, *, scratch: Path) -> None:
+    """Atomically publish generated metadata; retain interrupted scratch for its owner.
+
+    Scratch must be outside the payload tree at the caller's chosen location.
+    A fresh file on every attempt lets a crash leave partial bytes without making
+    the intended destination visible or preventing a retry. Existing destinations
+    are never replaced. The caller owns scratch retirement after its handoff.
+    """
+    path, scratch = map(safe_path, (path, scratch))
+    if path.exists():
+        raise FileExistsError(errno.EEXIST, "generated destination already exists", str(path))
+    scratch.mkdir(parents=True, exist_ok=True)
+    if scratch.stat().st_dev != path.parent.stat().st_dev:
+        raise OSError(errno.EXDEV, "generated metadata requires the same filesystem", str(path))
+    staged = safe_path(scratch / f"{uuid.uuid4().hex}.metadata")
+    with staged.open("xb") as stream:
+        if stream.write(payload) != len(payload):
+            raise OSError("incomplete generated metadata write")
+        stream.flush()
+        os.fsync(stream.fileno())
+    if staged.stat().st_size != len(payload) or file_digest(staged) != hashlib.sha256(payload).hexdigest():
+        raise ValueError("generated metadata differs before publication")
+    relocate_noreplace(staged, path)
 
 
 def read_json(path: Path, *, max_bytes: int = 8_000_000) -> dict[str, Any]:
