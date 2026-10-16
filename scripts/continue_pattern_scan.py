@@ -10,7 +10,7 @@ import os
 import sys
 from pathlib import Path
 
-from research_core.pattern_scan_continuation_v4 import PHASES, launch
+from research_core.pattern_scan_continuation_v4 import PHASES, launch, record_analysis_completion
 from research_core.research_data_paths import DataRoots
 from research_core.shared_data import ENV_KEY
 
@@ -53,12 +53,18 @@ def main() -> None:
         retirement_authorized=args.retirement_authorized,
         timeout_seconds=args.timeout_seconds,
     )
+    completion: dict[str, object] = {}
+    if args.phase == "analysis":
+        # launch has returned through its Job teardown/active-marker finally.
+        request = args.primary_root / ".tmp/pattern-scan-execution" / args.control_id / "request-analysis.json"
+        completion = {"completion_audit": record_analysis_completion(request)}
     sys.stdout.write(
         json.dumps({
             "complete": receipt["complete"],
             "phase": receipt["phase"],
             "source_id": receipt["source"]["source_id"],
             "executor_source_id": receipt["executor"]["source_id"],
+            **completion,
         })
         + "\n"
     )

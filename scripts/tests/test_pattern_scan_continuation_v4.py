@@ -15,12 +15,249 @@ from research_core import pattern_scan_analysis_v1 as analysis
 from research_core import pattern_scan_barrier_v1 as barrier_module
 from research_core import pattern_scan_continuation_v4 as continuation
 from research_core import pattern_scan_execution_v1 as execution
+from research_core import pattern_scan_git_source_v2 as git_source
 from research_core import pattern_scan_stock_v1 as stock_module
 from research_core.artifact_store import canonical, describe_file, file_digest, object_digest, read_json, write_json
 from research_core.research_data_paths import DataRoots
 from scripts import continue_pattern_scan as cli
 
 GIB = 1024**3
+
+
+def _completed_analysis(case: dict[str, Any]) -> tuple[Path, Path, Path, Path]:
+    executor = {
+        "schema": git_source.SCHEMA,
+        "code": case["executor"]["code"],
+        "runtime": git_source.runtime_identity(),
+        "platform": sys.platform,
+        "numerical_thread_limits": git_source.NUMERICAL_THREADS,
+    }
+    case["executor"] = {**executor, "source_id": object_digest(executor)}
+    request_path = _coordinator_request(case, "analysis")
+    (case["run"] / continuation.ACTIVE).unlink()
+    request = read_json(request_path)
+    computed_path = case["run"] / "computed-results.json"
+    write_json(
+        computed_path,
+        {
+            "schema": "pattern-scan-computed-results.v3",
+            "complete": True,
+            "state": "computed_unpublished",
+            "run_root": str(case["run"]),
+            "source": case["source"],
+            "input_id": "original-input",
+            "provenance": {"executor": request["executor"], "stock_reference": request["stock_reference"], "shared_price_reference": request["reference"]},
+        },
+    )
+    response_path = case["control"] / "response-analysis.json"
+    write_json(
+        response_path,
+        {
+            "schema": continuation.SCHEMA,
+            "complete": True,
+            "phase": "analysis",
+            "request_id": object_digest(request),
+            "source": case["source"],
+            "executor": case["executor"],
+            "input_id": "original-input",
+            "results": {"computed_results": _pin(computed_path)},
+            "result": {"expanded_stock_metadata": "must never be copied into bounded completion audit"},
+        },
+    )
+    job_path = response_path.with_suffix(".job-memory.json")
+    write_json(
+        job_path,
+        {
+            "schema": "pattern-scan-continuation-job-memory.v4",
+            "complete": True,
+            "request_id": object_digest(request),
+            "response_sha256": file_digest(response_path),
+            "job_memory": {"limit_bytes": 3 * GIB, "peak_committed_bytes": 123456, "scope": "virtual memory committed across this owned Windows job"},
+        },
+    )
+    return request_path, response_path, job_path, computed_path
+
+
+def test_analysis_completion_retains_small_actual_evidence_and_reuses_without_current_code(
+    case: dict[str, Any],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    request, response, job, computed = _completed_analysis(case)
+    monkeypatch.setattr(continuation, "assert_current_code", _forbidden)
+    monkeypatch.setattr(continuation, "require_continuation_capacity", _forbidden)
+    before = {path: (file_digest(path), path.stat().st_mtime_ns) for path in (request, response, job, computed)}
+    descriptor = continuation.record_analysis_completion(request)
+    audit_path = case["run"] / "analysis/audits/continuation-completion.json"
+    assert descriptor == _pin(audit_path)
+    audit = read_json(audit_path)
+    assert audit["schema"] == "pattern-scan-continuation-completion.v4" and audit["complete"] is True
+    assert audit["source"] == case["source"] and audit["executor"] == case["executor"]
+    assert audit["input_id"] == "original-input" and audit["shared_reference"] == case["reference"]
+    assert audit["computed_results"] == _pin(computed)
+    assert audit["request"] == {"descriptor": _pin(request), "contents": read_json(request)}
+    assert audit["job"] == {"descriptor": _pin(job), "contents": read_json(job)}
+    assert audit["response"]["descriptor"] == _pin(response)
+    assert "result" not in audit["response"]["identity"]
+    assert "expanded_stock_metadata" not in audit_path.read_text(encoding="utf-8")
+    assert audit["native_job_memory"]["peak_committed_bytes"] == 123456
+    stamp = audit_path.stat().st_mtime_ns
+    assert continuation.record_analysis_completion(request) == descriptor
+    assert audit_path.stat().st_mtime_ns == stamp
+    assert before == {path: (file_digest(path), path.stat().st_mtime_ns) for path in before}
+
+
+@pytest.mark.parametrize(
+    "damage",
+    [
+        "active",
+        "request_phase",
+        "request_source",
+        "request_reference",
+        "response_incomplete",
+        "response_phase",
+        "response_drift",
+        "request_drift",
+        "computed_drift",
+        "computed_incomplete",
+        "computed_source",
+        "computed_input",
+        "foreign_computed",
+        "extra_result",
+        "job_missing",
+        "job_incomplete",
+        "job_schema",
+        "job_hash",
+        "job_peak",
+        "bad_executor",
+        "foreign_stock",
+        "computed_executor",
+        "computed_reference",
+        "computed_stock",
+        "request_primary",
+        "request_data",
+    ],
+)
+def test_analysis_completion_refuses_partial_drift_or_foreign_evidence(case: dict[str, Any], damage: str) -> None:
+    request, response, job, computed = _completed_analysis(case)
+    if damage == "active":
+        write_json(case["run"] / continuation.ACTIVE, {"owner": "still-active"})
+    elif damage == "job_missing":
+        job.unlink()
+    elif damage in {"request_drift", "response_drift", "computed_drift"}:
+        target = {"request_drift": request, "response_drift": response, "computed_drift": computed}[damage]
+        target.write_bytes(target.read_bytes() + b" ")
+        # Request identity is canonical; whitespace alone is not identity drift.
+        if damage == "request_drift":
+            packet = read_json(request)
+            packet["active_owner"] = "foreign-request"
+            request.write_bytes(canonical(packet))
+    else:
+        if damage.startswith("request_") or damage in {"bad_executor", "foreign_stock"}:
+            target = request
+        elif damage.startswith("computed_"):
+            target = computed
+        elif damage.startswith("job_"):
+            target = job
+        else:
+            target = response
+        packet = read_json(target)
+        if damage in {"request_phase", "response_phase"}:
+            packet["phase"] = "barrier"
+        elif damage == "request_source":
+            packet["source"] = {"source_id": "foreign-source"}
+        elif damage == "request_reference":
+            packet["reference"] = {"generation": "foreign-generation"}
+        elif damage == "request_primary":
+            packet["primary"] = str(case["control"])
+        elif damage == "request_data":
+            packet["data"] = str(case["control"])
+        elif damage == "bad_executor":
+            packet["executor"]["source_id"] = "invalid-executor"
+        elif damage == "foreign_stock":
+            foreign = case["control"] / "foreign-stock.json"
+            foreign.write_bytes((case["run"] / "phase-stock-result.json").read_bytes())
+            packet["stock_reference"] = _pin(foreign)
+        elif damage in {"response_incomplete", "computed_incomplete", "job_incomplete"}:
+            packet["complete"] = False
+        elif damage == "computed_source":
+            packet["source"] = {"source_id": "foreign-source"}
+        elif damage == "computed_input":
+            packet["input_id"] = "foreign-input"
+        elif damage == "computed_executor":
+            packet["provenance"]["executor"] = {"source_id": "foreign-executor"}
+        elif damage == "computed_reference":
+            packet["provenance"]["shared_price_reference"] = {"generation": "foreign-generation"}
+        elif damage == "computed_stock":
+            packet["provenance"]["stock_reference"] = {"path": "foreign-stock"}
+        elif damage == "foreign_computed":
+            foreign = case["control"] / "foreign-computed.json"
+            foreign.write_bytes(computed.read_bytes())
+            packet["results"]["computed_results"] = _pin(foreign)
+        elif damage == "extra_result":
+            packet["results"]["unexpected"] = _pin(computed)
+        elif damage == "job_schema":
+            packet["schema"] = "foreign-job"
+        elif damage == "job_hash":
+            packet["response_sha256"] = "0" * 64
+        elif damage == "job_peak":
+            packet["job_memory"]["peak_committed_bytes"] = 0
+        target.write_bytes(canonical(packet))
+        # Re-pin deliberately invalid semantics so rejection is not just stale hashes.
+        if target == computed:
+            packet = read_json(response)
+            packet["results"]["computed_results"] = _pin(computed)
+            response.write_bytes(canonical(packet))
+        if target in {computed, response}:
+            packet = read_json(job)
+            packet["response_sha256"] = file_digest(response)
+            job.write_bytes(canonical(packet))
+    before = {path: (file_digest(path), path.stat().st_mtime_ns) for path in (request, response, job, computed) if path.exists()}
+    with pytest.raises((ValueError, FileNotFoundError)):
+        continuation.record_analysis_completion(request)
+    assert not (case["run"] / "analysis/audits/continuation-completion.json").exists()
+    assert before == {path: (file_digest(path), path.stat().st_mtime_ns) for path in before}
+
+
+def test_analysis_completion_retry_refuses_changed_completed_evidence_without_replacing_audit(case: dict[str, Any]) -> None:
+    request, response, job, _ = _completed_analysis(case)
+    descriptor = continuation.record_analysis_completion(request)
+    path = Path(descriptor["path"])
+    before = (path.read_bytes(), path.stat().st_mtime_ns)
+    packet = read_json(job)
+    packet["job_memory"]["peak_committed_bytes"] += 1
+    job.write_bytes(canonical(packet))
+    with pytest.raises(ValueError, match="existing handoff identity differs"):
+        continuation.record_analysis_completion(request)
+    assert (path.read_bytes(), path.stat().st_mtime_ns) == before
+
+
+def test_analysis_completion_reads_large_handoff_with_scan_reader_without_retaining_large_body(
+    case: dict[str, Any],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    handoff = case["run"] / continuation.HANDOFF
+    handoff.write_bytes(canonical({"reference": case["reference"], "large_handoff_only": "x" * (8 * 1024**2 + 1)}))
+    assert handoff.stat().st_size > 8 * 1024**2
+    request, _, _, _ = _completed_analysis(case)
+    original_scan_reader = continuation.read_scan_receipt
+    original_small_reader = continuation.read_json
+    calls: list[Path] = []
+
+    def scan_reader(path: Path) -> dict[str, Any]:
+        calls.append(path)
+        return original_scan_reader(path)
+
+    def small_reader(path: Path) -> dict[str, Any]:
+        assert path != handoff
+        return original_small_reader(path)
+
+    monkeypatch.setattr(continuation, "read_scan_receipt", scan_reader)
+    monkeypatch.setattr(continuation, "read_json", small_reader)
+    descriptor = continuation.record_analysis_completion(request)
+    audit = Path(descriptor["path"])
+    assert handoff in calls and descriptor["bytes"] < 100_000
+    assert "large_handoff_only" not in audit.read_text(encoding="utf-8")
+    assert read_json(audit)["shared_reference"] == case["reference"]
 
 
 def _forbidden(*args: Any, **kwargs: Any) -> Any:
@@ -524,13 +761,23 @@ def test_cli_forwards_explicit_roots_phase_scope_authorizations_generation_and_t
     shared_root = case["roots"].primary.parent / "external-shared"
     monkeypatch.setenv(cli.ENV_KEY, "previous process value")
     captured = []
+    order: list[str] = []
+    completion_pin = {"path": str(case["run"] / "analysis/audits/continuation-completion.json"), "bytes": 123, "sha256": "f" * 64}
 
     def launch(roots: DataRoots, **kwargs: Any) -> dict[str, Any]:
         assert roots == case["roots"] and os.environ[cli.ENV_KEY] == str(shared_root)
         captured.append(kwargs)
+        order.append("launch-returned")
         return {"complete": True, "phase": phase, "source": case["source"], "executor": case["executor"]}
 
+    def completion(request: Path) -> dict[str, Any]:
+        assert phase == "analysis" and order == ["launch-returned"]
+        assert request == case["control"] / "request-analysis.json"
+        order.append("completion-audit")
+        return completion_pin
+
     monkeypatch.setattr(cli, "launch", launch)
+    monkeypatch.setattr(cli, "record_analysis_completion", completion if phase == "analysis" else _forbidden)
     monkeypatch.setattr(sys, "argv", [*_argv(case, phase), "--shared-root", str(shared_root)])
     cli.main()
     assert captured == [
@@ -550,7 +797,38 @@ def test_cli_forwards_explicit_roots_phase_scope_authorizations_generation_and_t
         "phase": phase,
         "source_id": "original-stock-source",
         "executor_source_id": "current-executor",
+        **({"completion_audit": completion_pin} if phase == "analysis" else {}),
     }
+    assert order == (["launch-returned", "completion-audit"] if phase == "analysis" else ["launch-returned"])
+
+
+@pytest.mark.parametrize("failure", ["launch", "completion"])
+def test_cli_analysis_failures_never_print_false_completion(
+    case: dict[str, Any],
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    failure: str,
+) -> None:
+    calls: list[str] = []
+
+    def launch(*args: Any, **kwargs: Any) -> dict[str, Any]:
+        calls.append("launch")
+        if failure == "launch":
+            raise ValueError("synthetic launch failed")
+        return {"complete": True, "phase": "analysis", "source": case["source"], "executor": case["executor"]}
+
+    def completion(request: Path) -> dict[str, Any]:
+        assert calls == ["launch"] and request == case["control"] / "request-analysis.json"
+        calls.append("completion")
+        raise ValueError("synthetic completion audit failed")
+
+    monkeypatch.setattr(cli, "launch", launch)
+    monkeypatch.setattr(cli, "record_analysis_completion", completion if failure == "completion" else _forbidden)
+    monkeypatch.setattr(sys, "argv", _argv(case, "analysis"))
+    with pytest.raises(ValueError, match=f"synthetic {'launch' if failure == 'launch' else 'completion audit'} failed"):
+        cli.main()
+    assert capsys.readouterr().out == ""
+    assert calls == (["launch"] if failure == "launch" else ["launch", "completion"])
 
 
 @pytest.mark.parametrize(

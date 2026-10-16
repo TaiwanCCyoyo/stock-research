@@ -16,10 +16,10 @@ from typing import Any
 
 import pandas as pd
 
-from research_core.artifact_store import describe_file, file_digest, object_digest
+from research_core.artifact_store import describe_file, file_digest, object_digest, read_json
 from research_core.pattern_scan_capacity_v4 import require_continuation_capacity
 from research_core.pattern_scan_execution_v1 import ROOT, _MemoryBoundJob
-from research_core.pattern_scan_git_source_v2 import assert_current_code, git_source_identity
+from research_core.pattern_scan_git_source_v2 import assert_current_code, git_source_identity, verify_git_source
 from research_core.pattern_scan_inputs_v1 import read_preparation_pins
 from research_core.pattern_scan_price_references_v4 import EQUALITY, HANDOFF, RETIRED, create_price_handoff, read_benchmark, retire_own_prices
 from research_core.pattern_scan_receipt_io_v2 import read_scan_receipt
@@ -57,7 +57,7 @@ def _descriptor(path: Path) -> dict[str, Any]:
     return {**describe_file(path.parent, path), "path": str(path)}
 
 
-def _verify_output(response: Path, request: dict[str, Any]) -> dict[str, Any]:
+def verify_phase_result(response: Path, request: dict[str, Any]) -> dict[str, Any]:
     saved = read_scan_receipt(response)
     if saved.get("schema") != SCHEMA or saved.get("complete") is not True or saved.get("request_id") != object_digest(request):
         raise ValueError("continuation result identity differs")
@@ -81,6 +81,109 @@ def _verify_output(response: Path, request: dict[str, Any]) -> dict[str, Any]:
     ):
         raise ValueError("continuation native Job memory limit/peak evidence invalid")
     return {**saved, "coordinator_job_memory": memory["job_memory"]}
+
+
+def record_analysis_completion(request_path: Path) -> dict[str, Any]:
+    """Retain bounded completion evidence after the parent has closed its Job.
+
+    Historical executor identity is evidence, not a requirement on current code.
+    The computed index and expanded response remain untouched and are pinned.
+    This does not verify scientific delivery or authorize publication/cleanup.
+    """
+    if not request_path.is_absolute():
+        raise ValueError("explicit absolute completed analysis request required")
+    request_path = _checked_path(request_path)
+    request = read_json(request_path)  # Small protocol evidence, default byte bound.
+    run = _run(Path(request["run_root"]))
+    control = _run(Path(request["control_root"]))
+    if (
+        request.get("schema") != SCHEMA
+        or request.get("phase") != "analysis"
+        or request.get("calculation_authorized") is not True
+        or request_path != control / "request-analysis.json"
+        or run == control
+        or run.parent != control.parent
+        or request.get("run_root") != str(run)
+        or request.get("control_root") != str(control)
+        or request.get("primary") != str(run.parent.parent.parent)
+        or request.get("data") != str(run.parent.parent.parent / "research_data")
+    ):
+        raise ValueError("completed analysis request identity or locator differs")
+    if (run / ACTIVE).exists():
+        raise ValueError("active native Job blocks analysis completion evidence")
+    verify_git_source(request["executor"])
+    prepared = read_scan_receipt(run / "derived-preparation.json")
+    handoff_path = _checked_path(run / HANDOFF)
+    reference = read_scan_receipt(handoff_path)["reference"]
+    stock_path = _checked_path(run / "phase-stock-result.json")
+    if (
+        request.get("source") != prepared.get("source")
+        or request.get("input_id") != prepared.get("input_id")
+        or request.get("price_handoff") != _descriptor(handoff_path)
+        or request.get("reference") != reference
+        or request.get("stock_reference") != _descriptor(stock_path)
+    ):
+        raise ValueError("completed analysis ancestry or shared reference differs")
+    response_path = _checked_path(control / "response-analysis.json")
+    job_path = _checked_path(response_path.with_suffix(".job-memory.json"))
+    response = read_scan_receipt(response_path)
+    computed_path = _checked_path(run / "computed-results.json")
+    results = response.get("results")
+    if (
+        not isinstance(results, dict)
+        or set(results) != {"computed_results"}
+        or not isinstance(results["computed_results"], dict)
+        or set(results["computed_results"]) != {"path", "bytes", "sha256"}
+        or results["computed_results"]["path"] != str(computed_path)
+    ):
+        raise ValueError("completed analysis must pin this run's exact computed index")
+    del response  # Release expanded phase metadata before the shared verifier reads it.
+    job = read_json(job_path)  # Never copy expanded stock metadata into this audit.
+    if job.get("schema") != "pattern-scan-continuation-job-memory.v4":
+        raise ValueError("completed analysis native Job schema differs")
+    verified = verify_phase_result(response_path, request)
+    if verified["results"] != results:
+        raise ValueError("completed analysis result locators changed during verification")
+    response_identity = {key: verified[key] for key in ("schema", "complete", "phase", "request_id", "source", "executor", "input_id", "results")}
+    native_job_memory = verified["coordinator_job_memory"]
+    del verified
+    computed = read_scan_receipt(computed_path)
+    if (
+        computed.get("schema") != "pattern-scan-computed-results.v3"
+        or computed.get("complete") is not True
+        or computed.get("state") != "computed_unpublished"
+        or computed.get("run_root") != str(run)
+        or computed.get("source") != request["source"]
+        or computed.get("input_id") != request["input_id"]
+        or computed.get("provenance", {}).get("executor") != request["executor"]
+        or computed.get("provenance", {}).get("stock_reference") != request["stock_reference"]
+        or computed.get("provenance", {}).get("shared_price_reference") != request["reference"]
+    ):
+        raise ValueError("completed computed index identity differs")
+    # verify_phase_result already checked the full response hash against the Job.
+    # Keep its byte identity plus only the small protocol projection, not result.
+    body = {
+        "schema": "pattern-scan-continuation-completion.v4",
+        "complete": True,
+        "phase": "analysis",
+        "run_root": str(run),
+        "source": request["source"],
+        "executor": request["executor"],
+        "input_id": request["input_id"],
+        "shared_reference": request["reference"],
+        "computed_results": results["computed_results"],
+        "request": {"descriptor": _descriptor(request_path), "contents": request},
+        "response": {
+            "descriptor": {"path": str(response_path), "bytes": response_path.stat().st_size, "sha256": job["response_sha256"]},
+            "identity": response_identity,
+        },
+        "job": {"descriptor": _descriptor(job_path), "contents": job},
+        "native_job_memory": native_job_memory,
+    }
+    audit_dir = _checked_path(run / "analysis/audits")
+    audit_dir.mkdir(parents=True, exist_ok=True)
+    _save(audit_dir, "continuation-completion.json", body)
+    return _descriptor(audit_dir / "continuation-completion.json")
 
 
 def launch(
@@ -134,7 +237,7 @@ def launch(
         ):
             raise ValueError("continuation retry parameters differ")
         if response.exists() and response.with_suffix(".job-memory.json").exists():
-            return _verify_output(response, request)
+            return verify_phase_result(response, request)
     else:
         executor = git_source_identity(ROOT)
         if phase == "prices":
@@ -210,7 +313,7 @@ def launch(
                 "job_memory": job.memory_receipt(),
             },
         )
-        return _verify_output(response, request)
+        return verify_phase_result(response, request)
     finally:
         if job is not None:
             job.terminate_and_confirm()

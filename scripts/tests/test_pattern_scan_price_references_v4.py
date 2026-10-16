@@ -7,10 +7,12 @@ from pathlib import Path
 from typing import Any
 
 import pandas as pd
+import pyarrow.parquet as pq
 import pytest
 
 from research_core import pattern_scan_price_references_v4 as prices
 from research_core import pattern_scan_shared_prices_v4 as shared
+from research_core import price_basis
 from research_core.artifact_store import canonical, describe_file, file_digest, object_digest, read_json, write_json
 from research_core.pattern_scan_parquet_v1 import write_frame
 
@@ -150,6 +152,138 @@ def _create(case: dict[str, Any]) -> dict[str, Any]:
 
 def _retire(case: dict[str, Any], handoff: dict[str, Any]) -> dict[str, Any]:
     return prices.retire_own_prices(case["run"], handoff, retirement_authorized=True)
+
+
+def _replace_case_prepared_prices(case: dict[str, Any], expected: dict[str, pd.DataFrame]) -> None:
+    """Rebuild the synthetic original preparation and its dependent receipt pins."""
+    run, directory = case["run"], case["directory"]
+    for code, path in (("1101", case["prepared"]), ("0050", case["benchmark"])):
+        write_frame(expected[code], path, index=True)
+    own = read_json(case["prepared"].with_suffix(".json"))
+    own["sha256"] = file_digest(case["prepared"])
+    case["prepared"].with_suffix(".json").write_bytes(canonical(own))
+    write_frame(shared.as_stock_prices(expected["1101"], "1101"), directory / "prices.parquet", index=True)
+    part = read_json(directory / "receipt.json")
+    part["artifacts"] = [describe_file(directory, directory / name) for name in ("prices.parquet", "events.bin")]
+    (directory / "receipt.json").write_bytes(canonical(part))
+    prepared = read_json(run / "derived-preparation.json")
+    prepared["artifacts"] = [describe_file(run, path) for path in (case["prepared"], case["benchmark"])]
+    (run / "derived-preparation.json").write_bytes(canonical(prepared))
+    phase = read_json(run / "phase-stock-result.json")
+    phase["pool"]["results"] = [part]
+    (run / "phase-stock-result.json").write_bytes(canonical(phase))
+    receipt = read_json(run / "run-stock-receipt.json")
+    receipt["results"] = {"derived_preparation": _pin(run / "derived-preparation.json"), "phase_result": _pin(run / "phase-stock-result.json")}
+    (run / "run-stock-receipt.json").write_bytes(canonical(receipt))
+    response = read_json(run / "response-stock.json")
+    response.update(result=phase, run_receipt_sha256=file_digest(run / "run-stock-receipt.json"))
+    (run / "response-stock.json").write_bytes(canonical(response))
+    memory = read_json(run / "response-stock.job-memory.json")
+    memory["response_sha256"] = file_digest(run / "response-stock.json")
+    (run / "response-stock.job-memory.json").write_bytes(canonical(memory))
+    case["part"] = part
+
+
+def test_real_maintained_generation_adapter_handoff_retirement_exact(case: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    """Exercise real persisted as-of inputs through the reader and both consumers."""
+    maintained = shared.maintained
+
+    def forbidden_producer(*args: Any, **kwargs: Any) -> Any:
+        pytest.fail("synthetic generation integration must never load producer inputs")
+
+    monkeypatch.setattr(maintained, "load_inputs", forbidden_producer)
+    calendar = pd.DatetimeIndex(pd.to_datetime(["2010-01-04", "2026-10-12"]), name="Date")
+    after_cutoff = pd.Timestamp("2026-10-13")
+    rows = []
+    for code, close in (("1101", 100.0), ("0050", 200.0)):
+        for day in (calendar[0], calendar[1], after_cutoff):
+            if code == "1101" and day == calendar[1]:
+                continue  # The requested calendar must preserve this missing quote.
+            value = close / 2 if day == after_cutoff else close
+            rows.append({"Code": code, "Date": day, "Open": value, "High": value, "Low": value, "Close": value, "Volume": 1000.0, "Source": "official"})
+    bars = pd.DataFrame(rows)
+    actions = pd.DataFrame([{"code": code, "ex_date": "2026-10-13", "event_type": "ETF_SPLIT", "price_factor": 0.5} for code in ("1101", "0050")])
+    generation = "real-synthetic-generation"
+    directory = case["external"] / "derived" / maintained.FAMILY / "generations" / generation
+    directory.mkdir()
+    # Use the real generation writer primitives, without any producer/update entry.
+    writers: dict[str, Any] = {
+        basis: pq.ParquetWriter(directory / f"{basis}.parquet", maintained.ARROW_SCHEMA, compression="zstd") for basis in maintained.BASES
+    }
+    try:
+        summary = maintained.compute(bars, actions, writers)
+    finally:
+        for writer in writers.values():
+            writer.close()
+    for basis in maintained.BASES:
+        path = directory / f"{basis}.parquet"
+        summary["bases"][basis].update({"file": path.name, "bytes": path.stat().st_size, "sha256": file_digest(path)})
+    prepared = read_json(case["run"] / "derived-preparation.json")
+    write_json(
+        directory / "status.json",
+        {
+            "schema": maintained.SCHEMA,
+            "family": maintained.FAMILY,
+            "generation": generation,
+            "definition": {"prices": price_basis.DEFINITION_VERSION},
+            "source_policy": {"kept": "official"},
+            **summary,
+            "as_of_inputs": maintained._write_as_of_inputs(directory, bars, actions),
+            "input_fingerprint": prepared["producer_fingerprint"],
+        },
+    )
+    # Undo only the two adapter stubs installed by case. The maintained reader,
+    # compute, Parquet I/O and price_basis implementation are all real functions.
+    monkeypatch.setattr(prices, "make_price_reference", shared.make_price_reference)
+    monkeypatch.setattr(prices, "read_reference_frame", shared.read_reference_frame)
+    expected = {
+        code: price_basis.prepare_prices(
+            bars.loc[bars.Code.eq(code) & bars.Date.le(calendar[-1])],
+            actions,
+            calendar,
+            basis="reference_factor_adjusted",
+            cutoff=shared.CUTOFF,
+        )
+        for code in ("1101", "0050")
+    }
+    _replace_case_prepared_prices(case, expected)
+    reference = shared.make_price_reference(case["external"], generation, calendar, expected_fingerprint=prepared["producer_fingerprint"])
+    case["reference"] = reference
+    # A truncate-only reader would retain the later split's factor of 0.5.
+    current, _ = maintained.read_adjusted_daily("reference_factor_adjusted", root=case["external"], generation=generation, codes=["0050"])
+    assert current.loc[current.Date.eq(calendar[0]), "Close"].item() == 100.0
+    for code in ("1101", "0050"):
+        actual = shared.read_reference_frame(reference, code)
+        pd.testing.assert_frame_equal(actual, expected[code], check_exact=True, check_dtype=True, check_freq=True)
+        pd.testing.assert_frame_equal(
+            shared.read_reference_frame(reference, code, stock_part=True),
+            shared.as_stock_prices(expected[code], code),
+            check_exact=True,
+            check_dtype=True,
+            check_freq=True,
+        )
+    assert expected["0050"].loc[calendar[0], "Close"] == 200.0
+    assert pd.isna(expected["1101"].loc[calendar[-1], "Close"])
+    assert not bool(expected["1101"].loc[calendar[-1], "Quality"])
+    assert "missing_official_quote" in expected["1101"].loc[calendar[-1], "quality_reason"]
+    price_paths = {case["prepared"], case["prepared"].with_suffix(".json"), case["benchmark"], case["directory"] / "prices.parquet"}
+    nonprice = {path: path.read_bytes() for path in case["run"].rglob("*") if path.is_file() and path not in price_paths}
+    shared_files = {path: (path.stat().st_ino, path.read_bytes()) for path in case["external"].rglob("*") if path.is_file()}
+    handoff = _create(case)
+    result = _retire(case, handoff)
+    assert result["removed_files"] == len(price_paths)
+    assert all(not path.exists() for path in price_paths)
+    prices.verify_stock_artifacts(case["directory"], case["part"])
+    pd.testing.assert_frame_equal(prices.read_benchmark(case["run"]), expected["0050"], check_exact=True, check_dtype=True, check_freq=True)
+    pd.testing.assert_frame_equal(
+        prices.read_stock_prices(case["directory"]),
+        shared.as_stock_prices(expected["1101"], "1101"),
+        check_exact=True,
+        check_dtype=True,
+        check_freq=True,
+    )
+    assert all(path.read_bytes() == content for path, content in nonprice.items())
+    assert {path: (path.stat().st_ino, path.read_bytes()) for path in case["external"].rglob("*") if path.is_file()} == shared_files
 
 
 @pytest.fixture

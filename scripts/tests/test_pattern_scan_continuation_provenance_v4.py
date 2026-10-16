@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 from copy import deepcopy
 from pathlib import Path
 from typing import Any, cast
@@ -11,7 +12,7 @@ import pytest
 from research_core import pattern_scan_analysis_v1 as analysis
 from research_core import pattern_scan_git_source_v2 as git_source
 from research_core import pattern_scan_price_references_v4 as prices
-from research_core.artifact_store import describe_file, read_json, write_json
+from research_core.artifact_store import describe_file, object_digest, read_json, write_json
 
 
 def _pin(path: Path) -> dict[str, Any]:
@@ -184,6 +185,9 @@ def test_continuation_retains_small_metadata_and_separates_executor(case: dict[s
         "ancestral_stock_source": case["source"],
         "shared_price_reference": case["reference"],
         "price_handoff": _pin(case["run"] / prices.HANDOFF),
+        "phase_execution": {},
+        "phase_execution_unavailable": ["prices", "retire-prices", "barrier", "events"],
+        "analysis_native_job_memory": {"status": "pending", "observation": None},
     }
     assert case["checked"] == [(case["executor"], analysis.ROOT)]
     assert not (case["run"] / "prepared").exists()
@@ -392,3 +396,205 @@ def test_published_receipt_uses_executor_code_with_legacy_fallback(case: dict[st
     assert receipt["code"] == (case["executor"] if explicit_executor else case["source"])["code"]
     assert receipt["source"] == case["source"]
     assert receipt["provenance"] == provenance
+
+
+def _historical_executor(commit: str = "c" * 40) -> dict[str, Any]:
+    from research_core.pattern_scan_execution_v1 import NUMERICAL_THREADS
+    from research_core.stock_feature_pool_v1 import runtime_identity
+
+    body = {
+        "schema": "pattern-scan-source.git.v2",
+        "code": {"commit": commit, "dirty": False},
+        "runtime": runtime_identity(),
+        "platform": sys.platform,
+        "numerical_thread_limits": dict(NUMERICAL_THREADS),
+    }
+    return {**body, "source_id": object_digest(body)}
+
+
+def _resign_phase(case: dict[str, Any], phase: str, request: dict[str, Any], response: dict[str, Any] | None = None) -> None:
+    """Rebind synthetic envelopes so semantic drift tests reach the intended guard."""
+    control = case["control"]
+    _rewrite(control / f"request-{phase}.json", request)
+    response_path = control / f"response-{phase}.json"
+    saved = read_json(response_path) if response is None else response
+    saved.update({
+        "request_id": object_digest(request),
+        "phase": request["phase"],
+        "source": request["source"],
+        "input_id": request["input_id"],
+        "executor": request["executor"],
+    })
+    _rewrite(response_path, saved)
+    memory_path = control / f"response-{phase}.job-memory.json"
+    memory = read_json(memory_path)
+    memory.update({"request_id": object_digest(request), "response_sha256": _pin(response_path)["sha256"]})
+    _rewrite(memory_path, memory)
+
+
+def _add_phase(case: dict[str, Any], phase: str, executor: dict[str, Any] | None = None) -> dict[str, Any]:
+    run, control = case["run"], case["control"]
+    executor = _historical_executor() if executor is None else executor
+    outputs = {
+        "prices": {"price_handoff": run / prices.HANDOFF, "equivalence": run / prices.EQUALITY},
+        "retire-prices": {"price_retirement": run / prices.RETIRED},
+        "barrier": {"barrier": run / "global/receipt.json"},
+        "events": {"event_checkpoint": run / "event-checkpoint.json"},
+    }[phase]
+    for path in outputs.values():
+        if not path.exists():
+            path.parent.mkdir(parents=True, exist_ok=True)
+            write_json(path, {"synthetic": phase})
+    capacity = control / f"capacity-{phase}.json"
+    write_json(
+        capacity,
+        {
+            "schema": "pattern-scan-continuation-capacity.v4",
+            "phase": "prices" if phase == "retire-prices" else phase,
+            "executor_source_id": executor["source_id"],
+            "ancestral_source_id": case["source"]["source_id"],
+            "input_id": case["input_id"],
+            "memory": {"job_limit_bytes": 1024**3},
+        },
+    )
+    request = {
+        **read_json(case["request_path"]),
+        "phase": phase,
+        "executor": executor,
+        "retirement_authorized": phase == "retire-prices",
+        "price_handoff": None if phase == "prices" else _pin(run / prices.HANDOFF),
+        "capacity_path": str(capacity),
+        "capacity_sha256": _pin(capacity)["sha256"],
+    }
+    write_json(control / f"request-{phase}.json", request)
+    response = control / f"response-{phase}.json"
+    write_json(
+        response,
+        {
+            "schema": "pattern-scan-continuation.v4",
+            "complete": True,
+            "phase": phase,
+            "request_id": object_digest(request),
+            "source": request["source"],
+            "input_id": request["input_id"],
+            "executor": executor,
+            "results": {name: _pin(path) for name, path in outputs.items()},
+        },
+    )
+    write_json(
+        control / f"response-{phase}.job-memory.json",
+        {
+            "complete": True,
+            "request_id": object_digest(request),
+            "response_sha256": _pin(response)["sha256"],
+            "job_memory": {"limit_bytes": 1024**3, "peak_committed_bytes": 123_456, "scope": "virtual memory committed across this owned Windows job"},
+        },
+    )
+    return request
+
+
+def test_prior_phases_retain_actual_historical_executor_and_job_evidence(case: dict[str, Any]) -> None:
+    phases = ("prices", "retire-prices", "barrier", "events")
+    # A completed price comparison and later retirement can execute different code.
+    price_executor = _historical_executor("52f748afc9fdd08676b6f2e82e868023470f49cd")
+    later_executor = _historical_executor("ec025ab6ec607f0ad4e0b2c9d143146f1baed7ec")
+    executors = {phase: price_executor if phase == "prices" else later_executor for phase in phases}
+    assert price_executor["source_id"] != later_executor["source_id"]
+    for phase in phases:
+        _add_phase(case, phase, executors[phase])
+    files, provenance = _select(case)
+    assert provenance["phase_execution_unavailable"] == []
+    assert provenance["analysis_native_job_memory"] == {"status": "pending", "observation": None}
+    assert case["checked"] == [(case["executor"], analysis.ROOT)]
+    assert set(provenance["phase_execution"]) == set(phases)
+    for phase in phases:
+        evidence = provenance["phase_execution"][phase]
+        assert evidence["executor"] == executors[phase]
+        assert evidence["executor"] != case["executor"]
+        assert evidence["job_memory"]["peak_committed_bytes"] == 123_456
+        for kind in ("request", "response", "job-memory", "capacity"):
+            row = evidence["metadata"][kind]
+            logical = f"execution/phases/{phase}/{kind}.json"
+            assert row == {"retained_path": logical, **_pin(files[logical])}
+    assert case["run"] / prices.HANDOFF not in files.values()
+    assert case["run"] / "phase-stock-result.json" not in files.values()
+    assert case["run"] / "response-stock.json" not in files.values()
+
+
+@pytest.mark.parametrize("phase", ["prices", "retire-prices", "barrier", "events"])
+@pytest.mark.parametrize("missing", ["request", "response", "job-memory"])
+def test_partial_prior_phase_fails_closed(case: dict[str, Any], phase: str, missing: str) -> None:
+    _add_phase(case, phase)
+    name = f"request-{phase}.json" if missing == "request" else f"response-{phase}{'.job-memory' if missing == 'job-memory' else ''}.json"
+    (case["control"] / name).unlink()
+    with pytest.raises(ValueError, match="incomplete prior"):
+        _select(case)
+
+
+@pytest.mark.parametrize(
+    "fault",
+    [
+        "phase",
+        "run_root",
+        "control_root",
+        "primary",
+        "data",
+        "source",
+        "input_id",
+        "stock_reference",
+        "reference",
+        "calculation_authorized",
+        "retirement_authorized",
+        "executor",
+    ],
+)
+def test_prior_phase_request_drift_rejected_after_rebinding_envelopes(case: dict[str, Any], fault: str) -> None:
+    phase = "retire-prices"
+    request = _add_phase(case, phase)
+    if fault in {"calculation_authorized", "retirement_authorized"}:
+        request[fault] = False
+    elif fault == "executor":
+        request[fault] = {**request[fault], "source_id": "incorrect-digest"}
+    elif fault in {"source", "stock_reference", "reference"}:
+        request[fault] = {**request[fault], "sha256" if fault == "stock_reference" else "generation": "different"}
+    else:
+        request[fault] = "different"
+    _resign_phase(case, phase, request)
+    with pytest.raises(ValueError):
+        _select(case)
+
+
+@pytest.mark.parametrize("fault", ["phase", "executor_source_id", "ancestral_source_id", "input_id", "schema", "memory"])
+def test_prior_capacity_drift_rejected_after_repinning(case: dict[str, Any], fault: str) -> None:
+    request = _add_phase(case, "barrier")
+    path = Path(request["capacity_path"])
+    capacity = read_json(path)
+    capacity[fault] = {"job_limit_bytes": 2 * 1024**3} if fault == "memory" else "different"
+    _rewrite(path, capacity)
+    request["capacity_sha256"] = _pin(path)["sha256"]
+    _resign_phase(case, "barrier", request)
+    with pytest.raises(ValueError, match="capacity or observed Job"):
+        _select(case)
+
+
+@pytest.mark.parametrize("fault", ["output-key", "locator", "output-hash", "response-hash", "job-request", "job-limit", "peak"])
+def test_prior_result_and_native_observation_drift_rejected(case: dict[str, Any], fault: str) -> None:
+    request = _add_phase(case, "barrier")
+    response_path = case["control"] / "response-barrier.json"
+    response = read_json(response_path)
+    memory_path = case["control"] / "response-barrier.job-memory.json"
+    if fault in {"output-key", "locator", "output-hash"}:
+        if fault == "output-key":
+            response["results"]["unexpected"] = response["results"].pop("barrier")
+        else:
+            response["results"]["barrier"]["path" if fault == "locator" else "sha256"] = "different"
+        _resign_phase(case, "barrier", request, response)
+    else:
+        memory = read_json(memory_path)
+        if fault in {"response-hash", "job-request"}:
+            memory["response_sha256" if fault == "response-hash" else "request_id"] = "different"
+        else:
+            memory["job_memory"]["limit_bytes" if fault == "job-limit" else "peak_committed_bytes"] = 0
+        _rewrite(memory_path, memory)
+    with pytest.raises(ValueError):
+        _select(case)

@@ -76,6 +76,24 @@ equality/retirement certificates. Its final result receipt identifies the actual
 executor. Large handoff inventories and expanded event/control tables are
 execution intermediates, not permanent input snapshots.
 
+Completed continuation phases also retain their small request, response, native
+Job and capacity JSON under `execution/phases/<phase>/`. Their source/input,
+stock/reference pins, output locators and Job limits are checked before adoption.
+Different historical executors are allowed and recorded as they actually ran;
+they are never relabeled with the analysis commit. An entirely absent phase is
+listed as unavailable; a partial evidence set fails verification.
+
+The analysis Job's native peak is pending when the immutable computed index is
+captured. After `launch` returns and its Job has closed, the CLI calls
+`record_analysis_completion` to retain `analysis/audits/continuation-completion.json`.
+This bounded audit pins the computed index, contains the small request and Job
+evidence, and retains the expanded response's hash plus identity projection.
+Formal handoff must include it as `audits/continuation-completion.json` through
+`audit_files`; the computed index is not amended. A failed audit write can be
+retried against the completed phase without recomputing results. Sibling control
+metadata remains temporary until these retained records are verified in the
+formal bundle; cleanup of the original run does not implicitly delete siblings.
+
 `scripts.audit_pattern_scan_candidates` independently reconstructs the five
 selected candidates from explicit unpublished computed results and the pinned
 stock/barrier/label ancestors. Its 54,720 comparison rows do not replace the
@@ -91,6 +109,8 @@ decision; this continuation does not publish new versions to `research_cache/`.
 Receipts retain identities and comparison evidence, not deleted input bytes or a
 guarantee that a removed shared generation can ever be reproduced.
 
-Implementation tests use synthetic data. Actual execution, equality, retirement
+Implementation tests use synthetic data, including a real small maintained
+generation read through the as-of adapter, handoff and retirement without mocked
+price reads. Actual execution, equality, retirement
 counts and resource measurements are reported in their run receipts; passing
 tests alone never establishes any of those facts.

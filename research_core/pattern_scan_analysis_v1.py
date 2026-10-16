@@ -373,7 +373,8 @@ def _continuation_execution_provenance(
     continuation_request: Path,
 ) -> tuple[dict[str, Path], dict[str, Any]]:
     """Validate one active executor against immutable stock/price ancestry."""
-    from research_core.pattern_scan_git_source_v2 import assert_current_code
+    from research_core.pattern_scan_continuation_v4 import verify_phase_result
+    from research_core.pattern_scan_git_source_v2 import assert_current_code, verify_git_source
     from research_core.pattern_scan_price_references_v4 import EQUALITY, HANDOFF, RETIRED, retired_preparation_reference
     from research_core.pattern_scan_result_lifecycle_v3 import _run
 
@@ -512,13 +513,90 @@ def _continuation_execution_provenance(
         "execution/shared-price-equivalence.json": run / EQUALITY,
         "execution/own-price-retirement.json": run / RETIRED,
     })
-    provenance = {
+    provenance: dict[str, Any] = {
         "stock_reference": pin(run / "phase-stock-result.json"),
         "executor": executor,
         "ancestral_stock_source": source,
         "shared_price_reference": request["reference"],
         "price_handoff": pin(run / HANDOFF),
     }
+    phase_execution: dict[str, Any] = {}
+    unavailable: list[str] = []
+    expected_outputs = {
+        "prices": {"price_handoff": run / HANDOFF, "equivalence": run / EQUALITY},
+        "retire-prices": {"price_retirement": run / RETIRED},
+        "barrier": {"barrier": run / "global/receipt.json"},
+        "events": {"event_checkpoint": run / "event-checkpoint.json"},
+    }
+    for phase, outputs in expected_outputs.items():
+        paths = {
+            "request": control / f"request-{phase}.json",
+            "response": control / f"response-{phase}.json",
+            "job-memory": control / f"response-{phase}.job-memory.json",
+        }
+        present = [_checked_path(path).exists() for path in paths.values()]
+        if not any(present):
+            unavailable.append(phase)
+            continue
+        if not all(present):
+            raise ValueError(f"incomplete prior continuation phase evidence: {phase}")
+        previous = load(paths["request"])
+        if (
+            previous.get("schema") != "pattern-scan-continuation.v4"
+            or previous.get("phase") != phase
+            or previous.get("calculation_authorized") is not True
+            or any(previous.get(key) != request[key] for key in ("run_root", "control_root", "primary", "data", "source", "input_id"))
+            or object_digest(previous.get("stock_reference")) != object_digest(request["stock_reference"])
+            or object_digest(previous.get("reference")) != object_digest(request["reference"])
+            or (phase == "retire-prices" and previous.get("retirement_authorized") is not True)
+            or (phase == "prices" and previous.get("price_handoff") is not None)
+            or (phase != "prices" and object_digest(previous.get("price_handoff")) != object_digest(request["price_handoff"]))
+        ):
+            raise ValueError(f"prior continuation request lineage differs: {phase}")
+        # A completed prior phase may have a different actual executing commit.
+        # Historical validation must never compare it with today's checkout.
+        verify_git_source(previous["executor"])
+        saved = load(paths["response"])
+        result_pins = saved.get("results")
+        if not isinstance(result_pins, dict) or set(result_pins) != set(outputs):
+            raise ValueError(f"prior continuation result keys differ: {phase}")
+        for name, expected_path in outputs.items():
+            descriptor = result_pins[name]
+            if (
+                not isinstance(descriptor, dict)
+                or set(descriptor) != {"path", "bytes", "sha256"}
+                or descriptor.get("path") != str(expected_path)
+                or type(descriptor.get("bytes")) is not int
+                or descriptor["bytes"] < 0
+                or not isinstance(descriptor.get("sha256"), str)
+            ):
+                raise ValueError(f"prior continuation result locator differs: {phase}")
+            # Reject aliases/foreign locators before the reusable verifier reads bytes.
+            _checked_path(expected_path)
+        verified_phase = verify_phase_result(paths["response"], previous)
+        paths["capacity"] = Path(previous["capacity_path"])
+        prior_capacity = load(paths["capacity"])
+        observation = verified_phase["coordinator_job_memory"]
+        if (
+            pin(paths["capacity"])["sha256"] != previous["capacity_sha256"]
+            or prior_capacity.get("schema") != "pattern-scan-continuation-capacity.v4"
+            or prior_capacity.get("phase") != ("prices" if phase == "retire-prices" else phase)
+            or prior_capacity.get("executor_source_id") != previous["executor"]["source_id"]
+            or prior_capacity.get("ancestral_source_id") != source["source_id"]
+            or prior_capacity.get("input_id") != input_id
+            or type(prior_capacity.get("memory", {}).get("job_limit_bytes")) is not int
+            or prior_capacity["memory"]["job_limit_bytes"] != observation["limit_bytes"]
+        ):
+            raise ValueError(f"prior continuation capacity or observed Job limit differs: {phase}")
+        retained_metadata = {}
+        for kind, path in paths.items():
+            logical = f"execution/phases/{phase}/{kind}.json"
+            files[logical] = path
+            retained_metadata[kind] = {"retained_path": logical, **pin(path)}
+        phase_execution[phase] = {"executor": previous["executor"], "job_memory": observation, "metadata": retained_metadata}
+    provenance["phase_execution"] = phase_execution
+    provenance["phase_execution_unavailable"] = unavailable
+    provenance["analysis_native_job_memory"] = {"status": "pending", "observation": None}
     return files, provenance
 
 
