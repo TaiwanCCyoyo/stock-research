@@ -1,0 +1,382 @@
+:root {
+    --font-ui: system-ui, "Microsoft JhengHei", "PingFang TC", sans-serif;
+    --font-serif: system-ui, "Microsoft JhengHei", "PingFang TC", sans-serif;
+}
+
+body {
+    font-size: 15px;
+    overflow-wrap: anywhere;
+}
+
+.rk-page {
+    max-width: 1180px;
+}
+
+.rk-hero h1 {
+    max-width: 26em;
+    font-size: clamp(28px, 4vw, 42px);
+    line-height: 1.4;
+    letter-spacing: -0.02em;
+}
+
+.rk-section {
+    margin-bottom: 36px;
+}
+
+.rk-findings {
+    margin-bottom: 16px;
+}
+
+.rk-finding b {
+    font-variant-numeric: tabular-nums;
+}
+
+.skip-link {
+    position: absolute;
+    top: -100px;
+    left: 14px;
+    padding: 8px 12px;
+    background: var(--surface);
+    z-index: 10;
+}
+
+.skip-link:focus {
+    top: 8px;
+}
+
+.method-steps {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    list-style: none;
+    padding: 0;
+    counter-reset: step;
+}
+
+.method-steps li {
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    counter-increment: step;
+}
+
+.method-steps b::before {
+    content: counter(step) " · ";
+    color: var(--accent);
+}
+
+.method-steps span {
+    display: block;
+    color: var(--muted);
+    margin-top: 6px;
+    font-size: 14px;
+}
+
+summary {
+    padding: 5px 0;
+    min-height: 36px;
+}
+
+summary:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
+}
+
+.detail-body {
+    max-width: 62em;
+    padding-left: 16px;
+}
+
+.fee-list,
+.ytd-values {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin: 16px 0;
+}
+
+.fee-list div {
+    padding: 6px 0;
+    border-bottom: 1px solid var(--line);
+}
+
+dt {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+dd {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+}
+
+.annual-table caption {
+    text-align: left;
+    color: var(--muted);
+    font-size: 12px;
+    padding-bottom: 10px;
+}
+
+table.annual-table {
+    table-layout: fixed;
+    font-size: 12px;
+}
+
+.annual-table th,
+.annual-table td {
+    padding: 10px 7px;
+    white-space: normal;
+    vertical-align: top;
+}
+
+.annual-table thead th {
+    position: static;
+    font-size: 11px;
+}
+
+.annual-table th:first-child {
+    width: 10%;
+}
+
+.annual-table th:nth-child(2) {
+    width: 19%;
+}
+
+.annual-table th:last-child {
+    width: 22%;
+    text-align: left;
+}
+
+.annual-table td:last-child {
+    text-align: left;
+    color: var(--muted);
+}
+
+.annual-table tbody th {
+    background: transparent;
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.annual-table tbody th span {
+    display: block;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 400;
+}
+
+.annual-table .unknown {
+    color: var(--warn);
+}
+
+.beats-benchmark {
+    background: var(--accent-soft);
+}
+
+.ytd-card {
+    border-top: 3px solid var(--accent);
+}
+
+.ytd-card > p:first-child {
+    margin-top: 0;
+}
+
+.ytd-values {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.ytd-values dd {
+    font-size: clamp(22px, 3vw, 30px);
+    font-weight: 600;
+}
+
+.report-footer {
+    border-top: 1px solid var(--line-strong);
+    padding-top: 16px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.report-footer h2 {
+    font-size: 15px;
+    color: var(--ink);
+}
+
+@media (max-width: 820px) {
+    .annual-table,
+    .annual-table tbody,
+    .annual-table caption {
+        display: block;
+    }
+
+    .annual-table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+    }
+
+    .annual-table tr {
+        display: block;
+        margin-bottom: 14px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 6px 12px 10px;
+        background: var(--surface);
+    }
+
+    .annual-table tr.beats-benchmark {
+        border-color: var(--accent);
+    }
+
+    .annual-table tbody th {
+        display: flex;
+        gap: 10px;
+        align-items: baseline;
+        width: 100%;
+        font-size: 20px;
+        padding: 4px 0 8px;
+    }
+
+    .annual-table tbody th span {
+        font-size: 14px;
+    }
+
+    .annual-table td {
+        display: grid;
+        grid-template-columns: minmax(100px, 40%) minmax(0, 1fr);
+        gap: 10px;
+        text-align: right;
+        padding: 7px 0;
+        font-size: 14px;
+    }
+
+    .annual-table td::before {
+        content: attr(data-label);
+        text-align: left;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 400;
+    }
+
+    .annual-table td:last-child {
+        text-align: right;
+        border-bottom: 0;
+    }
+
+    .annual-table td[data-label="買入 → 退出"] {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 540px) {
+    .method-steps,
+    .ytd-values {
+        grid-template-columns: 1fr;
+    }
+
+    .ytd-values div {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .rk-findings {
+        grid-template-columns: 1fr;
+    }
+
+    .wide-break {
+        display: none;
+    }
+
+    .detail-body {
+        padding-left: 0;
+    }
+}
+
+@page {
+    size: A4 landscape;
+    margin: 12mm;
+}
+
+@media print {
+    :root {
+        --paper: #fff;
+        --surface: #fff;
+        --surface-2: #f4f4f4;
+        --ink: #111;
+        --muted: #444;
+        --line: #ccc;
+        --line-strong: #999;
+        --accent: #234e3d;
+        --accent-soft: #f2f5f2;
+        --warn: #765000;
+        --warn-soft: #fff;
+        --gain: #ad3034;
+        --loss: #176b4e;
+        color-scheme: light;
+    }
+
+    body {
+        font-size: 10pt;
+        background: white;
+        color: #111;
+    }
+
+    .rk-page {
+        padding: 0;
+        max-width: none;
+    }
+
+    .rk-hero h1 {
+        font-size: 24pt;
+    }
+
+    .skip-link,
+    .rk-toc {
+        display: none;
+    }
+
+    .rk-section {
+        margin-bottom: 18px;
+    }
+
+    .rk-findings {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .annual-table tr,
+    .rk-card,
+    .rk-finding {
+        break-inside: avoid;
+    }
+
+    table.annual-table {
+        font-size: 9pt;
+    }
+
+    .annual-table th,
+    .annual-table td {
+        padding: 6px;
+    }
+
+    details::details-content {
+        display: block;
+        content-visibility: visible;
+    }
+
+    details .detail-body {
+        display: block;
+    }
+
+    a {
+        color: #234e3d;
+        text-decoration: underline;
+    }
+}
