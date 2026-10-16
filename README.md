@@ -173,6 +173,8 @@ Documentation:
 
 Agent support:
 
+Ordinary delegation uses built-in general-purpose agents under `AGENTS.md`, with runtime-supported model selection and inherited-model fallback. Stock research roles keep their existing bounded authorization. Python diagnostics retain useful execution history without secrets or full payloads; normal hooks and CI own automated checks.
+
 - `.codex/`: Codex-specific instructions, hooks, private skills, and bounded execution/evidence helpers. Native Plan Mode handles interactive planning; Repository documentation handles durable cross-agent planning handoff. Native local review and hosted PR review follow root `AGENTS.md`.
 - `.claude/`: Claude Code settings, hooks, focused slash commands, skills, subagents, and path-scoped coding rules. Development workflows use Native Claude capabilities, project-owned components, and autoloaded skills; GitHub, skill-creator, and Pyright LSP remain enabled.
 - `.agents/`: shared local agent memory skeleton. Local memory content is ignored by Git.

@@ -2,7 +2,7 @@
 
 Current contract: `AGENTS.md`; the owner requested removal of `CLAUDE.md`. Use Claude Code 2.1.281 or later with built-in `agents-md` support enabled. It loads root `AGENTS.md` natively when no project or ancestor `CLAUDE.md`/`CLAUDE.local.md` takes precedence; this repository adds no import or injection hook. Before local implementation/security review, confirm the contract in `/context` or `/memory`. If native loading is unavailable or overridden, explicitly read root `AGENTS.md` before reviewing so its severity, secret classification, and authority boundaries apply. See [official instruction loading](https://code.claude.com/docs/en/memory#agentsmd). Historical removal notes below do not describe current rule loading.
 
-This document lists all agents, commands, skills, hooks, and rules active in the `.claude/` directory.
+This document lists all domain agents, commands, skills, hooks, and rules active in the `.claude/` directory.
 Intended for Python and SystemVerilog/UVM developers.
 
 **ECC source**: [affaan-m/ECC](https://github.com/affaan-m/ECC) v2.0.0-rc.1
@@ -13,37 +13,37 @@ The project settings intentionally disable the external Superpowers, Ponytail, a
 
 ---
 
-## Agents
+## Delegation
 
-Agents are specialized subagents invoked by the main Claude session for focused tasks.
+Use Claude's built-in general-purpose subagent for bounded work and Explore for focused code discovery. Ordinary work uses built-in agents; stock-research retains only the domain roles below. `AGENTS.md` owns the shared principles: delegate straightforward work with substantial input, output, noise, or repetitive cycles when the handoff has a concrete benefit. Use the lowest-cost suitable model available in Claude; the Codex-specific Luna preference does not imply that Claude supports that model.
 
-Claude auto-delegation is primarily guided by each agent's description and the current task context. `signal-miner` is the lowest-cost native read-only utility for bounded high-output commands. Route test suites, benchmarks, broad searches, verbose diagnostics, dependency traces, and large diff/log inspections to it when output isolation is worth a round trip; run short focused checks directly in the main context and use the built-in Explore agent for ordinary code location. `task-worker` is a mid-cost option only for a higher-tier main session to downshift bounded implementation with an explicit goal, scope, acceptance criteria, and verification. A lowest-cost main session handles simple work directly or uses built-in Explore or general-purpose as appropriate; it does not escalate to `task-worker`. Keep ambiguous, cross-cutting, security-sensitive, architectural, and planning work with the main session or a suitable built-in agent.
+Long translations, document synchronization, large diff/log inspection, and mechanical hook recovery follow this general rule. Select a model only through controls the current runtime actually supports. If only parent-model inheritance is available, report that limit and run directly, or delegate for a concrete context-isolation or parallelism benefit without claiming model or cost reduction. Choose a suitable model for implementation that needs more judgment, keep short work local, and leave architectural, product, security-sensitive, and ambiguous decisions with the main session. Give delegates explicit scope and acceptance criteria; collect concise evidence rather than raw output. Read-only instructions alone do not enforce tool permissions.
 
-Claude keeps `model: "opusplan"` in `.claude/settings.json`: native Plan Mode uses `opus`, and execution uses `sonnet`. Custom agents are not used to transfer plans back to the main session.
+For document translation or synchronization, the main session selects the authoritative source and explicit target. Preserve structure, links, code, and identifiers; report source conflicts or ambiguous terminology.
 
-### Workflow (original — not from ECC)
+Claude keeps `model: "opusplan"` in `.claude/settings.json`: native Plan Mode uses `opus`, and execution uses `sonnet`. Delegation does not change the main session's model choice or transfer planning authority.
 
-| Agent               | Model           | Tools                               | Purpose                                                                                                                                                                                           |
-| ------------------- | --------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `commit-specialist` | haiku           | Bash, Read                          | Review staged changes and draft commit messages                                                                                                                                                   |
-| `doc-translator`    | haiku           | Read, Write, Edit                   | Low-tier translator and synchronizer for any file-based translation into one explicit non-canonical target; the main session selects source and target, and its canonical document wins conflicts |
-| `signal-miner`      | haiku           | Read, Grep, Glob, Bash              | Lowest-cost isolation for commands expected to produce large logs or stdout; returns concise signal instead of raw output                                                                         |
-| `task-worker`       | sonnet (medium) | Read, Grep, Glob, Write, Edit, Bash | Implement explicit low-to-medium-risk tasks with acceptance criteria and verification; stop when scope or risk expands                                                                            |
+### stock-research domain roles
+
+| Agent                    | Purpose                                                                                            |
+| ------------------------ | -------------------------------------------------------------------------------------------------- |
+| `strategy-diagnostician` | Diagnose recorded evidence under the owner contract; no new study or acceptance changes.           |
+| `study-runner`           | Execute only the parent-designed, explicitly authorized study with its fixed gates and run budget. |
 
 ### Not ported from ECC (with reasons)
 
-| Agent                                                                                                                                              | Reason                                                                                                                                                                            |
-| -------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `planner`                                                                                                                                          | Removed 2026-06-08 — superseded by Native Plan Mode (`EnterPlanMode`/`ExitPlanMode`)                                                                                              |
-| `architect`, `code-reviewer`, `code-simplifier`, `loop-operator`, `performance-optimizer`, `python-reviewer`, `silent-failure-hunter`, `tdd-guide` | Removed 2026-07-13 — native Claude capabilities and focused reviewers cover their responsibilities without overlapping delegation.                                                |
-| `implementation-reviewer`, `plan-reviewer`, `security-reviewer`                                                                                    | Removed 2026-10-02 — current models, native Plan Mode, built-in `/code-review`, hosted Codex PR review, and pre-commit gates cover them; the remaining agents exist to save cost. |
-| `refactor-cleaner`                                                                                                                                 | Depends on Node.js tools (knip, depcheck, ts-prune); Python project                                                                                                               |
-| `harness-optimizer`                                                                                                                                | Requires ECC-internal `/harness-audit`; not portable                                                                                                                              |
-| All `*-build-resolver` (11 agents)                                                                                                                 | Non-Python languages not in use                                                                                                                                                   |
-| Language reviewers (non-Python)                                                                                                                    | Unused languages                                                                                                                                                                  |
-| `gan-*`, `seo-specialist`                                                                                                                          | Out of scope                                                                                                                                                                      |
-| `homelab-*`, `network-*`, `healthcare-reviewer`                                                                                                    | Domain mismatch                                                                                                                                                                   |
-| `marketing-agent`                                                                                                                                  | Deferred — add when short-form video planning starts                                                                                                                              |
+| Agent                                                                                                                                              | Reason                                                                                                                                                                                   |
+| -------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `planner`                                                                                                                                          | Removed 2026-06-08 — superseded by Native Plan Mode (`EnterPlanMode`/`ExitPlanMode`)                                                                                                     |
+| `architect`, `code-reviewer`, `code-simplifier`, `loop-operator`, `performance-optimizer`, `python-reviewer`, `silent-failure-hunter`, `tdd-guide` | Removed 2026-07-13 — native Claude capabilities and focused reviewers cover their responsibilities without overlapping delegation.                                                       |
+| `implementation-reviewer`, `plan-reviewer`, `security-reviewer`                                                                                    | Removed 2026-10-02 — current models, native Plan Mode, built-in `/code-review`, hosted Codex PR review, and pre-commit gates cover them; cost-aware delegation now uses built-in agents. |
+| `refactor-cleaner`                                                                                                                                 | Depends on Node.js tools (knip, depcheck, ts-prune); Python project                                                                                                                      |
+| `harness-optimizer`                                                                                                                                | Requires ECC-internal `/harness-audit`; not portable                                                                                                                                     |
+| All `*-build-resolver` (11 agents)                                                                                                                 | Non-Python languages not in use                                                                                                                                                          |
+| Language reviewers (non-Python)                                                                                                                    | Unused languages                                                                                                                                                                         |
+| `gan-*`, `seo-specialist`                                                                                                                          | Out of scope                                                                                                                                                                             |
+| `homelab-*`, `network-*`, `healthcare-reviewer`                                                                                                    | Domain mismatch                                                                                                                                                                          |
+| `marketing-agent`                                                                                                                                  | Deferred — add when short-form video planning starts                                                                                                                                     |
 
 ---
 
@@ -51,7 +51,7 @@ Claude keeps `model: "opusplan"` in `.claude/settings.json`: native Plan Mode us
 
 - Interactive work: enter Native Plan Mode, approve the plan, then return to execution mode.
 - Unattended work: use separate planning and execution sessions. The planning session writes a maintained plan artifact; the execution session reads the approved artifact. Do not use a planner subagent as the main-session handoff.
-- Claude-only company copy: retain instructions, rules, agents, skills, and hygiene hooks as-is. Use organization-approved model IDs or alias mappings rather than this repository's personal-Pro defaults.
+- Claude-only company copy: retain instructions, rules, the domain agents (`strategy-diagnostician` and `study-runner`), skills, and hygiene hooks as-is. Use organization-approved model IDs or alias mappings rather than this repository's personal-Pro defaults.
 
 `REVIEW.md` is not part of the local baseline. Add it only when the repository is enrolled in Claude's managed Team or Enterprise Code Review service.
 
@@ -61,10 +61,10 @@ Claude keeps `model: "opusplan"` in `.claude/settings.json`: native Plan Mode us
 
 ### Workflow (original — not from ECC)
 
-| Command       | Purpose                                                        |
-| ------------- | -------------------------------------------------------------- |
-| `/gen-commit` | Generate a Conventional Commit message via `commit-specialist` |
-| `/worktree`   | Create, resume, and finish isolated task worktrees             |
+| Command       | Purpose                                                    |
+| ------------- | ---------------------------------------------------------- |
+| `/gen-commit` | Prepare or execute a scoped commit through `commit-helper` |
+| `/worktree`   | Create, resume, and finish isolated task worktrees         |
 
 Native Git/GitHub operations follow the [shared Git workflow contract](git-workflow.md). Local-only delivery is the default; owner-enabled PR delivery authorizes task-branch pushes and PR updates, while merge requires separate authorization.
 
@@ -72,12 +72,12 @@ Native Git/GitHub operations follow the [shared Git workflow contract](git-workf
 
 | Command          | Replacement                                                                   |
 | ---------------- | ----------------------------------------------------------------------------- |
-| `/build-fix`     | Native evidence-driven debugging + `python-testing` skill                     |
+| `/build-fix`     | Native evidence-driven debugging                                              |
 | `/code-review`   | Built-in `/code-review` (incl. `ultra` cloud review) + hosted Codex PR review |
-| `/feature-dev`   | Native Plan Mode + native test-first workflow + `signal-miner` agent          |
-| `/python-review` | `python-testing` skill and built-in `/code-review`                            |
+| `/feature-dev`   | Native Plan Mode + native test-first workflow + built-in delegation           |
+| `/python-review` | Built-in `/code-review` and repository checks                                 |
 | `/security-scan` | Built-in `/security-review` + `detect-secrets` gate                           |
-| `/test-coverage` | `python-testing` skill (`pytest --cov`)                                       |
+| `/test-coverage` | Standard pytest-cov usage                                                     |
 
 ### Not ported from ECC (with reasons)
 
@@ -105,12 +105,6 @@ Skills are internal workflow documents loaded when a matching command or agent n
 | ------------------------ | ------------------------------------------------------------------------- |
 | `commit-helper`          | Conventional Commits format, scoped commit execution                      |
 | `dependabot-remediation` | Read-only alert retrieval, minimum-safe upgrades, and completion evidence |
-
-### Development (ported from ECC v2.0.0-rc.1)
-
-| Skill            | Purpose                                                                                                                                   |
-| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `python-testing` | Repository-specific behavioral tests, hook JSON fixtures, and Windows path behavior. Test-first decisions use native Claude capabilities. |
 
 ### Removed (2026-08-23 cleanup — native GitHub operations and focused security workflow)
 
@@ -167,6 +161,8 @@ Workspace editor defaults live in `.vscode/settings.json`: trim trailing whitesp
 
 Claude Code uses the official Pyright plugin for immediate type-aware navigation and diagnostics. Its PostToolUse hook adds a read-only targeted Ruff check for `E722,F601,F602,F634`, which complements Pyright without repeating its common undefined-name and unused-symbol diagnostics. Both the hook command and its internal Ruff invocation use `uv run --no-sync` so an edit never triggers an environment resync. Complete Ruff linting and formatting are deferred to pre-commit, so normal edits do not trigger repository-wide formatting. Normal commits run `.githooks/pre-commit` for formatting and validation.
 
+The [CI scope selector](../../scripts/ci_scope.py) and [test manifest](../../scripts/ci_test_domains.json) are the canonical test entry points; the manifest includes both `.codex/hooks/tests` and `.claude/hooks/tests`. The selector executes its explicit test paths with `python -m pytest`.
+
 ### ECC hook concepts noted but not ported
 
 | Concept                         | Status              | Why                                                                                                                                      |
@@ -180,11 +176,11 @@ Claude Code uses the official Pyright plugin for immediate type-aware navigation
 
 Rules are path-scoped markdown files loaded when Claude works with matching file types.
 
-| Rule set        | Paths                 | Source                     | Notes                                                 |
-| --------------- | --------------------- | -------------------------- | ----------------------------------------------------- |
-| `rules/python/` | `**/*.py`, `**/*.pyi` | ECC v2.0.0-rc.1 (modified) | Logging and log-driven debugging, and pytest pointers |
+| Rule set        | Paths                 | Source                     | Notes                               |
+| --------------- | --------------------- | -------------------------- | ----------------------------------- |
+| `rules/python/` | `**/*.py`, `**/*.pyi` | ECC v2.0.0-rc.1 (modified) | Script logging for future debugging |
 
-Detailed procedures live in skills or agent definitions.
+Detailed procedures live in skills; shared delegation principles live in `AGENTS.md`.
 
 ### Removed (2026-08-23 cleanup — merged into CLAUDE.md)
 
@@ -210,7 +206,7 @@ Because every `rules/common/` file matches `paths: "*"`, the set is injected on 
 | `rules/common/coding-style`               | Generic craft guidance duplicated CLAUDE.md `Engineering Discipline`; the structural review heuristic moved to `rules/common/code-review.md` |
 | `development-workflow` §Research & Reuse  | Verbatim duplicate of CLAUDE.md `Engineering Discipline`                                                                                     |
 | `development-workflow` §Pre-Review Checks | Generic pre-merge hygiene; CI and native GitHub operations own it                                                                            |
-| `testing` §AAA and §Test Naming           | Generic pytest structure and naming examples; owned by `skill: python-testing`                                                               |
+| `testing` §AAA and §Test Naming           | Generic pytest structure and naming examples removed; native capabilities cover them                                                         |
 | `code-review` §Security Review Triggers   | Pointer-only section; the reviewer routing list already links `security.md`                                                                  |
 
 ### Not ported from ECC (with reasons)

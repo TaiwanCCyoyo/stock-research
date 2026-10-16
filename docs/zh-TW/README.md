@@ -50,3 +50,5 @@ Docker 保留為選項，但既有掛載缺少必要模組且可寫範圍偏大�
 設定 `git config core.hooksPath .githooks` 可啟用既有工作樹初始化 hook 與提交檢查。
 
 文件採最清楚的語言；commit 訊息與程式識別字維持英文，檔案儲存為 UTF-8 without BOM。
+
+一般工作依 `AGENTS.md` 的共用原則委派給內建 general-purpose 代理，先確認 runtime 的模型選擇能力；只能繼承模型時採明確 fallback。研究專用角色保留既有授權邊界。Python 診斷保留有用的執行歷史，避免機密與完整 payload；自動檢查由正常 hooks 與 CI 負責。
