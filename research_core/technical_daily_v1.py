@@ -6,11 +6,16 @@ rows, one output row per price row. It adds no new formula: every column delegat
 an existing shared kernel, and the three gap-reset rules agree (every invalid row
 restarts all state):
 
-- `derived_features.compute_features` (`derived-features.v1`): ATR14, atr14_pct,
-  SMA5..120, EMA5..60, BB20 bands and the 1.5/4 ATR pivots.
-- `feature_atlas_features.compute_features`: RSI14, ADX14 and BBWidth, unchanged.
-- SMA240 and the raw MACD histogram follow the same segment reset with the atlas EMA
-  kernel, matching the PR17 pattern-scan indicators exactly.
+- `derived-features.v1` (`derived_features`): ATR14, atr14_pct, SMA5..120, EMA5..60,
+  BB20 bands and the 1.5/4 ATR pivots. ATR and pivots call its kernels; `_derived_daily`
+  repeats its SMA/EMA/BB arithmetic on plain floats because its per-row pandas indexing
+  would roughly triple a full update's compute time. `derived_features.py` itself
+  is SHA-pinned by stored evidence and stays byte-identical; the tests assert equality.
+- `feature_atlas_features` (`rsi14`, `adx14`, `bb_width20`): RSI14, ADX14 and BBWidth.
+  `_atlas_three` repeats only those three formulas of its `_segment`, in the same order
+  with the same `_smooth` kernel, instead of all ~48 atlas features; equality is tested.
+- SMA240 is a whole-series 240-row rolling mean (NaN whenever the window holds an invalid
+  row) and MACDHist uses the atlas EMA kernel, matching the PR17 pattern-scan values.
 
 Every value is known at that day's close. Pivots are known only from `confirmed_at`;
 `extreme_date` is where the extreme was, found afterwards. The daily pivot columns
@@ -29,7 +34,6 @@ import pyarrow as pa
 
 from research_core import derived_features
 from research_core.feature_atlas_features import _smooth
-from research_core.feature_atlas_features import compute_features as compute_atlas
 
 LOGGER = logging.getLogger(__name__)
 DEFINITION_VERSION = "technical-daily.v1"
@@ -110,6 +114,73 @@ def _valid_prices(prepared: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
+def _derived_daily(data: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """`derived_features.compute_features`, bit for bit, without per-row pandas indexing.
+
+    Same validation, ATR and pivot kernels; SMA/EMA/BB repeat `derived_features._convenience`
+    per valid segment with the same pandas rolling calls and the same EMA arithmetic order.
+    """
+    prices, valid = derived_features._validate(data)
+    atr = derived_features._atr(prices, valid)
+    close = prices[:, 3]
+    columns: dict[str, np.ndarray] = {"ATR14": atr, "atr14_pct": atr / close}
+    names = [*(f"SMA{n}" for n in derived_features.SMA_PERIODS), *(f"EMA{n}" for n in derived_features.EMA_PERIODS), "BB20_Middle", "BB20_Upper", "BB20_Lower"]
+    columns.update({name: np.full(len(close), np.nan) for name in names})
+    starts = np.flatnonzero(valid & ~np.r_[False, valid[:-1]]) if len(valid) else np.array([], dtype=int)
+    stops = np.flatnonzero(valid & ~np.r_[valid[1:], False]) + 1 if len(valid) else np.array([], dtype=int)
+    for start, stop in zip(starts, stops):
+        segment = close[start:stop]
+        values = pd.Series(segment)
+        for n in derived_features.SMA_PERIODS:
+            columns[f"SMA{n}"][start:stop] = np.asarray(values.rolling(n).mean())
+        for n in derived_features.EMA_PERIODS:
+            if len(segment) >= n:
+                ema = columns[f"EMA{n}"][start:stop]
+                ema[n - 1] = float(values.iloc[:n].mean())
+                alpha = 2 / (n + 1)
+                for i in range(n, len(segment)):
+                    ema[i] = alpha * segment[i] + (1 - alpha) * ema[i - 1]
+        middle, std = values.rolling(20).mean(), values.rolling(20).std(ddof=0)
+        for name, feature in (("BB20_Middle", middle), ("BB20_Upper", middle + 2 * std), ("BB20_Lower", middle - 2 * std)):
+            columns[name][start:stop] = np.asarray(feature)
+    pivots = derived_features._pivots(prices, valid, atr, cast(pd.DatetimeIndex, data.index))
+    return pd.DataFrame(columns, index=data.index), pivots
+
+
+def _atlas_three(data: pd.DataFrame) -> pd.DataFrame:
+    """`feature_atlas_features.compute_features` rsi14/adx14/bb_width20, bit for bit.
+
+    Same segmentation (any missing OHLC splits; segments shorter than 14 rows stay NaN)
+    and the same pandas expressions as its `_segment`.
+    """
+    prices = data.loc[:, list(OHLC)].astype(float)
+    output = pd.DataFrame(np.nan, index=data.index, columns=pd.Index(["bb_width20", "rsi14", "adx14"]))
+    valid = cast(pd.Series, prices.notna().all(axis=1))
+    for _, segment in prices.loc[valid].groupby((~valid).cumsum().loc[valid], sort=False):
+        if len(segment) < 14:
+            continue
+        h, low, c = (cast(pd.Series, segment[column]) for column in ("High", "Low", "Close"))
+        ma20 = cast(pd.Series, c.rolling(20).mean())
+        width = 4 * cast(pd.Series, c.rolling(20).std(ddof=0)) / ma20
+        tr = cast(pd.Series, pd.concat([h - low, (h - c.shift()).abs(), (low - c.shift()).abs()], axis=1).max(axis=1))
+        atr = _smooth(tr, 14, 1 / 14)
+        delta = cast(pd.Series, c.diff())
+        gain = _smooth(cast(pd.Series, delta.clip(lower=0)), 14, 1 / 14)
+        loss = _smooth(cast(pd.Series, (-delta).clip(lower=0)), 14, 1 / 14)
+        rsi = 100 * gain / (gain + loss).replace(0, np.nan)
+        rsi = rsi.mask((gain == 0) & (loss == 0), 50)
+        hd, ld = cast(pd.Series, h.diff()), -cast(pd.Series, low.diff())
+        plus = hd.where((hd > ld) & (hd > 0), 0).where(hd.notna())
+        minus = ld.where((ld > hd) & (ld > 0), 0).where(ld.notna())
+        pdi, mdi = _smooth(plus, 14, 1 / 14) / atr, _smooth(minus, 14, 1 / 14) / atr
+        dx = 100 * (pdi - mdi).abs() / (pdi + mdi).replace(0, np.nan)
+        dx = dx.mask((pdi == 0) & (mdi == 0), 0)
+        output.loc[segment.index, "bb_width20"] = width.to_numpy()
+        output.loc[segment.index, "rsi14"] = rsi.to_numpy()
+        output.loc[segment.index, "adx14"] = _smooth(dx, 14, 1 / 14).to_numpy()
+    return output
+
+
 def _sma240_and_macd(close: pd.Series) -> tuple[pd.Series, pd.Series]:
     """Both over the whole quality-masked close series, as PR17 computed them.
 
@@ -126,15 +197,12 @@ def compute_technical(code: str, prepared: pd.DataFrame) -> tuple[pd.DataFrame, 
     """Daily indicators and confirmed pivots for one symbol's prepared rows.
 
     `prepared` is one symbol from `price_basis.prepare_prices` (or a stored basis row set),
-    indexed by sorted unique dates, with OHLC, Quality and Turnover. Rows are neither
+    indexed by sorted unique dates, with OHLC and Quality. Rows are neither
     dropped nor filled; the daily frame has the same index.
     """
     data = _valid_prices(prepared)
-    daily, pivots = derived_features.compute_features(data)
-    atlas_input = data.loc[:, [*OHLC, "Turnover"]].copy()
-    turnover = cast(pd.Series, atlas_input["Turnover"])
-    atlas_input["Turnover"] = turnover.where(np.isfinite(turnover) & (turnover >= 0))
-    atlas = compute_atlas(atlas_input)
+    daily, pivots = _derived_daily(data)
+    atlas = _atlas_three(data)
     sma240, hist = _sma240_and_macd(cast(pd.Series, data["Close"]))
     result = pd.DataFrame(index=data.index)
     for column in INDICATOR_COLUMNS:
