@@ -104,9 +104,8 @@ def _convenience(daily: pd.DataFrame, close: np.ndarray, valid: np.ndarray) -> N
             if len(values) >= n:
                 ema[n - 1] = float(values.iloc[:n].mean())
                 alpha = 2 / (n + 1)
-                segment = close[start:stop]  # plain floats: same arithmetic as values.iloc[i], without per-row pandas indexing
                 for i in range(n, len(values)):
-                    ema[i] = alpha * segment[i] + (1 - alpha) * ema[i - 1]
+                    ema[i] = alpha * values.iloc[i] + (1 - alpha) * ema[i - 1]
             daily.iloc[start:stop, daily.columns.get_loc(f"EMA{n}")] = ema
         middle, std = values.rolling(20).mean(), values.rolling(20).std(ddof=0)
         for column, feature in (("BB20_Middle", middle), ("BB20_Upper", middle + 2 * std), ("BB20_Lower", middle - 2 * std)):

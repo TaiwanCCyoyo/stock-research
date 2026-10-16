@@ -26,7 +26,8 @@ routes you there and names what a finished change must satisfy.
 `uv run python -m scripts.maintain_adjusted_daily update` (status: `status`, timing: `measure --codes N`).
 It rebuilds everything from 2010 and flips `current.json`; it is the only writer. Check the
 producer schedule first (weekday 18:00-18:45 and running `StockProject-*` tasks are refused at
-load, and a full update takes roughly 25 minutes, so do not start it after about 17:30 on a weekday).
+load; compute alone measured about 22 minutes on 2026-10-17 and writes are not yet measured, so start
+before about 17:00 on a weekday).
 
 ## Extend
 

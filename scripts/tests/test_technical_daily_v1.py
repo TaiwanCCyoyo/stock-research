@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from research_core import derived_features, live_producer, maintained_adjusted_daily, run_receipt, technical_daily_v1
+from research_core import derived_features, feature_atlas_features, live_producer, maintained_adjusted_daily, run_receipt, technical_daily_v1
 from research_core.artifact_store import read_json, write_json
 from research_core.shared_data import ENV_KEY
 
@@ -33,9 +33,14 @@ def test_daily_values_are_causal_and_delegate_to_the_shared_kernels() -> None:
 
     assert daily["Date"].tolist() == prepared.index.tolist(), "one output row per input row, none dropped or filled"
     shared_daily, shared_pivots = derived_features.compute_features(prepared)
-    for column in ("ATR14", "SMA20", "EMA60", "BB20_Upper"):
-        pd.testing.assert_series_equal(daily[column], shared_daily[column].reset_index(drop=True), check_names=False)
-    assert pivots["confirmed_at"].tolist() == shared_pivots["confirmed_at"].tolist()
+    for column in ("ATR14", "atr14_pct", *(f"SMA{n}" for n in derived_features.SMA_PERIODS), *(f"EMA{n}" for n in derived_features.EMA_PERIODS)):
+        pd.testing.assert_series_equal(daily[column], shared_daily[column].reset_index(drop=True), check_names=False, check_exact=True)
+    for column in ("BB20_Middle", "BB20_Upper", "BB20_Lower"):
+        pd.testing.assert_series_equal(daily[column], shared_daily[column].reset_index(drop=True), check_names=False, check_exact=True)
+    pd.testing.assert_frame_equal(pivots.drop(columns="Code"), shared_pivots.loc[:, list(pivots.columns[1:])])
+    atlas = feature_atlas_features.compute_features(technical_daily_v1._valid_prices(prepared))
+    for column, source in (("BBWidth", "bb_width20"), ("RSI14", "rsi14"), ("ADX14", "adx14")):
+        pd.testing.assert_series_equal(daily[column], atlas[source].reset_index(drop=True), check_names=False, check_exact=True)
     # Truncating the input never changes an earlier row: no column reads a later day.
     cut = 260
     prefix, _ = technical_daily_v1.compute_technical("9999", prepared.iloc[:cut])

@@ -80,19 +80,20 @@
 
 **技術指標（`technical-daily.v1`，2026-10-17 起每個新世代都有）。** 由同一次 `update` 從該世代的 `reference_factor_adjusted` 列計算（`research_core/technical_daily_v1.py`），所以指標與價格永遠出自同一世代、同一 as-of，且每次都從 2010-01-04（每檔第一筆報價）完整重算，不是只附加新的一天。公式全部沿用既有正本，不另定義：
 
-| 欄位                                                                             | 定義來源                                                                    | 何時可知                                                                |
-| -------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| `ATR14`, `atr14_pct`, `SMA5..SMA120`, `EMA5..EMA60`, `BB20_Middle/Upper/Lower`   | `derived_features.compute_features`（`derived-features.v1`）                | 當日收盤                                                                |
-| `SMA240`, `MACDHist`（原始價格單位）                                             | 同上的分段重置規則，配 atlas EMA kernel；與 PR17 pattern-scan 指標同算法    | 當日收盤                                                                |
-| `BBWidth`, `RSI14`, `ADX14`                                                      | `feature_atlas_features.compute_features` 的 `bb_width20`／`rsi14`／`adx14` | 當日收盤                                                                |
-| `ConfirmedHigh_k15`, `ConfirmedLow_k15`, `ConfirmedHigh_k40`, `ConfirmedLow_k40` | 當天是否**確認**了一個 1.5／4 ATR 高／低點（布林，沒有就是 False）          | 當日收盤                                                                |
-| `LastHigh_k15`, `LastLow_k15`, `LastHigh_k40`, `LastLow_k40`                     | 截至當天最近一個已確認高／低點的價格；第一次確認前為 NaN                    | 當日收盤                                                                |
-| `technical_pivots`：`Code, k, kind, extreme_date, confirmed_at, price`           | `derived_features` 的轉折                                                   | **只能從 `confirmed_at` 起使用**；`extreme_date` 是事後才知道的極值位置 |
+| 欄位                                                                             | 定義來源                                                                                                        | 何時可知                                                                |
+| -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `ATR14`, `atr14_pct`, `SMA5..SMA120`, `EMA5..EMA60`, `BB20_Middle/Upper/Lower`   | `derived_features.compute_features`（`derived-features.v1`）                                                    | 當日收盤                                                                |
+| `SMA240`, `MACDHist`（原始價格單位）                                             | 整段序列的 240 列 rolling 平均（窗內有無效列即 NaN）；MACD 用 atlas EMA kernel；與 PR17 pattern-scan 指標同算法 | 當日收盤                                                                |
+| `BBWidth`, `RSI14`, `ADX14`                                                      | `feature_atlas_features.compute_features` 的 `bb_width20`／`rsi14`／`adx14`                                     | 當日收盤                                                                |
+| `ConfirmedHigh_k15`, `ConfirmedLow_k15`, `ConfirmedHigh_k40`, `ConfirmedLow_k40` | 當天是否**確認**了一個 1.5／4 ATR 高／低點（布林，沒有就是 False）                                              | 當日收盤                                                                |
+| `LastHigh_k15`, `LastLow_k15`, `LastHigh_k40`, `LastLow_k40`                     | 截至當天最近一個已確認高／低點的價格；第一次確認前為 NaN                                                        | 當日收盤                                                                |
+| `technical_pivots`：`Code, k, kind, extreme_date, confirmed_at, price`           | `derived_features` 的轉折                                                                                       | **只能從 `confirmed_at` 起使用**；`extreme_date` 是事後才知道的極值位置 |
 
 - **缺值**：任何無效列（`Quality` 為 False、OHLC 不合理）讓所有指標重新暖機；無效列本身是 NaN，不補值、不刪列。`Last*` 例外：已確認的轉折是既成事實，跨過缺口仍保留。NaN 是「未知／暖機中」，不是 0 或 False。
 - **讀取**：`daily, record = read_technical(codes=["2330"], columns=["SMA20", "BB20_Upper", "LastLow_k15"], prices=["Close", "Quality"])` 回傳指標並在 `Code, Date` 併入同世代的價格欄，就是一張「每天一列：價格＋指標」的寬表；`read_technical("pivots", codes=[...])` 讀轉折長表。`record` 記 generation、`technical-daily.v1`、檔案 SHA-256（`prices=` 時另含價格的 record），放進 receipt；`generation=` 用法同上。本功能之前建的世代沒有這兩個檔，讀取會直接報錯，請 `update`。
 - **截止日**：表內數值以世代 asof 計算。需要較早截止日時，用 `read_adjusted_daily(..., as_of=)` 取價格再呼叫 `technical_daily_v1.compute_technical`，不要截斷本表（截止日後的除權息會改寫整段還原價，指標跟著變）。
-- **實測（2026-10-17，真實資料 `measure --codes 100`，不寫入）**：3 個 basis 加技術指標每檔約 0.46 秒，全市場 2,065 檔估計計算約 16 分鐘（單程序，只算價格時約 9 分鐘）。`derived_features` 的 EMA 迴圈改用 numpy 陣列取值，52 檔實際資料逐位元相同。平行化未評估；update 若在平日 17:30 後開始可能撞到 18:00 的 producer 寫入，請提早或改到收盤更新後執行。
+- **實作與正本的關係**：`derived_features.py` 與 `feature_atlas_features.py` 被既有證據以 SHA-256 鎖定，本功能不改它們。`technical_daily_v1` 對 SMA／EMA／BB 與 RSI／ADX／BBWidth 用逐位元相同的精簡版（同樣的 pandas 運算與順序，不逐列 `iloc`、不算用不到的 atlas 特徵），測試對原函式做精確比對；2026-10-17 在 207 檔真實資料上也逐位元相同。ATR 與轉折直接呼叫 `derived_features` 的 kernel。
+- **實測（2026-10-17，真實資料 `measure --codes 100`，不寫入）**：3 個 basis 加技術指標，全市場 2,065 檔估計計算約 22 分鐘（單程序；同一次量測的機器比 10-15 慢，只算價格的部分也較慢）。寫入、雜湊與檔案大小待第一次 `update` 實測；兩世代並存的磁碟峰值會高於上方的 1.5 GB。平行化未評估；平日請在 17:00 前開始，避免撞到 18:00 的 producer 寫入。
 
 ### 共用資料的擴充規則
 
