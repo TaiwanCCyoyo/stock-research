@@ -16,7 +16,12 @@ routes you there and names what a finished change must satisfy.
 - Indicators and pivots: `read_technical("daily", codes=, columns=, prices=["Close", ...])`
   returns one row per price row with the prices joined from the same generation;
   `read_technical("pivots")` is the confirmed high/low long table, usable from `confirmed_at`.
-- Put the returned `record` in the study's `run_receipt`; pass its `generation=` to every later
+- Official source quotes for a study that runs its own price model (custom corporate-action
+  terms, holding-window economics): `read_official_quotes(codes=, as_of=)` returns the
+  generation's verified official quotes and session calendar, so the study does not scan
+  `price_daily.parquet`. Cash, share and source columns of corporate actions are not in this
+  family; read them from the producer's `corporate_actions.sqlite`.
+- Put the returned `record` in the study's `run_receipt` (`write_run_receipt(..., shared_data=[record])`); pass its `generation=` to every later
   read so the study stays on one generation. A pruned generation fails loudly by design.
 - Earlier cutoff: `read_adjusted_daily(..., as_of=)` then `technical_daily_v1.compute_technical`.
   Never truncate the latest table to fake a cutoff.

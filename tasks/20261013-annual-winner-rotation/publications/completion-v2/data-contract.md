@@ -53,6 +53,29 @@ remain a limitation: a seven-winner supplement cannot repair every unknown
 ranking candidate. The adjusted-daily shared family is not substituted for an
 economic holding model with cash and share entitlements.
 
+## Later quote source
+
+This publication was run with `--quotes producer`: it scanned every official
+date of `price_daily.parquet` for the calendar and read the fixed issuers'
+official rows. Since 2026-10-19 the runner's default is `--quotes shared`:
+`research_core.maintained_adjusted_daily.read_official_quotes` returns the same
+official quotes and calendar from the maintained `adjusted-daily-v1`
+generation, verified against its `status.json`, and the receipt records that
+generation under `shared_data` instead of fingerprinting `price_daily.parquet`.
+Corporate actions (cash, share and source columns), the evidence batch and the
+economic model are unchanged and still read from the producer.
+
+Equivalence on 2026-10-19, generation `2026-10-16-20261018T161203Z`, cutoff
+2026-10-12, 4,110 sessions, 66,775 fixed-issuer rows: a fresh run in each mode
+produced `results.json` and `admission-audit.json` equal value for value to this
+publication's files. Warm load phase: shared 1.49 s wall / 1.20 s CPU, producer
+2.76 s / 3.03 s; no market calendar scan in shared mode. The shared quotes
+differ from producer rows only where `prepare_prices` already normalizes them
+(non-numeric values, a negative or non-finite volume, a repeated date); the
+endpoint-volume gate treats both forms as invalid. This publication's files,
+receipt and archive are unchanged; reproduce it exactly with
+`--quotes producer` at its receipt commit.
+
 ## Cost and integrity
 
 One input fingerprint pass, one official calendar scan, bounded selected-issuer
