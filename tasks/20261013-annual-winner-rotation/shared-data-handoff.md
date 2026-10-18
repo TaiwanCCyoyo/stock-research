@@ -3,6 +3,20 @@
 更新：2026-10-19。這是 PR30 session 的現況與待確認事項，不代表已完成資料遷移。
 本輪僅整理文件，沒有改程式、重算、搬移／刪除資料、推送或 merge。
 
+## 2026-10-19 Claude review 結果
+
+以下為本 handoff 之後的處理，下方原文保留作為當時待辦。
+
+| 項目                         | 結果                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 已整併：官方報價與交易日曆   | `maintained_adjusted_daily.read_official_quotes` 從共用世代讀驗證過的官方報價與日曆；runner 預設 `--quotes shared`，不再掃描 `price_daily.parquet`。對世代 `2026-10-16-20261018T161203Z` 兩種讀法重跑，`results.json`／`admission-audit.json` 與 completion-v2 逐值相等；load 階段 1.49 s／1.20 s CPU 對 2.76 s／3.03 s。見[資料契約](publications/completion-v2/data-contract.md#later-quote-source) |
+| 已整併：receipt 記錄共用世代 | `write_run_receipt(..., shared_data=[record])` 記錄世代與 SHA-256，不重新雜湊大檔，並拒絕執行中被刪除或替換的世代                                                                                                                                                                                                                                                                                     |
+| 保留在研究內                 | 經濟模型、認股權情境、來源採認、選股序列與結果。共用 `actions.parquet` 只有價格因子，現金／股數／來源欄位仍唯讀 producer `corporate_actions.sqlite`                                                                                                                                                                                                                                                   |
+| 未做：官方補證併入正規化表   | 屬 producer 正規化，需獨立 submodule PR 與 writer 協調；補證正本已在 producer root，不另搬副本                                                                                                                                                                                                                                                                                                        |
+| completion-v2 歷史結果       | 檔案、receipt、ZIP 未改；`--quotes producer` 於其 receipt commit 可原樣重現。`verify_published_artifacts` 17/17 通過                                                                                                                                                                                                                                                                                  |
+
+PR17 中間資料（run `full-2010-20261016-retention-v3`，未改動）：每檔 `indicators.parquet` 共 1,493 MB，其中共用同名指標 66.8%、價格欄 18.1%、BB 別名 7.3%、研究專屬 F 欄 0.3%。隨機 40 檔以共用世代在 2026-10-12 截止重算，價格、指標與 pivots 全部逐值相等；全市場重算約 1 小時（單程序推估）。截止日不等於世代 asof，所以只能重算，不能直接讀 `technical_daily`。退場與否由 PR17 擁有者依下游讀取決定。
+
 ## 核對基準
 
 - [PR30](https://github.com/TaiwanCCyoyo/stock-research/pull/30)：open，遠端 head `a2403a6`；本 session worktree 為 `D:/Project/stock-research/.worktrees/annual-winner-html-report`，branch `codex/annual-winner-refresh`。
