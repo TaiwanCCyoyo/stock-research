@@ -187,8 +187,9 @@ def test_committed_source_gate_returns_detached_identity_and_pins_git_lookup(tmp
     "change",
     ["stable", "foreign_zip", "formatter_dirty", "formatter_head", "receipt_code", "receipt_dirty", "post_receipt_head"],
 )
+@pytest.mark.parametrize("quotes", ["shared", "producer"])
 def test_cli_fingerprints_then_formats_and_receipts_before_authoritative_zip(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], change: str
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], change: str, quotes: str
 ):
     prices, actions, dates, _, admission, params = fixture()
     producer = tmp_path / "producer"
@@ -229,7 +230,16 @@ def test_cli_fingerprints_then_formats_and_receipts_before_authoritative_zip(
         specs_seen.extend(specs)
         return {"inputs": {}}
 
+    shared_record = {"family": "adjusted-daily-v1", "generation": "g1", "file": "raw.parquet", "sha256": "1" * 64, "status_sha256": "2" * 64}
+
+    def official_quotes(*, codes: list[str], as_of: pd.Timestamp) -> tuple[pd.DataFrame, pd.DatetimeIndex, dict[str, Any]]:
+        assert events[0] == "fingerprint"
+        events.append("shared_quotes")
+        assert codes == ["0050", "1234", "5678", "9012"] and as_of == pd.Timestamp(params["cutoff"])
+        return prices.copy(), pd.DatetimeIndex(dates), shared_record
+
     def parquet(_path: Path, *, columns: list[str], **kwargs: Any) -> pd.DataFrame:
+        assert quotes == "producer", "the shared mode never scans price_daily.parquet"
         assert events[0] == "fingerprint"
         events.append("parquet")
         if columns == ["Date", "Source"]:
@@ -251,6 +261,7 @@ def test_cli_fingerprints_then_formats_and_receipts_before_authoritative_zip(
     def receipt(path: Path, **kwargs: Any) -> dict[str, Any]:
         assert events[-1] == "format"
         assert kwargs["inputs"] == {"inputs": {}}
+        assert kwargs["shared_data"] == ([shared_record] if quotes == "shared" else [])
         events.append("receipt")
         identities = {}
         for key, result_path in kwargs["results"].items():
@@ -270,6 +281,7 @@ def test_cli_fingerprints_then_formats_and_receipts_before_authoritative_zip(
     monkeypatch.setattr(completion, "fingerprint_inputs", fingerprint)
     monkeypatch.setattr(completion, "read_stable", lambda path, read: read(path))
     monkeypatch.setattr(completion.pd, "read_parquet", parquet)
+    monkeypatch.setattr(completion, "read_official_quotes", official_quotes)
     monkeypatch.setattr(completion, "readonly_sqlite", lambda _: SimpleNamespace(close=lambda: None))
     monkeypatch.setattr(completion.pd, "read_sql_query", lambda *_: actions.assign(source="official", market="TWSE"))
     monkeypatch.setattr(completion, "_format_outputs", format_outputs)
@@ -280,7 +292,7 @@ def test_cli_fingerprints_then_formats_and_receipts_before_authoritative_zip(
         "research_core.annual_completion_evidence",
         SimpleNamespace(load_verified_evidence=lambda _: evidence, build_admission=lambda *_: admission),
     )
-    arguments = ["--params", str(params_path), "--report", str(report), "--output", str(output)]
+    arguments = ["--params", str(params_path), "--report", str(report), "--output", str(output), "--quotes", quotes]
     if change not in {"stable", "foreign_zip"}:
         with pytest.raises(ValueError, match="identity"):
             completion.main(arguments)
@@ -303,14 +315,17 @@ def test_cli_fingerprints_then_formats_and_receipts_before_authoritative_zip(
     if change in {"stable", "foreign_zip"}:
         assert packed == [output]
     assert events.count("fingerprint") == 1
-    assert events.count("parquet") == 2
+    assert events.count("parquet") == (2 if quotes == "producer" else 0)
+    assert events.count("shared_quotes") == (1 if quotes == "shared" else 0)
     if not change.startswith("formatter_"):
         assert events[-2:] == ["format", "receipt"]
     assert report in committed_checks
-    assert next(spec for spec in specs_seen if spec.name == "price_daily").date_column is None
+    price_specs = [spec for spec in specs_seen if spec.name == "price_daily"]
+    assert [spec.date_column for spec in price_specs] == ([None] if quotes == "producer" else [])
     assert next(spec for spec in specs_seen if spec.name == "corporate_actions").tables == {"corporate_actions": "ex_date"}
     performance = json.loads((output / "performance.json").read_text(encoding="utf-8"))
     assert performance["input_copy_bytes"] == 0
+    assert performance["quote_source"] == quotes and performance["market_calendar_scans"] == (1 if quotes == "producer" else 0)
     with pytest.raises(FileExistsError):
         completion.main(["--params", str(params_path), "--report", str(report), "--output", str(output)])
 

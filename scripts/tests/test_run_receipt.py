@@ -13,6 +13,7 @@ import pandas as pd
 import pytest
 
 from research_core import live_producer
+from research_core.artifact_store import file_digest
 from research_core.live_producer import ProducerBusyError, ProducerChangedError, assert_producer_idle, read_stable, readonly_sqlite
 from research_core.run_receipt import InputSpec, changed_results, fingerprint_inputs, write_run_receipt
 
@@ -187,6 +188,35 @@ def test_receipt_refuses_inputs_changed_during_the_run(repo: Path, producer: Pat
     with pytest.raises(ProducerChangedError, match="prices"):
         write_run_receipt(repo / "r2.json", run_id="r", definition="d", parameters={}, inputs=fingerprint, results={"s": result}, repo_root=repo)
     assert not (repo / "r1.json").exists() and not (repo / "r2.json").exists()
+
+
+def test_receipt_records_shared_generation_reads_without_rehashing(repo: Path, producer: Path, tmp_path: Path) -> None:
+    generation = tmp_path / "shared" / "derived" / "demo-v1" / "generations" / "g1"
+    generation.mkdir(parents=True)
+    (generation / "status.json").write_text('{"generation": "g1"}\n', encoding="utf-8")
+    (generation / "raw.parquet").write_bytes(b"not re-read by the receipt")
+    record = {
+        "family": "demo-v1",
+        "generation": "g1",
+        "file": str(generation / "raw.parquet"),
+        "sha256": "a" * 64,
+        "status_sha256": file_digest(generation / "status.json"),
+    }
+    result = repo / "summary.json"
+    result.write_text("{}\n", encoding="utf-8")
+    inputs = fingerprint_inputs([InputSpec("prices", producer / "price_daily.parquet")], now=WEEKDAY_NIGHT)
+    receipt = write_run_receipt(
+        repo / "r1.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, repo_root=repo, shared_data=[record]
+    )
+    assert receipt["shared_data"] == [record]
+    plain = write_run_receipt(repo / "r2.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, repo_root=repo)
+    assert "shared_data" not in plain, "receipts without shared reads keep their earlier shape"
+    (generation / "status.json").unlink()
+    with pytest.raises(ValueError, match="changed or was pruned"):
+        write_run_receipt(
+            repo / "r3.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, repo_root=repo, shared_data=[record]
+        )
+    assert not (repo / "r3.json").exists()
 
 
 def test_fingerprint_of_task_inputs_needs_no_producer_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

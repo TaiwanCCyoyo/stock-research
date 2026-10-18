@@ -28,6 +28,7 @@ from research_core.annual_rotation_v2 import Entitlement, economic_path_v2
 from research_core.annual_statistics import equity_drawdown, summarize_annual_excess
 from research_core.artifact_store import canonical, read_json, safe_path, write_json
 from research_core.live_producer import read_stable, readonly_sqlite
+from research_core.maintained_adjusted_daily import read_official_quotes
 from research_core.producer_data import REPO_ROOT, producer_data_root
 from research_core.research_measurement_v1 import phase_receipt, resource_sample
 from research_core.run_receipt import InputSpec, code_identity, fingerprint_inputs, write_run_receipt
@@ -440,6 +441,15 @@ def _format_outputs(paths: Sequence[Path], repo: Path) -> float:
     return time.perf_counter() - started
 
 
+def _producer_quotes(price_path: Path, codes: Sequence[str], cutoff: pd.Timestamp) -> tuple[pd.DataFrame, pd.DatetimeIndex]:
+    """The completion-v2 read: scan every official date for the calendar, then the fixed issuers."""
+    dates = read_stable(price_path, lambda path: pd.read_parquet(path, columns=["Date", "Source"]))
+    calendar = pd.DatetimeIndex(sorted(pd.to_datetime(dates.loc[dates.Source.eq("official"), "Date"]).unique()))
+    columns = ["Code", "Date", "Open", "High", "Low", "Close", "Volume", "Source"]
+    prices = read_stable(price_path, lambda path: pd.read_parquet(path, columns=columns, filters=[("Code", "in", list(codes)), ("Source", "==", "official")]))
+    return prices, calendar[calendar <= cutoff]
+
+
 def _sample() -> dict[str, Any]:
     try:
         return resource_sample()
@@ -456,6 +466,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--report", type=Path, default=TASK / "report.md")
     parser.add_argument("--evidence-root", type=Path)
     parser.add_argument("--output", type=Path, default=TASK / "publications/completion-v2")
+    parser.add_argument(
+        "--quotes",
+        choices=("shared", "producer"),
+        default="shared",
+        help="official quotes and calendar: the maintained adjusted-daily-v1 generation (default), or a direct "
+        "price_daily.parquet scan as completion-v2 was run",
+    )
     args = parser.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     output = safe_path(args.output)
@@ -474,6 +491,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             REPO_ROOT / "research_core/annual_rotation_v2.py",
             REPO_ROOT / "research_core/annual_completion_evidence.py",
             REPO_ROOT / "research_core/json_integrity.py",
+            REPO_ROOT / "research_core/maintained_adjusted_daily.py",
             REPO_ROOT / "scripts/complete_annual_rotation.py",
             args.params,
             report,
@@ -483,8 +501,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     evidence_root = args.evidence_root or producer / "corporate_action_supplements/annual-winner-20261013-v1"
     price_path, action_path = producer / "price_daily.parquet", producer / "corporate_actions.sqlite"
     before = _sample()
+    quote_specs = [InputSpec("price_daily", price_path, live_producer=True)] if args.quotes == "producer" else []
     inputs = fingerprint_inputs([
-        InputSpec("price_daily", price_path, live_producer=True),
+        *quote_specs,
         InputSpec("corporate_actions", action_path, tables={"corporate_actions": "ex_date"}, live_producer=True),
         InputSpec("supplement_publication", evidence_root / "publication.json", live_producer=True),
         InputSpec("original_report", report, live_producer=False),
@@ -499,12 +518,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     selections = parse_fixed_selections(report.read_text(encoding="utf-8"))
     codes = sorted({row["code"] for row in selections} | {"0050"})
     cutoff = _daily_date(params.get("cutoff", "2026-10-12"))
-    dates = read_stable(price_path, lambda path: pd.read_parquet(path, columns=["Date", "Source"]))
-    calendar = pd.DatetimeIndex(sorted(pd.to_datetime(dates.loc[dates.Source.eq("official"), "Date"]).unique()))
-    calendar = calendar[calendar <= cutoff]
-    del dates
-    columns = ["Code", "Date", "Open", "High", "Low", "Close", "Volume", "Source"]
-    prices = read_stable(price_path, lambda path: pd.read_parquet(path, columns=columns, filters=[("Code", "in", codes), ("Source", "==", "official")]))
+    shared_reads: list[dict[str, Any]] = []
+    if args.quotes == "shared":
+        prices, calendar, quote_record = read_official_quotes(codes=codes, as_of=cutoff)
+        shared_reads.append(quote_record)
+    else:
+        prices, calendar = _producer_quotes(price_path, codes, cutoff)
     prices["Code"] = prices.Code.astype(str)
     prices["Date"] = pd.to_datetime(prices.Date)
     prices = prices.loc[prices.Date.le(cutoff)]
@@ -536,7 +555,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         "retained_evidence_bytes": evidence.retained_bytes,
         "input_copy_bytes": 0,
         "input_fingerprint_passes": 1,
-        "market_calendar_scans": 1,
+        "quote_source": args.quotes,
+        "market_calendar_scans": 1 if args.quotes == "producer" else 0,
         "fixed_price_rows_loaded": len(prices),
         "loaded_issuer_count": prices.Code.nunique(),
         "retained_result_bytes_before_format": len(canonical(result)) + len(canonical(audit)),
@@ -561,6 +581,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         results=outputs,
         preregistration=preregistration,
         repo_root=REPO_ROOT,
+        shared_data=shared_reads,
     )
     if receipt.get("code") != starting_identity:
         raise ValueError("run receipt code identity differs from the starting source identity")
