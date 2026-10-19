@@ -123,7 +123,6 @@ def environment(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[Path, 
     monkeypatch.setenv(ENV_KEY, str(shared))
     monkeypatch.setattr(run_receipt, "assert_producer_idle", lambda now=None: None)
     monkeypatch.setattr(live_producer, "running_producer_tasks", lambda: [])
-    monkeypatch.setattr(maintained_adjusted_daily, "WRITER_LOCK_SETTLE_SECONDS", 0.01)
     return producer, shared
 
 
@@ -262,33 +261,32 @@ def test_a_writer_lock_left_by_an_old_protocol_updater_is_refused(environment: t
         maintained_adjusted_daily.update(producer_root=producer)
     assert not (family / "current.json").exists()
     (family / ".writer.lock").write_bytes(b"")
-    assert maintained_adjusted_daily.update(producer_root=producer)["generation"], "an empty file that stays empty is the first OS-lock version's"
+    if sys.platform == "win32":
+        assert maintained_adjusted_daily.update(producer_root=producer)["generation"], "a mandatory lock makes an empty file safe"
+    else:
+        with pytest.raises(RuntimeError, match="advisory"):
+            maintained_adjusted_daily.update(producer_root=producer)
 
 
-def test_an_old_updater_between_create_and_write_is_refused(environment: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:
+def test_an_old_updater_between_create_and_write_cannot_run_beside_a_new_one(environment: tuple[Path, Path]) -> None:
     producer, shared = environment
     family = shared / "derived" / maintained_adjusted_daily.FAMILY
     family.mkdir(parents=True)
     lock = family / ".writer.lock"
     lock.write_bytes(b"")  # an old updater has created the file and not yet written its pid
-
-    blocked: list[bool] = []
-
-    def old_updater_writes(_seconds: float) -> None:
-        try:
-            with open(lock, "ab") as old:
-                old.write(b"pid=7 started_utc=2026-10-18T16:12:03+00:00\n")
-        except PermissionError:
-            blocked.append(True)  # Windows: the new OS lock stops the old write, so the old updater fails
-
-    monkeypatch.setattr(maintained_adjusted_daily.time, "sleep", old_updater_writes)
-    if sys.platform == "win32":
-        assert maintained_adjusted_daily.update(producer_root=producer)["generation"]
-        assert blocked == [True], "the old updater cannot write its pid while the new one holds the lock"
-    else:
-        with pytest.raises(RuntimeError, match="before 2026-10-19"):
+    if sys.platform != "win32":
+        with pytest.raises(RuntimeError, match="advisory"):
             maintained_adjusted_daily.update(producer_root=producer)
         assert not (family / "current.json").exists()
+        return
+    handle = maintained_adjusted_daily._acquire_lock(family)  # Windows accepts the empty file ...
+    try:
+        with pytest.raises(PermissionError), open(lock, "ab") as old:
+            old.write(b"pid=7 started_utc=2026-10-18T16:12:03+00:00")  # ... and the old pid write then fails
+            old.flush()
+    finally:
+        maintained_adjusted_daily._release_os_lock(handle)
+        handle.close()
 
 
 def test_a_new_writer_lock_is_created_exclusively_with_a_marker(environment: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:

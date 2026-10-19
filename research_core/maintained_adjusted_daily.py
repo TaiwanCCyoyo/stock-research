@@ -209,9 +209,6 @@ def _write_as_of_inputs(directory: Path, bars: pd.DataFrame, actions: pd.DataFra
 
 
 WRITER_LOCK_MARKER = b"writer-lock-v2\n"
-# An updater from before 2026-10-19 creates the file and writes "pid=..." at once; an
-# empty file still empty after this pause was left by the first OS-lock version instead.
-WRITER_LOCK_SETTLE_SECONDS = 2.0
 
 
 def _acquire_lock(family: Path) -> IO[bytes]:
@@ -223,8 +220,11 @@ def _acquire_lock(family: Path) -> IO[bytes]:
     Updaters before 2026-10-19 held the lock by creating the file exclusively and writing
     "pid=..." without an OS lock; they refuse whenever the file exists. This one creates
     the file exclusively with a fixed marker, so the two never both win the creation, and
-    refuses a file holding anything else: "pid=..." content, or an empty file that gains
-    content during a short pause (an old updater between its create and its write).
+    refuses "pid=..." content. An empty file is ambiguous: the first OS-lock version
+    (2026-10-19) left one, but so does an old updater between its create and its write.
+    On Windows the OS lock is mandatory, so such an old updater cannot write its pid and
+    fails; the file is accepted. Elsewhere the lock is advisory and the file is refused
+    until someone confirms no updater runs and deletes it.
     """
     lock = family / ".writer.lock"
     try:
@@ -239,14 +239,13 @@ def _acquire_lock(family: Path) -> IO[bytes]:
         handle.close()
         raise RuntimeError(f"another update holds {lock}; wait for it to finish")
     size = lock.stat().st_size
+    if size == len(WRITER_LOCK_MARKER) or (size == 0 and sys.platform == "win32"):
+        return handle
+    _release_os_lock(handle)
+    handle.close()
     if size == 0:
-        time.sleep(WRITER_LOCK_SETTLE_SECONDS)
-        size = lock.stat().st_size
-    if size not in (0, len(WRITER_LOCK_MARKER)):
-        _release_os_lock(handle)
-        handle.close()
-        raise RuntimeError(f"{lock} was written by an updater from before 2026-10-19; if none is running, delete the file and retry")
-    return handle
+        raise RuntimeError(f"{lock} is empty and this platform's lock is advisory; if no updater is running, delete the file and retry")
+    raise RuntimeError(f"{lock} was written by an updater from before 2026-10-19; if none is running, delete the file and retry")
 
 
 def _write_current(family: Path, generation: str, status_sha256: str) -> None:
