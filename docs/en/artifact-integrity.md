@@ -53,15 +53,15 @@ new work.
 
 ## 2. Identity per artifact (new work)
 
-| Artifact                          | Identity                                                                                                        | Lives in                 |
-| --------------------------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| Producer inputs (parquet, sqlite) | Description of the live input read: path, size, modification time, rows and date range, producer as-of; no hash | `run-receipt.v1` receipt |
-| Maintained shared derived data    | The reader's record (family, generation, as-of), kept as information                                            | receipt `shared_data`    |
-| Parameters                        | Git                                                                                                             | `tasks/<id>/params/`     |
-| Code of a run                     | Git commit plus dirty flag; loaded modules are not hashed                                                       | `run-receipt.v1` receipt |
-| Final results                     | SHA-256 of each published result file                                                                           | `run-receipt.v1` receipt |
-| Intermediate files                | None                                                                                                            | not recorded             |
-| Reports and prose                 | Git only                                                                                                        | `tasks/<id>/`            |
+| Artifact                          | Identity                                                                                                                                                                              | Lives in                 |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| Producer inputs (parquet, sqlite) | Description of the live input read: path, size, modification time, rows and date range, producer as-of; no hash (receipts before 2026-10-19 also carry a file SHA-256 and stay valid) | `run-receipt.v1` receipt |
+| Maintained shared derived data    | The reader's record (family, generation, as-of), kept as information                                                                                                                  | receipt `shared_data`    |
+| Parameters                        | Git                                                                                                                                                                                   | `tasks/<id>/params/`     |
+| Code of a run                     | Git commit plus dirty flag; loaded modules are not hashed                                                                                                                             | `run-receipt.v1` receipt |
+| Final results                     | SHA-256 of each published result file                                                                                                                                                 | `run-receipt.v1` receipt |
+| Intermediate files                | None                                                                                                                                                                                  | not recorded             |
+| Reports and prose                 | Git only                                                                                                                                                                              | `tasks/<id>/`            |
 
 A maintained shared family checks its own published files against its `status.json`
 when they are read. Those files are the family's final results, so this is the
