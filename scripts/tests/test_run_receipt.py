@@ -323,3 +323,15 @@ def test_receipt_names_a_committed_preregistration_by_path(repo: Path, producer:
             repo / "r3.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, preregistration=mission, repo_root=repo
         )
     assert not (repo / "r2.json").exists() and not (repo / "r3.json").exists()
+
+
+def test_an_input_vanishing_during_the_recheck_is_recorded_not_raised(producer: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from research_core import run_receipt
+
+    fingerprint = fingerprint_inputs([InputSpec("prices", producer / "price_daily.parquet")], now=WEEKDAY_NIGHT)
+
+    def vanished(path: Path) -> object:
+        raise FileNotFoundError(path)
+
+    monkeypatch.setattr(run_receipt, "stat_identity", vanished)
+    assert changed_inputs(fingerprint) == ["prices"]

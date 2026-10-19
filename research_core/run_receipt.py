@@ -190,23 +190,33 @@ def data_directory_inputs(data_path: Path, *, corporate_actions: Path | None = N
     return specs
 
 
+def _input_changed(name: str, row: Mapping[str, Any]) -> bool:
+    path = Path(row["path"])
+    if "pattern" in row:
+        return object_digest(_listing(InputSpec(name, path, pattern=row["pattern"]))) != row["listing_sha256"]
+    if row.get("absent"):
+        return path.exists()
+    if not path.is_file() or list(stat_identity(path)) != [row["bytes"], row["mtime_ns"]]:
+        return True
+    if "wal" in row:
+        wal = path.with_name(path.name + "-wal")
+        return (list(stat_identity(wal)) if wal.exists() else None) != row["wal"]
+    return False
+
+
 def changed_inputs(fingerprint: Mapping[str, Any]) -> list[str]:
-    """Names of fingerprinted inputs (or a SQLite input's WAL) whose size or time changed since."""
+    """Names of fingerprinted inputs (or a SQLite input's WAL) whose size or time changed since.
+
+    A file removed or replaced while it is being checked counts as changed rather than
+    raising, so a finished result is still saved with the change recorded.
+    """
     changed = []
     for name, row in fingerprint["inputs"].items():
-        path = Path(row["path"])
-        if "pattern" in row:
-            if object_digest(_listing(InputSpec(name, path, pattern=row["pattern"]))) != row["listing_sha256"]:
+        try:
+            if _input_changed(name, row):
                 changed.append(name)
-        elif row.get("absent"):
-            if path.exists():
-                changed.append(name)
-        elif not path.is_file() or list(stat_identity(path)) != [row["bytes"], row["mtime_ns"]]:
+        except OSError:
             changed.append(name)
-        elif "wal" in row:
-            wal = path.with_name(path.name + "-wal")
-            if (list(stat_identity(wal)) if wal.exists() else None) != row["wal"]:
-                changed.append(name)
     return changed
 
 
