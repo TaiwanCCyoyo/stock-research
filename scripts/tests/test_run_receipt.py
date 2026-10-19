@@ -141,6 +141,8 @@ def test_receipt_hashes_results_and_detects_later_edits(repo: Path, producer: Pa
     result.write_text('{"return": 0.1}\n', encoding="utf-8")
     mission = repo / "tasks" / "demo" / "mission.md"
     mission.write_text("# Demo\n", encoding="utf-8")
+    _git(["add", "tasks/demo/mission.md"], repo)
+    _git(["commit", "-q", "-m", "preregister"], repo)
     inputs = fingerprint_inputs([InputSpec("prices", producer / "price_daily.parquet", date_column="Date")], now=WEEKDAY_NIGHT)
     receipt_path = result.parent / "receipt.json"
     receipt = write_run_receipt(
@@ -283,11 +285,13 @@ def test_sqlite_reads_readonly_routes_a_modules_connect(tmp_path: Path) -> None:
     assert module.sqlite3 is sqlite3
 
 
-def test_receipt_names_an_existing_preregistration_by_path(repo: Path, producer: Path) -> None:
+def test_receipt_names_a_committed_preregistration_by_path(repo: Path, producer: Path, tmp_path: Path) -> None:
     result = repo / "summary.json"
     result.write_text("{}\n", encoding="utf-8")
     mission = repo / "mission.md"
     mission.write_text("# Demo\n", encoding="utf-8")
+    _git(["add", "mission.md"], repo)
+    _git(["commit", "-q", "-m", "preregister"], repo)
     inputs = fingerprint_inputs([InputSpec("prices", producer / "price_daily.parquet")], now=WEEKDAY_NIGHT)
     receipt = write_run_receipt(
         repo / "r1.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, preregistration=mission, repo_root=repo
@@ -304,4 +308,18 @@ def test_receipt_names_an_existing_preregistration_by_path(repo: Path, producer:
             preregistration=repo / "missing.md",
             repo_root=repo,
         )
-    assert not (repo / "r2.json").exists()
+    untracked = repo / "draft.md"
+    untracked.write_text("# Draft\n", encoding="utf-8")
+    outside = tmp_path / "elsewhere.md"
+    outside.write_text("# Elsewhere\n", encoding="utf-8")
+    for path, reason in ((untracked, "not tracked"), (outside, "outside the repository")):
+        with pytest.raises(ValueError, match=reason):
+            write_run_receipt(
+                repo / "r3.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, preregistration=path, repo_root=repo
+            )
+    mission.write_text("# Demo, edited after the commit\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="differs from the recorded commit"):
+        write_run_receipt(
+            repo / "r3.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, preregistration=mission, repo_root=repo
+        )
+    assert not (repo / "r2.json").exists() and not (repo / "r3.json").exists()

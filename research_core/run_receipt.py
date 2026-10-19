@@ -233,6 +233,26 @@ def code_identity(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
     return {"commit": git("rev-parse", "HEAD"), "dirty": bool(git("status", "--porcelain", "--untracked-files=no"))}
 
 
+def _require_committed_preregistration(path: Path, repo_root: Path) -> None:
+    """The receipt names the preregistration by path; the recorded commit must hold its exact content.
+
+    Without a hash, only a tracked file unchanged from HEAD inside the repository is identified
+    by the commit, so the rules are provably fixed before evaluation.
+    """
+    if not path.is_file():
+        raise FileNotFoundError(f"preregistration {path} does not exist; a receipt names an existing file")
+    resolved, root = path.resolve(), repo_root.resolve()
+    if not resolved.is_relative_to(root):
+        raise ValueError(f"preregistration {path} is outside the repository; the recorded commit cannot identify it")
+    relative = resolved.relative_to(root).as_posix()
+    tracked = subprocess.run(["git", "-C", str(root), "ls-files", "--error-unmatch", "--", relative], capture_output=True, text=True, check=False)
+    if tracked.returncode:
+        raise ValueError(f"preregistration {relative} is not tracked by Git; commit it before writing the receipt")
+    unchanged = subprocess.run(["git", "-C", str(root), "diff", "--quiet", "HEAD", "--", relative], capture_output=True, text=True, check=False)
+    if unchanged.returncode:
+        raise ValueError(f"preregistration {relative} differs from the recorded commit; commit it before writing the receipt")
+
+
 def write_run_receipt(
     path: Path,
     *,
@@ -254,8 +274,8 @@ def write_run_receipt(
     `inputs_changed_during_run` and logged, not refused; a shared generation pruned since
     it was read does not matter.
     """
-    if preregistration is not None and not preregistration.is_file():
-        raise FileNotFoundError(f"preregistration {preregistration} does not exist; a receipt names an existing file")
+    if preregistration is not None:
+        _require_committed_preregistration(preregistration, repo_root)
     changed = changed_inputs(inputs)
     if changed:
         LOGGER.warning("Inputs changed during run %s: %s; recorded in the receipt", run_id, changed)
