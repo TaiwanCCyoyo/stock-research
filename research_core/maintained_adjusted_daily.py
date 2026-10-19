@@ -269,11 +269,16 @@ HOLDER_PATTERN = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
 WINDOWS_DEVICE_NAMES = frozenset({"con", "prn", "aux", "nul", *(f"com{n}" for n in range(1, 10)), *(f"lpt{n}" for n in range(1, 10))})
 
 
-def _hold_path(family: Path, holder: str) -> Path:
-    if not HOLDER_PATTERN.fullmatch(holder):  # `$` alone would accept a trailing newline
+def _hold_path(family: Path, holder: str, *, new: bool = True) -> Path:
+    """Path of `holder`'s hold. New holds get the strict name rules; a release only needs to
+    locate a hold an older writer may have accepted (`match`, as the holds scan reads)."""
+    if new:
+        if not HOLDER_PATTERN.fullmatch(holder):  # `$` alone would accept a trailing newline
+            raise ValueError(f"holder must match {HOLDER_PATTERN.pattern}, got {holder!r}")
+        if holder in WINDOWS_DEVICE_NAMES:
+            raise ValueError(f"holder {holder!r} is a Windows device name; choose another")
+    elif not HOLDER_PATTERN.match(holder):
         raise ValueError(f"holder must match {HOLDER_PATTERN.pattern}, got {holder!r}")
-    if holder in WINDOWS_DEVICE_NAMES:
-        raise ValueError(f"holder {holder!r} is a Windows device name; choose another")
     return family / "holds" / f"{holder}.json"
 
 
@@ -379,7 +384,7 @@ def hold_generation(generation: str, *, holder: str, reason: str, root: Path | N
 def release_generation(holder: str, *, root: Path | None = None) -> dict[str, Any] | None:
     """Remove `holder`'s hold; the next update prunes the generation unless someone else holds it."""
     family = family_dir(root)
-    path = _hold_path(family, holder)
+    path = _hold_path(family, holder, new=False)
     with _holds_lock(family):
         if not path.is_file():
             return None

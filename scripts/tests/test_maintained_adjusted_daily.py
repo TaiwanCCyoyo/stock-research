@@ -513,6 +513,7 @@ def test_a_held_generation_survives_updates_until_released(environment: tuple[Pa
         maintained_adjusted_daily.hold_generation(result["generation"], holder="../escape", reason="x")
     with pytest.raises(ValueError, match="holder must match"):
         maintained_adjusted_daily.hold_generation(result["generation"], holder="study\n", reason="x")
+    assert maintained_adjusted_daily.release_generation("study\n") is None, "a release can still look up a name an older writer accepted"
     for device in ("con", "nul", "com1", "lpt9"):
         with pytest.raises(ValueError, match="Windows device name"):
             maintained_adjusted_daily.hold_generation(result["generation"], holder=device, reason="x")
