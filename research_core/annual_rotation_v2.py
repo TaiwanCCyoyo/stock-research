@@ -176,7 +176,7 @@ def _theoretical_terms_diagnostic(
     }
 
 
-def _native_terms_contradict(frame: pd.DataFrame, day: pd.Timestamp, *, share: float, cash: float) -> dict[str, Any] | None:
+def _native_terms_contradict(frame: pd.DataFrame, day: pd.Timestamp, *, share: float, cash: float, field: str = "Close") -> dict[str, Any] | None:
     """Diagnose a producer cash or exact split action against the last observed close.
 
     Returns the diagnostic when the observed close contradicts the action grossly
@@ -185,7 +185,7 @@ def _native_terms_contradict(frame: pd.DataFrame, day: pd.Timestamp, *, share: f
     position = int(frame.index.get_indexer([day])[0])
     prior = frame.iloc[:position]
     observed = prior.loc[prior.Quality.astype(bool) & np.isfinite(prior.RawClose.astype(float)) & prior.RawClose.astype(float).gt(0)]
-    close = float(frame.loc[day, "RawClose"])
+    close = float(frame.loc[day, f"Raw{field}"])  # the exit-day Open for an open exit
     if not len(observed) or not bool(frame.loc[day, "Quality"]) or not np.isfinite(close) or close <= 0:
         return None
     diagnostic = _theoretical_terms_diagnostic(
@@ -523,6 +523,10 @@ def economic_path_v2(
                     unknowns.append(f"{day.date()}:missing_or_negative_cash_estimate")
                     break
                 if day == end and end_field == "Open":
+                    if (contradiction := _native_terms_contradict(frame, day, share=1.0, cash=dividend, field="Open")) is not None:
+                        audit["quality_diagnostic"] = contradiction
+                        unknowns.append(f"{day.date()}:native_action_contradicts_observed_quote")
+                        break
                     cash_gross, cash_net = gross_units * dividend, net_units * dividend
                 else:
                     if (contradiction := _native_terms_contradict(frame, day, share=1.0, cash=dividend)) is not None:

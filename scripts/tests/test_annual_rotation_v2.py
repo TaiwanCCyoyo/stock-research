@@ -121,6 +121,15 @@ def test_a_native_cash_dividend_contradicting_the_quote_keeps_the_path_unknown()
     assert f"{day_at(days, 1).date()}:native_action_contradicts_observed_quote" in result["reasons"]
 
 
+def test_a_native_cash_dividend_on_an_open_exit_day_is_checked_against_the_open():
+    days, raw, actions = fixture([100.0, 100.0, 100.0, 110.0])
+    actions.loc[0, "ex_date"] = day_at(days, -1)
+    actions.loc[0, "cash_dividend_estimate"] = 90.0
+    result = economic_path_v2(raw, actions, days, start=day_at(days, 0), end=day_at(days, -1), end_field="Open")
+    assert result["status"] == "unknown"
+    assert f"{day_at(days, -1).date()}:native_action_contradicts_observed_quote" in result["reasons"]
+
+
 def test_small_terms_survive_ordinary_noise_in_either_direction():
     days, raw, actions = fixture([100.0, 103.0, 103.0, 103.0])
     actions = actions.iloc[:0]
