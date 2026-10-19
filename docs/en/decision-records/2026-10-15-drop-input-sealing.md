@@ -29,6 +29,11 @@ submodule needs to be initialized. `research_core/run_receipt.py` writes the fin
 result hashes. It identifies the inputs read and the code commit only. It does not hash
 loaded modules, so a source edit does not invalidate a receipt or force a rebuild.
 
+**Clarified 2026-10-19 (owner).** Only final results are hashed. Intermediate files a
+study writes along the way (per-stock parts, phase outputs, worker files, previews) get
+no hashes, manifests or per-file receipts; if they are lost the step is rerun. See
+[the integrity standard](../artifact-integrity.md#0-what-a-new-study-records-owner-decision-2026-10-19).
+
 ## What stays
 
 - Holdout and viewed-period discipline (`docs/en/research-registry.json`, owner contract).
