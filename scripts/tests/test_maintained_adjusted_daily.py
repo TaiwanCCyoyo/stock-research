@@ -492,3 +492,20 @@ def test_a_hold_racing_a_prune_is_refused_not_silently_lost(environment: tuple[P
     blocked = maintained_adjusted_daily.update(producer_root=producer)
     assert blocked["pruned"] == [], "a held lock skips pruning instead of failing a published update"
     assert read_json(family / "current.json")["generation"] == blocked["generation"]
+
+
+def test_release_waits_for_the_holds_lock(environment: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:
+    producer, shared = environment
+    family = shared / "derived" / maintained_adjusted_daily.FAMILY
+    generation = maintained_adjusted_daily.update(producer_root=producer)["generation"]
+    maintained_adjusted_daily.hold_generation(generation, holder="study", reason="reads it")
+    monkeypatch.setattr(maintained_adjusted_daily, "HOLDS_LOCK_WAIT_SECONDS", 0.2)
+    (family / ".holds.lock").write_text("a prune or hold in progress", encoding="utf-8")
+
+    with pytest.raises(RuntimeError, match="holds.lock"):
+        maintained_adjusted_daily.release_generation("study")
+    assert (family / "holds" / "study.json").exists(), "a release never races a prune scan or a new hold"
+
+    (family / ".holds.lock").unlink()
+    released = maintained_adjusted_daily.release_generation("study")
+    assert released is not None and released["generation"] == generation

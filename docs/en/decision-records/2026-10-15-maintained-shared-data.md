@@ -29,7 +29,10 @@ input change.
 producer's daily download. Because a generation would then disappear within two days, a
 study that must read one generation for longer marks it in use (`maintain_adjusted_daily
 hold`) and releases it when done; the updater keeps held generations. Unheld generations
-are still deleted, and a study whose generation is gone reruns on current data.
+are still deleted. A finished result never becomes invalid because a generation was
+updated or deleted: the receipt only records which generation was read. Only a step that
+still needs a deleted generation is handled, by reading the current one or redoing that
+step, never by rerunning the whole study.
 
 First family: `adjusted-daily-v1`, full-market daily prices in three bases (`raw`,
 `permanent_adjusted`, `reference_factor_adjusted`) from `price_basis.prepare_prices`

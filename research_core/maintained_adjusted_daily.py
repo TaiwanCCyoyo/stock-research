@@ -300,11 +300,13 @@ def hold_generation(generation: str, *, holder: str, reason: str, root: Path | N
 
 def release_generation(holder: str, *, root: Path | None = None) -> dict[str, Any] | None:
     """Remove `holder`'s hold; the next update prunes the generation unless someone else holds it."""
-    path = _hold_path(family_dir(root), holder)
-    if not path.is_file():
-        return None
-    record = read_json(path)
-    path.unlink()
+    family = family_dir(root)
+    path = _hold_path(family, holder)
+    with _holds_lock(family):
+        if not path.is_file():
+            return None
+        record = read_json(path)
+        path.unlink()
     LOGGER.info("Released %s generation %s held by %s", FAMILY, record["generation"], holder)
     return record
 

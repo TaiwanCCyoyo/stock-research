@@ -49,8 +49,14 @@ class InputSpec:
 
 
 def _file_fingerprint(spec: InputSpec) -> dict[str, Any]:
+    """Describe a file input (size, time, rows, date range); its bytes are not hashed.
+
+    Owner decision 2026-10-19: only final results are hashed; inputs are recorded as
+    information about what was read.
+    """
+
     def observe(path: Path) -> dict[str, Any]:
-        record: dict[str, Any] = {"sha256": file_digest(path)}
+        record: dict[str, Any] = {}
         if spec.date_column is not None and path.suffix == ".parquet":
             import pandas as pd
 
@@ -184,12 +190,8 @@ def data_directory_inputs(data_path: Path, *, corporate_actions: Path | None = N
     return specs
 
 
-def assert_inputs_unchanged(fingerprint: Mapping[str, Any]) -> None:
-    """Fail if any fingerprinted input (or a SQLite input's WAL) changed since it was fingerprinted.
-
-    Called at the end of a run, this catches a producer writer that ran during the study,
-    which a single idle probe before the reads cannot see.
-    """
+def changed_inputs(fingerprint: Mapping[str, Any]) -> list[str]:
+    """Names of fingerprinted inputs (or a SQLite input's WAL) whose size or time changed since."""
     changed = []
     for name, row in fingerprint["inputs"].items():
         path = Path(row["path"])
@@ -205,6 +207,16 @@ def assert_inputs_unchanged(fingerprint: Mapping[str, Any]) -> None:
             wal = path.with_name(path.name + "-wal")
             if (list(stat_identity(wal)) if wal.exists() else None) != row["wal"]:
                 changed.append(name)
+    return changed
+
+
+def assert_inputs_unchanged(fingerprint: Mapping[str, Any]) -> None:
+    """Fail if any fingerprinted input changed since it was fingerprinted.
+
+    For a data builder that must not publish a mix of producer states (the shared family's
+    update). A study's receipt records changes instead (`write_run_receipt`).
+    """
+    changed = changed_inputs(fingerprint)
     if changed:
         raise ProducerChangedError(f"inputs changed during the run: {changed}; rerun outside producer writes")
 
@@ -221,24 +233,6 @@ def code_identity(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
     return {"commit": git("rev-parse", "HEAD"), "dirty": bool(git("status", "--porcelain", "--untracked-files=no"))}
 
 
-SHARED_RECORD_KEYS = ("family", "generation", "file", "sha256", "status_sha256")
-
-
-def assert_shared_generation_unchanged(record: Mapping[str, Any]) -> dict[str, Any]:
-    """Fail if a shared-data generation read during the run was pruned or replaced since.
-
-    The record's file lives in `generations/<id>/` beside that generation's `status.json`,
-    whose SHA-256 the reader recorded; checking it is cheap and catches a prune or rebuild.
-    """
-    missing = [key for key in SHARED_RECORD_KEYS if not record.get(key)]
-    if missing:
-        raise ValueError(f"shared-data record lacks {missing}; pass the record a shared-data reader returned")
-    status = Path(record["file"]).parent / "status.json"
-    if not status.is_file() or file_digest(status) != record["status_sha256"]:
-        raise ValueError(f"{record['family']} generation {record['generation']} changed or was pruned during the run; rerun on one generation")
-    return dict(record)
-
-
 def write_run_receipt(
     path: Path,
     *,
@@ -251,16 +245,19 @@ def write_run_receipt(
     repo_root: Path = REPO_ROOT,
     shared_data: Sequence[Mapping[str, Any]] = (),
 ) -> dict[str, Any]:
-    """Write a new receipt (never replacing one) with result SHA-256s and the input fingerprint.
+    """Write a new receipt (never replacing one): final-result SHA-256s plus what was read.
 
-    Refuses when an input changed after it was fingerprinted, so a receipt never labels a
-    result with inputs other than those it read. `shared_data` holds the records returned
-    by maintained shared-data readers (`research_core.maintained_adjusted_daily`); they are
-    already verified against their generation's `status.json`, so they are recorded rather
-    than re-hashed, after checking that each generation is still the one that was read.
+    Owner decision 2026-10-19: only final results are hashed. `inputs` (the fingerprint)
+    and `shared_data` (records returned by shared-data readers such as
+    `research_core.maintained_adjusted_daily`) describe the sources; they never block saving
+    a finished result. An input that changed during the run is listed under
+    `inputs_changed_during_run` and logged, not refused; a shared generation pruned since
+    it was read does not matter.
     """
-    assert_inputs_unchanged(inputs)
-    shared = [assert_shared_generation_unchanged(record) for record in shared_data]
+    changed = changed_inputs(inputs)
+    if changed:
+        LOGGER.warning("Inputs changed during run %s: %s; recorded in the receipt", run_id, changed)
+    shared = [dict(record) for record in shared_data]
     receipt = {
         "schema": SCHEMA,
         "run_id": run_id,
@@ -270,6 +267,7 @@ def write_run_receipt(
         "code": code_identity(repo_root),
         "input_fingerprint": dict(inputs),
         **({"shared_data": shared} if shared else {}),
+        **({"inputs_changed_during_run": changed} if changed else {}),
         "results": {
             name: {"path": _display_path(result, repo_root), "bytes": result.stat().st_size, "sha256": file_digest(result)}
             for name, result in sorted(results.items())
