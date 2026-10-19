@@ -254,6 +254,7 @@ def test_directory_listing_fingerprint_detects_a_rewritten_csv(repo: Path, produ
     day_csv.write_text("Date,Close\n2010-01-04,64.9\n", encoding="utf-8")
     fingerprint = fingerprint_inputs([InputSpec("day_csv", producer, pattern="*_day.csv")], now=WEEKDAY_NIGHT)
     assert fingerprint["inputs"]["day_csv"]["files"] == 1 and fingerprint["inputs"]["day_csv"]["live_producer"]
+    assert "listing_sha256" not in fingerprint["inputs"]["day_csv"], "a directory input is described, not hashed"
     result = repo / "summary.json"
     result.write_text("{}\n", encoding="utf-8")
     day_csv.write_text("Date,Close\n2010-01-04,64.9\n2010-01-05,65.0\n", encoding="utf-8")
