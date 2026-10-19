@@ -371,6 +371,23 @@ def test_an_input_vanishing_during_the_recheck_is_recorded_not_raised(producer: 
     assert changed_inputs(fingerprint) == ["prices"]
 
 
+def test_receipt_refuses_an_executed_source_the_commit_does_not_contain(repo: Path, producer: Path) -> None:
+    result = repo / "summary.json"
+    result.write_text("{}\n", encoding="utf-8")
+    runner = repo / "runner.py"
+    runner.write_text("print('run')\n", encoding="utf-8")
+    inputs = fingerprint_inputs([InputSpec("prices", producer / "price_daily.parquet")], now=WEEKDAY_NIGHT)
+    with pytest.raises(ValueError, match="run source runner.py is not tracked"):
+        write_run_receipt(repo / "r1.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, repo_root=repo, sources=[runner])
+    _git(["add", "runner.py"], repo)
+    _git(["commit", "-q", "-m", "runner"], repo)
+    receipt = write_run_receipt(
+        repo / "r2.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, repo_root=repo, sources=[runner]
+    )
+    assert receipt["sources"] == ["runner.py"] and receipt["code"]["dirty"] is False
+    assert not (repo / "r1.json").exists()
+
+
 def test_a_legacy_listing_digest_still_detects_a_rename(producer: Path) -> None:
     from research_core.artifact_store import object_digest
     from research_core.run_receipt import _listing
