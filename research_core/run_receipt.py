@@ -266,6 +266,23 @@ def _require_committed_preregistration(path: Path, repo_root: Path) -> None:
         raise ValueError(f"preregistration {relative} differs from the recorded commit; commit it before writing the receipt")
 
 
+def _describe_shared_read(record: Mapping[str, Any]) -> dict[str, Any]:
+    """A shared-data read as information: every field except digests (`sha256`, `*_sha256`).
+
+    Readers return their files' SHA-256s for their own checks; a receipt hashes only the
+    study's final results, so those digests are dropped at this boundary, nested ones too.
+    """
+
+    def describe(value: Any) -> Any:
+        if isinstance(value, Mapping):
+            return {key: describe(item) for key, item in value.items() if not (key == "sha256" or str(key).endswith("_sha256"))}
+        if isinstance(value, list):
+            return [describe(item) for item in value]
+        return value
+
+    return describe(record)
+
+
 def write_run_receipt(
     path: Path,
     *,
@@ -292,7 +309,7 @@ def write_run_receipt(
     changed = changed_inputs(inputs)
     if changed:
         LOGGER.warning("Inputs changed during run %s: %s; recorded in the receipt", run_id, changed)
-    shared = [dict(record) for record in shared_data]
+    shared = [_describe_shared_read(record) for record in shared_data]
     receipt = {
         "schema": SCHEMA,
         "run_id": run_id,
