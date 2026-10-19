@@ -176,6 +176,32 @@ def _theoretical_terms_diagnostic(
     }
 
 
+def _native_terms_contradict(frame: pd.DataFrame, day: pd.Timestamp, *, share: float, cash: float) -> dict[str, Any] | None:
+    """Diagnose a producer cash or exact split action against the last observed close.
+
+    Returns the diagnostic when the observed close contradicts the action grossly
+    (residual of 40% or more), otherwise None; no observed anchor means no check.
+    """
+    position = int(frame.index.get_indexer([day])[0])
+    prior = frame.iloc[:position]
+    observed = prior.loc[prior.Quality.astype(bool) & np.isfinite(prior.RawClose.astype(float)) & prior.RawClose.astype(float).gt(0)]
+    close = float(frame.loc[day, "RawClose"])
+    if not len(observed) or not bool(frame.loc[day, "Quality"]) or not np.isfinite(close) or close <= 0:
+        return None
+    diagnostic = _theoretical_terms_diagnostic(
+        anchor_day=cast(pd.Timestamp, observed.index[-1]),
+        day=day,
+        previous=float(observed.RawClose.iloc[-1]),
+        close=close,
+        share=share,
+        cash=cash,
+        context="native_action",
+    )
+    residual = diagnostic["residual"]
+    consistent = bool(diagnostic["factor_valid"] and residual is not None and abs(residual) < 0.4)
+    return None if consistent else diagnostic
+
+
 def _require_source_factor_explanation(diagnostic: dict[str, Any], source_diagnostics: list[dict[str, Any]]) -> None:
     source_explains = any(value["source"] == "source_price_factor" and value["explains_jump"] for value in source_diagnostics)
     diagnostic["source_factor_explains_jump"] = source_explains
@@ -499,6 +525,10 @@ def economic_path_v2(
                 if day == end and end_field == "Open":
                     cash_gross, cash_net = gross_units * dividend, net_units * dividend
                 else:
+                    if (contradiction := _native_terms_contradict(frame, day, share=1.0, cash=dividend)) is not None:
+                        audit["quality_diagnostic"] = contradiction
+                        unknowns.append(f"{day.date()}:native_action_contradicts_observed_quote")
+                        break
                     close = float(row.RawClose)
                     if day in carried or not bool(row.Quality) or not np.isfinite(close) or close <= 0:
                         unknowns.append(f"{day.date()}:missing_dividend_reinvestment_close")
@@ -510,6 +540,9 @@ def economic_path_v2(
                 ratio = (split_ratios or {}).get(str(day.date()))
                 if ratio is None or not np.isfinite(ratio) or ratio <= 0:
                     unknowns.append(f"{day.date()}:missing_exact_share_ratio")
+                    break
+                if not (day == end and end_field == "Open") and _native_terms_contradict(frame, day, share=ratio, cash=0.0) is not None:
+                    unknowns.append(f"{day.date()}:native_action_contradicts_observed_quote")
                     break
                 gross_units *= ratio
                 net_units *= ratio

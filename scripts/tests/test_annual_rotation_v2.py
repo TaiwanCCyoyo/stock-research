@@ -113,6 +113,14 @@ def test_terms_after_a_carried_halt_are_checked_against_the_last_observed_close(
     assert f"{day_at(days, 2).date()}:entitlement_terms_contradict_observed_quote" in result["reasons"]
 
 
+def test_a_native_cash_dividend_contradicting_the_quote_keeps_the_path_unknown():
+    days, raw, actions = fixture([100.0, 110.0, 110.0, 110.0])
+    actions.loc[0, "cash_dividend_estimate"] = 90.0
+    result = economic_path_v2(raw, actions, days, start=day_at(days, 0), end=day_at(days, -1))
+    assert result["status"] == "unknown"
+    assert f"{day_at(days, 1).date()}:native_action_contradicts_observed_quote" in result["reasons"]
+
+
 def test_small_terms_survive_ordinary_noise_in_either_direction():
     days, raw, actions = fixture([100.0, 103.0, 103.0, 103.0])
     actions = actions.iloc[:0]
