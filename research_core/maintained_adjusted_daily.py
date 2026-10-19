@@ -208,18 +208,44 @@ def _write_as_of_inputs(directory: Path, bars: pd.DataFrame, actions: pd.DataFra
     return recorded
 
 
+WRITER_LOCK_MARKER = b"writer-lock-v2\n"
+
+
 def _acquire_lock(family: Path) -> IO[bytes]:
     """Take the single-writer OS lock on `.writer.lock` without waiting.
 
     The OS releases it when the update ends, however it ends (reboot, kill, task time
     limit), so a scheduled retry is never blocked by a lock left from a dead update.
+
+    Updaters before 2026-10-19 held the lock by creating the file exclusively and writing
+    "pid=..." without an OS lock; they refuse whenever the file exists. This one creates
+    the file exclusively with a fixed marker, so the two never both win the creation, and
+    refuses "pid=..." content. An empty file is ambiguous: the first OS-lock version
+    (2026-10-19) left one, but so does an old updater between its create and its write.
+    On Windows the OS lock is mandatory, so such an old updater cannot write its pid and
+    fails; the file is accepted. Elsewhere the lock is advisory and the file is refused
+    until someone confirms no updater runs and deletes it.
     """
     lock = family / ".writer.lock"
+    try:
+        descriptor = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY | getattr(os, "O_BINARY", 0))
+    except FileExistsError:
+        pass
+    else:
+        with os.fdopen(descriptor, "wb") as created:
+            created.write(WRITER_LOCK_MARKER)
     handle = lock.open("a+b")
     if not _try_os_lock(handle):
         handle.close()
         raise RuntimeError(f"another update holds {lock}; wait for it to finish")
-    return handle
+    size = lock.stat().st_size
+    if size == len(WRITER_LOCK_MARKER) or (size == 0 and sys.platform == "win32"):
+        return handle
+    _release_os_lock(handle)
+    handle.close()
+    if size == 0:
+        raise RuntimeError(f"{lock} is empty and this platform's lock is advisory; if no updater is running, delete the file and retry")
+    raise RuntimeError(f"{lock} was written by an updater from before 2026-10-19; if none is running, delete the file and retry")
 
 
 def _write_current(family: Path, generation: str, status_sha256: str) -> None:
@@ -242,11 +268,16 @@ HOLDER_PATTERN = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
 WINDOWS_DEVICE_NAMES = frozenset({"con", "prn", "aux", "nul", *(f"com{n}" for n in range(1, 10)), *(f"lpt{n}" for n in range(1, 10))})
 
 
-def _hold_path(family: Path, holder: str) -> Path:
-    if not HOLDER_PATTERN.match(holder):
+def _hold_path(family: Path, holder: str, *, new: bool = True) -> Path:
+    """Path of `holder`'s hold. New holds get the strict name rules; a release only needs to
+    locate a hold an older writer may have accepted (`match`, as the holds scan reads)."""
+    if new:
+        if not HOLDER_PATTERN.fullmatch(holder):  # `$` alone would accept a trailing newline
+            raise ValueError(f"holder must match {HOLDER_PATTERN.pattern}, got {holder!r}")
+        if holder in WINDOWS_DEVICE_NAMES:
+            raise ValueError(f"holder {holder!r} is a Windows device name; choose another")
+    elif not HOLDER_PATTERN.match(holder):
         raise ValueError(f"holder must match {HOLDER_PATTERN.pattern}, got {holder!r}")
-    if holder in WINDOWS_DEVICE_NAMES:
-        raise ValueError(f"holder {holder!r} is a Windows device name; choose another")
     return family / "holds" / f"{holder}.json"
 
 
@@ -256,7 +287,7 @@ def held_generations(root: Path | None = None) -> dict[str, list[dict[str, Any]]
     directory = family_dir(root) / "holds"
     if directory.is_dir():
         for path in sorted(directory.glob("*.json")):
-            if not HOLDER_PATTERN.match(path.stem):
+            if not HOLDER_PATTERN.match(path.stem):  # lenient on read: keep any hold an older writer accepted
                 continue  # only `<holder>.json`; never a temporary or foreign file
             try:
                 record = read_json(path)
@@ -352,7 +383,7 @@ def hold_generation(generation: str, *, holder: str, reason: str, root: Path | N
 def release_generation(holder: str, *, root: Path | None = None) -> dict[str, Any] | None:
     """Remove `holder`'s hold; the next update prunes the generation unless someone else holds it."""
     family = family_dir(root)
-    path = _hold_path(family, holder)
+    path = _hold_path(family, holder, new=False)
     with _holds_lock(family):
         if not path.is_file():
             return None
