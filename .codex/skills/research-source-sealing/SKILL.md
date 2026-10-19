@@ -35,6 +35,8 @@ Historical packets keep their existing byte-level verification contract.
    file hashes). Pass the runner, strategy and study modules the run executes as
    `write_run_receipt(..., sources=[...])`: the receipt's dirty flag does not see
    untracked files, so it refuses a source that is untracked or differs from the
+   commit. Take `code_identity()` before the run and pass it as `expected_code=`, so a
+   commit or checkout during a long run is refused instead of credited to the new
    commit. An input that changed during the run is listed in the receipt, not a reason
    to discard the result; hash results, not sources.
 5. Execute the authorized study using those fixed files. If code changes during
