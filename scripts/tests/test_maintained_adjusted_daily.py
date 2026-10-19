@@ -457,3 +457,38 @@ def test_a_held_generation_survives_updates_until_released(environment: tuple[Pa
         maintained_adjusted_daily.hold_generation(result["generation"], holder="../escape", reason="x")
     with pytest.raises(ValueError, match="reason"):
         maintained_adjusted_daily.hold_generation(result["generation"], holder="ok", reason=" ")
+
+
+def test_a_hold_racing_a_prune_is_refused_not_silently_lost(environment: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:
+    producer, shared = environment
+    family = shared / "derived" / maintained_adjusted_daily.FAMILY
+    first = maintained_adjusted_daily.update(producer_root=producer)["generation"]
+    monkeypatch.setattr(maintained_adjusted_daily, "datetime", _Later(1))
+    maintained_adjusted_daily.update(producer_root=producer)
+    monkeypatch.setattr(maintained_adjusted_daily, "HOLDS_LOCK_WAIT_SECONDS", 0.2)
+    original = maintained_adjusted_daily.held_generations
+    attempts: list[BaseException] = []
+
+    def hold_during_prune(root: Path | None = None) -> dict[str, list[dict[str, object]]]:
+        # The first call is the prune, holding the lock: a hold now must wait, then be refused.
+        if not attempts:
+            try:
+                maintained_adjusted_daily.hold_generation(first, holder="late-study", reason="started mid-prune")
+            except RuntimeError as error:
+                attempts.append(error)
+        return original(root)
+
+    monkeypatch.setattr(maintained_adjusted_daily, "held_generations", hold_during_prune)
+    monkeypatch.setattr(maintained_adjusted_daily, "datetime", _Later(2))
+    result = maintained_adjusted_daily.update(producer_root=producer)
+
+    assert len(attempts) == 1 and "holds.lock" in str(attempts[0]), "the racing hold is refused, not reported as successful"
+    assert first in result["pruned"] and not (family / "holds" / "late-study.json").exists()
+    assert not (family / ".holds.lock").exists()
+
+    monkeypatch.setattr(maintained_adjusted_daily, "held_generations", original)
+    (family / ".holds.lock").write_text("stale", encoding="utf-8")
+    monkeypatch.setattr(maintained_adjusted_daily, "datetime", _Later(3))
+    blocked = maintained_adjusted_daily.update(producer_root=producer)
+    assert blocked["pruned"] == [], "a held lock skips pruning instead of failing a published update"
+    assert read_json(family / "current.json")["generation"] == blocked["generation"]
