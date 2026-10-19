@@ -22,7 +22,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from research_core.artifact_store import file_digest, object_digest, read_json, write_json
+from research_core.artifact_store import file_digest, read_json, write_json
 from research_core.live_producer import ProducerChangedError, assert_producer_idle, read_stable, readonly_sqlite, stat_identity
 from research_core.producer_data import REPO_ROOT, producer_data_root
 
@@ -100,16 +100,25 @@ def _listing(spec: InputSpec) -> list[list[Any]]:
     return [[path.name, *stat_identity(path)] for path in sorted(spec.path.glob(spec.pattern)) if path.is_file()]
 
 
-def _glob_fingerprint(spec: InputSpec) -> dict[str, Any]:
-    """Identity of many files without hashing them: count, bytes, newest mtime and a listing digest."""
+LISTING_FIELDS = ("files", "total_bytes", "newest_mtime_ns")
+
+
+def _listing_summary(spec: InputSpec) -> dict[str, Any]:
     listing = _listing(spec)
     return {
-        "pattern": spec.pattern,
         "files": len(listing),
         "total_bytes": sum(row[1] for row in listing),
         "newest_mtime_ns": max((row[2] for row in listing), default=None),
-        "listing_sha256": object_digest(listing),
     }
+
+
+def _glob_fingerprint(spec: InputSpec) -> dict[str, Any]:
+    """Describe many files without hashing them: count, total bytes and newest mtime.
+
+    Receipts written before 2026-10-19 also carry a `listing_sha256`; the description
+    alone identifies the read now (owner decision: inputs are information only).
+    """
+    return {"pattern": spec.pattern, **_listing_summary(spec)}
 
 
 def producer_as_of(root: Path) -> dict[str, Any]:
@@ -196,7 +205,8 @@ def data_directory_inputs(data_path: Path, *, corporate_actions: Path | None = N
 def _input_changed(name: str, row: Mapping[str, Any]) -> bool:
     path = Path(row["path"])
     if "pattern" in row:
-        return object_digest(_listing(InputSpec(name, path, pattern=row["pattern"]))) != row["listing_sha256"]
+        current = _listing_summary(InputSpec(name, path, pattern=row["pattern"]))
+        return any(current[field] != row.get(field) for field in LISTING_FIELDS)
     if row.get("absent"):
         return path.exists()
     if not path.is_file() or list(stat_identity(path)) != [row["bytes"], row["mtime_ns"]]:
@@ -271,6 +281,9 @@ def _describe_shared_read(record: Mapping[str, Any]) -> dict[str, Any]:
 
     Readers return their files' SHA-256s for their own checks; a receipt hashes only the
     study's final results, so those digests are dropped at this boundary, nested ones too.
+    A calendar the study supplies (`as_of=..., calendar=`) is the study's own input: its
+    committed parameters and code identify it, so the receipt keeps only the calendar's
+    description (source, sessions, first and last date) and no digest of it.
     """
 
     def describe(value: Any) -> Any:
