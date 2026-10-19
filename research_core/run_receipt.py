@@ -317,6 +317,7 @@ def write_run_receipt(
     repo_root: Path = REPO_ROOT,
     shared_data: Sequence[Mapping[str, Any]] = (),
     sources: Sequence[Path] = (),
+    expected_code: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Write a new receipt (never replacing one): final-result SHA-256s plus what was read.
 
@@ -332,6 +333,11 @@ def write_run_receipt(
     # The runner, strategy and imported study modules the run executed: an untracked or
     # edited one would leave a clean-looking commit that does not contain the code.
     executed = [_require_committed(source, repo_root, "run source") for source in sources]
+    code = code_identity(repo_root)
+    # Pass `code_identity()` taken before the run: a commit or checkout during a long run
+    # would otherwise attribute results of the old code to the new commit.
+    if expected_code is not None and (code != dict(expected_code) or code.get("dirty") is not False):
+        raise ValueError(f"code changed during the run: started at {dict(expected_code)}, now {code}; rerun on one clean commit")
     changed = changed_inputs(inputs)
     if changed:
         LOGGER.warning("Inputs changed during run %s: %s; recorded in the receipt", run_id, changed)
@@ -343,7 +349,7 @@ def write_run_receipt(
         "parameters": dict(parameters),
         # The preregistration is a source: its path plus the code commit identify it, unhashed.
         "preregistration": None if preregistration is None else {"path": _display_path(preregistration, repo_root)},
-        "code": code_identity(repo_root),
+        "code": code,
         "input_fingerprint": dict(inputs),
         **({"shared_data": shared} if shared else {}),
         **({"sources": executed} if executed else {}),
