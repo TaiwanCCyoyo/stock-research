@@ -509,3 +509,36 @@ def test_release_waits_for_the_holds_lock(environment: tuple[Path, Path], monkey
     (family / ".holds.lock").unlink()
     released = maintained_adjusted_daily.release_generation("study")
     assert released is not None and released["generation"] == generation
+
+
+def test_a_stale_holds_lock_is_reclaimed_so_pruning_resumes(environment: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:
+    producer, shared = environment
+    family = shared / "derived" / maintained_adjusted_daily.FAMILY
+    first = maintained_adjusted_daily.update(producer_root=producer)["generation"]
+    monkeypatch.setattr(maintained_adjusted_daily, "datetime", _Later(1))
+    maintained_adjusted_daily.update(producer_root=producer)
+    lock = family / ".holds.lock"
+    lock.write_text("pid=1 started_utc=killed", encoding="utf-8")
+    old = lock.stat().st_mtime - maintained_adjusted_daily.HOLDS_LOCK_STALE_SECONDS - 60
+    os.utime(lock, (old, old))
+
+    monkeypatch.setattr(maintained_adjusted_daily, "datetime", _Later(2))
+    result = maintained_adjusted_daily.update(producer_root=producer)
+
+    assert first in result["pruned"], "a lock left by a killed process does not stop pruning forever"
+    assert not lock.exists() and not list(family.glob(".holds.lock.stale-*"))
+
+
+def test_holds_listing_skips_a_hold_released_while_listing(environment: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:
+    producer, _ = environment
+    generation = maintained_adjusted_daily.update(producer_root=producer)["generation"]
+    maintained_adjusted_daily.hold_generation(generation, holder="study", reason="reads it")
+    original = maintained_adjusted_daily.read_json
+
+    def released_meanwhile(path: Path) -> object:
+        if path.name == "study.json":
+            raise FileNotFoundError(path)
+        return original(path)
+
+    monkeypatch.setattr(maintained_adjusted_daily, "read_json", released_meanwhile)
+    assert maintained_adjusted_daily.held_generations() == {}

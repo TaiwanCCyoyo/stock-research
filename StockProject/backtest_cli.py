@@ -26,7 +26,7 @@ sys.path.insert(0, str(current_dir.parent))
 
 from research_core.live_producer import ProducerBusyError, ProducerChangedError, sqlite_reads_readonly  # noqa: E402
 from research_core.producer_data import producer_data_root  # noqa: E402
-from research_core.run_receipt import assert_inputs_unchanged, data_directory_inputs, fingerprint_inputs  # noqa: E402
+from research_core.run_receipt import changed_inputs, data_directory_inputs, fingerprint_inputs  # noqa: E402
 
 try:
     from engine.backtest_engine import BacktestEngine
@@ -841,11 +841,17 @@ def main():
             sys.exit(1)
         summary = result
 
-    try:
-        assert_inputs_unchanged(args.input_fingerprint)
-    except ProducerChangedError as e:
-        logger.error("[!] %s", e)
-        sys.exit(1)
+    # Owner decision 2026-10-19: inputs are information; a finished run is saved and a
+    # producer write during it is recorded in the output, not a reason to discard it.
+    args.inputs_changed = changed_inputs(args.input_fingerprint) if getattr(args, "input_fingerprint", None) else []
+    if args.inputs_changed:
+        logger.warning("[!] inputs changed during the run: %s; recorded in the output", args.inputs_changed)
+        written = [summary, *summaries.values()] if args.capital_mode == "all" else [summary]
+        if universe_names:
+            written += list(universe_summaries.values())
+        for item in written:
+            if isinstance(item, dict):
+                item.setdefault("data", {})["inputs_changed_during_run"] = args.inputs_changed
 
     # 5. Output Results
     logger.info("\n" + "=" * 30)

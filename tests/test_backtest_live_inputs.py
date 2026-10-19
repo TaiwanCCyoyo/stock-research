@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import sqlite3
 import sys
@@ -64,19 +65,19 @@ def test_backtest_refuses_live_data_in_the_write_window(live_root: Path, monkeyp
     assert stopped.value.code == 1
 
 
-def test_backtest_fails_when_live_inputs_change_during_the_run(live_root: Path, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_backtest_records_live_inputs_changed_during_the_run(live_root: Path, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     _at(monkeypatch, datetime(2026, 10, 15, 1, 30, tzinfo=TAIPEI))
 
     def writer_runs_meanwhile(*args: Any) -> dict[str, Any]:
         os.utime(live_root / "price_daily.parquet", ns=(1, 1))
-        return {}
+        return {"metrics": {"return_rate": 0.0, "max_drawdown_rate": 0.0, "win_rate": None, "total_pnl": 0.0, "final_value": 1.0, "trade_count": 0}}
 
     _stub_run(monkeypatch, writer_runs_meanwhile)
     output = tmp_path / "summary.json"
     monkeypatch.setattr(sys, "argv", ["backtest_cli", "--strategy", "unused.py", "--codes", "2330", "--output", str(output)])
-    with pytest.raises(SystemExit) as stopped:
-        backtest_cli.main()
-    assert stopped.value.code == 1 and not output.exists()
+    backtest_cli.main()
+    saved = json.loads(output.read_text(encoding="utf-8"))
+    assert saved["data"]["inputs_changed_during_run"] == ["price_daily"], "the finished run is saved with the change recorded"
 
 
 def test_backtest_corporate_action_read_is_read_only(live_root: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -123,9 +124,9 @@ def _run_with_real_loader(monkeypatch: pytest.MonkeyPatch, data: Path, output: P
         backtest_cli.main()
         assert output.exists()
         return
-    with pytest.raises(SystemExit) as stopped:
-        backtest_cli.main()
-    assert stopped.value.code == 1 and not output.exists()
+    backtest_cli.main()
+    assert output.exists(), "a finished run is saved; the producer write is recorded, not a reason to discard it"
+    assert json.loads(output.read_text(encoding="utf-8"))["data"]["inputs_changed_during_run"]
     assert "inputs changed during the run" in caplog.text
 
 
@@ -149,13 +150,15 @@ def test_fallback_corporate_action_db_is_fingerprinted_and_rechecked(
     _run_with_real_loader(monkeypatch, data, tmp_path / "summary.json", writer_commits, caplog)
 
 
-def test_first_day_csv_appearing_mid_run_is_refused(live_root: Path, monkeypatch: pytest.MonkeyPatch, tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
+def test_first_day_csv_appearing_mid_run_is_recorded(
+    live_root: Path, monkeypatch: pytest.MonkeyPatch, tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
     data = _nested_data_dir(live_root)
     assert not list(data.glob("*_day.csv"))
     _run_with_real_loader(monkeypatch, data, tmp_path / "summary.json", lambda: (data / "2330_day.csv").write_text("Date,Close\n", encoding="utf-8"), caplog)
 
 
-def test_optional_input_appearing_mid_run_is_refused(
+def test_optional_input_appearing_mid_run_is_recorded(
     live_root: Path, monkeypatch: pytest.MonkeyPatch, tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
     data = _nested_data_dir(live_root)
@@ -165,5 +168,5 @@ def test_optional_input_appearing_mid_run_is_refused(
 def test_unchanged_live_inputs_let_the_backtest_write_results(
     live_root: Path, monkeypatch: pytest.MonkeyPatch, tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Control for the refusal cases: the same run with no producer write completes."""
+    """Control for the recorded-change cases: the same run with no producer write completes."""
     _run_with_real_loader(monkeypatch, _nested_data_dir(live_root), tmp_path / "summary.json", None, caplog)
