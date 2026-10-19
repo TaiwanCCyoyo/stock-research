@@ -208,22 +208,41 @@ def _write_as_of_inputs(directory: Path, bars: pd.DataFrame, actions: pd.DataFra
     return recorded
 
 
+WRITER_LOCK_MARKER = b"writer-lock-v2\n"
+# An updater from before 2026-10-19 creates the file and writes "pid=..." at once; an
+# empty file still empty after this pause was left by the first OS-lock version instead.
+WRITER_LOCK_SETTLE_SECONDS = 2.0
+
+
 def _acquire_lock(family: Path) -> IO[bytes]:
     """Take the single-writer OS lock on `.writer.lock` without waiting.
 
     The OS releases it when the update ends, however it ends (reboot, kill, task time
     limit), so a scheduled retry is never blocked by a lock left from a dead update.
+
+    Updaters before 2026-10-19 held the lock by creating the file exclusively and writing
+    "pid=..." without an OS lock; they refuse whenever the file exists. This one creates
+    the file exclusively with a fixed marker, so the two never both win the creation, and
+    refuses a file holding anything else: "pid=..." content, or an empty file that gains
+    content during a short pause (an old updater between its create and its write).
     """
     lock = family / ".writer.lock"
+    try:
+        descriptor = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY | getattr(os, "O_BINARY", 0))
+    except FileExistsError:
+        pass
+    else:
+        with os.fdopen(descriptor, "wb") as created:
+            created.write(WRITER_LOCK_MARKER)
     handle = lock.open("a+b")
     if not _try_os_lock(handle):
         handle.close()
         raise RuntimeError(f"another update holds {lock}; wait for it to finish")
-    # Updaters before 2026-10-19 held the lock by creating the file with "pid=..." in it
-    # and took no OS lock. This protocol never writes to the file, so content means an old
-    # updater is running or died; refuse rather than run beside it. An old updater, for
-    # its part, always refuses while the file exists, which it now always does.
-    if lock.stat().st_size:
+    size = lock.stat().st_size
+    if size == 0:
+        time.sleep(WRITER_LOCK_SETTLE_SECONDS)
+        size = lock.stat().st_size
+    if size not in (0, len(WRITER_LOCK_MARKER)):
         _release_os_lock(handle)
         handle.close()
         raise RuntimeError(f"{lock} was written by an updater from before 2026-10-19; if none is running, delete the file and retry")
