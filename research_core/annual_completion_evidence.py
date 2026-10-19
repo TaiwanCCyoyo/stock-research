@@ -14,7 +14,7 @@ import time
 from dataclasses import dataclass
 from decimal import ROUND_HALF_EVEN, Decimal, InvalidOperation
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
@@ -171,15 +171,15 @@ def _valid_day(prices: pd.DataFrame, code: str, date: str, *, first_after: bool 
     rows = prices.loc[prices.Code.astype(str).eq(code) & prices.Date.ge(pd.Timestamp(date))]
     if not first_after:
         rows = rows.loc[rows.Date.eq(pd.Timestamp(date))]
-    rows = rows.sort_values("Date")
-    if rows.Date.duplicated().any():
-        raise ValueError("duplicate quote at entitlement application")
-    values = rows[["Open", "High", "Low", "Close"]].to_numpy(dtype=float)
-    valid = np.isfinite(values).all(axis=1) & (values > 0).all(axis=1)
-    valid &= (values[:, 1] >= values.max(axis=1)) & (values[:, 2] <= values.min(axis=1))
-    if not valid.any():
-        raise ValueError("observed event quote required")
-    return str(rows.loc[valid, "Date"].iloc[0].date())
+    # Walk the dates in order and stop at the first valid quote: a duplicate on a date up
+    # to and including it is ambiguous, but a later, unrelated duplicate is not checked.
+    for day, day_rows in rows.sort_values("Date").groupby("Date", sort=True):
+        if len(day_rows) > 1:
+            raise ValueError("duplicate quote at entitlement application")
+        values = day_rows[["Open", "High", "Low", "Close"]].to_numpy(dtype=float)[0]
+        if np.isfinite(values).all() and (values > 0).all() and values[1] >= values.max() and values[2] <= values.min():
+            return str(pd.Timestamp(cast(Any, day)).date())
+    raise ValueError("observed event quote required")
 
 
 def _rights_terms(evidence: Evidence, event: dict[str, Any]) -> tuple[str, Decimal, Decimal, Decimal, Decimal]:

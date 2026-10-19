@@ -684,3 +684,21 @@ def test_manifest_read_retains_eight_megabyte_bound(tmp_path: Path):
     (tmp_path / "publication.json").write_bytes(b" " * 8_000_001)
     with pytest.raises(ValueError, match="manifest exceeds size limit"):
         adapter.load_verified_evidence(tmp_path)
+
+
+def test_first_valid_day_ignores_a_later_unrelated_duplicate_quote():
+    from research_core.annual_completion_evidence import _valid_day
+
+    days = pd.to_datetime(["2020-01-06", "2020-01-07", "2020-01-08", "2020-01-08"])
+    prices = pd.DataFrame({
+        "Code": "1234",
+        "Date": days,
+        "Open": [10.0, 11.0, 12.0, 12.5],
+        "High": [10.0, 11.0, 12.0, 12.5],
+        "Low": [10.0, 11.0, 12.0, 12.5],
+        "Close": [10.0, 11.0, 12.0, 12.5],
+    })
+    prices.loc[0, ["Open", "High", "Low", "Close"]] = float("nan")  # the announced day has no valid quote
+    assert _valid_day(prices, "1234", "2020-01-06", first_after=True) == "2020-01-07"
+    with pytest.raises(ValueError, match="duplicate quote"):
+        _valid_day(prices, "1234", "2020-01-08")
