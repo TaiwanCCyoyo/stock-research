@@ -347,6 +347,18 @@ def test_nested_reader_digests_are_dropped_from_shared_reads() -> None:
     }
 
 
+def test_a_renamed_directory_file_with_equal_totals_is_recorded(producer: Path) -> None:
+    first = producer / "2330_day.csv"
+    first.write_text("Date,Close\n", encoding="utf-8")
+    fingerprint = fingerprint_inputs([InputSpec("day_csv", producer, pattern="*_day.csv")], now=WEEKDAY_NIGHT)
+    assert fingerprint["inputs"]["day_csv"]["listing"][0][0] == "2330_day.csv"
+    stat = first.stat()
+    renamed = producer / "2317_day.csv"
+    first.rename(renamed)
+    os.utime(renamed, ns=(stat.st_atime_ns, stat.st_mtime_ns))  # same size, same mtime, new name
+    assert changed_inputs(fingerprint) == ["day_csv"]
+
+
 def test_an_input_vanishing_during_the_recheck_is_recorded_not_raised(producer: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     from research_core import run_receipt
 
