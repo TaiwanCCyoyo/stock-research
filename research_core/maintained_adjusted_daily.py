@@ -245,6 +245,8 @@ def held_generations(root: Path | None = None) -> dict[str, list[dict[str, Any]]
     directory = family_dir(root) / "holds"
     if directory.is_dir():
         for path in sorted(directory.glob("*.json")):
+            if not HOLDER_PATTERN.match(path.stem):
+                continue  # only `<holder>.json`; never a temporary or foreign file
             try:
                 record = read_json(path)
             except FileNotFoundError:
@@ -325,7 +327,7 @@ def hold_generation(generation: str, *, holder: str, reason: str, root: Path | N
         # Under the lock no prune runs, so a generation that exists now is kept.
         current_generation(root, generation=generation)
         path.parent.mkdir(parents=True, exist_ok=True)
-        temporary = path.with_name(f".{holder}-{os.getpid()}.json")
+        temporary = path.with_name(f".{holder}-{os.getpid()}.tmp")
         write_json(temporary, record)
         os.replace(temporary, path)
     LOGGER.info("Held %s generation %s for %s: %s", FAMILY, generation, holder, record["reason"])
