@@ -15,7 +15,8 @@ Each study keeps:
 - the code commit (with a dirty flag), definition, parameters and preregistration;
 - an **input fingerprint**: path, SHA-256 (files) or row counts (SQLite), date range,
   and producer as-of time for each input read. The fingerprint records identity only,
-  never bytes.
+  never bytes. (Amended 2026-10-19: file inputs are described by size and modification
+  time without a SHA-256; receipts written earlier keep theirs and stay valid.)
 
 When a result cannot be reproduced later, the experiment is rerun on current data. The old
 result stays as a historical record, labeled with its fingerprint. Material that cannot

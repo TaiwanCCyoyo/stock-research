@@ -233,9 +233,15 @@ def _write_current(family: Path, generation: str, status_sha256: str) -> None:
 HOLDER_PATTERN = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
 
 
+# Windows treats these as devices whatever the extension, so `<holder>.json` cannot be a file.
+WINDOWS_DEVICE_NAMES = frozenset({"con", "prn", "aux", "nul", *(f"com{n}" for n in range(1, 10)), *(f"lpt{n}" for n in range(1, 10))})
+
+
 def _hold_path(family: Path, holder: str) -> Path:
     if not HOLDER_PATTERN.match(holder):
         raise ValueError(f"holder must match {HOLDER_PATTERN.pattern}, got {holder!r}")
+    if holder in WINDOWS_DEVICE_NAMES:
+        raise ValueError(f"holder {holder!r} is a Windows device name; choose another")
     return family / "holds" / f"{holder}.json"
 
 
