@@ -130,6 +130,25 @@ def test_a_native_cash_dividend_on_an_open_exit_day_is_checked_against_the_open(
     assert f"{day_at(days, -1).date()}:native_action_contradicts_observed_quote" in result["reasons"]
 
 
+def test_a_cash_entitlement_on_an_open_exit_day_is_checked_against_the_open():
+    days, raw, actions = fixture([100.0, 100.0, 100.0, 110.0])
+    actions = actions.loc[[0]].assign(ex_date=[day_at(days, -1)], cash_dividend_estimate=[90.0])
+    item = entitlement(day_at(days, -1), cash_per_old_share=90.0, source_event_type="CASH_DIVIDEND")
+    result = economic_path_v2(raw, actions, days, start=day_at(days, 0), end=day_at(days, -1), end_field="Open", entitlements=[item])
+    assert result["status"] == "unknown"
+    assert f"{day_at(days, -1).date()}:entitlement_terms_contradict_observed_quote" in result["reasons"]
+
+
+def test_a_native_split_on_an_open_exit_day_is_checked_against_the_open():
+    days, raw, actions = fixture([100.0, 100.0, 100.0, 25.0])
+    actions = actions.loc[[0]].assign(ex_date=[day_at(days, -1)], event_type=["ETF_SPLIT"], price_factor=[0.25])
+    result = economic_path_v2(
+        raw, actions, days, start=day_at(days, 0), end=day_at(days, -1), end_field="Open", split_ratios={str(day_at(days, -1).date()): 10.0}
+    )
+    assert result["status"] == "unknown"
+    assert f"{day_at(days, -1).date()}:native_action_contradicts_observed_quote" in result["reasons"]
+
+
 def test_small_terms_survive_ordinary_noise_in_either_direction():
     days, raw, actions = fixture([100.0, 103.0, 103.0, 103.0])
     actions = actions.iloc[:0]

@@ -314,8 +314,9 @@ def economic_path_v2(
             if explained:
                 frame.loc[day, "Quality"] = True
                 frame.loc[day, "quality_reason"] = None
-        elif bool(frame.loc[day, "Quality"]) and (day < end or end_field == "Close"):
-            # An open-exit-day entitlement is already ambiguous; a close exit is checked.
+        elif bool(frame.loc[day, "Quality"]) and (day < end or end_field == "Close" or (item.share_multiplier == 1 and item.rights_per_old_share == 0)):
+            # A share or rights change on an open-exit day is already ambiguous; a cash-only
+            # entitlement credited at an open exit is checked against the exit open.
             # Below the jump threshold the terms are still applied to holdings, so an
             # observed quote that contradicts them grossly (e.g. a halving share
             # multiplier on a rising close) keeps the path unknown. Direction is not
@@ -331,7 +332,7 @@ def economic_path_v2(
                     anchor_day=cast(pd.Timestamp, observed.index[-1]),
                     day=day,
                     previous=previous,
-                    close=float(frame.loc[day, "RawClose"]),
+                    close=float(frame.loc[day, "RawOpen" if day == end and end_field == "Open" else "RawClose"]),
                     share=item.share_multiplier,
                     cash=item.cash_per_old_share,
                     rights=item.rights_per_old_share,
@@ -545,7 +546,8 @@ def economic_path_v2(
                 if ratio is None or not np.isfinite(ratio) or ratio <= 0:
                     unknowns.append(f"{day.date()}:missing_exact_share_ratio")
                     break
-                if not (day == end and end_field == "Open") and _native_terms_contradict(frame, day, share=ratio, cash=0.0) is not None:
+                exit_open = day == end and end_field == "Open"
+                if _native_terms_contradict(frame, day, share=ratio, cash=0.0, field="Open" if exit_open else "Close") is not None:
                     unknowns.append(f"{day.date()}:native_action_contradicts_observed_quote")
                     break
                 gross_units *= ratio
