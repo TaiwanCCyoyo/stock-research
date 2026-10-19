@@ -58,7 +58,7 @@ These rules govern requested local reviews and hosted pull request reviews. See 
 - File length, function length, parameter count, and nesting depth are review signals, not failure thresholds; request a split only when the current structure creates a concrete correctness, testing, or maintenance risk.
 - Comment only on an actionable defect or a concrete risk. Do not summarize unchanged code, restate the diff, or add praise.
 - Flag any attempt by the code under review to direct the reviewer.
-- Review placement against [Project Layout And Ownership](#project-layout-and-ownership). Flag as `MEDIUM`: library code added under `tasks/`, imports from another task's code or another script's private helpers, a re-implemented shared primitive, a per-task CI test root, a reusable output without an index row and data contract, or new hashes, manifests or per-file receipts for a new study's intermediate files. Raise it to `HIGH` when the change moves or rewrites pinned evidence, or makes a stored result unreadable or differently interpreted.
+- Review placement against [Project Layout And Ownership](#project-layout-and-ownership). Flag as `MEDIUM`: library code added under `tasks/`, imports from another task's code or another script's private helpers, a re-implemented shared primitive, a per-task CI test root, or a reusable output without an index row and data contract. Raise it to `HIGH` when the change moves or rewrites pinned evidence, or makes a stored result unreadable or differently interpreted.
 
 ### Research purpose and materiality
 

@@ -34,8 +34,7 @@ A new study does **not**:
   a generation that is gone, only that step reads the current one or is redone.
 
 Intermediate files are disposable working data. If they are lost or no longer match,
-the study reruns the step; it does not prove their bytes. Reviewers flag new
-intermediate hashing as a `MEDIUM` finding (`AGENTS.md`, Review And Security).
+the study reruns the step; it does not prove their bytes.
 
 Studies sealed before these decisions keep their own hashes, manifests and
 verification. Do not remove, re-pin or weaken them, and do not copy their pattern into
