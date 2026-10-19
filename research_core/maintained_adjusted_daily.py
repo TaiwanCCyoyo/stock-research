@@ -15,11 +15,12 @@ Layout under ``<shared root>/derived/adjusted-daily-v1/``::
     generations/<id>/technical_daily.parquet   technical-daily.v1 indicators, one row per
                                                reference_factor_adjusted row
     generations/<id>/technical_pivots.parquet  confirmed 1.5/4 ATR highs and lows
+    holds/<holder>.json           a generation a running study marked in use; never pruned
 
 Every new ex-date restates the whole earlier history of that symbol, so an update builds
 a complete new generation and then flips ``current.json`` with ``os.replace`` (atomic on
 Windows, unlike replacing a directory). The previous generation is kept for rollback and
-for readers still holding it; older ones are pruned. A failed build never touches
+for readers still holding it; older ones are pruned unless a study holds them. A failed build never touches
 ``current.json``. A definition change gets a new family name (``adjusted-daily-v2``),
 never an in-place rewrite of this one.
 
@@ -35,12 +36,16 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import shutil
+import sys
 import time
-from collections.abc import Callable, Sequence
+import uuid
+from collections.abc import Callable, Iterator, Sequence
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, TypeVar, cast
+from typing import IO, Any, TypeVar, cast
 
 import pandas as pd
 import pyarrow as pa
@@ -203,14 +208,18 @@ def _write_as_of_inputs(directory: Path, bars: pd.DataFrame, actions: pd.DataFra
     return recorded
 
 
-def _acquire_lock(family: Path) -> Path:
+def _acquire_lock(family: Path) -> IO[bytes]:
+    """Take the single-writer OS lock on `.writer.lock` without waiting.
+
+    The OS releases it when the update ends, however it ends (reboot, kill, task time
+    limit), so a scheduled retry is never blocked by a lock left from a dead update.
+    """
     lock = family / ".writer.lock"
-    try:
-        with lock.open("x", encoding="utf-8") as handle:
-            handle.write(f"pid={os.getpid()} started_utc={datetime.now(timezone.utc).isoformat(timespec='seconds')}\n")
-    except FileExistsError as error:
-        raise RuntimeError(f"another update holds {lock}; if no update is running, read it and remove it") from error
-    return lock
+    handle = lock.open("a+b")
+    if not _try_os_lock(handle):
+        handle.close()
+        raise RuntimeError(f"another update holds {lock}; wait for it to finish")
+    return handle
 
 
 def _write_current(family: Path, generation: str, status_sha256: str) -> None:
@@ -226,17 +235,154 @@ def _write_current(family: Path, generation: str, status_sha256: str) -> None:
     os.replace(temporary, family / "current.json")
 
 
-def _prune(family: Path, keep: list[str]) -> list[str]:
-    """Best effort: a generation still open in a reader (Windows) is left for the next update."""
-    removed = []
-    for path in sorted((family / "generations").iterdir()):
-        if path.is_dir() and path.name not in keep:
+HOLDER_PATTERN = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
+
+
+# Windows treats these as devices whatever the extension, so `<holder>.json` cannot be a file.
+WINDOWS_DEVICE_NAMES = frozenset({"con", "prn", "aux", "nul", *(f"com{n}" for n in range(1, 10)), *(f"lpt{n}" for n in range(1, 10))})
+
+
+def _hold_path(family: Path, holder: str) -> Path:
+    if not HOLDER_PATTERN.match(holder):
+        raise ValueError(f"holder must match {HOLDER_PATTERN.pattern}, got {holder!r}")
+    if holder in WINDOWS_DEVICE_NAMES:
+        raise ValueError(f"holder {holder!r} is a Windows device name; choose another")
+    return family / "holds" / f"{holder}.json"
+
+
+def held_generations(root: Path | None = None) -> dict[str, list[dict[str, Any]]]:
+    """Generations a running study marked in use, mapped to their holds; the updater keeps them."""
+    holds: dict[str, list[dict[str, Any]]] = {}
+    directory = family_dir(root) / "holds"
+    if directory.is_dir():
+        for path in sorted(directory.glob("*.json")):
+            if not HOLDER_PATTERN.match(path.stem):
+                continue  # only `<holder>.json`; never a temporary or foreign file
             try:
-                shutil.rmtree(path)
-            except OSError as error:
-                LOGGER.warning("Could not prune generation %s, retrying on the next update: %s", path.name, error)
-                continue
-            removed.append(path.name)
+                record = read_json(path)
+            except FileNotFoundError:
+                continue  # released between listing and reading
+            holds.setdefault(str(record["generation"]), []).append(record)
+    return holds
+
+
+HOLDS_LOCK_WAIT_SECONDS = 120.0
+
+
+def _try_os_lock(handle: IO[bytes]) -> bool:
+    """Take an exclusive OS lock on the first byte; the OS drops it when the process ends."""
+    handle.seek(0)
+    try:
+        if sys.platform == "win32":
+            import msvcrt
+
+            msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
+        else:
+            import fcntl
+
+            fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        return False
+    return True
+
+
+def _release_os_lock(handle: IO[bytes]) -> None:
+    handle.seek(0)
+    if sys.platform == "win32":
+        import msvcrt
+
+        msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+    else:
+        import fcntl
+
+        fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+
+
+@contextmanager
+def _holds_lock(family: Path) -> Iterator[None]:
+    """Serialize hold changes with pruning, so a hold is either seen by the prune or refused.
+
+    An OS lock on `.holds.lock`, not the file's existence: the file stays, and a killed
+    holder's lock is released by the OS, so no age-based reclaim can break a live holder.
+    Held only for a hold write or one prune pass, never for a whole update.
+    """
+    lock = family / ".holds.lock"
+    family.mkdir(parents=True, exist_ok=True)
+    handle = lock.open("a+b")
+    try:
+        deadline = time.monotonic() + HOLDS_LOCK_WAIT_SECONDS
+        while not _try_os_lock(handle):
+            if time.monotonic() >= deadline:
+                raise RuntimeError(f"{lock} is locked by a running update, hold or release; retry when it finishes")
+            time.sleep(0.5)
+        try:
+            yield
+        finally:
+            _release_os_lock(handle)
+    finally:
+        handle.close()
+
+
+def hold_generation(generation: str, *, holder: str, reason: str, root: Path | None = None) -> dict[str, Any]:
+    """Mark `generation` in use by `holder` so updates keep it until `release_generation(holder)`.
+
+    One hold per holder; holding again moves it. Kept generations cost disk (about 1-2 GB
+    each), so release as soon as the study no longer reads it.
+    """
+    family = family_dir(root)
+    path = _hold_path(family, holder)
+    if not reason.strip():
+        raise ValueError("a hold needs a reason another session can act on")
+    record = {"holder": holder, "generation": generation, "reason": reason.strip(), "held_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds")}
+    with _holds_lock(family):
+        # Under the lock no prune runs, so a generation that exists now is kept.
+        current_generation(root, generation=generation)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        # Under the lock no other hold write runs, so this holder's leftover temporaries
+        # (a write killed before os.replace) are safe to remove; a fresh name never collides.
+        for leftover in path.parent.glob(f".{holder}-*.tmp"):
+            leftover.unlink(missing_ok=True)
+        temporary = path.with_name(f".{holder}-{uuid.uuid4().hex}.tmp")
+        write_json(temporary, record)
+        os.replace(temporary, path)
+    LOGGER.info("Held %s generation %s for %s: %s", FAMILY, generation, holder, record["reason"])
+    return record
+
+
+def release_generation(holder: str, *, root: Path | None = None) -> dict[str, Any] | None:
+    """Remove `holder`'s hold; the next update prunes the generation unless someone else holds it."""
+    family = family_dir(root)
+    path = _hold_path(family, holder)
+    with _holds_lock(family):
+        if not path.is_file():
+            return None
+        record = read_json(path)
+        path.unlink()
+    LOGGER.info("Released %s generation %s held by %s", FAMILY, record["generation"], holder)
+    return record
+
+
+def _prune(family: Path, keep: list[str]) -> list[str]:
+    """Best effort: a generation still open in a reader (Windows) is left for the next update.
+
+    Generations a study holds (`hold_generation`) are kept as well; the holds are read
+    under the same lock a new hold takes, so none can appear mid-prune.
+    """
+    removed: list[str] = []
+    try:
+        with _holds_lock(family):
+            keep = [*keep, *held_generations(family.parent.parent)]
+            for path in sorted((family / "generations").iterdir()):
+                if path.is_dir() and path.name not in keep:
+                    try:
+                        shutil.rmtree(path)
+                    except OSError as error:
+                        LOGGER.warning("Could not prune generation %s, retrying on the next update: %s", path.name, error)
+                        continue
+                    removed.append(path.name)
+    except RuntimeError as error:
+        LOGGER.warning("Skipped pruning this update, retrying on the next one: %s", error)
+        return removed
     LOGGER.info("Pruned generations %s; kept %s", removed, keep)
     return removed
 
@@ -304,6 +450,7 @@ def update(*, producer_root: Path, root: Path | None = None) -> dict[str, Any]:
             "asof": asof,
             "previous": previous,
             "pruned": removed,
+            "held": sorted(held_generations(root)),
             "path": str(final),
             "timings_seconds": status["timings_seconds"],
         }
@@ -313,7 +460,8 @@ def update(*, producer_root: Path, root: Path | None = None) -> dict[str, Any]:
             shutil.rmtree(staging, ignore_errors=True)
         raise
     finally:
-        lock.unlink()
+        _release_os_lock(lock)
+        lock.close()
 
 
 def current_generation(root: Path | None = None, *, generation: str | None = None) -> dict[str, Any]:

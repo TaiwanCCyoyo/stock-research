@@ -13,8 +13,9 @@ import pandas as pd
 import pytest
 
 from research_core import live_producer
+from research_core.artifact_store import file_digest
 from research_core.live_producer import ProducerBusyError, ProducerChangedError, assert_producer_idle, read_stable, readonly_sqlite
-from research_core.run_receipt import InputSpec, changed_results, fingerprint_inputs, write_run_receipt
+from research_core.run_receipt import InputSpec, assert_inputs_unchanged, changed_inputs, changed_results, fingerprint_inputs, write_run_receipt
 
 TAIPEI = timezone(timedelta(hours=8))
 WEEKDAY_EVENING = datetime(2026, 10, 15, 18, 10, tzinfo=TAIPEI)
@@ -117,7 +118,8 @@ def test_fingerprint_records_identity_and_wal_rows_without_copying(producer: Pat
         writer.close()
     prices, actions = result["inputs"]["prices"], result["inputs"]["actions"]
     assert prices["live_producer"] and prices["rows"] == 3 and prices["date_range"] == ["2010-01-04", "2026-10-14"]
-    assert len(prices["sha256"]) == 64
+    assert "sha256" not in prices, "inputs are described, not hashed (owner decision 2026-10-19)"
+    assert prices["bytes"] > 0 and prices["mtime_ns"] > 0
     assert actions["tables"] == {"corporate_actions": {"rows": 2, "date_range": ["2010-06-01", "2026-06-11"]}}
     assert result["producer_as_of"]["data_quality_generated_at"] == "2026-10-14T10:26:14+00:00"
     assert sorted(path.name for path in producer.iterdir() if not path.name.endswith(("-wal", "-shm"))) == [
@@ -139,6 +141,8 @@ def test_receipt_hashes_results_and_detects_later_edits(repo: Path, producer: Pa
     result.write_text('{"return": 0.1}\n', encoding="utf-8")
     mission = repo / "tasks" / "demo" / "mission.md"
     mission.write_text("# Demo\n", encoding="utf-8")
+    _git(["add", "tasks/demo/mission.md"], repo)
+    _git(["commit", "-q", "-m", "preregister"], repo)
     inputs = fingerprint_inputs([InputSpec("prices", producer / "price_daily.parquet", date_column="Date")], now=WEEKDAY_NIGHT)
     receipt_path = result.parent / "receipt.json"
     receipt = write_run_receipt(
@@ -162,8 +166,8 @@ def test_receipt_hashes_results_and_detects_later_edits(repo: Path, producer: Pa
     assert changed_results(receipt_path, repo) == ["summary"]
 
 
-def test_receipt_refuses_inputs_changed_during_the_run(repo: Path, producer: Path) -> None:
-    """A writer that ran between the reads and the receipt is caught, including a SQLite WAL commit."""
+def test_receipt_records_inputs_changed_during_the_run(repo: Path, producer: Path) -> None:
+    """A writer between the reads and the receipt is recorded, including a SQLite WAL commit; the result is still saved."""
     database = producer / "symbol_meta.sqlite"
     with closing(sqlite3.connect(database)) as setup:
         setup.execute("PRAGMA journal_mode=WAL")
@@ -178,15 +182,46 @@ def test_receipt_refuses_inputs_changed_during_the_run(repo: Path, producer: Pat
         fingerprint = fingerprint_inputs(specs, now=WEEKDAY_NIGHT)
         writer.execute("INSERT INTO symbol_meta VALUES ('2330')")
         writer.commit()
-        with pytest.raises(ProducerChangedError, match="meta"):
-            write_run_receipt(repo / "r1.json", run_id="r", definition="d", parameters={}, inputs=fingerprint, results={"s": result}, repo_root=repo)
+        first = write_run_receipt(repo / "r1.json", run_id="r", definition="d", parameters={}, inputs=fingerprint, results={"s": result}, repo_root=repo)
     finally:
         writer.close()
+    assert first["inputs_changed_during_run"] == ["meta"]
     fingerprint = fingerprint_inputs(specs, now=WEEKDAY_NIGHT)
     os.utime(producer / "price_daily.parquet", ns=(1, 1))
+    second = write_run_receipt(repo / "r2.json", run_id="r", definition="d", parameters={}, inputs=fingerprint, results={"s": result}, repo_root=repo)
+    assert second["inputs_changed_during_run"] == ["prices"]
+    assert (repo / "r1.json").exists() and (repo / "r2.json").exists(), "a finished result is saved, with the change recorded"
     with pytest.raises(ProducerChangedError, match="prices"):
-        write_run_receipt(repo / "r2.json", run_id="r", definition="d", parameters={}, inputs=fingerprint, results={"s": result}, repo_root=repo)
-    assert not (repo / "r1.json").exists() and not (repo / "r2.json").exists()
+        assert_inputs_unchanged(fingerprint)
+
+
+def test_receipt_records_shared_generation_reads_as_information(repo: Path, producer: Path, tmp_path: Path) -> None:
+    generation = tmp_path / "shared" / "derived" / "demo-v1" / "generations" / "g1"
+    generation.mkdir(parents=True)
+    (generation / "status.json").write_text('{"generation": "g1"}\n', encoding="utf-8")
+    (generation / "raw.parquet").write_bytes(b"not re-read by the receipt")
+    record = {
+        "family": "demo-v1",
+        "generation": "g1",
+        "file": str(generation / "raw.parquet"),
+        "sha256": "a" * 64,
+        "status_sha256": file_digest(generation / "status.json"),
+    }
+    result = repo / "summary.json"
+    result.write_text("{}\n", encoding="utf-8")
+    inputs = fingerprint_inputs([InputSpec("prices", producer / "price_daily.parquet")], now=WEEKDAY_NIGHT)
+    receipt = write_run_receipt(
+        repo / "r1.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, repo_root=repo, shared_data=[record]
+    )
+    described = {"family": "demo-v1", "generation": "g1", "file": record["file"]}
+    assert receipt["shared_data"] == [described], "digests from the reader are dropped; only the description is kept"
+    plain = write_run_receipt(repo / "r2.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, repo_root=repo)
+    assert "shared_data" not in plain, "receipts without shared reads keep their earlier shape"
+    (generation / "status.json").unlink()
+    pruned = write_run_receipt(
+        repo / "r3.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, repo_root=repo, shared_data=[record]
+    )
+    assert pruned["shared_data"] == [described], "a generation pruned after it was read does not block saving the result"
 
 
 def test_fingerprint_of_task_inputs_needs_no_producer_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -219,11 +254,13 @@ def test_directory_listing_fingerprint_detects_a_rewritten_csv(repo: Path, produ
     day_csv.write_text("Date,Close\n2010-01-04,64.9\n", encoding="utf-8")
     fingerprint = fingerprint_inputs([InputSpec("day_csv", producer, pattern="*_day.csv")], now=WEEKDAY_NIGHT)
     assert fingerprint["inputs"]["day_csv"]["files"] == 1 and fingerprint["inputs"]["day_csv"]["live_producer"]
+    assert "listing_sha256" not in fingerprint["inputs"]["day_csv"], "a directory input is described, not hashed"
     result = repo / "summary.json"
     result.write_text("{}\n", encoding="utf-8")
     day_csv.write_text("Date,Close\n2010-01-04,64.9\n2010-01-05,65.0\n", encoding="utf-8")
+    assert changed_inputs(fingerprint) == ["day_csv"]
     with pytest.raises(ProducerChangedError, match="day_csv"):
-        write_run_receipt(repo / "r.json", run_id="r", definition="d", parameters={}, inputs=fingerprint, results={"s": result}, repo_root=repo)
+        assert_inputs_unchanged(fingerprint)
 
 
 PINNED_READER = """
@@ -248,3 +285,152 @@ def test_sqlite_reads_readonly_routes_a_modules_connect(tmp_path: Path) -> None:
     with sqlite_reads_readonly(module), pytest.raises(sqlite3.OperationalError, match="readonly"):
         module.write(database)
     assert module.sqlite3 is sqlite3
+
+
+def test_receipt_names_a_committed_preregistration_by_path(repo: Path, producer: Path, tmp_path: Path) -> None:
+    result = repo / "summary.json"
+    result.write_text("{}\n", encoding="utf-8")
+    mission = repo / "mission.md"
+    mission.write_text("# Demo\n", encoding="utf-8")
+    _git(["add", "mission.md"], repo)
+    _git(["commit", "-q", "-m", "preregister"], repo)
+    inputs = fingerprint_inputs([InputSpec("prices", producer / "price_daily.parquet")], now=WEEKDAY_NIGHT)
+    receipt = write_run_receipt(
+        repo / "r1.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, preregistration=mission, repo_root=repo
+    )
+    assert receipt["preregistration"] == {"path": "mission.md"}, "a source is named, not hashed"
+    with pytest.raises(FileNotFoundError, match="preregistration"):
+        write_run_receipt(
+            repo / "r2.json",
+            run_id="r",
+            definition="d",
+            parameters={},
+            inputs=inputs,
+            results={"s": result},
+            preregistration=repo / "missing.md",
+            repo_root=repo,
+        )
+    untracked = repo / "draft.md"
+    untracked.write_text("# Draft\n", encoding="utf-8")
+    outside = tmp_path / "elsewhere.md"
+    outside.write_text("# Elsewhere\n", encoding="utf-8")
+    for path, reason in ((untracked, "not tracked"), (outside, "outside the repository")):
+        with pytest.raises(ValueError, match=reason):
+            write_run_receipt(
+                repo / "r3.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, preregistration=path, repo_root=repo
+            )
+    mission.write_text("# Demo, edited after the commit\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="differs from the recorded commit"):
+        write_run_receipt(
+            repo / "r3.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, preregistration=mission, repo_root=repo
+        )
+    assert not (repo / "r2.json").exists() and not (repo / "r3.json").exists()
+
+
+def test_nested_reader_digests_are_dropped_from_shared_reads() -> None:
+    from research_core.run_receipt import _describe_shared_read
+
+    record = {
+        "family": "adjusted-daily-v1",
+        "generation": "g1",
+        "sha256": "a" * 64,
+        "status_sha256": "b" * 64,
+        "actions_sha256": "c" * 64,
+        "calendar": {"sessions": 3, "first": "2026-10-01", "sha256": "d" * 64, "file_sha256": "e" * 64},
+        "prices": {"basis": "raw", "sha256": "f" * 64},
+    }
+    assert _describe_shared_read(record) == {
+        "family": "adjusted-daily-v1",
+        "generation": "g1",
+        "calendar": {"sessions": 3, "first": "2026-10-01"},
+        "prices": {"basis": "raw"},
+    }
+
+
+def test_a_renamed_directory_file_with_equal_totals_is_recorded(producer: Path) -> None:
+    first = producer / "2330_day.csv"
+    first.write_text("Date,Close\n", encoding="utf-8")
+    fingerprint = fingerprint_inputs([InputSpec("day_csv", producer, pattern="*_day.csv")], now=WEEKDAY_NIGHT)
+    assert fingerprint["inputs"]["day_csv"]["listing"][0][0] == "2330_day.csv"
+    stat = first.stat()
+    renamed = producer / "2317_day.csv"
+    first.rename(renamed)
+    os.utime(renamed, ns=(stat.st_atime_ns, stat.st_mtime_ns))  # same size, same mtime, new name
+    assert changed_inputs(fingerprint) == ["day_csv"]
+
+
+def test_an_input_vanishing_during_the_recheck_is_recorded_not_raised(producer: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from research_core import run_receipt
+
+    fingerprint = fingerprint_inputs([InputSpec("prices", producer / "price_daily.parquet")], now=WEEKDAY_NIGHT)
+
+    def vanished(path: Path) -> object:
+        raise FileNotFoundError(path)
+
+    monkeypatch.setattr(run_receipt, "stat_identity", vanished)
+    assert changed_inputs(fingerprint) == ["prices"]
+
+
+def test_receipt_refuses_an_executed_source_the_commit_does_not_contain(repo: Path, producer: Path) -> None:
+    result = repo / "summary.json"
+    result.write_text("{}\n", encoding="utf-8")
+    runner = repo / "runner.py"
+    runner.write_text("print('run')\n", encoding="utf-8")
+    inputs = fingerprint_inputs([InputSpec("prices", producer / "price_daily.parquet")], now=WEEKDAY_NIGHT)
+    with pytest.raises(ValueError, match="run source runner.py is not tracked"):
+        write_run_receipt(repo / "r1.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, repo_root=repo, sources=[runner])
+    _git(["add", "runner.py"], repo)
+    _git(["commit", "-q", "-m", "runner"], repo)
+    receipt = write_run_receipt(
+        repo / "r2.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, repo_root=repo, sources=[runner]
+    )
+    assert receipt["sources"] == ["runner.py"] and receipt["code"]["dirty"] is False
+    assert not (repo / "r1.json").exists()
+
+
+def test_a_legacy_listing_digest_still_detects_a_rename(producer: Path) -> None:
+    from research_core.artifact_store import object_digest
+    from research_core.run_receipt import _listing
+
+    day_csv = producer / "2330_day.csv"
+    day_csv.write_bytes(b"Date,Close")
+    listing = _listing(InputSpec("day_csv", producer, pattern="*_day.csv"))
+    legacy = {
+        "inputs": {
+            "day_csv": {
+                "path": str(producer),
+                "pattern": "*_day.csv",
+                "files": 1,
+                "total_bytes": 10,
+                "newest_mtime_ns": listing[0][2],
+                "listing_sha256": object_digest(listing),
+            }
+        }
+    }
+    assert changed_inputs(legacy) == []
+    stat = day_csv.stat()
+    renamed = producer / "2317_day.csv"
+    day_csv.rename(renamed)
+    os.utime(renamed, ns=(stat.st_atime_ns, stat.st_mtime_ns))
+    assert changed_inputs(legacy) == ["day_csv"]
+
+
+def test_receipt_refuses_a_commit_made_during_the_run(repo: Path, producer: Path) -> None:
+    from research_core.run_receipt import code_identity
+
+    result = repo / "summary.json"
+    result.write_text("{}", encoding="utf-8")
+    inputs = fingerprint_inputs([InputSpec("prices", producer / "price_daily.parquet")], now=WEEKDAY_NIGHT)
+    started = code_identity(repo)
+    (repo / "runner.py").write_text("print('b')", encoding="utf-8")
+    _git(["add", "runner.py"], repo)
+    _git(["commit", "-q", "-m", "runner b during the run"], repo)
+    with pytest.raises(ValueError, match="code changed during the run"):
+        write_run_receipt(
+            repo / "r1.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, repo_root=repo, expected_code=started
+        )
+    assert not (repo / "r1.json").exists()
+    same = write_run_receipt(
+        repo / "r2.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, repo_root=repo, expected_code=code_identity(repo)
+    )
+    assert same["code"]["dirty"] is False

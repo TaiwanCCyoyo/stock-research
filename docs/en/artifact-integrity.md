@@ -20,15 +20,15 @@ below changed accordingly; earlier sealed studies keep the rules they used.
 
 ## 2. Identity per artifact
 
-| Artifact                          | Identity                                                                                                        | Lives in                      |
-| --------------------------------- | --------------------------------------------------------------------------------------------------------------- | ----------------------------- |
-| Producer inputs (parquet, sqlite) | Fingerprint of the live input read: path, SHA-256 (files) or row counts and date range (SQLite), producer as-of | `run-receipt.v1` receipt      |
-| Per-stock derived inputs          | Digest of the normalized content (see below)                                                                    | derived cache / feature block |
-| Parameters                        | Git, plus canonical-JSON digest inside the bundle identity                                                      | `tasks/<id>/params/`          |
-| Code of a run                     | Git commit plus dirty flag; loaded modules are not hashed                                                       | `run-receipt.v1` receipt      |
-| Results and process bundles       | Manifest of member bytes and digests; version id is the digest of the manifest                                  | `research_data` bundle        |
-| Public result JSON in Git         | Semantic equality with the sealed result (the study's verifier, e.g. annual `verified_result`), not raw bytes   | `tasks/<id>/`                 |
-| Reports and prose                 | Git only                                                                                                        | `tasks/<id>/`                 |
+| Artifact                          | Identity                                                                                                                                                 | Lives in                      |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| Producer inputs (parquet, sqlite) | Description of the live input read: path, size, time, rows and date range, producer as-of; no file hash since 2026-10-19 (older receipts also carry one) | `run-receipt.v1` receipt      |
+| Per-stock derived inputs          | Digest of the normalized content (see below)                                                                                                             | derived cache / feature block |
+| Parameters                        | Git, plus canonical-JSON digest inside the bundle identity                                                                                               | `tasks/<id>/params/`          |
+| Code of a run                     | Git commit plus dirty flag; loaded modules are not hashed                                                                                                | `run-receipt.v1` receipt      |
+| Results and process bundles       | Manifest of member bytes and digests; version id is the digest of the manifest                                                                           | `research_data` bundle        |
+| Public result JSON in Git         | Semantic equality with the sealed result (the study's verifier, e.g. annual `verified_result`), not raw bytes                                            | `tasks/<id>/`                 |
+| Reports and prose                 | Git only                                                                                                                                                 | `tasks/<id>/`                 |
 
 Normalization for content digests must keep every distinction that matters: floats
 by exact value (`float.hex()`), missing distinct from zero, dates with their type,

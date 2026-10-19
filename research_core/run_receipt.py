@@ -2,8 +2,11 @@
 
 Owner policy 2026-10-15 (docs/en/decision-records/2026-10-15-drop-input-sealing.md):
 results keep their SHA-256 so accidental edits are detectable; inputs keep an identity
-only (path, SHA-256 or row counts, date range, producer as-of time). A result that cannot
-be reproduced later is rerun on current data, and the old receipt labels the old result.
+only. Since 2026-10-19 that identity is information, not a hash: path, size, modification
+time, rows and date range, producer as-of time. Receipts written before then also carry a
+file SHA-256 for each input; they remain valid `run-receipt.v1` receipts, and a missing
+input hash in a newer receipt is the current policy, not damage. A result that cannot be
+reproduced later is rerun on current data, and the old receipt labels the old result.
 
 Code identity is the Git commit plus a dirty flag. Loaded modules are deliberately not
 hashed: that would tie the receipt to unrelated source edits and force rebuilds.
@@ -13,7 +16,7 @@ from __future__ import annotations
 
 import logging
 import subprocess
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -49,8 +52,14 @@ class InputSpec:
 
 
 def _file_fingerprint(spec: InputSpec) -> dict[str, Any]:
+    """Describe a file input (size, time, rows, date range); its bytes are not hashed.
+
+    Owner decision 2026-10-19: only final results are hashed; inputs are recorded as
+    information about what was read.
+    """
+
     def observe(path: Path) -> dict[str, Any]:
-        record: dict[str, Any] = {"sha256": file_digest(path)}
+        record: dict[str, Any] = {}
         if spec.date_column is not None and path.suffix == ".parquet":
             import pandas as pd
 
@@ -91,16 +100,29 @@ def _listing(spec: InputSpec) -> list[list[Any]]:
     return [[path.name, *stat_identity(path)] for path in sorted(spec.path.glob(spec.pattern)) if path.is_file()]
 
 
-def _glob_fingerprint(spec: InputSpec) -> dict[str, Any]:
-    """Identity of many files without hashing them: count, bytes, newest mtime and a listing digest."""
+LISTING_FIELDS = ("files", "total_bytes", "newest_mtime_ns")
+
+
+def _listing_summary(spec: InputSpec) -> dict[str, Any]:
     listing = _listing(spec)
     return {
-        "pattern": spec.pattern,
         "files": len(listing),
         "total_bytes": sum(row[1] for row in listing),
         "newest_mtime_ns": max((row[2] for row in listing), default=None),
-        "listing_sha256": object_digest(listing),
+        # Name, size and mtime per file: a rename or an add-and-remove that leaves the
+        # totals unchanged is still visible, and nothing is hashed.
+        "listing": listing,
     }
+
+
+def _glob_fingerprint(spec: InputSpec) -> dict[str, Any]:
+    """Describe many files without hashing them: count, total bytes, newest mtime and the
+    per-file listing (name, size, mtime).
+
+    Receipts written before 2026-10-19 also carry a `listing_sha256`; the description
+    alone identifies the read now (owner decision: inputs are information only).
+    """
+    return {"pattern": spec.pattern, **_listing_summary(spec)}
 
 
 def producer_as_of(root: Path) -> dict[str, Any]:
@@ -184,27 +206,48 @@ def data_directory_inputs(data_path: Path, *, corporate_actions: Path | None = N
     return specs
 
 
-def assert_inputs_unchanged(fingerprint: Mapping[str, Any]) -> None:
-    """Fail if any fingerprinted input (or a SQLite input's WAL) changed since it was fingerprinted.
+def _input_changed(name: str, row: Mapping[str, Any]) -> bool:
+    path = Path(row["path"])
+    if "pattern" in row:
+        current = _listing_summary(InputSpec(name, path, pattern=row["pattern"]))
+        if "listing" in row:
+            return [list(item) for item in current["listing"]] != [list(item) for item in row["listing"]]
+        if "listing_sha256" in row:  # a fingerprint taken before 2026-10-19: compare, never store
+            return object_digest(current["listing"]) != row["listing_sha256"]
+        return any(current[field] != row.get(field) for field in LISTING_FIELDS)
+    if row.get("absent"):
+        return path.exists()
+    if not path.is_file() or list(stat_identity(path)) != [row["bytes"], row["mtime_ns"]]:
+        return True
+    if "wal" in row:
+        wal = path.with_name(path.name + "-wal")
+        return (list(stat_identity(wal)) if wal.exists() else None) != row["wal"]
+    return False
 
-    Called at the end of a run, this catches a producer writer that ran during the study,
-    which a single idle probe before the reads cannot see.
+
+def changed_inputs(fingerprint: Mapping[str, Any]) -> list[str]:
+    """Names of fingerprinted inputs (or a SQLite input's WAL) whose size or time changed since.
+
+    A file removed or replaced while it is being checked counts as changed rather than
+    raising, so a finished result is still saved with the change recorded.
     """
     changed = []
     for name, row in fingerprint["inputs"].items():
-        path = Path(row["path"])
-        if "pattern" in row:
-            if object_digest(_listing(InputSpec(name, path, pattern=row["pattern"]))) != row["listing_sha256"]:
+        try:
+            if _input_changed(name, row):
                 changed.append(name)
-        elif row.get("absent"):
-            if path.exists():
-                changed.append(name)
-        elif not path.is_file() or list(stat_identity(path)) != [row["bytes"], row["mtime_ns"]]:
+        except OSError:
             changed.append(name)
-        elif "wal" in row:
-            wal = path.with_name(path.name + "-wal")
-            if (list(stat_identity(wal)) if wal.exists() else None) != row["wal"]:
-                changed.append(name)
+    return changed
+
+
+def assert_inputs_unchanged(fingerprint: Mapping[str, Any]) -> None:
+    """Fail if any fingerprinted input changed since it was fingerprinted.
+
+    For a data builder that must not publish a mix of producer states (the shared family's
+    update). A study's receipt records changes instead (`write_run_receipt`).
+    """
+    changed = changed_inputs(fingerprint)
     if changed:
         raise ProducerChangedError(f"inputs changed during the run: {changed}; rerun outside producer writes")
 
@@ -221,6 +264,47 @@ def code_identity(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
     return {"commit": git("rev-parse", "HEAD"), "dirty": bool(git("status", "--porcelain", "--untracked-files=no"))}
 
 
+def _require_committed(path: Path, repo_root: Path, label: str) -> str:
+    """Require a tracked file unchanged from HEAD inside the repository; return its relative path.
+
+    Without a hash, the recorded commit is the only identity of a preregistration or an
+    executed source, and `code_identity`'s dirty flag does not see untracked files.
+    """
+    if not path.is_file():
+        raise FileNotFoundError(f"{label} {path} does not exist; a receipt names an existing file")
+    resolved, root = path.resolve(), repo_root.resolve()
+    if not resolved.is_relative_to(root):
+        raise ValueError(f"{label} {path} is outside the repository; the recorded commit cannot identify it")
+    relative = resolved.relative_to(root).as_posix()
+    tracked = subprocess.run(["git", "-C", str(root), "ls-files", "--error-unmatch", "--", relative], capture_output=True, text=True, check=False)
+    if tracked.returncode:
+        raise ValueError(f"{label} {relative} is not tracked by Git; commit it before writing the receipt")
+    unchanged = subprocess.run(["git", "-C", str(root), "diff", "--quiet", "HEAD", "--", relative], capture_output=True, text=True, check=False)
+    if unchanged.returncode:
+        raise ValueError(f"{label} {relative} differs from the recorded commit; commit it before writing the receipt")
+    return relative
+
+
+def _describe_shared_read(record: Mapping[str, Any]) -> dict[str, Any]:
+    """A shared-data read as information: every field except digests (`sha256`, `*_sha256`).
+
+    Readers return their files' SHA-256s for their own checks; a receipt hashes only the
+    study's final results, so those digests are dropped at this boundary, nested ones too.
+    A calendar the study supplies (`as_of=..., calendar=`) is the study's own input: its
+    committed parameters and code identify it, so the receipt keeps only the calendar's
+    description (source, sessions, first and last date) and no digest of it.
+    """
+
+    def describe(value: Any) -> Any:
+        if isinstance(value, Mapping):
+            return {key: describe(item) for key, item in value.items() if not (key == "sha256" or str(key).endswith("_sha256"))}
+        if isinstance(value, list):
+            return [describe(item) for item in value]
+        return value
+
+    return describe(record)
+
+
 def write_run_receipt(
     path: Path,
     *,
@@ -231,21 +315,45 @@ def write_run_receipt(
     results: Mapping[str, Path],
     preregistration: Path | None = None,
     repo_root: Path = REPO_ROOT,
+    shared_data: Sequence[Mapping[str, Any]] = (),
+    sources: Sequence[Path] = (),
+    expected_code: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Write a new receipt (never replacing one) with result SHA-256s and the input fingerprint.
+    """Write a new receipt (never replacing one): final-result SHA-256s plus what was read.
 
-    Refuses when an input changed after it was fingerprinted, so a receipt never labels a
-    result with inputs other than those it read.
+    Owner decision 2026-10-19: only final results are hashed. `inputs` (the fingerprint)
+    and `shared_data` (records returned by shared-data readers such as
+    `research_core.maintained_adjusted_daily`) describe the sources; they never block saving
+    a finished result. An input that changed during the run is listed under
+    `inputs_changed_during_run` and logged, not refused; a shared generation pruned since
+    it was read does not matter.
     """
-    assert_inputs_unchanged(inputs)
+    if preregistration is not None:
+        _require_committed(preregistration, repo_root, "preregistration")
+    # The runner, strategy and imported study modules the run executed: an untracked or
+    # edited one would leave a clean-looking commit that does not contain the code.
+    executed = [_require_committed(source, repo_root, "run source") for source in sources]
+    code = code_identity(repo_root)
+    # Pass `code_identity()` taken before the run: a commit or checkout during a long run
+    # would otherwise attribute results of the old code to the new commit.
+    if expected_code is not None and (code != dict(expected_code) or code.get("dirty") is not False):
+        raise ValueError(f"code changed during the run: started at {dict(expected_code)}, now {code}; rerun on one clean commit")
+    changed = changed_inputs(inputs)
+    if changed:
+        LOGGER.warning("Inputs changed during run %s: %s; recorded in the receipt", run_id, changed)
+    shared = [_describe_shared_read(record) for record in shared_data]
     receipt = {
         "schema": SCHEMA,
         "run_id": run_id,
         "definition": definition,
         "parameters": dict(parameters),
-        "preregistration": None if preregistration is None else {"path": _display_path(preregistration, repo_root), "sha256": file_digest(preregistration)},
-        "code": code_identity(repo_root),
+        # The preregistration is a source: its path plus the code commit identify it, unhashed.
+        "preregistration": None if preregistration is None else {"path": _display_path(preregistration, repo_root)},
+        "code": code,
         "input_fingerprint": dict(inputs),
+        **({"shared_data": shared} if shared else {}),
+        **({"sources": executed} if executed else {}),
+        **({"inputs_changed_during_run": changed} if changed else {}),
         "results": {
             name: {"path": _display_path(result, repo_root), "bytes": result.stat().st_size, "sha256": file_digest(result)}
             for name, result in sorted(results.items())

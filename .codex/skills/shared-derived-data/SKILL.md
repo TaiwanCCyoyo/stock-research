@@ -16,18 +16,24 @@ routes you there and names what a finished change must satisfy.
 - Indicators and pivots: `read_technical("daily", codes=, columns=, prices=["Close", ...])`
   returns one row per price row with the prices joined from the same generation;
   `read_technical("pivots")` is the confirmed high/low long table, usable from `confirmed_at`.
-- Put the returned `record` in the study's `run_receipt`; pass its `generation=` to every later
-  read so the study stays on one generation. A pruned generation fails loudly by design.
+- Record the returned `record` with `write_run_receipt(..., shared_data=[record])`; it says which
+  generation was read and never blocks saving a result. Pass its `generation=` to every later read
+  so the study stays on one generation; a later read of a pruned generation fails loudly.
 - Earlier cutoff: `read_adjusted_daily(..., as_of=)` then `technical_daily_v1.compute_technical`.
   Never truncate the latest table to fake a cutoff.
 
 ## Refresh
 
-`uv run python -m scripts.maintain_adjusted_daily update` (status: `status`, timing: `measure --codes N`).
-It rebuilds everything from 2010 and flips `current.json`; it is the only writer. Check the
-producer schedule first (weekday 18:00-18:45 and running `StockProject-*` tasks are refused at
-load; compute alone measured about 22 minutes on 2026-10-17 and writes are not yet measured, so start
-before about 17:00 on a weekday).
+Updated automatically every weekday at 20:30 by the Windows task
+`StockResearch-SharedDerivedUpdate`, after the producer's daily download; check `status` before
+running `uv run python -m scripts.maintain_adjusted_daily update` by hand (timing: `measure --codes N`).
+It rebuilds everything from 2010 in about 13 minutes and flips `current.json`; it is the only writer.
+Weekday 18:00-18:45 and running `StockProject-*` tasks are refused at load.
+
+A study that reads one generation for more than a day holds it, or the next update deletes it:
+`uv run python -m scripts.maintain_adjusted_daily hold --generation <id> --holder <study> --reason <why>`,
+then `uv run python -m scripts.maintain_adjusted_daily release --holder <study>` when done. Unheld old generations are deleted. A finished
+result stays valid after its generation is gone; only a step that still needs it is redone.
 
 ## Extend
 

@@ -21,9 +21,19 @@ input change.
 - **Updates.** An update builds a complete new generation, then flips `current.json`
   atomically. The previous generation is kept for rollback; older ones are deleted by the
   updater. A failed update leaves `current.json` untouched.
-- **Studies.** Record the generation they read (family, generation id, as-of date, file
-  SHA-256) in their `run_receipt`. They do not pin or copy the data. A later update does
+- **Studies.** Record the generation they read (family, generation id, as-of date) in
+  their `run_receipt`; since 2026-10-19 the receipt keeps this description only, without
+  the files' SHA-256. They do not pin or copy the data. A later update does
   not invalidate a finished result; rerunning uses current data, per the sealing decision.
+
+**Amended 2026-10-19 (owner).** The family is updated automatically every weekday after the
+producer's daily download. Because a generation would then disappear within two days, a
+study that must read one generation for longer marks it in use (`maintain_adjusted_daily
+hold`) and releases it when done; the updater keeps held generations. Unheld generations
+are still deleted. A finished result never becomes invalid because a generation was
+updated or deleted: the receipt only records which generation was read. Only a step that
+still needs a deleted generation is handled, by reading the current one or redoing that
+step, never by rerunning the whole study.
 
 First family: `adjusted-daily-v1`, full-market daily prices in three bases (`raw`,
 `permanent_adjusted`, `reference_factor_adjusted`) from `price_basis.prepare_prices`

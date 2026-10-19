@@ -1,7 +1,9 @@
 """Maintain the shared full-market adjusted daily prices and their technical tables (no downloads).
 
 update   build a new generation (3 price bases + technical-daily.v1) from live producer data and make it current
-status   print the current generation's status
+status   print the current generation's status and the generations studies hold
+hold     keep a generation through later updates while a study still reads it
+release  drop a study's hold so the next update can prune that generation
 measure  time N symbols x 3 bases + technical tables without writing anything
 """
 
@@ -21,6 +23,12 @@ def main() -> int:
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("update")
     sub.add_parser("status")
+    hold = sub.add_parser("hold")
+    hold.add_argument("--generation", required=True)
+    hold.add_argument("--holder", required=True, help="short study id, e.g. pr17-pattern-scan")
+    hold.add_argument("--reason", required=True)
+    release = sub.add_parser("release")
+    release.add_argument("--holder", required=True)
     measure = sub.add_parser("measure")
     measure.add_argument("--codes", type=int, default=50, help="number of symbols, taken evenly across the sorted list")
     args = parser.parse_args()
@@ -35,6 +43,11 @@ def main() -> int:
         }
         technical = status.get("technical")
         result["technical"] = None if technical is None else {"definition": technical["definition"]["version"], "tables": technical["tables"]}
+        result["holds"] = family.held_generations()
+    elif args.command == "hold":
+        result = family.hold_generation(args.generation, holder=args.holder, reason=args.reason)
+    elif args.command == "release":
+        result = {"released": family.release_generation(args.holder)}
     else:
         started = time.monotonic()
         bars, actions, _, _ = family.load_inputs(producer_data_root())
