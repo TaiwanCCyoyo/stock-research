@@ -264,7 +264,7 @@ def held_generations(root: Path | None = None) -> dict[str, list[dict[str, Any]]
     directory = family_dir(root) / "holds"
     if directory.is_dir():
         for path in sorted(directory.glob("*.json")):
-            if not HOLDER_PATTERN.fullmatch(path.stem):
+            if not HOLDER_PATTERN.match(path.stem):  # lenient on read: keep any hold an older writer accepted
                 continue  # only `<holder>.json`; never a temporary or foreign file
             try:
                 record = read_json(path)
