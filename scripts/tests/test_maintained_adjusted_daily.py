@@ -554,3 +554,14 @@ def test_holds_listing_skips_a_hold_released_while_listing(environment: tuple[Pa
 
     monkeypatch.setattr(maintained_adjusted_daily, "read_json", released_meanwhile)
     assert maintained_adjusted_daily.held_generations() == {}
+
+
+def test_holds_listing_reads_only_formal_holder_files(environment: tuple[Path, Path]) -> None:
+    producer, shared = environment
+    holds = shared / "derived" / maintained_adjusted_daily.FAMILY / "holds"
+    generation = maintained_adjusted_daily.update(producer_root=producer)["generation"]
+    maintained_adjusted_daily.hold_generation(generation, holder="study", reason="reads it")
+    (holds / ".other-123.json").write_text("{", encoding="utf-8")  # a writer killed mid-write
+    (holds / ".other-124.tmp").write_text("{", encoding="utf-8")
+    assert [record["holder"] for record in maintained_adjusted_daily.held_generations()[generation]] == ["study"]
+    assert sorted(path.name for path in holds.glob("*.tmp")) == [".other-124.tmp"], "a completed hold write leaves no temporary file"
