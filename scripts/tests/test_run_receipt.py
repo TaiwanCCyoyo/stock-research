@@ -15,7 +15,7 @@ import pytest
 from research_core import live_producer
 from research_core.artifact_store import file_digest
 from research_core.live_producer import ProducerBusyError, ProducerChangedError, assert_producer_idle, read_stable, readonly_sqlite
-from research_core.run_receipt import InputSpec, changed_results, fingerprint_inputs, write_run_receipt
+from research_core.run_receipt import InputSpec, assert_inputs_unchanged, changed_inputs, changed_results, fingerprint_inputs, write_run_receipt
 
 TAIPEI = timezone(timedelta(hours=8))
 WEEKDAY_EVENING = datetime(2026, 10, 15, 18, 10, tzinfo=TAIPEI)
@@ -118,7 +118,8 @@ def test_fingerprint_records_identity_and_wal_rows_without_copying(producer: Pat
         writer.close()
     prices, actions = result["inputs"]["prices"], result["inputs"]["actions"]
     assert prices["live_producer"] and prices["rows"] == 3 and prices["date_range"] == ["2010-01-04", "2026-10-14"]
-    assert len(prices["sha256"]) == 64
+    assert "sha256" not in prices, "inputs are described, not hashed (owner decision 2026-10-19)"
+    assert prices["bytes"] > 0 and prices["mtime_ns"] > 0
     assert actions["tables"] == {"corporate_actions": {"rows": 2, "date_range": ["2010-06-01", "2026-06-11"]}}
     assert result["producer_as_of"]["data_quality_generated_at"] == "2026-10-14T10:26:14+00:00"
     assert sorted(path.name for path in producer.iterdir() if not path.name.endswith(("-wal", "-shm"))) == [
@@ -163,8 +164,8 @@ def test_receipt_hashes_results_and_detects_later_edits(repo: Path, producer: Pa
     assert changed_results(receipt_path, repo) == ["summary"]
 
 
-def test_receipt_refuses_inputs_changed_during_the_run(repo: Path, producer: Path) -> None:
-    """A writer that ran between the reads and the receipt is caught, including a SQLite WAL commit."""
+def test_receipt_records_inputs_changed_during_the_run(repo: Path, producer: Path) -> None:
+    """A writer between the reads and the receipt is recorded, including a SQLite WAL commit; the result is still saved."""
     database = producer / "symbol_meta.sqlite"
     with closing(sqlite3.connect(database)) as setup:
         setup.execute("PRAGMA journal_mode=WAL")
@@ -179,18 +180,20 @@ def test_receipt_refuses_inputs_changed_during_the_run(repo: Path, producer: Pat
         fingerprint = fingerprint_inputs(specs, now=WEEKDAY_NIGHT)
         writer.execute("INSERT INTO symbol_meta VALUES ('2330')")
         writer.commit()
-        with pytest.raises(ProducerChangedError, match="meta"):
-            write_run_receipt(repo / "r1.json", run_id="r", definition="d", parameters={}, inputs=fingerprint, results={"s": result}, repo_root=repo)
+        first = write_run_receipt(repo / "r1.json", run_id="r", definition="d", parameters={}, inputs=fingerprint, results={"s": result}, repo_root=repo)
     finally:
         writer.close()
+    assert first["inputs_changed_during_run"] == ["meta"]
     fingerprint = fingerprint_inputs(specs, now=WEEKDAY_NIGHT)
     os.utime(producer / "price_daily.parquet", ns=(1, 1))
+    second = write_run_receipt(repo / "r2.json", run_id="r", definition="d", parameters={}, inputs=fingerprint, results={"s": result}, repo_root=repo)
+    assert second["inputs_changed_during_run"] == ["prices"]
+    assert (repo / "r1.json").exists() and (repo / "r2.json").exists(), "a finished result is saved, with the change recorded"
     with pytest.raises(ProducerChangedError, match="prices"):
-        write_run_receipt(repo / "r2.json", run_id="r", definition="d", parameters={}, inputs=fingerprint, results={"s": result}, repo_root=repo)
-    assert not (repo / "r1.json").exists() and not (repo / "r2.json").exists()
+        assert_inputs_unchanged(fingerprint)
 
 
-def test_receipt_records_shared_generation_reads_without_rehashing(repo: Path, producer: Path, tmp_path: Path) -> None:
+def test_receipt_records_shared_generation_reads_as_information(repo: Path, producer: Path, tmp_path: Path) -> None:
     generation = tmp_path / "shared" / "derived" / "demo-v1" / "generations" / "g1"
     generation.mkdir(parents=True)
     (generation / "status.json").write_text('{"generation": "g1"}\n', encoding="utf-8")
@@ -212,11 +215,10 @@ def test_receipt_records_shared_generation_reads_without_rehashing(repo: Path, p
     plain = write_run_receipt(repo / "r2.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, repo_root=repo)
     assert "shared_data" not in plain, "receipts without shared reads keep their earlier shape"
     (generation / "status.json").unlink()
-    with pytest.raises(ValueError, match="changed or was pruned"):
-        write_run_receipt(
-            repo / "r3.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, repo_root=repo, shared_data=[record]
-        )
-    assert not (repo / "r3.json").exists()
+    pruned = write_run_receipt(
+        repo / "r3.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, repo_root=repo, shared_data=[record]
+    )
+    assert pruned["shared_data"] == [record], "a generation pruned after it was read does not block saving the result"
 
 
 def test_fingerprint_of_task_inputs_needs_no_producer_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -252,8 +254,9 @@ def test_directory_listing_fingerprint_detects_a_rewritten_csv(repo: Path, produ
     result = repo / "summary.json"
     result.write_text("{}\n", encoding="utf-8")
     day_csv.write_text("Date,Close\n2010-01-04,64.9\n2010-01-05,65.0\n", encoding="utf-8")
+    assert changed_inputs(fingerprint) == ["day_csv"]
     with pytest.raises(ProducerChangedError, match="day_csv"):
-        write_run_receipt(repo / "r.json", run_id="r", definition="d", parameters={}, inputs=fingerprint, results={"s": result}, repo_root=repo)
+        assert_inputs_unchanged(fingerprint)
 
 
 PINNED_READER = """

@@ -136,6 +136,11 @@ def check_cutoff(
     return result
 
 
+def _described(inputs: dict[str, Any]) -> dict[str, Any]:
+    """Input descriptions without file hashes: generations built before 2026-10-19 also stored a SHA-256."""
+    return {name: {key: value for key, value in row.items() if key != "sha256"} for name, row in inputs.items()}
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--root", type=Path, required=True, help="shared root holding derived/adjusted-daily-v1 (a scratch root is fine)")
@@ -152,7 +157,7 @@ def main() -> int:
     bars, actions, fingerprint, _ = family.load_inputs(producer)
     # The fingerprint is taken before the reads; recheck so a writer that started in between fails the check.
     assert_inputs_unchanged(fingerprint)
-    if fingerprint["inputs"] != status["input_fingerprint"]["inputs"]:
+    if _described(fingerprint["inputs"]) != _described(status["input_fingerprint"]["inputs"]):
         raise SystemExit("live producer inputs changed since the generation was built; rebuild with --build")
     sessions = family.session_calendar(bars)
     pinned = _pins_calendar(args.calendar_pins) if args.calendar_pins else None

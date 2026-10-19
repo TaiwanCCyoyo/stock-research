@@ -15,11 +15,12 @@ Layout under ``<shared root>/derived/adjusted-daily-v1/``::
     generations/<id>/technical_daily.parquet   technical-daily.v1 indicators, one row per
                                                reference_factor_adjusted row
     generations/<id>/technical_pivots.parquet  confirmed 1.5/4 ATR highs and lows
+    holds/<holder>.json           a generation a running study marked in use; never pruned
 
 Every new ex-date restates the whole earlier history of that symbol, so an update builds
 a complete new generation and then flips ``current.json`` with ``os.replace`` (atomic on
 Windows, unlike replacing a directory). The previous generation is kept for rollback and
-for readers still holding it; older ones are pruned. A failed build never touches
+for readers still holding it; older ones are pruned unless a study holds them. A failed build never touches
 ``current.json``. A definition change gets a new family name (``adjusted-daily-v2``),
 never an in-place rewrite of this one.
 
@@ -35,9 +36,11 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import shutil
 import time
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterator, Sequence
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, TypeVar, cast
@@ -226,17 +229,109 @@ def _write_current(family: Path, generation: str, status_sha256: str) -> None:
     os.replace(temporary, family / "current.json")
 
 
+HOLDER_PATTERN = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
+
+
+def _hold_path(family: Path, holder: str) -> Path:
+    if not HOLDER_PATTERN.match(holder):
+        raise ValueError(f"holder must match {HOLDER_PATTERN.pattern}, got {holder!r}")
+    return family / "holds" / f"{holder}.json"
+
+
+def held_generations(root: Path | None = None) -> dict[str, list[dict[str, Any]]]:
+    """Generations a running study marked in use, mapped to their holds; the updater keeps them."""
+    holds: dict[str, list[dict[str, Any]]] = {}
+    directory = family_dir(root) / "holds"
+    if directory.is_dir():
+        for path in sorted(directory.glob("*.json")):
+            record = read_json(path)
+            holds.setdefault(str(record["generation"]), []).append(record)
+    return holds
+
+
+HOLDS_LOCK_WAIT_SECONDS = 120.0
+
+
+@contextmanager
+def _holds_lock(family: Path) -> Iterator[None]:
+    """Serialize hold changes with pruning, so a hold is either seen by the prune or refused.
+
+    Held only for a hold write or one prune pass (seconds), never for a whole update.
+    """
+    lock = family / ".holds.lock"
+    family.mkdir(parents=True, exist_ok=True)
+    deadline = time.monotonic() + HOLDS_LOCK_WAIT_SECONDS
+    while True:
+        try:
+            with lock.open("x", encoding="utf-8") as handle:
+                handle.write(f"pid={os.getpid()} started_utc={datetime.now(timezone.utc).isoformat(timespec='seconds')}\n")
+            break
+        except FileExistsError as error:
+            if time.monotonic() >= deadline:
+                raise RuntimeError(f"{lock} is held; if no update or hold is running, read it and remove it") from error
+            time.sleep(0.5)
+    try:
+        yield
+    finally:
+        lock.unlink()
+
+
+def hold_generation(generation: str, *, holder: str, reason: str, root: Path | None = None) -> dict[str, Any]:
+    """Mark `generation` in use by `holder` so updates keep it until `release_generation(holder)`.
+
+    One hold per holder; holding again moves it. Kept generations cost disk (about 1-2 GB
+    each), so release as soon as the study no longer reads it.
+    """
+    family = family_dir(root)
+    path = _hold_path(family, holder)
+    if not reason.strip():
+        raise ValueError("a hold needs a reason another session can act on")
+    record = {"holder": holder, "generation": generation, "reason": reason.strip(), "held_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds")}
+    with _holds_lock(family):
+        # Under the lock no prune runs, so a generation that exists now is kept.
+        current_generation(root, generation=generation)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_name(f".{holder}-{os.getpid()}.json")
+        write_json(temporary, record)
+        os.replace(temporary, path)
+    LOGGER.info("Held %s generation %s for %s: %s", FAMILY, generation, holder, record["reason"])
+    return record
+
+
+def release_generation(holder: str, *, root: Path | None = None) -> dict[str, Any] | None:
+    """Remove `holder`'s hold; the next update prunes the generation unless someone else holds it."""
+    family = family_dir(root)
+    path = _hold_path(family, holder)
+    with _holds_lock(family):
+        if not path.is_file():
+            return None
+        record = read_json(path)
+        path.unlink()
+    LOGGER.info("Released %s generation %s held by %s", FAMILY, record["generation"], holder)
+    return record
+
+
 def _prune(family: Path, keep: list[str]) -> list[str]:
-    """Best effort: a generation still open in a reader (Windows) is left for the next update."""
-    removed = []
-    for path in sorted((family / "generations").iterdir()):
-        if path.is_dir() and path.name not in keep:
-            try:
-                shutil.rmtree(path)
-            except OSError as error:
-                LOGGER.warning("Could not prune generation %s, retrying on the next update: %s", path.name, error)
-                continue
-            removed.append(path.name)
+    """Best effort: a generation still open in a reader (Windows) is left for the next update.
+
+    Generations a study holds (`hold_generation`) are kept as well; the holds are read
+    under the same lock a new hold takes, so none can appear mid-prune.
+    """
+    removed: list[str] = []
+    try:
+        with _holds_lock(family):
+            keep = [*keep, *held_generations(family.parent.parent)]
+            for path in sorted((family / "generations").iterdir()):
+                if path.is_dir() and path.name not in keep:
+                    try:
+                        shutil.rmtree(path)
+                    except OSError as error:
+                        LOGGER.warning("Could not prune generation %s, retrying on the next update: %s", path.name, error)
+                        continue
+                    removed.append(path.name)
+    except RuntimeError as error:
+        LOGGER.warning("Skipped pruning this update, retrying on the next one: %s", error)
+        return removed
     LOGGER.info("Pruned generations %s; kept %s", removed, keep)
     return removed
 
@@ -304,6 +399,7 @@ def update(*, producer_root: Path, root: Path | None = None) -> dict[str, Any]:
             "asof": asof,
             "previous": previous,
             "pruned": removed,
+            "held": sorted(held_generations(root)),
             "path": str(final),
             "timings_seconds": status["timings_seconds"],
         }
