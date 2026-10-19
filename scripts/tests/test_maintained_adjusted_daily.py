@@ -477,6 +477,9 @@ def test_a_held_generation_survives_updates_until_released(environment: tuple[Pa
         maintained_adjusted_daily.hold_generation(held, holder="late", reason="too late")
     with pytest.raises(ValueError, match="holder must match"):
         maintained_adjusted_daily.hold_generation(result["generation"], holder="../escape", reason="x")
+    for device in ("con", "nul", "com1", "lpt9"):
+        with pytest.raises(ValueError, match="Windows device name"):
+            maintained_adjusted_daily.hold_generation(result["generation"], holder=device, reason="x")
     with pytest.raises(ValueError, match="reason"):
         maintained_adjusted_daily.hold_generation(result["generation"], holder="ok", reason=" ")
 

@@ -2,8 +2,11 @@
 
 Owner policy 2026-10-15 (docs/en/decision-records/2026-10-15-drop-input-sealing.md):
 results keep their SHA-256 so accidental edits are detectable; inputs keep an identity
-only (path, SHA-256 or row counts, date range, producer as-of time). A result that cannot
-be reproduced later is rerun on current data, and the old receipt labels the old result.
+only. Since 2026-10-19 that identity is information, not a hash: path, size, modification
+time, rows and date range, producer as-of time. Receipts written before then also carry a
+file SHA-256 for each input; they remain valid `run-receipt.v1` receipts, and a missing
+input hash in a newer receipt is the current policy, not damage. A result that cannot be
+reproduced later is rerun on current data, and the old receipt labels the old result.
 
 Code identity is the Git commit plus a dirty flag. Loaded modules are deliberately not
 hashed: that would tie the receipt to unrelated source edits and force rebuilds.
