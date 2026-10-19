@@ -413,3 +413,24 @@ def test_a_legacy_listing_digest_still_detects_a_rename(producer: Path) -> None:
     day_csv.rename(renamed)
     os.utime(renamed, ns=(stat.st_atime_ns, stat.st_mtime_ns))
     assert changed_inputs(legacy) == ["day_csv"]
+
+
+def test_receipt_refuses_a_commit_made_during_the_run(repo: Path, producer: Path) -> None:
+    from research_core.run_receipt import code_identity
+
+    result = repo / "summary.json"
+    result.write_text("{}", encoding="utf-8")
+    inputs = fingerprint_inputs([InputSpec("prices", producer / "price_daily.parquet")], now=WEEKDAY_NIGHT)
+    started = code_identity(repo)
+    (repo / "runner.py").write_text("print('b')", encoding="utf-8")
+    _git(["add", "runner.py"], repo)
+    _git(["commit", "-q", "-m", "runner b during the run"], repo)
+    with pytest.raises(ValueError, match="code changed during the run"):
+        write_run_receipt(
+            repo / "r1.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, repo_root=repo, expected_code=started
+        )
+    assert not (repo / "r1.json").exists()
+    same = write_run_receipt(
+        repo / "r2.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, repo_root=repo, expected_code=code_identity(repo)
+    )
+    assert same["code"]["dirty"] is False
