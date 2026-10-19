@@ -1,5 +1,48 @@
 # PR17 shared-price continuation v4
 
+## Current continuation policy: owner update 2026-10-19
+
+This section takes precedence over the historical orchestration and intermediate
+hash requirements below for newly written phases. It follows section 6 of
+Claude's `pr17-shared-data-reply-claude-20261017.md` and the owner's explicit
+instruction. Existing receipts, completed results and numerical source/input
+identities remain unchanged; this is not authority to rerun completed work.
+
+- Do not execute `maintain_adjusted_daily update` before
+  [PR #34](https://github.com/TaiwanCCyoyo/stock-research/pull/34) is merged. The
+  current main updater ignores holds and could prune the generation used by
+  this study. Before any later authorized update, use the merged implementation
+  that honors holds; merge alone does not request an update or scheduler change.
+- The existing hold is `pr17-pattern-scan`, for generation
+  `2026-10-15-20261015T161626Z`. It protects the original Q2--Q6 inputs. Continue
+  reading the original derived tables; do not switch this unfinished run to the
+  newer technical generation. The hold file was checked read-only on 2026-10-19.
+- After Q2--Q6 finish, release this holder with the merged hold-aware CLI:
+
+    ```text
+    uv run python -m scripts.maintain_adjusted_daily release --holder pr17-pattern-scan
+    ```
+
+    This removes the hold, not the generation payload; a later update may prune
+    the now-unheld generation. Do not release while Q2--Q6 remain incomplete.
+
+- Apply the owner-approved results-only policy from
+  [PR #35](https://github.com/TaiwanCCyoyo/stock-research/pull/35) to newly written
+  phases and future runs now. Hash final result tables and record inputs, shared
+  generation and actual code commit in the run receipt. Do not hash intermediate
+  stock parts, phase outputs, worker files or previews; do not create per-file
+  intermediate receipts/manifests or repeat payload verification between phases,
+  including through legacy helpers. Missing or damaged intermediates require
+  rerunning the affected step, not another archival layer. Numerical tests,
+  schema/count checks and deterministic aggregation remain appropriate.
+
+The older per-file pins and receipts below describe retained execution history
+and its compatibility path, not a template for new stages. Preserve those stored
+records and completed Q1 outputs. This policy update itself runs no calculation,
+shared update, release or deletion.
+
+## Historical execution contract
+
 Owner instruction: 2026-10-16, after PR26 merged (`804a765`). This addendum
 supersedes only the v3 requirement to retain PR17's own prices until formal
 publication. Historical receipts and completed numerical work keep their bytes
