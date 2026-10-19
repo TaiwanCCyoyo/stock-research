@@ -546,6 +546,10 @@ def economic_path_v2(
                 if ratio is None or not np.isfinite(ratio) or ratio <= 0:
                     unknowns.append(f"{day.date()}:missing_exact_share_ratio")
                     break
+                if day in carried:
+                    # Like an admitted share entitlement: no observed quote confirms the ratio.
+                    unknowns.append(f"{day.date()}:share_change_requires_observed_effective_quote")
+                    break
                 exit_open = day == end and end_field == "Open"
                 if _native_terms_contradict(frame, day, share=ratio, cash=0.0, field="Open" if exit_open else "Close") is not None:
                     unknowns.append(f"{day.date()}:native_action_contradicts_observed_quote")

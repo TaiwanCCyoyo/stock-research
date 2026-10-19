@@ -149,6 +149,22 @@ def test_a_native_split_on_an_open_exit_day_is_checked_against_the_open():
     assert f"{day_at(days, -1).date()}:native_action_contradicts_observed_quote" in result["reasons"]
 
 
+def test_a_native_split_on_a_carried_halt_day_is_unknown():
+    days, raw, actions = fixture([100.0, 100.0, 100.0, 100.0])
+    actions = actions.loc[[0]].assign(event_type=["ETF_SPLIT"], price_factor=[0.5])
+    result = economic_path_v2(
+        raw.drop(index=1),
+        actions,
+        days,
+        start=day_at(days, 0),
+        end=day_at(days, -1),
+        known_halts={str(day_at(days, 1).date())},
+        split_ratios={str(day_at(days, 1).date()): 2.0},
+    )
+    assert result["status"] == "unknown"
+    assert f"{day_at(days, 1).date()}:share_change_requires_observed_effective_quote" in result["reasons"]
+
+
 def test_small_terms_survive_ordinary_noise_in_either_direction():
     days, raw, actions = fixture([100.0, 103.0, 103.0, 103.0])
     actions = actions.iloc[:0]
