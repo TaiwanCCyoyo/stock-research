@@ -4,8 +4,9 @@ Research worktrees read the live producer root in place (`producer_data.producer
 which owns root discovery). Its files change during the producer's evening runs, so a
 research run calls `assert_producer_idle` before reading, opens SQLite read-only, uses
 `read_stable` so a file rewritten mid-read fails, and `run_receipt.write_run_receipt`
-re-checks every fingerprinted input at the end so a writer that ran during the study is
-caught rather than mixing old and new files silently.
+re-checks every fingerprinted input at the end: a writer that ran during the study is
+recorded as `inputs_changed_during_run` with the finished result kept, so a mix of old
+and new files is never silent.
 """
 
 from __future__ import annotations
