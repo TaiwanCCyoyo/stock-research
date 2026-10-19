@@ -90,7 +90,9 @@ backfill. SQLite is opened with `readonly_sqlite()` (`?mode=ro`). Files are read
 mid-read fails instead of being half-read. The idle check is a point-in-time probe and
 cannot see a writer that starts afterwards, so `write_run_receipt` re-checks the size and
 mtime of every fingerprinted input (and a SQLite input's WAL) before writing. A writer that
-ran during the study fails the run instead of silently mixing old and new files. This
+ran during the study fails the run instead of silently mixing old and new files
+(amended 2026-10-19: the change is now recorded in the receipt as
+`inputs_changed_during_run` and the finished result is kept). This
 change check is still not a cross-file transaction: a writer that finished entirely before
 the first read is visible only through the recorded mtimes.
 
@@ -102,7 +104,8 @@ be declared, and a task-owned declaration under the producer root is rejected.
 before reading (including the corporate-action database the loader actually resolves,
 missing optional inputs as absent and an always-recorded `*_day.csv` listing, so a file
 that appears mid-run is caught), refuses the window, makes the SHA-pinned `DataLoader`'s and
-`universe.py`'s SQLite reads read-only, and re-checks the inputs before writing results.
+`universe.py`'s SQLite reads read-only, and re-checks the inputs before writing results
+(since 2026-10-19 it records a change in the output instead of exiting).
 A read-write connection is not harmless here: on a WAL database, the last connection to
 close checkpoints the WAL into the main file, which writes producer data.
 

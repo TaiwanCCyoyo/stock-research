@@ -244,12 +244,17 @@ def held_generations(root: Path | None = None) -> dict[str, list[dict[str, Any]]
     directory = family_dir(root) / "holds"
     if directory.is_dir():
         for path in sorted(directory.glob("*.json")):
-            record = read_json(path)
+            try:
+                record = read_json(path)
+            except FileNotFoundError:
+                continue  # released between listing and reading
             holds.setdefault(str(record["generation"]), []).append(record)
     return holds
 
 
 HOLDS_LOCK_WAIT_SECONDS = 120.0
+# A hold write or one prune pass takes seconds; a lock this old was left by a killed process.
+HOLDS_LOCK_STALE_SECONDS = 1800.0
 
 
 @contextmanager
@@ -267,6 +272,8 @@ def _holds_lock(family: Path) -> Iterator[None]:
                 handle.write(f"pid={os.getpid()} started_utc={datetime.now(timezone.utc).isoformat(timespec='seconds')}\n")
             break
         except FileExistsError as error:
+            if _reclaim_stale_lock(lock):
+                continue
             if time.monotonic() >= deadline:
                 raise RuntimeError(f"{lock} is held; if no update or hold is running, read it and remove it") from error
             time.sleep(0.5)
@@ -274,6 +281,27 @@ def _holds_lock(family: Path) -> Iterator[None]:
         yield
     finally:
         lock.unlink()
+
+
+def _reclaim_stale_lock(lock: Path) -> bool:
+    """Move aside a holds lock older than HOLDS_LOCK_STALE_SECONDS; True when this call reclaimed it.
+
+    A rename succeeds for one caller only, so two waiters cannot both reclaim the same lock.
+    """
+    try:
+        age = time.time() - lock.stat().st_mtime
+    except FileNotFoundError:
+        return True  # released meanwhile; try to take it again
+    if age < HOLDS_LOCK_STALE_SECONDS:
+        return False
+    aside = lock.with_name(f"{lock.name}.stale-{os.getpid()}-{time.time_ns()}")
+    try:
+        os.rename(lock, aside)
+    except FileNotFoundError:
+        return True
+    LOGGER.warning("Reclaimed a holds lock left %.0f s ago (%s)", age, aside.read_text(encoding="utf-8", errors="replace").strip())
+    aside.unlink(missing_ok=True)
+    return True
 
 
 def hold_generation(generation: str, *, holder: str, reason: str, root: Path | None = None) -> dict[str, Any]:
