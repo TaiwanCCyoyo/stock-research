@@ -32,8 +32,11 @@ Historical packets keep their existing byte-level verification contract.
 4. After formatting is stable, commit the selected source and preregistration.
    For a new run, record that commit, definition and parameters with the existing
    run-receipt API, and describe the inputs actually read (`fingerprint_inputs`, no
-   file hashes). An input that changed during the run is listed in the receipt, not a
-   reason to discard the result; hash results, not sources.
+   file hashes). Pass the runner, strategy and study modules the run executes as
+   `write_run_receipt(..., sources=[...])`: the receipt's dirty flag does not see
+   untracked files, so it refuses a source that is untracked or differs from the
+   commit. An input that changed during the run is listed in the receipt, not a reason
+   to discard the result; hash results, not sources.
 5. Execute the authorized study using those fixed files. If code changes during
    the run, stop publication and investigate; a dirty flag must not be presented
    as a clean committed implementation. A historical byte-sealed packet is the
