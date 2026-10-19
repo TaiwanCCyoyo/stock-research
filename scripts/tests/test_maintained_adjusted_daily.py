@@ -252,6 +252,18 @@ def test_a_same_size_replacement_after_a_cached_read_is_refused(environment: tup
         maintained_adjusted_daily.read_adjusted_daily("raw")
 
 
+def test_a_writer_lock_left_by_an_old_protocol_updater_is_refused(environment: tuple[Path, Path]) -> None:
+    producer, shared = environment
+    family = shared / "derived" / maintained_adjusted_daily.FAMILY
+    family.mkdir(parents=True)
+    (family / ".writer.lock").write_text("pid=1 started_utc=2026-10-18T16:12:03+00:00\n", encoding="utf-8")
+    with pytest.raises(RuntimeError, match="before 2026-10-19"):
+        maintained_adjusted_daily.update(producer_root=producer)
+    assert not (family / "current.json").exists()
+    (family / ".writer.lock").write_bytes(b"")
+    assert maintained_adjusted_daily.update(producer_root=producer)["generation"]
+
+
 def test_concurrent_writer_is_refused(environment: tuple[Path, Path]) -> None:
     producer, shared = environment
     family = shared / "derived" / maintained_adjusted_daily.FAMILY
@@ -463,6 +475,8 @@ def test_a_held_generation_survives_updates_until_released(environment: tuple[Pa
         maintained_adjusted_daily.hold_generation(held, holder="late", reason="too late")
     with pytest.raises(ValueError, match="holder must match"):
         maintained_adjusted_daily.hold_generation(result["generation"], holder="../escape", reason="x")
+    with pytest.raises(ValueError, match="holder must match"):
+        maintained_adjusted_daily.hold_generation(result["generation"], holder="study\n", reason="x")
     for device in ("con", "nul", "com1", "lpt9"):
         with pytest.raises(ValueError, match="Windows device name"):
             maintained_adjusted_daily.hold_generation(result["generation"], holder=device, reason="x")

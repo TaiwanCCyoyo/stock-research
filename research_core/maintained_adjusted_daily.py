@@ -219,6 +219,14 @@ def _acquire_lock(family: Path) -> IO[bytes]:
     if not _try_os_lock(handle):
         handle.close()
         raise RuntimeError(f"another update holds {lock}; wait for it to finish")
+    # Updaters before 2026-10-19 held the lock by creating the file with "pid=..." in it
+    # and took no OS lock. This protocol never writes to the file, so content means an old
+    # updater is running or died; refuse rather than run beside it. An old updater, for
+    # its part, always refuses while the file exists, which it now always does.
+    if lock.stat().st_size:
+        _release_os_lock(handle)
+        handle.close()
+        raise RuntimeError(f"{lock} was written by an updater from before 2026-10-19; if none is running, delete the file and retry")
     return handle
 
 
@@ -243,7 +251,7 @@ WINDOWS_DEVICE_NAMES = frozenset({"con", "prn", "aux", "nul", *(f"com{n}" for n 
 
 
 def _hold_path(family: Path, holder: str) -> Path:
-    if not HOLDER_PATTERN.match(holder):
+    if not HOLDER_PATTERN.fullmatch(holder):  # `$` alone would accept a trailing newline
         raise ValueError(f"holder must match {HOLDER_PATTERN.pattern}, got {holder!r}")
     if holder in WINDOWS_DEVICE_NAMES:
         raise ValueError(f"holder {holder!r} is a Windows device name; choose another")
@@ -256,7 +264,7 @@ def held_generations(root: Path | None = None) -> dict[str, list[dict[str, Any]]
     directory = family_dir(root) / "holds"
     if directory.is_dir():
         for path in sorted(directory.glob("*.json")):
-            if not HOLDER_PATTERN.match(path.stem):
+            if not HOLDER_PATTERN.fullmatch(path.stem):
                 continue  # only `<holder>.json`; never a temporary or foreign file
             try:
                 record = read_json(path)
