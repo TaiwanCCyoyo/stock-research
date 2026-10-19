@@ -263,7 +263,8 @@ def write_run_receipt(
         "run_id": run_id,
         "definition": definition,
         "parameters": dict(parameters),
-        "preregistration": None if preregistration is None else {"path": _display_path(preregistration, repo_root), "sha256": file_digest(preregistration)},
+        # The preregistration is a source: its path plus the code commit identify it, unhashed.
+        "preregistration": None if preregistration is None else {"path": _display_path(preregistration, repo_root)},
         "code": code_identity(repo_root),
         "input_fingerprint": dict(inputs),
         **({"shared_data": shared} if shared else {}),
