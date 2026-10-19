@@ -264,24 +264,25 @@ def code_identity(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
     return {"commit": git("rev-parse", "HEAD"), "dirty": bool(git("status", "--porcelain", "--untracked-files=no"))}
 
 
-def _require_committed_preregistration(path: Path, repo_root: Path) -> None:
-    """The receipt names the preregistration by path; the recorded commit must hold its exact content.
+def _require_committed(path: Path, repo_root: Path, label: str) -> str:
+    """Require a tracked file unchanged from HEAD inside the repository; return its relative path.
 
-    Without a hash, only a tracked file unchanged from HEAD inside the repository is identified
-    by the commit, so the rules are provably fixed before evaluation.
+    Without a hash, the recorded commit is the only identity of a preregistration or an
+    executed source, and `code_identity`'s dirty flag does not see untracked files.
     """
     if not path.is_file():
-        raise FileNotFoundError(f"preregistration {path} does not exist; a receipt names an existing file")
+        raise FileNotFoundError(f"{label} {path} does not exist; a receipt names an existing file")
     resolved, root = path.resolve(), repo_root.resolve()
     if not resolved.is_relative_to(root):
-        raise ValueError(f"preregistration {path} is outside the repository; the recorded commit cannot identify it")
+        raise ValueError(f"{label} {path} is outside the repository; the recorded commit cannot identify it")
     relative = resolved.relative_to(root).as_posix()
     tracked = subprocess.run(["git", "-C", str(root), "ls-files", "--error-unmatch", "--", relative], capture_output=True, text=True, check=False)
     if tracked.returncode:
-        raise ValueError(f"preregistration {relative} is not tracked by Git; commit it before writing the receipt")
+        raise ValueError(f"{label} {relative} is not tracked by Git; commit it before writing the receipt")
     unchanged = subprocess.run(["git", "-C", str(root), "diff", "--quiet", "HEAD", "--", relative], capture_output=True, text=True, check=False)
     if unchanged.returncode:
-        raise ValueError(f"preregistration {relative} differs from the recorded commit; commit it before writing the receipt")
+        raise ValueError(f"{label} {relative} differs from the recorded commit; commit it before writing the receipt")
+    return relative
 
 
 def _describe_shared_read(record: Mapping[str, Any]) -> dict[str, Any]:
@@ -315,6 +316,7 @@ def write_run_receipt(
     preregistration: Path | None = None,
     repo_root: Path = REPO_ROOT,
     shared_data: Sequence[Mapping[str, Any]] = (),
+    sources: Sequence[Path] = (),
 ) -> dict[str, Any]:
     """Write a new receipt (never replacing one): final-result SHA-256s plus what was read.
 
@@ -326,7 +328,10 @@ def write_run_receipt(
     it was read does not matter.
     """
     if preregistration is not None:
-        _require_committed_preregistration(preregistration, repo_root)
+        _require_committed(preregistration, repo_root, "preregistration")
+    # The runner, strategy and imported study modules the run executed: an untracked or
+    # edited one would leave a clean-looking commit that does not contain the code.
+    executed = [_require_committed(source, repo_root, "run source") for source in sources]
     changed = changed_inputs(inputs)
     if changed:
         LOGGER.warning("Inputs changed during run %s: %s; recorded in the receipt", run_id, changed)
@@ -341,6 +346,7 @@ def write_run_receipt(
         "code": code_identity(repo_root),
         "input_fingerprint": dict(inputs),
         **({"shared_data": shared} if shared else {}),
+        **({"sources": executed} if executed else {}),
         **({"inputs_changed_during_run": changed} if changed else {}),
         "results": {
             name: {"path": _display_path(result, repo_root), "bytes": result.stat().st_size, "sha256": file_digest(result)}
