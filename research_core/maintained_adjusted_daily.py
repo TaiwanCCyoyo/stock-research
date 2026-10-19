@@ -40,6 +40,7 @@ import re
 import shutil
 import sys
 import time
+import uuid
 from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager
 from datetime import datetime, timezone
@@ -337,7 +338,11 @@ def hold_generation(generation: str, *, holder: str, reason: str, root: Path | N
         # Under the lock no prune runs, so a generation that exists now is kept.
         current_generation(root, generation=generation)
         path.parent.mkdir(parents=True, exist_ok=True)
-        temporary = path.with_name(f".{holder}-{os.getpid()}.tmp")
+        # Under the lock no other hold write runs, so this holder's leftover temporaries
+        # (a write killed before os.replace) are safe to remove; a fresh name never collides.
+        for leftover in path.parent.glob(f".{holder}-*.tmp"):
+            leftover.unlink(missing_ok=True)
+        temporary = path.with_name(f".{holder}-{uuid.uuid4().hex}.tmp")
         write_json(temporary, record)
         os.replace(temporary, path)
     LOGGER.info("Held %s generation %s for %s: %s", FAMILY, generation, holder, record["reason"])

@@ -31,8 +31,8 @@ It rebuilds everything from 2010 in about 13 minutes and flips `current.json`; i
 Weekday 18:00-18:45 and running `StockProject-*` tasks are refused at load.
 
 A study that reads one generation for more than a day holds it, or the next update deletes it:
-`maintain_adjusted_daily hold --generation <id> --holder <study> --reason <why>`, then
-`release --holder <study>` when done. Unheld old generations are deleted. A finished
+`uv run python -m scripts.maintain_adjusted_daily hold --generation <id> --holder <study> --reason <why>`,
+then `uv run python -m scripts.maintain_adjusted_daily release --holder <study>` when done. Unheld old generations are deleted. A finished
 result stays valid after its generation is gone; only a step that still needs it is redone.
 
 ## Extend
