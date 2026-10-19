@@ -506,12 +506,11 @@ def test_a_hold_racing_a_prune_is_refused_not_silently_lost(environment: tuple[P
 
     assert len(attempts) == 1 and "holds.lock" in str(attempts[0]), "the racing hold is refused, not reported as successful"
     assert first in result["pruned"] and not (family / "holds" / "late-study.json").exists()
-    assert not (family / ".holds.lock").exists()
 
     monkeypatch.setattr(maintained_adjusted_daily, "held_generations", original)
-    (family / ".holds.lock").write_text("stale", encoding="utf-8")
     monkeypatch.setattr(maintained_adjusted_daily, "datetime", _Later(3))
-    blocked = maintained_adjusted_daily.update(producer_root=producer)
+    with maintained_adjusted_daily._holds_lock(family):  # another process mid-prune or mid-hold
+        blocked = maintained_adjusted_daily.update(producer_root=producer)
     assert blocked["pruned"] == [], "a held lock skips pruning instead of failing a published update"
     assert read_json(family / "current.json")["generation"] == blocked["generation"]
 
@@ -522,33 +521,46 @@ def test_release_waits_for_the_holds_lock(environment: tuple[Path, Path], monkey
     generation = maintained_adjusted_daily.update(producer_root=producer)["generation"]
     maintained_adjusted_daily.hold_generation(generation, holder="study", reason="reads it")
     monkeypatch.setattr(maintained_adjusted_daily, "HOLDS_LOCK_WAIT_SECONDS", 0.2)
-    (family / ".holds.lock").write_text("a prune or hold in progress", encoding="utf-8")
 
-    with pytest.raises(RuntimeError, match="holds.lock"):
+    with maintained_adjusted_daily._holds_lock(family), pytest.raises(RuntimeError, match="holds.lock"):
         maintained_adjusted_daily.release_generation("study")
     assert (family / "holds" / "study.json").exists(), "a release never races a prune scan or a new hold"
 
-    (family / ".holds.lock").unlink()
     released = maintained_adjusted_daily.release_generation("study")
     assert released is not None and released["generation"] == generation
 
 
-def test_a_stale_holds_lock_is_reclaimed_so_pruning_resumes(environment: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:
+def test_a_lock_left_by_a_killed_process_does_not_stop_pruning(environment: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:
     producer, shared = environment
     family = shared / "derived" / maintained_adjusted_daily.FAMILY
     first = maintained_adjusted_daily.update(producer_root=producer)["generation"]
     monkeypatch.setattr(maintained_adjusted_daily, "datetime", _Later(1))
     maintained_adjusted_daily.update(producer_root=producer)
-    lock = family / ".holds.lock"
-    lock.write_text("pid=1 started_utc=killed", encoding="utf-8")
-    old = lock.stat().st_mtime - maintained_adjusted_daily.HOLDS_LOCK_STALE_SECONDS - 60
-    os.utime(lock, (old, old))
+    # A killed holder leaves the file but the OS drops its lock: closing a locked handle
+    # without unlocking is what process exit does.
+    handle = (family / ".holds.lock").open("a+b")
+    assert maintained_adjusted_daily._try_os_lock(handle)
+    handle.close()
 
     monkeypatch.setattr(maintained_adjusted_daily, "datetime", _Later(2))
     result = maintained_adjusted_daily.update(producer_root=producer)
 
-    assert first in result["pruned"], "a lock left by a killed process does not stop pruning forever"
-    assert not lock.exists() and not list(family.glob(".holds.lock.stale-*"))
+    assert first in result["pruned"], "a lock file without a live holder does not stop pruning"
+
+
+def test_a_live_lock_is_never_taken_over(environment: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:
+    _, shared = environment
+    family = shared / "derived" / maintained_adjusted_daily.FAMILY
+    monkeypatch.setattr(maintained_adjusted_daily, "HOLDS_LOCK_WAIT_SECONDS", 0.2)
+    old = family / ".holds.lock"
+    family.mkdir(parents=True, exist_ok=True)
+    old.write_bytes(b"")
+    os.utime(old, (0, 0))  # however old the file looks, a live lock holds
+    with maintained_adjusted_daily._holds_lock(family):
+        with pytest.raises(RuntimeError, match="holds.lock"), maintained_adjusted_daily._holds_lock(family):
+            pass
+    with maintained_adjusted_daily._holds_lock(family):
+        pass  # released by its owner, then free again
 
 
 def test_holds_listing_skips_a_hold_released_while_listing(environment: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:

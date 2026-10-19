@@ -38,12 +38,13 @@ import logging
 import os
 import re
 import shutil
+import sys
 import time
 from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, TypeVar, cast
+from typing import IO, Any, TypeVar, cast
 
 import pandas as pd
 import pyarrow as pa
@@ -253,55 +254,60 @@ def held_generations(root: Path | None = None) -> dict[str, list[dict[str, Any]]
 
 
 HOLDS_LOCK_WAIT_SECONDS = 120.0
-# A hold write or one prune pass takes seconds; a lock this old was left by a killed process.
-HOLDS_LOCK_STALE_SECONDS = 1800.0
+
+
+def _try_os_lock(handle: IO[bytes]) -> bool:
+    """Take an exclusive OS lock on the first byte; the OS drops it when the process ends."""
+    handle.seek(0)
+    try:
+        if sys.platform == "win32":
+            import msvcrt
+
+            msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
+        else:
+            import fcntl
+
+            fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        return False
+    return True
+
+
+def _release_os_lock(handle: IO[bytes]) -> None:
+    handle.seek(0)
+    if sys.platform == "win32":
+        import msvcrt
+
+        msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+    else:
+        import fcntl
+
+        fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
 
 
 @contextmanager
 def _holds_lock(family: Path) -> Iterator[None]:
     """Serialize hold changes with pruning, so a hold is either seen by the prune or refused.
 
-    Held only for a hold write or one prune pass (seconds), never for a whole update.
+    An OS lock on `.holds.lock`, not the file's existence: the file stays, and a killed
+    holder's lock is released by the OS, so no age-based reclaim can break a live holder.
+    Held only for a hold write or one prune pass, never for a whole update.
     """
     lock = family / ".holds.lock"
     family.mkdir(parents=True, exist_ok=True)
-    deadline = time.monotonic() + HOLDS_LOCK_WAIT_SECONDS
-    while True:
-        try:
-            with lock.open("x", encoding="utf-8") as handle:
-                handle.write(f"pid={os.getpid()} started_utc={datetime.now(timezone.utc).isoformat(timespec='seconds')}\n")
-            break
-        except FileExistsError as error:
-            if _reclaim_stale_lock(lock):
-                continue
+    handle = lock.open("a+b")
+    try:
+        deadline = time.monotonic() + HOLDS_LOCK_WAIT_SECONDS
+        while not _try_os_lock(handle):
             if time.monotonic() >= deadline:
-                raise RuntimeError(f"{lock} is held; if no update or hold is running, read it and remove it") from error
+                raise RuntimeError(f"{lock} is locked by a running update, hold or release; retry when it finishes")
             time.sleep(0.5)
-    try:
-        yield
+        try:
+            yield
+        finally:
+            _release_os_lock(handle)
     finally:
-        lock.unlink()
-
-
-def _reclaim_stale_lock(lock: Path) -> bool:
-    """Move aside a holds lock older than HOLDS_LOCK_STALE_SECONDS; True when this call reclaimed it.
-
-    A rename succeeds for one caller only, so two waiters cannot both reclaim the same lock.
-    """
-    try:
-        age = time.time() - lock.stat().st_mtime
-    except FileNotFoundError:
-        return True  # released meanwhile; try to take it again
-    if age < HOLDS_LOCK_STALE_SECONDS:
-        return False
-    aside = lock.with_name(f"{lock.name}.stale-{os.getpid()}-{time.time_ns()}")
-    try:
-        os.rename(lock, aside)
-    except FileNotFoundError:
-        return True
-    LOGGER.warning("Reclaimed a holds lock left %.0f s ago (%s)", age, aside.read_text(encoding="utf-8", errors="replace").strip())
-    aside.unlink(missing_ok=True)
-    return True
+        handle.close()
 
 
 def hold_generation(generation: str, *, holder: str, reason: str, root: Path | None = None) -> dict[str, Any]:
