@@ -109,11 +109,15 @@ def _listing_summary(spec: InputSpec) -> dict[str, Any]:
         "files": len(listing),
         "total_bytes": sum(row[1] for row in listing),
         "newest_mtime_ns": max((row[2] for row in listing), default=None),
+        # Name, size and mtime per file: a rename or an add-and-remove that leaves the
+        # totals unchanged is still visible, and nothing is hashed.
+        "listing": listing,
     }
 
 
 def _glob_fingerprint(spec: InputSpec) -> dict[str, Any]:
-    """Describe many files without hashing them: count, total bytes and newest mtime.
+    """Describe many files without hashing them: count, total bytes, newest mtime and the
+    per-file listing (name, size, mtime).
 
     Receipts written before 2026-10-19 also carry a `listing_sha256`; the description
     alone identifies the read now (owner decision: inputs are information only).
@@ -206,6 +210,8 @@ def _input_changed(name: str, row: Mapping[str, Any]) -> bool:
     path = Path(row["path"])
     if "pattern" in row:
         current = _listing_summary(InputSpec(name, path, pattern=row["pattern"]))
+        if "listing" in row:
+            return [list(item) for item in current["listing"]] != [list(item) for item in row["listing"]]
         return any(current[field] != row.get(field) for field in LISTING_FIELDS)
     if row.get("absent"):
         return path.exists()

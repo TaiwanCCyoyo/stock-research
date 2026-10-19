@@ -170,3 +170,9 @@ def test_unchanged_live_inputs_let_the_backtest_write_results(
 ) -> None:
     """Control for the recorded-change cases: the same run with no producer write completes."""
     _run_with_real_loader(monkeypatch, _nested_data_dir(live_root), tmp_path / "summary.json", None, caplog)
+
+
+def test_comparison_artifacts_carry_inputs_changed_during_the_run() -> None:
+    summaries: dict[str, dict[str, Any]] = {"shared": {"data": {"inputs_changed_during_run": ["price_daily"]}}, "per_stock": {"data": {}}}
+    assert backtest_cli._with_input_changes({"modes": {}}, summaries) == {"modes": {}, "inputs_changed_during_run": ["price_daily"]}
+    assert backtest_cli._with_input_changes({"modes": {}}, {"shared": {"data": {}}}) == {"modes": {}}

@@ -650,13 +650,19 @@ def write_json(path: Path, payload: Any) -> None:
     path.write_text(json.dumps(make_json_safe(payload), indent=4), encoding="utf-8")
 
 
+def _with_input_changes(comparison: dict[str, Any], summaries: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    """Carry inputs changed during the run into a comparison artifact read on its own."""
+    changed = sorted({name for summary in summaries.values() for name in summary.get("data", {}).get("inputs_changed_during_run", [])})
+    return {**comparison, "inputs_changed_during_run": changed} if changed else comparison
+
+
 def write_comparison_artifacts(output_path: Path, summaries: dict[str, dict[str, Any]]) -> None:
     """Write Option-A comparison artifacts next to the requested output path."""
     root = output_path.parent
     write_json(root / "summary_shared.json", summaries["shared"])
     write_json(root / "summary_per_stock.json", summaries["per_stock"])
     write_json(root / "summary_unconstrained.json", summaries["unconstrained"])
-    write_json(root / "comparison.json", build_capital_mode_comparison(summaries))
+    write_json(root / "comparison.json", _with_input_changes(build_capital_mode_comparison(summaries), summaries))
     write_json(output_path, summaries["shared"])
 
 
@@ -681,7 +687,7 @@ def write_universe_comparison_artifacts(output_path: Path, summaries: dict[str, 
     root = output_path.parent
     for name, summary in summaries.items():
         write_json(root / f"summary_{name}.json", summary)
-    write_json(root / "comparison.json", build_universe_comparison(summaries))
+    write_json(root / "comparison.json", _with_input_changes(build_universe_comparison(summaries), summaries))
     write_json(output_path, summaries[default_universe])
 
 
