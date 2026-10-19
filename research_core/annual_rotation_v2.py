@@ -288,6 +288,31 @@ def economic_path_v2(
             if explained:
                 frame.loc[day, "Quality"] = True
                 frame.loc[day, "quality_reason"] = None
+        elif bool(frame.loc[day, "Quality"]) and day < end:
+            # An exit-day entitlement is already ambiguous for an open exit.
+            # Below the jump threshold the terms are still applied to holdings, so an
+            # observed quote that contradicts them grossly (e.g. a halving share
+            # multiplier on a rising close) keeps the path unknown. Direction is not
+            # required here: ordinary noise may move a small factor either way.
+            position = int(frame.index.get_indexer([day])[0])
+            previous = float(frame.RawClose.iloc[position - 1]) if position else np.nan
+            if position and bool(frame.Quality.iloc[position - 1]) and np.isfinite(previous) and previous > 0:
+                terms_diagnostic = _theoretical_terms_diagnostic(
+                    anchor_day=cast(pd.Timestamp, frame.index[position - 1]),
+                    day=day,
+                    previous=previous,
+                    close=float(frame.loc[day, "RawClose"]),
+                    share=item.share_multiplier,
+                    cash=item.cash_per_old_share,
+                    rights=item.rights_per_old_share,
+                    subscription=item.subscription_price or 0,
+                    context="event",
+                )
+                residual = terms_diagnostic["residual"]
+                terms_diagnostic["consistent_with_terms"] = bool(terms_diagnostic["factor_valid"] and residual is not None and abs(residual) < 0.4)
+                diagnostic.append(terms_diagnostic)
+                if not terms_diagnostic["consistent_with_terms"]:
+                    unknowns.append(f"{day.date()}:entitlement_terms_contradict_observed_quote")
     availability = {day: "H" for day in known_halts or set()}
     availability.update(unavailable_days or {})
     carried: set[pd.Timestamp] = set()

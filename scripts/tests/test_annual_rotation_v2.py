@@ -84,6 +84,23 @@ def test_share_only_reduction_and_par_change_have_explicit_quality_diagnostic(mu
     assert result["events"][0]["source_actions"] == []
 
 
+def test_terms_that_contradict_a_small_observed_move_keep_the_path_unknown():
+    days, raw, actions = fixture([100.0, 110.0, 110.0, 110.0])
+    actions = actions.iloc[:0]
+    item = entitlement(day_at(days, 1), share_multiplier=0.5)
+    result = economic_path_v2(raw, actions, days, start=day_at(days, 0), end=day_at(days, -1), entitlements=[item])
+    assert result["status"] == "unknown" and result["gross_multiplier"] is None
+    assert f"{day_at(days, 1).date()}:entitlement_terms_contradict_observed_quote" in result["reasons"]
+
+
+def test_small_terms_survive_ordinary_noise_in_either_direction():
+    days, raw, actions = fixture([100.0, 103.0, 103.0, 103.0])
+    actions = actions.iloc[:0]
+    item = entitlement(day_at(days, 1), share_multiplier=1.02)
+    result = economic_path_v2(raw, actions, days, start=day_at(days, 0), end=day_at(days, -1), entitlements=[item])
+    assert result["status"] == "modeled" and result["gross_multiplier"] == pytest.approx(1.03 * 1.02)
+
+
 def test_lapse_and_realize_are_separate_rights_scenarios():
     days, raw, actions = fixture([100.0, 80.0, 80.0, 80.0])
     actions.loc[0, "event_type"] = "EX_RIGHT"
