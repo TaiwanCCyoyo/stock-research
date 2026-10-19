@@ -22,7 +22,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from research_core.artifact_store import file_digest, read_json, write_json
+from research_core.artifact_store import file_digest, object_digest, read_json, write_json
 from research_core.live_producer import ProducerChangedError, assert_producer_idle, read_stable, readonly_sqlite, stat_identity
 from research_core.producer_data import REPO_ROOT, producer_data_root
 
@@ -212,6 +212,8 @@ def _input_changed(name: str, row: Mapping[str, Any]) -> bool:
         current = _listing_summary(InputSpec(name, path, pattern=row["pattern"]))
         if "listing" in row:
             return [list(item) for item in current["listing"]] != [list(item) for item in row["listing"]]
+        if "listing_sha256" in row:  # a fingerprint taken before 2026-10-19: compare, never store
+            return object_digest(current["listing"]) != row["listing_sha256"]
         return any(current[field] != row.get(field) for field in LISTING_FIELDS)
     if row.get("absent"):
         return path.exists()
