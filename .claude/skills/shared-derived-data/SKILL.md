@@ -23,11 +23,15 @@ routes you there and names what a finished change must satisfy.
 
 ## Refresh
 
-`uv run python -m scripts.maintain_adjusted_daily update` (status: `status`, timing: `measure --codes N`).
-It rebuilds everything from 2010 and flips `current.json`; it is the only writer. Check the
-producer schedule first (weekday 18:00-18:45 and running `StockProject-*` tasks are refused at
-load; compute alone measured about 22 minutes on 2026-10-17 and writes are not yet measured, so start
-before about 17:00 on a weekday).
+Updated automatically every weekday at 20:30 by the Windows task
+`StockResearch-SharedDerivedUpdate`, after the producer's daily download; check `status` before
+running `uv run python -m scripts.maintain_adjusted_daily update` by hand (timing: `measure --codes N`).
+It rebuilds everything from 2010 in about 13 minutes and flips `current.json`; it is the only writer.
+Weekday 18:00-18:45 and running `StockProject-*` tasks are refused at load.
+
+A study that reads one generation for more than a day holds it, or the next update deletes it:
+`maintain_adjusted_daily hold --generation <id> --holder <study> --reason <why>`, then
+`release --holder <study>` when done. Unheld old generations are deleted.
 
 ## Extend
 

@@ -15,11 +15,12 @@ Layout under ``<shared root>/derived/adjusted-daily-v1/``::
     generations/<id>/technical_daily.parquet   technical-daily.v1 indicators, one row per
                                                reference_factor_adjusted row
     generations/<id>/technical_pivots.parquet  confirmed 1.5/4 ATR highs and lows
+    holds/<holder>.json           a generation a running study marked in use; never pruned
 
 Every new ex-date restates the whole earlier history of that symbol, so an update builds
 a complete new generation and then flips ``current.json`` with ``os.replace`` (atomic on
 Windows, unlike replacing a directory). The previous generation is kept for rollback and
-for readers still holding it; older ones are pruned. A failed build never touches
+for readers still holding it; older ones are pruned unless a study holds them. A failed build never touches
 ``current.json``. A definition change gets a new family name (``adjusted-daily-v2``),
 never an in-place rewrite of this one.
 
@@ -35,6 +36,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import shutil
 import time
 from collections.abc import Callable, Sequence
@@ -226,8 +228,68 @@ def _write_current(family: Path, generation: str, status_sha256: str) -> None:
     os.replace(temporary, family / "current.json")
 
 
+HOLDER_PATTERN = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
+
+
+def _hold_path(family: Path, holder: str) -> Path:
+    if not HOLDER_PATTERN.match(holder):
+        raise ValueError(f"holder must match {HOLDER_PATTERN.pattern}, got {holder!r}")
+    return family / "holds" / f"{holder}.json"
+
+
+def held_generations(root: Path | None = None) -> dict[str, list[dict[str, Any]]]:
+    """Generations a running study marked in use, mapped to their holds; the updater keeps them."""
+    holds: dict[str, list[dict[str, Any]]] = {}
+    directory = family_dir(root) / "holds"
+    if directory.is_dir():
+        for path in sorted(directory.glob("*.json")):
+            record = read_json(path)
+            holds.setdefault(str(record["generation"]), []).append(record)
+    return holds
+
+
+def hold_generation(generation: str, *, holder: str, reason: str, root: Path | None = None) -> dict[str, Any]:
+    """Mark `generation` in use by `holder` so updates keep it until `release_generation(holder)`.
+
+    One hold per holder; holding again moves it. Kept generations cost disk (about 1-2 GB
+    each), so release as soon as the study no longer reads it.
+    """
+    family = family_dir(root)
+    path = _hold_path(family, holder)
+    if not reason.strip():
+        raise ValueError("a hold needs a reason another session can act on")
+    current_generation(root, generation=generation)
+    record = {"holder": holder, "generation": generation, "reason": reason.strip(), "held_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds")}
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{holder}-{os.getpid()}.json")
+    write_json(temporary, record)
+    os.replace(temporary, path)
+    # An update that pruned between the check and the write has already removed it.
+    if not (family / "generations" / generation / "status.json").is_file():
+        path.unlink()
+        raise FileNotFoundError(f"{FAMILY} generation {generation!r} was pruned while it was being held")
+    LOGGER.info("Held %s generation %s for %s: %s", FAMILY, generation, holder, record["reason"])
+    return record
+
+
+def release_generation(holder: str, *, root: Path | None = None) -> dict[str, Any] | None:
+    """Remove `holder`'s hold; the next update prunes the generation unless someone else holds it."""
+    path = _hold_path(family_dir(root), holder)
+    if not path.is_file():
+        return None
+    record = read_json(path)
+    path.unlink()
+    LOGGER.info("Released %s generation %s held by %s", FAMILY, record["generation"], holder)
+    return record
+
+
 def _prune(family: Path, keep: list[str]) -> list[str]:
-    """Best effort: a generation still open in a reader (Windows) is left for the next update."""
+    """Best effort: a generation still open in a reader (Windows) is left for the next update.
+
+    Generations a study holds (`hold_generation`) are kept as well.
+    """
+    held = held_generations(family.parent.parent)
+    keep = [*keep, *held]
     removed = []
     for path in sorted((family / "generations").iterdir()):
         if path.is_dir() and path.name not in keep:
@@ -304,6 +366,7 @@ def update(*, producer_root: Path, root: Path | None = None) -> dict[str, Any]:
             "asof": asof,
             "previous": previous,
             "pruned": removed,
+            "held": sorted(held_generations(root)),
             "path": str(final),
             "timings_seconds": status["timings_seconds"],
         }
