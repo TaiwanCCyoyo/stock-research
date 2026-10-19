@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import logging
 import subprocess
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -221,6 +221,24 @@ def code_identity(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
     return {"commit": git("rev-parse", "HEAD"), "dirty": bool(git("status", "--porcelain", "--untracked-files=no"))}
 
 
+SHARED_RECORD_KEYS = ("family", "generation", "file", "sha256", "status_sha256")
+
+
+def assert_shared_generation_unchanged(record: Mapping[str, Any]) -> dict[str, Any]:
+    """Fail if a shared-data generation read during the run was pruned or replaced since.
+
+    The record's file lives in `generations/<id>/` beside that generation's `status.json`,
+    whose SHA-256 the reader recorded; checking it is cheap and catches a prune or rebuild.
+    """
+    missing = [key for key in SHARED_RECORD_KEYS if not record.get(key)]
+    if missing:
+        raise ValueError(f"shared-data record lacks {missing}; pass the record a shared-data reader returned")
+    status = Path(record["file"]).parent / "status.json"
+    if not status.is_file() or file_digest(status) != record["status_sha256"]:
+        raise ValueError(f"{record['family']} generation {record['generation']} changed or was pruned during the run; rerun on one generation")
+    return dict(record)
+
+
 def write_run_receipt(
     path: Path,
     *,
@@ -231,13 +249,18 @@ def write_run_receipt(
     results: Mapping[str, Path],
     preregistration: Path | None = None,
     repo_root: Path = REPO_ROOT,
+    shared_data: Sequence[Mapping[str, Any]] = (),
 ) -> dict[str, Any]:
     """Write a new receipt (never replacing one) with result SHA-256s and the input fingerprint.
 
     Refuses when an input changed after it was fingerprinted, so a receipt never labels a
-    result with inputs other than those it read.
+    result with inputs other than those it read. `shared_data` holds the records returned
+    by maintained shared-data readers (`research_core.maintained_adjusted_daily`); they are
+    already verified against their generation's `status.json`, so they are recorded rather
+    than re-hashed, after checking that each generation is still the one that was read.
     """
     assert_inputs_unchanged(inputs)
+    shared = [assert_shared_generation_unchanged(record) for record in shared_data]
     receipt = {
         "schema": SCHEMA,
         "run_id": run_id,
@@ -246,6 +269,7 @@ def write_run_receipt(
         "preregistration": None if preregistration is None else {"path": _display_path(preregistration, repo_root), "sha256": file_digest(preregistration)},
         "code": code_identity(repo_root),
         "input_fingerprint": dict(inputs),
+        **({"shared_data": shared} if shared else {}),
         "results": {
             name: {"path": _display_path(result, repo_root), "bytes": result.stat().st_size, "sha256": file_digest(result)}
             for name, result in sorted(results.items())
