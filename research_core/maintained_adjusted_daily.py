@@ -207,14 +207,18 @@ def _write_as_of_inputs(directory: Path, bars: pd.DataFrame, actions: pd.DataFra
     return recorded
 
 
-def _acquire_lock(family: Path) -> Path:
+def _acquire_lock(family: Path) -> IO[bytes]:
+    """Take the single-writer OS lock on `.writer.lock` without waiting.
+
+    The OS releases it when the update ends, however it ends (reboot, kill, task time
+    limit), so a scheduled retry is never blocked by a lock left from a dead update.
+    """
     lock = family / ".writer.lock"
-    try:
-        with lock.open("x", encoding="utf-8") as handle:
-            handle.write(f"pid={os.getpid()} started_utc={datetime.now(timezone.utc).isoformat(timespec='seconds')}\n")
-    except FileExistsError as error:
-        raise RuntimeError(f"another update holds {lock}; if no update is running, read it and remove it") from error
-    return lock
+    handle = lock.open("a+b")
+    if not _try_os_lock(handle):
+        handle.close()
+        raise RuntimeError(f"another update holds {lock}; wait for it to finish")
+    return handle
 
 
 def _write_current(family: Path, generation: str, status_sha256: str) -> None:
@@ -451,7 +455,8 @@ def update(*, producer_root: Path, root: Path | None = None) -> dict[str, Any]:
             shutil.rmtree(staging, ignore_errors=True)
         raise
     finally:
-        lock.unlink()
+        _release_os_lock(lock)
+        lock.close()
 
 
 def current_generation(root: Path | None = None, *, generation: str | None = None) -> dict[str, Any]:

@@ -165,7 +165,8 @@ def test_failed_update_leaves_current_untouched_and_retention_keeps_two(environm
 
     assert read_json(family / "current.json")["generation"] == generations[2]
     assert sorted(path.name for path in (family / "generations").iterdir()) == sorted(generations[1:])
-    assert not (family / ".writer.lock").exists()
+    with (family / ".writer.lock").open("a+b") as probe:
+        assert maintained_adjusted_daily._try_os_lock(probe), "a failed update releases the writer lock"
     frame, record = maintained_adjusted_daily.read_adjusted_daily("raw")
     assert record["generation"] == generations[2] and len(frame) == 6
 
@@ -255,11 +256,18 @@ def test_concurrent_writer_is_refused(environment: tuple[Path, Path]) -> None:
     producer, shared = environment
     family = shared / "derived" / maintained_adjusted_daily.FAMILY
     family.mkdir(parents=True)
-    (family / ".writer.lock").write_text("pid=1\n", encoding="utf-8")
+    running = (family / ".writer.lock").open("a+b")  # a live update holds the OS lock
+    try:
+        assert maintained_adjusted_daily._try_os_lock(running)
+        with pytest.raises(RuntimeError, match="another update holds"):
+            maintained_adjusted_daily.update(producer_root=producer)
+        assert not (family / "current.json").exists()
+    finally:
+        running.close()  # what process exit does: the OS drops the lock
 
-    with pytest.raises(RuntimeError, match="another update holds"):
-        maintained_adjusted_daily.update(producer_root=producer)
-    assert not (family / "current.json").exists()
+    result = maintained_adjusted_daily.update(producer_root=producer)
+    assert (family / ".writer.lock").exists(), "the lock file stays; only the OS lock matters"
+    assert read_json(family / "current.json")["generation"] == result["generation"], "a lock file left by a dead update does not block the next"
 
 
 def test_cli_update_then_status(environment: tuple[Path, Path]) -> None:
