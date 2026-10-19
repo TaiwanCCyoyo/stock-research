@@ -567,6 +567,20 @@ def test_holds_listing_skips_a_hold_released_while_listing(environment: tuple[Pa
     assert maintained_adjusted_daily.held_generations() == {}
 
 
+def test_a_hold_write_killed_before_replace_does_not_block_the_next_hold(environment: tuple[Path, Path]) -> None:
+    producer, shared = environment
+    holds = shared / "derived" / maintained_adjusted_daily.FAMILY / "holds"
+    generation = maintained_adjusted_daily.update(producer_root=producer)["generation"]
+    holds.mkdir(parents=True, exist_ok=True)
+    leftover = holds / f".study-{os.getpid()}.tmp"
+    leftover.write_text("{", encoding="utf-8")
+
+    maintained_adjusted_daily.hold_generation(generation, holder="study", reason="reads it")
+
+    assert not leftover.exists() and not list(holds.glob(".study-*.tmp")), "this holder's leftovers are cleaned under the lock"
+    assert maintained_adjusted_daily.held_generations()[generation][0]["holder"] == "study"
+
+
 def test_holds_listing_reads_only_formal_holder_files(environment: tuple[Path, Path]) -> None:
     producer, shared = environment
     holds = shared / "derived" / maintained_adjusted_daily.FAMILY / "holds"
