@@ -369,3 +369,30 @@ def test_an_input_vanishing_during_the_recheck_is_recorded_not_raised(producer: 
 
     monkeypatch.setattr(run_receipt, "stat_identity", vanished)
     assert changed_inputs(fingerprint) == ["prices"]
+
+
+def test_a_legacy_listing_digest_still_detects_a_rename(producer: Path) -> None:
+    from research_core.artifact_store import object_digest
+    from research_core.run_receipt import _listing
+
+    day_csv = producer / "2330_day.csv"
+    day_csv.write_bytes(b"Date,Close")
+    listing = _listing(InputSpec("day_csv", producer, pattern="*_day.csv"))
+    legacy = {
+        "inputs": {
+            "day_csv": {
+                "path": str(producer),
+                "pattern": "*_day.csv",
+                "files": 1,
+                "total_bytes": 10,
+                "newest_mtime_ns": listing[0][2],
+                "listing_sha256": object_digest(listing),
+            }
+        }
+    }
+    assert changed_inputs(legacy) == []
+    stat = day_csv.stat()
+    renamed = producer / "2317_day.csv"
+    day_csv.rename(renamed)
+    os.utime(renamed, ns=(stat.st_atime_ns, stat.st_mtime_ns))
+    assert changed_inputs(legacy) == ["day_csv"]
