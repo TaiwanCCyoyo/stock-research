@@ -281,3 +281,27 @@ def test_sqlite_reads_readonly_routes_a_modules_connect(tmp_path: Path) -> None:
     with sqlite_reads_readonly(module), pytest.raises(sqlite3.OperationalError, match="readonly"):
         module.write(database)
     assert module.sqlite3 is sqlite3
+
+
+def test_receipt_names_an_existing_preregistration_by_path(repo: Path, producer: Path) -> None:
+    result = repo / "summary.json"
+    result.write_text("{}\n", encoding="utf-8")
+    mission = repo / "mission.md"
+    mission.write_text("# Demo\n", encoding="utf-8")
+    inputs = fingerprint_inputs([InputSpec("prices", producer / "price_daily.parquet")], now=WEEKDAY_NIGHT)
+    receipt = write_run_receipt(
+        repo / "r1.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, preregistration=mission, repo_root=repo
+    )
+    assert receipt["preregistration"] == {"path": "mission.md"}, "a source is named, not hashed"
+    with pytest.raises(FileNotFoundError, match="preregistration"):
+        write_run_receipt(
+            repo / "r2.json",
+            run_id="r",
+            definition="d",
+            parameters={},
+            inputs=inputs,
+            results={"s": result},
+            preregistration=repo / "missing.md",
+            repo_root=repo,
+        )
+    assert not (repo / "r2.json").exists()

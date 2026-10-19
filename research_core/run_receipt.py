@@ -254,6 +254,8 @@ def write_run_receipt(
     `inputs_changed_during_run` and logged, not refused; a shared generation pruned since
     it was read does not matter.
     """
+    if preregistration is not None and not preregistration.is_file():
+        raise FileNotFoundError(f"preregistration {preregistration} does not exist; a receipt names an existing file")
     changed = changed_inputs(inputs)
     if changed:
         LOGGER.warning("Inputs changed during run %s: %s; recorded in the receipt", run_id, changed)
