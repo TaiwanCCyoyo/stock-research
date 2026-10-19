@@ -93,7 +93,7 @@
 - **讀取**：`daily, record = read_technical(codes=["2330"], columns=["SMA20", "BB20_Upper", "LastLow_k15"], prices=["Close", "Quality"])` 回傳指標並在 `Code, Date` 併入同世代的價格欄，就是一張「每天一列：價格＋指標」的寬表；`read_technical("pivots", codes=[...])` 讀轉折長表。`record` 記 generation、`technical-daily.v1`、檔案 SHA-256（`prices=` 時另含價格的 record），放進 receipt；`generation=` 用法同上。本功能之前建的世代沒有這兩個檔，讀取會直接報錯，請 `update`。
 - **截止日**：表內數值以世代 asof 計算。需要較早截止日時，用 `read_adjusted_daily(..., as_of=)` 取價格再呼叫 `technical_daily_v1.compute_technical`，不要截斷本表（截止日後的除權息會改寫整段還原價，指標跟著變）。
 - **實作與正本的關係**：`derived_features.py` 與 `feature_atlas_features.py` 被既有證據以 SHA-256 鎖定，本功能不改它們。`technical_daily_v1` 對 SMA／EMA／BB 與 RSI／ADX／BBWidth 用逐位元相同的精簡版（同樣的 pandas 運算與順序，不逐列 `iloc`、不算用不到的 atlas 特徵），測試對原函式做精確比對；2026-10-17 在 207 檔真實資料上也逐位元相同。ATR 與轉折直接呼叫 `derived_features` 的 kernel。
-- **實測（2026-10-17，真實資料 `measure --codes 100`，不寫入）**：3 個 basis 加技術指標，全市場 2,065 檔估計計算約 22 分鐘（單程序；同一次量測的機器比 10-15 慢，只算價格的部分也較慢）。寫入、雜湊與檔案大小待第一次 `update` 實測；兩世代並存的磁碟峰值會高於上方的 1.5 GB。平行化未評估；平日請在 17:00 前開始，避免撞到 18:00 的 producer 寫入。
+- **實測（2026-10-19 第一次含技術指標的 `update`，primary `main` 8ae5182，真實資料）**：世代 `2026-10-16-20261018T161203Z`，2,065 檔，讀輸入 11.4 秒、計算加寫入 742.4 秒，總共 755.4 秒（約 12.6 分鐘，單程序）。先前 `measure --codes 100` 估計的約 22 分鐘偏高，當次機器較慢。檔案大小：三個 basis 各 6,599,736 列，raw 229 MB、permanent 256 MB、reference 301 MB；`technical_daily` 6,599,736 列 1,076 MB；`technical_pivots` 1,341,368 列 31 MB；整個世代 1.89 GB（不含技術指標的舊世代 0.79 GB）。**磁碟**：更新時「現行＋前一世代＋建置中的新世代」同時存在。這次是 0.79＋1.89 GB，建完後兩世代共 2.68 GB（實測）；之後每一世代都含技術指標，依同樣大小推算，建置中峰值約 5.7 GB、建完約 3.8 GB，每多保留一個世代再加約 1.9 GB（推算，未實測）。讀一檔的價格加指標約 1.2 秒。平行化未評估；手動更新請避開平日 18:00–18:45 的 producer 寫入。
 
 ### 共用資料的擴充規則
 
