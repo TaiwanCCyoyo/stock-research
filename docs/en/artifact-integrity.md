@@ -11,9 +11,13 @@ its `run-receipt.v1` (`research_core/run_receipt.py`):
 
 1. **Final results**: the SHA-256 of each result file the study publishes, so an
    accidental edit is detectable.
-2. **What it read**: the input fingerprint of live producer files, and the record a
-   shared-data reader returns (`write_run_receipt(..., shared_data=[record])`). These
-   identify the inputs; they are not copies and the study does not re-hash shared files.
+2. **What it read**, as information: a description of each live producer input (path,
+   size, modification time, rows and date range, producer as-of; no file hash) and the
+   record a shared-data reader returns (`write_run_receipt(..., shared_data=[record])`:
+   family, generation, as-of). These say which data and version were used. They are not
+   copies, the study does not hash them, and they never decide whether a finished result
+   may be saved: an input that changed during the run is listed in the receipt
+   (`inputs_changed_during_run`), not refused.
 3. **How it ran**: Git commit plus dirty flag, definition, parameters and
    preregistration.
 
@@ -23,10 +27,11 @@ A new study does **not**:
   phase outputs, worker files, caches, previews);
 - verify intermediate files between phases or bind a later phase's identity to them;
 - copy inputs or source code into a snapshot;
-- refuse to continue because a later shared-data generation differs. To read one
-  generation for longer than a day, hold it
-  ([shared data](research-derived-data.md#維護中的共用衍生資料)); without a hold, rerun on
-  the current generation.
+- treat a later producer update or shared-data generation as invalidating a finished
+  result, or rerun a whole study because a generation it read was deleted. A study that
+  still reads one generation for days may hold it
+  ([shared data](research-derived-data.md#維護中的共用衍生資料)); if a remaining step needs
+  a generation that is gone, only that step reads the current one or is redone.
 
 Intermediate files are disposable working data. If they are lost or no longer match,
 the study reruns the step; it does not prove their bytes. Reviewers flag new
@@ -41,7 +46,7 @@ new work.
 | Risk                            | Does a hash help?                                               | What actually decides it                                                                                           |
 | ------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | Accidental change or corruption | Yes. Raw bytes against a stored digest.                         | A formatter, editor, line-ending conversion or partial write is the realistic cause in this repository.            |
-| Using the wrong data version    | Yes, as an identifier, **if the consumer holds the pin**.       | The receipt names the producer fingerprint and the shared generation that were read.                               |
+| Using the wrong data version    | Yes, as an identifier, **if the consumer holds the pin**.       | The receipt names the producer inputs and the shared generation that were read.                                    |
 | Result cannot be reproduced     | Necessary (inputs, parameters, code), not sufficient.           | Rerun on current data and compare. Equality checks are the evidence, not the digest.                               |
 | Deliberate tampering            | Only when the pin lives where the writer cannot also change it. | Reviewed Git history. A manifest next to the data, or a read-only attribute, proves consistency, not authenticity. |
 | Wrong calculation               | No. A hash keeps a wrong number the same wrong number.          | Tests, invariants, independent recomputation.                                                                      |
@@ -50,16 +55,17 @@ new work.
 
 | Artifact                          | Identity                                                                                                        | Lives in                 |
 | --------------------------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| Producer inputs (parquet, sqlite) | Fingerprint of the live input read: path, SHA-256 (files) or row counts and date range (SQLite), producer as-of | `run-receipt.v1` receipt |
-| Maintained shared derived data    | The reader's record: family, generation, file SHA-256 from the generation's own `status.json`                   | receipt `shared_data`    |
+| Producer inputs (parquet, sqlite) | Description of the live input read: path, size, modification time, rows and date range, producer as-of; no hash | `run-receipt.v1` receipt |
+| Maintained shared derived data    | The reader's record (family, generation, as-of), kept as information                                            | receipt `shared_data`    |
 | Parameters                        | Git                                                                                                             | `tasks/<id>/params/`     |
 | Code of a run                     | Git commit plus dirty flag; loaded modules are not hashed                                                       | `run-receipt.v1` receipt |
 | Final results                     | SHA-256 of each published result file                                                                           | `run-receipt.v1` receipt |
 | Intermediate files                | None                                                                                                            | not recorded             |
 | Reports and prose                 | Git only                                                                                                        | `tasks/<id>/`            |
 
-A maintained shared family verifies its own files against its `status.json` when they
-are read; that is the family's job, not the study's.
+A maintained shared family checks its own published files against its `status.json`
+when they are read. Those files are the family's final results, so this is the
+results-only rule applied to the family; a study adds no source hashing on top.
 
 Legacy identities stay valid for the artifacts that use them and are not a pattern for
 new studies: content digests of per-stock derived caches and feature blocks,
@@ -82,10 +88,11 @@ sort key, never equate `bool` with a number, and reject duplicate JSON keys, `Na
 
 ## 4. Updating data
 
-Producer files change daily by design and are not hash-protected; a study fingerprints
-what it read and reads only while the producer is idle (`research_core/live_producer.py`).
-Maintained shared families are rebuilt as a new generation on each update; a study either
-finishes on the generation it read, holds it, or reruns on the current one. Legacy
+Producer files change daily by design and are not hash-protected; a study records what
+it read and reads only while the producer is idle (`research_core/live_producer.py`).
+Maintained shared families are rebuilt as a new generation on each update. A finished
+result stays valid after that; a study still reading an older generation holds it, and a
+remaining step whose generation is gone reads the current one or is redone. Legacy
 immutable versions (`research_data`, `research_cache`) stay readable; any byte change
 inside one of them is an error.
 
@@ -93,7 +100,7 @@ inside one of them is an error.
 
 | When                                  | What                                                                                                                                                 |
 | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| During a study                        | Nothing for intermediate files. Shared readers verify their files once per process.                                                                  |
+| During a study                        | Nothing for inputs or intermediate files. A shared family checks its own files once per process when read.                                           |
 | Before a report or PR claims a result | Check the final results against the receipt once (`run_receipt.changed_results`), or run the legacy study's `verify` once.                           |
 | Legacy bundles                        | Verify a bundle once per process when first used; `DataCatalog.get_verified` keeps no memo, so a caller that needs it twice keeps the result itself. |
 | Across sessions                       | No cached "verified" state until a measurement shows the need. Size, modification time or a read-only attribute alone is not verification.           |
@@ -131,9 +138,9 @@ Cold-disk hashing time was not measured. Re-measure before relying on these.
 
 ## 8. Checklist for a new study
 
-1. The receipt has the input fingerprint, any shared-data records, the commit, and a
-   SHA-256 per final result file.
+1. The receipt has the input descriptions, any shared-data records, the commit, and a
+   SHA-256 per final result file; nothing about the inputs blocks saving it.
 2. No intermediate file is hashed, manifested or re-verified.
 3. Result files are formatted before the receipt is written.
-4. A generation read for more than a day is held, and released when the study ends.
+4. A generation still read over several days is held, and released when the study ends.
 5. Phase timings are recorded; unknowns are marked as unknown.
