@@ -64,7 +64,7 @@
 - **截止日讀取（`as_of`，擁有者 2026-10-15 核准）**：`read_adjusted_daily(basis, codes=..., as_of="2026-10-12", calendar=fixed_calendar, generation=...)` 回傳每檔股票在該截止日、以 `price_basis.prepare_prices(官方報價 <= 截止日, 事件 <= 截止日, 日曆, basis, 截止日)` 算出的結果，欄位與 dtype 都和直接呼叫一致。`calendar` 省略時用該世代截止日以前的交易日。輸出涵蓋日曆上每個位置，包括股票首筆報價以前、末筆報價以後的位置（缺報價列，`missing_official_quote`），所以家族本身照舊只存首末報價之間的列。
     - **為什麼要重算，而不是截斷最新世代。** 截止日之後的事件會改寫更早的整段歷史：因子正常時是乘上去，因子缺漏、同日多種事件或未知事件時則把整段標成 NaN、品質原因也一併串進去，事後拆不回來。換日曆後，非交易日事件掛到哪一列、跳幅以哪兩列計算也會跟著變。`factor(t) / factor(cutoff)` 只能當起點，不是定義。因此 reader 用 raw basis 的 `Raw*`／`VolumeLots` 還原官方報價（`missing_official_quote` 列視為沒有報價，`duplicate_date` 列補回一筆重複），配上同一世代的 `actions.parquet`，在截止日直接重算。
     - **拒絕條件**：截止日晚於世代 asof（之後的報價與事件對該世代未知）；世代沒有 `actions.parquet`（本功能之前建的世代，請 update）；指定的股票在截止日以前沒有官方報價；日曆含截止日之後的日期。不指定 `codes` 時，只回傳截止日以前有官方報價的股票。所有讀到的檔案都先核對 SHA-256。
-    - **record** 另外記 `as_of`、`actions_sha256`、日曆來源／筆數／起訖與日期清單的 SHA-256，請放進 receipt。`as_of` 是計算截止日，不是當時可得資料的時點證明；ordinary-reference 名單、產業等其他 metadata 不在這個家族裡，要另外記錄。
+    - **record** 另外記 `as_of`、`actions_sha256`、日曆來源／筆數／起訖與日期清單的 SHA-256，供讀取端自己核對；交給 `write_run_receipt(..., shared_data=[record])` 時雜湊欄位會被拿掉，receipt 只留說明。`as_of` 是計算截止日，不是當時可得資料的時點證明；ordinary-reference 名單、產業等其他 metadata 不在這個家族裡，要另外記錄。
     - **成本**：每檔每個 basis 重算一次，等於 `prepare_prices` 的單股耗時；2026-10-16 實測，全市場 2,064 檔、4,110 個交易日的一個 basis，以每批 200 檔讀取共約 2.5–5 分鐘（單程序）。
     - **真實資料等價驗證**：`uv run python -m scripts.check_adjusted_daily_asof --root <共用根> [--build] --cutoff ... --calendar-pins <pins> --out <report.json>` 對每個截止日、每個 basis、每檔股票逐欄比對 reader 與直接呼叫 `prepare_prices`（同一份 live 輸入，指紋必須與世代一致），並統計截斷最新世代會錯幾列。2026-10-16 對世代 `2026-10-15-20261015T161626Z` 跑過一次，四個截止日 × 三個 basis 全部逐欄相等（含 dtype、NaN 位置）：
 
@@ -100,7 +100,7 @@
 | `technical_pivots`：`Code, k, kind, extreme_date, confirmed_at, price`           | `derived_features` 的轉折                                                                                       | **只能從 `confirmed_at` 起使用**；`extreme_date` 是事後才知道的極值位置 |
 
 - **缺值**：任何無效列（`Quality` 為 False、OHLC 不合理）讓所有指標重新暖機；無效列本身是 NaN，不補值、不刪列。`Last*` 例外：已確認的轉折是既成事實，跨過缺口仍保留。NaN 是「未知／暖機中」，不是 0 或 False。
-- **讀取**：`daily, record = read_technical(codes=["2330"], columns=["SMA20", "BB20_Upper", "LastLow_k15"], prices=["Close", "Quality"])` 回傳指標並在 `Code, Date` 併入同世代的價格欄，就是一張「每天一列：價格＋指標」的寬表；`read_technical("pivots", codes=[...])` 讀轉折長表。`record` 記 generation、`technical-daily.v1`、檔案 SHA-256（`prices=` 時另含價格的 record），放進 receipt；`generation=` 用法同上。本功能之前建的世代沒有這兩個檔，讀取會直接報錯，請 `update`。
+- **讀取**：`daily, record = read_technical(codes=["2330"], columns=["SMA20", "BB20_Upper", "LastLow_k15"], prices=["Close", "Quality"])` 回傳指標並在 `Code, Date` 併入同世代的價格欄，就是一張「每天一列：價格＋指標」的寬表；`read_technical("pivots", codes=[...])` 讀轉折長表。`record` 記 generation、`technical-daily.v1`、檔案 SHA-256（`prices=` 時另含價格的 record），以 `shared_data=[record]` 記進 receipt 時只留說明欄位、不含雜湊；`generation=` 用法同上。本功能之前建的世代沒有這兩個檔，讀取會直接報錯，請 `update`。
 - **截止日**：表內數值以世代 asof 計算。需要較早截止日時，用 `read_adjusted_daily(..., as_of=)` 取價格再呼叫 `technical_daily_v1.compute_technical`，不要截斷本表（截止日後的除權息會改寫整段還原價，指標跟著變）。
 - **實作與正本的關係**：`derived_features.py` 與 `feature_atlas_features.py` 被既有證據以 SHA-256 鎖定，本功能不改它們。`technical_daily_v1` 對 SMA／EMA／BB 與 RSI／ADX／BBWidth 用逐位元相同的精簡版（同樣的 pandas 運算與順序，不逐列 `iloc`、不算用不到的 atlas 特徵），測試對原函式做精確比對；2026-10-17 在 207 檔真實資料上也逐位元相同。ATR 與轉折直接呼叫 `derived_features` 的 kernel。
 - **實測（2026-10-17，真實資料 `measure --codes 100`，不寫入）**：3 個 basis 加技術指標，全市場 2,065 檔估計計算約 22 分鐘（單程序；同一次量測的機器比 10-15 慢，只算價格的部分也較慢）。寫入、雜湊與檔案大小待第一次 `update` 實測；兩世代並存的磁碟峰值會高於上方的 1.5 GB。平行化未評估；平日請在 17:00 前開始，避免撞到 18:00 的 producer 寫入。
