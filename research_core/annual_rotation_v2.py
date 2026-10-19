@@ -288,17 +288,21 @@ def economic_path_v2(
             if explained:
                 frame.loc[day, "Quality"] = True
                 frame.loc[day, "quality_reason"] = None
-        elif bool(frame.loc[day, "Quality"]) and day < end:
-            # An exit-day entitlement is already ambiguous for an open exit.
+        elif bool(frame.loc[day, "Quality"]) and (day < end or end_field == "Close"):
+            # An open-exit-day entitlement is already ambiguous; a close exit is checked.
             # Below the jump threshold the terms are still applied to holdings, so an
             # observed quote that contradicts them grossly (e.g. a halving share
             # multiplier on a rising close) keeps the path unknown. Direction is not
             # required here: ordinary noise may move a small factor either way.
+            # Compare with the last observed close, so a first quote after an admitted
+            # H/N carry is checked against the price before the gap.
             position = int(frame.index.get_indexer([day])[0])
-            previous = float(frame.RawClose.iloc[position - 1]) if position else np.nan
-            if position and bool(frame.Quality.iloc[position - 1]) and np.isfinite(previous) and previous > 0:
+            prior = frame.iloc[:position]
+            observed = prior.loc[prior.Quality.astype(bool) & np.isfinite(prior.RawClose.astype(float)) & prior.RawClose.astype(float).gt(0)]
+            previous = float(observed.RawClose.iloc[-1]) if len(observed) else np.nan
+            if np.isfinite(previous):
                 terms_diagnostic = _theoretical_terms_diagnostic(
-                    anchor_day=cast(pd.Timestamp, frame.index[position - 1]),
+                    anchor_day=cast(pd.Timestamp, observed.index[-1]),
                     day=day,
                     previous=previous,
                     close=float(frame.loc[day, "RawClose"]),

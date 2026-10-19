@@ -93,6 +93,26 @@ def test_terms_that_contradict_a_small_observed_move_keep_the_path_unknown():
     assert f"{day_at(days, 1).date()}:entitlement_terms_contradict_observed_quote" in result["reasons"]
 
 
+def test_terms_are_checked_on_a_close_exit_day():
+    days, raw, actions = fixture([100.0, 100.0, 100.0, 110.0])
+    actions = actions.iloc[:0]
+    item = entitlement(day_at(days, -1), share_multiplier=0.5)
+    result = economic_path_v2(raw, actions, days, start=day_at(days, 0), end=day_at(days, -1), end_field="Close", entitlements=[item])
+    assert result["status"] == "unknown"
+    assert f"{day_at(days, -1).date()}:entitlement_terms_contradict_observed_quote" in result["reasons"]
+
+
+def test_terms_after_a_carried_halt_are_checked_against_the_last_observed_close():
+    days, raw, actions = fixture([100.0, 100.0, 110.0, 110.0])
+    actions = actions.iloc[:0]
+    item = entitlement(day_at(days, 2), share_multiplier=0.5)
+    result = economic_path_v2(
+        raw.drop(index=1), actions, days, start=day_at(days, 0), end=day_at(days, -1), entitlements=[item], known_halts={str(day_at(days, 1).date())}
+    )
+    assert result["status"] == "unknown"
+    assert f"{day_at(days, 2).date()}:entitlement_terms_contradict_observed_quote" in result["reasons"]
+
+
 def test_small_terms_survive_ordinary_noise_in_either_direction():
     days, raw, actions = fixture([100.0, 103.0, 103.0, 103.0])
     actions = actions.iloc[:0]
