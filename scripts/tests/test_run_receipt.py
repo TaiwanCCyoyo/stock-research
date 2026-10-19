@@ -213,14 +213,15 @@ def test_receipt_records_shared_generation_reads_as_information(repo: Path, prod
     receipt = write_run_receipt(
         repo / "r1.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, repo_root=repo, shared_data=[record]
     )
-    assert receipt["shared_data"] == [record]
+    described = {"family": "demo-v1", "generation": "g1", "file": record["file"]}
+    assert receipt["shared_data"] == [described], "digests from the reader are dropped; only the description is kept"
     plain = write_run_receipt(repo / "r2.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, repo_root=repo)
     assert "shared_data" not in plain, "receipts without shared reads keep their earlier shape"
     (generation / "status.json").unlink()
     pruned = write_run_receipt(
         repo / "r3.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, repo_root=repo, shared_data=[record]
     )
-    assert pruned["shared_data"] == [record], "a generation pruned after it was read does not block saving the result"
+    assert pruned["shared_data"] == [described], "a generation pruned after it was read does not block saving the result"
 
 
 def test_fingerprint_of_task_inputs_needs_no_producer_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -323,6 +324,26 @@ def test_receipt_names_a_committed_preregistration_by_path(repo: Path, producer:
             repo / "r3.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, preregistration=mission, repo_root=repo
         )
     assert not (repo / "r2.json").exists() and not (repo / "r3.json").exists()
+
+
+def test_nested_reader_digests_are_dropped_from_shared_reads() -> None:
+    from research_core.run_receipt import _describe_shared_read
+
+    record = {
+        "family": "adjusted-daily-v1",
+        "generation": "g1",
+        "sha256": "a" * 64,
+        "status_sha256": "b" * 64,
+        "actions_sha256": "c" * 64,
+        "calendar": {"sessions": 3, "first": "2026-10-01", "sha256": "d" * 64, "file_sha256": "e" * 64},
+        "prices": {"basis": "raw", "sha256": "f" * 64},
+    }
+    assert _describe_shared_read(record) == {
+        "family": "adjusted-daily-v1",
+        "generation": "g1",
+        "calendar": {"sessions": 3, "first": "2026-10-01"},
+        "prices": {"basis": "raw"},
+    }
 
 
 def test_an_input_vanishing_during_the_recheck_is_recorded_not_raised(producer: Path, monkeypatch: pytest.MonkeyPatch) -> None:
