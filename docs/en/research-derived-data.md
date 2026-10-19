@@ -58,9 +58,9 @@
 - **來源政策**：只用 `Source == "official"` 的報價，**在計算前**就篩掉 `shioaji`（永豐分 K 轉日 K）列；若先混合計算再篩，非官方列仍會影響相鄰官方列的跳幅與品質判斷。2026-10-15 時被排除 152,631 列、351 檔，其中 12 檔完全沒有官方報價，因此不在本家族。排除數量與這些代號記在 `status.json` 的 `source_policy`。日曆也只取官方列的日期。
 - **輸入**：live producer 的 `price_daily.parquet`（只取 OHLCV，忽略舊 SMA／EMA）與 `corporate_actions.sqlite`（唯讀）。as-of 是價格最大日期；之後的除權息事件不納入，數量記在 `actions.after_asof_excluded`。
 - **日曆與列範圍**：日曆是 `price_daily.parquet` 所有日期的聯集，不是交易所公告日曆；每檔從第一筆到最後一筆報價，中間缺的交易日保留為無效列。
-- **更新**：`uv run python -m scripts.maintain_adjusted_daily update`。避開平日 18:00–18:45，producer 有工作在跑時會拒絕。每次建完整新世代：新的除權息會改寫該股整段較早歷史，所以只附加新一天並不正確。建完先核對輸入沒變，再以 `os.replace` 原子切換 `current.json`；保留前一世代以便回退、也讓正在讀的人讀完，更舊的由 updater 刪除。失敗不動 `current.json`，未完成的 staging 會刪除。同時只允許一個 writer（`.writer.lock`）。
+- **更新**：`uv run python -m scripts.maintain_adjusted_daily update`。避開平日 18:00–18:45，producer 有工作在跑時會拒絕。每次建完整新世代：新的除權息會改寫該股整段較早歷史，所以只附加新一天並不正確。建完先核對輸入沒變，再以 `os.replace` 原子切換 `current.json`；保留前一世代以便回退、也讓正在讀的人讀完，以及研究標記「使用中」的世代（見下方），其餘更舊的由 updater 刪除。失敗不動 `current.json`，未完成的 staging 會刪除。同時只允許一個 writer（`.writer.lock`）。
 - **實測（2026-10-15，真實資料完整建置一次）**：2,077 檔、4,113 個交易日，每個 basis 6,764,521 列。讀輸入 6.5 秒，計算加寫入 556.6 秒，總共約 9.4 分鐘（單程序）。一個世代 768 MB（raw 223 MB、permanent 250 MB、reference 293 MB）；更新期間新舊兩世代並存，峰值約 1.5 GB。讀一檔 0.12 秒，整個 basis 讀三個欄位 0.31 秒。permanent 與 reference 各有 22,590 列標為 `ambiguous_or_missing_action_factor`：依上方價格政策，事件因子缺漏或不一致時，該事件日以前的還原歷史標為不明，而不是猜一個因子。這些列的來源分布尚未逐一核對。要不寫入就重測，用 `measure --codes N`。這個耗時目前不需要平行化；若之後成為瓶頸，再依 AGENTS.md 先量測有界的單股平行。
-- **讀取**：`frame, record = read_adjusted_daily("reference_factor_adjusted", codes=["2330"])`（`research_core.maintained_adjusted_daily`）。`record` 有 family、generation、asof、檔案路徑與 SHA-256，請放進研究的 receipt。同一研究的後續讀取請傳入第一次拿到的 `generation=`，整個研究就會固定在同一版；那一版被刪除後會直接報錯，不會悄悄改讀新版。擁有者 2026-10-15 決定：舊版可以直接刪除，不做租約或保護標記；長跑研究遇到自己那一版被刪，就用目前的版本重跑。讀取前會把 parquet 的大小與 SHA-256 跟 `status.json` 核對（每個行程、每個檔案只核對一次），檔案被換掉或損毀時直接拒絕，不會交出未驗證的資料。`uv run python -m scripts.maintain_adjusted_daily status` 可看現行世代。
+- **讀取**：`frame, record = read_adjusted_daily("reference_factor_adjusted", codes=["2330"])`（`research_core.maintained_adjusted_daily`）。`record` 有 family、generation、asof、檔案路徑與 SHA-256，請放進研究的 receipt。同一研究的後續讀取請傳入第一次拿到的 `generation=`，整個研究就會固定在同一版；那一版被刪除後會直接報錯，不會悄悄改讀新版。擁有者 2026-10-15 原決定舊版直接刪除；2026-10-19 因改為每天自動更新而修訂：跑超過一天、需要固定一版的研究，開始時用 `uv run python -m scripts.maintain_adjusted_daily hold --generation <id> --holder <研究代號> --reason <原因>` 標記使用中，更新就不會刪那一版；研究讀完立刻 `release --holder <研究代號>`，下次更新才刪。每保留一版約多佔 1–2 GB，`status` 會列出目前所有使用中標記。沒有標記的舊版照舊會被刪，被刪就用目前的版本重跑。讀取前會把 parquet 的大小與 SHA-256 跟 `status.json` 核對（每個行程、每個檔案只核對一次），檔案被換掉或損毀時直接拒絕，不會交出未驗證的資料。`uv run python -m scripts.maintain_adjusted_daily status` 可看現行世代。
 - **截止日讀取（`as_of`，擁有者 2026-10-15 核准）**：`read_adjusted_daily(basis, codes=..., as_of="2026-10-12", calendar=fixed_calendar, generation=...)` 回傳每檔股票在該截止日、以 `price_basis.prepare_prices(官方報價 <= 截止日, 事件 <= 截止日, 日曆, basis, 截止日)` 算出的結果，欄位與 dtype 都和直接呼叫一致。`calendar` 省略時用該世代截止日以前的交易日。輸出涵蓋日曆上每個位置，包括股票首筆報價以前、末筆報價以後的位置（缺報價列，`missing_official_quote`），所以家族本身照舊只存首末報價之間的列。
     - **為什麼要重算，而不是截斷最新世代。** 截止日之後的事件會改寫更早的整段歷史：因子正常時是乘上去，因子缺漏、同日多種事件或未知事件時則把整段標成 NaN、品質原因也一併串進去，事後拆不回來。換日曆後，非交易日事件掛到哪一列、跳幅以哪兩列計算也會跟著變。`factor(t) / factor(cutoff)` 只能當起點，不是定義。因此 reader 用 raw basis 的 `Raw*`／`VolumeLots` 還原官方報價（`missing_official_quote` 列視為沒有報價，`duplicate_date` 列補回一筆重複），配上同一世代的 `actions.parquet`，在截止日直接重算。
     - **拒絕條件**：截止日晚於世代 asof（之後的報價與事件對該世代未知）；世代沒有 `actions.parquet`（本功能之前建的世代，請 update）；指定的股票在截止日以前沒有官方報價；日曆含截止日之後的日期。不指定 `codes` 時，只回傳截止日以前有官方報價的股票。所有讀到的檔案都先核對 SHA-256。
@@ -76,6 +76,16 @@
         | 2015-12-31 | 世代日曆                                  | 1,529  | 2,272,094     | 256,853          | 1,250,698 / 1,961,415                           |
 
         較早的截止日各有 6,707–8,534 列在最新世代裡因子已是 NaN、但在截止日其實可知：依 `prepare_prices` 的規則離線核對 `actions.parquet`，這來自截止日後 1 筆未知種類事件，以及 4（2023-06-30）、5（2020-12-31）、10（2015-12-31）檔股票的不可用因子事件（方向不符或值不一致）。PR17 的截止日離 asof 只有三天，之後只有 6 筆可用事件，所以它單獨相等證明不了多少，較早截止日才是主要證據。真實資料裡沒有截止日後同日多種事件、截止日當天沒有可用因子，或日曆與世代不同的例子；這些由 `scripts/tests/test_maintained_adjusted_daily.py` 的合成資料覆蓋。
+- **每日自動更新（擁有者 2026-10-19 同意）**：Windows 排程 `StockResearch-SharedDerivedUpdate`，週一至週五 20:30 在 primary checkout（`main`）執行 `update`，排在 producer 18:00 的每日下載之後；producer 還在跑（例如每月 1 日的長補檔）時 `update` 會拒絕，排程每 30 分鐘重試、最多 3 次。名稱刻意不用 `StockProject-*`，因為 `update` 會拒絕任何執行中的 `StockProject-*` 工作，包括它自己。紀錄寫到 `D:/StockData/stock-research/logs/adjusted-daily-update.log`。一次約 13 分鐘、每天寫一份新世代（約 1.8 GB）並刪掉最舊且未被標記使用中的一份。註冊指令（先建立 logs 目錄）：
+
+    ```powershell
+    New-Item -ItemType Directory -Force D:\StockData\stock-research\logs | Out-Null
+    $action = New-ScheduledTaskAction -Execute 'cmd.exe' -Argument '/c cd /d D:\Project\stock-research && C:\Users\xjp01\.local\bin\uv.exe run python -m scripts.maintain_adjusted_daily update >> D:\StockData\stock-research\logs\adjusted-daily-update.log 2>&1'
+    $trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Monday,Tuesday,Wednesday,Thursday,Friday -At 20:30
+    $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 30) -ExecutionTimeLimit (New-TimeSpan -Hours 2) -MultipleInstances IgnoreNew
+    Register-ScheduledTask -TaskName 'StockResearch-SharedDerivedUpdate' -Action $action -Trigger $trigger -Settings $settings
+    ```
+
 - **定義變更**：開新家族 `adjusted-daily-v2`，不在原家族裡改寫。
 
 **技術指標（`technical-daily.v1`，2026-10-17 起每個新世代都有）。** 由同一次 `update` 從該世代的 `reference_factor_adjusted` 列計算（`research_core/technical_daily_v1.py`），所以指標與價格永遠出自同一世代、同一 as-of，且每次都從 2010-01-04（每檔第一筆報價）完整重算，不是只附加新的一天。公式全部沿用既有正本，不另定義：

@@ -427,3 +427,68 @@ def test_real_data_check_script_reports_equality_and_truncation_damage(environme
     assert entry["codes"] == 2 and all(entry[basis]["equal"] for basis in maintained_adjusted_daily.BASES)
     assert entry["reference_factor_adjusted"]["truncation_codes_masked_in_latest_known_at_cutoff"] == 1
     assert entry["situations"]["post_cutoff_multi_kind_days"] == 1 and entry["situations"]["post_cutoff_unknown_kind"] == 1
+
+
+def test_a_held_generation_survives_updates_until_released(environment: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:
+    producer, shared = environment
+    family = shared / "derived" / maintained_adjusted_daily.FAMILY
+    held = maintained_adjusted_daily.update(producer_root=producer)["generation"]
+    record = maintained_adjusted_daily.hold_generation(held, holder="pr17-pattern-scan", reason="Q2-Q6 read this generation")
+    assert record["generation"] == held
+    for offset in (1, 2, 3):
+        monkeypatch.setattr(maintained_adjusted_daily, "datetime", _Later(offset))
+        result = maintained_adjusted_daily.update(producer_root=producer)
+        assert held in result["held"]
+    assert held in {path.name for path in (family / "generations").iterdir()}, "updates keep a held generation"
+    frame, read = maintained_adjusted_daily.read_adjusted_daily("raw", generation=held)
+    assert read["generation"] == held and len(frame) == 6
+    assert len(list((family / "generations").iterdir())) == 3, "current + previous + the held one, nothing else"
+
+    released = maintained_adjusted_daily.release_generation("pr17-pattern-scan")
+    assert released is not None and released["generation"] == held
+    assert maintained_adjusted_daily.release_generation("pr17-pattern-scan") is None
+    monkeypatch.setattr(maintained_adjusted_daily, "datetime", _Later(4))
+    maintained_adjusted_daily.update(producer_root=producer)
+    assert held not in {path.name for path in (family / "generations").iterdir()}, "released generations are pruned again"
+
+    with pytest.raises(FileNotFoundError, match="may have been pruned"):
+        maintained_adjusted_daily.hold_generation(held, holder="late", reason="too late")
+    with pytest.raises(ValueError, match="holder must match"):
+        maintained_adjusted_daily.hold_generation(result["generation"], holder="../escape", reason="x")
+    with pytest.raises(ValueError, match="reason"):
+        maintained_adjusted_daily.hold_generation(result["generation"], holder="ok", reason=" ")
+
+
+def test_a_hold_racing_a_prune_is_refused_not_silently_lost(environment: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:
+    producer, shared = environment
+    family = shared / "derived" / maintained_adjusted_daily.FAMILY
+    first = maintained_adjusted_daily.update(producer_root=producer)["generation"]
+    monkeypatch.setattr(maintained_adjusted_daily, "datetime", _Later(1))
+    maintained_adjusted_daily.update(producer_root=producer)
+    monkeypatch.setattr(maintained_adjusted_daily, "HOLDS_LOCK_WAIT_SECONDS", 0.2)
+    original = maintained_adjusted_daily.held_generations
+    attempts: list[BaseException] = []
+
+    def hold_during_prune(root: Path | None = None) -> dict[str, list[dict[str, object]]]:
+        # The first call is the prune, holding the lock: a hold now must wait, then be refused.
+        if not attempts:
+            try:
+                maintained_adjusted_daily.hold_generation(first, holder="late-study", reason="started mid-prune")
+            except RuntimeError as error:
+                attempts.append(error)
+        return original(root)
+
+    monkeypatch.setattr(maintained_adjusted_daily, "held_generations", hold_during_prune)
+    monkeypatch.setattr(maintained_adjusted_daily, "datetime", _Later(2))
+    result = maintained_adjusted_daily.update(producer_root=producer)
+
+    assert len(attempts) == 1 and "holds.lock" in str(attempts[0]), "the racing hold is refused, not reported as successful"
+    assert first in result["pruned"] and not (family / "holds" / "late-study.json").exists()
+    assert not (family / ".holds.lock").exists()
+
+    monkeypatch.setattr(maintained_adjusted_daily, "held_generations", original)
+    (family / ".holds.lock").write_text("stale", encoding="utf-8")
+    monkeypatch.setattr(maintained_adjusted_daily, "datetime", _Later(3))
+    blocked = maintained_adjusted_daily.update(producer_root=producer)
+    assert blocked["pruned"] == [], "a held lock skips pruning instead of failing a published update"
+    assert read_json(family / "current.json")["generation"] == blocked["generation"]
