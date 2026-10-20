@@ -1,0 +1,13 @@
+{
+    "schema": "study-presentation.v1",
+    "task_id": "20261010-hhhl-v4-probability",
+    "publication": null,
+    "section": "method",
+    "report_path": "report.md",
+    "report_sha256": "43543b9084308bd38b1b40165b74968bfd1f28527b185938deadccb6bac6eeeb",
+    "title": "HHHL v4 全部描述性比較完成",
+    "summary": "**核心結果：型態全部突破翻倍率 8.49%，主控制 8.86%，沒有顯示明顯整體增益。**\n上方無線 9.68%、有線 6.22% 是可保留的分組線索；不是已通過策略。",
+    "web_report": false,
+    "shared_data": [],
+    "shared_data_reason": "本次僅登錄既有描述研究報告；舊固定輸入與本機 publication 不等同現行 maintained family，尚未確認可連結的目錄版本。"
+}

@@ -22,6 +22,7 @@ from threading import Lock, local
 from typing import Any, Callable, TypedDict
 
 from research_core.evidence import EvidenceError, finite_json, read_json, task_catalog, validate_registry, validate_result
+from research_core.study_presentation import project_study_history
 
 logger = logging.getLogger(__name__)
 SCHEMA = "saved-research-studio.v1"
@@ -1593,11 +1594,13 @@ class SavedResearchStudio:
         capture_provider: Callable[[str, str], dict[str, Any] | None] | None = None,
         history_presentation_path: Path | None = None,
         history_title_origins_path: Path | None = None,
+        history_tasks_root: Path | None = None,
     ):
         self.package_path = package_path
         self.capture_provider = capture_provider
         self.history_presentation_path = history_presentation_path
         self.history_title_origins_path = history_title_origins_path
+        self.history_tasks_root = history_tasks_root
         self._package: dict[str, Any] | None = None
         self._package_version: str | None = None
         self._package_lock = Lock()
@@ -1794,6 +1797,11 @@ class SavedResearchStudio:
         for item in history["items"]:
             _apply_history_presentation(item, presentation.get(item["id"], {}))
         history["excludedInfrastructureCount"] = len(original_items) - len(history["items"])
+        if self.package_path is not None and self.history_tasks_root is not None:
+            try:
+                history = project_study_history(history, self.history_tasks_root)
+            except ValueError as error:
+                raise StudioError(f"invalid study presentation registration: {error}") from error
         return history
 
     def exposure(self, run_id: str) -> dict[str, Any]:

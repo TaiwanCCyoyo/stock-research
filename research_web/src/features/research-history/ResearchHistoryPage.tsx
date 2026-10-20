@@ -60,6 +60,13 @@ export function ResearchHistoryPage() {
             <p className="ss-warning">
                 這裡只列已登錄且仍可取得的研究證據，不能宣稱涵蓋全部歷史；白話摘要仍需研究端核對，以保存原文與正式判定為準。研究結案不等於批准採用。
             </p>
+            {resource.data?.historyProjection && (
+                <p className="ss-small ss-muted">
+                    歷程包含目前 checkout 已登錄報告，帳戶仍是原固定快照。
+                    日期依 task
+                    建立日期排列，不是認證完成日，也不代表其他工作目錄的後續進度。
+                </p>
+            )}
             <div className="ss-head-row" role="group" aria-label="研究類別">
                 {HISTORY_SECTIONS.map((option) => (
                     <button
@@ -93,6 +100,14 @@ export function ResearchHistoryPage() {
                             </div>
                             <h2>{item.title}</h2>
                             <ResearchMarkdown text={historyConclusion(item)} />
+                            {item.webReportHref && (
+                                <a
+                                    className="ss-button"
+                                    href={item.webReportHref}
+                                >
+                                    開啟研究報告
+                                </a>
+                            )}
                             <details>
                                 <summary>查看原文摘要與研究證據</summary>
                                 {item.summarySource ===
@@ -142,6 +157,24 @@ export function ResearchHistoryPage() {
                                             {item.reportPath}
                                         </p>
                                     </>
+                                )}
+                                {item.sourceNote &&
+                                    item.summarySource === "formal-report" && (
+                                        <p className="ss-small ss-muted">
+                                            {item.sourceNote}
+                                        </p>
+                                    )}
+                                {!!item.sharedData?.length && (
+                                    <p>
+                                        <a href="#data">共用資料目錄</a>
+                                        {" · "}
+                                        {item.sharedData.join("、")}
+                                    </p>
+                                )}
+                                {item.sharedDataReason && (
+                                    <p className="ss-small ss-muted">
+                                        資料連結：{item.sharedDataReason}
+                                    </p>
                                 )}
                             </details>
                         </article>

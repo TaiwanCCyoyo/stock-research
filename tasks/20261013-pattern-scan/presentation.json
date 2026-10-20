@@ -1,0 +1,13 @@
+{
+    "schema": "study-presentation.v1",
+    "task_id": "20261013-pattern-scan",
+    "publication": null,
+    "section": "design",
+    "report_path": "report.md",
+    "report_sha256": "2f6d2287b0cb80e37f056d488a52447db0e6e7ef5cf760d6e20b073407f40da8",
+    "title": "Pattern-scan v1 準備報告",
+    "summary": "**研究尚未執行；本次完成handoff盤點、mission提案、原始來源覆蓋與snapshot準備，\n以及pure helper、獨立cohort與event overlay。**",
+    "web_report": false,
+    "shared_data": [],
+    "shared_data_reason": "僅呈現目前 main 已提交的準備報告，不代表其他 worktree 或未提交證據的後續研究進度；此報告未發布全市場研究版本。"
+}

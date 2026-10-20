@@ -201,11 +201,17 @@ primary 本機位置、查詢／重算與未知／相依／current-reference 限
 
 ### 收尾條件
 
+完成的研究需提供三項閱讀入口，做不到的項目在報告中明列理由：`tasks/<id>/web-report/`（report-kit v1）、`tasks/<id>/presentation.json` 歷程登錄、以及用到或產出的共用資料 ID 與資料目錄連結。登錄契約與保留舊快照的方式見 [study-presentation.v1](study-presentation.md)；這不要求為舊研究重算結果或補造未保存的判定。
+
 新建或延伸實驗的交接需讓未參與該實驗的 session，從研究總覽找到相關資產、取得其記錄版本、理解語意與限制，並判斷能否用於另一策略。完成時更新資料說明、定位表及已知使用關係，保留正面、負面與不完整結果；取得或說明仍有缺口時，明列未完成部分，不能宣稱交接完整。
 
 這是後續工作的交付要求，不改寫歷史 mission、結果或驗收規則，也不授權為補索引而開啟封存期間、重跑研究、搬移舊資料或擴大備份範圍。舊資產在後續需要時補定位與缺口說明，保留原始證據。
 
 ## 已做研究的定位表：非完整清單
+
+| 資產                    | 契約                                        | 取得與邊界                                                                                                                                                                       |
+| ----------------------- | ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `study-presentation.v1` | [研究收尾與歷程登錄](study-presentation.md) | `research_core.study_presentation` 讀取各 task 的 `presentation.json`，驗證 current report 的 SHA 與逐字摘要，追加 private studio 歷程投影；不更新舊帳戶快照或推論正式 outcome。 |
 
 波段的時間調整展示：[`wave-growth-display.v1` 契約](opportunity-presentation.md#time-adjusted-wave-display)、[預先記錄的規則](../../tasks/20261005-opportunity-growth-display/mission.md)、[共享計算](../../research_core/wave_growth.py)、[CLI](../../scripts/score_wave_growth.py)。滿一年採 CAGR，未滿一年採實際漲幅，初始門檻 100%；完整事後波段不刪除。此為同一保存波段的查詢日投影，非新回測、PIT 訊號或完整市場認證；程式／契約可由 Git 取得，原價格快照仍沿用原取得限制。
 
