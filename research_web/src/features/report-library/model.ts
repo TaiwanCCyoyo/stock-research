@@ -12,6 +12,8 @@ export type ReportEntry = {
 
 export type ReportIndex = {
     schema: "research-reports.v1";
+    /** Optional build identity added without changing the v1 index contract. */
+    version?: string;
     reports: ReportEntry[];
 };
 
@@ -28,7 +30,10 @@ export function statusLabel(status: string): string {
     return STATUS_LABELS[status] ?? (status || "未標示");
 }
 
-export function validateReportIndex(value: unknown): ReportIndex {
+export function validateReportIndex(
+    value: unknown,
+    expectedVersion?: string,
+): ReportIndex {
     if (
         !value ||
         typeof value !== "object" ||
@@ -36,6 +41,11 @@ export function validateReportIndex(value: unknown): ReportIndex {
         !Array.isArray((value as { reports?: unknown }).reports)
     )
         throw new Error("報告清單格式不符，無法讀取。");
+    if (
+        expectedVersion !== undefined &&
+        (value as { version?: unknown }).version !== expectedVersion
+    )
+        throw new Error("報告索引版本與目前頁面不一致，請重新載入頁面。");
     return value as ReportIndex;
 }
 

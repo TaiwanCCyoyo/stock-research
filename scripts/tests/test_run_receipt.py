@@ -415,22 +415,296 @@ def test_a_legacy_listing_digest_still_detects_a_rename(producer: Path) -> None:
     assert changed_inputs(legacy) == ["day_csv"]
 
 
-def test_receipt_refuses_a_commit_made_during_the_run(repo: Path, producer: Path) -> None:
+def test_receipt_records_a_source_replaced_by_an_outside_link_during_the_run(repo: Path, producer: Path, tmp_path: Path) -> None:
     from research_core.run_receipt import code_identity
 
     result = repo / "summary.json"
     result.write_text("{}", encoding="utf-8")
+    runner = repo / "runner.py"
+    runner.write_text("print('a')", encoding="utf-8")
+    prereg = repo / "prereg.md"
+    prereg.write_text("# Rules\n", encoding="utf-8")
+    _git(["add", "runner.py", "prereg.md"], repo)
+    _git(["commit", "-q", "-m", "runner a"], repo)
     inputs = fingerprint_inputs([InputSpec("prices", producer / "price_daily.parquet")], now=WEEKDAY_NIGHT)
-    started = code_identity(repo)
-    (repo / "runner.py").write_text("print('b')", encoding="utf-8")
-    _git(["add", "runner.py"], repo)
-    _git(["commit", "-q", "-m", "runner b during the run"], repo)
-    with pytest.raises(ValueError, match="code changed during the run"):
-        write_run_receipt(
-            repo / "r1.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, repo_root=repo, expected_code=started
-        )
-    assert not (repo / "r1.json").exists()
-    same = write_run_receipt(
-        repo / "r2.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, repo_root=repo, expected_code=code_identity(repo)
+    started = code_identity(repo, sources=[runner])
+    outside = tmp_path / "outside.py"
+    outside.write_text("print('outside')", encoding="utf-8")
+    (tmp_path / "outside.md").write_text("# Other rules\n", encoding="utf-8")
+    runner.unlink()
+    prereg.unlink()
+    try:
+        os.symlink(outside, runner)
+        os.symlink(tmp_path / "outside.md", prereg)
+    except OSError as error:  # Windows without symlink privilege
+        pytest.skip(f"symlinks unavailable: {error}")
+    receipt = write_run_receipt(
+        repo / "r.json",
+        run_id="r",
+        definition="d",
+        parameters={},
+        inputs=inputs,
+        results={"s": result},
+        repo_root=repo,
+        sources=[runner],
+        preregistration=prereg,
+        expected_code=started,
     )
-    assert same["code"]["dirty"] is False
+    assert receipt["sources"] == ["runner.py"], "the starting commit is queried by the link's own path"
+    assert receipt["preregistration"] == {"path": "prereg.md"}, "the checked repository path is recorded, not the link target"
+    assert receipt["code_drift"]["sources_changed"] == ["runner.py", "prereg.md"] and receipt["code_drift"]["sources_unchanged_observed"] is False
+
+
+def _link_directory(target: Path, link: Path) -> None:
+    """A directory link that needs no symlink privilege on Windows (a junction)."""
+    if os.name == "nt":
+        import _winapi
+
+        _winapi.CreateJunction(str(target), str(link))
+    else:
+        os.symlink(target, link, target_is_directory=True)
+
+
+def test_receipt_records_a_parent_directory_replaced_by_an_outside_link_during_the_run(repo: Path, producer: Path, tmp_path: Path) -> None:
+    import shutil
+
+    from research_core.run_receipt import code_identity
+
+    result = repo / "summary.json"
+    result.write_text("{}", encoding="utf-8")
+    package = repo / "pkg"
+    package.mkdir()
+    runner = package / "runner.py"
+    runner.write_text("print('a')", encoding="utf-8")
+    _git(["add", "pkg/runner.py"], repo)
+    _git(["commit", "-q", "-m", "runner a"], repo)
+    inputs = fingerprint_inputs([InputSpec("prices", producer / "price_daily.parquet")], now=WEEKDAY_NIGHT)
+    started = code_identity(repo, sources=[runner])
+    outside = tmp_path / "outside-pkg"
+    outside.mkdir()
+    (outside / "runner.py").write_text("print('outside version')", encoding="utf-8")
+    shutil.rmtree(package)
+    _link_directory(outside, package)
+    assert runner.resolve().is_relative_to(outside.resolve()), "the parent now leads outside the repository"
+    receipt = write_run_receipt(
+        repo / "r.json",
+        run_id="r",
+        definition="d",
+        parameters={},
+        inputs=inputs,
+        results={"s": result},
+        repo_root=repo,
+        sources=[runner],
+        expected_code=started,
+    )
+    assert receipt["sources"] == ["pkg/runner.py"], "the starting commit is queried by the repository path, not the link target"
+    assert receipt["code_drift"]["sources_changed"] == ["pkg/runner.py"] and receipt["code_drift"]["sources_unchanged_observed"] is False
+
+
+def test_receipt_refuses_a_source_committed_as_a_symlink(repo: Path, producer: Path) -> None:
+    from research_core.run_receipt import code_identity
+
+    result = repo / "summary.json"
+    result.write_text("{}", encoding="utf-8")
+    # Commit a symlink entry with plumbing so the test needs no symlink privilege on Windows.
+    blob = subprocess.run(["git", "hash-object", "-w", "--stdin"], cwd=repo, input="../outside.py", capture_output=True, text=True, check=True).stdout.strip()
+    _git(["update-index", "--add", "--cacheinfo", f"120000,{blob},link.py"], repo)
+    _git(["commit", "-q", "-m", "committed link"], repo)
+    inputs = fingerprint_inputs([InputSpec("prices", producer / "price_daily.parquet")], now=WEEKDAY_NIGHT)
+    with pytest.raises(ValueError, match="is a symlink in the starting commit"):
+        write_run_receipt(
+            repo / "r.json",
+            run_id="r",
+            definition="d",
+            parameters={},
+            inputs=inputs,
+            results={"s": result},
+            repo_root=repo,
+            sources=[repo / "link.py"],
+            expected_code=code_identity(repo),
+        )
+
+
+def test_receipt_sees_a_source_rewritten_and_restored_during_the_run(repo: Path, producer: Path) -> None:
+    from research_core.run_receipt import code_identity
+
+    result = repo / "summary.json"
+    result.write_text("{}", encoding="utf-8")
+    runner = repo / "runner.py"
+    runner.write_text("print('a')", encoding="utf-8")
+    _git(["add", "runner.py"], repo)
+    _git(["commit", "-q", "-m", "runner a"], repo)
+    inputs = fingerprint_inputs([InputSpec("prices", producer / "price_daily.parquet")], now=WEEKDAY_NIGHT)
+    started = code_identity(repo, sources=[runner])
+    without_stats = code_identity(repo)
+
+    runner.write_text("print('temporary')", encoding="utf-8")  # a late import could load this version
+    _git(["checkout", "--", "runner.py"], repo)
+    status = runner.stat()
+    # A long run puts time between start and restore; coarse test timestamps must not hide it.
+    os.utime(runner, ns=(status.st_atime_ns, status.st_mtime_ns + 1_000_000_000))
+    assert code_identity(repo) == without_stats, "commit and dirty flag alone see no change"
+    assert code_identity(repo, sources=[runner])["source_stats"] != started["source_stats"]
+
+    restored = write_run_receipt(
+        repo / "r1.json",
+        run_id="r",
+        definition="d",
+        parameters={},
+        inputs=inputs,
+        results={"s": result},
+        repo_root=repo,
+        sources=[runner],
+        expected_code=started,
+    )
+    assert restored["code_drift"]["sources_changed"] == ["runner.py"], "the rewritten source is named"
+    assert restored["code_drift"]["sources_unchanged_observed"] is False
+    unstatted = write_run_receipt(
+        repo / "r2.json",
+        run_id="r",
+        definition="d",
+        parameters={},
+        inputs=inputs,
+        results={"s": result},
+        repo_root=repo,
+        sources=[runner],
+        expected_code=without_stats,
+    )
+    assert unstatted["code_drift"]["sources_unchanged_observed"] is False and unstatted["code_drift"]["sources_changed"] is None, (
+        "without start stats nothing is proven"
+    )
+
+
+def test_receipt_records_code_drift_during_the_run_instead_of_refusing(repo: Path, producer: Path) -> None:
+    from research_core.run_receipt import code_identity
+
+    result = repo / "summary.json"
+    result.write_text("{}", encoding="utf-8")
+    runner = repo / "runner.py"
+    runner.write_text("print('a')", encoding="utf-8")
+    _git(["add", "runner.py"], repo)
+    _git(["commit", "-q", "-m", "runner a"], repo)
+    inputs = fingerprint_inputs([InputSpec("prices", producer / "price_daily.parquet")], now=WEEKDAY_NIGHT)
+    started = code_identity(repo, sources=[runner])
+
+    (repo / "README.md").write_text("unrelated\n", encoding="utf-8")
+    _git(["commit", "-q", "-am", "unrelated docs during the run"], repo)
+    unrelated = write_run_receipt(
+        repo / "r1.json",
+        run_id="r",
+        definition="d",
+        parameters={},
+        inputs=inputs,
+        results={"s": result},
+        repo_root=repo,
+        sources=[runner],
+        expected_code=started,
+    )
+    assert unrelated["code_drift"]["started"] == started and unrelated["code_drift"]["ended"]["commit"] != started["commit"]
+    assert unrelated["code"] == started, "the standard code field names the code the run started from"
+    assert unrelated["code_drift"]["sources_unchanged_observed"] is True, "an unrelated commit leaves the executed code known"
+    unlisted = write_run_receipt(
+        repo / "r1b.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, repo_root=repo, expected_code=started
+    )
+    assert unlisted["code_drift"]["sources_unchanged_observed"] is False, "without listed sources the drift may have touched the code that ran"
+    assert unrelated["code_drift"]["sources_changed"] == [], "an unrelated commit is recorded, never refused"
+
+    runner.write_text("print('b')", encoding="utf-8")
+    _git(["commit", "-q", "-am", "runner b during the run"], repo)
+    edited = write_run_receipt(
+        repo / "r2.json",
+        run_id="r",
+        definition="d",
+        parameters={},
+        inputs=inputs,
+        results={"s": result},
+        repo_root=repo,
+        sources=[runner],
+        expected_code=started,
+    )
+    assert edited["code_drift"]["sources_changed"] == ["runner.py"], "the executed source that changed is named"
+    assert edited["code_drift"]["sources_unchanged_observed"] is False, "a late import may have run the edited source"
+
+    same = write_run_receipt(
+        repo / "r3.json",
+        run_id="r",
+        definition="d",
+        parameters={},
+        inputs=inputs,
+        results={"s": result},
+        repo_root=repo,
+        sources=[runner],
+        expected_code=code_identity(repo, sources=[runner]),
+    )
+    assert "code_drift" not in same
+    assert same["runtime_code_verified"] is False, "a clean start and end with no drift is still only an observation"
+    plain = write_run_receipt(repo / "r3b.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, repo_root=repo)
+    assert plain["runtime_code_verified"] is False
+    assert unrelated["runtime_code_verified"] is False and edited["runtime_code_verified"] is False
+
+    clean = code_identity(repo, sources=[runner])
+    runner.write_text("print('c, not committed')", encoding="utf-8")  # edited during the run, left uncommitted
+    uncommitted = write_run_receipt(
+        repo / "r4.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, repo_root=repo, sources=[runner], expected_code=clean
+    )
+    assert uncommitted["code_drift"]["ended"]["dirty"] is True and uncommitted["code_drift"]["sources_changed"] == ["runner.py"]
+    assert uncommitted["code_drift"]["sources_unchanged_observed"] is False
+    dirty_start = code_identity(repo)
+    assert dirty_start["dirty"] is True  # runner.py still holds the uncommitted edit before this run
+    unidentified = write_run_receipt(
+        repo / "r6.json",
+        run_id="r",
+        definition="d",
+        parameters={},
+        inputs=inputs,
+        results={"s": result},
+        repo_root=repo,
+        sources=[runner],
+        expected_code=dirty_start,
+    )
+    assert unidentified["code_drift"]["sources_unchanged_observed"] is False and unidentified["code_drift"]["sources_changed"] is None
+    with pytest.raises(ValueError, match="not in the starting commit"):
+        write_run_receipt(
+            repo / "r5.json",
+            run_id="r",
+            definition="d",
+            parameters={},
+            inputs=inputs,
+            results={"s": result},
+            repo_root=repo,
+            sources=[repo / "new_module.py"],
+            expected_code=clean,
+        )
+    package = repo / "pkg"
+    package.mkdir()
+    (package / "mod.py").write_text("x = 1\n", encoding="utf-8")
+    _git(["add", "pkg"], repo)
+    _git(["commit", "-q", "-m", "package"], repo)
+    with pytest.raises(ValueError, match="is a tree in the starting commit"):
+        write_run_receipt(
+            repo / "r7.json",
+            run_id="r",
+            definition="d",
+            parameters={},
+            inputs=inputs,
+            results={"s": result},
+            repo_root=repo,
+            sources=[package],
+            expected_code=code_identity(repo),
+        )
+    late = repo / "late-prereg.md"
+    late.write_text("# Rules added after the run started\n", encoding="utf-8")
+    _git(["add", "late-prereg.md"], repo)
+    _git(["commit", "-q", "-m", "preregistration after start"], repo)
+    with pytest.raises(ValueError, match="preregistration late-prereg.md is not in the starting commit"):
+        write_run_receipt(
+            repo / "r7.json",
+            run_id="r",
+            definition="d",
+            parameters={},
+            inputs=inputs,
+            results={"s": result},
+            repo_root=repo,
+            preregistration=late,
+            expected_code=clean,
+        )

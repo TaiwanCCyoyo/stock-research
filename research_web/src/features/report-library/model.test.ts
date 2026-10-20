@@ -37,12 +37,36 @@ test("search matches every word across title, id and tags, and a tag narrows", (
 test("index validation rejects other shapes and labels unknown statuses plainly", () => {
     assert.throws(() => validateReportIndex({ reports: [] }));
     assert.equal(
+        validateReportIndex({
+            schema: "research-reports.v1",
+            version: "a1b2c3",
+            reports: [],
+        }).version,
+        "a1b2c3",
+    );
+    assert.equal(statusLabel("descriptive"), "描述性結果");
+    assert.equal(statusLabel(""), "未標示");
+});
+
+test("report index version matches the current shell while legacy pages stay compatible", () => {
+    const index = {
+        schema: "research-reports.v1",
+        version: "release-123",
+        reports: [],
+    };
+    assert.equal(
+        validateReportIndex(index, "release-123").version,
+        "release-123",
+    );
+    assert.throws(
+        () => validateReportIndex(index, "older-release"),
+        /請重新載入頁面/,
+    );
+    assert.equal(
         validateReportIndex({ schema: "research-reports.v1", reports: [] })
             .reports.length,
         0,
     );
-    assert.equal(statusLabel("descriptive"), "描述性結果");
-    assert.equal(statusLabel(""), "未標示");
 });
 
 test("frame source encodes the id and carries the first-paint theme", () => {

@@ -7,6 +7,9 @@ export function useReportIndex() {
     const [error, setError] = useState("");
     useEffect(() => {
         const control = new AbortController();
+        const expectedVersion = document.querySelector<HTMLMetaElement>(
+            'meta[name="research-web-version"]',
+        )?.content;
         fetch("/reports/index.json", {
             signal: control.signal,
             cache: "no-store",
@@ -18,7 +21,9 @@ export function useReportIndex() {
                     );
                 return response.json();
             })
-            .then((value) => setReports(validateReportIndex(value).reports))
+            .then((value) =>
+                setReports(validateReportIndex(value, expectedVersion).reports),
+            )
             .catch((e) => {
                 if (e.name !== "AbortError") setError(e.message);
             });

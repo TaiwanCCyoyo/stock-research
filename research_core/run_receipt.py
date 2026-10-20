@@ -15,6 +15,7 @@ hashed: that would tie the receipt to unrelated source edits and force rebuilds.
 from __future__ import annotations
 
 import logging
+import os
 import subprocess
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -257,11 +258,51 @@ def _display_path(path: Path, repo_root: Path) -> str:
     return resolved.relative_to(repo_root.resolve()).as_posix() if resolved.is_relative_to(repo_root.resolve()) else str(resolved)
 
 
-def code_identity(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
+def code_identity(repo_root: Path = REPO_ROOT, sources: Sequence[Path] = ()) -> dict[str, Any]:
+    """Commit and dirty flag; with `sources`, also each source's size and modification time.
+
+    Before a long run, take it with the sources the run executes and pass it as
+    `write_run_receipt(expected_code=)` with the same `sources=`: the stats may show a source
+    rewritten during the run even when its content was restored before the end. Never a hash,
+    and a description only: it does not verify the bytes a run executed.
+    """
+
     def git(*arguments: str) -> str:
         return subprocess.run(["git", "-C", str(repo_root), *arguments], capture_output=True, text=True, check=True).stdout.strip()
 
-    return {"commit": git("rev-parse", "HEAD"), "dirty": bool(git("status", "--porcelain", "--untracked-files=no"))}
+    identity: dict[str, Any] = {"commit": git("rev-parse", "HEAD"), "dirty": bool(git("status", "--porcelain", "--untracked-files=no"))}
+    if sources:
+        identity["source_stats"] = _source_stats(repo_root, [Path(source) for source in sources])
+    return identity
+
+
+def _repo_relative(path: Path, repo_root: Path) -> str | None:
+    """`path` relative to the repository, worked out lexically (None when outside it).
+
+    No link is followed, neither the file nor a parent directory: a source or directory
+    replaced by a link during a run keeps its own repository path, so the starting commit is
+    queried by that path and the change shows up as drift, never a refusal.
+    """
+    absolute = Path(os.path.abspath(path))
+    for root in (Path(os.path.abspath(repo_root)), repo_root.resolve()):
+        if absolute.is_relative_to(root):
+            return absolute.relative_to(root).as_posix()
+    return None
+
+
+def _source_stats(repo_root: Path, paths: Sequence[Path]) -> dict[str, dict[str, int] | None]:
+    """Size and modification time per source (a link's own, not its target's), keyed by
+    repository-relative path (None if missing)."""
+    stats: dict[str, dict[str, int] | None] = {}
+    for path in paths:
+        key = _repo_relative(path, repo_root) or str(path)
+        try:
+            status = Path(os.path.abspath(path)).lstat()
+        except OSError:
+            stats[key] = None
+        else:
+            stats[key] = {"bytes": status.st_size, "mtime_ns": status.st_mtime_ns}
+    return stats
 
 
 def _require_committed(path: Path, repo_root: Path, label: str) -> str:
@@ -305,6 +346,73 @@ def _describe_shared_read(record: Mapping[str, Any]) -> dict[str, Any]:
     return describe(record)
 
 
+def _require_in_commit(path: Path, repo_root: Path, commit: str, label: str = "run source") -> str:
+    """Require a regular file tracked in `commit`, the run's starting commit.
+
+    A directory is refused, and so is a committed symlink: the commit fixes only the link
+    text, not the content it points to.
+    """
+    relative = _repo_relative(path, repo_root)
+    if relative is None:
+        raise ValueError(f"{label} {path} is outside the repository; the recorded commit cannot identify it")
+    entry = subprocess.run(["git", "-C", str(repo_root), "ls-tree", commit, "--", relative], capture_output=True, text=True, check=False)
+    fields = entry.stdout.split(None, 2)
+    if entry.returncode or len(fields) < 2:
+        raise ValueError(f"{label} {relative} is not in the starting commit {commit}; commit it before the run")
+    mode, kind = fields[0], fields[1]
+    if kind != "blob":
+        raise ValueError(f"{label} {relative} is a {kind} in the starting commit {commit}, not a file; name the file")
+    if mode == "120000":
+        raise ValueError(f"{label} {relative} is a symlink in the starting commit {commit}; name the file it points to")
+    return relative
+
+
+def _code_drift(started: dict[str, Any], ended: dict[str, Any], executed: Sequence[str], documents: Sequence[str], repo_root: Path) -> dict[str, Any] | None:
+    """Observed start and end code identity when they differ, with the sources seen to change.
+
+    `sources_changed` lists executed sources (and documents such as the preregistration)
+    whose content differs from the starting commit, plus executed sources whose size or
+    modification time differs from `started["source_stats"]`: a source rewritten and
+    restored during the run may have been loaded by a late import or a new worker. It is
+    None when that cannot be said: the run started dirty (no commit holds what it ran), or
+    `started` has no stats for an executed source. `sources_unchanged_observed` is true only
+    when executed sources are listed and none was seen to change; an unrelated commit leaves
+    it true.
+
+    These are observations at two moments, not verification: an unlisted lazily imported
+    module, or a rewrite that keeps size and modification time, is not seen, and no drift
+    does not prove the code that ran was unchanged (the receipt's `runtime_code_verified` is
+    always false). Never a reason to refuse the receipt.
+    """
+    start_stats = started.get("source_stats") or {}
+    end_stats = _source_stats(repo_root, [repo_root / source for source in executed])
+    unstatted = [source for source in executed if source not in start_stats]
+    rewritten = {source for source in executed if source in start_stats and start_stats[source] != end_stats[source]}
+    base = {key: value for key, value in started.items() if key != "source_stats"}
+    if base == ended and ended.get("dirty") is False and not unstatted and not rewritten:
+        return None
+    if started.get("dirty") is not False:
+        return {"started": started, "ended": ended, "sources_unchanged_observed": False, "sources_changed": None}
+    changed: list[str] | None = []
+    for source in [*executed, *documents]:
+        diff = subprocess.run(
+            # The working tree against the starting commit: committed and uncommitted edits alike.
+            ["git", "-C", str(repo_root), "diff", "--quiet", str(started.get("commit")), "--", source],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if diff.returncode not in (0, 1):
+            changed = None  # the starting commit is unknown here; which sources changed cannot be said
+            break
+        if diff.returncode == 1 or source in rewritten:
+            assert changed is not None
+            changed.append(source)
+    if unstatted:
+        changed = None  # taken without stats, a rewrite restored before the end would not show
+    return {"started": started, "ended": ended, "sources_unchanged_observed": bool(executed) and changed == [], "sources_changed": changed}
+
+
 def write_run_receipt(
     path: Path,
     *,
@@ -326,18 +434,36 @@ def write_run_receipt(
     `research_core.maintained_adjusted_daily`) describe the sources; they never block saving
     a finished result. An input that changed during the run is listed under
     `inputs_changed_during_run` and logged, not refused; a shared generation pruned since
-    it was read does not matter.
+    it was read does not matter. `code`, `sources` and `code_drift` likewise describe the
+    code as observed at the start and at the end; nothing verifies the bytes the run
+    actually executed, so every receipt carries `runtime_code_verified: false`.
     """
+    start_commit = None if expected_code is None else expected_code.get("commit")
+    # The recorded code is the starting commit when expected_code is given, so the
+    # preregistration must be in that commit; a later edit is recorded in code_drift.
+    tracked_for_drift: list[str] = []
+    # The repository path checked here is the one recorded, never an end-of-run link target.
+    preregistration_path: str | None = None
     if preregistration is not None:
-        _require_committed(preregistration, repo_root, "preregistration")
+        if start_commit:
+            preregistration_path = _require_in_commit(preregistration, repo_root, str(start_commit), "preregistration")
+            tracked_for_drift.append(preregistration_path)
+        else:
+            preregistration_path = _require_committed(preregistration, repo_root, "preregistration")
     # The runner, strategy and imported study modules the run executed: an untracked or
     # edited one would leave a clean-looking commit that does not contain the code.
-    executed = [_require_committed(source, repo_root, "run source") for source in sources]
+    if start_commit:
+        # The run was started from the starting commit's sources; later edits seen, committed
+        # or not, are recorded in code_drift rather than refusing the finished result.
+        executed = [_require_in_commit(source, repo_root, str(start_commit)) for source in sources]
+    else:
+        executed = [_require_committed(source, repo_root, "run source") for source in sources]
     code = code_identity(repo_root)
-    # Pass `code_identity()` taken before the run: a commit or checkout during a long run
-    # would otherwise attribute results of the old code to the new commit.
-    if expected_code is not None and (code != dict(expected_code) or code.get("dirty") is not False):
-        raise ValueError(f"code changed during the run: started at {dict(expected_code)}, now {code}; rerun on one clean commit")
+    # Pass `code_identity(sources=...)` taken before the run: a commit, checkout or edit during
+    # a long run is recorded, not refused, so a finished result is always saved with its provenance.
+    drift = None if expected_code is None else _code_drift(dict(expected_code), code, executed, tracked_for_drift, repo_root)
+    if drift:
+        LOGGER.warning("Code changed during run %s: %s", run_id, drift)
     changed = changed_inputs(inputs)
     if changed:
         LOGGER.warning("Inputs changed during run %s: %s; recorded in the receipt", run_id, changed)
@@ -348,11 +474,15 @@ def write_run_receipt(
         "definition": definition,
         "parameters": dict(parameters),
         # The preregistration is a source: its path plus the code commit identify it, unhashed.
-        "preregistration": None if preregistration is None else {"path": _display_path(preregistration, repo_root)},
-        "code": code,
+        "preregistration": None if preregistration_path is None else {"path": preregistration_path},
+        # With expected_code this is the code observed when the run started; code_drift
+        # describes what was seen to change by the end. Neither verifies the executed bytes.
+        "code": code if expected_code is None else dict(expected_code),
+        "runtime_code_verified": False,
         "input_fingerprint": dict(inputs),
         **({"shared_data": shared} if shared else {}),
         **({"sources": executed} if executed else {}),
+        **({"code_drift": drift} if drift else {}),
         **({"inputs_changed_during_run": changed} if changed else {}),
         "results": {
             name: {"path": _display_path(result, repo_root), "bytes": result.stat().st_size, "sha256": file_digest(result)}

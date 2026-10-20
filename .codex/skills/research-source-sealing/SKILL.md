@@ -34,14 +34,32 @@ Historical packets keep their existing byte-level verification contract.
    run-receipt API, and describe the inputs actually read (`fingerprint_inputs`, no
    file hashes). Pass the runner, strategy and study modules the run executes as
    `write_run_receipt(..., sources=[...])`: the receipt's dirty flag does not see
-   untracked files, so it refuses a source that is untracked or differs from the
-   commit. Take `code_identity()` before the run and pass it as `expected_code=`, so a
-   commit or checkout during a long run is refused instead of credited to the new
-   commit. An input that changed during the run is listed in the receipt, not a reason
-   to discard the result; hash results, not sources.
-5. Execute the authorized study using those fixed files. If code changes during
-   the run, stop publication and investigate; a dirty flag must not be presented
-   as a clean committed implementation. A historical byte-sealed packet is the
+   untracked files, so it refuses a source missing from the starting commit (without
+   `expected_code`, one that is untracked or differs from `HEAD`). Take
+   `code_identity(sources=[...])` before the run, with the same list later passed as
+   `sources=`, and pass it as `expected_code=`: a commit, checkout or edit seen during a
+   long run is recorded as `code_drift` (start and end identity, and which executed
+   sources differ between them, including one rewritten and restored, which its size and
+   modification time show) instead of refusing the receipt. An input that changed
+   during the run is listed in the receipt, not a reason to discard the result; hash
+   results, not sources.
+5. Execute the authorized study using those fixed files. The receipt's `code`, `sources`
+   and `code_drift` are descriptions observed at the start and the end, not verification
+   of the code that ran: every receipt says `runtime_code_verified: false`, and no drift
+   is not proof that nothing changed. Cite the starting commit as the code the run was
+   started from. An unrelated commit during the run needs nothing more than its
+   `code_drift` entry. If an executed source is listed in `code_drift.sources_changed`, a
+   late import or a new worker may have loaded the edited version:
+   `sources_unchanged_observed` is false, so say which version executed is undetermined,
+   or rerun on one commit. A drift recorded without `sources=`, or with an `expected_code`
+   taken without `code_identity(sources=...)`, is also `sources_unchanged_observed:
+false`, so list every executed source. Unlisted lazily imported modules and rewrites
+   that keep size and modification time are not seen; running from a dedicated worktree
+   at the start commit makes a change less likely but is not verified either. Start from
+   a clean tree: a run that starts dirty is still recorded, with
+   `sources_unchanged_observed: false`, because no commit holds the code it executed; a
+   dirty flag must not be presented as a clean committed implementation. A historical
+   byte-sealed packet is the
    exception: use its original raw-byte hashes and verification rules without
    changing or re-pinning them. That exception does not authorize sealing a new
    study with the retired workflow.
