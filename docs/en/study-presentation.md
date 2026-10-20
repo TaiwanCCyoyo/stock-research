@@ -39,7 +39,8 @@ series into these JSON files.
 ## Read and integrity contract
 
 `research_core.study_presentation.project_study_history` uses the existing
-`task_catalog` current-publication selection. It requires a bounded registration
+`task_publications` current-publication selection for opted-in task directories only.
+It requires a bounded registration
 and report, contained task paths, matching SHA-256, exact title and excerpt.
 Invalid opted-in registrations fail explicitly, instead of silently replacing
 their evidence. A report change requires reviewing and updating its registration.

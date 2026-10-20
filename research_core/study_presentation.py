@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from research_core.artifact_store import relative_name, safe_path
-from research_core.evidence import EvidenceError, read_json, task_catalog, text_field, validate_result
+from research_core.evidence import EvidenceError, read_json, task_publications, text_field, validate_result
 
 MAX_REGISTRATION_BYTES = 64 * 1024
 MAX_REPORT_BYTES = 2 * 1024 * 1024
@@ -52,8 +52,9 @@ def _item(tasks_root: Path, task: dict[str, Any]) -> dict[str, Any]:
     section = registration.get("section")
     if section not in {"method", "market", "design"}:
         raise EvidenceError("study presentation section is invalid")
-    if not re.fullmatch(r"\d{8}-.+", identity):
-        raise EvidenceError("study presentation task needs a dated identity")
+    # Same character set as the report route, plus the dated task prefix.
+    if not re.fullmatch(r"[0-9]{8}-[A-Za-z0-9._-]+", identity):
+        raise EvidenceError("study presentation task needs a dated, report-route-safe identity")
     day = date.fromisoformat(f"{identity[:4]}-{identity[4:6]}-{identity[6:8]}").isoformat()
     web_report = registration.get("web_report")
     if not isinstance(web_report, bool):
@@ -63,8 +64,11 @@ def _item(tasks_root: Path, task: dict[str, Any]) -> dict[str, Any]:
     shared = registration.get("shared_data")
     if not isinstance(shared, list) or any(not isinstance(value, str) or not re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}", value) for value in shared):
         raise EvidenceError("study presentation shared_data must contain catalog or family identifiers")
+    reason = registration.get("shared_data_reason")
+    if reason is not None and not isinstance(reason, str):
+        raise EvidenceError("study presentation shared_data_reason must be text or null")
     if not shared:
-        text_field(registration.get("shared_data_reason"), "shared_data_reason")
+        text_field(reason, "shared_data_reason")
     outcome = None
     result_relative = task.get("result_path", "research_result.json")
     if (root / result_relative).exists():
@@ -94,7 +98,7 @@ def _item(tasks_root: Path, task: dict[str, Any]) -> dict[str, Any]:
         "registryEventIds": [],
         "webReportHref": f"#report/{identity}" if web_report else None,
         "sharedData": shared,
-        "sharedDataReason": registration.get("shared_data_reason"),
+        "sharedDataReason": reason,
     }
 
 
@@ -102,9 +106,21 @@ def project_study_history(history: dict[str, Any], tasks_root: Path) -> dict[str
     """Append or replace opted-in report projections after legacy integrity checks."""
     result = copy.deepcopy(history)
     rows = {row["id"]: row for row in result["items"]}
-    for task in task_catalog(tasks_root):
-        if not (tasks_root / task["task"] / "presentation.json").exists():
+    for root in tasks_root.iterdir() if tasks_root.is_dir() else ():
+        if not root.is_dir() or not (root / "presentation.json").exists():
             continue
+        # Discover opt-ins before parsing any publication index. Unregistered
+        # work-in-progress tasks must not invalidate unrelated history cards.
+        root = safe_path(root)
+        task: dict[str, Any] = {"task": root.name}
+        publications = task_publications(root)
+        if publications is not None:
+            current = next(item for item in publications["publications"] if item["id"] == publications["current"])
+            task.update(
+                current_publication=publications["current"],
+                report_path=current["report_path"],
+                result_path=current["result_path"],
+            )
         item = _item(tasks_root, task)
         previous = rows.get(item["id"])
         if previous is not None:

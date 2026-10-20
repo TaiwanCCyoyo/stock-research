@@ -47,6 +47,51 @@ def test_projection_appends_verbatim_report_without_mutating_old_history(tmp_pat
     assert len(original["items"]) == 1
 
 
+def test_unregistered_malformed_publication_does_not_break_registered_history(tmp_path: Path) -> None:
+    task, _ = registration(tmp_path)
+    unregistered = tmp_path / "20261021-work-in-progress"
+    unregistered.mkdir()
+    (unregistered / "publications.json").write_text("{invalid", encoding="utf-8")
+    result = project_study_history({"items": []}, tmp_path)
+    assert [item["id"] for item in result["items"]] == [task.name]
+
+
+@pytest.mark.parametrize(
+    "identity",
+    [
+        "20261020-has space",
+        "20261020-has#fragment",
+        "20261020-has%20encoding",
+        "20261020-中文",
+    ],
+)
+def test_task_identity_must_be_report_route_safe(tmp_path: Path, identity: str) -> None:
+    task, metadata = registration(tmp_path)
+    destination = tmp_path / identity
+    task.rename(destination)
+    metadata["task_id"] = identity
+    save(destination, metadata)
+    with pytest.raises(EvidenceError, match="report-route-safe"):
+        project_study_history({"items": []}, tmp_path)
+
+
+@pytest.mark.parametrize("shared", [[], ["adjusted-daily-v1"]])
+@pytest.mark.parametrize("reason", [{}, []])
+def test_shared_reason_rejects_objects_for_all_reference_states(tmp_path: Path, shared: list[str], reason: object) -> None:
+    task, metadata = registration(tmp_path)
+    metadata.update(shared_data=shared, shared_data_reason=reason)
+    save(task, metadata)
+    with pytest.raises(EvidenceError, match="shared_data_reason must be text or null"):
+        project_study_history({"items": []}, tmp_path)
+
+
+def test_nonempty_references_allow_null_reason(tmp_path: Path) -> None:
+    task, metadata = registration(tmp_path)
+    metadata.update(shared_data=["adjusted-daily-v1"], shared_data_reason=None)
+    save(task, metadata)
+    assert project_study_history({"items": []}, tmp_path)["items"][0]["sharedDataReason"] is None
+
+
 @pytest.mark.parametrize(
     ("key", "value"),
     [
