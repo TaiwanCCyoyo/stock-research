@@ -10,6 +10,7 @@ from io import BytesIO
 from numbers import Integral, Real
 from pathlib import Path
 from typing import Any
+from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 import numpy as np
 import pandas as pd
@@ -81,8 +82,8 @@ def _read_receipt(root: Path, target: str) -> tuple[dict[str, Any], bytes, dict[
     receipt = json.loads(receipt_bytes)
     if not isinstance(receipt, dict):
         raise ValueError(f"{target}: receipt must be an object")
-    if receipt.get("schema") != RECEIPT_SCHEMA:
-        raise ValueError(f"{target}: expected {RECEIPT_SCHEMA}")
+    if receipt.get("schema") != RECEIPT_SCHEMA or receipt.get("definition") != "pattern-scan-local-q1.v1":
+        raise ValueError(f"{target}: expected {RECEIPT_SCHEMA} for pattern-scan-local-q1.v1")
     declared = receipt.get("results")
     expected = {f"{target}-summary.parquet", f"{target}-annual.parquet"}
     if not isinstance(declared, dict) or set(declared) != expected:
@@ -174,8 +175,13 @@ def build_q1_report_data(q1_root: Path, *, as_of: str) -> tuple[dict[str, Any], 
         raise ValueError("Q1 receipts have inconsistent input/source/stock/code identities")
     input_id, source_id, numerical_source_code, (stock_count, executor_code) = identities[0]
 
-    for target in PATTERNS:
-        files[relative_name(f"receipts/{target}-receipt.json")] = receipts[target]
+    # Bounded lossless transport of audited receipt metadata, as used by other
+    # publications; no expansion of the owner's secret-scanner baseline.
+    transport = BytesIO()
+    with ZipFile(transport, "w") as archive:
+        for target in PATTERNS:
+            archive.writestr(ZipInfo(f"{target}-receipt.json"), receipts[target], compress_type=ZIP_DEFLATED)
+    files["q1-receipts.zip"] = transport.getvalue()
     downloads = [
         {
             "label": f"{name.rsplit('/', 1)[-1].split('-', 1)[0]} {'摘要表' if '-summary.' in name else '年度表'}（Parquet）",
@@ -233,11 +239,11 @@ def build_q1_report_data(q1_root: Path, *, as_of: str) -> tuple[dict[str, Any], 
                 "notes": [
                     (
                         "範圍：12 種型態；交叉檢核 split=cross-check、全期間 era=all、"
-                        "全市場 mkt=all、row_kind=full、union cohort、unconditional feature 與 known 狀態；"
+                        "全部市場背景 mkt=all、row_kind=full、union cohort、unconditional feature 與 known 狀態；"
                         "各型態比較 pattern 組及其主要 control，觀察期為 126 與 252 個交易日。"
                     ),
                     "命中定義為 126／252 個交易日內收盤價達錨點的 2 倍；虧損定義為完整觀察期未命中且期末收盤價低於錨點。",
-                    "分母為已知樣本 known_n；缺失與設限樣本不納入，unknown_n 與 censored_n 可能重疊。",
+                    "分母 known_n 只納入已知且符合統計資格的樣本；缺失、設限與已知但排除資格者不納入。unknown_n 與 censored_n 可能重疊。",
                     "10%／20% 僅為負責人參考線；Q4–Q6 僅作描述。來源表保留 2010–2012 年品質分層。",
                     "顯示的 generation 是歷史價格等價交接參考；本匯出讀取已完成的原始衍生表，未重新讀取共用資料。",
                 ]
@@ -265,10 +271,7 @@ def build_q1_report_data(q1_root: Path, *, as_of: str) -> tuple[dict[str, Any], 
             {"label": "數值來源識別", "value": source_id},
             {"label": "數值來源程式", "value": _code_provenance(numerical_source_code, label="歷史數值來源程式", historical=True)},
             {"label": "投影執行程式", "value": _code_provenance(executor_code, label="本次投影執行程式", historical=False)},
-            *[
-                {"label": f"{target} 原始收據", "value": "原始 Q1 收據；內含最終表格路徑與來源中繼資料。", "href": f"data/receipts/{target}-receipt.json"}
-                for target in PATTERNS
-            ],
+            {"label": "原始 Q1 收據", "value": "12 份原始收據的無損壓縮包", "href": "data/q1-receipts.zip"},
             {
                 "label": "資料沿革",
                 "value": "數值結果早於本報告匯出；投影執行程式僅作來源紀錄。Generation 為歷史價格等價交接參考，不表示本次匯出重新讀取共用資料。",
@@ -291,5 +294,5 @@ def export_q1_report_data(q1_root: Path, output: Path, *, as_of: str) -> dict[st
         raise FileExistsError(f"report data destination already exists: {output}")
     report, files = build_q1_report_data(q1_root, as_of=as_of)
     publish_new_directory(output, files)
-    LOGGER.info("Published partial Q1 report data families=%d tables=%d output=%s", len(PATTERNS), len(files) - len(PATTERNS) - 1, output)
+    LOGGER.info("Published partial Q1 report data families=%d tables=%d output=%s", len(PATTERNS), 2 * len(PATTERNS), output)
     return report

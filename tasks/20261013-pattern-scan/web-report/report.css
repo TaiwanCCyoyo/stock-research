@@ -1,0 +1,224 @@
+/* Study presentation only. The copied report kit remains byte-identical. */
+html {
+    scroll-behavior: smooth;
+}
+body {
+    min-width: 0;
+}
+.rk-page,
+.rk-section,
+.rk-card,
+.rk-grid-2 > *,
+#questions {
+    min-width: 0;
+}
+.skip-link {
+    position: absolute;
+    z-index: 10;
+    top: 8px;
+    left: 12px;
+    padding: 8px 12px;
+    background: var(--surface);
+    transform: translateY(-160%);
+}
+.skip-link:focus {
+    transform: none;
+}
+.report-nav {
+    position: sticky;
+    top: 0;
+    z-index: 4;
+    margin: 0 0 28px;
+    padding: 10px 0;
+    background: var(--paper);
+    border-bottom: 1px solid var(--line);
+}
+.report-nav .rk-toc {
+    margin: 0;
+}
+.report-nav a:hover,
+.report-nav a:focus-visible {
+    border-color: var(--accent);
+}
+.rk-section {
+    scroll-margin-top: 106px;
+}
+.question-progress {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+.question-link {
+    display: block;
+    min-width: 0;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    text-decoration: none;
+}
+.question-link .question-id {
+    font-weight: 600;
+    margin-right: 8px;
+}
+.question-link p {
+    margin: 6px 0 0;
+    color: var(--ink);
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+.rk-finding b {
+    overflow-wrap: anywhere;
+}
+.question-notes {
+    padding-left: 22px;
+    color: var(--muted);
+}
+.question-table {
+    margin-top: 16px;
+}
+.question-table h3,
+.rk-card h3 {
+    margin: 0 0 12px;
+    font-size: 16px;
+    font-weight: 600;
+}
+.rk-table-wrap {
+    max-width: 100%;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+}
+.rk-table-wrap:focus-visible {
+    outline-offset: 2px;
+}
+.rk-table caption {
+    padding: 9px 10px;
+    color: var(--muted);
+    font-size: 12px;
+    text-align: left;
+    background: var(--surface-2);
+}
+.rk-table .text-cell {
+    text-align: left;
+}
+.table-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    align-items: center;
+    margin: 12px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+}
+.table-pagination button,
+.table-pagination select,
+.table-pagination input {
+    min-height: 36px;
+    border: 1px solid var(--line-strong);
+    border-radius: 5px;
+    background: var(--surface);
+    padding: 4px 9px;
+}
+.table-pagination input {
+    width: 78px;
+}
+.table-pagination label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.table-pagination button {
+    cursor: pointer;
+}
+.table-pagination button:disabled {
+    cursor: default;
+    opacity: 0.45;
+}
+.table-summary {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+}
+.download-list {
+    display: grid;
+    gap: 8px;
+    margin: 10px 0 0;
+    padding-left: 20px;
+}
+.download-list li,
+.rk-answer,
+.rk-note,
+.rk-card li {
+    overflow-wrap: anywhere;
+}
+.download-size {
+    margin-left: 8px;
+    color: var(--muted);
+    font-size: 12px;
+}
+.provenance-card {
+    margin-top: 14px;
+}
+#provenance {
+    display: grid;
+    grid-template-columns: minmax(100px, 160px) minmax(0, 1fr);
+    gap: 8px 18px;
+    margin: 0;
+}
+#provenance dt {
+    color: var(--muted);
+}
+#provenance dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+.report-footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 12px;
+}
+.report-footer p {
+    margin: 0;
+}
+@media (max-width: 640px) {
+    .rk-page {
+        padding: 20px 16px 40px;
+    }
+    .rk-grid-2 {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .rk-findings {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .question-progress {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .rk-card {
+        padding: 13px;
+    }
+    .report-nav .rk-toc {
+        gap: 6px 4px;
+    }
+    .report-nav .rk-toc a {
+        padding: 3px 8px;
+    }
+    .rk-section {
+        scroll-margin-top: 132px;
+    }
+    #provenance {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 3px;
+    }
+    #provenance dd {
+        margin-bottom: 10px;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+}

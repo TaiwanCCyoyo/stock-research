@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+from io import BytesIO
 from pathlib import Path
+from zipfile import ZipFile
 
 import pandas as pd
 import pytest
@@ -82,13 +84,15 @@ def test_build_projects_stored_rows_and_all_24_tables(tmp_path: Path) -> None:
     assert len(report["downloads"]) == 24
     assert all(download["href"].startswith("data/tables/") for download in report["downloads"])
     assert len([name for name in files if name.startswith("tables/")]) == 24
-    assert len([name for name in files if name.startswith("receipts/")]) == 12
+    with ZipFile(BytesIO(files["q1-receipts.zip"])) as archive:
+        assert set(archive.namelist()) == {f"{target}-receipt.json" for target in PATTERNS}
+        for target in PATTERNS:
+            assert archive.read(f"{target}-receipt.json") == before[f"{target}/{target}-receipt.json"][0]
     row = report["questions"][0]["tables"][0]["rows"][0]
     assert row["event_n"] == 0 and row["hit_rate"] is None and row["loss_rate"] == 0.0
     numerical_source = next(item for item in report["provenance"] if item["label"] == "數值來源程式")["value"]
     assert "dirty=true" in numerical_source and "歷史" in numerical_source
-    assert next(item for item in report["provenance"] if item["label"] == "H1 原始收據")["href"] == "data/receipts/H1-receipt.json"
-    assert files["receipts/H1-receipt.json"] == before["H1/H1-receipt.json"][0]
+    assert next(item for item in report["provenance"] if item["label"] == "原始 Q1 收據")["href"] == "data/q1-receipts.zip"
     for relative, (raw, mtime_ns) in before.items():
         source = root / relative
         assert source.read_bytes() == raw
