@@ -165,6 +165,14 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                     初步辨識，規則未定 · 事後回看
                 </span>
             </header>
+            {metadata && (
+                <p className="ss-muted" title={metadata.catalogId}>
+                    固定歷史目錄 · {metadata.coverage.from} 至{" "}
+                    {metadata.coverage.to} · 版本{" "}
+                    {metadata.catalogId.slice(0, 12)}
+                    。此範圍為已保存的歷史快照，不代表最新共用資料世代。
+                </p>
+            )}
             {history.metadataError && (
                 <div className="fh-error" role="alert">
                     <strong>暫時無法讀取歷史資料</strong>

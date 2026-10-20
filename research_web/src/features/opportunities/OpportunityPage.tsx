@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { readArtifact } from "../../api/artifacts";
+import {
+    privateReadTransition,
+    type PrivateReadState,
+} from "./privateReadState.ts";
 import { priceExplanation } from "../../components/priceExplanation.ts";
 import { createOpportunityFixture } from "../../domain/opportunities/fixture.ts";
 import {
@@ -66,8 +70,12 @@ export function OpportunityPage({ active }: { active: boolean }) {
         null,
     );
     const [mode, setMode] = useState("historical"),
-        [loading, setLoading] = useState(true),
-        [loadError, setLoadError] = useState("");
+        [readState, setReadState] = useState<PrivateReadState>({
+            status: "loading",
+        });
+    const loading = readState.status === "loading";
+    const loadError = readState.status === "failure" ? readState.message : "";
+    const privateMode = import.meta.env.VITE_ARTIFACT_MODE === "local-private";
     const [custom, setCustom] = useState<OpportunityBundle | null>(null);
     const [index, setIndex] = useState(500),
         [playing, setPlaying] = useState(false);
@@ -177,21 +185,25 @@ export function OpportunityPage({ active }: { active: boolean }) {
         readArtifact("opportunity-explorer", controller.signal)
             .then((value) => {
                 const data = validateBundle(value);
-                setHistorical(data);
-                if (requestEpoch === sourceEpoch.current)
+                if (requestEpoch === sourceEpoch.current) {
+                    setHistorical(data);
+                    setReadState((state) =>
+                        privateReadTransition(state, { type: "loaded" }),
+                    );
                     setIndex(previewDateIndex(data));
-            })
-            .catch((e) => {
-                if (e.name !== "AbortError") {
-                    setLoadError(e.message);
-                    if (requestEpoch === sourceEpoch.current) {
-                        setMode("demo");
-                        setIndex(500);
-                    }
                 }
             })
-            .finally(() => {
-                if (!controller.signal.aborted) setLoading(false);
+            .catch((e) => {
+                if (
+                    e.name !== "AbortError" &&
+                    requestEpoch === sourceEpoch.current
+                )
+                    setReadState((state) =>
+                        privateReadTransition(state, {
+                            type: "failed",
+                            message: e instanceof Error ? e.message : String(e),
+                        }),
+                    );
             });
         return () => controller.abort();
     }, []);
@@ -230,15 +242,54 @@ export function OpportunityPage({ active }: { active: boolean }) {
     const changeSource = (next: string) => {
         sourceEpoch.current++;
         setMode(next);
+        if (next === "demo")
+            setReadState((state) =>
+                privateReadTransition(state, { type: "explicit-demo" }),
+            );
         setPlaying(false);
         setSelected(null);
         setSelectedIds([]);
         setNotice("");
-        setIndex(
-            next === "demo"
-                ? 500
-                : previewDateIndex(next === "custom" ? custom! : historical!),
+        if (next === "demo") setIndex(500);
+        else if (next === "custom" && custom)
+            setIndex(previewDateIndex(custom));
+        else if (next === "historical" && historical) {
+            setReadState((state) =>
+                privateReadTransition(state, { type: "loaded" }),
+            );
+            setIndex(previewDateIndex(historical));
+        }
+    };
+    const retryHistorical = () => {
+        const requestEpoch = ++sourceEpoch.current;
+        const controller = new AbortController();
+        setMode("historical");
+        setReadState((state) =>
+            privateReadTransition(state, { type: "retry" }),
         );
+        readArtifact("opportunity-explorer", controller.signal)
+            .then((value) => {
+                const data = validateBundle(value);
+                if (requestEpoch === sourceEpoch.current) {
+                    setHistorical(data);
+                    setIndex(previewDateIndex(data));
+                    setReadState((state) =>
+                        privateReadTransition(state, { type: "loaded" }),
+                    );
+                }
+            })
+            .catch((e) => {
+                if (
+                    e.name !== "AbortError" &&
+                    requestEpoch === sourceEpoch.current
+                )
+                    setReadState((state) =>
+                        privateReadTransition(state, {
+                            type: "failed",
+                            message: e instanceof Error ? e.message : String(e),
+                        }),
+                    );
+            });
     };
     const changeDate = (d: string) => {
         const i = bundle.dates.indexOf(d);
@@ -305,6 +356,33 @@ export function OpportunityPage({ active }: { active: boolean }) {
         limitations: bundle.limitations,
     });
 
+    if (privateMode && mode === "historical" && !historical)
+        return (
+            <div className="op-page">
+                <section
+                    className="op-card"
+                    role={loading ? "status" : "alert"}
+                >
+                    <h1>歷史資料</h1>
+                    {loading ? (
+                        <p>正在讀取本機歷史資料…</p>
+                    ) : (
+                        <>
+                            <p>
+                                無法讀取本機歷史資料：{loadError || "未知錯誤"}
+                            </p>
+                            <button type="button" onClick={retryHistorical}>
+                                重新讀取
+                            </button>
+                        </>
+                    )}
+                    <button type="button" onClick={() => changeSource("demo")}>
+                        使用示範資料
+                    </button>
+                </section>
+            </div>
+        );
+
     if (detail)
         return (
             <WaveLabPage
@@ -318,6 +396,14 @@ export function OpportunityPage({ active }: { active: boolean }) {
             className="op-page"
             data-reduced-motion={reducedMotion ? "true" : "false"}
         >
+            {privateMode && mode === "demo" && (
+                <p className="op-scope-note synthetic">
+                    目前顯示合成示範。
+                    <button type="button" onClick={retryHistorical}>
+                        重新讀取本機資料
+                    </button>
+                </p>
+            )}
             <section className="op-hero">
                 <div>
                     <h1>飆股地圖</h1>
@@ -1088,8 +1174,6 @@ export function OpportunityPage({ active }: { active: boolean }) {
                 onNotice={setNotice}
                 onImport={(next) => {
                     sourceEpoch.current++;
-                    setLoadError("");
-                    setLoading(false);
                     setCustom(next);
                     setMode("custom");
                     setSelected(null);

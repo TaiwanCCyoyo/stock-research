@@ -56,7 +56,12 @@ def create_studio_router(
         try:
             if configuration_error is not None:
                 raise configuration_error
-            return {**action(), "dataMode": "public-synthetic" if package_path is None else "local-private", "synthetic": package_path is None}
+            return {
+                **action(),
+                "source": service.source_metadata(),
+                "dataMode": "public-synthetic" if package_path is None else "local-private",
+                "synthetic": package_path is None,
+            }
         except OSError as error:
             logger.warning("saved strategy package unavailable: %s", error)
             raise HTTPException(503, "策略證據包尚未準備完成。", headers={"X-Research-Evidence-Error": "unavailable"}) from error

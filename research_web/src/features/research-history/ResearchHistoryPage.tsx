@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { SourceNotice } from "../../components/SourceNotice";
 import { useStudioHistory } from "../../api/strategyStudio";
 import { StudioState } from "../strategies/shared";
 import { ResearchMarkdown } from "./ResearchMarkdown";
@@ -38,6 +39,9 @@ export function ResearchHistoryPage() {
     );
     return (
         <div className="ss-page">
+            {resource.data && (
+                <SourceNotice source={resource.data.source} history />
+            )}
             <div className="ss-head-row">
                 <div>
                     <h1>研究歷程</h1>

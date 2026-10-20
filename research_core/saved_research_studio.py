@@ -1599,6 +1599,8 @@ class SavedResearchStudio:
         self.history_presentation_path = history_presentation_path
         self.history_title_origins_path = history_title_origins_path
         self._package: dict[str, Any] | None = None
+        self._package_version: str | None = None
+        self._package_lock = Lock()
         self._enriched: dict[str, dict[str, Any]] = {}
         self._capture_locks_guard = Lock()
         self._capture_locks: dict[str, Any] = {}
@@ -1615,10 +1617,33 @@ class SavedResearchStudio:
 
     def _load(self) -> dict[str, Any]:
         if self._package is None:
-            value = synthetic_studio_package() if self.package_path is None else read_studio_package(self.package_path)
-            self._package = value
-            logger.info("loaded saved studio package %s (%d runs)", self.package_path, len(value["runs"]))
+            with self._package_lock:
+                if self._package is None:
+                    value = synthetic_studio_package() if self.package_path is None else read_studio_package(self.package_path)
+                    # Identify the validated payload including history before making
+                    # it visible to concurrent requests. Later file replacements do
+                    # not relabel this cached response with a different version.
+                    self._package_version = hashlib.sha256(
+                        json.dumps(value, sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+                    ).hexdigest()
+                    self._package = value
+                    logger.info("loaded saved studio package %s (%d runs)", self.package_path, len(value["runs"]))
         return self._package
+
+    def source_metadata(self) -> dict[str, Any]:
+        """Metadata for this reader's immutable snapshot, never the live generation."""
+        package = self._load()
+        runs = package["runs"]
+        return {
+            "kind": "saved-snapshot",
+            "mode": "public-synthetic" if self.package_path is None else "local-private",
+            "schema": package["schema"],
+            "version": self._package_version,
+            "asOf": package.get("asOf"),
+            "from": min((run["from"] for run in runs), default=None),
+            "through": max((run["through"] for run in runs), default=None),
+            "historyThrough": max((item["date"] for item in package["researchHistory"]["items"]), default=None),
+        }
 
     def _find(self, run_id: str) -> dict[str, Any]:
         for run in self._load()["runs"]:
