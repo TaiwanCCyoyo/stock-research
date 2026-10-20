@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { studioRoute } from "../../app/routes";
 import { SourceNotice } from "../../components/SourceNotice";
 import { useStudioHistory } from "../../api/strategyStudio";
 import { StudioState } from "../strategies/shared";
@@ -171,7 +172,14 @@ export function ResearchHistoryPage() {
                                     )}
                                 {!!item.sharedData?.length && (
                                     <p>
-                                        <a href="#data">共用資料目錄</a>
+                                        {studioRoute("#data").page !==
+                                        "home" ? (
+                                            <a href="#data">共用資料目錄</a>
+                                        ) : (
+                                            <span>
+                                                共用資料（此版本尚無目錄頁）
+                                            </span>
+                                        )}
                                         {" · "}
                                         {item.sharedData.join("、")}
                                     </p>
