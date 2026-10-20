@@ -415,6 +415,39 @@ def test_a_legacy_listing_digest_still_detects_a_rename(producer: Path) -> None:
     assert changed_inputs(legacy) == ["day_csv"]
 
 
+def test_receipt_records_a_source_replaced_by_an_outside_link_during_the_run(repo: Path, producer: Path, tmp_path: Path) -> None:
+    from research_core.run_receipt import code_identity
+
+    result = repo / "summary.json"
+    result.write_text("{}", encoding="utf-8")
+    runner = repo / "runner.py"
+    runner.write_text("print('a')", encoding="utf-8")
+    _git(["add", "runner.py"], repo)
+    _git(["commit", "-q", "-m", "runner a"], repo)
+    inputs = fingerprint_inputs([InputSpec("prices", producer / "price_daily.parquet")], now=WEEKDAY_NIGHT)
+    started = code_identity(repo, sources=[runner])
+    outside = tmp_path / "outside.py"
+    outside.write_text("print('outside')", encoding="utf-8")
+    runner.unlink()
+    try:
+        os.symlink(outside, runner)
+    except OSError as error:  # Windows without symlink privilege
+        pytest.skip(f"symlinks unavailable: {error}")
+    receipt = write_run_receipt(
+        repo / "r.json",
+        run_id="r",
+        definition="d",
+        parameters={},
+        inputs=inputs,
+        results={"s": result},
+        repo_root=repo,
+        sources=[runner],
+        expected_code=started,
+    )
+    assert receipt["sources"] == ["runner.py"], "the starting commit is queried by the link's own path"
+    assert receipt["code_drift"]["sources_changed"] == ["runner.py"] and receipt["code_drift"]["sources_unchanged_observed"] is False
+
+
 def test_receipt_sees_a_source_rewritten_and_restored_during_the_run(repo: Path, producer: Path) -> None:
     from research_core.run_receipt import code_identity
 

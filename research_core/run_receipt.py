@@ -15,6 +15,7 @@ hashed: that would tie the receipt to unrelated source edits and force rebuilds.
 from __future__ import annotations
 
 import logging
+import os
 import subprocess
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -271,19 +272,30 @@ def code_identity(repo_root: Path = REPO_ROOT, sources: Sequence[Path] = ()) -> 
 
     identity: dict[str, Any] = {"commit": git("rev-parse", "HEAD"), "dirty": bool(git("status", "--porcelain", "--untracked-files=no"))}
     if sources:
-        identity["source_stats"] = _source_stats(repo_root, [Path(source).resolve() for source in sources])
+        identity["source_stats"] = _source_stats(repo_root, [_unfollowed(Path(source)) for source in sources])
     return identity
 
 
+def _unfollowed(path: Path) -> Path:
+    """`path` made absolute with its directories resolved but its last component not followed.
+
+    A source replaced by a symlink during a run keeps its own repository path: the starting
+    commit is queried by that path and the link itself shows up as drift, never a refusal.
+    """
+    absolute = Path(os.path.abspath(path))
+    return absolute.parent.resolve() / absolute.name
+
+
 def _source_stats(repo_root: Path, paths: Sequence[Path]) -> dict[str, dict[str, int] | None]:
-    """Size and modification time per source, keyed by repository-relative path (None if missing)."""
+    """Size and modification time per source (a link's own, not its target's), keyed by
+    repository-relative path (None if missing)."""
     root = repo_root.resolve()
     stats: dict[str, dict[str, int] | None] = {}
     for path in paths:
-        resolved = path.resolve()
+        resolved = _unfollowed(path)
         key = resolved.relative_to(root).as_posix() if resolved.is_relative_to(root) else str(path)
         try:
-            status = resolved.stat()
+            status = resolved.lstat()
         except OSError:
             stats[key] = None
         else:
@@ -334,7 +346,7 @@ def _describe_shared_read(record: Mapping[str, Any]) -> dict[str, Any]:
 
 def _require_in_commit(path: Path, repo_root: Path, commit: str, label: str = "run source") -> str:
     """Require a file (a Git blob, not a directory) tracked in `commit`, the run's starting commit."""
-    resolved, root = path.resolve(), repo_root.resolve()
+    resolved, root = _unfollowed(path), repo_root.resolve()
     if not resolved.is_relative_to(root):
         raise ValueError(f"{label} {path} is outside the repository; the recorded commit cannot identify it")
     relative = resolved.relative_to(root).as_posix()
