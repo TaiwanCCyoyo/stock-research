@@ -268,7 +268,9 @@ def test_cli_fingerprints_then_formats_and_receipts_before_authoritative_zip(
         assert kwargs["expected_code"] == starting_identity, "drift during the run is recorded by the receipt"
         assert Path(completion.__file__) in kwargs["sources"] and report not in kwargs["sources"]
         listed = {Path(source).name for source in kwargs["sources"]}
-        assert {"annual_rotation.py", "annual_rotation_v2.py", "annual_statistics.py", "price_basis.py"} <= listed, "every computing module is listed"
+        assert {"annual_rotation.py", "annual_rotation_v2.py", "annual_statistics.py", "price_basis.py", "data_loader.py"} <= listed, (
+            "every computing module is listed"
+        )
         events.append("receipt")
         identities = {}
         for key, result_path in kwargs["results"].items():

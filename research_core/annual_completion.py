@@ -492,6 +492,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         REPO_ROOT / "research_core/annual_rotation_v2.py",
         REPO_ROOT / "research_core/annual_statistics.py",
         REPO_ROOT / "research_core/price_basis.py",
+        REPO_ROOT / "StockProject/engine/data_loader.py",
         REPO_ROOT / "research_core/annual_completion_evidence.py",
         REPO_ROOT / "research_core/json_integrity.py",
         REPO_ROOT / "research_core/maintained_adjusted_daily.py",
