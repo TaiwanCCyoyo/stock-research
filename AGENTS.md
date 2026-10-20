@@ -86,7 +86,7 @@ These rules govern requested local reviews and hosted pull request reviews. See 
 - Verify what you changed and show the output as evidence; state plainly when verification was skipped or insufficient and what risk remains.
 - Choose verification proportional to the change and its concrete risks; use available evidence and avoid redundant checks.
 - Use normal commit hooks and hosted PR checks without a duplicate manual pass; investigate reported failures.
-- Follow `docs/en/artifact-integrity.md` for hashes, pins and verification cost: format before hashing, hash results and fingerprint inputs rather than copying them, verify each bundle once per process, and record phase timings before adding a verification pass.
+- Follow `docs/en/artifact-integrity.md`: a new study hashes its final result files only and records which inputs, shared-data generation and code commit it used as information; it never hashes its sources or intermediate files, and a later data update never invalidates a finished result. Format before hashing, and record phase timings before adding any verification pass.
 - The test suite does not read the real published artifacts. After a change that rewrites stored evidence or the code that reads it, run `uv run python -m scripts.verify_published_artifacts` and compare it with the run before the change.
 
 ## Delegation
