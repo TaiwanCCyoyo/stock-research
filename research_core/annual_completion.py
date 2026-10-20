@@ -499,9 +499,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         REPO_ROOT / "scripts/complete_annual_rotation.py",
     ]
     starting_identity = _require_committed_sources(REPO_ROOT, [*executed_sources, args.params, report])
-    # Observed with the executed sources' size and mtime: a later commit, checkout or edit is
-    # recorded in the receipt's code_drift instead of discarding the finished computation.
-    run_start = code_identity(REPO_ROOT, sources=executed_sources)
+    # Observed with the executed sources' and the preregistration's size and mtime: a later
+    # commit, checkout or edit (even one restored before the end) is recorded in the
+    # receipt's code_drift instead of discarding the finished computation.
+    preregistration = REPO_ROOT / read_json(args.params)["preregistration"]
+    run_start = code_identity(REPO_ROOT, sources=[*executed_sources, preregistration])
     if {key: run_start.get(key) for key in starting_identity} != starting_identity:
         # A commit or checkout between the two reads: refuse now, before any computation.
         raise ValueError("run source identity changed while the run was starting; start it again")
@@ -520,7 +522,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     fingerprint_phase = phase_receipt("fingerprint", before, _sample())
     before = _sample()
     params = read_json(args.params)
-    preregistration = REPO_ROOT / params["preregistration"]
     if _require_committed_sources(REPO_ROOT, [preregistration]) != starting_identity:
         raise ValueError("run source identity changed before preregistration admission")
     selections = parse_fixed_selections(report.read_text(encoding="utf-8"))
