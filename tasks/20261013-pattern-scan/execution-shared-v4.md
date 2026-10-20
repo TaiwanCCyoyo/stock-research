@@ -63,6 +63,16 @@ bounded examples. Q5/Q6 reuse per-stock followup projections and original
 holding grids. Same-industry holding partitions retain every reference peer in
 original column order and are tested exactly against the full-grid kernel.
 
+Q4 uses `pattern_scan_candidate_daily_v2` for the mission's daily tri-state
+coverage rule. A candidate can be selected from eligible development events
+while one of its conditions is not applicable on other raw signal dates (for
+example H outside its comparison cohort, or H1 A without bonus levels). Such
+dates remain unknown, with the original conjunction's N/A precedence preserved.
+They neither prove candidate absence nor remove an episode. A known match still
+absorbs unknown; an unknown day before it keeps first timing uncertain. The
+historical `candidate_daily_v1` and its callers stay byte-identical. Candidate
+selection, event membership, Q1 and completed conditions tables do not change.
+
 The final summary/annual/coverage/selection/episode/followup tables receive
 SHA-256s through `write_run_receipt`; inputs are descriptions and original
 lineage, shared generation and actual executor commit are recorded. New phase

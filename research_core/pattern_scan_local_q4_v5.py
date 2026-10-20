@@ -20,7 +20,7 @@ import pyarrow.parquet as pq
 
 from research_core.artifact_store import object_digest, read_json
 from research_core.hhhl_variants_selection import Atom
-from research_core.pattern_scan_candidate_daily_v1 import daily_candidate_states
+from research_core.pattern_scan_candidate_daily_v2 import daily_candidate_states
 from research_core.pattern_scan_conditions_v1 import PATTERNS
 from research_core.pattern_scan_episode_coverage_v1 import CONTROL_COLUMNS, _control_rows
 from research_core.pattern_scan_episode_tables_v1 import (

@@ -484,6 +484,7 @@
         "scripts/tests/test_pattern_scan_candidate_audit_v2.py",
         "scripts/tests/test_pattern_scan_candidate_coverage_v1.py",
         "scripts/tests/test_pattern_scan_candidate_daily_v1.py",
+        "scripts/tests/test_pattern_scan_candidate_daily_v2.py",
         "scripts/tests/test_pattern_scan_capacity_v3.py",
         "scripts/tests/test_pattern_scan_capacity_v4.py",
         "scripts/tests/test_pattern_scan_classification_cache_v1.py",

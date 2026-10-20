@@ -108,6 +108,31 @@ def _atom() -> Atom:
     return next(atom for atom in atoms_for_pattern("B1") if atom.feature_id == "MA_b" and atom.bin_id == "true")
 
 
+def test_q4_keeps_episodes_unknown_when_selected_h_is_not_applicable(tmp_path: Path) -> None:
+    class OutsideCohortInputs(Inputs):
+        def stock(self, code: str) -> dict[str, pd.DataFrame]:
+            tables = super().stock(code)
+            common = tables["common_values"]
+            common["H"], common["H_applicable"] = 95.0, True
+            common.iloc[60, common.columns.get_loc("H_applicable")] = False
+            return tables
+
+        def group_frame(self, bound: EventTables, group: str, horizon: int) -> pd.DataFrame:
+            frame = super().group_frame(bound, group, horizon)
+            frame["H_status"] = np.where(frame.calendar_index.eq(60), "not_applicable", "known")
+            frame["H_bin"] = "ge90"
+            frame.loc[frame.calendar_index.eq(60), "H_bin"] = None
+            return frame
+
+    atom = next(atom for atom in atoms_for_pattern("B1") if atom.feature_id == "H" and atom.bin_id == "ge90")
+    output = tmp_path / "q4"
+    module.run_q4(cast(Any, OutsideCohortInputs()), "B1", {"h": (atom,)}, output)
+    coverage = pd.read_parquet(output / "coverage.parquet")
+    rows = coverage.loc[coverage.group_id.eq("B1:candidate:h") & coverage.era.eq("all") & coverage.mkt.eq("all")]
+    assert rows.episode_n.sum() == rows.unknown_n.sum() == 2
+    assert rows.matched_n.sum() == rows.unmatched_n.sum() == 0
+
+
 def _legacy_rows(inputs: Inputs, candidates: dict[str, tuple[Atom, ...]]) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     observations, draws, quotas = [], [], []
     dates = tuple(inputs.calendar.strftime("%Y-%m-%d"))
