@@ -443,6 +443,10 @@ def test_receipt_records_code_drift_during_the_run_instead_of_refusing(repo: Pat
     assert unrelated["code_drift"]["started"] == started and unrelated["code_drift"]["ended"]["commit"] != started["commit"]
     assert unrelated["code"] == started, "the standard code field names the code the run started from"
     assert unrelated["code_drift"]["sources_identified"] is True, "an unrelated commit leaves the executed code known"
+    unlisted = write_run_receipt(
+        repo / "r1b.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, repo_root=repo, expected_code=started
+    )
+    assert unlisted["code_drift"]["sources_identified"] is False, "without listed sources the drift may have touched the code that ran"
     assert unrelated["code_drift"]["sources_changed"] == [], "an unrelated commit is recorded, never refused"
 
     runner.write_text("print('b')", encoding="utf-8")

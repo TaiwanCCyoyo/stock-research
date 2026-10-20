@@ -325,7 +325,9 @@ def _code_drift(started: dict[str, Any], ended: dict[str, Any], sources: Sequenc
     may have loaded the edited version, so which version executed cannot be determined:
     `sources_identified` is then false. A run that started dirty may have
     executed uncommitted source content no commit holds: `sources_identified` is then
-    false and `sources_changed` is None. Never a reason to refuse the receipt.
+    false and `sources_changed` is None. With no executed sources listed, nothing shows the
+    change missed the code that ran, so `write_run_receipt` sets `sources_identified` false.
+    Never a reason to refuse the receipt.
     """
     if started == ended and ended.get("dirty") is False:
         return None
@@ -393,6 +395,8 @@ def write_run_receipt(
     # Pass `code_identity()` taken before the run: a commit, checkout or edit during a long
     # run is recorded, not refused, so a finished result is always saved with its provenance.
     drift = None if expected_code is None else _code_drift(dict(expected_code), code, [*executed, *tracked_for_drift], repo_root)
+    if drift and not executed:
+        drift["sources_identified"] = False  # the preregistration alone does not say which code ran
     if drift:
         LOGGER.warning("Code changed during run %s: %s", run_id, drift)
     changed = changed_inputs(inputs)
