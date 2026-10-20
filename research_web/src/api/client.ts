@@ -22,8 +22,11 @@ export class ApiError extends Error {
     }
 }
 
-async function getJson<T>(path: string): Promise<T> {
-    const response = await fetch(`${API_BASE}${path}`);
+async function getJson<T>(
+    path: string,
+    cache: RequestCache = "default",
+): Promise<T> {
+    const response = await fetch(`${API_BASE}${path}`, { cache });
     if (!response.ok) {
         let detail = `HTTP ${response.status}`;
         try {
@@ -43,7 +46,7 @@ export function fetchTasks(): Promise<TaskListResponse> {
 
 /** Data quality is a global, task-independent view over the local price archive. */
 export function fetchDataQuality(): Promise<DataQualityResponse> {
-    return getJson<unknown>("/data-quality").then((value) => {
+    return getJson<unknown>("/data-quality", "no-store").then((value) => {
         if (!value || typeof value !== "object")
             throw new Error("資料品質回應格式無效。 ");
         const response = value as Record<string, unknown>;
