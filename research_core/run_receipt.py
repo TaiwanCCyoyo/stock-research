@@ -369,8 +369,8 @@ def _require_in_commit(path: Path, repo_root: Path, commit: str, label: str = "r
 
 
 def _is_commit_id(value: str, repo_root: Path) -> bool:
-    """True for a full hexadecimal commit object id (never a ref name like HEAD)."""
-    if not re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", value):
+    """True for a full hexadecimal commit object id in either case (never a ref name like HEAD)."""
+    if not re.fullmatch(r"[0-9a-fA-F]{40}|[0-9a-fA-F]{64}", value):
         return False
     kind = subprocess.run(["git", "-C", str(repo_root), "cat-file", "-t", value], capture_output=True, text=True, check=False)
     return kind.returncode == 0 and kind.stdout.strip() == "commit"
@@ -453,6 +453,10 @@ def write_run_receipt(
     if expected_code is not None and not _is_commit_id(str(start_commit), repo_root):
         # A ref such as HEAD would be checked against wherever it points now, then recorded as is.
         raise ValueError(f"expected_code commit {start_commit!r} is not a full commit id; pass code_identity() taken before the run")
+    if expected_code is not None:
+        # Recorded in Git's own lowercase spelling, so the same commit always reads the same.
+        start_commit = str(start_commit).lower()
+        expected_code = {**expected_code, "commit": start_commit}
     # The recorded code is the starting commit when expected_code is given, so the
     # preregistration must be in that commit; a later edit is recorded in code_drift.
     tracked_for_drift: list[str] = []

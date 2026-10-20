@@ -575,6 +575,20 @@ def test_receipt_refuses_an_expected_code_that_is_not_a_full_commit_id(repo: Pat
                 expected_code={"commit": commit, "dirty": False},
             )
     assert not (repo / "r.json").exists()
+    from research_core.run_receipt import code_identity
+
+    started = code_identity(repo)
+    upper = write_run_receipt(
+        repo / "r.json",
+        run_id="r",
+        definition="d",
+        parameters={},
+        inputs=inputs,
+        results={"s": result},
+        repo_root=repo,
+        expected_code={**started, "commit": started["commit"].upper()},
+    )
+    assert upper["code"]["commit"] == started["commit"], "an uppercase id is accepted and recorded in lowercase"
 
 
 def test_receipt_sees_a_source_rewritten_and_restored_during_the_run(repo: Path, producer: Path) -> None:
