@@ -7,6 +7,7 @@ import {
     createChart,
     createSeriesMarkers,
     type IChartApi,
+    type UTCTimestamp,
 } from "lightweight-charts";
 import {
     candleRows,
@@ -74,6 +75,19 @@ export function SharedChart({
             localization: { locale: "zh-TW" },
         });
         chartRef.current = chart;
+        // Convert the daily calendar once, rather than letting each setData
+        // parse the same ISO dates again for every price/indicator series.
+        // UTC midnight preserves the daily axis; API dates remain unchanged.
+        const times = series.dates.map(
+            (date) => (Date.parse(`${date}T00:00:00Z`) / 1000) as UTCTimestamp,
+        );
+        const dateIndex = new Map(series.dates.map((date, i) => [date, i]));
+        const timeIndex = new Map(times.map((time, i) => [time, i]));
+        const indicatorRows = (key: string) =>
+            featureRows(series, key).map((row, i) => ({
+                ...row,
+                time: times[i],
+            }));
         const candles = chart.addSeries(CandlestickSeries, {
             upColor: gain,
             downColor: loss,
@@ -82,7 +96,9 @@ export function SharedChart({
             wickUpColor: gain,
             wickDownColor: loss,
         });
-        candles.setData(candleRows(series));
+        candles.setData(
+            candleRows(series).map((row, i) => ({ ...row, time: times[i] })),
+        );
         const reference = series.basis === "reference_factor_adjusted";
         if (reference) {
             ma.forEach((n) => {
@@ -94,7 +110,7 @@ export function SharedChart({
                         lastValueVisible: false,
                         title: `MA${n}`,
                     })
-                    .setData(featureRows(series, `SMA${n}`));
+                    .setData(indicatorRows(`SMA${n}`));
             });
             if (bb)
                 ["BB20_Upper", "BB20_Middle", "BB20_Lower"].forEach((key) => {
@@ -105,7 +121,7 @@ export function SharedChart({
                             priceLineVisible: false,
                             lastValueVisible: false,
                         })
-                        .setData(featureRows(series, key));
+                        .setData(indicatorRows(key));
                 });
             const dateSet = new Set(
                 series.dates.filter((_, i) => validPrice(series, i)),
@@ -118,7 +134,7 @@ export function SharedChart({
             createSeriesMarkers(
                 candles,
                 marks.map((p) => ({
-                    time: p.extreme_date,
+                    time: times[dateIndex.get(p.extreme_date)!],
                     position:
                         p.kind === "high"
                             ? ("aboveBar" as const)
@@ -139,7 +155,7 @@ export function SharedChart({
                 1,
             )
             .setData(
-                series.dates.map((time, i) =>
+                times.map((time, i) =>
                     validPrice(series, i) && numeric(series.volume[i])
                         ? {
                               time,
@@ -164,21 +180,26 @@ export function SharedChart({
                     },
                     2,
                 )
-                .setData(featureRows(series, oscillator));
+                .setData(indicatorRows(oscillator));
         }
         chart
             .panes()
             .forEach((pane, i) => pane.setStretchFactor(i === 0 ? 5 : 1.4));
         chart.subscribeCrosshairMove((event) => {
             if (event.time) {
+                if (typeof event.time === "number") {
+                    const index = timeIndex.get(event.time);
+                    if (index !== undefined) onCursor(index);
+                    return;
+                }
                 const time =
                     typeof event.time === "string"
                         ? event.time
                         : typeof event.time === "object"
                           ? `${event.time.year}-${String(event.time.month).padStart(2, "0")}-${String(event.time.day).padStart(2, "0")}`
                           : "";
-                const index = series.dates.indexOf(time);
-                if (index >= 0) onCursor(index);
+                const index = dateIndex.get(time);
+                if (index !== undefined) onCursor(index);
             } else onCursor(series.dates.length - 1);
         });
         return () => {

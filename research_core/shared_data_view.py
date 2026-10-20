@@ -1,7 +1,7 @@
 """Read-only dashboard projections of maintained prices and catalog metadata.
 
-No calculation, publication or acquisition occurs here. A single background worker
-warms the existing verified readers; HTTP requests never wait for whole-file hashes.
+No calculation, publication or acquisition occurs here. One background warmup uses
+the existing verified readers; a bounded pool projects three files concurrently.
 """
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ import logging
 import sqlite3
 import threading
 import time
-from concurrent.futures import Future, ThreadPoolExecutor
+from concurrent.futures import Future, ThreadPoolExecutor, wait
 from pathlib import Path
 from typing import Any, cast
 
@@ -83,12 +83,13 @@ def column_arrays(frame: pd.DataFrame) -> dict[str, Any]:
 
 
 class SharedDataView:
-    """One bounded worker and one active generation; no disk cache or shared writes."""
+    """One active generation and at most three reader workers; no shared writes."""
 
     def __init__(self, root: Path | None = None):
         self._root = root
         self._lock = threading.Lock()
-        self._executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="shared-data-verify")
+        self._read_lock = threading.Lock()
+        self._executor = ThreadPoolExecutor(max_workers=3, thread_name_prefix="shared-data-read")
         self._future: Future[list[dict[str, Any]]] | None = None
         self._identity: tuple[str, str] | None = None
         self._names: dict[str, tuple[str, str]] = {}
@@ -181,14 +182,26 @@ class SharedDataView:
             raise LookupError("此世代沒有這個股票代號。")
         generation = status["generation"]
         try:
-            prices, _ = maintained.read_adjusted_daily(basis, codes=[code], columns=PRICE_COLUMNS, root=self.root, generation=generation)
+            # Only one symbol's three verified file projections are in flight.
+            # The queue and memory stay bounded even with concurrent HTTP callers.
+            with self._read_lock:
+                price_read = self._executor.submit(
+                    maintained.read_adjusted_daily, basis, codes=[code], columns=PRICE_COLUMNS, root=self.root, generation=generation
+                )
+                technical_read = pivot_read = None
+                if basis == REFERENCE:
+                    technical_read = self._executor.submit(maintained.read_technical, "daily", codes=[code], root=self.root, generation=generation)
+                    pivot_read = self._executor.submit(maintained.read_technical, "pivots", codes=[code], root=self.root, generation=generation)
+                reads = [price_read, *([technical_read, pivot_read] if technical_read and pivot_read else [])]
+                # Drain every submitted read even when one fails, before admitting
+                # another symbol; the failing future is raised below.
+                wait(reads)
+                prices, _ = price_read.result()
+                technical = technical_read.result()[0] if technical_read else pd.DataFrame()
+                pivots = pivot_read.result()[0] if pivot_read else pd.DataFrame()
             prices = prices.sort_values("Date").reset_index(drop=True)
-            technical = pd.DataFrame()
-            pivots = pd.DataFrame()
             if basis == REFERENCE:
-                technical, _ = maintained.read_technical("daily", codes=[code], root=self.root, generation=generation)
                 technical = prices[["Code", "Date"]].merge(technical, on=["Code", "Date"], how="left", validate="one_to_one")
-                pivots, _ = maintained.read_technical("pivots", codes=[code], root=self.root, generation=generation)
             selected = pd.Series(True, index=prices.index)
             if first:
                 selected &= prices["Date"].ge(pd.Timestamp(first))

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { artifactMode } from "../../api/artifactMode";
 import { readShared } from "./api";
 import {
@@ -32,6 +32,17 @@ export function SharedDataPage({
     const [basis, setBasis] = useState<Basis>("reference_factor_adjusted");
     const [families, setFamilies] = useState<Families | null>(null);
     const [symbols, setSymbols] = useState<SharedSymbol[]>([]);
+    // Thousands of options are unchanged when a quote or cursor date changes.
+    const symbolOptions = useMemo(
+        () =>
+            symbols.map((item) => (
+                <option
+                    key={item.code}
+                    value={`${item.code} ${item.name || ""}`}
+                />
+            )),
+        [symbols],
+    );
     const [namesAvailable, setNamesAvailable] = useState(true);
     const [loaded, setLoaded] = useState<{
         series: SharedSeries;
@@ -115,7 +126,10 @@ export function SharedDataPage({
         current && cursor >= 0
             ? Math.min(cursor, current.dates.length - 1)
             : -1;
-    const reasons = current ? qualityCounts(current) : [];
+    const reasons = useMemo(
+        () => (current ? qualityCounts(current) : []),
+        [current],
+    );
     const invalid = reasons.reduce((total, [, count]) => total + count, 0);
     const toggle = (values: number[], value: number) =>
         values.includes(value)
@@ -247,12 +261,7 @@ export function SharedDataPage({
                                                 </button>
                                             </div>
                                             <datalist id="shared-symbols">
-                                                {symbols.map((item) => (
-                                                    <option
-                                                        key={item.code}
-                                                        value={`${item.code} ${item.name || ""}`}
-                                                    />
-                                                ))}
+                                                {symbolOptions}
                                             </datalist>
                                         </form>
                                         <label>

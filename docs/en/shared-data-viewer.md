@@ -23,11 +23,15 @@ mode; the latter displays a local-data requirement.
 
 Responses carry generation and status SHA. All prices/technicals use the existing
 `read_adjusted_daily`/`read_technical` readers with the same explicit generation.
-A single background worker warms their per-process hash checks; warming returns
+One background task warms their per-process hash checks; warming returns
 503 with Retry-After. Missing/pruned/invalid evidence returns explicit 503,
 unknown symbols 404 and invalid basis/date ranges 422. No writer or maintenance
 command is invoked. A new generation triggers a new warmup, with no unbounded
 queue or retained whole-market price tables.
+After warmup, at most three workers read one symbol's independent price/daily/pivot
+files concurrently; other requests wait for that bounded projection. A comparison
+on 2330/2603/2882 found identical frames and reduced file reads from 166–188 ms
+to 85–87 ms. This excludes JSON transport and chart rendering.
 
 Only reference-factor-adjusted prices have attached technical values. Other
 bases hide those layers; no browser indicator calculations are used. Volume is
