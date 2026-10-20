@@ -320,8 +320,10 @@ def _require_in_commit(path: Path, repo_root: Path, commit: str, label: str = "r
 def _code_drift(started: dict[str, Any], ended: dict[str, Any], sources: Sequence[str], repo_root: Path) -> dict[str, Any] | None:
     """Start and end code identity when they differ, with the executed sources that changed.
 
-    An unrelated commit leaves `sources_changed` empty; a listed source means the result
-    came from the starting commit's version of it. A run that started dirty may have
+    An unrelated commit leaves `sources_changed` empty and `sources_identified` true. A
+    listed source was edited during the run, and a late import or a newly started worker
+    may have loaded the edited version, so which version executed cannot be determined:
+    `sources_identified` is then false. A run that started dirty may have
     executed uncommitted source content no commit holds: `sources_identified` is then
     false and `sources_changed` is None. Never a reason to refuse the receipt.
     """
@@ -344,7 +346,7 @@ def _code_drift(started: dict[str, Any], ended: dict[str, Any], sources: Sequenc
         elif diff.returncode:
             changed = None  # the starting commit is unknown here; which sources changed cannot be said
             break
-    return {"started": started, "ended": ended, "sources_identified": changed is not None, "sources_changed": changed}
+    return {"started": started, "ended": ended, "sources_identified": changed == [], "sources_changed": changed}
 
 
 def write_run_receipt(
@@ -382,7 +384,7 @@ def write_run_receipt(
     # The runner, strategy and imported study modules the run executed: an untracked or
     # edited one would leave a clean-looking commit that does not contain the code.
     if start_commit:
-        # The run executed the starting commit's sources; later edits, committed or not,
+        # The run started from the starting commit's sources; later edits, committed or not,
         # are recorded in code_drift rather than refusing the finished result.
         executed = [_require_in_commit(source, repo_root, str(start_commit)) for source in sources]
     else:
@@ -404,7 +406,7 @@ def write_run_receipt(
         "parameters": dict(parameters),
         # The preregistration is a source: its path plus the code commit identify it, unhashed.
         "preregistration": None if preregistration is None else {"path": _display_path(preregistration, repo_root)},
-        # With expected_code the result was produced by the starting code; the end state is in code_drift.
+        # With expected_code this is the code the run started from; code_drift says whether it ran unchanged.
         "code": code if expected_code is None else dict(expected_code),
         "input_fingerprint": dict(inputs),
         **({"shared_data": shared} if shared else {}),

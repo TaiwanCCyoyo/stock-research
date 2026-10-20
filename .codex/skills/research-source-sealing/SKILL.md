@@ -42,8 +42,10 @@ Historical packets keep their existing byte-level verification contract.
    to discard the result; hash results, not sources.
 5. Execute the authorized study using those fixed files. An unrelated commit during the
    run needs nothing more than its `code_drift` entry. If an executed source is listed in
-   `code_drift.sources_changed`, the result came from the starting commit's code: cite
-   that commit and say so. Start from a clean tree: a run that starts dirty is still
+   `code_drift.sources_changed`, it was edited during the run and a late import or a new
+   worker may have loaded the edited version: `sources_identified` is false, and the
+   result must not be attributed to the starting commit; say which version executed is
+   undetermined, or rerun on one commit. Start from a clean tree: a run that starts dirty is still
    recorded, but with `sources_identified: false`, because no commit holds the code it
    executed; a dirty flag must not be presented as a clean committed implementation. A historical byte-sealed packet is the
    exception: use its original raw-byte hashes and verification rules without
