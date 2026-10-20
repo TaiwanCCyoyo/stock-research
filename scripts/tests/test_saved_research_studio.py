@@ -54,6 +54,8 @@ def test_request_mode_mismatch_rejects_before_reading_private_package(tmp_path: 
     [
         ("sharedDataReason", {}),
         ("sharedDataReason", []),
+        ("webReportReason", {}),
+        ("webReportReason", []),
         ("sharedData", "adjusted-daily-v1"),
         ("sharedData", ["../outside"]),
         ("sharedData", [{}]),
@@ -90,7 +92,8 @@ def test_private_history_optional_presentation_fields_fail_at_reader_boundary(tm
     "optional",
     [
         {},
-        {"sharedDataReason": None, "sharedData": [], "webReportHref": None},
+        {"sharedDataReason": None, "sharedData": [], "webReportHref": None, "webReportReason": None},
+        {"webReportReason": "Reading page deferred; saved report is preserved."},
         {"sharedDataReason": "Saved summary", "sharedData": ["adjusted-daily-v1"], "webReportHref": "#report/20261020-synthetic"},
     ],
 )

@@ -92,6 +92,28 @@ def test_nonempty_references_allow_null_reason(tmp_path: Path) -> None:
     assert project_study_history({"items": []}, tmp_path)["items"][0]["sharedDataReason"] is None
 
 
+@pytest.mark.parametrize("reason", [{}, [], 1])
+def test_web_report_reason_rejects_nontext(tmp_path: Path, reason: object) -> None:
+    task, metadata = registration(tmp_path)
+    metadata["web_report_reason"] = reason
+    save(task, metadata)
+    with pytest.raises(EvidenceError, match="web_report_reason must be text or null"):
+        project_study_history({"items": []}, tmp_path)
+
+
+@pytest.mark.parametrize("reason", [None, "Reading page deferred; saved report is preserved."])
+def test_web_report_reason_is_optional_projection_metadata(tmp_path: Path, reason: str | None) -> None:
+    task, metadata = registration(tmp_path)
+    report = (task / "report.md").read_bytes()
+    assert project_study_history({"items": []}, tmp_path)["items"][0]["webReportReason"] is None
+    metadata["web_report_reason"] = reason
+    save(task, metadata)
+    item = project_study_history({"items": []}, tmp_path)["items"][0]
+    assert item["webReportReason"] == reason
+    assert item["webReportHref"] is None
+    assert (task / "report.md").read_bytes() == report
+
+
 @pytest.mark.parametrize(
     ("key", "value"),
     [

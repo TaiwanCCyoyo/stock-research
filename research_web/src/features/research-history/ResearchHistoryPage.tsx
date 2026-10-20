@@ -100,6 +100,11 @@ export function ResearchHistoryPage() {
                             </div>
                             <h2>{item.title}</h2>
                             <ResearchMarkdown text={historyConclusion(item)} />
+                            {!item.webReportHref && item.webReportReason && (
+                                <p className="ss-small ss-muted">
+                                    閱讀頁：{item.webReportReason}
+                                </p>
+                            )}
                             {item.webReportHref && (
                                 <a
                                     className="ss-button"

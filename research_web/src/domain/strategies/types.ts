@@ -225,6 +225,7 @@ export interface StudioHistoryItem {
     summarySource?: "formal-report" | "presentation-metadata" | "mission";
     sourceNote?: string | null;
     webReportHref?: string | null;
+    webReportReason?: string | null;
     sharedData?: string[];
     sharedDataReason?: string | null;
 }

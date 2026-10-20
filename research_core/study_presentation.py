@@ -59,6 +59,9 @@ def _item(tasks_root: Path, task: dict[str, Any]) -> dict[str, Any]:
     web_report = registration.get("web_report")
     if not isinstance(web_report, bool):
         raise EvidenceError("study presentation web_report must be boolean")
+    web_reason = registration.get("web_report_reason")
+    if web_reason is not None and not isinstance(web_reason, str):
+        raise EvidenceError("study presentation web_report_reason must be text or null")
     if web_report:
         _file(root, "web-report/index.html", MAX_REPORT_BYTES)
     shared = registration.get("shared_data")
@@ -97,6 +100,7 @@ def _item(tasks_root: Path, task: dict[str, Any]) -> dict[str, Any]:
         "evidenceState": "published_report_not_owner_adoption",
         "registryEventIds": [],
         "webReportHref": f"#report/{identity}" if web_report else None,
+        "webReportReason": web_reason,
         "sharedData": shared,
         "sharedDataReason": reason,
     }

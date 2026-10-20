@@ -22,6 +22,7 @@ pattern-scan. Required fields:
 | `title`              | Exact first Markdown H1 in that report                                                               |
 | `summary`            | Nonempty, verbatim contiguous excerpt from that report; preserve limitations                         |
 | `web_report`         | Boolean; true requires `web-report/index.html`                                                       |
+| `web_report_reason`  | Optional text or null; explain why the reading page is absent when `web_report` is false             |
 | `shared_data`        | Existing maintained family or catalog data IDs used/produced by this result                          |
 | `shared_data_reason` | Required when the list is empty; explain unavailable/unregistered data or why no shared data applies |
 
@@ -29,6 +30,12 @@ Dates come from the task ID and are labeled task dates, not certified completion
 dates. New formal outcomes come from the current `research_result.json`.
 When that file is absent, an existing saved card retains its historical outcome;
 a descriptive report or presentation card never grants approval.
+
+For new closeout registrations without a reading page, provide a concrete
+`web_report_reason` for display on the history card. Existing registrations and
+saved packages may omit it for compatibility. Registering an older completed
+study does not require rewriting its pinned report: record the missing reading
+page and its follow-up here, preserving the report bytes and digest.
 
 Local preview: launch the private dashboard, open `/#history`, then `/#reports`
 or `/#report/<task-id>`. Shared-data links lead to `/#data` and individual symbols

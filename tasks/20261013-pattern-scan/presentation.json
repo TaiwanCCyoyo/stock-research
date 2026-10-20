@@ -8,6 +8,7 @@
     "title": "Pattern-scan v1 準備報告",
     "summary": "**研究尚未執行；本次完成handoff盤點、mission提案、原始來源覆蓋與snapshot準備，\n以及pure helper、獨立cohort與event overlay。**",
     "web_report": false,
+    "web_report_reason": "此登錄引用的已提交報告仍是研究準備狀態，尚未提供研究結果閱讀頁；不代表其他工作目錄的後續進度。",
     "shared_data": [],
     "shared_data_reason": "僅呈現目前 main 已提交的準備報告，不代表其他 worktree 或未提交證據的後續研究進度；此報告未發布全市場研究版本。"
 }
