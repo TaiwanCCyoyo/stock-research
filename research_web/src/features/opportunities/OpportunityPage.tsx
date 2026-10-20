@@ -66,13 +66,11 @@ function stored<T>(key: string, fallback: T): T {
     }
 }
 export function OpportunityPage({ active }: { active: boolean }) {
-    const [historical, setHistorical] = useState<OpportunityBundle | null>(
-        null,
-    );
     const [mode, setMode] = useState("historical"),
-        [readState, setReadState] = useState<PrivateReadState>({
-            status: "loading",
-        });
+        [readState, setReadState] = useState<
+            PrivateReadState<OpportunityBundle>
+        >({ status: "loading", historical: null });
+    const historical = readState.historical;
     const loading = readState.status === "loading";
     const loadError = readState.status === "failure" ? readState.message : "";
     const privateMode = import.meta.env.VITE_ARTIFACT_MODE === "local-private";
@@ -186,9 +184,11 @@ export function OpportunityPage({ active }: { active: boolean }) {
             .then((value) => {
                 const data = validateBundle(value);
                 if (requestEpoch === sourceEpoch.current) {
-                    setHistorical(data);
                     setReadState((state) =>
-                        privateReadTransition(state, { type: "loaded" }),
+                        privateReadTransition(state, {
+                            type: "loaded",
+                            historical: data,
+                        }),
                     );
                     setIndex(previewDateIndex(data));
                 }
@@ -255,7 +255,7 @@ export function OpportunityPage({ active }: { active: boolean }) {
             setIndex(previewDateIndex(custom));
         else if (next === "historical" && historical) {
             setReadState((state) =>
-                privateReadTransition(state, { type: "loaded" }),
+                privateReadTransition(state, { type: "loaded", historical }),
             );
             setIndex(previewDateIndex(historical));
         }
@@ -271,10 +271,12 @@ export function OpportunityPage({ active }: { active: boolean }) {
             .then((value) => {
                 const data = validateBundle(value);
                 if (requestEpoch === sourceEpoch.current) {
-                    setHistorical(data);
                     setIndex(previewDateIndex(data));
                     setReadState((state) =>
-                        privateReadTransition(state, { type: "loaded" }),
+                        privateReadTransition(state, {
+                            type: "loaded",
+                            historical: data,
+                        }),
                     );
                 }
             })

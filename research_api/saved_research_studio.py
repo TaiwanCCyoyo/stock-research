@@ -52,13 +52,14 @@ def create_studio_router(
 
     router = APIRouter(prefix="/saved-research-studio/v1", tags=["saved strategy evidence"], dependencies=[Depends(verify_request_mode)])
 
-    def invoke(action: Callable[[], dict[str, Any]]) -> dict[str, Any]:
+    def invoke(action: Callable[[], dict[str, Any]], *, history: bool = False) -> dict[str, Any]:
         try:
             if configuration_error is not None:
                 raise configuration_error
+            result = action()
             return {
-                **action(),
-                "source": service.source_metadata(),
+                **result,
+                "source": service.source_metadata(result if history else None),
                 "dataMode": "public-synthetic" if package_path is None else "local-private",
                 "synthetic": package_path is None,
             }
@@ -77,7 +78,7 @@ def create_studio_router(
 
     @router.get("/research-history")
     def history() -> dict[str, Any]:
-        return invoke(service.history)
+        return invoke(service.history, history=True)
 
     @router.get("/run")
     @router.get("/runs/{run_id}")

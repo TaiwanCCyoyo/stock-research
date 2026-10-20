@@ -1630,19 +1630,26 @@ class SavedResearchStudio:
                     logger.info("loaded saved studio package %s (%d runs)", self.package_path, len(value["runs"]))
         return self._package
 
-    def source_metadata(self) -> dict[str, Any]:
+    def source_metadata(self, history: dict[str, Any] | None = None) -> dict[str, Any]:
         """Metadata for this reader's immutable snapshot, never the live generation."""
         package = self._load()
         runs = package["runs"]
+        history_view = history if history is not None else package["researchHistory"]
+        version = self._package_version
+        if history is not None:
+            # Presentation can exclude infrastructure or restore saved titles.
+            # Describe exactly the projected items returned by this request.
+            projection = {"packageVersion": version, "history": history}
+            version = hashlib.sha256(json.dumps(projection, sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode("utf-8")).hexdigest()
         return {
             "kind": "saved-snapshot",
             "mode": "public-synthetic" if self.package_path is None else "local-private",
             "schema": package["schema"],
-            "version": self._package_version,
+            "version": version,
             "asOf": package.get("asOf"),
             "from": min((run["from"] for run in runs), default=None),
             "through": max((run["through"] for run in runs), default=None),
-            "historyThrough": max((item["date"] for item in package["researchHistory"]["items"]), default=None),
+            "historyThrough": max((item["date"] for item in history_view["items"]), default=None),
         }
 
     def _find(self, run_id: str) -> dict[str, Any]:

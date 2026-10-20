@@ -5,24 +5,47 @@ import {
     type PrivateReadState,
 } from "./privateReadState.ts";
 
-test("private read failure stays an error, retry returns to loading, and success resolves", () => {
-    let state: PrivateReadState = { status: "loading" };
-    assert.deepEqual(state, { status: "loading" });
+test("private read failure stays an error, retry clears old data, and success resolves", () => {
+    let state: PrivateReadState<string> = {
+        status: "loading",
+        historical: null,
+    };
     state = privateReadTransition(state, {
         type: "failed",
         message: "HTTP 503",
     });
-    assert.deepEqual(state, { status: "failure", message: "HTTP 503" });
+    assert.deepEqual(state, {
+        status: "failure",
+        message: "HTTP 503",
+        historical: null,
+    });
     state = privateReadTransition(state, { type: "retry" });
-    assert.deepEqual(state, { status: "loading" });
-    state = privateReadTransition(state, { type: "loaded" });
-    assert.deepEqual(state, { status: "success" });
+    assert.deepEqual(state, { status: "loading", historical: null });
+    state = privateReadTransition(state, {
+        type: "loaded",
+        historical: "new snapshot",
+    });
+    assert.deepEqual(state, { status: "success", historical: "new snapshot" });
 });
 
-test("demo state requires the explicit demo selection event", () => {
-    const state = privateReadTransition(
-        { status: "failure", message: "HTTP 503" },
-        { type: "explicit-demo" },
-    );
-    assert.deepEqual(state, { status: "demo" });
+test("success to demo to failed local retry cannot display the old private snapshot", () => {
+    let state: PrivateReadState<string> = {
+        status: "success",
+        historical: "old private snapshot",
+    };
+    state = privateReadTransition(state, { type: "explicit-demo" });
+    assert.equal(state.status, "demo");
+    state = privateReadTransition(state, { type: "retry" });
+    assert.deepEqual(state, { status: "loading", historical: null });
+    state = privateReadTransition(state, {
+        type: "failed",
+        message: "HTTP 503",
+    });
+    assert.deepEqual(state, {
+        status: "failure",
+        message: "HTTP 503",
+        historical: null,
+    });
+    state = privateReadTransition(state, { type: "explicit-demo" });
+    assert.deepEqual(state, { status: "demo", historical: null });
 });

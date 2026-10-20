@@ -876,6 +876,8 @@ def test_history_projection_excludes_only_explicit_infrastructure_without_changi
     assert response.status_code == 200
     assert response.json()["items"] == expected_items
     assert response.json()["excludedInfrastructureCount"] == 1
+    assert response.json()["source"]["historyThrough"] == "2026-10-07"
+    assert response.json()["source"]["version"] != service.source_metadata()["version"]
 
 
 def test_history_without_presentation_path_keeps_every_saved_item(tmp_path: Path) -> None:
@@ -887,7 +889,7 @@ def test_history_without_presentation_path_keeps_every_saved_item(tmp_path: Path
     app.include_router(create_studio_router(path, history_presentation_path=None))
     response = TestClient(app).get("/saved-research-studio/v1/research-history")
     assert response.status_code == 200
-    assert response.json() == {**projected, "source": SavedResearchStudio(path).source_metadata(), "dataMode": "local-private", "synthetic": False}
+    assert response.json() == {**projected, "source": SavedResearchStudio(path).source_metadata(projected), "dataMode": "local-private", "synthetic": False}
 
 
 @pytest.mark.parametrize("category", [None, "engineering", "Research", False, ["infrastructure"], {}])

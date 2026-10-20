@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
     fetchDataQuality,
     fetchTaskBundle,
@@ -101,22 +101,31 @@ export default function App() {
     }, []);
 
     // Data quality is independent of task loading and can be retried with a read-only GET.
+    const dataQualityRequest = useRef(0);
     const refreshDataQuality = useCallback(() => {
+        const request = ++dataQualityRequest.current;
         setDataQuality({ status: "loading" });
         fetchDataQuality()
-            .then((data) =>
-                setDataQuality(dataQualityState({ status: "loaded", data })),
-            )
-            .catch((err: Error) =>
-                setDataQuality({
-                    status: "failure",
-                    message: err.message || "網路連線失敗。",
-                }),
-            );
+            .then((data) => {
+                if (request === dataQualityRequest.current)
+                    setDataQuality(
+                        dataQualityState({ status: "loaded", data }),
+                    );
+            })
+            .catch((err: Error) => {
+                if (request === dataQualityRequest.current)
+                    setDataQuality({
+                        status: "failure",
+                        message: err.message || "網路連線失敗。",
+                    });
+            });
     }, []);
 
     useEffect(() => {
         refreshDataQuality();
+        return () => {
+            dataQualityRequest.current++;
+        };
     }, [refreshDataQuality]);
 
     const loadTask = useCallback((taskId: string) => {
