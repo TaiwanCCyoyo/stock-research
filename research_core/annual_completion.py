@@ -501,6 +501,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     # Observed with the executed sources' size and mtime: a later commit, checkout or edit is
     # recorded in the receipt's code_drift instead of discarding the finished computation.
     run_start = code_identity(REPO_ROOT, sources=executed_sources)
+    if {key: run_start.get(key) for key in starting_identity} != starting_identity:
+        # A commit or checkout between the two reads: refuse now, before any computation.
+        raise ValueError("run source identity changed while the run was starting; start it again")
     producer = producer_data_root()
     evidence_root = args.evidence_root or producer / "corporate_action_supplements/annual-winner-20261013-v1"
     price_path, action_path = producer / "price_daily.parquet", producer / "corporate_actions.sqlite"

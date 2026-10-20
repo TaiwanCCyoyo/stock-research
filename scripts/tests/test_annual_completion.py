@@ -185,7 +185,7 @@ def test_committed_source_gate_returns_detached_identity_and_pins_git_lookup(tmp
 
 @pytest.mark.parametrize(
     "change",
-    ["stable", "foreign_zip", "formatter_dirty", "formatter_head", "receipt_code", "receipt_dirty", "post_receipt_head"],
+    ["stable", "foreign_zip", "start_head", "formatter_dirty", "formatter_head", "receipt_code", "receipt_dirty", "post_receipt_head"],
 )
 @pytest.mark.parametrize("quotes", ["shared", "producer"])
 def test_cli_fingerprints_then_formats_and_receipts_before_authoritative_zip(
@@ -209,7 +209,10 @@ def test_cli_fingerprints_then_formats_and_receipts_before_authoritative_zip(
 
     def committed_sources(_repo: Path, paths: list[Path]) -> dict[str, Any]:
         committed_checks.extend(paths)
-        return dict(current_identity)
+        checked = dict(current_identity)
+        if change == "start_head":
+            current_identity["commit"] = "b" * 40  # another commit lands before the run takes its start identity
+        return checked
 
     original_pack = completion.pack_publication
 
@@ -297,6 +300,11 @@ def test_cli_fingerprints_then_formats_and_receipts_before_authoritative_zip(
         SimpleNamespace(load_verified_evidence=lambda _: evidence, build_admission=lambda *_: admission),
     )
     arguments = ["--params", str(params_path), "--report", str(report), "--output", str(output), "--quotes", quotes]
+    if change == "start_head":
+        with pytest.raises(ValueError, match="while the run was starting"):
+            completion.main(arguments)
+        assert events == [] and packed == [], "refused before any computation"
+        return
     # A commit, checkout or edit during the run is recorded in the receipt, never a reason to drop the result.
     published = {"stable", "formatter_dirty", "formatter_head", "post_receipt_head"}
     if change not in published | {"foreign_zip"}:
