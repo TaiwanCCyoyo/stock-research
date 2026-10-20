@@ -9,10 +9,10 @@ the launcher switches `dist` only after the frontend shell and report index
 carry the same version. A failed build leaves the previous `dist` available.
 
 From `research_web`, `npm run build` performs the same freshness check and staged
-publish. It uses the dependencies already installed in `node_modules`; install
-them with `npm ci` when needed. `npm run build:stage` is the internal raw Vite
-build used by the release manager and writes only to the configured staging
-directory.
+publish. If dependencies are missing, it runs `npm ci` before building; no
+separate dependency bootstrap is needed. `npm run build:stage` is the internal
+raw Vite build used by the release manager and writes only to the configured
+staging directory.
 
 For hot reload, use `npm run dev`. The Vite page and `/reports/index.json` both
 identify that session as `development`; production builds carry the source

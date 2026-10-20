@@ -5,6 +5,7 @@ import { join, resolve } from "node:path";
 import test from "node:test";
 import {
     ensureRelease,
+    hasBuildDependencies,
     isCurrentRelease,
     publishDirectory,
     sourceVersion,
@@ -25,7 +26,12 @@ async function fixture() {
     );
     await writeFile(join(web, "vite.config.ts"), "vite source");
     await writeFile(join(web, "index.html"), "<html></html>");
-    await writeFile(join(web, "package.json"), "{}");
+    await writeFile(
+        join(web, "package.json"),
+        JSON.stringify({
+            devDependencies: { vite: "test", typescript: "test" },
+        }),
+    );
     return { root, web };
 }
 
@@ -77,24 +83,56 @@ test("release rebuilds stale source and keeps frontend and report indexes on one
 
 test("release fingerprint includes Vite production env files and effective overrides", async () => {
     const { root, web } = await fixture();
-    const previousArtifactMode = process.env.VITE_ARTIFACT_MODE;
-    const previousApiBase = process.env.VITE_API_BASE;
     try {
         const baseline = sourceVersion(root);
         await writeFile(
-            join(web, ".env.production"),
-            "VITE_API_BASE=/private-api\n",
+            join(web, ".env.production.local"),
+            [
+                "VITE_API_BASE=/private-api",
+                "VITE_ARTIFACT_MODE=local-private",
+                "",
+            ].join("\n"),
         );
         const envFileVersion = sourceVersion(root);
         assert.notEqual(envFileVersion, baseline);
-        process.env.VITE_ARTIFACT_MODE = "synthetic-private";
-        assert.notEqual(sourceVersion(root), envFileVersion);
+        for (const name of ["VITE_ARTIFACT_MODE", "VITE_API_BASE"]) {
+            const previous = process.env[name];
+            try {
+                delete process.env[name];
+                const unsetOverride = sourceVersion(root);
+                process.env[name] = "";
+                const emptyOverride = sourceVersion(root);
+                assert.notEqual(emptyOverride, unsetOverride, name);
+                process.env[name] = "synthetic-override";
+                assert.notEqual(sourceVersion(root), emptyOverride, name);
+            } finally {
+                if (previous === undefined) delete process.env[name];
+                else process.env[name] = previous;
+            }
+        }
     } finally {
-        if (previousArtifactMode === undefined)
-            delete process.env.VITE_ARTIFACT_MODE;
-        else process.env.VITE_ARTIFACT_MODE = previousArtifactMode;
-        if (previousApiBase === undefined) delete process.env.VITE_API_BASE;
-        else process.env.VITE_API_BASE = previousApiBase;
+        await rm(root, { recursive: true, force: true });
+    }
+});
+
+test("build dependencies are detected without invoking npm", async () => {
+    const { root, web } = await fixture();
+    try {
+        assert.equal(hasBuildDependencies(web), false);
+        await mkdir(join(web, "node_modules", "vite"), { recursive: true });
+        await mkdir(join(web, "node_modules", "typescript"), {
+            recursive: true,
+        });
+        await writeFile(
+            join(web, "node_modules", "vite", "package.json"),
+            "{}",
+        );
+        await writeFile(
+            join(web, "node_modules", "typescript", "package.json"),
+            "{}",
+        );
+        assert.equal(hasBuildDependencies(web), true);
+    } finally {
         await rm(root, { recursive: true, force: true });
     }
 });

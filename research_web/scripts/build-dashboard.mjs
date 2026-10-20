@@ -69,7 +69,12 @@ export function sourceVersion(root = repoRoot) {
     }
     hash.update("mode:production\0");
     for (const name of ["VITE_ARTIFACT_MODE", "VITE_API_BASE"]) {
-        hash.update(`${name}=${process.env[name] ?? ""}\0`);
+        hash.update(
+            `${name}=${JSON.stringify({
+                present: Object.hasOwn(process.env, name),
+                value: process.env[name],
+            })}\0`,
+        );
     }
     const reportsRoot = join(root, "tasks");
     for (const report of listReports(reportsRoot))
@@ -152,12 +157,40 @@ export function ensureRelease({ root = repoRoot, build = buildStage } = {}) {
     }
 }
 
+export function hasBuildDependencies(webRoot) {
+    const packageJson = JSON.parse(
+        readFileSync(join(webRoot, "package.json"), "utf8"),
+    );
+    const dependencies = [
+        ...Object.keys(packageJson.dependencies ?? {}),
+        ...Object.keys(packageJson.devDependencies ?? {}),
+    ];
+    return (
+        dependencies.length > 0 &&
+        dependencies.every((name) =>
+            existsSync(join(webRoot, "node_modules", name, "package.json")),
+        )
+    );
+}
+
 function buildStage(root, stage, version) {
     const npm = process.platform === "win32" ? "npm.cmd" : "npm";
-    const result = spawnSync(npm, ["run", "build:stage"], {
-        cwd: join(root, "research_web"),
+    const webRoot = join(root, "research_web");
+    const options = {
+        cwd: webRoot,
         stdio: "inherit",
         shell: process.platform === "win32",
+    };
+    if (!hasBuildDependencies(webRoot)) {
+        const install = spawnSync(npm, ["ci"], options);
+        if (install.error) throw install.error;
+        if (install.status !== 0)
+            throw new Error(
+                `frontend dependency installation failed (${install.status ?? install.signal})`,
+            );
+    }
+    const result = spawnSync(npm, ["run", "build:stage"], {
+        ...options,
         env: {
             ...process.env,
             RESEARCH_WEB_BUILD_OUT_DIR: stage,

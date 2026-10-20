@@ -14,7 +14,7 @@ cd /d "%REPO_ROOT%"
 set UV_CACHE_DIR=.uv-cache
 rem Check the source fingerprint and stage a fresh build before replacing dist.
 rem Failed builds leave any previously usable dist in place.
-node research_web\scripts\build-dashboard.mjs
+call node research_web\scripts\build-dashboard.mjs
 if errorlevel 1 exit /b 1
 rem Set RESEARCH_VIEWER_SKIP_BROWSER=1 for launcher smoke tests.
 if /i not "%RESEARCH_VIEWER_SKIP_BROWSER%"=="1" start "" http://127.0.0.1:8503/
