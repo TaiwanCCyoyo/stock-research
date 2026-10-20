@@ -455,6 +455,52 @@ def test_receipt_records_a_source_replaced_by_an_outside_link_during_the_run(rep
     assert receipt["code_drift"]["sources_changed"] == ["runner.py", "prereg.md"] and receipt["code_drift"]["sources_unchanged_observed"] is False
 
 
+def _link_directory(target: Path, link: Path) -> None:
+    """A directory link that needs no symlink privilege on Windows (a junction)."""
+    if os.name == "nt":
+        import _winapi
+
+        _winapi.CreateJunction(str(target), str(link))
+    else:
+        os.symlink(target, link, target_is_directory=True)
+
+
+def test_receipt_records_a_parent_directory_replaced_by_an_outside_link_during_the_run(repo: Path, producer: Path, tmp_path: Path) -> None:
+    import shutil
+
+    from research_core.run_receipt import code_identity
+
+    result = repo / "summary.json"
+    result.write_text("{}", encoding="utf-8")
+    package = repo / "pkg"
+    package.mkdir()
+    runner = package / "runner.py"
+    runner.write_text("print('a')", encoding="utf-8")
+    _git(["add", "pkg/runner.py"], repo)
+    _git(["commit", "-q", "-m", "runner a"], repo)
+    inputs = fingerprint_inputs([InputSpec("prices", producer / "price_daily.parquet")], now=WEEKDAY_NIGHT)
+    started = code_identity(repo, sources=[runner])
+    outside = tmp_path / "outside-pkg"
+    outside.mkdir()
+    (outside / "runner.py").write_text("print('outside version')", encoding="utf-8")
+    shutil.rmtree(package)
+    _link_directory(outside, package)
+    assert runner.resolve().is_relative_to(outside.resolve()), "the parent now leads outside the repository"
+    receipt = write_run_receipt(
+        repo / "r.json",
+        run_id="r",
+        definition="d",
+        parameters={},
+        inputs=inputs,
+        results={"s": result},
+        repo_root=repo,
+        sources=[runner],
+        expected_code=started,
+    )
+    assert receipt["sources"] == ["pkg/runner.py"], "the starting commit is queried by the repository path, not the link target"
+    assert receipt["code_drift"]["sources_changed"] == ["pkg/runner.py"] and receipt["code_drift"]["sources_unchanged_observed"] is False
+
+
 def test_receipt_refuses_a_source_committed_as_a_symlink(repo: Path, producer: Path) -> None:
     from research_core.run_receipt import code_identity
 

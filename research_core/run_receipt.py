@@ -272,30 +272,32 @@ def code_identity(repo_root: Path = REPO_ROOT, sources: Sequence[Path] = ()) -> 
 
     identity: dict[str, Any] = {"commit": git("rev-parse", "HEAD"), "dirty": bool(git("status", "--porcelain", "--untracked-files=no"))}
     if sources:
-        identity["source_stats"] = _source_stats(repo_root, [_unfollowed(Path(source)) for source in sources])
+        identity["source_stats"] = _source_stats(repo_root, [Path(source) for source in sources])
     return identity
 
 
-def _unfollowed(path: Path) -> Path:
-    """`path` made absolute with its directories resolved but its last component not followed.
+def _repo_relative(path: Path, repo_root: Path) -> str | None:
+    """`path` relative to the repository, worked out lexically (None when outside it).
 
-    A source replaced by a symlink during a run keeps its own repository path: the starting
-    commit is queried by that path and the link itself shows up as drift, never a refusal.
+    No link is followed, neither the file nor a parent directory: a source or directory
+    replaced by a link during a run keeps its own repository path, so the starting commit is
+    queried by that path and the change shows up as drift, never a refusal.
     """
     absolute = Path(os.path.abspath(path))
-    return absolute.parent.resolve() / absolute.name
+    for root in (Path(os.path.abspath(repo_root)), repo_root.resolve()):
+        if absolute.is_relative_to(root):
+            return absolute.relative_to(root).as_posix()
+    return None
 
 
 def _source_stats(repo_root: Path, paths: Sequence[Path]) -> dict[str, dict[str, int] | None]:
     """Size and modification time per source (a link's own, not its target's), keyed by
     repository-relative path (None if missing)."""
-    root = repo_root.resolve()
     stats: dict[str, dict[str, int] | None] = {}
     for path in paths:
-        resolved = _unfollowed(path)
-        key = resolved.relative_to(root).as_posix() if resolved.is_relative_to(root) else str(path)
+        key = _repo_relative(path, repo_root) or str(path)
         try:
-            status = resolved.lstat()
+            status = Path(os.path.abspath(path)).lstat()
         except OSError:
             stats[key] = None
         else:
@@ -350,11 +352,10 @@ def _require_in_commit(path: Path, repo_root: Path, commit: str, label: str = "r
     A directory is refused, and so is a committed symlink: the commit fixes only the link
     text, not the content it points to.
     """
-    resolved, root = _unfollowed(path), repo_root.resolve()
-    if not resolved.is_relative_to(root):
+    relative = _repo_relative(path, repo_root)
+    if relative is None:
         raise ValueError(f"{label} {path} is outside the repository; the recorded commit cannot identify it")
-    relative = resolved.relative_to(root).as_posix()
-    entry = subprocess.run(["git", "-C", str(root), "ls-tree", commit, "--", relative], capture_output=True, text=True, check=False)
+    entry = subprocess.run(["git", "-C", str(repo_root), "ls-tree", commit, "--", relative], capture_output=True, text=True, check=False)
     fields = entry.stdout.split(None, 2)
     if entry.returncode or len(fields) < 2:
         raise ValueError(f"{label} {relative} is not in the starting commit {commit}; commit it before the run")
