@@ -305,6 +305,28 @@ def _describe_shared_read(record: Mapping[str, Any]) -> dict[str, Any]:
     return describe(record)
 
 
+def _code_drift(started: dict[str, Any], ended: dict[str, Any], sources: Sequence[str], repo_root: Path) -> dict[str, Any] | None:
+    """Start and end code identity when they differ, with the executed sources that changed.
+
+    An unrelated commit leaves `sources_changed` empty; a listed source means the result
+    came from the starting commit's version of it. Never a reason to refuse the receipt.
+    """
+    if started == ended and ended.get("dirty") is False:
+        return None
+    changed: list[str] | None = []
+    for source in sources:
+        diff = subprocess.run(
+            ["git", "-C", str(repo_root), "diff", "--quiet", str(started.get("commit")), "HEAD", "--", source], capture_output=True, text=True, check=False
+        )
+        if diff.returncode == 1:
+            assert changed is not None
+            changed.append(source)
+        elif diff.returncode:
+            changed = None  # the starting commit is unknown here; which sources changed cannot be said
+            break
+    return {"started": started, "ended": ended, "sources_changed": changed}
+
+
 def write_run_receipt(
     path: Path,
     *,
@@ -334,10 +356,11 @@ def write_run_receipt(
     # edited one would leave a clean-looking commit that does not contain the code.
     executed = [_require_committed(source, repo_root, "run source") for source in sources]
     code = code_identity(repo_root)
-    # Pass `code_identity()` taken before the run: a commit or checkout during a long run
-    # would otherwise attribute results of the old code to the new commit.
-    if expected_code is not None and (code != dict(expected_code) or code.get("dirty") is not False):
-        raise ValueError(f"code changed during the run: started at {dict(expected_code)}, now {code}; rerun on one clean commit")
+    # Pass `code_identity()` taken before the run: a commit, checkout or edit during a long
+    # run is recorded, not refused, so a finished result is always saved with its provenance.
+    drift = None if expected_code is None else _code_drift(dict(expected_code), code, executed, repo_root)
+    if drift:
+        LOGGER.warning("Code changed during run %s: %s", run_id, drift)
     changed = changed_inputs(inputs)
     if changed:
         LOGGER.warning("Inputs changed during run %s: %s; recorded in the receipt", run_id, changed)
@@ -353,6 +376,7 @@ def write_run_receipt(
         "input_fingerprint": dict(inputs),
         **({"shared_data": shared} if shared else {}),
         **({"sources": executed} if executed else {}),
+        **({"code_drift": drift} if drift else {}),
         **({"inputs_changed_during_run": changed} if changed else {}),
         "results": {
             name: {"path": _display_path(result, repo_root), "bytes": result.stat().st_size, "sha256": file_digest(result)}

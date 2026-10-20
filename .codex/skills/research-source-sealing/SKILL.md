@@ -35,13 +35,16 @@ Historical packets keep their existing byte-level verification contract.
    file hashes). Pass the runner, strategy and study modules the run executes as
    `write_run_receipt(..., sources=[...])`: the receipt's dirty flag does not see
    untracked files, so it refuses a source that is untracked or differs from the
-   commit. Take `code_identity()` before the run and pass it as `expected_code=`, so a
-   commit or checkout during a long run is refused instead of credited to the new
-   commit. An input that changed during the run is listed in the receipt, not a reason
+   commit. Take `code_identity()` before the run and pass it as `expected_code=`: a
+   commit, checkout or edit during a long run is recorded as `code_drift` (start and end
+   identity, and which executed sources differ between them) instead of refusing the
+   receipt. An input that changed during the run is listed in the receipt, not a reason
    to discard the result; hash results, not sources.
-5. Execute the authorized study using those fixed files. If code changes during
-   the run, stop publication and investigate; a dirty flag must not be presented
-   as a clean committed implementation. A historical byte-sealed packet is the
+5. Execute the authorized study using those fixed files. An unrelated commit during the
+   run needs nothing more than its `code_drift` entry. If an executed source is listed in
+   `code_drift.sources_changed`, the result came from the starting commit's code: cite
+   that commit and say so; a dirty flag must not be presented as a clean committed
+   implementation. A historical byte-sealed packet is the
    exception: use its original raw-byte hashes and verification rules without
    changing or re-pinning them. That exception does not authorize sealing a new
    study with the retired workflow.

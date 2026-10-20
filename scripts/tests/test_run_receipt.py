@@ -415,22 +415,50 @@ def test_a_legacy_listing_digest_still_detects_a_rename(producer: Path) -> None:
     assert changed_inputs(legacy) == ["day_csv"]
 
 
-def test_receipt_refuses_a_commit_made_during_the_run(repo: Path, producer: Path) -> None:
+def test_receipt_records_code_drift_during_the_run_instead_of_refusing(repo: Path, producer: Path) -> None:
     from research_core.run_receipt import code_identity
 
     result = repo / "summary.json"
     result.write_text("{}", encoding="utf-8")
+    runner = repo / "runner.py"
+    runner.write_text("print('a')", encoding="utf-8")
+    _git(["add", "runner.py"], repo)
+    _git(["commit", "-q", "-m", "runner a"], repo)
     inputs = fingerprint_inputs([InputSpec("prices", producer / "price_daily.parquet")], now=WEEKDAY_NIGHT)
     started = code_identity(repo)
-    (repo / "runner.py").write_text("print('b')", encoding="utf-8")
-    _git(["add", "runner.py"], repo)
-    _git(["commit", "-q", "-m", "runner b during the run"], repo)
-    with pytest.raises(ValueError, match="code changed during the run"):
-        write_run_receipt(
-            repo / "r1.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, repo_root=repo, expected_code=started
-        )
-    assert not (repo / "r1.json").exists()
-    same = write_run_receipt(
-        repo / "r2.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, repo_root=repo, expected_code=code_identity(repo)
+
+    (repo / "README.md").write_text("unrelated\n", encoding="utf-8")
+    _git(["commit", "-q", "-am", "unrelated docs during the run"], repo)
+    unrelated = write_run_receipt(
+        repo / "r1.json",
+        run_id="r",
+        definition="d",
+        parameters={},
+        inputs=inputs,
+        results={"s": result},
+        repo_root=repo,
+        sources=[runner],
+        expected_code=started,
     )
-    assert same["code"]["dirty"] is False
+    assert unrelated["code_drift"]["started"] == started and unrelated["code_drift"]["ended"]["commit"] != started["commit"]
+    assert unrelated["code_drift"]["sources_changed"] == [], "an unrelated commit is recorded, never refused"
+
+    runner.write_text("print('b')", encoding="utf-8")
+    _git(["commit", "-q", "-am", "runner b during the run"], repo)
+    edited = write_run_receipt(
+        repo / "r2.json",
+        run_id="r",
+        definition="d",
+        parameters={},
+        inputs=inputs,
+        results={"s": result},
+        repo_root=repo,
+        sources=[runner],
+        expected_code=started,
+    )
+    assert edited["code_drift"]["sources_changed"] == ["runner.py"], "the executed source that changed is named"
+
+    same = write_run_receipt(
+        repo / "r3.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, repo_root=repo, expected_code=code_identity(repo)
+    )
+    assert "code_drift" not in same
