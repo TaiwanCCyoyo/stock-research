@@ -422,15 +422,20 @@ def test_receipt_records_a_source_replaced_by_an_outside_link_during_the_run(rep
     result.write_text("{}", encoding="utf-8")
     runner = repo / "runner.py"
     runner.write_text("print('a')", encoding="utf-8")
-    _git(["add", "runner.py"], repo)
+    prereg = repo / "prereg.md"
+    prereg.write_text("# Rules\n", encoding="utf-8")
+    _git(["add", "runner.py", "prereg.md"], repo)
     _git(["commit", "-q", "-m", "runner a"], repo)
     inputs = fingerprint_inputs([InputSpec("prices", producer / "price_daily.parquet")], now=WEEKDAY_NIGHT)
     started = code_identity(repo, sources=[runner])
     outside = tmp_path / "outside.py"
     outside.write_text("print('outside')", encoding="utf-8")
+    (tmp_path / "outside.md").write_text("# Other rules\n", encoding="utf-8")
     runner.unlink()
+    prereg.unlink()
     try:
         os.symlink(outside, runner)
+        os.symlink(tmp_path / "outside.md", prereg)
     except OSError as error:  # Windows without symlink privilege
         pytest.skip(f"symlinks unavailable: {error}")
     receipt = write_run_receipt(
@@ -442,10 +447,36 @@ def test_receipt_records_a_source_replaced_by_an_outside_link_during_the_run(rep
         results={"s": result},
         repo_root=repo,
         sources=[runner],
+        preregistration=prereg,
         expected_code=started,
     )
     assert receipt["sources"] == ["runner.py"], "the starting commit is queried by the link's own path"
-    assert receipt["code_drift"]["sources_changed"] == ["runner.py"] and receipt["code_drift"]["sources_unchanged_observed"] is False
+    assert receipt["preregistration"] == {"path": "prereg.md"}, "the checked repository path is recorded, not the link target"
+    assert receipt["code_drift"]["sources_changed"] == ["runner.py", "prereg.md"] and receipt["code_drift"]["sources_unchanged_observed"] is False
+
+
+def test_receipt_refuses_a_source_committed_as_a_symlink(repo: Path, producer: Path) -> None:
+    from research_core.run_receipt import code_identity
+
+    result = repo / "summary.json"
+    result.write_text("{}", encoding="utf-8")
+    # Commit a symlink entry with plumbing so the test needs no symlink privilege on Windows.
+    blob = subprocess.run(["git", "hash-object", "-w", "--stdin"], cwd=repo, input="../outside.py", capture_output=True, text=True, check=True).stdout.strip()
+    _git(["update-index", "--add", "--cacheinfo", f"120000,{blob},link.py"], repo)
+    _git(["commit", "-q", "-m", "committed link"], repo)
+    inputs = fingerprint_inputs([InputSpec("prices", producer / "price_daily.parquet")], now=WEEKDAY_NIGHT)
+    with pytest.raises(ValueError, match="is a symlink in the starting commit"):
+        write_run_receipt(
+            repo / "r.json",
+            run_id="r",
+            definition="d",
+            parameters={},
+            inputs=inputs,
+            results={"s": result},
+            repo_root=repo,
+            sources=[repo / "link.py"],
+            expected_code=code_identity(repo),
+        )
 
 
 def test_receipt_sees_a_source_rewritten_and_restored_during_the_run(repo: Path, producer: Path) -> None:

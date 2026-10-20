@@ -345,16 +345,24 @@ def _describe_shared_read(record: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def _require_in_commit(path: Path, repo_root: Path, commit: str, label: str = "run source") -> str:
-    """Require a file (a Git blob, not a directory) tracked in `commit`, the run's starting commit."""
+    """Require a regular file tracked in `commit`, the run's starting commit.
+
+    A directory is refused, and so is a committed symlink: the commit fixes only the link
+    text, not the content it points to.
+    """
     resolved, root = _unfollowed(path), repo_root.resolve()
     if not resolved.is_relative_to(root):
         raise ValueError(f"{label} {path} is outside the repository; the recorded commit cannot identify it")
     relative = resolved.relative_to(root).as_posix()
-    kind = subprocess.run(["git", "-C", str(root), "cat-file", "-t", f"{commit}:{relative}"], capture_output=True, text=True, check=False)
-    if kind.returncode:
+    entry = subprocess.run(["git", "-C", str(root), "ls-tree", commit, "--", relative], capture_output=True, text=True, check=False)
+    fields = entry.stdout.split(None, 2)
+    if entry.returncode or len(fields) < 2:
         raise ValueError(f"{label} {relative} is not in the starting commit {commit}; commit it before the run")
-    if kind.stdout.strip() != "blob":
-        raise ValueError(f"{label} {relative} is a {kind.stdout.strip()} in the starting commit {commit}, not a file; name the file")
+    mode, kind = fields[0], fields[1]
+    if kind != "blob":
+        raise ValueError(f"{label} {relative} is a {kind} in the starting commit {commit}, not a file; name the file")
+    if mode == "120000":
+        raise ValueError(f"{label} {relative} is a symlink in the starting commit {commit}; name the file it points to")
     return relative
 
 
@@ -433,11 +441,14 @@ def write_run_receipt(
     # The recorded code is the starting commit when expected_code is given, so the
     # preregistration must be in that commit; a later edit is recorded in code_drift.
     tracked_for_drift: list[str] = []
+    # The repository path checked here is the one recorded, never an end-of-run link target.
+    preregistration_path: str | None = None
     if preregistration is not None:
         if start_commit:
-            tracked_for_drift.append(_require_in_commit(preregistration, repo_root, str(start_commit), "preregistration"))
+            preregistration_path = _require_in_commit(preregistration, repo_root, str(start_commit), "preregistration")
+            tracked_for_drift.append(preregistration_path)
         else:
-            _require_committed(preregistration, repo_root, "preregistration")
+            preregistration_path = _require_committed(preregistration, repo_root, "preregistration")
     # The runner, strategy and imported study modules the run executed: an untracked or
     # edited one would leave a clean-looking commit that does not contain the code.
     if start_commit:
@@ -462,7 +473,7 @@ def write_run_receipt(
         "definition": definition,
         "parameters": dict(parameters),
         # The preregistration is a source: its path plus the code commit identify it, unhashed.
-        "preregistration": None if preregistration is None else {"path": _display_path(preregistration, repo_root)},
+        "preregistration": None if preregistration_path is None else {"path": preregistration_path},
         # With expected_code this is the code observed when the run started; code_drift
         # describes what was seen to change by the end. Neither verifies the executed bytes.
         "code": code if expected_code is None else dict(expected_code),
