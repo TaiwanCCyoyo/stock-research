@@ -14,6 +14,16 @@ const CHECK_LABELS: Record<DataQualityCheckName, string> = {
     unexplained_fallback: "備援資料未能說明",
 };
 
+const RETRY_STYLE = {
+    marginTop: 8,
+    padding: "8px 12px",
+    color: "var(--text)",
+    background: "var(--bg-hover)",
+    border: "1px solid var(--border-strong)",
+    borderRadius: 6,
+    cursor: "pointer",
+};
+
 function ReadStatus({
     children,
     onRetry,
@@ -24,7 +34,7 @@ function ReadStatus({
     return (
         <div className="empty-state">
             <div>{children}</div>
-            <button type="button" onClick={onRetry} style={{ marginTop: 8 }}>
+            <button type="button" onClick={onRetry} style={RETRY_STYLE}>
                 重新讀取
             </button>
         </div>
@@ -144,7 +154,7 @@ export function DataQuality({ state, onRetry }: DataQualityProps) {
                     ))}
                 </div>
             )}
-            <button type="button" onClick={onRetry} style={{ marginTop: 8 }}>
+            <button type="button" onClick={onRetry} style={RETRY_STYLE}>
                 重新讀取報告
             </button>
         </section>
