@@ -12,12 +12,15 @@ import uuid
 from pathlib import Path
 from typing import Any, cast
 
+import numpy as np
 import pandas as pd
+import pyarrow as pa
+import pyarrow.parquet as pq
 
 from research_core.artifact_store import read_json, write_json
 from research_core.pattern_scan_classification_cache_v1 import ConditionClassificationCache
 from research_core.pattern_scan_event_tables_v1 import EventTables, build_event_tables
-from research_core.pattern_scan_holding_v1 import holding_values
+from research_core.pattern_scan_holding_v1 import OUTPUT_COLUMNS, holding_values
 from research_core.pattern_scan_parquet_v1 import read_frame, write_frame
 from research_core.pattern_scan_receipt_io_v2 import read_scan_receipt
 from research_core.research_data_paths import checked_path
@@ -25,6 +28,7 @@ from research_core.research_data_paths import checked_path
 LOGGER = logging.getLogger(__name__)
 TABLES = ("indicators", "pivots", "common_values", "universe", "pattern_states", "raw_events", "cohort_events", "controls", "base_labels")
 EVENT_FILES = ("events", "conditions", "group_memberships", "daily_groups", "formula_groups")
+HOLDING_KEYS = ("security_id", "t0", "calendar_index", "horizon", "calendar_full", "censored", "endpoint_out_of_range", "observed_sessions")
 
 
 def write_progress(path: Path, value: dict[str, Any]) -> None:
@@ -73,6 +77,59 @@ def industry_holding(
         benchmark_jump=cast(pd.Series, benchmark["quality_reason"]).fillna("").str.contains("unexplained.*jump", regex=True),
         anchors=anchors,
     )
+
+
+def _cached_holding(
+    path: Path,
+    security: str,
+    calendar: pd.DatetimeIndex,
+    anchors: list[int],
+    *,
+    full: bool,
+    exact_anchors: bool = False,
+) -> pd.DataFrame | None:
+    """Read a bounded stock cache only when its footer and fixed clocks agree."""
+    try:
+        metadata = pq.read_metadata(path)
+        schema = metadata.schema.to_arrow_schema()
+        if tuple(schema.names) != OUTPUT_COLUMNS:
+            return None
+        frame = read_frame(path, columns=None if full else list(HOLDING_KEYS))
+    except PermissionError:
+        raise
+    except (OSError, ValueError, pa.ArrowException):
+        return None
+    if metadata.num_rows != len(frame):
+        return None
+    requested = set(anchors)
+    if frame.empty:
+        return frame if not requested else None
+    if not bool(frame.security_id.eq(security).all()):
+        return None
+    if any(not pd.api.types.is_integer_dtype(frame[name]) for name in ("calendar_index", "horizon", "observed_sessions")):
+        return None
+    if any(not pd.api.types.is_bool_dtype(frame[name]) for name in ("calendar_full", "censored", "endpoint_out_of_range")):
+        return None
+    positions = frame.calendar_index.to_numpy(dtype=np.int64)
+    horizons = frame.horizon.to_numpy(dtype=np.int64)
+    if bool(((positions < 0) | (positions >= len(calendar))).any()) or not bool(np.isin(horizons, (126, 252)).all()):
+        return None
+    observed_anchors = set(int(position) for position in positions)
+    if (exact_anchors and observed_anchors != requested) or not requested.issubset(observed_anchors):
+        return None
+    pairs = set(zip(positions.tolist(), horizons.tolist(), strict=True))
+    if len(pairs) != len(frame) or pairs != {(position, horizon) for position in observed_anchors for horizon in (126, 252)}:
+        return None
+    if frame.t0.tolist() != calendar[positions].strftime("%Y-%m-%d").tolist():
+        return None
+    full_clock = positions + horizons < len(calendar)
+    if not np.array_equal(frame.calendar_full.to_numpy(), full_clock):
+        return None
+    if not np.array_equal(frame.censored.to_numpy(), ~full_clock) or not np.array_equal(frame.endpoint_out_of_range.to_numpy(), ~full_clock):
+        return None
+    if not np.array_equal(frame.observed_sessions.to_numpy(), np.minimum(horizons, len(calendar) - positions - 1)):
+        return None
+    return frame
 
 
 class LocalInputs:
@@ -260,21 +317,35 @@ class LocalInputs:
         output = self.temporary / "holding"
         output.mkdir(exist_ok=True)
         path = output / f"{code}.parquet"
-        if not path.exists():
+        security_id = f"TW:{code}"
+        frame = _cached_holding(path, security_id, self.calendar, anchors, full=True)
+        if frame is None:
             close = self.sidecar("close_matrix")
-            industry = self.industries[f"TW:{code}"]
+            industry = self.industries[security_id]
             peers = tuple(stock for stock in close if self.industries[stock] == industry)
             requested = {}
             for security in peers:
                 events = read_frame(self.parts[security.removeprefix("TW:")] / "cohort_events.parquet", columns=["calendar_index"])
                 requested[security] = sorted(set(int(value) for value in events.calendar_index))
+            repair = [
+                security
+                for security in peers
+                if security == security_id
+                or _cached_holding(
+                    output / f"{security.removeprefix('TW:')}.parquet", security, self.calendar, requested[security], full=False, exact_anchors=True
+                )
+                is None
+            ]
             result = industry_holding(close, self.sidecar("jump_matrix"), self.industries, self.sidecar("benchmark"), self.sidecar("context"), peers, requested)
-            for security in peers:
+            for security in repair:
                 destination = output / f"{security.removeprefix('TW:')}.parquet"
-                if not destination.exists():
-                    write_frame(result.loc[result.security_id.eq(security)].reset_index(drop=True), destination, index=False)
-            LOGGER.info("Holding peer block stocks=%d rows=%d", len(peers), len(result))
-        frame = read_frame(path)
+                staged = destination.with_name(f".{destination.name}-{uuid.uuid4().hex}.tmp")
+                write_frame(result.loc[result.security_id.eq(security)].reset_index(drop=True), staged, index=False)
+                os.replace(staged, destination)
+            LOGGER.info("Holding peer block stocks=%d rows=%d repaired_peers=%d", len(peers), len(result), len(repair))
+            frame = _cached_holding(path, security_id, self.calendar, anchors, full=True)
+            if frame is None:
+                raise ValueError("holding cache lacks an original cohort anchor or valid fixed clock")
         result = frame.loc[frame.calendar_index.isin(anchors)].copy()
         if set(anchors) != set(result.calendar_index):
             raise ValueError("holding cache lacks an original cohort anchor")

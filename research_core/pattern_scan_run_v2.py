@@ -8,11 +8,15 @@ producer or demand that today's live files reproduce historical results.
 from __future__ import annotations
 
 import logging
+import os
 import sys
 import time
 import uuid
 from pathlib import Path
 from typing import Any
+
+import pandas as pd
+import pyarrow as pa
 
 from research_core.artifact_store import describe_file, file_digest, object_digest, publish_noreplace, read_json, relative_name, verify_files
 from research_core.live_producer import assert_producer_idle
@@ -95,6 +99,29 @@ def _receipt(path: Path, **kwargs: Any) -> None:
     staging = path.with_name(f".staging-{path.name}-{uuid.uuid4().hex}")
     write_run_receipt(staging, **kwargs)
     publish_noreplace(staging, path)
+
+
+def _prepare_benchmark(path: Path, frame: pd.DataFrame) -> None:
+    """Retain a complete benchmark before publishing its preparation record.
+
+    This path is only used before derived-preparation.json exists. An invalid
+    unreceipted checkpoint may be replaced; retained preparations keep their
+    existing artifact identities and never enter this repair path.
+    """
+    path = _checked_path(path)
+    if path.exists():
+        try:
+            retained = read_frame(path)
+        except PermissionError:
+            raise
+        except (OSError, ValueError, pa.ArrowException):
+            retained = None
+        if retained is not None and retained.equals(frame):
+            return
+    staging = path.with_name(f".staging-{path.name}-{uuid.uuid4().hex}")
+    with staging.open("xb") as stream:
+        write_frame(frame, stream, index=True)
+    os.replace(staging, path)
 
 
 def verify_completion(response: Path, request: dict[str, Any], roots: DataRoots) -> dict[str, Any]:
@@ -268,7 +295,13 @@ def _prepare(roots: DataRoots, request: dict[str, Any], run: Path) -> tuple[dict
                 receipt_path,
                 run_id=request["run_id"] + ":producer-read",
                 definition="pattern-scan-price-preparation.v2",
-                parameters={"cutoff": "2026-10-12", "start": "2010-01-04", "scope": record["scope"]},
+                parameters={
+                    "cutoff": "2026-10-12",
+                    "start": "2010-01-04",
+                    "scope": record["scope"],
+                    "original_read_code": record["source"]["code"],
+                    "recovered_without_producer_read": True,
+                },
                 inputs=record["producer_fingerprint"],
                 results={"derived_preparation": index},
                 preregistration=ROOT / "tasks" / TASK / "mission.md",
@@ -291,9 +324,7 @@ def _prepare(roots: DataRoots, request: dict[str, Any], run: Path) -> tuple[dict
         codes = tuple(sorted(snapshot.inventory.loc[snapshot.inventory["included"], "code"].astype(str)))
     packets, measurement = prepare_requests(snapshot, codes, request["source"], run, calculation_authorized=True)
     benchmark = run / "prepared" / "benchmark.parquet"
-    if not benchmark.exists():
-        with benchmark.open("xb") as stream:
-            write_frame(snapshot.stock("0050"), stream, index=True)
+    _prepare_benchmark(benchmark, snapshot.stock("0050"))
     snapshot.verify_after()
     artifacts = [describe_file(run, Path(packet["prepared_path"])) for packet in packets]
     artifacts.append(describe_file(run, benchmark))

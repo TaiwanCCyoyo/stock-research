@@ -82,6 +82,15 @@ phase without that record requires an explicit recovery of its known executor,
 never a guessed commit. Reusing an already receipted final bundle verifies its
 stored result digests once in that process; intermediate files remain unhashed.
 
+Candidate-selection JSON, the legacy preparation benchmark and temporary
+holding projections publish through sibling staging. An interrupted write
+repairs only the unreceipted metadata or affected cache; valid existing files
+retain their bytes and modification times. Recovery of a missing legacy
+producer-read receipt preserves the original input fingerprint and read-code
+identity, records the recovery code and any later source drift, and explicitly
+states that no producer read was repeated. It does not require today's producer
+files to reproduce completed derived bytes or rewrite existing receipts.
+
 Only this continuation's new temporary projections are cleaned after a target's
 three final components are saved, readable and receipt-recorded. Original
 inputs/checkpoints, Q1 and preview are retained. Q2–Q6 completion is reported only

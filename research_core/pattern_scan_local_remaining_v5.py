@@ -12,7 +12,7 @@ from typing import Any
 
 import pyarrow.parquet as pq
 
-from research_core.artifact_store import file_digest, publish_noreplace, read_json, write_json
+from research_core.artifact_store import canonical, file_digest, publish_noreplace, read_json, write_json
 from research_core.hhhl_variants_selection import Atom
 from research_core.pattern_scan_conditions_v1 import PATTERNS
 from research_core.pattern_scan_local_conditions_v5 import run_conditions
@@ -229,9 +229,16 @@ def run_remaining(stock_result: Path, output: Path, *, repo_root: Path, targets:
                         candidates = {name: tuple(Atom(**atom) for atom in atoms) for name, atoms in selected.items()}
                     if phase == "conditions":
                         _, candidates, files = run_conditions(inputs, target, working)
-                        top_path = working / "top-candidates.json"
-                        if not top_path.exists():
-                            write_json(top_path, {name: [asdict(atom) for atom in atoms] for name, atoms in candidates.items()})
+                        top_path = checked_path(working / "top-candidates.json")
+                        expected = {name: [asdict(atom) for atom in atoms] for name, atoms in candidates.items()}
+                        try:
+                            valid = canonical(read_json(top_path)) == canonical(expected)
+                        except (FileNotFoundError, ValueError):
+                            valid = False
+                        if not valid:
+                            # This metadata has no final receipt yet. Rebuild
+                            # only it, using the already completed selection.
+                            write_progress(top_path, expected)
                         files.append(top_path)
                     else:
                         inputs.cache_target(target, inputs.temporary / "events" / target)

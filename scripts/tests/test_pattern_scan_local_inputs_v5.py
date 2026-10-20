@@ -2,7 +2,7 @@
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
@@ -225,3 +225,132 @@ def test_complete_projection_cache_reuses_after_restart_without_building_or_hash
     assert builds == ["0050", "2330"]
     assert json.loads((output / "progress.json").read_text(encoding="utf-8"))["completed"] == ["0050", "2330"]
     assert not list(output.rglob("*receipt*")) and not list(output.rglob("*manifest*"))
+
+
+def _holding_cache_inputs(temporary: Path) -> tuple[module.LocalInputs, dict[str, list[int]]]:
+    close, jumps, industries, benchmark, context = _holding_inputs()
+    temporary.mkdir()
+    inputs = object.__new__(module.LocalInputs)
+    inputs.temporary = temporary
+    inputs.calendar = cast(pd.DatetimeIndex, close.index)
+    inputs.codes = tuple(str(security).removeprefix("TW:") for security in close)
+    inputs._sidecars = {"close_matrix": close, "jump_matrix": jumps, "benchmark": benchmark, "context": context}
+    inputs._industries = industries
+    inputs.parts = {}
+    anchors = {str(security): [] if security == "TW:0002" else [0, 20, 130, 299] for security in close}
+    for code in inputs.codes:
+        part = temporary / f"original-{code}"
+        part.mkdir()
+        inputs.parts[code] = part
+        module.write_frame(pd.DataFrame({"calendar_index": pd.Series(anchors[f"TW:{code}"], dtype="int64")}), part / "cohort_events.parquet", index=False)
+    return inputs, anchors
+
+
+def test_holding_partial_peer_retry_preserves_valid_peers_and_recomputes_only_complete_affected_partition(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _forbid_hashes(monkeypatch)
+    inputs, anchors = _holding_cache_inputs(tmp_path / "holding-inputs")
+    inputs.holding("0009", anchors["TW:0009"])
+    output = inputs.temporary / "holding"
+    unrelated = output / "0009.parquet"
+    unrelated_before = unrelated.read_bytes(), unrelated.stat().st_mtime_ns
+    write, replace, kernel = module.write_frame, module.os.replace, module.industry_holding
+    reductions: list[tuple[str, ...]] = []
+    publications: list[str] = []
+
+    def observed_kernel(*args: Any, **kwargs: Any) -> pd.DataFrame:
+        reductions.append(args[5])
+        return kernel(*args, **kwargs)
+
+    def checked_replace(staged: Path, destination: Path) -> None:
+        assert staged.parent == destination.parent and staged != destination
+        security = f"TW:{destination.stem}"
+        assert module._cached_holding(staged, security, inputs.calendar, anchors[security], full=True, exact_anchors=True) is not None
+        publications.append(destination.stem)
+        replace(staged, destination)
+
+    def interrupted_write(frame: pd.DataFrame, path: Path, *, index: bool) -> None:
+        if path.name.startswith(".0001.parquet-"):
+            path.write_bytes(b"PAR1synthetic interrupted staged peer")
+            raise RuntimeError("interrupted staged holding peer")
+        write(frame, path, index=index)
+
+    monkeypatch.setattr(module, "industry_holding", observed_kernel)
+    monkeypatch.setattr(module.os, "replace", checked_replace)
+    monkeypatch.setattr(module, "write_frame", interrupted_write)
+    with pytest.raises(RuntimeError, match="staged holding peer"):
+        inputs.holding("0003", anchors["TW:0003"])
+    valid_peer = output / "0003.parquet"
+    valid_before = valid_peer.read_bytes(), valid_peer.stat().st_mtime_ns
+    assert not (output / "0001.parquet").exists()  # A new staged half-write never becomes canonical.
+    # An old direct-write implementation may already have left this canonical
+    # half-file; the new restart path must repair it rather than trust exists().
+    (output / "0001.parquet").write_bytes(b"PAR1old half-written canonical peer")
+    monkeypatch.setattr(module, "write_frame", write)
+    recovered = inputs.holding("0001", anchors["TW:0001"])
+    peers = ("TW:0003", "TW:0001", "TW:0005", "TW:0002")
+    assert reductions == [peers, peers]
+    assert publications == ["0003", "0001", "0005", "0002"]
+    assert valid_before == (valid_peer.read_bytes(), valid_peer.stat().st_mtime_ns)
+    assert unrelated_before == (unrelated.read_bytes(), unrelated.stat().st_mtime_ns)
+    close, jumps, industries, benchmark, context = _holding_inputs()
+    expected = holding_values(
+        close,
+        industries,
+        benchmark.Close,
+        context.set_index("Date").retrospective_state,
+        jump_matrix=jumps,
+        benchmark_jump=benchmark.quality_reason.fillna("").str.contains("unexplained.*jump", regex=True),
+        anchors=anchors,
+    )
+    pd.testing.assert_frame_equal(recovered.reset_index(drop=True), expected.loc[expected.security_id.eq("TW:0001")].reset_index(drop=True), check_exact=True)
+    for security in peers:
+        actual = inputs.holding(security.removeprefix("TW:"), anchors[security])
+        pd.testing.assert_frame_equal(actual.reset_index(drop=True), expected.loc[expected.security_id.eq(security)].reset_index(drop=True), check_exact=True)
+    assert reductions == [peers, peers]  # Valid reads never rerun any partition.
+    assert not list(output.glob("*receipt*")) and not list(output.glob("*manifest*"))
+
+
+@pytest.mark.parametrize("damage", ("schema", "missing_horizon", "wrong_security", "wrong_clock"))
+def test_holding_cache_rejects_readable_but_incomplete_fixed_clock(tmp_path: Path, damage: str) -> None:
+    close, jumps, industries, benchmark, context = _holding_inputs()
+    security, anchors = "TW:0003", [0, 20]
+    frame = holding_values(
+        close,
+        industries,
+        benchmark.Close,
+        context.set_index("Date").retrospective_state,
+        jump_matrix=jumps,
+        benchmark_jump=benchmark.quality_reason.fillna("").str.contains("unexplained.*jump", regex=True),
+        anchors={security: anchors},
+    )
+    if damage == "schema":
+        frame = frame.drop(columns="own_return")
+    elif damage == "missing_horizon":
+        frame = frame.iloc[:-1].copy()
+    elif damage == "wrong_security":
+        frame["security_id"] = "TW:9999"
+    else:
+        frame.loc[frame.index[0], "t0"] = "2010-01-05"
+    path = tmp_path / "readable.parquet"
+    module.write_frame(frame, path, index=False)
+    assert module._cached_holding(path, security, cast(pd.DatetimeIndex, close.index), anchors, full=True, exact_anchors=True) is None
+
+
+def test_holding_cache_permission_error_propagates_without_kernel_or_repair(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    inputs, anchors = _holding_cache_inputs(tmp_path / "permission-inputs")
+    denied = PermissionError("synthetic holding footer denied")
+
+    def denied_footer(*args: Any, **kwargs: Any) -> Any:
+        raise denied
+
+    def forbidden(*args: Any, **kwargs: Any) -> Any:
+        pytest.fail("permission errors must not trigger kernel recomputation or repair")
+
+    monkeypatch.setattr(module.pq, "read_metadata", denied_footer)
+    monkeypatch.setattr(module, "industry_holding", forbidden)
+    monkeypatch.setattr(module.os, "replace", forbidden)
+    with pytest.raises(PermissionError) as error:
+        inputs.holding("0003", anchors["TW:0003"])
+    assert error.value is denied

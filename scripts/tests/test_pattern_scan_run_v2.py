@@ -16,7 +16,6 @@ from research_core import pattern_scan_result_lifecycle_v3 as lifecycle
 from research_core import pattern_scan_run_v2 as run
 from research_core import run_receipt
 from research_core.artifact_store import canonical, describe_file, file_digest, object_digest, read_json, write_json
-from research_core.live_producer import ProducerChangedError
 from research_core.research_data_paths import DataRoots
 from scripts import pattern_scan_live as cli
 
@@ -116,9 +115,10 @@ def test_fresh_live_read_ends_with_receipt_before_derived_phase(setup_run: Any, 
         calendar = ["2020-01-01"]
         consumption_measurements: list[Any] = []
 
-        def stock(self, code: str) -> None:
+        def stock(self, code: str) -> pd.DataFrame:
             assert code == "0050"
             events.append("benchmark-read")
+            return pd.DataFrame({"Close": [100.0]}, index=pd.to_datetime(self.calendar))
 
         def verify_after(self) -> None:
             events.append("raw-fingerprint-verified")
@@ -142,7 +142,6 @@ def test_fresh_live_read_ends_with_receipt_before_derived_phase(setup_run: Any, 
     monkeypatch.setattr(run, "load_live_inputs", live)
     monkeypatch.setattr(run, "representative_codes", lambda snapshot: (("0001",), {}))
     monkeypatch.setattr(run, "prepare_requests", prepare)
-    monkeypatch.setattr(run, "write_frame", lambda frame, stream, **kwargs: stream.write(b"synthetic benchmark"))
     record, index = run._prepare(roots, request, directory)
     assert record["scope"] == scope
     assert events == ["live-read", "benchmark-read", "raw-fingerprint-verified"]
@@ -246,7 +245,10 @@ def test_missing_producer_receipt_blocks_numerical_work(setup_run: Any, monkeypa
         run.coordinator_main(path)
 
 
-def test_interrupted_read_receipt_recovers_only_unchanged_fingerprint(setup_run: Any, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+@pytest.mark.parametrize("mutation", (None, "changed", "removed"))
+def test_interrupted_read_receipt_preserves_original_inputs_and_records_drift(
+    setup_run: Any, monkeypatch: pytest.MonkeyPatch, tmp_path: Path, mutation: str | None
+) -> None:
     roots, directory, request = setup_run
     index = _prepared(directory, request)
     producer = tmp_path / "synthetic-raw-input"
@@ -259,14 +261,52 @@ def test_interrupted_read_receipt_recovers_only_unchanged_fingerprint(setup_run:
     receipt = directory / "producer-read-receipt.json"
     receipt.unlink()
     monkeypatch.setattr(run, "assert_producer_idle", lambda: None)
-    producer.write_bytes(b"changed and longer")
-    with pytest.raises(ProducerChangedError, match="changed"):
-        run._prepare(roots, request, directory)
-    assert not receipt.exists()
-    producer.write_bytes(b"original")
-    os.utime(producer, ns=(stat.st_atime_ns, stat.st_mtime_ns))
+    recovery_code = {"commit": "b" * 40, "dirty": False}
+    monkeypatch.setattr(run_receipt, "code_identity", lambda *args: recovery_code)
+    retained = {path: path.read_bytes() for path in (index, *(directory / "prepared").glob("*.parquet"))}
+    if mutation == "changed":
+        producer.write_bytes(b"changed and longer")
+    elif mutation == "removed":
+        producer.unlink()
     assert run._prepare(roots, request, directory)[1] == index
-    assert receipt.is_file()
+    recovered = read_json(receipt)
+    assert recovered["input_fingerprint"] == record["producer_fingerprint"]
+    assert recovered.get("inputs_changed_during_run", []) == ([] if mutation is None else ["raw"])
+    assert recovered["code"] == recovery_code
+    assert recovered["parameters"]["original_read_code"] == request["source"]["code"]
+    assert recovered["parameters"]["recovered_without_producer_read"] is True
+    assert all(path.read_bytes() == before for path, before in retained.items())
+    receipt_before = receipt.read_bytes()
+    assert run._prepare(roots, request, directory)[1] == index
+    assert receipt.read_bytes() == receipt_before
+
+
+@pytest.mark.parametrize("existing", ("missing", "truncated", "wrong_schema"))
+def test_benchmark_checkpoint_retries_partial_write_and_preserves_valid_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, existing: str) -> None:
+    path = tmp_path / "benchmark.parquet"
+    frame = pd.DataFrame({"Close": [100.0, 101.0], "quality_reason": [None, "gap"]}, index=pd.date_range("2020-01-01", periods=2))
+    if existing == "truncated":
+        path.write_bytes(b"PAR1 incomplete")
+    elif existing == "wrong_schema":
+        run.write_frame(frame.rename(columns={"Close": "wrong"}), path, index=True)
+    before = path.read_bytes() if path.exists() else None
+    write = run.write_frame
+
+    def interrupted(*args: Any, **kwargs: Any) -> None:
+        args[1].write(b"PAR1 partial staging")
+        raise OSError("synthetic benchmark interruption")
+
+    monkeypatch.setattr(run, "write_frame", interrupted)
+    with pytest.raises(OSError, match="synthetic benchmark interruption"):
+        run._prepare_benchmark(path, frame)
+    assert (path.read_bytes() if path.exists() else None) == before
+    monkeypatch.setattr(run, "write_frame", write)
+    run._prepare_benchmark(path, frame)
+    pd.testing.assert_frame_equal(run.read_frame(path), frame, check_exact=True, check_freq=False)
+    valid = path.read_bytes(), path.stat().st_mtime_ns
+    monkeypatch.setattr(run, "write_frame", _forbidden)
+    run._prepare_benchmark(path, frame)
+    assert (path.read_bytes(), path.stat().st_mtime_ns) == valid
 
 
 @pytest.mark.parametrize("mutation", [None, "request", "result", "receipt", "response", "source", "phase"])

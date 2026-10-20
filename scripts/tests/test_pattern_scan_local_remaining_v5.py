@@ -1,5 +1,7 @@
 """Target completion, retained results and owned scratch boundaries."""
 
+import json
+from dataclasses import asdict
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -9,6 +11,7 @@ import pytest
 
 from research_core import pattern_scan_local_remaining_v5 as module
 from research_core.artifact_store import read_json, write_json
+from research_core.hhhl_variants_selection import Atom
 
 
 @pytest.mark.parametrize(
@@ -140,6 +143,130 @@ def test_only_final_results_are_receipted_and_completed_phases_are_not_rerun(
     assert errors and not releases
     assert calls == ["conditions", "q4", "followup"]
     assert not (output / ".active").exists()
+
+
+@pytest.mark.parametrize("metadata", ("truncated", "mismatch", "valid", "denied"))
+def test_unreceipted_top_candidates_repair_reuses_completed_conditions(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, metadata: str) -> None:
+    repo = tmp_path / "repo"
+    output = repo / ".tmp/remaining"
+    original = tmp_path / "original"
+    original.mkdir()
+    stock = original / "stock.json"
+    stock.write_text("{}", encoding="utf-8")
+    atom = Atom("MA", "MA_b", "true")
+    candidates = {"selected": (atom,)}
+    expected = {name: [asdict(member) for member in members] for name, members in candidates.items()}
+    group_computations: list[str] = []
+    q4_candidates: list[dict[str, tuple[Atom, ...]]] = []
+    metadata_writes: list[Path] = []
+    final_hashes: list[Path] = []
+    valid_before: list[tuple[bytes, int]] = []
+
+    class Inputs:
+        def __init__(self, stock_result: Path, temporary: Path) -> None:
+            self.stock_result, self.temporary, self.run = stock_result, temporary, original
+            self.source_id, self.input_id, self.original_code = "source", "input", {"commit": "original"}
+            self.codes, self.shared_record = ("1101",), {"generation": "held-original"}
+            temporary.mkdir(parents=True, exist_ok=True)
+
+        def cache_target(self, target: str, directory: Path) -> None:
+            directory.mkdir(parents=True, exist_ok=True)
+
+    def conditions(inputs: Inputs, target: str, directory: Path) -> tuple[dict, dict, list[Path]]:
+        directory.mkdir(parents=True, exist_ok=True)
+        completed = directory / "completed-group.parquet"
+        if not completed.exists():
+            group_computations.append(target)
+            pd.DataFrame({"count": [1]}).to_parquet(completed, index=False)
+        top = directory / "top-candidates.json"
+        if metadata in {"valid", "denied"} and not top.exists():
+            top.write_text(json.dumps(expected, indent=4) + "\n", encoding="utf-8")
+            valid_before.append((top.read_bytes(), top.stat().st_mtime_ns))
+        return {}, candidates, [completed]
+
+    def q4(inputs: Inputs, target: str, selected: dict[str, tuple[Atom, ...]], directory: Path) -> list[Path]:
+        assert read_json(output / target / "conditions/top-candidates.json") == expected
+        q4_candidates.append(selected)
+        directory.mkdir(parents=True, exist_ok=True)
+        path = directory / "final.parquet"
+        pd.DataFrame({"count": [1]}).to_parquet(path, index=False)
+        return [path]
+
+    digest = module.file_digest
+
+    def final_digest(path: Path) -> str:
+        final_hashes.append(path)
+        return digest(path)
+
+    def receipt(path: Path, **kwargs: Any) -> None:
+        if kwargs["parameters"]["phase"] == "conditions":
+            assert read_json(path.parent / "top-candidates.json") == expected
+        write_json(
+            path,
+            {
+                "schema": "run-receipt.v1",
+                "definition": kwargs["definition"],
+                "parameters": kwargs["parameters"],
+                "code": kwargs["expected_code"],
+                "results": {
+                    name: {"path": str(result), "bytes": result.stat().st_size, "sha256": module.file_digest(result)}
+                    for name, result in kwargs["results"].items()
+                },
+            },
+        )
+
+    save = module.write_progress
+
+    def interrupt_top_write(path: Path, value: dict[str, Any]) -> None:
+        if path.name == "top-candidates.json":
+            metadata_writes.append(path)
+            if metadata in {"truncated", "mismatch"} and len(metadata_writes) == 1:
+                # Reproduce a prior interrupted direct write. Retry must repair
+                # just this unreceipted metadata, using the completed group.
+                path.write_text('{"selected":' if metadata == "truncated" else '{"unexpected":[]}', encoding="utf-8")
+                raise OSError("synthetic interrupted top candidates write")
+        save(path, value)
+
+    load = module.read_json
+
+    def denied_top_read(path: Path, **kwargs: Any) -> dict[str, Any]:
+        if metadata == "denied" and path.name == "top-candidates.json":
+            raise PermissionError("synthetic top metadata access denied")
+        return load(path, **kwargs)
+
+    monkeypatch.setattr(module, "LocalInputs", Inputs)
+    monkeypatch.setattr(module, "code_identity", lambda root: {"commit": "executor", "dirty": False})
+    monkeypatch.setattr(module, "fingerprint_inputs", lambda specs: {"inputs": {}})
+    monkeypatch.setattr(module, "run_conditions", conditions)
+    monkeypatch.setattr(module, "run_q4", q4)
+    monkeypatch.setattr(module, "write_run_receipt", receipt)
+    monkeypatch.setattr(module, "write_progress", interrupt_top_write)
+    monkeypatch.setattr(module, "read_json", denied_top_read)
+    monkeypatch.setattr(module, "file_digest", final_digest)
+    monkeypatch.setattr(module, "PATTERNS", ("H1",))
+    phases = ("conditions", "q4")
+    if metadata == "denied":
+        with pytest.raises(PermissionError, match="access denied"):
+            module.run_remaining(stock, output, repo_root=repo, targets=("H1",), phases=phases)
+        top = output / "H1/.staging-conditions/top-candidates.json"
+        assert (top.read_bytes(), top.stat().st_mtime_ns) == valid_before[0]
+        assert not metadata_writes and not final_hashes and not q4_candidates
+        return
+    if metadata in {"truncated", "mismatch"}:
+        with pytest.raises(OSError, match="interrupted top"):
+            module.run_remaining(stock, output, repo_root=repo, targets=("H1",), phases=phases)
+        assert group_computations == ["H1"] and not final_hashes
+    module.run_remaining(stock, output, repo_root=repo, targets=("H1",), phases=phases)
+    top = output / "H1/conditions/top-candidates.json"
+    assert read_json(top) == expected
+    assert group_computations == ["H1"]  # Selection/group results were reused.
+    assert q4_candidates == [candidates]
+    assert len(final_hashes) == 3  # The two conditions results and Q4 final only.
+    if metadata == "valid":
+        assert (top.read_bytes(), top.stat().st_mtime_ns) == valid_before[0]
+        assert not metadata_writes
+    else:
+        assert len(metadata_writes) == 2
 
 
 @pytest.mark.parametrize(
