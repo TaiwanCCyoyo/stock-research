@@ -484,9 +484,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     report = safe_path(args.report)
     if report.resolve() != safe_path(TASK / "report.md").resolve():
         raise ValueError("fixed PR15 selections require the canonical task report.md")
+    # Every research module whose code computes the published results (direct and through
+    # imports); storage and measurement helpers do not change the numbers.
     executed_sources = [
         Path(__file__),
+        REPO_ROOT / "research_core/annual_rotation.py",
         REPO_ROOT / "research_core/annual_rotation_v2.py",
+        REPO_ROOT / "research_core/annual_statistics.py",
+        REPO_ROOT / "research_core/price_basis.py",
         REPO_ROOT / "research_core/annual_completion_evidence.py",
         REPO_ROOT / "research_core/json_integrity.py",
         REPO_ROOT / "research_core/maintained_adjusted_daily.py",
