@@ -1,0 +1,102 @@
+{
+    "evidence_verification_seconds": 0.19237180000345688,
+    "execution": {
+        "benchmark_calls": 19,
+        "full_ranking_calls": 0,
+        "kernel_calls": 45,
+        "scenario_reuses": 14,
+        "strategy_v2_calls": 18,
+        "v1_comparison_calls": 8
+    },
+    "fixed_price_rows_loaded": 66775,
+    "input_copy_bytes": 0,
+    "input_fingerprint_passes": 1,
+    "loaded_issuer_count": 17,
+    "market_calendar_scans": 1,
+    "phases": [
+        {
+            "cpu_seconds": 0.484375,
+            "native": {
+                "io_delta": {
+                    "OtherOperationCount": 42933,
+                    "OtherTransferCount": 1707618,
+                    "ReadOperationCount": 1014,
+                    "ReadTransferCount": 206666335,
+                    "WriteOperationCount": 1,
+                    "WriteTransferCount": 98
+                },
+                "io_scope": "Windows process transfer counters, including cached I/O; not physical disk throughput",
+                "memory_scope": "Process lifetime peak observed at phase end; not an isolated phase peak",
+                "peak_working_set_process_lifetime_bytes": 92979200,
+                "working_set_after_bytes": 86876160
+            },
+            "phase": "fingerprint",
+            "wall_seconds": 2.937096699999529
+        },
+        {
+            "cpu_seconds": 1.625,
+            "native": {
+                "io_delta": {
+                    "OtherOperationCount": 1724,
+                    "OtherTransferCount": 39640,
+                    "ReadOperationCount": 7454,
+                    "ReadTransferCount": 113145230,
+                    "WriteOperationCount": 8,
+                    "WriteTransferCount": 228277
+                },
+                "io_scope": "Windows process transfer counters, including cached I/O; not physical disk throughput",
+                "memory_scope": "Process lifetime peak observed at phase end; not an isolated phase peak",
+                "peak_working_set_process_lifetime_bytes": 539934720,
+                "working_set_after_bytes": 487153664
+            },
+            "phase": "load",
+            "wall_seconds": 1.4862469999934547
+        },
+        {
+            "cpu_seconds": 0.21875,
+            "native": {
+                "io_delta": {
+                    "OtherOperationCount": 23446,
+                    "OtherTransferCount": 748082,
+                    "ReadOperationCount": 412,
+                    "ReadTransferCount": 26706236,
+                    "WriteOperationCount": 0,
+                    "WriteTransferCount": 0
+                },
+                "io_scope": "Windows process transfer counters, including cached I/O; not physical disk throughput",
+                "memory_scope": "Process lifetime peak observed at phase end; not an isolated phase peak",
+                "peak_working_set_process_lifetime_bytes": 539934720,
+                "working_set_after_bytes": 515063808
+            },
+            "phase": "evidence",
+            "wall_seconds": 0.21738710001227446
+        },
+        {
+            "cpu_seconds": 2.015625,
+            "native": {
+                "io_delta": {
+                    "OtherOperationCount": 79,
+                    "OtherTransferCount": 842,
+                    "ReadOperationCount": 2,
+                    "ReadTransferCount": 298,
+                    "WriteOperationCount": 0,
+                    "WriteTransferCount": 0
+                },
+                "io_scope": "Windows process transfer counters, including cached I/O; not physical disk throughput",
+                "memory_scope": "Process lifetime peak observed at phase end; not an isolated phase peak",
+                "peak_working_set_process_lifetime_bytes": 539934720,
+                "working_set_after_bytes": 515362816
+            },
+            "phase": "compute",
+            "wall_seconds": 2.008928900002502
+        }
+    ],
+    "retained_evidence_bytes": 26674849,
+    "retained_result_bytes_before_format": 60884,
+    "run_id": "annual-completion-v2-20261016",
+    "schema": "annual-completion-performance.v2",
+    "unavailable_observations": [
+        "physical disk I/O and isolated phase peak RSS are not measured",
+        "formatting timing and final retained output bytes are reported on CLI stdout"
+    ]
+}

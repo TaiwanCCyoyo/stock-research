@@ -1,0 +1,24 @@
+{
+    "commission": 0.001425,
+    "stock_sell_tax": 0.003,
+    "etf_sell_tax": 0.001,
+    "slippage": 0.001,
+    "exact_benchmark_splits": {
+        "2025-06-18": 4.0
+    },
+    "known_benchmark_halts": [
+        "2025-06-11",
+        "2025-06-12",
+        "2025-06-13",
+        "2025-06-16",
+        "2025-06-17"
+    ],
+    "seed": 20261013,
+    "bootstrap_resamples": 20000,
+    "study_id": "20261013-annual-winner-rotation",
+    "run_id": "annual-completion-v2-20261016",
+    "definition_version": "annual-holding-completion.v2",
+    "cutoff": "2026-10-12",
+    "selection_scope": "fixed-v1-known-return-leaders",
+    "preregistration": "tasks/20261013-annual-winner-rotation/publications/completion-v2/preregistration.md"
+}

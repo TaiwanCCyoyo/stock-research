@@ -208,18 +208,44 @@ def _write_as_of_inputs(directory: Path, bars: pd.DataFrame, actions: pd.DataFra
     return recorded
 
 
+WRITER_LOCK_MARKER = b"writer-lock-v2\n"
+
+
 def _acquire_lock(family: Path) -> IO[bytes]:
     """Take the single-writer OS lock on `.writer.lock` without waiting.
 
     The OS releases it when the update ends, however it ends (reboot, kill, task time
     limit), so a scheduled retry is never blocked by a lock left from a dead update.
+
+    Updaters before 2026-10-19 held the lock by creating the file exclusively and writing
+    "pid=..." without an OS lock; they refuse whenever the file exists. This one creates
+    the file exclusively with a fixed marker, so the two never both win the creation, and
+    refuses "pid=..." content. An empty file is ambiguous: the first OS-lock version
+    (2026-10-19) left one, but so does an old updater between its create and its write.
+    On Windows the OS lock is mandatory, so such an old updater cannot write its pid and
+    fails; the file is accepted. Elsewhere the lock is advisory and the file is refused
+    until someone confirms no updater runs and deletes it.
     """
     lock = family / ".writer.lock"
+    try:
+        descriptor = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY | getattr(os, "O_BINARY", 0))
+    except FileExistsError:
+        pass
+    else:
+        with os.fdopen(descriptor, "wb") as created:
+            created.write(WRITER_LOCK_MARKER)
     handle = lock.open("a+b")
     if not _try_os_lock(handle):
         handle.close()
         raise RuntimeError(f"another update holds {lock}; wait for it to finish")
-    return handle
+    size = lock.stat().st_size
+    if size == len(WRITER_LOCK_MARKER) or (size == 0 and sys.platform == "win32"):
+        return handle
+    _release_os_lock(handle)
+    handle.close()
+    if size == 0:
+        raise RuntimeError(f"{lock} is empty and this platform's lock is advisory; if no updater is running, delete the file and retry")
+    raise RuntimeError(f"{lock} was written by an updater from before 2026-10-19; if none is running, delete the file and retry")
 
 
 def _write_current(family: Path, generation: str, status_sha256: str) -> None:
@@ -242,11 +268,16 @@ HOLDER_PATTERN = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
 WINDOWS_DEVICE_NAMES = frozenset({"con", "prn", "aux", "nul", *(f"com{n}" for n in range(1, 10)), *(f"lpt{n}" for n in range(1, 10))})
 
 
-def _hold_path(family: Path, holder: str) -> Path:
-    if not HOLDER_PATTERN.match(holder):
+def _hold_path(family: Path, holder: str, *, new: bool = True) -> Path:
+    """Path of `holder`'s hold. New holds get the strict name rules; a release only needs to
+    locate a hold an older writer may have accepted (`match`, as the holds scan reads)."""
+    if new:
+        if not HOLDER_PATTERN.fullmatch(holder):  # `$` alone would accept a trailing newline
+            raise ValueError(f"holder must match {HOLDER_PATTERN.pattern}, got {holder!r}")
+        if holder in WINDOWS_DEVICE_NAMES:
+            raise ValueError(f"holder {holder!r} is a Windows device name; choose another")
+    elif not HOLDER_PATTERN.match(holder):
         raise ValueError(f"holder must match {HOLDER_PATTERN.pattern}, got {holder!r}")
-    if holder in WINDOWS_DEVICE_NAMES:
-        raise ValueError(f"holder {holder!r} is a Windows device name; choose another")
     return family / "holds" / f"{holder}.json"
 
 
@@ -256,7 +287,7 @@ def held_generations(root: Path | None = None) -> dict[str, list[dict[str, Any]]
     directory = family_dir(root) / "holds"
     if directory.is_dir():
         for path in sorted(directory.glob("*.json")):
-            if not HOLDER_PATTERN.match(path.stem):
+            if not HOLDER_PATTERN.match(path.stem):  # lenient on read: keep any hold an older writer accepted
                 continue  # only `<holder>.json`; never a temporary or foreign file
             try:
                 record = read_json(path)
@@ -352,7 +383,7 @@ def hold_generation(generation: str, *, holder: str, reason: str, root: Path | N
 def release_generation(holder: str, *, root: Path | None = None) -> dict[str, Any] | None:
     """Remove `holder`'s hold; the next update prunes the generation unless someone else holds it."""
     family = family_dir(root)
-    path = _hold_path(family, holder)
+    path = _hold_path(family, holder, new=False)
     with _holds_lock(family):
         if not path.is_file():
             return None
@@ -629,6 +660,87 @@ def _stored_quotes(stored: pd.DataFrame) -> pd.DataFrame:
     return pd.concat([quotes, quotes.loc[duplicated[observed]]]).sort_values(["Code", "Date"], kind="stable")
 
 
+def _read_stored_quotes(status: dict[str, Any], cutoff: pd.Timestamp, codes: Sequence[str] | None) -> pd.DataFrame:
+    """The verified official quotes on or before `cutoff` that this generation was built from."""
+    filters: list[Any] = [("Date", "<=", cutoff)]
+    if codes is not None:
+        filters.append(("Code", "in", [str(code) for code in codes]))
+    stored = _read_verified(
+        Path(status["path"]) / "raw.parquet",
+        status["bases"]["raw"],
+        lambda source: pq.read_table(source, columns=["Code", "Date", *RAW_QUOTE_COLUMNS, "quality_reason"], filters=filters).to_pandas(),
+    )
+    return _stored_quotes(stored)
+
+
+def _generation_calendar(status: dict[str, Any], inputs: dict[str, Any], cutoff: pd.Timestamp) -> pd.DatetimeIndex:
+    sessions = _read_verified(Path(status["path"]) / inputs["calendar"]["file"], inputs["calendar"], lambda source: pq.read_table(source).to_pandas())
+    calendar = pd.DatetimeIndex(sessions["Date"])
+    return calendar[calendar <= cutoff]
+
+
+def _cutoff_inputs(status: dict[str, Any], as_of: str | pd.Timestamp) -> tuple[pd.Timestamp, dict[str, Any]]:
+    cutoff = cast(pd.Timestamp, pd.Timestamp(as_of))
+    if pd.isna(cutoff) or cutoff.tzinfo is not None or cutoff != cutoff.normalize():
+        raise ValueError(f"as_of must be a naive date, got {as_of!r}")
+    if cutoff > pd.Timestamp(status["asof"]):
+        raise ValueError(f"as_of {cutoff.date()} is after generation {status['generation']} asof {status['asof']}; its later quotes and actions are unknown")
+    inputs = status.get("as_of_inputs")
+    if inputs is None:
+        raise ValueError(f"generation {status['generation']} has no actions snapshot and cannot be read as_of; run scripts.maintain_adjusted_daily update")
+    return cutoff, inputs
+
+
+def _calendar_record(calendar: pd.DatetimeIndex, source: str) -> dict[str, Any]:
+    days = [day.date().isoformat() for day in calendar]
+    return {"source": source, "sessions": len(days), "first": days[0] if days else None, "last": days[-1] if days else None, "sha256": object_digest(days)}
+
+
+def read_official_quotes(
+    *,
+    codes: Sequence[str],
+    as_of: str | pd.Timestamp,
+    root: Path | None = None,
+    generation: str | None = None,
+) -> tuple[pd.DataFrame, pd.DatetimeIndex, dict[str, Any]]:
+    """Official quotes and the session calendar on or before `as_of`, as this generation saw them.
+
+    For a study that runs its own price model on source quotes (custom corporate-action
+    terms, holding-window economics) instead of reading a prepared basis. The quotes are
+    `Code, Date, Open, High, Low, Close, Volume` from the producer's `official` rows as
+    `prepare_prices` stored them: numeric-coerced, a negative or non-finite `Volume` (the
+    producer column, stored as `VolumeLots`) is NaN, and a duplicated date repeats its first
+    row. `prepare_prices` gives the same result on these rows as on the source rows; a
+    caller that reads quote values directly must accept those three normalizations. The
+    calendar is the generation's official source-date union. Both are verified against `status.json`, so the
+    study needs no scan or fingerprint of `price_daily.parquet`; put the record in the
+    receipt (`write_run_receipt(shared_data=[record])`). Requested codes without a quote on
+    or before the cutoff are listed in `record["absent_codes"]`, not refused: the caller
+    decides what a missing history means. Corporate actions are not included; this family's
+    actions snapshot keeps only the price factor.
+    """
+    status = current_generation(root, generation=generation)
+    cutoff, inputs = _cutoff_inputs(status, as_of)
+    calendar = _generation_calendar(status, inputs, cutoff)
+    requested = list(dict.fromkeys(str(code) for code in codes))
+    quotes = _read_stored_quotes(status, cutoff, requested).reset_index(drop=True)
+    record = {
+        **_record(status, "raw"),
+        "as_of": cutoff.date().isoformat(),
+        "method": "official quotes rebuilt from the raw basis (missing_official_quote rows dropped, duplicate_date rows repeated)",
+        "calendar": {
+            **_calendar_record(calendar, "generation"),
+            "file": str(Path(status["path"]) / inputs["calendar"]["file"]),
+            "file_sha256": inputs["calendar"]["sha256"],
+        },
+        "codes": requested,
+        "absent_codes": sorted(set(requested) - set(quotes["Code"].astype(str))),
+        "rows": len(quotes),
+    }
+    LOGGER.info("Read %s official quotes as_of=%s generation=%s codes=%d rows=%d", FAMILY, record["as_of"], status["generation"], len(requested), len(quotes))
+    return quotes, calendar, record
+
+
 def _read_as_of(
     status: dict[str, Any],
     basis: price_basis.PriceBasis,
@@ -647,32 +759,15 @@ def _read_as_of(
     every symbol with such a quote is returned.
     """
     started = time.monotonic()
-    cutoff = cast(pd.Timestamp, pd.Timestamp(as_of))
-    if pd.isna(cutoff) or cutoff.tzinfo is not None or cutoff != cutoff.normalize():
-        raise ValueError(f"as_of must be a naive date, got {as_of!r}")
-    if cutoff > pd.Timestamp(status["asof"]):
-        raise ValueError(f"as_of {cutoff.date()} is after generation {status['generation']} asof {status['asof']}; its later quotes and actions are unknown")
-    inputs = status.get("as_of_inputs")
-    if inputs is None:
-        raise ValueError(f"generation {status['generation']} has no actions snapshot and cannot be read as_of; run scripts.maintain_adjusted_daily update")
+    cutoff, inputs = _cutoff_inputs(status, as_of)
     directory = Path(status["path"])
     if calendar is None:
-        sessions = _read_verified(directory / inputs["calendar"]["file"], inputs["calendar"], lambda source: pq.read_table(source).to_pandas())
-        calendar = pd.DatetimeIndex(sessions["Date"])
-        calendar = calendar[calendar <= cutoff]
+        calendar = _generation_calendar(status, inputs, cutoff)
         calendar_source = "generation"
     else:
         calendar_source = "caller"
     actions = _read_verified(directory / inputs["actions"]["file"], inputs["actions"], lambda source: pq.read_table(source).to_pandas())
-    filters: list[Any] = [("Date", "<=", cutoff)]
-    if codes is not None:
-        filters.append(("Code", "in", [str(code) for code in codes]))
-    stored = _read_verified(
-        directory / "raw.parquet",
-        status["bases"]["raw"],
-        lambda source: pq.read_table(source, columns=["Code", "Date", *RAW_QUOTE_COLUMNS, "quality_reason"], filters=filters).to_pandas(),
-    )
-    quotes = _stored_quotes(stored)
+    quotes = _read_stored_quotes(status, cutoff, codes)
     by_code = {str(code): frame for code, frame in quotes.groupby("Code", sort=True)}
     events_by_code = {str(code): frame for code, frame in actions.groupby("code", sort=False)}
     empty_events = actions.iloc[0:0]
@@ -692,20 +787,13 @@ def _read_as_of(
     result = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame(columns=ARROW_SCHEMA.names)
     if columns is not None:
         result = cast(pd.DataFrame, result[list(columns)])
-    days = [day.date().isoformat() for day in calendar]
     record = {
         **_record(status, basis),
         "as_of": cutoff.date().isoformat(),
         "as_of_method": "price_basis.prepare_prices at as_of from the generation's raw quotes and actions snapshot",
         "definition": status["definition"]["prices"],
         "actions_sha256": inputs["actions"]["sha256"],
-        "calendar": {
-            "source": calendar_source,
-            "sessions": len(days),
-            "first": days[0] if days else None,
-            "last": days[-1] if days else None,
-            "sha256": object_digest(days),
-        },
+        "calendar": _calendar_record(calendar, calendar_source),
         "codes": len(selected),
     }
     LOGGER.info(
@@ -716,7 +804,7 @@ def _read_as_of(
         status["generation"],
         len(selected),
         calendar_source,
-        len(days),
+        len(calendar),
         len(result),
         time.monotonic() - started,
     )

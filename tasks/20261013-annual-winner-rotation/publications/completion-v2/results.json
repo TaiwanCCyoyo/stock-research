@@ -1,0 +1,928 @@
+{
+    "compatibility": [
+        {
+            "code": "1781",
+            "common_multipliers_match": true,
+            "comparison_scope": "same current inputs; original rounded report values remain in rows.v1",
+            "current_v1": {
+                "carried_days": 0,
+                "complete_equity": false,
+                "gross_return": -0.1364599893574967,
+                "net_return": -0.14322251456917823,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "current_v2": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": -0.1364599893574967,
+                "net_return": -0.14322251456917823,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "max_absolute_difference": 0.0,
+            "year": 2013
+        },
+        {
+            "code": "3229",
+            "common_multipliers_match": true,
+            "comparison_scope": "same current inputs; original rounded report values remain in rows.v1",
+            "current_v1": {
+                "carried_days": 0,
+                "complete_equity": false,
+                "gross_return": -0.0676883780332056,
+                "net_return": -0.07498651893923103,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "current_v2": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": -0.0676883780332056,
+                "net_return": -0.07498651893923103,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "max_absolute_difference": 0.0,
+            "year": 2014
+        },
+        {
+            "code": "3520",
+            "common_multipliers_match": true,
+            "comparison_scope": "same current inputs; original rounded report values remain in rows.v1",
+            "current_v1": {
+                "carried_days": 0,
+                "complete_equity": false,
+                "gross_return": -0.2287581699346405,
+                "net_return": -0.2347954555544035,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "current_v2": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": -0.2287581699346405,
+                "net_return": -0.2347954555544035,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "max_absolute_difference": 0.0,
+            "year": 2015
+        },
+        {
+            "code": "3522",
+            "common_multipliers_match": true,
+            "comparison_scope": "same current inputs; original rounded report values remain in rows.v1",
+            "current_v1": {
+                "carried_days": 0,
+                "complete_equity": false,
+                "gross_return": -0.1641304347826087,
+                "net_return": -0.17067362669642994,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "current_v2": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": -0.1641304347826087,
+                "net_return": -0.17067362669642994,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "max_absolute_difference": 0.0,
+            "year": 2017
+        },
+        {
+            "code": "2388",
+            "common_multipliers_match": true,
+            "comparison_scope": "same current inputs; original rounded report values remain in rows.v1",
+            "current_v1": {
+                "carried_days": 0,
+                "complete_equity": false,
+                "gross_return": 0.3724007561436673,
+                "net_return": 0.3616575948852643,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "current_v2": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": 0.3724007561436673,
+                "net_return": 0.3616575948852643,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "max_absolute_difference": 0.0,
+            "year": 2019
+        },
+        {
+            "code": "3228",
+            "common_multipliers_match": true,
+            "comparison_scope": "same current inputs; original rounded report values remain in rows.v1",
+            "current_v1": {
+                "carried_days": 0,
+                "complete_equity": false,
+                "gross_return": 1.2201834862385321,
+                "net_return": 1.2028038767409934,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "current_v2": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": 1.2201834862385321,
+                "net_return": 1.2028038767409934,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "max_absolute_difference": 0.0,
+            "year": 2021
+        },
+        {
+            "code": "3141",
+            "common_multipliers_match": true,
+            "comparison_scope": "same current inputs; original rounded report values remain in rows.v1",
+            "current_v1": {
+                "carried_days": 0,
+                "complete_equity": false,
+                "gross_return": -0.6918384770017434,
+                "net_return": -0.6942658400049727,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "current_v2": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": -0.6918384770017434,
+                "net_return": -0.6942658400049727,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "max_absolute_difference": 0.0,
+            "year": 2022
+        },
+        {
+            "code": "8996",
+            "common_multipliers_match": true,
+            "comparison_scope": "same current inputs; original rounded report values remain in rows.v1",
+            "current_v1": {
+                "carried_days": 0,
+                "complete_equity": false,
+                "gross_return": 0.21600423953365144,
+                "net_return": 0.20647420311408515,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "current_v2": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": 0.21600423953365144,
+                "net_return": 0.20647420311408515,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "max_absolute_difference": 0.0,
+            "year": 2023
+        }
+    ],
+    "cutoff": "2026-10-12",
+    "definition": "annual-holding-completion.v2",
+    "execution": {
+        "benchmark_calls": 19,
+        "full_ranking_calls": 0,
+        "kernel_calls": 45,
+        "scenario_reuses": 14,
+        "strategy_v2_calls": 18,
+        "v1_comparison_calls": 8
+    },
+    "limitations": [
+        "Fixed v1 calculable leaders are reused; historical universe and unknown ranking candidates are not reconstructed.",
+        "Current input vintage and original rounded report values are distinct observations.",
+        "Cash dividends use the original immediate ex-date close fractional reinvestment estimate.",
+        "Rights lapse and realize are stated scenarios, not actual exercise or return bounds.",
+        "Carried marks permit terminal modeling only; actual complete daily drawdown remains unknown.",
+        "Paired diagnostics assume symmetric exchangeable log excesses and iid bootstrap years; they do not certify significance or unseen data."
+    ],
+    "rows": [
+        {
+            "benchmark": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": -0.16722335670082566,
+                "net_return": -0.17212494099210962,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "code": "3406",
+            "entry_date": "2011-01-03",
+            "exit_date": "2012-01-02",
+            "is_ytd": false,
+            "lapse": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": -0.4089237166160242,
+                "net_return": -0.4135558377955698,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "ranking_return": 5.9565,
+            "realize": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": -0.4018831634634322,
+                "net_return": -0.40658039974614113,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "v1": { "gross_return": null, "net_return": null },
+            "year": 2011
+        },
+        {
+            "benchmark": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": 0.13162433830964138,
+                "net_return": 0.12496545069793585,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "code": "6276",
+            "entry_date": "2012-01-02",
+            "exit_date": "2013-01-02",
+            "is_ytd": false,
+            "lapse": {
+                "carried_days": 9,
+                "complete_equity": false,
+                "gross_return": -0.20259401076753936,
+                "net_return": -0.2088361095804343,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "ranking_return": 2.0284,
+            "realize": {
+                "carried_days": 9,
+                "complete_equity": false,
+                "gross_return": -0.20259401076753936,
+                "net_return": -0.2088361095804343,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "v1": { "gross_return": null, "net_return": null },
+            "year": 2012
+        },
+        {
+            "benchmark": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": 0.11253660263217191,
+                "net_return": 0.10600905366551028,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "code": "1781",
+            "entry_date": "2013-01-02",
+            "exit_date": "2014-01-02",
+            "is_ytd": false,
+            "lapse": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": -0.1364599893574967,
+                "net_return": -0.14322251456917823,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "ranking_return": 2.536,
+            "realize": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": -0.1364599893574967,
+                "net_return": -0.14322251456917823,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "v1": { "gross_return": -0.1365, "net_return": -0.1432 },
+            "year": 2013
+        },
+        {
+            "benchmark": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": 0.15898390585336264,
+                "net_return": 0.15218207791175953,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "code": "3229",
+            "entry_date": "2014-01-02",
+            "exit_date": "2015-01-05",
+            "is_ytd": false,
+            "lapse": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": -0.0676883780332056,
+                "net_return": -0.07498651893923103,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "ranking_return": 4.3389,
+            "realize": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": -0.0676883780332056,
+                "net_return": -0.07498651893923103,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "v1": { "gross_return": -0.0677, "net_return": -0.075 },
+            "year": 2014
+        },
+        {
+            "benchmark": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": -0.055966701818894626,
+                "net_return": -0.06151512222703881,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "code": "3520",
+            "entry_date": "2015-01-05",
+            "exit_date": "2016-01-04",
+            "is_ytd": false,
+            "lapse": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": -0.2287581699346405,
+                "net_return": -0.2347954555544035,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "ranking_return": 3.7937,
+            "realize": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": -0.2287581699346405,
+                "net_return": -0.2347954555544035,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "v1": { "gross_return": -0.2288, "net_return": -0.2348 },
+            "year": 2015
+        },
+        {
+            "benchmark": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": 0.1937931133046229,
+                "net_return": 0.1868069824074654,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "code": "3205",
+            "entry_date": "2016-01-04",
+            "exit_date": "2017-01-03",
+            "is_ytd": false,
+            "lapse": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": -0.5493887491035325,
+                "net_return": -0.5529268852821063,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "ranking_return": 9.520800000000001,
+            "realize": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": -0.545263098482174,
+                "net_return": -0.5488393550089192,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "v1": { "gross_return": null, "net_return": null },
+            "year": 2016
+        },
+        {
+            "benchmark": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": 0.1829852643275145,
+                "net_return": 0.1760297209931927,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "code": "3522",
+            "entry_date": "2017-01-03",
+            "exit_date": "2018-01-02",
+            "is_ytd": false,
+            "lapse": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": -0.1641304347826087,
+                "net_return": -0.17067362669642994,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "ranking_return": 3.6102999999999996,
+            "realize": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": -0.1641304347826087,
+                "net_return": -0.17067362669642994,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "v1": { "gross_return": -0.1641, "net_return": -0.1707 },
+            "year": 2017
+        },
+        {
+            "benchmark": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": -0.04510437327533079,
+                "net_return": -0.05072099804852481,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "code": "3162",
+            "entry_date": "2018-01-02",
+            "exit_date": "2019-01-02",
+            "is_ytd": false,
+            "lapse": {
+                "carried_days": 6,
+                "complete_equity": false,
+                "gross_return": -0.42374999999999996,
+                "net_return": -0.42826088841757126,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "ranking_return": 5.4297,
+            "realize": {
+                "carried_days": 6,
+                "complete_equity": false,
+                "gross_return": -0.42374999999999996,
+                "net_return": -0.42826088841757126,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "v1": { "gross_return": null, "net_return": null },
+            "year": 2018
+        },
+        {
+            "benchmark": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": 0.3303664950609706,
+                "net_return": 0.3225315823508308,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "code": "2388",
+            "entry_date": "2019-01-02",
+            "exit_date": "2020-01-02",
+            "is_ytd": false,
+            "lapse": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": 0.3724007561436673,
+                "net_return": 0.3616575948852643,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "ranking_return": 1.4811,
+            "realize": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": 0.3724007561436673,
+                "net_return": 0.3616575948852643,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "v1": { "gross_return": 0.3724, "net_return": 0.3617 },
+            "year": 2019
+        },
+        {
+            "benchmark": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": 0.3089577786502833,
+                "net_return": 0.3012493409194581,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "code": "6538",
+            "entry_date": "2020-01-02",
+            "exit_date": "2021-01-04",
+            "is_ytd": false,
+            "lapse": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": 0.039245086923658246,
+                "net_return": 0.03109779813857605,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "ranking_return": 5.903200000000001,
+            "realize": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": 0.039245086923658246,
+                "net_return": 0.03109779813857605,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "v1": { "gross_return": null, "net_return": null },
+            "year": 2020
+        },
+        {
+            "benchmark": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": 0.22440122447794253,
+                "net_return": 0.21721501192480974,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "code": "3228",
+            "entry_date": "2021-01-04",
+            "exit_date": "2022-01-03",
+            "is_ytd": false,
+            "lapse": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": 1.2201834862385321,
+                "net_return": 1.2028038767409934,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "ranking_return": 4.9859,
+            "realize": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": 1.2201834862385321,
+                "net_return": 1.2028038767409934,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "v1": { "gross_return": 1.2202, "net_return": 1.2028 },
+            "year": 2021
+        },
+        {
+            "benchmark": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": -0.22037772129182365,
+                "net_return": -0.22496800599392774,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "code": "3141",
+            "entry_date": "2022-01-03",
+            "exit_date": "2023-01-03",
+            "is_ytd": false,
+            "lapse": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": -0.6918384770017434,
+                "net_return": -0.6942658400049727,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "ranking_return": 5.1617,
+            "realize": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": -0.6918384770017434,
+                "net_return": -0.6942658400049727,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "v1": {
+                "gross_return": -0.6918000000000001,
+                "net_return": -0.6943
+            },
+            "year": 2022
+        },
+        {
+            "benchmark": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": 0.28237077451230297,
+                "net_return": 0.27482392798119504,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "code": "8996",
+            "entry_date": "2023-01-03",
+            "exit_date": "2024-01-02",
+            "is_ytd": false,
+            "lapse": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": 0.21600423953365144,
+                "net_return": 0.20647420311408515,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "ranking_return": 1.9977,
+            "realize": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": 0.21600423953365144,
+                "net_return": 0.20647420311408515,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "v1": { "gross_return": 0.21600000000000003, "net_return": 0.2065 },
+            "year": 2023
+        },
+        {
+            "benchmark": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": 0.48431146433788896,
+                "net_return": 0.47559183838588903,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "code": "1519",
+            "entry_date": "2024-01-02",
+            "exit_date": "2025-01-02",
+            "is_ytd": false,
+            "lapse": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": 0.9139883594751899,
+                "net_return": 0.8989867615217424,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "ranking_return": 5.8454,
+            "realize": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": 0.9139883594751899,
+                "net_return": 0.8989867615217424,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "v1": { "gross_return": null, "net_return": null },
+            "year": 2024
+        },
+        {
+            "benchmark": {
+                "carried_days": 5,
+                "complete_equity": false,
+                "gross_return": 0.37758267075523255,
+                "net_return": 0.36950456556504174,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "code": "5314",
+            "entry_date": "2025-01-02",
+            "exit_date": "2026-01-02",
+            "is_ytd": false,
+            "lapse": {
+                "carried_days": 10,
+                "complete_equity": false,
+                "gross_return": 1.4268838045654904,
+                "net_return": 1.4078786396065395,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "ranking_return": 9.2438,
+            "realize": {
+                "carried_days": 10,
+                "complete_equity": false,
+                "gross_return": 1.4268838045654904,
+                "net_return": 1.4078786396065395,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "v1": { "gross_return": null, "net_return": null },
+            "year": 2025
+        },
+        {
+            "benchmark": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": 0.7739431079598211,
+                "net_return": 0.7635433538862528,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "code": "5475",
+            "entry_date": "2026-01-02",
+            "exit_date": "2026-10-12",
+            "is_ytd": true,
+            "lapse": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": 1.167539267015707,
+                "net_return": 1.1505717567784624,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "ranking_return": 6.8607000000000005,
+            "realize": {
+                "carried_days": 0,
+                "complete_equity": true,
+                "gross_return": 1.167539267015707,
+                "net_return": 1.1505717567784624,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "v1": { "gross_return": 1.1675, "net_return": 1.1506 },
+            "year": 2026
+        }
+    ],
+    "run_id": "annual-completion-v2-20261016",
+    "schema": "annual-completion-result.v2",
+    "selection_scope": "fixed-v1-known-return-leaders",
+    "study_id": "20261013-annual-winner-rotation",
+    "windows": [
+        {
+            "benchmark": {
+                "cagr": 0.13520481262898576,
+                "complete_equity": false,
+                "gross_terminal_multiple": 6.742724397163348,
+                "net_terminal_multiple": 6.699111817701591,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "end_date": "2026-01-02",
+            "end_year": 2025,
+            "id": "2011-2025",
+            "scenarios": {
+                "lapse": {
+                    "cagr": -0.07489124866378982,
+                    "carried_mark_reference_drawdown": -0.9542865203998906,
+                    "complete": true,
+                    "complete_equity": false,
+                    "gross_terminal_multiple": 0.35010492612195954,
+                    "max_drawdown": null,
+                    "net_terminal_multiple": 0.31113641783590346,
+                    "paired_diagnostics": {
+                        "annual_geometric_relative_excess": -0.18059060557830697,
+                        "bootstrap_ci_95": [
+                            -0.3405066136057, 0.020558697458868957
+                        ],
+                        "leave_best_one_relative_terminal_multiple": 0.02785515307207481,
+                        "leave_best_two_relative_terminal_multiple": 0.015842891198600068,
+                        "n_years": 15,
+                        "net_log_contribution": -2.987571734013647,
+                        "sign_flip_p_value": 0.946136474609375,
+                        "win_count": 4
+                    },
+                    "reason": null
+                },
+                "realize": {
+                    "cagr": -0.07359963370279787,
+                    "carried_mark_reference_drawdown": -0.9533198595276006,
+                    "complete": true,
+                    "complete_equity": false,
+                    "gross_terminal_multiple": 0.35751879882837356,
+                    "max_drawdown": null,
+                    "net_terminal_multiple": 0.3177157332522192,
+                    "paired_diagnostics": {
+                        "annual_geometric_relative_excess": -0.17944669877435804,
+                        "bootstrap_ci_95": [
+                            -0.3389637104229589, 0.021155597201101717
+                        ],
+                        "leave_best_one_relative_terminal_multiple": 0.028444180352473706,
+                        "leave_best_two_relative_terminal_multiple": 0.0161779062348564,
+                        "n_years": 15,
+                        "net_log_contribution": -2.966646130172141,
+                        "sign_flip_p_value": 0.945526123046875,
+                        "win_count": 4
+                    },
+                    "reason": null
+                }
+            },
+            "start_date": "2011-01-03",
+            "start_year": 2011
+        },
+        {
+            "benchmark": {
+                "cagr": 0.1605709696725155,
+                "complete_equity": false,
+                "gross_terminal_multiple": 8.096678084595407,
+                "net_terminal_multiple": 8.04472061930827,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "end_date": "2026-01-02",
+            "end_year": 2025,
+            "id": "2012-2025",
+            "scenarios": {
+                "lapse": {
+                    "cagr": -0.04425998920922558,
+                    "carried_mark_reference_drawdown": -0.9316309358683159,
+                    "complete": true,
+                    "complete_equity": false,
+                    "gross_terminal_multiple": 0.5923176685715943,
+                    "max_drawdown": null,
+                    "net_terminal_multiple": 0.5305473869265724,
+                    "paired_diagnostics": {
+                        "annual_geometric_relative_excess": -0.1720234912113663,
+                        "bootstrap_ci_95": [
+                            -0.3436705771927916, 0.04578547801927568
+                        ],
+                        "leave_best_one_relative_terminal_multiple": 0.039322731778134765,
+                        "leave_best_two_relative_terminal_multiple": 0.022365188932215008,
+                        "n_years": 14,
+                        "net_log_contribution": -2.6427869443858776,
+                        "sign_flip_p_value": 0.92376708984375,
+                        "win_count": 4
+                    },
+                    "reason": null
+                },
+                "realize": {
+                    "cagr": -0.04363853932748574,
+                    "carried_mark_reference_drawdown": -0.9310058465704187,
+                    "complete": true,
+                    "complete_equity": false,
+                    "gross_terminal_multiple": 0.5977407372422552,
+                    "max_drawdown": null,
+                    "net_terminal_multiple": 0.5353981114144252,
+                    "paired_diagnostics": {
+                        "annual_geometric_relative_excess": -0.1714850531457608,
+                        "bootstrap_ci_95": [
+                            -0.3427186102577148, 0.046149490101921486
+                        ],
+                        "leave_best_one_relative_terminal_multiple": 0.039682254306500096,
+                        "leave_best_two_relative_terminal_multiple": 0.02256967089236075,
+                        "n_years": 14,
+                        "net_log_contribution": -2.6336856198263336,
+                        "sign_flip_p_value": 0.9237060546875,
+                        "win_count": 4
+                    },
+                    "reason": null
+                }
+            },
+            "start_date": "2012-01-02",
+            "start_year": 2012
+        },
+        {
+            "benchmark": {
+                "cagr": 0.1628602192631028,
+                "complete_equity": false,
+                "gross_terminal_multiple": 7.1549168840693,
+                "net_terminal_multiple": 7.109356948736255,
+                "reasons": [],
+                "status": "modeled"
+            },
+            "end_date": "2026-01-02",
+            "end_year": 2025,
+            "id": "2013-2025",
+            "scenarios": {
+                "lapse": {
+                    "cagr": -0.030271487266011143,
+                    "carried_mark_reference_drawdown": -0.9234778575587164,
+                    "complete": true,
+                    "complete_equity": false,
+                    "gross_terminal_multiple": 0.7428056430096881,
+                    "max_drawdown": null,
+                    "net_terminal_multiple": 0.6705910031424909,
+                    "paired_diagnostics": {
+                        "annual_geometric_relative_excess": -0.1615616217210093,
+                        "bootstrap_ci_95": [
+                            -0.3453075883393947, 0.07189622638328586
+                        ],
+                        "leave_best_one_relative_terminal_multiple": 0.05591346522906149,
+                        "leave_best_two_relative_terminal_multiple": 0.031801331117034405,
+                        "n_years": 13,
+                        "net_log_contribution": -2.290784480972076,
+                        "sign_flip_p_value": 0.894287109375,
+                        "win_count": 4
+                    },
+                    "reason": null
+                },
+                "realize": {
+                    "cagr": -0.029592318973117315,
+                    "carried_mark_reference_drawdown": -0.9227782257457069,
+                    "complete": true,
+                    "complete_equity": false,
+                    "gross_terminal_multiple": 0.7496065308182697,
+                    "max_drawdown": null,
+                    "net_terminal_multiple": 0.6767221278646777,
+                    "paired_diagnostics": {
+                        "annual_geometric_relative_excess": -0.16097442390323546,
+                        "bootstrap_ci_95": [
+                            -0.34458649812372266, 0.07218658012700474
+                        ],
+                        "leave_best_one_relative_terminal_multiple": 0.05642467463593177,
+                        "leave_best_two_relative_terminal_multiple": 0.0320920864753622,
+                        "n_years": 13,
+                        "net_log_contribution": -2.281683156412532,
+                        "sign_flip_p_value": 0.8941650390625,
+                        "win_count": 4
+                    },
+                    "reason": null
+                }
+            },
+            "start_date": "2013-01-02",
+            "start_year": 2013
+        }
+    ]
+}

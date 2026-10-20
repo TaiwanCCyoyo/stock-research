@@ -122,3 +122,40 @@ def test_variants_portable_publication_passes_and_tampered_chunk_fails(tmp_path:
     assert inventory.main(argv) == 1
     output = capsys.readouterr().out
     assert "fail" in output and "hash/size mismatch" in output
+
+
+@pytest.mark.parametrize("failure", [None, "tampered-result", "wrong-version", "projection-results", "projection-performance"])
+def test_annual_completion_inventory_uses_its_reader_without_live_inputs(tmp_path: Path, capsys: pytest.CaptureFixture[str], failure: str | None) -> None:
+    root = tmp_path / "synthetic checkout"
+    relative = "tasks/20261013-annual-winner-rotation/publications/completion-v2"
+    publication = root / relative
+    publication.mkdir(parents=True)
+    names = {"results": "results.json", "admission": "admission-audit.json", "performance": "performance.json"}
+    schemas = {"results": "annual-completion-result.v2", "admission": "annual-completion-admission.v2", "performance": "annual-completion-performance.v2"}
+    members = {name: canonical({"schema": schemas[key], "run_id": "synthetic-inventory", "unresolved": []}) for key, name in names.items()}
+    identities: dict[str, dict[str, str | int]] = {
+        key: {"path": relative + "/" + name, "bytes": len(members[name]), "sha256": hashlib.sha256(members[name]).hexdigest()} for key, name in names.items()
+    }
+    receipt = {
+        "schema": "run-receipt.v1",
+        "run_id": "synthetic-inventory",
+        "input_fingerprint": {"inputs": {"never_open": {"path": "Z:/unavailable/input.parquet"}}},
+        "results": identities,
+    }
+    if failure == "wrong-version":
+        identities["results"]["path"] = relative.replace("completion-v2", "completion-v3") + "/results.json"
+    elif failure == "tampered-result":
+        members["results.json"] += b" "
+    members["run-receipt.json"] = canonical(receipt)
+    with zipfile.ZipFile(publication / "publication.zip", "w") as archive:
+        for name, raw in members.items():
+            archive.writestr(name, raw)
+    if failure is not None and failure.startswith("projection-"):
+        name = "results.json" if failure == "projection-results" else "performance.json"
+        (publication / name).write_bytes(b'{"changed":"reading copy"}')
+    status = inventory.main(["--root", str(root), "--only", "annual-holding-completion"])
+    assert status == (0 if failure is None else 1)
+    output = capsys.readouterr().out
+    assert "annual-holding-completion.v2" in output
+    assert ("pass" if failure is None else "fail") in output
+    assert "synthetic-inventory" in output if failure is None else "mismatch" in output

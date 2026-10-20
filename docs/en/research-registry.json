@@ -319,6 +319,19 @@
             "recorded_on": "2026-10-13",
             "source": "tasks/20261013-annual-winner-rotation/report.md",
             "note": "Independent preregistered annual-rotation.v1 exploration, ranking 2010-2025 and holding 2011-2025 plus separate 2026 YTD. Historical covered quote codes, incomplete PIT/delistings and economic actions; unknown candidates/holdings retained. All three strategy windows incomplete; no full-market or significance acceptance. Original frozen run retained; review corrections reuse unchanged verified ranks and recalculate held paths only. No independent unseen status, source downloads, producer writes, trades or automation."
+        },
+        {
+            "id": "annual-winner-holding-completion-exposure-20261016",
+            "kind": "exposure",
+            "scope": "taiwan-price-strategy",
+            "state": "viewed",
+            "window": {
+                "start": "2011-01-03",
+                "end": "2026-10-12"
+            },
+            "recorded_on": "2026-10-16",
+            "source": "tasks/20261013-annual-winner-rotation/publications/completion-v2/report.md",
+            "note": "Post hoc exploratory completion of the fixed v1 known-return leader sequence under preregistered annual-holding-completion.v2, source commit db7c6cc. Existing captured official sources published additively once under the canonical producer root; live prices/actions fingerprinted, no input copies, reranking, new download, normalized-database mutation, trades or automation. All 15 complete holdings modeled under both stated rights scenarios: net terminal wealth 0.311136/0.317716 versus continuous 0050 6.699112; four paired annual wins. Eight prior modeled years match v1 exactly on current inputs. All three windows fail superiority; daily actual drawdown and all-market leadership remain unknown. YTD 2026 separately viewed. Original results and unknown ranking candidates remain historical; this event confers no unseen or independent confirmation status."
         }
     ]
 }

@@ -252,6 +252,52 @@ def test_a_same_size_replacement_after_a_cached_read_is_refused(environment: tup
         maintained_adjusted_daily.read_adjusted_daily("raw")
 
 
+def test_a_writer_lock_left_by_an_old_protocol_updater_is_refused(environment: tuple[Path, Path]) -> None:
+    producer, shared = environment
+    family = shared / "derived" / maintained_adjusted_daily.FAMILY
+    family.mkdir(parents=True)
+    (family / ".writer.lock").write_text("pid=1 started_utc=2026-10-18T16:12:03+00:00\n", encoding="utf-8")
+    with pytest.raises(RuntimeError, match="before 2026-10-19"):
+        maintained_adjusted_daily.update(producer_root=producer)
+    assert not (family / "current.json").exists()
+    (family / ".writer.lock").write_bytes(b"")
+    if sys.platform == "win32":
+        assert maintained_adjusted_daily.update(producer_root=producer)["generation"], "a mandatory lock makes an empty file safe"
+    else:
+        with pytest.raises(RuntimeError, match="advisory"):
+            maintained_adjusted_daily.update(producer_root=producer)
+
+
+def test_an_old_updater_between_create_and_write_cannot_run_beside_a_new_one(environment: tuple[Path, Path]) -> None:
+    producer, shared = environment
+    family = shared / "derived" / maintained_adjusted_daily.FAMILY
+    family.mkdir(parents=True)
+    lock = family / ".writer.lock"
+    lock.write_bytes(b"")  # an old updater has created the file and not yet written its pid
+    if sys.platform != "win32":
+        with pytest.raises(RuntimeError, match="advisory"):
+            maintained_adjusted_daily.update(producer_root=producer)
+        assert not (family / "current.json").exists()
+        return
+    handle = maintained_adjusted_daily._acquire_lock(family)  # Windows accepts the empty file ...
+    try:
+        with pytest.raises(PermissionError), open(lock, "ab") as old:
+            old.write(b"pid=7 started_utc=2026-10-18T16:12:03+00:00")  # ... and the old pid write then fails
+            old.flush()
+    finally:
+        maintained_adjusted_daily._release_os_lock(handle)
+        handle.close()
+
+
+def test_a_new_writer_lock_is_created_exclusively_with_a_marker(environment: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:
+    producer, shared = environment
+    family = shared / "derived" / maintained_adjusted_daily.FAMILY
+    maintained_adjusted_daily.update(producer_root=producer)
+    assert (family / ".writer.lock").read_bytes() == maintained_adjusted_daily.WRITER_LOCK_MARKER
+    monkeypatch.setattr(maintained_adjusted_daily, "datetime", _Later(1))  # a distinct generation id
+    assert maintained_adjusted_daily.update(producer_root=producer)["generation"], "a marked file is this protocol's own"
+
+
 def test_concurrent_writer_is_refused(environment: tuple[Path, Path]) -> None:
     producer, shared = environment
     family = shared / "derived" / maintained_adjusted_daily.FAMILY
@@ -437,6 +483,28 @@ def test_real_data_check_script_reports_equality_and_truncation_damage(environme
     assert entry["situations"]["post_cutoff_multi_kind_days"] == 1 and entry["situations"]["post_cutoff_unknown_kind"] == 1
 
 
+def test_official_quotes_are_the_source_rows_the_generation_saw_and_feed_a_receipt(environment: tuple[Path, Path]) -> None:
+    producer, _ = environment
+    bars, _ = _tricky_producer(producer)
+    maintained_adjusted_daily.update(producer_root=producer)
+
+    quotes, calendar, record = maintained_adjusted_daily.read_official_quotes(codes=["1101", "2330", "6488", "9999"], as_of=CUTOFF)
+
+    assert calendar.equals(SESSIONS[SESSIONS <= CUTOFF]), "the generation's official session union, cut at as_of"
+    assert record["absent_codes"] == ["6488", "9999"], "no quote on or before the cutoff is reported, not refused"
+    assert record["calendar"]["sessions"] == len(calendar) and record["rows"] == len(quotes)
+    expected = bars.loc[bars["Source"].eq("official") & bars["Date"].le(CUTOFF) & bars["Code"].isin(["1101", "2330"])].drop(columns="Source")
+    assert list(quotes.columns) == ["Code", "Date", "Open", "High", "Low", "Close", "Volume"]
+    counts = quotes.groupby(["Code", "Date"]).size()
+    assert counts.equals(expected.groupby(["Code", "Date"]).size()), "gaps stay absent; a duplicated date keeps both rows"
+    single = expected.loc[~expected.duplicated(["Code", "Date"], keep=False)].sort_values(["Code", "Date"]).reset_index(drop=True)
+    single["Volume"] = single["Volume"].where(single["Volume"].ge(0))  # prepare_prices stores an invalid volume as NaN
+    got = quotes.loc[~quotes.duplicated(["Code", "Date"], keep=False)].reset_index(drop=True)
+    pd.testing.assert_frame_equal(got, single, check_dtype=False)
+
+    assert record["generation"] == maintained_adjusted_daily.current_generation()["generation"]
+
+
 def test_a_held_generation_survives_updates_until_released(environment: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:
     producer, shared = environment
     family = shared / "derived" / maintained_adjusted_daily.FAMILY
@@ -463,6 +531,9 @@ def test_a_held_generation_survives_updates_until_released(environment: tuple[Pa
         maintained_adjusted_daily.hold_generation(held, holder="late", reason="too late")
     with pytest.raises(ValueError, match="holder must match"):
         maintained_adjusted_daily.hold_generation(result["generation"], holder="../escape", reason="x")
+    with pytest.raises(ValueError, match="holder must match"):
+        maintained_adjusted_daily.hold_generation(result["generation"], holder="study\n", reason="x")
+    assert maintained_adjusted_daily.release_generation("study\n") is None, "a release can still look up a name an older writer accepted"
     for device in ("con", "nul", "com1", "lpt9"):
         with pytest.raises(ValueError, match="Windows device name"):
             maintained_adjusted_daily.hold_generation(result["generation"], holder=device, reason="x")
