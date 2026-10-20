@@ -119,10 +119,48 @@ def test_live_mode_and_proxy_mismatch_are_refused() -> None:
         response.__enter__.return_value.read.return_value = b'{"dataMode":"public-synthetic"}'
         with pytest.raises(RuntimeError, match="資料模式"):
             launcher._verify_live_mode("history-api", 18517, environment)
-        assert request.call_args.args[0].endswith("/history-api/saved-research-studio/v1/runs")
+        assert request.call_args.args[0].endswith("/__research_service__")
         response.__enter__.return_value.read.return_value = b'{"dataMode":"local-private","apiTarget":"wrong"}'
         with pytest.raises(RuntimeError, match="proxy"):
             launcher._verify_live_mode("research-web", 15177, environment)
+
+
+@pytest.mark.parametrize("missing_identity", [False, True])
+def test_changed_private_source_or_missing_identity_refuses_reuse(tmp_path: Path, missing_identity: bool) -> None:
+    environment = {
+        **private_settings(tmp_path),
+        "VITE_ARTIFACT_MODE": "local-private",
+        "STOCK_RESEARCH_DATA_MODE": "local-private",
+    }
+    running = dict(environment)
+    running["STOCK_SAVED_STUDIO_PACKAGE"] = str(tmp_path / "older-package.json")
+    payload = launcher.dashboard_identity(running)
+    if missing_identity:
+        payload.pop("configId")
+    response = MagicMock()
+    response.__enter__.return_value.read.return_value = json.dumps(payload).encode()
+    with patch.object(launcher.urllib.request, "urlopen", return_value=response):
+        with pytest.raises(RuntimeError, match="設定身份|來源設定"):
+            launcher._verify_live_mode("history-api", 18517, environment)
+
+
+def test_check_uses_identity_only_never_studio_runs(tmp_path: Path) -> None:
+    environment = {"VITE_ARTIFACT_MODE": "public-synthetic", "STOCK_RESEARCH_DATA_MODE": "public-synthetic"}
+    response = MagicMock()
+    response.__enter__.return_value.read.return_value = json.dumps({
+        **launcher.dashboard_identity(environment),
+        "apiTarget": "http://127.0.0.1:18517",
+    }).encode()
+    with (
+        patch.object(launcher, "project_root", return_value=tmp_path),
+        patch.object(launcher, "_inspect_service", return_value="reusable"),
+        patch.object(launcher.urllib.request, "urlopen", return_value=response) as request,
+    ):
+        assert launcher.run(check=True, api_port=18517, web_port=15177) == 0
+    assert [item.args[0] for item in request.call_args_list] == [
+        "http://127.0.0.1:18517/__research_service__",
+        "http://127.0.0.1:15177/__research_service__",
+    ]
 
 
 def test_check_reports_mode_without_starting_services(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:

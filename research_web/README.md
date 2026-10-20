@@ -32,6 +32,11 @@ running. To preview alongside another dashboard, use
 `--api-port 18517 --web-port 15177 --no-browser`. Both proxies follow the chosen
 API port. The launcher refuses existing services with another mode or proxy
 target and never terminates them. Ctrl+C stops only children it started.
+The API identity also fingerprints its startup private directory and package
+paths, so changing those settings cannot silently reuse an API serving an older
+package. Identity checks do not request saved runs or start history capture
+verification. Package contents at the same path remain immutable evidence;
+publish revisions at a new path and restart your own service.
 
 ### Run the services
 

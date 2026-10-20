@@ -21,6 +21,7 @@ from typing import Any
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from research_core.dashboard_identity import dashboard_identity
 from research_core.producer_data import primary_checkout, read_env_file_value
 from research_core.saved_research_studio import StudioError, read_studio_package
 
@@ -72,12 +73,13 @@ def launch_environment(root: Path, environ: dict[str, str]) -> dict[str, str]:
 
 
 def _verify_live_mode(name: str, port: int, environment: dict[str, str]) -> None:
-    path = "/history-api/saved-research-studio/v1/runs" if name == "history-api" else IDENTITY_PATH
     try:
-        with urllib.request.urlopen(f"http://127.0.0.1:{port}{path}", timeout=30) as response:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}{IDENTITY_PATH}", timeout=1) as response:
             payload = json.loads(response.read().decode("utf-8"))
         if not isinstance(payload, dict) or payload.get("dataMode") != environment[MODE_KEYS[0]]:
             raise ValueError("資料模式不符或服務版本尚未提供模式")
+        if name == "history-api" and payload.get("configId") != dashboard_identity(environment)["configId"]:
+            raise ValueError("私有來源設定不符或服務版本尚未提供設定身份")
         if name == "research-web" and payload.get("apiTarget") != environment["RESEARCH_WEB_API_TARGET"]:
             raise ValueError("前端 API proxy 目標不符")
     except (OSError, ValueError) as exc:
