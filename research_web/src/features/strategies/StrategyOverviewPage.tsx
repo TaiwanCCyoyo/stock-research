@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SourceNotice } from "../../components/SourceNotice";
 import { useStudioIndex } from "../../api/strategyStudio";
 import { LineChart } from "./StrategyCharts";
 import { duration, gainClass, money, percentage } from "./format";
@@ -6,6 +7,7 @@ import { filterStrategies, type StrategyStatus } from "./model";
 import { StatusBadge, StudioState } from "./shared";
 import { strategyIdea, strategyTitle } from "./presentation";
 import { capturedTradeLabel, capturedTradeNote } from "./captureModel";
+import { SharedDataStatus } from "./SharedDataStatus";
 import "./strategies.css";
 
 export function StrategyOverviewPage() {
@@ -14,6 +16,8 @@ export function StrategyOverviewPage() {
     const runs = filterStrategies(resource.data?.runs ?? [], filter);
     return (
         <div className="ss-page">
+            {resource.data && <SourceNotice source={resource.data.source} />}
+            <SharedDataStatus />
             {resource.data?.synthetic && (
                 <p className="ss-muted">
                     合成示範：帳戶、價格與交易均為虛構，不代表真實研究結果。

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
     fetchDataQuality,
     fetchTaskBundle,
@@ -8,7 +8,6 @@ import {
 } from "./api/client";
 import type {
     CapitalMode,
-    DataQualityResponse,
     HealthRows,
     Summary,
     TaskBundle,
@@ -18,6 +17,10 @@ import type {
 import { ClosedState } from "./components/ClosedState";
 import { ComparisonView } from "./components/ComparisonView";
 import { DataQuality } from "./components/DataQuality";
+import {
+    dataQualityState,
+    type DataQualityState,
+} from "./components/dataQualityState";
 import { DiagnosisView } from "./components/DiagnosisView";
 import { HelpView } from "./components/HelpView";
 import { MetricChips } from "./components/MetricChips";
@@ -71,9 +74,9 @@ export default function App() {
     const [error, setError] = useState<string | null>(null);
     const [capitalMode, setCapitalMode] = useState<CapitalMode | null>(null);
     const [closed, setClosed] = useState(false);
-    const [dataQuality, setDataQuality] = useState<DataQualityResponse | null>(
-        null,
-    );
+    const [dataQuality, setDataQuality] = useState<DataQualityState>({
+        status: "loading",
+    });
 
     // Tells the server this tab is still open; the launcher auto-shuts-down once
     // heartbeats stop (e.g. the tab was closed). Runs independently of any loaded
@@ -97,13 +100,33 @@ export default function App() {
             );
     }, []);
 
-    // Data quality is a global view over the local price archive, independent of the
-    // selected task; fetched once so a slow/missing report never blocks task loading.
-    useEffect(() => {
+    // Data quality is independent of task loading and can be retried with a read-only GET.
+    const dataQualityRequest = useRef(0);
+    const refreshDataQuality = useCallback(() => {
+        const request = ++dataQualityRequest.current;
+        setDataQuality({ status: "loading" });
         fetchDataQuality()
-            .then(setDataQuality)
-            .catch(() => setDataQuality(null));
+            .then((data) => {
+                if (request === dataQualityRequest.current)
+                    setDataQuality(
+                        dataQualityState({ status: "loaded", data }),
+                    );
+            })
+            .catch((err: Error) => {
+                if (request === dataQualityRequest.current)
+                    setDataQuality({
+                        status: "failure",
+                        message: err.message || "網路連線失敗。",
+                    });
+            });
     }, []);
+
+    useEffect(() => {
+        refreshDataQuality();
+        return () => {
+            dataQualityRequest.current++;
+        };
+    }, [refreshDataQuality]);
 
     const loadTask = useCallback((taskId: string) => {
         setLoading(true);
@@ -220,6 +243,11 @@ export default function App() {
                     </>
                 )}
                 <div className="content">
+                    <DataQuality
+                        state={dataQuality}
+                        onRetry={refreshDataQuality}
+                    />
+                    <div style={{ height: 16 }} />
                     {error && <div className="error-banner">{error}</div>}
                     {loading && (
                         <div className="loading-row">
@@ -257,8 +285,6 @@ export default function App() {
                                 !(capitalMode && trades.length === 0) &&
                                 tab === "workbench" && (
                                     <>
-                                        <DataQuality data={dataQuality} />
-                                        <div style={{ height: 16 }} />
                                         <StrategyHealth
                                             health={healthForMode(
                                                 bundle,

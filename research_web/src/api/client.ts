@@ -22,8 +22,11 @@ export class ApiError extends Error {
     }
 }
 
-async function getJson<T>(path: string): Promise<T> {
-    const response = await fetch(`${API_BASE}${path}`);
+async function getJson<T>(
+    path: string,
+    cache: RequestCache = "default",
+): Promise<T> {
+    const response = await fetch(`${API_BASE}${path}`, { cache });
     if (!response.ok) {
         let detail = `HTTP ${response.status}`;
         try {
@@ -43,7 +46,73 @@ export function fetchTasks(): Promise<TaskListResponse> {
 
 /** Data quality is a global, task-independent view over the local price archive. */
 export function fetchDataQuality(): Promise<DataQualityResponse> {
-    return getJson("/data-quality");
+    return getJson<unknown>("/data-quality", "no-store").then((value) => {
+        if (!value || typeof value !== "object")
+            throw new Error("資料品質回應格式無效。 ");
+        const response = value as Record<string, unknown>;
+        if (typeof response.available !== "boolean")
+            throw new Error("資料品質回應缺少有效的 available 欄位。");
+        if (!response.available) {
+            if (response.report !== null && response.report !== undefined)
+                throw new Error("資料品質回應狀態不一致。");
+            return { available: false, report: null };
+        }
+        if (!response.report || typeof response.report !== "object")
+            throw new Error("資料品質回應狀態不一致：available 報告缺失。");
+
+        const report = response.report as Record<string, unknown>;
+        if (
+            typeof report.generated_at !== "string" ||
+            !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|\+00:00)$/.test(
+                report.generated_at,
+            ) ||
+            !Number.isFinite(Date.parse(report.generated_at))
+        )
+            throw new Error("資料品質報告缺少有效的 UTC 產生時間。");
+        if (
+            report.coverage !== undefined &&
+            (!report.coverage ||
+                typeof report.coverage !== "object" ||
+                Array.isArray(report.coverage))
+        )
+            throw new Error("資料品質報告的 coverage 格式無效。");
+        if (
+            report.checks !== undefined &&
+            (!report.checks ||
+                typeof report.checks !== "object" ||
+                Array.isArray(report.checks))
+        )
+            throw new Error("資料品質報告的 checks 格式無效。");
+        if (
+            report.symbols !== undefined &&
+            (!report.symbols ||
+                typeof report.symbols !== "object" ||
+                Array.isArray(report.symbols))
+        )
+            throw new Error("資料品質報告的 symbols 格式無效。");
+
+        const coverage = report.coverage as Record<string, unknown> | undefined;
+        if (coverage) {
+            for (const key of [
+                "symbol_count",
+                "trading_day_count",
+                "row_count",
+            ])
+                if (
+                    coverage[key] !== undefined &&
+                    (typeof coverage[key] !== "number" ||
+                        !Number.isFinite(coverage[key]))
+                )
+                    throw new Error(`資料品質報告的 ${key} 格式無效。`);
+            for (const key of ["first_date", "last_date"])
+                if (
+                    coverage[key] !== undefined &&
+                    typeof coverage[key] !== "string"
+                )
+                    throw new Error(`資料品質報告的 ${key} 格式無效。`);
+        }
+        return value as DataQualityResponse;
+    });
 }
 
 export function fetchTaskBundle(taskId: string): Promise<TaskBundle> {

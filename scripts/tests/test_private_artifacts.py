@@ -62,6 +62,62 @@ def test_built_frontend_api_alias_exists(monkeypatch: pytest.MonkeyPatch) -> Non
     assert response.headers["X-Research-Evidence-Error"] == "unavailable"
 
 
+def test_shared_status_is_private_and_returns_only_generation_metadata(monkeypatch: pytest.MonkeyPatch) -> None:
+    from research_core import maintained_adjusted_daily
+
+    application = FastAPI()
+    application.include_router(create_private_artifact_router())
+    client = TestClient(application)
+    calls = []
+
+    def fake_current_generation():
+        calls.append(True)
+        return {
+            "family": "adjusted-daily-v1",
+            "generation": "g-20261020",
+            "asof": "2026-10-19",
+            "built_at_utc": "2026-10-20T01:02:03+00:00",
+            "status_sha256": "a" * 64,
+            "path": "private-root/derived/g-20261020",
+            "input_fingerprint": {"large": "private input metadata"},
+        }
+
+    monkeypatch.setattr(maintained_adjusted_daily, "current_generation", fake_current_generation)
+    monkeypatch.setenv("STOCK_RESEARCH_DATA_MODE", "public-synthetic")
+    public = client.get("/private-artifacts/v1/shared-status")
+    assert public.status_code == 503
+    assert calls == []
+
+    monkeypatch.setenv("STOCK_RESEARCH_DATA_MODE", "local-private")
+    private = client.get("/private-artifacts/v1/shared-status")
+    assert private.status_code == 200
+    assert private.json() == {
+        "family": "adjusted-daily-v1",
+        "generation": "g-20261020",
+        "asof": "2026-10-19",
+        "built_at_utc": "2026-10-20T01:02:03+00:00",
+        "status_sha256": "a" * 64,
+    }
+    assert calls == [True]
+
+
+def test_shared_status_missing_generation_is_generic_503(monkeypatch: pytest.MonkeyPatch) -> None:
+    from research_core import maintained_adjusted_daily
+
+    monkeypatch.setenv("STOCK_RESEARCH_DATA_MODE", "local-private")
+    monkeypatch.setattr(
+        maintained_adjusted_daily,
+        "current_generation",
+        lambda: (_ for _ in ()).throw(FileNotFoundError("private root detail")),
+    )
+    application = FastAPI()
+    application.include_router(create_private_artifact_router())
+    response = TestClient(application).get("/private-artifacts/v1/shared-status")
+    assert response.status_code == 503
+    assert response.headers["X-Research-Evidence-Error"] == "unavailable"
+    assert "private root detail" not in response.text
+
+
 def test_bounded_decode(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("research_api.private_artifacts.MAX_BYTES", 100)
     (tmp_path / "opportunity-explorer.json.gz").write_bytes(gzip.compress(b"x" * 101))
