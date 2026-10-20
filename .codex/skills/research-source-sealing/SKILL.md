@@ -37,7 +37,8 @@ Historical packets keep their existing byte-level verification contract.
    untracked files, so it refuses a source missing from the starting commit (without
    `expected_code`, one that is untracked or differs from `HEAD`). Take
    `code_identity(sources=[...])` before the run, with the same list later passed as
-   `sources=`, and pass it as `expected_code=`: a commit, checkout or edit seen during a
+   `sources=` plus the preregistration, and pass it unchanged as `expected_code=` (a ref
+   such as `HEAD` is refused): a commit, checkout or edit seen during a
    long run is recorded as `code_drift` (start and end identity, and which executed
    sources differ between them, including one rewritten and restored, which its size and
    modification time show) instead of refusing the receipt. An input that changed

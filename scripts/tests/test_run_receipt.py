@@ -525,6 +525,58 @@ def test_receipt_refuses_a_source_committed_as_a_symlink(repo: Path, producer: P
         )
 
 
+def test_receipt_sees_a_preregistration_rewritten_and_restored_during_the_run(repo: Path, producer: Path) -> None:
+    from research_core.run_receipt import code_identity
+
+    result = repo / "summary.json"
+    result.write_text("{}", encoding="utf-8")
+    runner, prereg = repo / "runner.py", repo / "prereg.md"
+    runner.write_text("print('a')", encoding="utf-8")
+    prereg.write_text("# Rules" + chr(10), encoding="utf-8")
+    _git(["add", "runner.py", "prereg.md"], repo)
+    _git(["commit", "-q", "-m", "runner and rules"], repo)
+    inputs = fingerprint_inputs([InputSpec("prices", producer / "price_daily.parquet")], now=WEEKDAY_NIGHT)
+    started = code_identity(repo, sources=[runner, prereg])
+
+    prereg.write_text("# Temporary rules" + chr(10), encoding="utf-8")  # the study may read this version
+    _git(["checkout", "--", "prereg.md"], repo)
+    status = prereg.stat()
+    os.utime(prereg, ns=(status.st_atime_ns, status.st_mtime_ns + 1_000_000_000))
+    receipt = write_run_receipt(
+        repo / "r.json",
+        run_id="r",
+        definition="d",
+        parameters={},
+        inputs=inputs,
+        results={"s": result},
+        repo_root=repo,
+        sources=[runner],
+        preregistration=prereg,
+        expected_code=started,
+    )
+    assert receipt["code_drift"]["sources_changed"] == ["prereg.md"], "a restored preregistration rewrite is recorded"
+    assert receipt["code_drift"]["sources_unchanged_observed"] is False
+
+
+def test_receipt_refuses_an_expected_code_that_is_not_a_full_commit_id(repo: Path, producer: Path) -> None:
+    result = repo / "summary.json"
+    result.write_text("{}", encoding="utf-8")
+    inputs = fingerprint_inputs([InputSpec("prices", producer / "price_daily.parquet")], now=WEEKDAY_NIGHT)
+    for commit in ("HEAD", "main", "", None):
+        with pytest.raises(ValueError, match="not a full commit id"):
+            write_run_receipt(
+                repo / "r.json",
+                run_id="r",
+                definition="d",
+                parameters={},
+                inputs=inputs,
+                results={"s": result},
+                repo_root=repo,
+                expected_code={"commit": commit, "dirty": False},
+            )
+    assert not (repo / "r.json").exists()
+
+
 def test_receipt_sees_a_source_rewritten_and_restored_during_the_run(repo: Path, producer: Path) -> None:
     from research_core.run_receipt import code_identity
 
