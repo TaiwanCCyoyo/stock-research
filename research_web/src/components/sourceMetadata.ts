@@ -16,7 +16,9 @@ export function snapshotDescription(
     if (!source)
         return "此服務尚未提供來源版本；無法確認目前顯示的研究快照版本。";
     const label =
-        source.mode === "public-synthetic" ? "合成示範" : "真實研究固定快照";
+        source.mode === "public-synthetic"
+            ? "目前是合成示範，設定方式見 README"
+            : "真實研究固定快照";
     const coverage = history
         ? `研究登錄截至 ${source.historyThrough ?? "未知"}`
         : `帳戶期間 ${source.from ?? "未知"} 至 ${source.through ?? "未知"}；資料截至 ${source.asOf ?? "未知"}`;
