@@ -257,11 +257,37 @@ def _display_path(path: Path, repo_root: Path) -> str:
     return resolved.relative_to(repo_root.resolve()).as_posix() if resolved.is_relative_to(repo_root.resolve()) else str(resolved)
 
 
-def code_identity(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
+def code_identity(repo_root: Path = REPO_ROOT, sources: Sequence[Path] = ()) -> dict[str, Any]:
+    """Commit and dirty flag; with `sources`, also each source's size and modification time.
+
+    Before a long run, take it with the sources the run executes and pass it as
+    `write_run_receipt(expected_code=)` with the same `sources=`: the stats show a source
+    rewritten during the run even when its content was restored before the end. Never a hash.
+    """
+
     def git(*arguments: str) -> str:
         return subprocess.run(["git", "-C", str(repo_root), *arguments], capture_output=True, text=True, check=True).stdout.strip()
 
-    return {"commit": git("rev-parse", "HEAD"), "dirty": bool(git("status", "--porcelain", "--untracked-files=no"))}
+    identity: dict[str, Any] = {"commit": git("rev-parse", "HEAD"), "dirty": bool(git("status", "--porcelain", "--untracked-files=no"))}
+    if sources:
+        identity["source_stats"] = _source_stats(repo_root, [Path(source).resolve() for source in sources])
+    return identity
+
+
+def _source_stats(repo_root: Path, paths: Sequence[Path]) -> dict[str, dict[str, int] | None]:
+    """Size and modification time per source, keyed by repository-relative path (None if missing)."""
+    root = repo_root.resolve()
+    stats: dict[str, dict[str, int] | None] = {}
+    for path in paths:
+        resolved = path.resolve()
+        key = resolved.relative_to(root).as_posix() if resolved.is_relative_to(root) else str(path)
+        try:
+            status = resolved.stat()
+        except OSError:
+            stats[key] = None
+        else:
+            stats[key] = {"bytes": status.st_size, "mtime_ns": status.st_mtime_ns}
+    return stats
 
 
 def _require_committed(path: Path, repo_root: Path, label: str) -> str:
@@ -317,24 +343,33 @@ def _require_in_commit(path: Path, repo_root: Path, commit: str, label: str = "r
     return relative
 
 
-def _code_drift(started: dict[str, Any], ended: dict[str, Any], sources: Sequence[str], repo_root: Path) -> dict[str, Any] | None:
+def _code_drift(started: dict[str, Any], ended: dict[str, Any], executed: Sequence[str], documents: Sequence[str], repo_root: Path) -> dict[str, Any] | None:
     """Start and end code identity when they differ, with the executed sources that changed.
 
-    An unrelated commit leaves `sources_changed` empty and `sources_identified` true. A
-    listed source was edited during the run, and a late import or a newly started worker
-    may have loaded the edited version, so which version executed cannot be determined:
-    `sources_identified` is then false. A run that started dirty may have
-    executed uncommitted source content no commit holds: `sources_identified` is then
-    false and `sources_changed` is None. With no executed sources listed, nothing shows the
-    change missed the code that ran, so `write_run_receipt` sets `sources_identified` false.
-    Never a reason to refuse the receipt.
+    `sources_changed` lists executed sources (and documents such as the preregistration)
+    whose content differs from the starting commit, plus executed sources whose size or
+    modification time differs from `started["source_stats"]`: a source rewritten and
+    restored during the run may have been loaded by a late import or a new worker. It is
+    None when that cannot be said: the run started dirty (no commit holds what it ran), or
+    `started` has no stats for an executed source. `sources_identified` is true only when
+    executed sources are listed and none changed; an unrelated commit leaves it true.
+
+    This covers the listed sources only: an unlisted lazily imported module, or a rewrite
+    that keeps size and modification time, is not seen. Running from a dedicated worktree
+    at the starting commit is what guarantees the code did not change. Never a reason to
+    refuse the receipt.
     """
-    if started == ended and ended.get("dirty") is False:
+    start_stats = started.get("source_stats") or {}
+    end_stats = _source_stats(repo_root, [repo_root / source for source in executed])
+    unstatted = [source for source in executed if source not in start_stats]
+    rewritten = {source for source in executed if source in start_stats and start_stats[source] != end_stats[source]}
+    base = {key: value for key, value in started.items() if key != "source_stats"}
+    if base == ended and ended.get("dirty") is False and not unstatted and not rewritten:
         return None
     if started.get("dirty") is not False:
         return {"started": started, "ended": ended, "sources_identified": False, "sources_changed": None}
     changed: list[str] | None = []
-    for source in sources:
+    for source in [*executed, *documents]:
         diff = subprocess.run(
             # The working tree against the starting commit: committed and uncommitted edits alike.
             ["git", "-C", str(repo_root), "diff", "--quiet", str(started.get("commit")), "--", source],
@@ -342,13 +377,15 @@ def _code_drift(started: dict[str, Any], ended: dict[str, Any], sources: Sequenc
             text=True,
             check=False,
         )
-        if diff.returncode == 1:
-            assert changed is not None
-            changed.append(source)
-        elif diff.returncode:
+        if diff.returncode not in (0, 1):
             changed = None  # the starting commit is unknown here; which sources changed cannot be said
             break
-    return {"started": started, "ended": ended, "sources_identified": changed == [], "sources_changed": changed}
+        if diff.returncode == 1 or source in rewritten:
+            assert changed is not None
+            changed.append(source)
+    if unstatted:
+        changed = None  # taken without stats, a rewrite restored before the end would not show
+    return {"started": started, "ended": ended, "sources_identified": bool(executed) and changed == [], "sources_changed": changed}
 
 
 def write_run_receipt(
@@ -392,11 +429,9 @@ def write_run_receipt(
     else:
         executed = [_require_committed(source, repo_root, "run source") for source in sources]
     code = code_identity(repo_root)
-    # Pass `code_identity()` taken before the run: a commit, checkout or edit during a long
-    # run is recorded, not refused, so a finished result is always saved with its provenance.
-    drift = None if expected_code is None else _code_drift(dict(expected_code), code, [*executed, *tracked_for_drift], repo_root)
-    if drift and not executed:
-        drift["sources_identified"] = False  # the preregistration alone does not say which code ran
+    # Pass `code_identity(sources=...)` taken before the run: a commit, checkout or edit during
+    # a long run is recorded, not refused, so a finished result is always saved with its provenance.
+    drift = None if expected_code is None else _code_drift(dict(expected_code), code, executed, tracked_for_drift, repo_root)
     if drift:
         LOGGER.warning("Code changed during run %s: %s", run_id, drift)
     changed = changed_inputs(inputs)

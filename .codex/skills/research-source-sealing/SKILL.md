@@ -35,9 +35,11 @@ Historical packets keep their existing byte-level verification contract.
    file hashes). Pass the runner, strategy and study modules the run executes as
    `write_run_receipt(..., sources=[...])`: the receipt's dirty flag does not see
    untracked files, so it refuses a source missing from the starting commit (without
-   `expected_code`, one that is untracked or differs from `HEAD`). Take `code_identity()` before the run and pass it as `expected_code=`: a
+   `expected_code`, one that is untracked or differs from `HEAD`). Take `code_identity(sources=[...])` before the run, with the same list later
+   passed as `sources=`, and pass it as `expected_code=`: a
    commit, checkout or edit during a long run is recorded as `code_drift` (start and end
-   identity, and which executed sources differ between them) instead of refusing the
+   identity, and which executed sources differ between them, including one rewritten and
+   restored, which its size and modification time show) instead of refusing the
    receipt. An input that changed during the run is listed in the receipt, not a reason
    to discard the result; hash results, not sources.
 5. Execute the authorized study using those fixed files. An unrelated commit during the
@@ -46,7 +48,10 @@ Historical packets keep their existing byte-level verification contract.
    worker may have loaded the edited version: `sources_identified` is false, and the
    result must not be attributed to the starting commit; say which version executed is
    undetermined, or rerun on one commit. A drift recorded without `sources=` is also
-   `sources_identified: false`, so list every executed source. Start from a clean tree: a run that starts dirty is still
+   `sources_identified: false`, so list every executed source; so is one taken without
+   `code_identity(sources=...)`. This sees only the listed sources: an unlisted lazily
+   imported module, or a rewrite keeping size and modification time, is not seen. To
+   guarantee the code did not change, run from a dedicated worktree at the start commit. Start from a clean tree: a run that starts dirty is still
    recorded, but with `sources_identified: false`, because no commit holds the code it
    executed; a dirty flag must not be presented as a clean committed implementation. A historical byte-sealed packet is the
    exception: use its original raw-byte hashes and verification rules without

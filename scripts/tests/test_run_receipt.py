@@ -415,6 +415,56 @@ def test_a_legacy_listing_digest_still_detects_a_rename(producer: Path) -> None:
     assert changed_inputs(legacy) == ["day_csv"]
 
 
+def test_receipt_sees_a_source_rewritten_and_restored_during_the_run(repo: Path, producer: Path) -> None:
+    from research_core.run_receipt import code_identity
+
+    result = repo / "summary.json"
+    result.write_text("{}", encoding="utf-8")
+    runner = repo / "runner.py"
+    runner.write_text("print('a')", encoding="utf-8")
+    _git(["add", "runner.py"], repo)
+    _git(["commit", "-q", "-m", "runner a"], repo)
+    inputs = fingerprint_inputs([InputSpec("prices", producer / "price_daily.parquet")], now=WEEKDAY_NIGHT)
+    started = code_identity(repo, sources=[runner])
+    without_stats = code_identity(repo)
+
+    runner.write_text("print('temporary')", encoding="utf-8")  # a late import could load this version
+    _git(["checkout", "--", "runner.py"], repo)
+    status = runner.stat()
+    # A long run puts time between start and restore; coarse test timestamps must not hide it.
+    os.utime(runner, ns=(status.st_atime_ns, status.st_mtime_ns + 1_000_000_000))
+    assert code_identity(repo) == without_stats, "commit and dirty flag alone see no change"
+    assert code_identity(repo, sources=[runner])["source_stats"] != started["source_stats"]
+
+    restored = write_run_receipt(
+        repo / "r1.json",
+        run_id="r",
+        definition="d",
+        parameters={},
+        inputs=inputs,
+        results={"s": result},
+        repo_root=repo,
+        sources=[runner],
+        expected_code=started,
+    )
+    assert restored["code_drift"]["sources_changed"] == ["runner.py"], "the rewritten source is named"
+    assert restored["code_drift"]["sources_identified"] is False
+    unstatted = write_run_receipt(
+        repo / "r2.json",
+        run_id="r",
+        definition="d",
+        parameters={},
+        inputs=inputs,
+        results={"s": result},
+        repo_root=repo,
+        sources=[runner],
+        expected_code=without_stats,
+    )
+    assert unstatted["code_drift"]["sources_identified"] is False and unstatted["code_drift"]["sources_changed"] is None, (
+        "without start stats nothing is proven"
+    )
+
+
 def test_receipt_records_code_drift_during_the_run_instead_of_refusing(repo: Path, producer: Path) -> None:
     from research_core.run_receipt import code_identity
 
@@ -425,7 +475,7 @@ def test_receipt_records_code_drift_during_the_run_instead_of_refusing(repo: Pat
     _git(["add", "runner.py"], repo)
     _git(["commit", "-q", "-m", "runner a"], repo)
     inputs = fingerprint_inputs([InputSpec("prices", producer / "price_daily.parquet")], now=WEEKDAY_NIGHT)
-    started = code_identity(repo)
+    started = code_identity(repo, sources=[runner])
 
     (repo / "README.md").write_text("unrelated\n", encoding="utf-8")
     _git(["commit", "-q", "-am", "unrelated docs during the run"], repo)
@@ -470,7 +520,7 @@ def test_receipt_records_code_drift_during_the_run_instead_of_refusing(repo: Pat
     )
     assert "code_drift" not in same
 
-    clean = code_identity(repo)
+    clean = code_identity(repo, sources=[runner])
     runner.write_text("print('c, not committed')", encoding="utf-8")  # edited during the run, left uncommitted
     uncommitted = write_run_receipt(
         repo / "r4.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, repo_root=repo, sources=[runner], expected_code=clean
