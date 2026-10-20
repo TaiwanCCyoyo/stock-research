@@ -358,7 +358,8 @@
                 "research_core/pattern_scan_storage_profile_v2.py",
                 "scripts/pattern_scan_live.py",
                 "scripts/continue_pattern_scan.py",
-                "scripts/audit_pattern_scan_candidates.py"
+                "scripts/audit_pattern_scan_candidates.py",
+                "scripts/run_pattern_scan_remaining.py"
             ],
             "tests": ["scripts/tests/test_pattern_scan*.py"]
         }
@@ -519,7 +520,12 @@
         "scripts/tests/test_pattern_scan_indicators_v1.py",
         "scripts/tests/test_pattern_scan_inputs_v1.py",
         "scripts/tests/test_pattern_scan_live_inputs_v2.py",
+        "scripts/tests/test_pattern_scan_local_conditions_v5.py",
+        "scripts/tests/test_pattern_scan_local_followup_v5.py",
+        "scripts/tests/test_pattern_scan_local_inputs_v5.py",
         "scripts/tests/test_pattern_scan_local_q1_v1.py",
+        "scripts/tests/test_pattern_scan_local_q4_v5.py",
+        "scripts/tests/test_pattern_scan_local_remaining_v5.py",
         "scripts/tests/test_pattern_scan_membership_v1.py",
         "scripts/tests/test_pattern_scan_parquet_v1.py",
         "scripts/tests/test_pattern_scan_pipeline_v1.py",

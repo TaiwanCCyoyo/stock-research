@@ -41,6 +41,44 @@ and its compatibility path, not a template for new stages. Preserve those stored
 records and completed Q1 outputs. This policy update itself runs no calculation,
 shared update, release or deletion.
 
+## Local Q2–Q6 v5
+
+Owner instruction 2026-10-20 authorizes continuation after synchronizing main.
+PR #34 is merged (`0b3e8d6`); main `d164227` also includes #30 and #38.
+PR #35 remained open when checked, but the owner's results-only policy applies
+to new stages immediately. No update is needed for this continuation.
+
+`scripts.run_pattern_scan_remaining` reads the original 1,942 stocks, 4,110
+sessions and original global barrier through cutoff 2026-10-12. It reuses the
+1,372 existing event parts and completed Q1, without source/input re-pinning,
+new producer fingerprints compared with old ones, or per-file verification.
+Neither the shared latest technical tables nor the 2.32 GB preview is an input.
+Preview retirement is handled by another session under the owner's instruction.
+
+New missing event/condition projections are temporary, limited to one target.
+Q2/Q3 keep exact development integer counts, CRC split, Fraction ranking,
+family gate and all registered candidates; one group/horizon accumulator lives
+at a time. Q4 keeps the fixed random seed, dates/quota selection records and
+bounded examples. Q5/Q6 reuse per-stock followup projections and original
+holding grids. Same-industry holding partitions retain every reference peer in
+original column order and are tested exactly against the full-grid kernel.
+
+The final summary/annual/coverage/selection/episode/followup tables receive
+SHA-256s through `write_run_receipt`; inputs are descriptions and original
+lineage, shared generation and actual executor commit are recorded. New phase
+progress records completed groups/stocks rather than per-file hash manifests.
+Completed components are referenced and not rerun. The owned Windows Job is
+limited to 8 GiB committed memory, one serial target and a finite timeout, with
+4 GiB additional available host memory required. Measurements distinguish
+process memory, Job committed memory and disk space.
+
+Only this continuation's new temporary projections are cleaned after a target's
+three final components are saved, readable and receipt-recorded. Original
+inputs/checkpoints, Q1 and preview are retained. Q2–Q6 completion is reported only
+after all twelve targets finish all three components. The owner-authorized
+`release --holder pr17-pattern-scan` follows that completion; partial runs never
+release the held generation.
+
 ## Historical execution contract
 
 Owner instruction: 2026-10-16, after PR26 merged (`804a765`). This addendum
