@@ -93,6 +93,33 @@ The dev server proxies `/api` to port 8517 by default; set
 `RESEARCH_WEB_API_TARGET=http://127.0.0.1:8503` for the optional old API.
 `VITE_API_BASE` can override the frontend request base.
 
+## Built dashboard release (port 8503)
+
+For the built frontend served by the read-only research API, run the Windows
+dashboard launcher from the repository root:
+
+```powershell
+.\scripts\research\open_research_dashboard.cmd
+```
+
+This entry checks the saved frontend release before starting the API at
+`http://127.0.0.1:8503/`. It compares the release identity with the frontend
+source, production Vite settings, effective `VITE_ARTIFACT_MODE` and
+`VITE_API_BASE`, and the saved reports copied into the release. A stale or
+missing release is built in a temporary sibling folder; `dist` is replaced only
+after the HTML shell, `release.json`, and report index carry the same version.
+A failed build leaves the previous `dist` available and stops the launcher.
+
+From `research_web`, `npm run build` performs the same freshness check and staged
+publish. When a rebuild is needed and dependencies are missing, it first runs
+`npm ci`. `npm run build:stage` is the internal raw Vite build and requires a
+configured staging destination; use `npm run build` for normal builds.
+
+For hot reload, keep using the port 5177 launcher or `npm run dev` described
+above. The Vite shell and `/reports/index.json` both identify that session as
+`development`; built releases carry their source fingerprint. Configure the
+private viewing variables below before launching either mode.
+
 ## Opportunity explorer and saved research
 
 `/#market` covers the saved 2010-01-04 through 2026-10-02 snapshot: 1,970 eligible
@@ -241,6 +268,11 @@ Open `/#reports`. Each study can publish one report as free-form HTML/JS that an
 agent writes to fit its findings; the studio only provides the library, the
 frame and a shared look. Nothing is registered by hand.
 
+The report index retains the `research-reports.v1` schema with an additive
+`version` field identifying its frontend release. The viewer compares that
+version with the HTML shell and asks for a reload if they differ. Legacy pages
+without a shell version remain compatible.
+
 - **Location:** `tasks/<task-id>/web-report/index.html`, with its own `kit/` and
   `data/` folders. The Vite plugin (`scripts/research-reports.mjs`) lists every
   such folder at `/reports/index.json`, serves files under `/reports/<task-id>/`
@@ -372,5 +404,6 @@ reasons are never generated.
 
 Use `npm test`, `npm run build` and `npm run lint` for frontend verification.
 The Python export fixtures are in `scripts/tests/test_export_market_atlas.py`.
-Production assets must be rebuilt after source changes; an existing `dist/`
-does not automatically refresh. This preview has no public deployment.
+Production assets must be checked after source changes. The Windows dashboard
+launcher and `npm run build` detect stale `dist/` and rebuild it through the
+staged release process above. This preview has no public deployment.

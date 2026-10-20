@@ -173,8 +173,21 @@ export function contentType(path) {
     );
 }
 
+/** Stamp the shell with the same release identity used by the report index. */
+export function stampIndexHtml(html, version) {
+    return html.replace(
+        "</head>",
+        `    <meta name="research-web-version" content="${version}" />\n    </head>`,
+    );
+}
+
 /** Handle /reports/index.json and /reports/<id>/<path>; returns false when not ours. */
-export function handleReportRequest(tasksRoot, url, response) {
+export function handleReportRequest(
+    tasksRoot,
+    url,
+    response,
+    version = "development",
+) {
     const path = (url ?? "").split("?")[0].split("#")[0];
     if (!path.startsWith("/reports/")) return false;
     const rest = path.slice("/reports/".length);
@@ -184,6 +197,7 @@ export function handleReportRequest(tasksRoot, url, response) {
         response.end(
             JSON.stringify({
                 schema: "research-reports.v1",
+                version,
                 reports: listReports(tasksRoot),
             }),
         );
@@ -208,7 +222,7 @@ export function handleReportRequest(tasksRoot, url, response) {
 }
 
 /** Copy every report folder into <outDir>/reports/ with its generated index. */
-export function copyReports(tasksRoot, outDir) {
+export function copyReports(tasksRoot, outDir, version = "development") {
     const reports = listReports(tasksRoot);
     for (const report of reports)
         cpSync(
@@ -224,7 +238,7 @@ export function copyReports(tasksRoot, outDir) {
     mkdirSync(join(outDir, "reports"), { recursive: true });
     writeFileSync(
         join(outDir, "reports", "index.json"),
-        JSON.stringify({ schema: "research-reports.v1", reports }),
+        JSON.stringify({ schema: "research-reports.v1", version, reports }),
     );
     return reports;
 }

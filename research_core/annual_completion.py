@@ -484,19 +484,27 @@ def main(argv: Sequence[str] | None = None) -> int:
     report = safe_path(args.report)
     if report.resolve() != safe_path(TASK / "report.md").resolve():
         raise ValueError("fixed PR15 selections require the canonical task report.md")
-    starting_identity = _require_committed_sources(
-        REPO_ROOT,
-        [
-            Path(__file__),
-            REPO_ROOT / "research_core/annual_rotation_v2.py",
-            REPO_ROOT / "research_core/annual_completion_evidence.py",
-            REPO_ROOT / "research_core/json_integrity.py",
-            REPO_ROOT / "research_core/maintained_adjusted_daily.py",
-            REPO_ROOT / "scripts/complete_annual_rotation.py",
-            args.params,
-            report,
-        ],
-    )
+    # Every research module whose code computes the published results (direct and through
+    # imports); storage and measurement helpers do not change the numbers.
+    executed_sources = [
+        Path(__file__),
+        REPO_ROOT / "research_core/annual_rotation.py",
+        REPO_ROOT / "research_core/annual_rotation_v2.py",
+        REPO_ROOT / "research_core/annual_statistics.py",
+        REPO_ROOT / "research_core/price_basis.py",
+        REPO_ROOT / "StockProject/engine/data_loader.py",
+        REPO_ROOT / "research_core/annual_completion_evidence.py",
+        REPO_ROOT / "research_core/json_integrity.py",
+        REPO_ROOT / "research_core/maintained_adjusted_daily.py",
+        REPO_ROOT / "scripts/complete_annual_rotation.py",
+    ]
+    starting_identity = _require_committed_sources(REPO_ROOT, [*executed_sources, args.params, report])
+    # Observed with the executed sources' size and mtime: a later commit, checkout or edit is
+    # recorded in the receipt's code_drift instead of discarding the finished computation.
+    run_start = code_identity(REPO_ROOT, sources=executed_sources)
+    if {key: run_start.get(key) for key in starting_identity} != starting_identity:
+        # A commit or checkout between the two reads: refuse now, before any computation.
+        raise ValueError("run source identity changed while the run was starting; start it again")
     producer = producer_data_root()
     evidence_root = args.evidence_root or producer / "corporate_action_supplements/annual-winner-20261013-v1"
     price_path, action_path = producer / "price_daily.parquet", producer / "corporate_actions.sqlite"
@@ -571,7 +579,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     for key, value in (("results", result), ("admission", audit), ("performance", performance)):
         write_json(outputs[key], value)
     formatting_seconds = _format_outputs(list(outputs.values()), REPO_ROOT)
-    _require_code_identity(REPO_ROOT, starting_identity)
     receipt = write_run_receipt(
         output / "run-receipt.json",
         run_id=params["run_id"],
@@ -582,10 +589,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         preregistration=preregistration,
         repo_root=REPO_ROOT,
         shared_data=shared_reads,
+        sources=executed_sources,
+        expected_code=run_start,
     )
-    if receipt.get("code") != starting_identity:
+    recorded = receipt.get("code", {})
+    if {key: recorded.get(key) for key in starting_identity} != starting_identity:
         raise ValueError("run receipt code identity differs from the starting source identity")
-    _require_code_identity(REPO_ROOT, starting_identity)
     packing_started = time.perf_counter()
     archive = pack_publication(output)
     packing_seconds = time.perf_counter() - packing_started

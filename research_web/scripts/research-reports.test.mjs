@@ -16,6 +16,7 @@ import {
     listReports,
     parseReportMeta,
     resolveReportFile,
+    stampIndexHtml,
 } from "./research-reports.mjs";
 
 const page = (
@@ -73,6 +74,16 @@ test("meta tags are read in any attribute order, with entities and trimmed tags"
     );
 });
 
+test("development and production shells receive an explicit version meta tag", () => {
+    const html = "<html><head></head><body></body></html>";
+    assert.match(stampIndexHtml(html, "development"), /content="development"/);
+    assert.match(
+        stampIndexHtml(html, "a".repeat(12)),
+        /content="aaaaaaaaaaaa"/,
+    );
+    assert.doesNotMatch(html, /%VITE_RESEARCH_WEB_VERSION%/);
+});
+
 test("reports are discovered from tasks/*/web-report, newest first, and others ignored", async () => {
     const { root, report } = await scratchTasks();
     try {
@@ -94,6 +105,7 @@ test("reports are discovered from tasks/*/web-report, newest first, and others i
 
 test("only files inside one report folder are served; traversal and bad ids are refused", async () => {
     const { root, report } = await scratchTasks();
+    const out = join(root, "..", `${root.split(/[\\/]/).pop()}-dist`);
     try {
         await report("20261012-new", page("New", "2026-10-12"));
         await writeFile(join(root, "secret.txt"), "secret");
@@ -125,10 +137,22 @@ test("only files inside one report folder are served; traversal and bad ids are 
 
         const index = fakeResponse();
         assert.equal(
-            handleReportRequest(root, "/reports/index.json?x=1", index),
+            handleReportRequest(
+                root,
+                "/reports/index.json?x=1",
+                index,
+                "release-test",
+            ),
             true,
         );
-        assert.equal(JSON.parse(index.body).reports[0].id, "20261012-new");
+        const responseIndex = JSON.parse(index.body);
+        assert.equal(responseIndex.reports[0].id, "20261012-new");
+        assert.equal(responseIndex.version, "release-test");
+        copyReports(root, out, "release-test");
+        const staticIndex = JSON.parse(
+            readFileSync(join(out, "reports", "index.json"), "utf8"),
+        );
+        assert.equal(staticIndex.version, "release-test");
         const file = fakeResponse();
         handleReportRequest(
             root,
@@ -152,6 +176,7 @@ test("only files inside one report folder are served; traversal and bad ids are 
         );
     } finally {
         await rm(root, { recursive: true });
+        await rm(out, { recursive: true, force: true });
     }
 });
 
@@ -173,6 +198,7 @@ test("a build copies every report folder with its generated index", async () => 
             index.reports.map((r) => r.id),
             ["20261012-new"],
         );
+        assert.equal(index.version, "development");
     } finally {
         await rm(root, { recursive: true });
         await rm(out, { recursive: true, force: true });
