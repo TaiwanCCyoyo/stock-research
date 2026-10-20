@@ -333,14 +333,16 @@ def _describe_shared_read(record: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def _require_in_commit(path: Path, repo_root: Path, commit: str, label: str = "run source") -> str:
-    """Require a repository path tracked in `commit` (the run's starting commit)."""
+    """Require a file (a Git blob, not a directory) tracked in `commit`, the run's starting commit."""
     resolved, root = path.resolve(), repo_root.resolve()
     if not resolved.is_relative_to(root):
         raise ValueError(f"{label} {path} is outside the repository; the recorded commit cannot identify it")
     relative = resolved.relative_to(root).as_posix()
-    present = subprocess.run(["git", "-C", str(root), "cat-file", "-e", f"{commit}:{relative}"], capture_output=True, text=True, check=False)
-    if present.returncode:
+    kind = subprocess.run(["git", "-C", str(root), "cat-file", "-t", f"{commit}:{relative}"], capture_output=True, text=True, check=False)
+    if kind.returncode:
         raise ValueError(f"{label} {relative} is not in the starting commit {commit}; commit it before the run")
+    if kind.stdout.strip() != "blob":
+        raise ValueError(f"{label} {relative} is a {kind.stdout.strip()} in the starting commit {commit}, not a file; name the file")
     return relative
 
 

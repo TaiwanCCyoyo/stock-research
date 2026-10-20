@@ -565,6 +565,23 @@ def test_receipt_records_code_drift_during_the_run_instead_of_refusing(repo: Pat
             sources=[repo / "new_module.py"],
             expected_code=clean,
         )
+    package = repo / "pkg"
+    package.mkdir()
+    (package / "mod.py").write_text("x = 1\n", encoding="utf-8")
+    _git(["add", "pkg"], repo)
+    _git(["commit", "-q", "-m", "package"], repo)
+    with pytest.raises(ValueError, match="is a tree in the starting commit"):
+        write_run_receipt(
+            repo / "r7.json",
+            run_id="r",
+            definition="d",
+            parameters={},
+            inputs=inputs,
+            results={"s": result},
+            repo_root=repo,
+            sources=[package],
+            expected_code=code_identity(repo),
+        )
     late = repo / "late-prereg.md"
     late.write_text("# Rules added after the run started\n", encoding="utf-8")
     _git(["add", "late-prereg.md"], repo)
