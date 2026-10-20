@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import subprocess
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -367,13 +368,22 @@ def _require_in_commit(path: Path, repo_root: Path, commit: str, label: str = "r
     return relative
 
 
+def _is_commit_id(value: str, repo_root: Path) -> bool:
+    """True for a full hexadecimal commit object id in either case (never a ref name like HEAD)."""
+    if not re.fullmatch(r"[0-9a-fA-F]{40}|[0-9a-fA-F]{64}", value):
+        return False
+    kind = subprocess.run(["git", "-C", str(repo_root), "cat-file", "-t", value], capture_output=True, text=True, check=False)
+    return kind.returncode == 0 and kind.stdout.strip() == "commit"
+
+
 def _code_drift(started: dict[str, Any], ended: dict[str, Any], executed: Sequence[str], documents: Sequence[str], repo_root: Path) -> dict[str, Any] | None:
     """Observed start and end code identity when they differ, with the sources seen to change.
 
     `sources_changed` lists executed sources (and documents such as the preregistration)
-    whose content differs from the starting commit, plus executed sources whose size or
+    whose content differs from the starting commit, plus listed files whose size or
     modification time differs from `started["source_stats"]`: a source rewritten and
-    restored during the run may have been loaded by a late import or a new worker. It is
+    restored during the run may have been loaded by a late import or a new worker, and a
+    preregistration in those stats is compared the same way. It is
     None when that cannot be said: the run started dirty (no commit holds what it ran), or
     `started` has no stats for an executed source. `sources_unchanged_observed` is true only
     when executed sources are listed and none was seen to change; an unrelated commit leaves
@@ -385,9 +395,10 @@ def _code_drift(started: dict[str, Any], ended: dict[str, Any], executed: Sequen
     always false). Never a reason to refuse the receipt.
     """
     start_stats = started.get("source_stats") or {}
-    end_stats = _source_stats(repo_root, [repo_root / source for source in executed])
+    observed = [source for source in [*executed, *documents] if source in start_stats]
+    end_stats = _source_stats(repo_root, [repo_root / source for source in observed])
     unstatted = [source for source in executed if source not in start_stats]
-    rewritten = {source for source in executed if source in start_stats and start_stats[source] != end_stats[source]}
+    rewritten = {source for source in observed if start_stats[source] != end_stats[source]}
     base = {key: value for key, value in started.items() if key != "source_stats"}
     if base == ended and ended.get("dirty") is False and not unstatted and not rewritten:
         return None
@@ -439,6 +450,13 @@ def write_run_receipt(
     actually executed, so every receipt carries `runtime_code_verified: false`.
     """
     start_commit = None if expected_code is None else expected_code.get("commit")
+    if expected_code is not None and not _is_commit_id(str(start_commit), repo_root):
+        # A ref such as HEAD would be checked against wherever it points now, then recorded as is.
+        raise ValueError(f"expected_code commit {start_commit!r} is not a full commit id; pass code_identity() taken before the run")
+    if expected_code is not None:
+        # Recorded in Git's own lowercase spelling, so the same commit always reads the same.
+        start_commit = str(start_commit).lower()
+        expected_code = {**expected_code, "commit": start_commit}
     # The recorded code is the starting commit when expected_code is given, so the
     # preregistration must be in that commit; a later edit is recorded in code_drift.
     tracked_for_drift: list[str] = []
