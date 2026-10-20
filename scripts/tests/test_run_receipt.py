@@ -462,3 +462,22 @@ def test_receipt_records_code_drift_during_the_run_instead_of_refusing(repo: Pat
         repo / "r3.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, repo_root=repo, expected_code=code_identity(repo)
     )
     assert "code_drift" not in same
+
+    clean = code_identity(repo)
+    runner.write_text("print('c, not committed')", encoding="utf-8")  # edited during the run, left uncommitted
+    uncommitted = write_run_receipt(
+        repo / "r4.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, repo_root=repo, sources=[runner], expected_code=clean
+    )
+    assert uncommitted["code_drift"]["ended"]["dirty"] is True and uncommitted["code_drift"]["sources_changed"] == ["runner.py"]
+    with pytest.raises(ValueError, match="not in the starting commit"):
+        write_run_receipt(
+            repo / "r5.json",
+            run_id="r",
+            definition="d",
+            parameters={},
+            inputs=inputs,
+            results={"s": result},
+            repo_root=repo,
+            sources=[repo / "new_module.py"],
+            expected_code=clean,
+        )

@@ -34,8 +34,8 @@ Historical packets keep their existing byte-level verification contract.
    run-receipt API, and describe the inputs actually read (`fingerprint_inputs`, no
    file hashes). Pass the runner, strategy and study modules the run executes as
    `write_run_receipt(..., sources=[...])`: the receipt's dirty flag does not see
-   untracked files, so it refuses a source that is untracked or differs from the
-   commit. Take `code_identity()` before the run and pass it as `expected_code=`: a
+   untracked files, so it refuses a source missing from the starting commit (without
+   `expected_code`, one that is untracked or differs from `HEAD`). Take `code_identity()` before the run and pass it as `expected_code=`: a
    commit, checkout or edit during a long run is recorded as `code_drift` (start and end
    identity, and which executed sources differ between them) instead of refusing the
    receipt. An input that changed during the run is listed in the receipt, not a reason

@@ -305,6 +305,18 @@ def _describe_shared_read(record: Mapping[str, Any]) -> dict[str, Any]:
     return describe(record)
 
 
+def _require_in_commit(path: Path, repo_root: Path, commit: str) -> str:
+    """Require a repository path tracked in `commit` (the run's starting commit)."""
+    resolved, root = path.resolve(), repo_root.resolve()
+    if not resolved.is_relative_to(root):
+        raise ValueError(f"run source {path} is outside the repository; the recorded commit cannot identify it")
+    relative = resolved.relative_to(root).as_posix()
+    present = subprocess.run(["git", "-C", str(root), "cat-file", "-e", f"{commit}:{relative}"], capture_output=True, text=True, check=False)
+    if present.returncode:
+        raise ValueError(f"run source {relative} is not in the starting commit {commit}; commit it before the run")
+    return relative
+
+
 def _code_drift(started: dict[str, Any], ended: dict[str, Any], sources: Sequence[str], repo_root: Path) -> dict[str, Any] | None:
     """Start and end code identity when they differ, with the executed sources that changed.
 
@@ -316,7 +328,11 @@ def _code_drift(started: dict[str, Any], ended: dict[str, Any], sources: Sequenc
     changed: list[str] | None = []
     for source in sources:
         diff = subprocess.run(
-            ["git", "-C", str(repo_root), "diff", "--quiet", str(started.get("commit")), "HEAD", "--", source], capture_output=True, text=True, check=False
+            # The working tree against the starting commit: committed and uncommitted edits alike.
+            ["git", "-C", str(repo_root), "diff", "--quiet", str(started.get("commit")), "--", source],
+            capture_output=True,
+            text=True,
+            check=False,
         )
         if diff.returncode == 1:
             assert changed is not None
@@ -354,7 +370,13 @@ def write_run_receipt(
         _require_committed(preregistration, repo_root, "preregistration")
     # The runner, strategy and imported study modules the run executed: an untracked or
     # edited one would leave a clean-looking commit that does not contain the code.
-    executed = [_require_committed(source, repo_root, "run source") for source in sources]
+    start_commit = None if expected_code is None else expected_code.get("commit")
+    if start_commit:
+        # The run executed the starting commit's sources; later edits, committed or not,
+        # are recorded in code_drift rather than refusing the finished result.
+        executed = [_require_in_commit(source, repo_root, str(start_commit)) for source in sources]
+    else:
+        executed = [_require_committed(source, repo_root, "run source") for source in sources]
     code = code_identity(repo_root)
     # Pass `code_identity()` taken before the run: a commit, checkout or edit during a long
     # run is recorded, not refused, so a finished result is always saved with its provenance.
