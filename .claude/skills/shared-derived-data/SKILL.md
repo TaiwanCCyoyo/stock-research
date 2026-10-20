@@ -16,6 +16,11 @@ routes you there and names what a finished change must satisfy.
 - Indicators and pivots: `read_technical("daily", codes=, columns=, prices=["Close", ...])`
   returns one row per price row with the prices joined from the same generation;
   `read_technical("pivots")` is the confirmed high/low long table, usable from `confirmed_at`.
+- Official source quotes for a study that runs its own price model (custom corporate-action
+  terms, holding-window economics): `read_official_quotes(codes=, as_of=)` returns the
+  generation's verified official quotes and session calendar, so the study does not scan
+  `price_daily.parquet`. Cash, share and source columns of corporate actions are not in this
+  family; read them from the producer's `corporate_actions.sqlite`.
 - Record the returned `record` with `write_run_receipt(..., shared_data=[record])`; it says which
   generation was read and never blocks saving a result. Pass its `generation=` to every later read
   so the study stays on one generation; a later read of a pruned generation fails loudly.

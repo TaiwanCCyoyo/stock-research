@@ -483,6 +483,28 @@ def test_real_data_check_script_reports_equality_and_truncation_damage(environme
     assert entry["situations"]["post_cutoff_multi_kind_days"] == 1 and entry["situations"]["post_cutoff_unknown_kind"] == 1
 
 
+def test_official_quotes_are_the_source_rows_the_generation_saw_and_feed_a_receipt(environment: tuple[Path, Path]) -> None:
+    producer, _ = environment
+    bars, _ = _tricky_producer(producer)
+    maintained_adjusted_daily.update(producer_root=producer)
+
+    quotes, calendar, record = maintained_adjusted_daily.read_official_quotes(codes=["1101", "2330", "6488", "9999"], as_of=CUTOFF)
+
+    assert calendar.equals(SESSIONS[SESSIONS <= CUTOFF]), "the generation's official session union, cut at as_of"
+    assert record["absent_codes"] == ["6488", "9999"], "no quote on or before the cutoff is reported, not refused"
+    assert record["calendar"]["sessions"] == len(calendar) and record["rows"] == len(quotes)
+    expected = bars.loc[bars["Source"].eq("official") & bars["Date"].le(CUTOFF) & bars["Code"].isin(["1101", "2330"])].drop(columns="Source")
+    assert list(quotes.columns) == ["Code", "Date", "Open", "High", "Low", "Close", "Volume"]
+    counts = quotes.groupby(["Code", "Date"]).size()
+    assert counts.equals(expected.groupby(["Code", "Date"]).size()), "gaps stay absent; a duplicated date keeps both rows"
+    single = expected.loc[~expected.duplicated(["Code", "Date"], keep=False)].sort_values(["Code", "Date"]).reset_index(drop=True)
+    single["Volume"] = single["Volume"].where(single["Volume"].ge(0))  # prepare_prices stores an invalid volume as NaN
+    got = quotes.loc[~quotes.duplicated(["Code", "Date"], keep=False)].reset_index(drop=True)
+    pd.testing.assert_frame_equal(got, single, check_dtype=False)
+
+    assert record["generation"] == maintained_adjusted_daily.current_generation()["generation"]
+
+
 def test_a_held_generation_survives_updates_until_released(environment: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:
     producer, shared = environment
     family = shared / "derived" / maintained_adjusted_daily.FAMILY

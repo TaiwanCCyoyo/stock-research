@@ -234,6 +234,13 @@ def hhhl_variants_publication(root: Path, _local_root: Path) -> tuple[str, str]:
     return "pass", f"dataset={receipt['dataset_id']} rows={len(frame)}"
 
 
+def annual_holding_completion(root: Path, _local_root: Path) -> tuple[str, str]:
+    from research_core.annual_completion_publication import load_publication
+
+    saved = load_publication(root / "tasks/20261013-annual-winner-rotation/publications/completion-v2", repo_root=root)
+    return "pass", f"run={saved['results.json']['run_id']} verified_members={len(saved)}"
+
+
 CHECKS = [
     Check("owner-hhhl-labels.v1", owner_labels),
     Check("hhhl-v4 public transport + correction", v4_public),
@@ -259,6 +266,7 @@ CHECKS = [
         ),
     ),
     Check("hhhl-variants-publication.v1", hhhl_variants_publication),
+    Check("annual-holding-completion.v2", annual_holding_completion),
 ]
 
 
