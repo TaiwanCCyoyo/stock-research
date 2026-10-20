@@ -15,7 +15,8 @@ Each study keeps:
 - the code commit (with a dirty flag), definition, parameters and preregistration;
 - an **input fingerprint**: path, SHA-256 (files) or row counts (SQLite), date range,
   and producer as-of time for each input read. The fingerprint records identity only,
-  never bytes.
+  never bytes. (Amended 2026-10-19: file inputs are described by size and modification
+  time without a SHA-256; receipts written earlier keep theirs and stay valid.)
 
 When a result cannot be reproduced later, the experiment is rerun on current data. The old
 result stays as a historical record, labeled with its fingerprint. Material that cannot
@@ -90,7 +91,9 @@ backfill. SQLite is opened with `readonly_sqlite()` (`?mode=ro`). Files are read
 mid-read fails instead of being half-read. The idle check is a point-in-time probe and
 cannot see a writer that starts afterwards, so `write_run_receipt` re-checks the size and
 mtime of every fingerprinted input (and a SQLite input's WAL) before writing. A writer that
-ran during the study fails the run instead of silently mixing old and new files. This
+ran during the study is recorded in the receipt as `inputs_changed_during_run`, and the
+finished result is kept, so a mix of old and new files is never silent. (Until the owner's
+2026-10-19 decision such a change failed the run.) This
 change check is still not a cross-file transaction: a writer that finished entirely before
 the first read is visible only through the recorded mtimes.
 
@@ -102,7 +105,9 @@ be declared, and a task-owned declaration under the producer root is rejected.
 before reading (including the corporate-action database the loader actually resolves,
 missing optional inputs as absent and an always-recorded `*_day.csv` listing, so a file
 that appears mid-run is caught), refuses the window, makes the SHA-pinned `DataLoader`'s and
-`universe.py`'s SQLite reads read-only, and re-checks the inputs before writing results.
+`universe.py`'s SQLite reads read-only, and re-checks the inputs before writing results,
+recording any change in the output as `data.inputs_changed_during_run` (before 2026-10-19
+it exited instead).
 A read-write connection is not harmless here: on a WAL database, the last connection to
 close checkpoints the WAL into the main file, which writes producer data.
 

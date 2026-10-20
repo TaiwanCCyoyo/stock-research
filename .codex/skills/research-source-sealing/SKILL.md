@@ -7,10 +7,13 @@ description: Prepare source code for an already authorized stock-research study 
 
 The repository-wide rules for hashes, pins and verification cost are in
 [the artifact integrity standard](../../../docs/en/artifact-integrity.md); this skill
-covers sealing source code before a run.
+covers fixing the source identity before a run. The 2026-10-15 owner policy
+distinguishes new run receipts from historical byte-sealed packets.
 
-Format before fixing the executed source identity. A receipt must describe the
-actual bytes used by the run, including line endings and imported project code.
+Format before fixing the executed source identity. New studies use the Git commit
+and dirty flag in `research_core/run_receipt.py`; do not hash or copy loaded
+modules, lock files or producer inputs into a private source/input snapshot.
+Historical packets keep their existing byte-level verification contract.
 
 ## Before execution
 
@@ -26,18 +29,22 @@ actual bytes used by the run, including line endings and imported project code.
    or evidence changes, then rerun the configured checks. Continue until they
    pass and no longer change files. Resolve failures before execution; never
    disable a hook or alter its exclusions to make a study run.
-4. Only after formatting is stable, fix the selected source version in a commit
-   or immutable source snapshot and record SHA-256 of each executed file's raw
-   bytes, including the project dependencies required by the study's contract.
-   Use binary reads, such as `Path(path).read_bytes()`, without decoding, newline
-   replacement or JSON reserialization. A Git commit or blob identity does not
-   replace the raw-byte hash of a working-tree file.
-5. Execute the authorized study using those fixed files. Verify source hashes
-   against that snapshot before execution and again before publishing the receipt.
-   Record the actual source paths, raw-byte hashes, source version and required
-   input/environment identities in the study's existing packet or receipt format.
-   If source bytes change during the run, stop publication and investigate; do not
-   claim the changed source produced the existing output.
+4. After formatting is stable, commit the selected source and preregistration.
+   For a new run, record that commit, definition and parameters with the existing
+   run-receipt API, and describe the inputs actually read (`fingerprint_inputs`, no
+   file hashes). Pass the runner, strategy and study modules the run executes as
+   `write_run_receipt(..., sources=[...])`: the receipt's dirty flag does not see
+   untracked files, so it refuses a source that is untracked or differs from the
+   commit. Take `code_identity()` before the run and pass it as `expected_code=`, so a
+   commit or checkout during a long run is refused instead of credited to the new
+   commit. An input that changed during the run is listed in the receipt, not a reason
+   to discard the result; hash results, not sources.
+5. Execute the authorized study using those fixed files. If code changes during
+   the run, stop publication and investigate; a dirty flag must not be presented
+   as a clean committed implementation. A historical byte-sealed packet is the
+   exception: use its original raw-byte hashes and verification rules without
+   changing or re-pinning them. That exception does not authorize sealing a new
+   study with the retired workflow.
 
 ## Frozen evidence and line endings
 

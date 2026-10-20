@@ -26,7 +26,7 @@ sys.path.insert(0, str(current_dir.parent))
 
 from research_core.live_producer import ProducerBusyError, ProducerChangedError, sqlite_reads_readonly  # noqa: E402
 from research_core.producer_data import producer_data_root  # noqa: E402
-from research_core.run_receipt import assert_inputs_unchanged, data_directory_inputs, fingerprint_inputs  # noqa: E402
+from research_core.run_receipt import changed_inputs, data_directory_inputs, fingerprint_inputs  # noqa: E402
 
 try:
     from engine.backtest_engine import BacktestEngine
@@ -650,13 +650,19 @@ def write_json(path: Path, payload: Any) -> None:
     path.write_text(json.dumps(make_json_safe(payload), indent=4), encoding="utf-8")
 
 
+def _with_input_changes(comparison: dict[str, Any], summaries: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    """Carry inputs changed during the run into a comparison artifact read on its own."""
+    changed = sorted({name for summary in summaries.values() for name in summary.get("data", {}).get("inputs_changed_during_run", [])})
+    return {**comparison, "inputs_changed_during_run": changed} if changed else comparison
+
+
 def write_comparison_artifacts(output_path: Path, summaries: dict[str, dict[str, Any]]) -> None:
     """Write Option-A comparison artifacts next to the requested output path."""
     root = output_path.parent
     write_json(root / "summary_shared.json", summaries["shared"])
     write_json(root / "summary_per_stock.json", summaries["per_stock"])
     write_json(root / "summary_unconstrained.json", summaries["unconstrained"])
-    write_json(root / "comparison.json", build_capital_mode_comparison(summaries))
+    write_json(root / "comparison.json", _with_input_changes(build_capital_mode_comparison(summaries), summaries))
     write_json(output_path, summaries["shared"])
 
 
@@ -681,7 +687,7 @@ def write_universe_comparison_artifacts(output_path: Path, summaries: dict[str, 
     root = output_path.parent
     for name, summary in summaries.items():
         write_json(root / f"summary_{name}.json", summary)
-    write_json(root / "comparison.json", build_universe_comparison(summaries))
+    write_json(root / "comparison.json", _with_input_changes(build_universe_comparison(summaries), summaries))
     write_json(output_path, summaries[default_universe])
 
 
@@ -841,11 +847,17 @@ def main():
             sys.exit(1)
         summary = result
 
-    try:
-        assert_inputs_unchanged(args.input_fingerprint)
-    except ProducerChangedError as e:
-        logger.error("[!] %s", e)
-        sys.exit(1)
+    # Owner decision 2026-10-19: inputs are information; a finished run is saved and a
+    # producer write during it is recorded in the output, not a reason to discard it.
+    args.inputs_changed = changed_inputs(args.input_fingerprint) if getattr(args, "input_fingerprint", None) else []
+    if args.inputs_changed:
+        logger.warning("[!] inputs changed during the run: %s; recorded in the output", args.inputs_changed)
+        written = [summary, *summaries.values()] if args.capital_mode == "all" else [summary]
+        if universe_names:
+            written += list(universe_summaries.values())
+        for item in written:
+            if isinstance(item, dict):
+                item.setdefault("data", {})["inputs_changed_during_run"] = args.inputs_changed
 
     # 5. Output Results
     logger.info("\n" + "=" * 30)

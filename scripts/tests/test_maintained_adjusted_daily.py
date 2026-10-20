@@ -165,7 +165,8 @@ def test_failed_update_leaves_current_untouched_and_retention_keeps_two(environm
 
     assert read_json(family / "current.json")["generation"] == generations[2]
     assert sorted(path.name for path in (family / "generations").iterdir()) == sorted(generations[1:])
-    assert not (family / ".writer.lock").exists()
+    with (family / ".writer.lock").open("a+b") as probe:
+        assert maintained_adjusted_daily._try_os_lock(probe), "a failed update releases the writer lock"
     frame, record = maintained_adjusted_daily.read_adjusted_daily("raw")
     assert record["generation"] == generations[2] and len(frame) == 6
 
@@ -251,15 +252,68 @@ def test_a_same_size_replacement_after_a_cached_read_is_refused(environment: tup
         maintained_adjusted_daily.read_adjusted_daily("raw")
 
 
+def test_a_writer_lock_left_by_an_old_protocol_updater_is_refused(environment: tuple[Path, Path]) -> None:
+    producer, shared = environment
+    family = shared / "derived" / maintained_adjusted_daily.FAMILY
+    family.mkdir(parents=True)
+    (family / ".writer.lock").write_text("pid=1 started_utc=2026-10-18T16:12:03+00:00\n", encoding="utf-8")
+    with pytest.raises(RuntimeError, match="before 2026-10-19"):
+        maintained_adjusted_daily.update(producer_root=producer)
+    assert not (family / "current.json").exists()
+    (family / ".writer.lock").write_bytes(b"")
+    if sys.platform == "win32":
+        assert maintained_adjusted_daily.update(producer_root=producer)["generation"], "a mandatory lock makes an empty file safe"
+    else:
+        with pytest.raises(RuntimeError, match="advisory"):
+            maintained_adjusted_daily.update(producer_root=producer)
+
+
+def test_an_old_updater_between_create_and_write_cannot_run_beside_a_new_one(environment: tuple[Path, Path]) -> None:
+    producer, shared = environment
+    family = shared / "derived" / maintained_adjusted_daily.FAMILY
+    family.mkdir(parents=True)
+    lock = family / ".writer.lock"
+    lock.write_bytes(b"")  # an old updater has created the file and not yet written its pid
+    if sys.platform != "win32":
+        with pytest.raises(RuntimeError, match="advisory"):
+            maintained_adjusted_daily.update(producer_root=producer)
+        assert not (family / "current.json").exists()
+        return
+    handle = maintained_adjusted_daily._acquire_lock(family)  # Windows accepts the empty file ...
+    try:
+        with pytest.raises(PermissionError), open(lock, "ab") as old:
+            old.write(b"pid=7 started_utc=2026-10-18T16:12:03+00:00")  # ... and the old pid write then fails
+            old.flush()
+    finally:
+        maintained_adjusted_daily._release_os_lock(handle)
+        handle.close()
+
+
+def test_a_new_writer_lock_is_created_exclusively_with_a_marker(environment: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:
+    producer, shared = environment
+    family = shared / "derived" / maintained_adjusted_daily.FAMILY
+    maintained_adjusted_daily.update(producer_root=producer)
+    assert (family / ".writer.lock").read_bytes() == maintained_adjusted_daily.WRITER_LOCK_MARKER
+    monkeypatch.setattr(maintained_adjusted_daily, "datetime", _Later(1))  # a distinct generation id
+    assert maintained_adjusted_daily.update(producer_root=producer)["generation"], "a marked file is this protocol's own"
+
+
 def test_concurrent_writer_is_refused(environment: tuple[Path, Path]) -> None:
     producer, shared = environment
     family = shared / "derived" / maintained_adjusted_daily.FAMILY
     family.mkdir(parents=True)
-    (family / ".writer.lock").write_text("pid=1\n", encoding="utf-8")
+    running = (family / ".writer.lock").open("a+b")  # a live update holds the OS lock
+    try:
+        assert maintained_adjusted_daily._try_os_lock(running)
+        with pytest.raises(RuntimeError, match="another update holds"):
+            maintained_adjusted_daily.update(producer_root=producer)
+        assert not (family / "current.json").exists()
+    finally:
+        running.close()  # what process exit does: the OS drops the lock
 
-    with pytest.raises(RuntimeError, match="another update holds"):
-        maintained_adjusted_daily.update(producer_root=producer)
-    assert not (family / "current.json").exists()
+    result = maintained_adjusted_daily.update(producer_root=producer)
+    assert (family / ".writer.lock").exists(), "the lock file stays; only the OS lock matters"
+    assert read_json(family / "current.json")["generation"] == result["generation"], "a lock file left by a dead update does not block the next"
 
 
 def test_cli_update_then_status(environment: tuple[Path, Path]) -> None:
@@ -427,3 +481,183 @@ def test_real_data_check_script_reports_equality_and_truncation_damage(environme
     assert entry["codes"] == 2 and all(entry[basis]["equal"] for basis in maintained_adjusted_daily.BASES)
     assert entry["reference_factor_adjusted"]["truncation_codes_masked_in_latest_known_at_cutoff"] == 1
     assert entry["situations"]["post_cutoff_multi_kind_days"] == 1 and entry["situations"]["post_cutoff_unknown_kind"] == 1
+
+
+def test_official_quotes_are_the_source_rows_the_generation_saw_and_feed_a_receipt(environment: tuple[Path, Path]) -> None:
+    producer, _ = environment
+    bars, _ = _tricky_producer(producer)
+    maintained_adjusted_daily.update(producer_root=producer)
+
+    quotes, calendar, record = maintained_adjusted_daily.read_official_quotes(codes=["1101", "2330", "6488", "9999"], as_of=CUTOFF)
+
+    assert calendar.equals(SESSIONS[SESSIONS <= CUTOFF]), "the generation's official session union, cut at as_of"
+    assert record["absent_codes"] == ["6488", "9999"], "no quote on or before the cutoff is reported, not refused"
+    assert record["calendar"]["sessions"] == len(calendar) and record["rows"] == len(quotes)
+    expected = bars.loc[bars["Source"].eq("official") & bars["Date"].le(CUTOFF) & bars["Code"].isin(["1101", "2330"])].drop(columns="Source")
+    assert list(quotes.columns) == ["Code", "Date", "Open", "High", "Low", "Close", "Volume"]
+    counts = quotes.groupby(["Code", "Date"]).size()
+    assert counts.equals(expected.groupby(["Code", "Date"]).size()), "gaps stay absent; a duplicated date keeps both rows"
+    single = expected.loc[~expected.duplicated(["Code", "Date"], keep=False)].sort_values(["Code", "Date"]).reset_index(drop=True)
+    single["Volume"] = single["Volume"].where(single["Volume"].ge(0))  # prepare_prices stores an invalid volume as NaN
+    got = quotes.loc[~quotes.duplicated(["Code", "Date"], keep=False)].reset_index(drop=True)
+    pd.testing.assert_frame_equal(got, single, check_dtype=False)
+
+    assert record["generation"] == maintained_adjusted_daily.current_generation()["generation"]
+
+
+def test_a_held_generation_survives_updates_until_released(environment: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:
+    producer, shared = environment
+    family = shared / "derived" / maintained_adjusted_daily.FAMILY
+    held = maintained_adjusted_daily.update(producer_root=producer)["generation"]
+    record = maintained_adjusted_daily.hold_generation(held, holder="pr17-pattern-scan", reason="Q2-Q6 read this generation")
+    assert record["generation"] == held
+    for offset in (1, 2, 3):
+        monkeypatch.setattr(maintained_adjusted_daily, "datetime", _Later(offset))
+        result = maintained_adjusted_daily.update(producer_root=producer)
+        assert held in result["held"]
+    assert held in {path.name for path in (family / "generations").iterdir()}, "updates keep a held generation"
+    frame, read = maintained_adjusted_daily.read_adjusted_daily("raw", generation=held)
+    assert read["generation"] == held and len(frame) == 6
+    assert len(list((family / "generations").iterdir())) == 3, "current + previous + the held one, nothing else"
+
+    released = maintained_adjusted_daily.release_generation("pr17-pattern-scan")
+    assert released is not None and released["generation"] == held
+    assert maintained_adjusted_daily.release_generation("pr17-pattern-scan") is None
+    monkeypatch.setattr(maintained_adjusted_daily, "datetime", _Later(4))
+    maintained_adjusted_daily.update(producer_root=producer)
+    assert held not in {path.name for path in (family / "generations").iterdir()}, "released generations are pruned again"
+
+    with pytest.raises(FileNotFoundError, match="may have been pruned"):
+        maintained_adjusted_daily.hold_generation(held, holder="late", reason="too late")
+    with pytest.raises(ValueError, match="holder must match"):
+        maintained_adjusted_daily.hold_generation(result["generation"], holder="../escape", reason="x")
+    with pytest.raises(ValueError, match="holder must match"):
+        maintained_adjusted_daily.hold_generation(result["generation"], holder="study\n", reason="x")
+    assert maintained_adjusted_daily.release_generation("study\n") is None, "a release can still look up a name an older writer accepted"
+    for device in ("con", "nul", "com1", "lpt9"):
+        with pytest.raises(ValueError, match="Windows device name"):
+            maintained_adjusted_daily.hold_generation(result["generation"], holder=device, reason="x")
+    with pytest.raises(ValueError, match="reason"):
+        maintained_adjusted_daily.hold_generation(result["generation"], holder="ok", reason=" ")
+
+
+def test_a_hold_racing_a_prune_is_refused_not_silently_lost(environment: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:
+    producer, shared = environment
+    family = shared / "derived" / maintained_adjusted_daily.FAMILY
+    first = maintained_adjusted_daily.update(producer_root=producer)["generation"]
+    monkeypatch.setattr(maintained_adjusted_daily, "datetime", _Later(1))
+    maintained_adjusted_daily.update(producer_root=producer)
+    monkeypatch.setattr(maintained_adjusted_daily, "HOLDS_LOCK_WAIT_SECONDS", 0.2)
+    original = maintained_adjusted_daily.held_generations
+    attempts: list[BaseException] = []
+
+    def hold_during_prune(root: Path | None = None) -> dict[str, list[dict[str, object]]]:
+        # The first call is the prune, holding the lock: a hold now must wait, then be refused.
+        if not attempts:
+            try:
+                maintained_adjusted_daily.hold_generation(first, holder="late-study", reason="started mid-prune")
+            except RuntimeError as error:
+                attempts.append(error)
+        return original(root)
+
+    monkeypatch.setattr(maintained_adjusted_daily, "held_generations", hold_during_prune)
+    monkeypatch.setattr(maintained_adjusted_daily, "datetime", _Later(2))
+    result = maintained_adjusted_daily.update(producer_root=producer)
+
+    assert len(attempts) == 1 and "holds.lock" in str(attempts[0]), "the racing hold is refused, not reported as successful"
+    assert first in result["pruned"] and not (family / "holds" / "late-study.json").exists()
+
+    monkeypatch.setattr(maintained_adjusted_daily, "held_generations", original)
+    monkeypatch.setattr(maintained_adjusted_daily, "datetime", _Later(3))
+    with maintained_adjusted_daily._holds_lock(family):  # another process mid-prune or mid-hold
+        blocked = maintained_adjusted_daily.update(producer_root=producer)
+    assert blocked["pruned"] == [], "a held lock skips pruning instead of failing a published update"
+    assert read_json(family / "current.json")["generation"] == blocked["generation"]
+
+
+def test_release_waits_for_the_holds_lock(environment: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:
+    producer, shared = environment
+    family = shared / "derived" / maintained_adjusted_daily.FAMILY
+    generation = maintained_adjusted_daily.update(producer_root=producer)["generation"]
+    maintained_adjusted_daily.hold_generation(generation, holder="study", reason="reads it")
+    monkeypatch.setattr(maintained_adjusted_daily, "HOLDS_LOCK_WAIT_SECONDS", 0.2)
+
+    with maintained_adjusted_daily._holds_lock(family), pytest.raises(RuntimeError, match="holds.lock"):
+        maintained_adjusted_daily.release_generation("study")
+    assert (family / "holds" / "study.json").exists(), "a release never races a prune scan or a new hold"
+
+    released = maintained_adjusted_daily.release_generation("study")
+    assert released is not None and released["generation"] == generation
+
+
+def test_a_lock_left_by_a_killed_process_does_not_stop_pruning(environment: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:
+    producer, shared = environment
+    family = shared / "derived" / maintained_adjusted_daily.FAMILY
+    first = maintained_adjusted_daily.update(producer_root=producer)["generation"]
+    monkeypatch.setattr(maintained_adjusted_daily, "datetime", _Later(1))
+    maintained_adjusted_daily.update(producer_root=producer)
+    # A killed holder leaves the file but the OS drops its lock: closing a locked handle
+    # without unlocking is what process exit does.
+    handle = (family / ".holds.lock").open("a+b")
+    assert maintained_adjusted_daily._try_os_lock(handle)
+    handle.close()
+
+    monkeypatch.setattr(maintained_adjusted_daily, "datetime", _Later(2))
+    result = maintained_adjusted_daily.update(producer_root=producer)
+
+    assert first in result["pruned"], "a lock file without a live holder does not stop pruning"
+
+
+def test_a_live_lock_is_never_taken_over(environment: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:
+    _, shared = environment
+    family = shared / "derived" / maintained_adjusted_daily.FAMILY
+    monkeypatch.setattr(maintained_adjusted_daily, "HOLDS_LOCK_WAIT_SECONDS", 0.2)
+    old = family / ".holds.lock"
+    family.mkdir(parents=True, exist_ok=True)
+    old.write_bytes(b"")
+    os.utime(old, (0, 0))  # however old the file looks, a live lock holds
+    with maintained_adjusted_daily._holds_lock(family):
+        with pytest.raises(RuntimeError, match="holds.lock"), maintained_adjusted_daily._holds_lock(family):
+            pass
+    with maintained_adjusted_daily._holds_lock(family):
+        pass  # released by its owner, then free again
+
+
+def test_holds_listing_skips_a_hold_released_while_listing(environment: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:
+    producer, _ = environment
+    generation = maintained_adjusted_daily.update(producer_root=producer)["generation"]
+    maintained_adjusted_daily.hold_generation(generation, holder="study", reason="reads it")
+    original = maintained_adjusted_daily.read_json
+
+    def released_meanwhile(path: Path) -> object:
+        if path.name == "study.json":
+            raise FileNotFoundError(path)
+        return original(path)
+
+    monkeypatch.setattr(maintained_adjusted_daily, "read_json", released_meanwhile)
+    assert maintained_adjusted_daily.held_generations() == {}
+
+
+def test_a_hold_write_killed_before_replace_does_not_block_the_next_hold(environment: tuple[Path, Path]) -> None:
+    producer, shared = environment
+    holds = shared / "derived" / maintained_adjusted_daily.FAMILY / "holds"
+    generation = maintained_adjusted_daily.update(producer_root=producer)["generation"]
+    holds.mkdir(parents=True, exist_ok=True)
+    leftover = holds / f".study-{os.getpid()}.tmp"
+    leftover.write_text("{", encoding="utf-8")
+
+    maintained_adjusted_daily.hold_generation(generation, holder="study", reason="reads it")
+
+    assert not leftover.exists() and not list(holds.glob(".study-*.tmp")), "this holder's leftovers are cleaned under the lock"
+    assert maintained_adjusted_daily.held_generations()[generation][0]["holder"] == "study"
+
+
+def test_holds_listing_reads_only_formal_holder_files(environment: tuple[Path, Path]) -> None:
+    producer, shared = environment
+    holds = shared / "derived" / maintained_adjusted_daily.FAMILY / "holds"
+    generation = maintained_adjusted_daily.update(producer_root=producer)["generation"]
+    maintained_adjusted_daily.hold_generation(generation, holder="study", reason="reads it")
+    (holds / ".other-123.json").write_text("{", encoding="utf-8")  # a writer killed mid-write
+    (holds / ".other-124.tmp").write_text("{", encoding="utf-8")
+    assert [record["holder"] for record in maintained_adjusted_daily.held_generations()[generation]] == ["study"]
+    assert sorted(path.name for path in holds.glob("*.tmp")) == [".other-124.tmp"], "a completed hold write leaves no temporary file"

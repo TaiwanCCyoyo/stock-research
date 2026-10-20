@@ -1,0 +1,80 @@
+{
+    "schema_version": "research-result.v1",
+    "study_id": "20261013-annual-winner-rotation",
+    "candidate_id": "annual-holding-completion.v2-fixed-v1-leaders",
+    "run_id": "annual-completion-v2-20261016",
+    "phase": "exploration",
+    "outcome": "candidate_failed",
+    "identities": {
+        "owner_contract": "../../mission.md; preregistration.md",
+        "metric_contract": "data-contract.md; preregistration.md",
+        "execution_contract": "annual-holding-completion.v2",
+        "data_snapshot": "publication.zip#run-receipt.json/input_fingerprint",
+        "code": "https://github.com/TaiwanCCyoyo/stock-research/commit/db7c6cc40f7b8f99b3c47867b579068e35aa83f5",
+        "runtime": "performance.json"
+    },
+    "window": {
+        "start": "2011-01-03",
+        "end": "2026-01-02"
+    },
+    "metrics": {
+        "complete_holding_years": {
+            "value": 15,
+            "unit": "count"
+        },
+        "expected_complete_years": {
+            "value": 15,
+            "unit": "count"
+        },
+        "paired_annual_wins_in_both_scenarios": {
+            "value": 4,
+            "unit": "count"
+        },
+        "daily_max_drawdown": {
+            "value": null,
+            "unit": "fraction",
+            "unavailable_reason": "Official no-quote dates carry reference marks; a complete observed daily equity path is unavailable."
+        },
+        "benchmark_net_terminal_multiple": {
+            "value": 6.699111817701591,
+            "unit": "ratio"
+        },
+        "lapse_net_terminal_multiple": {
+            "value": 0.31113641783590346,
+            "unit": "ratio"
+        },
+        "lapse_cagr": {
+            "value": -0.07489124866378982,
+            "unit": "fraction"
+        },
+        "realize_net_terminal_multiple": {
+            "value": 0.3177157332522192,
+            "unit": "ratio"
+        },
+        "realize_cagr": {
+            "value": -0.07359963370279787,
+            "unit": "fraction"
+        }
+    },
+    "artifacts": [
+        "report.md",
+        "results.json",
+        "performance.json",
+        "preregistration.md",
+        "data-contract.md",
+        "storage-audit.md",
+        "../../params/completion-v2.json",
+        "../../web-report/index.html",
+        "publication.zip"
+    ],
+    "limitations": [
+        "Fixed v1 calculable leaders are reused; historical universe and unknown ranking candidates are not reconstructed.",
+        "Current input vintage and original rounded report values are distinct observations.",
+        "Cash dividends use the original immediate ex-date close fractional reinvestment estimate.",
+        "Rights lapse and realize are stated scenarios, not actual exercise or return bounds.",
+        "Carried marks permit terminal modeling only; actual complete daily drawdown remains unknown.",
+        "Paired diagnostics assume symmetric exchangeable log excesses and iid bootstrap years; they do not certify significance or unseen data.",
+        "Candidate failure describes this fixed selected sequence under two stated rights scenarios, not every momentum strategy or the unobserved all-market champion sequence."
+    ],
+    "supersedes": []
+}

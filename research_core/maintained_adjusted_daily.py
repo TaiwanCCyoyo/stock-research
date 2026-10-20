@@ -15,11 +15,12 @@ Layout under ``<shared root>/derived/adjusted-daily-v1/``::
     generations/<id>/technical_daily.parquet   technical-daily.v1 indicators, one row per
                                                reference_factor_adjusted row
     generations/<id>/technical_pivots.parquet  confirmed 1.5/4 ATR highs and lows
+    holds/<holder>.json           a generation a running study marked in use; never pruned
 
 Every new ex-date restates the whole earlier history of that symbol, so an update builds
 a complete new generation and then flips ``current.json`` with ``os.replace`` (atomic on
 Windows, unlike replacing a directory). The previous generation is kept for rollback and
-for readers still holding it; older ones are pruned. A failed build never touches
+for readers still holding it; older ones are pruned unless a study holds them. A failed build never touches
 ``current.json``. A definition change gets a new family name (``adjusted-daily-v2``),
 never an in-place rewrite of this one.
 
@@ -35,12 +36,16 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import shutil
+import sys
 import time
-from collections.abc import Callable, Sequence
+import uuid
+from collections.abc import Callable, Iterator, Sequence
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, TypeVar, cast
+from typing import IO, Any, TypeVar, cast
 
 import pandas as pd
 import pyarrow as pa
@@ -203,14 +208,44 @@ def _write_as_of_inputs(directory: Path, bars: pd.DataFrame, actions: pd.DataFra
     return recorded
 
 
-def _acquire_lock(family: Path) -> Path:
+WRITER_LOCK_MARKER = b"writer-lock-v2\n"
+
+
+def _acquire_lock(family: Path) -> IO[bytes]:
+    """Take the single-writer OS lock on `.writer.lock` without waiting.
+
+    The OS releases it when the update ends, however it ends (reboot, kill, task time
+    limit), so a scheduled retry is never blocked by a lock left from a dead update.
+
+    Updaters before 2026-10-19 held the lock by creating the file exclusively and writing
+    "pid=..." without an OS lock; they refuse whenever the file exists. This one creates
+    the file exclusively with a fixed marker, so the two never both win the creation, and
+    refuses "pid=..." content. An empty file is ambiguous: the first OS-lock version
+    (2026-10-19) left one, but so does an old updater between its create and its write.
+    On Windows the OS lock is mandatory, so such an old updater cannot write its pid and
+    fails; the file is accepted. Elsewhere the lock is advisory and the file is refused
+    until someone confirms no updater runs and deletes it.
+    """
     lock = family / ".writer.lock"
     try:
-        with lock.open("x", encoding="utf-8") as handle:
-            handle.write(f"pid={os.getpid()} started_utc={datetime.now(timezone.utc).isoformat(timespec='seconds')}\n")
-    except FileExistsError as error:
-        raise RuntimeError(f"another update holds {lock}; if no update is running, read it and remove it") from error
-    return lock
+        descriptor = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY | getattr(os, "O_BINARY", 0))
+    except FileExistsError:
+        pass
+    else:
+        with os.fdopen(descriptor, "wb") as created:
+            created.write(WRITER_LOCK_MARKER)
+    handle = lock.open("a+b")
+    if not _try_os_lock(handle):
+        handle.close()
+        raise RuntimeError(f"another update holds {lock}; wait for it to finish")
+    size = lock.stat().st_size
+    if size == len(WRITER_LOCK_MARKER) or (size == 0 and sys.platform == "win32"):
+        return handle
+    _release_os_lock(handle)
+    handle.close()
+    if size == 0:
+        raise RuntimeError(f"{lock} is empty and this platform's lock is advisory; if no updater is running, delete the file and retry")
+    raise RuntimeError(f"{lock} was written by an updater from before 2026-10-19; if none is running, delete the file and retry")
 
 
 def _write_current(family: Path, generation: str, status_sha256: str) -> None:
@@ -226,17 +261,159 @@ def _write_current(family: Path, generation: str, status_sha256: str) -> None:
     os.replace(temporary, family / "current.json")
 
 
-def _prune(family: Path, keep: list[str]) -> list[str]:
-    """Best effort: a generation still open in a reader (Windows) is left for the next update."""
-    removed = []
-    for path in sorted((family / "generations").iterdir()):
-        if path.is_dir() and path.name not in keep:
+HOLDER_PATTERN = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
+
+
+# Windows treats these as devices whatever the extension, so `<holder>.json` cannot be a file.
+WINDOWS_DEVICE_NAMES = frozenset({"con", "prn", "aux", "nul", *(f"com{n}" for n in range(1, 10)), *(f"lpt{n}" for n in range(1, 10))})
+
+
+def _hold_path(family: Path, holder: str, *, new: bool = True) -> Path:
+    """Path of `holder`'s hold. New holds get the strict name rules; a release only needs to
+    locate a hold an older writer may have accepted (`match`, as the holds scan reads)."""
+    if new:
+        if not HOLDER_PATTERN.fullmatch(holder):  # `$` alone would accept a trailing newline
+            raise ValueError(f"holder must match {HOLDER_PATTERN.pattern}, got {holder!r}")
+        if holder in WINDOWS_DEVICE_NAMES:
+            raise ValueError(f"holder {holder!r} is a Windows device name; choose another")
+    elif not HOLDER_PATTERN.match(holder):
+        raise ValueError(f"holder must match {HOLDER_PATTERN.pattern}, got {holder!r}")
+    return family / "holds" / f"{holder}.json"
+
+
+def held_generations(root: Path | None = None) -> dict[str, list[dict[str, Any]]]:
+    """Generations a running study marked in use, mapped to their holds; the updater keeps them."""
+    holds: dict[str, list[dict[str, Any]]] = {}
+    directory = family_dir(root) / "holds"
+    if directory.is_dir():
+        for path in sorted(directory.glob("*.json")):
+            if not HOLDER_PATTERN.match(path.stem):  # lenient on read: keep any hold an older writer accepted
+                continue  # only `<holder>.json`; never a temporary or foreign file
             try:
-                shutil.rmtree(path)
-            except OSError as error:
-                LOGGER.warning("Could not prune generation %s, retrying on the next update: %s", path.name, error)
-                continue
-            removed.append(path.name)
+                record = read_json(path)
+            except FileNotFoundError:
+                continue  # released between listing and reading
+            holds.setdefault(str(record["generation"]), []).append(record)
+    return holds
+
+
+HOLDS_LOCK_WAIT_SECONDS = 120.0
+
+
+def _try_os_lock(handle: IO[bytes]) -> bool:
+    """Take an exclusive OS lock on the first byte; the OS drops it when the process ends."""
+    handle.seek(0)
+    try:
+        if sys.platform == "win32":
+            import msvcrt
+
+            msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
+        else:
+            import fcntl
+
+            fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        return False
+    return True
+
+
+def _release_os_lock(handle: IO[bytes]) -> None:
+    handle.seek(0)
+    if sys.platform == "win32":
+        import msvcrt
+
+        msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+    else:
+        import fcntl
+
+        fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+
+
+@contextmanager
+def _holds_lock(family: Path) -> Iterator[None]:
+    """Serialize hold changes with pruning, so a hold is either seen by the prune or refused.
+
+    An OS lock on `.holds.lock`, not the file's existence: the file stays, and a killed
+    holder's lock is released by the OS, so no age-based reclaim can break a live holder.
+    Held only for a hold write or one prune pass, never for a whole update.
+    """
+    lock = family / ".holds.lock"
+    family.mkdir(parents=True, exist_ok=True)
+    handle = lock.open("a+b")
+    try:
+        deadline = time.monotonic() + HOLDS_LOCK_WAIT_SECONDS
+        while not _try_os_lock(handle):
+            if time.monotonic() >= deadline:
+                raise RuntimeError(f"{lock} is locked by a running update, hold or release; retry when it finishes")
+            time.sleep(0.5)
+        try:
+            yield
+        finally:
+            _release_os_lock(handle)
+    finally:
+        handle.close()
+
+
+def hold_generation(generation: str, *, holder: str, reason: str, root: Path | None = None) -> dict[str, Any]:
+    """Mark `generation` in use by `holder` so updates keep it until `release_generation(holder)`.
+
+    One hold per holder; holding again moves it. Kept generations cost disk (about 1-2 GB
+    each), so release as soon as the study no longer reads it.
+    """
+    family = family_dir(root)
+    path = _hold_path(family, holder)
+    if not reason.strip():
+        raise ValueError("a hold needs a reason another session can act on")
+    record = {"holder": holder, "generation": generation, "reason": reason.strip(), "held_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds")}
+    with _holds_lock(family):
+        # Under the lock no prune runs, so a generation that exists now is kept.
+        current_generation(root, generation=generation)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        # Under the lock no other hold write runs, so this holder's leftover temporaries
+        # (a write killed before os.replace) are safe to remove; a fresh name never collides.
+        for leftover in path.parent.glob(f".{holder}-*.tmp"):
+            leftover.unlink(missing_ok=True)
+        temporary = path.with_name(f".{holder}-{uuid.uuid4().hex}.tmp")
+        write_json(temporary, record)
+        os.replace(temporary, path)
+    LOGGER.info("Held %s generation %s for %s: %s", FAMILY, generation, holder, record["reason"])
+    return record
+
+
+def release_generation(holder: str, *, root: Path | None = None) -> dict[str, Any] | None:
+    """Remove `holder`'s hold; the next update prunes the generation unless someone else holds it."""
+    family = family_dir(root)
+    path = _hold_path(family, holder, new=False)
+    with _holds_lock(family):
+        if not path.is_file():
+            return None
+        record = read_json(path)
+        path.unlink()
+    LOGGER.info("Released %s generation %s held by %s", FAMILY, record["generation"], holder)
+    return record
+
+
+def _prune(family: Path, keep: list[str]) -> list[str]:
+    """Best effort: a generation still open in a reader (Windows) is left for the next update.
+
+    Generations a study holds (`hold_generation`) are kept as well; the holds are read
+    under the same lock a new hold takes, so none can appear mid-prune.
+    """
+    removed: list[str] = []
+    try:
+        with _holds_lock(family):
+            keep = [*keep, *held_generations(family.parent.parent)]
+            for path in sorted((family / "generations").iterdir()):
+                if path.is_dir() and path.name not in keep:
+                    try:
+                        shutil.rmtree(path)
+                    except OSError as error:
+                        LOGGER.warning("Could not prune generation %s, retrying on the next update: %s", path.name, error)
+                        continue
+                    removed.append(path.name)
+    except RuntimeError as error:
+        LOGGER.warning("Skipped pruning this update, retrying on the next one: %s", error)
+        return removed
     LOGGER.info("Pruned generations %s; kept %s", removed, keep)
     return removed
 
@@ -304,6 +481,7 @@ def update(*, producer_root: Path, root: Path | None = None) -> dict[str, Any]:
             "asof": asof,
             "previous": previous,
             "pruned": removed,
+            "held": sorted(held_generations(root)),
             "path": str(final),
             "timings_seconds": status["timings_seconds"],
         }
@@ -313,7 +491,8 @@ def update(*, producer_root: Path, root: Path | None = None) -> dict[str, Any]:
             shutil.rmtree(staging, ignore_errors=True)
         raise
     finally:
-        lock.unlink()
+        _release_os_lock(lock)
+        lock.close()
 
 
 def current_generation(root: Path | None = None, *, generation: str | None = None) -> dict[str, Any]:
@@ -481,6 +660,87 @@ def _stored_quotes(stored: pd.DataFrame) -> pd.DataFrame:
     return pd.concat([quotes, quotes.loc[duplicated[observed]]]).sort_values(["Code", "Date"], kind="stable")
 
 
+def _read_stored_quotes(status: dict[str, Any], cutoff: pd.Timestamp, codes: Sequence[str] | None) -> pd.DataFrame:
+    """The verified official quotes on or before `cutoff` that this generation was built from."""
+    filters: list[Any] = [("Date", "<=", cutoff)]
+    if codes is not None:
+        filters.append(("Code", "in", [str(code) for code in codes]))
+    stored = _read_verified(
+        Path(status["path"]) / "raw.parquet",
+        status["bases"]["raw"],
+        lambda source: pq.read_table(source, columns=["Code", "Date", *RAW_QUOTE_COLUMNS, "quality_reason"], filters=filters).to_pandas(),
+    )
+    return _stored_quotes(stored)
+
+
+def _generation_calendar(status: dict[str, Any], inputs: dict[str, Any], cutoff: pd.Timestamp) -> pd.DatetimeIndex:
+    sessions = _read_verified(Path(status["path"]) / inputs["calendar"]["file"], inputs["calendar"], lambda source: pq.read_table(source).to_pandas())
+    calendar = pd.DatetimeIndex(sessions["Date"])
+    return calendar[calendar <= cutoff]
+
+
+def _cutoff_inputs(status: dict[str, Any], as_of: str | pd.Timestamp) -> tuple[pd.Timestamp, dict[str, Any]]:
+    cutoff = cast(pd.Timestamp, pd.Timestamp(as_of))
+    if pd.isna(cutoff) or cutoff.tzinfo is not None or cutoff != cutoff.normalize():
+        raise ValueError(f"as_of must be a naive date, got {as_of!r}")
+    if cutoff > pd.Timestamp(status["asof"]):
+        raise ValueError(f"as_of {cutoff.date()} is after generation {status['generation']} asof {status['asof']}; its later quotes and actions are unknown")
+    inputs = status.get("as_of_inputs")
+    if inputs is None:
+        raise ValueError(f"generation {status['generation']} has no actions snapshot and cannot be read as_of; run scripts.maintain_adjusted_daily update")
+    return cutoff, inputs
+
+
+def _calendar_record(calendar: pd.DatetimeIndex, source: str) -> dict[str, Any]:
+    days = [day.date().isoformat() for day in calendar]
+    return {"source": source, "sessions": len(days), "first": days[0] if days else None, "last": days[-1] if days else None, "sha256": object_digest(days)}
+
+
+def read_official_quotes(
+    *,
+    codes: Sequence[str],
+    as_of: str | pd.Timestamp,
+    root: Path | None = None,
+    generation: str | None = None,
+) -> tuple[pd.DataFrame, pd.DatetimeIndex, dict[str, Any]]:
+    """Official quotes and the session calendar on or before `as_of`, as this generation saw them.
+
+    For a study that runs its own price model on source quotes (custom corporate-action
+    terms, holding-window economics) instead of reading a prepared basis. The quotes are
+    `Code, Date, Open, High, Low, Close, Volume` from the producer's `official` rows as
+    `prepare_prices` stored them: numeric-coerced, a negative or non-finite `Volume` (the
+    producer column, stored as `VolumeLots`) is NaN, and a duplicated date repeats its first
+    row. `prepare_prices` gives the same result on these rows as on the source rows; a
+    caller that reads quote values directly must accept those three normalizations. The
+    calendar is the generation's official source-date union. Both are verified against `status.json`, so the
+    study needs no scan or fingerprint of `price_daily.parquet`; put the record in the
+    receipt (`write_run_receipt(shared_data=[record])`). Requested codes without a quote on
+    or before the cutoff are listed in `record["absent_codes"]`, not refused: the caller
+    decides what a missing history means. Corporate actions are not included; this family's
+    actions snapshot keeps only the price factor.
+    """
+    status = current_generation(root, generation=generation)
+    cutoff, inputs = _cutoff_inputs(status, as_of)
+    calendar = _generation_calendar(status, inputs, cutoff)
+    requested = list(dict.fromkeys(str(code) for code in codes))
+    quotes = _read_stored_quotes(status, cutoff, requested).reset_index(drop=True)
+    record = {
+        **_record(status, "raw"),
+        "as_of": cutoff.date().isoformat(),
+        "method": "official quotes rebuilt from the raw basis (missing_official_quote rows dropped, duplicate_date rows repeated)",
+        "calendar": {
+            **_calendar_record(calendar, "generation"),
+            "file": str(Path(status["path"]) / inputs["calendar"]["file"]),
+            "file_sha256": inputs["calendar"]["sha256"],
+        },
+        "codes": requested,
+        "absent_codes": sorted(set(requested) - set(quotes["Code"].astype(str))),
+        "rows": len(quotes),
+    }
+    LOGGER.info("Read %s official quotes as_of=%s generation=%s codes=%d rows=%d", FAMILY, record["as_of"], status["generation"], len(requested), len(quotes))
+    return quotes, calendar, record
+
+
 def _read_as_of(
     status: dict[str, Any],
     basis: price_basis.PriceBasis,
@@ -499,32 +759,15 @@ def _read_as_of(
     every symbol with such a quote is returned.
     """
     started = time.monotonic()
-    cutoff = cast(pd.Timestamp, pd.Timestamp(as_of))
-    if pd.isna(cutoff) or cutoff.tzinfo is not None or cutoff != cutoff.normalize():
-        raise ValueError(f"as_of must be a naive date, got {as_of!r}")
-    if cutoff > pd.Timestamp(status["asof"]):
-        raise ValueError(f"as_of {cutoff.date()} is after generation {status['generation']} asof {status['asof']}; its later quotes and actions are unknown")
-    inputs = status.get("as_of_inputs")
-    if inputs is None:
-        raise ValueError(f"generation {status['generation']} has no actions snapshot and cannot be read as_of; run scripts.maintain_adjusted_daily update")
+    cutoff, inputs = _cutoff_inputs(status, as_of)
     directory = Path(status["path"])
     if calendar is None:
-        sessions = _read_verified(directory / inputs["calendar"]["file"], inputs["calendar"], lambda source: pq.read_table(source).to_pandas())
-        calendar = pd.DatetimeIndex(sessions["Date"])
-        calendar = calendar[calendar <= cutoff]
+        calendar = _generation_calendar(status, inputs, cutoff)
         calendar_source = "generation"
     else:
         calendar_source = "caller"
     actions = _read_verified(directory / inputs["actions"]["file"], inputs["actions"], lambda source: pq.read_table(source).to_pandas())
-    filters: list[Any] = [("Date", "<=", cutoff)]
-    if codes is not None:
-        filters.append(("Code", "in", [str(code) for code in codes]))
-    stored = _read_verified(
-        directory / "raw.parquet",
-        status["bases"]["raw"],
-        lambda source: pq.read_table(source, columns=["Code", "Date", *RAW_QUOTE_COLUMNS, "quality_reason"], filters=filters).to_pandas(),
-    )
-    quotes = _stored_quotes(stored)
+    quotes = _read_stored_quotes(status, cutoff, codes)
     by_code = {str(code): frame for code, frame in quotes.groupby("Code", sort=True)}
     events_by_code = {str(code): frame for code, frame in actions.groupby("code", sort=False)}
     empty_events = actions.iloc[0:0]
@@ -544,20 +787,13 @@ def _read_as_of(
     result = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame(columns=ARROW_SCHEMA.names)
     if columns is not None:
         result = cast(pd.DataFrame, result[list(columns)])
-    days = [day.date().isoformat() for day in calendar]
     record = {
         **_record(status, basis),
         "as_of": cutoff.date().isoformat(),
         "as_of_method": "price_basis.prepare_prices at as_of from the generation's raw quotes and actions snapshot",
         "definition": status["definition"]["prices"],
         "actions_sha256": inputs["actions"]["sha256"],
-        "calendar": {
-            "source": calendar_source,
-            "sessions": len(days),
-            "first": days[0] if days else None,
-            "last": days[-1] if days else None,
-            "sha256": object_digest(days),
-        },
+        "calendar": _calendar_record(calendar, calendar_source),
         "codes": len(selected),
     }
     LOGGER.info(
@@ -568,7 +804,7 @@ def _read_as_of(
         status["generation"],
         len(selected),
         calendar_source,
-        len(days),
+        len(calendar),
         len(result),
         time.monotonic() - started,
     )
