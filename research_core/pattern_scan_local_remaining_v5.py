@@ -3,16 +3,19 @@
 from __future__ import annotations
 
 import logging
+import os
 import shutil
 import time
 import uuid
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
 import pyarrow.parquet as pq
 
-from research_core.artifact_store import canonical, file_digest, publish_noreplace, read_json, write_json
+from research_core.artifact_store import canonical, file_digest, publish_noreplace, read_json, release_os_lock, try_os_lock, write_json
 from research_core.hhhl_variants_selection import Atom
 from research_core.pattern_scan_conditions_v1 import PATTERNS
 from research_core.pattern_scan_local_conditions_v5 import run_conditions
@@ -28,6 +31,7 @@ from research_core.run_receipt import InputSpec, code_identity, fingerprint_inpu
 LOGGER = logging.getLogger(__name__)
 PHASES = ("conditions", "q4", "followup")
 DEFINITION = "pattern-scan-local-remaining.v5"
+ACTIVE_SCHEMA = "pattern-scan-local-active.v5"
 _VERIFIED_FINALS: dict[Path, tuple[str, int, int, int, int]] = {}
 
 
@@ -318,6 +322,51 @@ def run_remaining(stock_result: Path, output: Path, *, repo_root: Path, targets:
     return progress
 
 
+@contextmanager
+def _active_launch(output: Path) -> Iterator[None]:
+    """Hold the permanent OS lock, retaining unknown/legacy diagnostics."""
+    active, lock_path = checked_path(output / ".active"), checked_path(output / ".active.lock")
+    with lock_path.open("a+b") as handle:
+        if not try_os_lock(handle):
+            raise RuntimeError(f"{lock_path} is locked by another continuation launcher")
+        marker: dict[str, Any] | None = None
+        try:
+            previous: dict[str, Any] | None
+            try:
+                previous = read_json(active)
+            except FileNotFoundError:
+                previous = None
+            except ValueError as error:
+                raise RuntimeError("legacy, malformed or foreign active marker requires explicit owner/process recovery") from error
+            if previous is not None and not (
+                previous.get("schema") == ACTIVE_SCHEMA
+                and previous.get("lock_path") == str(lock_path)
+                and isinstance(previous.get("owner"), str)
+                and bool(previous["owner"])
+                and isinstance(previous.get("pid"), int)
+                and not isinstance(previous["pid"], bool)
+                and previous["pid"] > 0
+            ):
+                raise RuntimeError("legacy, malformed or foreign active marker requires explicit owner/process recovery")
+            # Only this OS lock, never file age or PID probing, establishes
+            # that a compatible stale diagnostic marker may be replaced.
+            marker = {"schema": ACTIVE_SCHEMA, "owner": uuid.uuid4().hex, "pid": os.getpid(), "lock_path": str(lock_path)}
+            write_progress(active, marker)
+            yield
+        finally:
+            try:
+                if marker is not None:
+                    current: dict[str, Any] | None
+                    try:
+                        current = read_json(active)
+                    except (FileNotFoundError, ValueError):
+                        current = None
+                    if current == marker:
+                        active.unlink(missing_ok=True)
+            finally:
+                release_os_lock(handle)
+
+
 def launch_remaining(arguments: list[str], repo_root: Path, output: Path, *, timeout_seconds: int) -> None:
     """Use the existing owned Windows Job with one explicit memory/time limit."""
     import subprocess
@@ -334,42 +383,41 @@ def launch_remaining(arguments: list[str], repo_root: Path, output: Path, *, tim
     if not output.is_relative_to(repo_root / ".tmp") or output == repo_root / ".tmp":
         raise ValueError("launch output must be below the calling worktree's .tmp")
     output.mkdir(parents=True, exist_ok=True)
-    active = output / ".active"
-    with active.open("x", encoding="utf-8") as stream:
-        stream.write(str(__import__("os").getpid()))
-    job: _MemoryBoundJob | None = None
-    started = time.monotonic()
-    try:
-        job = _MemoryBoundJob(8 * 1024**3)
-        process = job.start([sys.executable, "-m", "scripts.run_pattern_scan_remaining", *arguments, "--worker"], repo_root)
-        while process.poll() is None:
-            if time.monotonic() - started > timeout_seconds:
-                job.terminate_and_confirm()
-                raise TimeoutError("owned continuation exceeded its explicit timeout")
-            time.sleep(0.5)
-        write_progress(output / "job-memory.json", {**job.memory_receipt(), "wall_seconds": time.monotonic() - started, "exit_code": process.returncode})
-        if process.returncode:
-            raise subprocess.CalledProcessError(process.returncode, process.args)
-        progress_path = output / "progress.json"
-        progress = read_json(progress_path)
-        completed = progress.get("completed", {})
-        all_finished = set(completed) == set(PATTERNS) and all(set(value) == set(PHASES) for value in completed.values())
-        if progress.get("complete") is True and progress.get("release_pending") is True and all_finished:
-            # Owner authorized release after every original Q2--Q6 component.
-            # This CLI only removes the holder; it does not run an update or
-            # delete a generation. Failed/partial calculations never reach it.
-            released = subprocess.run(
-                [sys.executable, "-m", "scripts.maintain_adjusted_daily", "release", "--holder", "pr17-pattern-scan"],
-                cwd=repo_root,
-                capture_output=True,
-                text=True,
-                check=True,
-            )
-            progress["release_pending"] = False
-            progress["release"] = {"holder": "pr17-pattern-scan", "result": released.stdout.strip()}
-            write_progress(progress_path, progress)
-            LOGGER.info("All Q2--Q6 complete; released holder=pr17-pattern-scan")
-    finally:
-        if job is not None:
-            job.close()
-        active.unlink(missing_ok=True)
+    with _active_launch(output):
+        job: _MemoryBoundJob | None = None
+        started = time.monotonic()
+        try:
+            job = _MemoryBoundJob(8 * 1024**3)
+            process = job.start([sys.executable, "-m", "scripts.run_pattern_scan_remaining", *arguments, "--worker"], repo_root)
+            while process.poll() is None:
+                if time.monotonic() - started > timeout_seconds:
+                    raise TimeoutError("owned continuation exceeded its explicit timeout")
+                time.sleep(0.5)
+            write_progress(output / "job-memory.json", {**job.memory_receipt(), "wall_seconds": time.monotonic() - started, "exit_code": process.returncode})
+            if process.returncode:
+                raise subprocess.CalledProcessError(process.returncode, process.args)
+            progress_path = output / "progress.json"
+            progress = read_json(progress_path)
+            completed = progress.get("completed", {})
+            all_finished = set(completed) == set(PATTERNS) and all(set(value) == set(PHASES) for value in completed.values())
+            if progress.get("complete") is True and progress.get("release_pending") is True and all_finished:
+                # Owner authorized release after every original Q2--Q6 component.
+                # This CLI only removes the holder; it does not run an update or
+                # delete a generation. Failed/partial calculations never reach it.
+                released = subprocess.run(
+                    [sys.executable, "-m", "scripts.maintain_adjusted_daily", "release", "--holder", "pr17-pattern-scan"],
+                    cwd=repo_root,
+                    capture_output=True,
+                    text=True,
+                    check=True,
+                )
+                progress["release_pending"] = False
+                progress["release"] = {"holder": "pr17-pattern-scan", "result": released.stdout.strip()}
+                write_progress(progress_path, progress)
+                LOGGER.info("All Q2--Q6 complete; released holder=pr17-pattern-scan")
+        finally:
+            if job is not None:
+                try:
+                    job.terminate_and_confirm()
+                finally:
+                    job.close()

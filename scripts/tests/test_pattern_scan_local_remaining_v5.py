@@ -128,6 +128,9 @@ def test_only_final_results_are_receipted_and_completed_phases_are_not_rerun(
         def memory_receipt(self) -> dict[str, int]:
             return {"peak_committed_bytes": 10}
 
+        def terminate_and_confirm(self) -> None:
+            pass
+
         def close(self) -> None:
             pass
 
@@ -535,6 +538,9 @@ def test_job_initialization_failure_removes_active_marker(tmp_path: Path, monkey
     output = repo / ".tmp/run"
 
     def fail_job(limit: int) -> None:
+        marker = read_json(output / ".active")
+        assert marker["schema"] == module.ACTIVE_SCHEMA
+        assert marker["lock_path"] == str(output / ".active.lock")
         raise OSError("synthetic Job Object initialization failure")
 
     monkeypatch.setattr(pattern_scan_execution_v1, "_MemoryBoundJob", fail_job)
@@ -542,6 +548,158 @@ def test_job_initialization_failure_removes_active_marker(tmp_path: Path, monkey
     with pytest.raises(OSError, match="Job Object initialization"):
         module.launch_remaining([], repo, output, timeout_seconds=10)
     assert not (output / ".active").exists()
+    with (output / ".active.lock").open("a+b") as handle:
+        assert module.try_os_lock(handle)
+        module.release_os_lock(handle)
+
+
+@pytest.mark.parametrize("kind", ("legacy", "malformed", "foreign"))
+def test_unknown_active_marker_is_preserved(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, kind: str) -> None:
+    from research_core import pattern_scan_execution_v1, research_measurement_v1
+
+    repo = tmp_path / "repo"
+    output = repo / ".tmp/run"
+    output.mkdir(parents=True)
+    active = output / ".active"
+    contents = {
+        "legacy": b"1234\n",
+        "malformed": b'{"schema":',
+        "foreign": json.dumps({"schema": module.ACTIVE_SCHEMA, "owner": "foreign", "pid": 1, "lock_path": str(output / "other.lock")}).encode(),
+    }[kind]
+    active.write_bytes(contents)
+    before = active.stat().st_mtime_ns
+
+    def unexpected_job(limit: int) -> None:
+        raise AssertionError("a protected active marker must not start a Job")
+
+    monkeypatch.setattr(pattern_scan_execution_v1, "_MemoryBoundJob", unexpected_job)
+    monkeypatch.setattr(research_measurement_v1, "host_resources", lambda: {"physical_available_bytes": 16 * 1024**3})
+    with pytest.raises(RuntimeError, match="active marker"):
+        module.launch_remaining([], repo, output, timeout_seconds=10)
+    assert active.read_bytes() == contents and active.stat().st_mtime_ns == before
+    assert (output / ".active.lock").is_file()
+    with (output / ".active.lock").open("a+b") as handle:
+        assert module.try_os_lock(handle)
+        module.release_os_lock(handle)
+
+
+def test_active_cleanup_preserves_a_different_owner(tmp_path: Path) -> None:
+    output = tmp_path / "run"
+    output.mkdir()
+    with module._active_launch(output):
+        marker = read_json(output / ".active")
+        foreign = {**marker, "owner": "different-owner"}
+        module.write_progress(output / ".active", foreign)
+    assert read_json(output / ".active") == foreign
+    with (output / ".active.lock").open("a+b") as handle:
+        assert module.try_os_lock(handle)
+        module.release_os_lock(handle)
+
+
+@pytest.mark.parametrize("close_failure", (False, True))
+def test_os_lock_blocks_live_child_and_recovers_after_child_death(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, close_failure: bool) -> None:
+    import subprocess
+    import sys
+    import time
+
+    from research_core import pattern_scan_execution_v1, research_measurement_v1
+
+    repo = tmp_path / "repo"
+    output = repo / ".tmp/run"
+    output.mkdir(parents=True)
+    active, lock_path, ready = output / ".active", output / ".active.lock", output / "child-ready"
+    write_json(output / "progress.json", {"complete": False, "release_pending": False, "completed": {}})
+    child_code = """
+import os
+import sys
+import time
+from pathlib import Path
+from research_core.artifact_store import release_os_lock, try_os_lock, write_json
+
+output, ready = Path(sys.argv[1]), Path(sys.argv[2])
+lock = output / ".active.lock"
+handle = lock.open("a+b")
+if not try_os_lock(handle):
+    raise RuntimeError("synthetic child could not acquire OS lock")
+try:
+    write_json(output / ".active", {
+        "schema": "pattern-scan-local-active.v5", "owner": "synthetic-child",
+        "pid": os.getpid(), "lock_path": str(lock),
+    })
+    ready.write_text("ready", encoding="utf-8")
+    deadline = time.monotonic() + 30.0
+    while time.monotonic() < deadline:
+        time.sleep(0.1)
+finally:
+    release_os_lock(handle)
+    handle.close()
+"""
+    starts: list[dict[str, Any]] = []
+    teardown: list[str] = []
+
+    class Job:
+        def __init__(self, limit: int) -> None:
+            assert limit == 8 * 1024**3
+
+        def start(self, command: list[str], root: Path) -> SimpleNamespace:
+            starts.append(read_json(active))
+            return SimpleNamespace(poll=lambda: 0, returncode=0, args=command)
+
+        def memory_receipt(self) -> dict[str, int]:
+            return {"peak_committed_bytes": 10}
+
+        def terminate_and_confirm(self) -> None:
+            teardown.append("terminate")
+
+        def close(self) -> None:
+            teardown.append("close")
+            if close_failure:
+                raise OSError("synthetic Job close failure")
+
+    monkeypatch.setattr(pattern_scan_execution_v1, "_MemoryBoundJob", Job)
+    monkeypatch.setattr(research_measurement_v1, "host_resources", lambda: {"physical_available_bytes": 16 * 1024**3})
+    child = subprocess.Popen(
+        [sys.executable, "-c", child_code, str(output), str(ready)],
+        cwd=Path(__file__).resolve().parents[2],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+    )
+    try:
+        deadline = time.monotonic() + 15.0
+        while not ready.is_file():
+            if child.poll() is not None:
+                stdout, stderr = child.communicate(timeout=5)
+                pytest.fail(f"synthetic lock holder exited: {stdout} {stderr}")
+            if time.monotonic() >= deadline:
+                pytest.fail("synthetic lock holder did not become ready before timeout")
+            time.sleep(0.05)
+        contents, before, inode = active.read_bytes(), active.stat().st_mtime_ns, lock_path.stat().st_ino
+        with pytest.raises(RuntimeError, match="locked"):
+            module.launch_remaining([], repo, output, timeout_seconds=1)
+        assert active.read_bytes() == contents and active.stat().st_mtime_ns == before
+        assert not starts
+        child.kill()
+        child.wait(timeout=5)
+        assert read_json(active)["owner"] == "synthetic-child"
+        if close_failure:
+            with pytest.raises(OSError, match="Job close failure"):
+                module.launch_remaining([], repo, output, timeout_seconds=1)
+        else:
+            module.launch_remaining([], repo, output, timeout_seconds=1)
+        assert len(starts) == 1 and starts[0]["owner"] != "synthetic-child"
+        assert starts[0]["schema"] == module.ACTIVE_SCHEMA and starts[0]["lock_path"] == str(lock_path)
+        assert teardown == ["terminate", "close"]
+        assert not active.exists()
+        assert lock_path.is_file() and lock_path.stat().st_ino == inode
+        with lock_path.open("a+b") as handle:
+            assert module.try_os_lock(handle)
+            module.release_os_lock(handle)
+    finally:
+        if child.poll() is None:
+            child.kill()
+        child.communicate(timeout=5)
 
 
 @pytest.mark.parametrize("finished", (False, True))
@@ -567,6 +725,9 @@ def test_launcher_releases_only_after_all_original_components(tmp_path: Path, mo
 
         def memory_receipt(self) -> dict[str, int]:
             return {"peak_committed_bytes": 10}
+
+        def terminate_and_confirm(self) -> None:
+            pass
 
         def close(self) -> None:
             pass

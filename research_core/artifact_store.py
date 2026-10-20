@@ -12,7 +12,7 @@ import stat
 import sys
 import uuid
 from pathlib import Path, PurePosixPath, PureWindowsPath
-from typing import Any
+from typing import IO, Any
 
 
 def safe_path(path: Path) -> Path:
@@ -36,6 +36,35 @@ def relative_name(value: str) -> str:
     if any(not part for part in value.split("/")):
         raise ValueError(f"unsafe artifact name: {value}")
     return value
+
+
+def try_os_lock(handle: IO[bytes]) -> bool:
+    """Take an exclusive OS lock on the first byte; the OS drops it when the process ends."""
+    handle.seek(0)
+    try:
+        if sys.platform == "win32":
+            import msvcrt
+
+            msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
+        else:
+            import fcntl
+
+            fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        return False
+    return True
+
+
+def release_os_lock(handle: IO[bytes]) -> None:
+    handle.seek(0)
+    if sys.platform == "win32":
+        import msvcrt
+
+        msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+    else:
+        import fcntl
+
+        fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
 
 
 def _linux_publish_noreplace(source: Path, destination: Path) -> None:

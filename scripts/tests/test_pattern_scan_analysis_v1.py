@@ -332,3 +332,159 @@ def test_event_parts_route_only_stock_prices_and_stock_verification_through_refe
     assert set(result) == set(PATTERNS)
     assert verified == [stock] and reads == [stock] and generic
     assert all(stocks["0001"].is_dir() for stocks in result.values())
+
+
+def test_selection_atomic_new_publication_and_equivalent_bytes_are_preserved(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    path = tmp_path / "selection.json"
+    selections = {"B1": {"candidates": (), "selected_atoms": ("G:300to500",)}}
+    publish = analysis.publish_noreplace
+    publications: list[tuple[Path, Path]] = []
+
+    def checked_publish(staged: Path, destination: Path) -> None:
+        assert staged.parent == destination.parent
+        assert json.loads(staged.read_text(encoding="utf-8")) == json.loads(json.dumps(selections))
+        assert not destination.exists()
+        publications.append((staged, destination))
+        publish(staged, destination)
+
+    monkeypatch.setattr(analysis, "publish_noreplace", checked_publish)
+    analysis._retain_selection(path, selections)
+    assert len(publications) == 1
+    # Legacy whitespace/key ordering must not be normalized by a retry.
+    original = b'{ "B1" : { "selected_atoms": ["G:300to500"], "candidates": [] } }\n'
+    path.write_bytes(original)
+    modified = path.stat().st_mtime_ns
+    analysis._retain_selection(path, selections)
+    assert path.read_bytes() == original
+    assert path.stat().st_mtime_ns == modified
+    assert len(publications) == 1
+
+
+def test_selection_different_valid_content_fails_without_changing_bytes(tmp_path: Path) -> None:
+    path = tmp_path / "selection.json"
+    path.write_bytes(b'{"B1":{"candidates":["original"]}}')
+    before = path.read_bytes(), path.stat().st_mtime_ns
+    with pytest.raises(ValueError, match="fixed selection differs"):
+        analysis._retain_selection(path, {"B1": {"candidates": ["replacement"]}})
+    assert (path.read_bytes(), path.stat().st_mtime_ns) == before
+    assert list(tmp_path.iterdir()) == [path]
+
+
+@pytest.mark.parametrize("damaged", (b'{"B1":', b"\xff\xfe incomplete"))
+def test_selection_unpublished_malformed_content_is_repaired_atomically(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, damaged: bytes) -> None:
+    path = tmp_path / "selection.json"
+    path.write_bytes(damaged)
+    selections: dict[str, dict[str, list[str]]] = {"B1": {"candidates": []}}
+    replace = analysis.os.replace
+    repairs: list[tuple[Path, Path]] = []
+
+    def checked_replace(staged: Path, destination: Path) -> None:
+        assert staged.parent == destination.parent
+        assert destination.read_bytes() == damaged
+        assert json.loads(staged.read_text(encoding="utf-8")) == selections
+        repairs.append((staged, destination))
+        replace(staged, destination)
+
+    monkeypatch.setattr(analysis.os, "replace", checked_replace)
+    analysis._retain_selection(path, selections)
+    assert json.loads(path.read_text(encoding="utf-8")) == selections
+    assert len(repairs) == 1
+
+
+@pytest.mark.parametrize(
+    "marker",
+    (
+        "receipt.json",
+        "manifest.json",
+        "run-receipt.json",
+        "audits/receipt.json",
+        "followup/episodes/receipt.json",
+        "../computed-results.json",
+        "../handoff-plan.json",
+        "../publication-ready.json",
+        "../publication-handoff.json",
+        "../phase-all-result.json",
+        "../run-all-receipt.json",
+        "../response-all.json",
+    ),
+)
+def test_selection_completion_or_publication_marker_blocks_repair_even_if_marker_is_damaged(tmp_path: Path, marker: str) -> None:
+    output = tmp_path / "run/analysis"
+    output.mkdir(parents=True)
+    path = output / "selection.json"
+    damaged = b'{"B1":'
+    path.write_bytes(damaged)
+    completion = output / marker
+    completion.parent.mkdir(parents=True, exist_ok=True)
+    completion.write_bytes(b'{"complete":')
+    before = path.read_bytes(), path.stat().st_mtime_ns
+    with pytest.raises(ValueError, match="frozen selection"):
+        analysis._retain_selection(path, {"B1": {"candidates": []}})
+    assert (path.read_bytes(), path.stat().st_mtime_ns) == before
+    path.unlink()
+    with pytest.raises(ValueError, match="frozen selection"):
+        analysis._retain_selection(path, {"B1": {"candidates": []}})
+    assert not path.exists()
+
+
+def test_selection_completed_same_content_is_reused_without_rewrite(tmp_path: Path) -> None:
+    path = tmp_path / "selection.json"
+    path.write_bytes(b'{ "B1": {"candidates": []} }\n')
+    (tmp_path / "receipt.json").write_bytes(b'{"complete":true}')
+    before = path.read_bytes(), path.stat().st_mtime_ns
+    analysis._retain_selection(path, {"B1": {"candidates": ()}})
+    assert (path.read_bytes(), path.stat().st_mtime_ns) == before
+
+
+@pytest.mark.parametrize("repair", (False, True))
+def test_selection_interruption_keeps_final_unchanged_and_retry_succeeds(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, repair: bool) -> None:
+    path = tmp_path / "selection.json"
+    if repair:
+        path.write_bytes(b'{"B1":')
+    before = path.read_bytes() if path.exists() else None
+    original_write = analysis.write_json
+
+    def interrupted_write(staged: Path, value: Any) -> None:
+        staged.write_bytes(b'{"partial":')
+        raise OSError("synthetic interrupted selection write")
+
+    monkeypatch.setattr(analysis, "write_json", interrupted_write)
+    with pytest.raises(OSError, match="interrupted selection"):
+        analysis._retain_selection(path, {"B1": {"candidates": []}})
+    assert (path.read_bytes() if path.exists() else None) == before
+    assert list(tmp_path.glob(".staging-selection.json-*"))
+    monkeypatch.setattr(analysis, "write_json", original_write)
+    analysis._retain_selection(path, {"B1": {"candidates": []}})
+    assert json.loads(path.read_text(encoding="utf-8")) == {"B1": {"candidates": []}}
+
+
+def test_selection_permission_error_is_not_treated_as_repairable_json(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    path = tmp_path / "selection.json"
+
+    def denied(*args: Any, **kwargs: Any) -> Any:
+        raise PermissionError("synthetic selection read denied")
+
+    monkeypatch.setattr(analysis, "read_json", denied)
+    with pytest.raises(PermissionError, match="selection read denied"):
+        analysis._retain_selection(path, {"B1": {"candidates": []}})
+    assert not list(tmp_path.iterdir())
+
+
+def test_run_analysis_retains_completed_selector_result_before_audits(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    output = tmp_path / "run/analysis"
+    output.mkdir(parents=True)
+    path = output / "selection.json"
+    path.write_bytes(b'{"B1":')
+    selections: dict[str, dict[str, list[str]]] = {"B1": {"candidates": []}}
+    monkeypatch.setattr(analysis, "verify_source", lambda source: None)
+    monkeypatch.setattr(analysis, "_report_execution_files", lambda *args: {})
+    monkeypatch.setattr(analysis, "prepare_event_parts", lambda *args, **kwargs: {})
+    monkeypatch.setattr(analysis, "select_all", lambda parts: selections)
+
+    def stop_at_audits(*args: Any, **kwargs: Any) -> Any:
+        assert json.loads(path.read_text(encoding="utf-8")) == selections
+        raise RuntimeError("synthetic stop before audits")
+
+    monkeypatch.setattr(analysis, "_audits", stop_at_audits)
+    with pytest.raises(RuntimeError, match="before audits"):
+        analysis.run_analysis(cast(Any, None), {}, {}, {}, output, source=SOURCE, input_id="synthetic-input", defer_publication=True)

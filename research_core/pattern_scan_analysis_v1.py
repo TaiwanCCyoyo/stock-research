@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import uuid
 from dataclasses import asdict, fields
 from pathlib import Path
@@ -684,6 +685,67 @@ def _report_execution_files(
     return selected
 
 
+def _same_selection(path: Path, selections: dict[str, Any]) -> bool:
+    try:
+        saved = read_json(path)
+    except (FileNotFoundError, json.JSONDecodeError, UnicodeDecodeError):
+        return False
+    if saved != selections:
+        raise ValueError("existing fixed selection differs")
+    return True
+
+
+def _selection_unfrozen(path: Path) -> None:
+    """A consumed/retained selection is evidence, even if its marker is damaged."""
+    analysis = path.parent
+    run = analysis.parent
+    markers = [
+        *(analysis / name for name in ("receipt.json", "manifest.json", "run-receipt.json")),
+        # Both legacy consumers record the fixed selection in their identity.
+        analysis / "audits/receipt.json",
+        analysis / "followup/episodes/receipt.json",
+        *(
+            run / name
+            for name in (
+                "computed-results.json",
+                "handoff-plan.json",
+                "publication-ready.json",
+                "publication-handoff.json",
+                "phase-all-result.json",
+                "run-all-receipt.json",
+                "response-all.json",
+            )
+        ),
+    ]
+    if any(marker.exists() for marker in markers):
+        raise ValueError("frozen selection cannot be repaired after a completion receipt or publication marker")
+
+
+def _retain_selection(path: Path, selections: dict[str, Any]) -> None:
+    """Atomically retain a fixed selection; repair only unpublished bad JSON.
+
+    Valid equivalent bytes are kept verbatim. A new selection uses no-replace
+    publication; malformed unreceipted bytes stay in place until atomic repair.
+    The coordinator owns serialization of active runs, not this file helper.
+    """
+    path = _checked_path(path)
+    normalized = json.loads(json.dumps(selections, allow_nan=False))
+    if _same_selection(path, normalized):
+        return
+    _selection_unfrozen(path)
+    staged = path.with_name(f".staging-{path.name}-{uuid.uuid4().hex}")
+    write_json(staged, selections)
+    try:
+        publish_noreplace(staged, path)
+    except FileExistsError:
+        # Preserve a valid selection that appeared before publication. Never
+        # turn a permission/read failure into permission to overwrite evidence.
+        if _same_selection(path, normalized):
+            return
+        _selection_unfrozen(path)
+        os.replace(staged, path)
+
+
 def run_analysis(
     roots: DataRoots,
     parts: dict[str, Path],
@@ -711,11 +773,7 @@ def run_analysis(
     event_parts = prepare_event_parts(parts, barrier, entries, output / "event-parts", source=source, input_id=input_id, shared=shared)
     selections = select_all(event_parts)
     selection_path = output / "selection.json"
-    if selection_path.exists():
-        if read_json(selection_path) != json.loads(json.dumps(selections)):
-            raise ValueError("existing fixed selection differs")
-    else:
-        write_json(selection_path, selections)
+    _retain_selection(selection_path, selections)
     audits = _audits(roots, parts, barrier, event_parts, selections, output / "audits", source=source, input_id=input_id, shared=shared)
     summaries = summarize_all(event_parts, selections, output / "summaries")
     calendar = pd.DatetimeIndex(pd.to_datetime(barrier["calendar"]))

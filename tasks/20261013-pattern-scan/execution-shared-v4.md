@@ -91,6 +91,15 @@ identity, records the recovery code and any later source drift, and explicitly
 states that no producer read was repeated. It does not require today's producer
 files to reproduce completed derived bytes or rewrite existing receipts.
 
+The launcher reuses the shared maintenance code's OS-lock primitive. The small
+`.active.lock` file remains in place; the operating system releases its lock
+when the coordinator dies. A new-protocol diagnostic marker can then be
+replaced under that lock. Legacy PID markers, malformed markers and foreign
+markers require explicit verified recovery and are never automatically taken
+over. This protects the still-running original executor. The legacy analysis
+selection also publishes atomically; an already consumed or receipted selection
+is never repaired in place.
+
 Only this continuation's new temporary projections are cleaned after a target's
 three final components are saved, readable and receipt-recorded. Original
 inputs/checkpoints, Q1 and preview are retained. Q2–Q6 completion is reported only
