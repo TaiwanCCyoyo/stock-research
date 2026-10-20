@@ -6,6 +6,7 @@ import json
 from collections.abc import Iterator
 from pathlib import Path
 from threading import Event
+from types import SimpleNamespace
 from typing import Any
 
 import pandas as pd
@@ -212,3 +213,66 @@ def test_busy_producer_declines_metadata_before_resolving_or_reading_root(monkey
     monkeypatch.setattr(shared_data_view, "producer_data_root", forbidden)
     monkeypatch.setattr(live_producer, "readonly_sqlite", forbidden)
     assert shared_data_view.symbol_names() == {}
+
+
+def test_failed_warmup_retries_same_generation_only_after_cooldown(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    _publish(tmp_path, "generation-one")
+    monkeypatch.setattr(shared_data_view, "symbol_names", lambda: {})
+    clock = [100.0]
+    monkeypatch.setattr(shared_data_view, "time", SimpleNamespace(monotonic=lambda: clock[0], perf_counter=shared_data_view.time.perf_counter))
+    read = maintained.read_adjusted_daily
+    calls = 0
+
+    def transient(*args: Any, **kwargs: Any) -> Any:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            raise OSError("temporary synthetic file access failure")
+        return read(*args, **kwargs)
+
+    monkeypatch.setattr(maintained, "read_adjusted_daily", transient)
+    store = SharedDataView(tmp_path)
+    try:
+        with pytest.raises(shared_data_view.ViewUnavailable):
+            store.prepare(wait=True)
+        for moment in (100.0, 100.5, 100.99):
+            clock[0] = moment
+            with pytest.raises(shared_data_view.ViewUnavailable):
+                store.prepare(wait=True)
+        assert calls == 1, "requests within the cooldown must not enqueue another warmup"
+        clock[0] = 101.0
+        status, symbols = store.prepare(wait=True)
+        assert status["generation"] == "generation-one"
+        assert symbols[0]["code"] == "2330"
+        assert store.series("2330", "raw", None, None)["close"] == [10.0, None, None, 10.0]
+    finally:
+        store.close()
+
+
+@pytest.mark.parametrize("phase", ["warm", "series"])
+@pytest.mark.parametrize("expected_error", [True, False])
+def test_concurrent_file_change_is_503_but_programming_error_surfaces(
+    viewer: SharedDataView, monkeypatch: pytest.MonkeyPatch, phase: str, expected_error: bool
+) -> None:
+    monkeypatch.setenv("STOCK_RESEARCH_DATA_MODE", "local-private")
+
+    def fail(*args: Any, **kwargs: Any) -> Any:
+        if expected_error:
+            raise live_producer.ProducerChangedError("synthetic file changed during stable read")
+        raise RuntimeError("unexpected programming failure")
+
+    monkeypatch.setattr(maintained, "read_adjusted_daily", fail)
+    if phase == "warm":
+        _publish(viewer.root, "generation-two")
+        error = shared_data_view.ViewUnavailable if expected_error else RuntimeError
+        with pytest.raises(error):
+            viewer.prepare(wait=True)
+        path = "/shared-data/v1/adjusted-daily-v1/symbols"
+    else:
+        path = "/shared-data/v1/adjusted-daily-v1/series/2330"
+    client = _client(viewer)
+    if expected_error:
+        assert client.get(path).status_code == 503
+    else:
+        with pytest.raises(RuntimeError, match="unexpected programming failure"):
+            client.get(path)

@@ -27,6 +27,8 @@ from research_core.shared_data import shared_data_root
 LOGGER = logging.getLogger(__name__)
 REFERENCE = "reference_factor_adjusted"
 PRICE_COLUMNS = ["Code", "Date", "Open", "High", "Low", "Close", "VolumeLots", "Quality", "quality_reason"]
+READ_ERRORS = (OSError, ValueError, KeyError, live_producer.ProducerChangedError)
+WARM_RETRY_SECONDS = 1.0
 
 
 class ViewWarming(RuntimeError):
@@ -92,6 +94,7 @@ class SharedDataView:
         self._executor = ThreadPoolExecutor(max_workers=3, thread_name_prefix="shared-data-read")
         self._future: Future[list[dict[str, Any]]] | None = None
         self._identity: tuple[str, str] | None = None
+        self._retry_after: float | None = None
         self._names: dict[str, tuple[str, str]] = {}
         self.warm_seconds: float | None = None
 
@@ -142,6 +145,16 @@ class SharedDataView:
                     raise ViewWarming("正在核對共用資料；世代更新後將重新核對。")
                 self._identity = identity
                 self._future = self._executor.submit(self._warm, status)
+                self._retry_after = None
+            elif self._future is not None and self._future.done() and isinstance(self._future.exception(), READ_ERRORS):
+                # Retry only on demand and after a cooldown. The lock ensures
+                # concurrent callers cannot enqueue duplicate warmups.
+                now = time.monotonic()
+                if self._retry_after is None:
+                    self._retry_after = now + WARM_RETRY_SECONDS
+                elif now >= self._retry_after:
+                    self._future = self._executor.submit(self._warm, status)
+                    self._retry_after = None
             future = self._future
         assert future is not None
         if not wait and not future.done():
@@ -153,7 +166,10 @@ class SharedDataView:
             if (current["generation"], current["status_sha256"]) != identity:
                 raise ViewWarming("共用資料世代已更新，正在重新核對。")
             return status, symbols
-        except (OSError, ValueError, KeyError) as exc:
+        except READ_ERRORS as exc:
+            with self._lock:
+                if self._future is future and self._retry_after is None:
+                    self._retry_after = time.monotonic() + WARM_RETRY_SECONDS
             LOGGER.warning("Shared viewer warmup failed: %s", exc)
             raise ViewUnavailable("共用資料檔案缺失、已清除或驗證失敗。") from exc
 
@@ -248,6 +264,6 @@ class SharedDataView:
                 "status_sha256": status["status_sha256"],
                 "asof": status["asof"],
             }
-        except (OSError, ValueError, KeyError) as exc:
+        except READ_ERRORS as exc:
             LOGGER.warning("Shared viewer read failed generation=%s code=%s: %s", generation, code, exc)
             raise ViewUnavailable("共用資料檔案缺失、已清除或驗證失敗；請重新載入。") from exc
