@@ -5,18 +5,21 @@ from __future__ import annotations
 import logging
 import shutil
 import time
+import uuid
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
 import pyarrow.parquet as pq
 
-from research_core.artifact_store import publish_noreplace, read_json, write_json
+from research_core.artifact_store import file_digest, publish_noreplace, read_json, write_json
 from research_core.hhhl_variants_selection import Atom
 from research_core.pattern_scan_conditions_v1 import PATTERNS
 from research_core.pattern_scan_local_conditions_v5 import run_conditions
+from research_core.pattern_scan_local_followup_v5 import completed_results as completed_followup_results
 from research_core.pattern_scan_local_followup_v5 import run_followup
 from research_core.pattern_scan_local_inputs_v5 import LocalInputs, write_progress
+from research_core.pattern_scan_local_q4_v5 import completed_results as completed_q4_results
 from research_core.pattern_scan_local_q4_v5 import run_q4
 from research_core.research_data_paths import checked_path
 from research_core.research_measurement_v1 import phase_receipt, resource_sample
@@ -25,6 +28,60 @@ from research_core.run_receipt import InputSpec, code_identity, fingerprint_inpu
 LOGGER = logging.getLogger(__name__)
 PHASES = ("conditions", "q4", "followup")
 DEFINITION = "pattern-scan-local-remaining.v5"
+_VERIFIED_FINALS: dict[Path, tuple[str, int, int, int, int]] = {}
+
+
+def _verify_final_results(receipt: dict[str, Any], files: list[Path], *, already_hashed: bool = False) -> None:
+    """Check only receipted final results, once per unchanged file/process.
+
+    A newly created receipt already hashed these files. Relocating that same
+    verified file also needs no second hash. Inputs and intermediate projections
+    never enter this check.
+    """
+    for row, supplied in zip(receipt["results"].values(), files, strict=True):
+        path = checked_path(supplied)
+        if not path.is_file():
+            raise ValueError("completed final result is missing")
+        before = path.stat()
+        digest, size = row.get("sha256"), row.get("bytes")
+        if not isinstance(digest, str) or not isinstance(size, int) or isinstance(size, bool) or before.st_size != size:
+            raise ValueError("completed final result size or digest record differs")
+        stamp = digest, before.st_size, before.st_mtime_ns, before.st_dev, before.st_ino
+        if not already_hashed and _VERIFIED_FINALS.get(path) != stamp:
+            if file_digest(path) != digest:
+                raise ValueError("completed final result SHA-256 differs")
+            after = path.stat()
+            if (after.st_size, after.st_mtime_ns, after.st_dev, after.st_ino) != stamp[1:]:
+                raise ValueError("completed final result changed while being checked")
+        _VERIFIED_FINALS[path] = stamp
+
+
+def _check_receipt_scope(receipt: dict[str, Any], parameters: dict[str, str]) -> None:
+    recorded, code = receipt.get("parameters"), receipt.get("code")
+    if (
+        receipt.get("schema") != "run-receipt.v1"
+        or receipt.get("definition") != DEFINITION
+        or not isinstance(recorded, dict)
+        or any(recorded.get(key) != value for key, value in parameters.items())
+        or not isinstance(code, dict)
+        or not isinstance(code.get("commit"), str)
+        or code.get("dirty") is not False
+        or not isinstance(receipt.get("results"), dict)
+        or not receipt["results"]
+    ):
+        raise ValueError("final receipt belongs to different continuation scope or lacks its original executor")
+
+
+def _published_files(receipt: dict[str, Any], final: Path, repo_root: Path, parameters: dict[str, str]) -> list[Path]:
+    _check_receipt_scope(receipt, parameters)
+    files = []
+    for row in receipt["results"].values():
+        supplied = Path(row["path"])
+        absolute = checked_path(supplied if supplied.is_absolute() else repo_root / supplied)
+        if not absolute.is_relative_to(final):
+            raise ValueError("published final result path is outside its phase root")
+        files.append(absolute)
+    return files
 
 
 def _remove_owned_temporary(path: Path, output: Path) -> None:
@@ -37,6 +94,62 @@ def _remove_owned_temporary(path: Path, output: Path) -> None:
     for child in path.rglob("*"):
         checked_path(child)
     shutil.rmtree(path)
+
+
+def _staged_receipt(receipt_path: Path, working: Path, final: Path, repo_root: Path, parameters: dict[str, str]) -> tuple[dict[str, Any], list[Path]]:
+    """Recover finished result bytes, before or after receipt path relocation.
+
+    The final receipt already owns the result hashes and original executor.
+    This step checks scope, staging membership and sizes without recomputing
+    a completed phase. Final-only integrity checks are owned by the caller.
+    """
+    receipt = read_json(receipt_path)
+    _check_receipt_scope(receipt, parameters)
+    results = receipt.get("results")
+    if not isinstance(results, dict) or not results or not isinstance(receipt.get("code"), dict):
+        raise ValueError("staged final receipt lacks results or its original executor")
+    files: list[Path] = []
+    for row in results.values():
+        if not isinstance(row, dict) or not isinstance(row.get("path"), str):
+            raise ValueError("staged final receipt requires result paths")
+        supplied = Path(row["path"])
+        absolute = checked_path(supplied if supplied.is_absolute() else repo_root / supplied)
+        if absolute.is_relative_to(working):
+            relative = absolute.relative_to(working)
+        elif absolute.is_relative_to(final):
+            relative = absolute.relative_to(final)
+        else:
+            raise ValueError("staged result path is outside its working and final roots")
+        staged = checked_path(working / relative)
+        size = row.get("bytes")
+        if not isinstance(size, int) or isinstance(size, bool) or not staged.is_file() or staged.stat().st_size != size:
+            raise ValueError("staged final result is missing or its recorded size differs")
+        row["path"] = str(final / relative)
+        files.append(staged)
+    return receipt, files
+
+
+def _phase_start(path: Path, working: Path, parameters: dict[str, str], executor: dict[str, Any]) -> dict[str, Any]:
+    """Keep one small phase scope/executor record, before numerical work."""
+    scope = {"schema": "pattern-scan-local-phase-start.v5", "definition": DEFINITION, "parameters": parameters}
+    if path.exists():
+        saved = read_json(path)
+        code = saved.get("code")
+        if (
+            any(saved.get(key) != value for key, value in scope.items())
+            or not isinstance(code, dict)
+            or not isinstance(code.get("commit"), str)
+            or code.get("dirty") is not False
+        ):
+            raise ValueError("phase-start scope or original executor differs")
+        return saved
+    if working.exists() and any(working.iterdir()):
+        raise ValueError("unfinished phase lacks its original executor record; recover phase-start explicitly")
+    saved = {**scope, "code": executor}
+    staged = path.with_name(f".{path.name}-{uuid.uuid4().hex}")
+    write_json(staged, saved)
+    publish_noreplace(staged, path)
+    return saved
 
 
 def run_remaining(stock_result: Path, output: Path, *, repo_root: Path, targets: tuple[str, ...], phases: tuple[str, ...] = PHASES) -> dict[str, Any]:
@@ -73,10 +186,10 @@ def run_remaining(stock_result: Path, output: Path, *, repo_root: Path, targets:
     for target in targets:
         completed = progress["completed"].setdefault(target, {})
         for phase in phases:
+            parameters = {"target": target, "phase": phase, "original_source_id": inputs.source_id, "original_input_id": inputs.input_id}
             if phase in completed:
                 receipt = read_json(Path(completed[phase]["receipt"]))
-                if any(not Path(row["path"]).is_file() for row in receipt["results"].values()):
-                    raise ValueError("completed final result is missing; repair the affected phase explicitly")
+                _verify_final_results(receipt, _published_files(receipt, output / target / phase, repo_root, parameters))
                 LOGGER.info("Reuse complete target=%s phase=%s executor=%s", target, phase, receipt["code"]["commit"])
                 continue
             if phase != "conditions" and "conditions" not in completed:
@@ -89,48 +202,63 @@ def run_remaining(stock_result: Path, output: Path, *, repo_root: Path, targets:
                 if not receipt_path.is_file():
                     raise ValueError("published local result lacks its final receipt")
                 receipt = read_json(receipt_path)
+                _verify_final_results(receipt, _published_files(receipt, final, repo_root, parameters))
                 completed[phase] = {"receipt": str(receipt_path), "executor": receipt["code"], "recovered": True}
                 write_progress(progress_path, progress)
                 continue
-            started = resource_sample()
-            LOGGER.info("Start target=%s phase=%s original_stocks=%d", target, phase, len(inputs.codes))
-            candidates = {}
-            if phase != "conditions":
-                selected = read_json(output / target / "conditions" / "top-candidates.json")
-                candidates = {name: tuple(Atom(**atom) for atom in atoms) for name, atoms in selected.items()}
-            if phase == "conditions":
-                _, candidates, files = run_conditions(inputs, target, working)
-                top_path = working / "top-candidates.json"
-                if not top_path.exists():
-                    write_json(top_path, {name: [asdict(atom) for atom in atoms] for name, atoms in candidates.items()})
-                files.append(top_path)
-            else:
-                inputs.cache_target(target, inputs.temporary / "events" / target)
-                if phase == "q4":
-                    files = run_q4(inputs, target, candidates, working)
-                else:
-                    files = run_followup(inputs, target, candidates, working)
-            # Schema/footer validation is a readability check of final output,
-            # not another data hash or a new intermediate verification chain.
-            for path in files:
-                if path.suffix == ".parquet":
-                    pq.ParquetFile(path).metadata
-            measurement = phase_receipt(phase, started, resource_sample())
             receipt_path = working / "run-receipt.json"
-            if not receipt_path.exists():
+            existing_receipt = receipt_path.exists()
+            if not existing_receipt:
+                start_path = output / target / f".phase-start-{phase}.json"
+                phase_start = _phase_start(start_path, working, parameters, executor)
+                started = resource_sample()
+                LOGGER.info("Start target=%s phase=%s original_stocks=%d", target, phase, len(inputs.codes))
+                files = completed_q4_results(working) if phase == "q4" else completed_followup_results(working) if phase == "followup" else None
+                reused_completed_tables = files is not None
+                if files is None:
+                    if phase_start["code"] != executor:
+                        execution_codes = phase_start.setdefault("execution_codes", [phase_start["code"]])
+                        if not isinstance(execution_codes, list):
+                            raise ValueError("phase-start execution codes must be a list")
+                        if executor not in execution_codes:
+                            execution_codes.append(executor)
+                            write_progress(start_path, phase_start)
+                    candidates = {}
+                    if phase != "conditions":
+                        selected = read_json(output / target / "conditions" / "top-candidates.json")
+                        candidates = {name: tuple(Atom(**atom) for atom in atoms) for name, atoms in selected.items()}
+                    if phase == "conditions":
+                        _, candidates, files = run_conditions(inputs, target, working)
+                        top_path = working / "top-candidates.json"
+                        if not top_path.exists():
+                            write_json(top_path, {name: [asdict(atom) for atom in atoms] for name, atoms in candidates.items()})
+                        files.append(top_path)
+                    else:
+                        inputs.cache_target(target, inputs.temporary / "events" / target)
+                        if phase == "q4":
+                            files = run_q4(inputs, target, candidates, working)
+                        else:
+                            files = run_followup(inputs, target, candidates, working)
+                    # Readability of newly completed final outputs, without
+                    # another hash or an intermediate verification chain.
+                    for path in files:
+                        if path.suffix == ".parquet":
+                            pq.ParquetFile(path).metadata
+                else:
+                    LOGGER.info("Finalize complete tables target=%s phase=%s original_executor=%s", target, phase, phase_start["code"]["commit"])
+                measurement = phase_receipt(phase, started, resource_sample())
+                staged_receipt = working / f".run-receipt-{uuid.uuid4().hex}.json"
                 write_run_receipt(
-                    receipt_path,
+                    staged_receipt,
                     run_id=f"{output.name}-{target}-{phase}",
                     definition=DEFINITION,
                     parameters={
-                        "target": target,
-                        "phase": phase,
-                        "original_source_id": inputs.source_id,
-                        "original_input_id": inputs.input_id,
+                        **parameters,
                         "original_code": inputs.original_code,
                         "cutoff": "2026-10-12",
                         "horizons": [126, 252],
                         "measurement": measurement,
+                        "reused_completed_tables": reused_completed_tables,
                         "Q1": "reuse existing pr17-q1-local-20261016; no Q1 computation",
                     },
                     inputs=fingerprint,
@@ -140,23 +268,44 @@ def run_remaining(stock_result: Path, output: Path, *, repo_root: Path, targets:
                     shared_data=[inputs.shared_record],
                     expected_code=executor,
                 )
-            # Paths in the receipt must describe the final single-copy location.
-            # No result bytes are copied or rehashed during this relocation.
-            receipt = read_json(receipt_path)
-            for row in receipt["results"].values():
-                result_path = Path(row["path"])
-                absolute = result_path if result_path.is_absolute() else repo_root / result_path
-                row["path"] = str(final / absolute.relative_to(working))
+                # Receipt creation runs under the retry's code, while the
+                # numerical phase retains its originally recorded executor.
+                # Publish this small metadata only after both are recorded.
+                created = read_json(staged_receipt)
+                created["code"] = phase_start["code"]
+                if "execution_codes" in phase_start:
+                    created["execution_codes"] = phase_start["execution_codes"]
+                if phase_start["code"] != executor and reused_completed_tables:
+                    created["finalized_by_code"] = executor
+                write_progress(staged_receipt, created)
+                publish_noreplace(staged_receipt, receipt_path)
+            # A receipt left before publication means calculation is complete.
+            # Both original staging paths and already-relocated final paths
+            # resolve to the same retained staging bytes. Only recorded final
+            # results are verified; intermediate projections are not hashed.
+            receipt, files = _staged_receipt(receipt_path, working, final, repo_root, parameters)
+            _verify_final_results(receipt, files, already_hashed=not existing_receipt)
             write_progress(receipt_path, receipt)
             final.parent.mkdir(parents=True, exist_ok=True)
             publish_noreplace(working, final)
-            completed[phase] = {"receipt": str(final / "run-receipt.json"), "executor": executor}
+            _verify_final_results(receipt, _published_files(receipt, final, repo_root, parameters), already_hashed=True)
+            completed[phase] = {"receipt": str(final / "run-receipt.json"), "executor": receipt["code"]}
             write_progress(progress_path, progress)
             LOGGER.info("Complete target=%s phase=%s final_files=%d", target, phase, len(files))
         if set(completed) == set(PHASES):
             _remove_owned_temporary(inputs.temporary / "events" / target, output)
+            _remove_owned_temporary(output / target / "q4" / "_temporary", output)
             _remove_owned_temporary(output / target / "followup" / "_temporary", output)
     progress["complete"] = set(progress["completed"]) == set(PATTERNS) and all(set(value) == set(PHASES) for value in progress["completed"].values())
+    if progress["complete"]:
+        # A scoped retry may finish the last phase while other phases were
+        # completed by earlier processes. Verify every retained final before
+        # permitting release; this process's already checked files are cached.
+        for target, phases_completed in progress["completed"].items():
+            for phase, recorded in phases_completed.items():
+                receipt = read_json(Path(recorded["receipt"]))
+                parameters = {"target": target, "phase": phase, "original_source_id": inputs.source_id, "original_input_id": inputs.input_id}
+                _verify_final_results(receipt, _published_files(receipt, output / target / phase, repo_root, parameters))
     progress["release_pending"] = progress["complete"]
     write_progress(progress_path, progress)
     return progress
@@ -181,9 +330,10 @@ def launch_remaining(arguments: list[str], repo_root: Path, output: Path, *, tim
     active = output / ".active"
     with active.open("x", encoding="utf-8") as stream:
         stream.write(str(__import__("os").getpid()))
-    job = _MemoryBoundJob(8 * 1024**3)
+    job: _MemoryBoundJob | None = None
     started = time.monotonic()
     try:
+        job = _MemoryBoundJob(8 * 1024**3)
         process = job.start([sys.executable, "-m", "scripts.run_pattern_scan_remaining", *arguments, "--worker"], repo_root)
         while process.poll() is None:
             if time.monotonic() - started > timeout_seconds:
@@ -213,5 +363,6 @@ def launch_remaining(arguments: list[str], repo_root: Path, output: Path, *, tim
             write_progress(progress_path, progress)
             LOGGER.info("All Q2--Q6 complete; released holder=pr17-pattern-scan")
     finally:
-        job.close()
+        if job is not None:
+            job.close()
         active.unlink(missing_ok=True)

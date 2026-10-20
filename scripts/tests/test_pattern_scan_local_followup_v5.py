@@ -184,15 +184,17 @@ def test_exact_oracle_parity_nonhit_holding_empty_candidate_and_no_temp_hashes(t
         assert codecs <= {"ZSTD"}
 
 
-def test_empty_candidates_keep_original_pattern_and_reject_result_overwrite(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_empty_candidates_keep_original_pattern_and_reuse_complete_results(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     inputs = SyntheticInputs()
     inputs.codes = ()
     paths = local.run_followup(cast(Any, inputs), "R1", {"R1": ()}, tmp_path / "empty")
     assert len(paths) == 9
     frame = pd.read_parquet(tmp_path / "empty" / "path_summary.parquet")
     assert set(frame.group_id) == {"R1"} and frame.event_n.eq(0).all()
-    with pytest.raises(FileExistsError, match="target progress"):
-        local.run_followup(cast(Any, inputs), "R1", {}, tmp_path / "empty")
+    retained = {path: (path.read_bytes(), path.stat().st_mtime_ns) for path in paths}
+    assert local.completed_results(tmp_path / "empty") == paths
+    assert local.run_followup(cast(Any, inputs), "R1", {}, tmp_path / "empty") == paths
+    assert retained == {path: (path.read_bytes(), path.stat().st_mtime_ns) for path in paths}
 
 
 def test_interrupted_phase_reuses_completed_stock_without_hashes_or_recalculation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -225,6 +227,105 @@ def test_interrupted_phase_reuses_completed_stock_without_hashes_or_recalculatio
     assert len(paths) == 9
     assert calls == ["TW:0001", "TW:0002", "TW:0002"]
     assert original == {path: (path.read_bytes(), path.stat().st_mtime_ns) for path in original}
+
+
+def test_partial_final_write_resumes_only_failure_family_and_complete_retry_reads_no_stocks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    expected = _oracle(SyntheticInputs(), {})
+    inputs = SyntheticInputs()
+    numerical_followup, parquet_write = local.followup_values, local._write
+    kernels: list[str] = []
+
+    def observed_followup(events: pd.DataFrame, *args: Any, **kwargs: Any) -> FollowupTables:
+        kernels.append(events.security_id.iloc[0])
+        return numerical_followup(events, *args, **kwargs)
+
+    def interrupted_write(path: Path, table: pd.DataFrame, *, incomplete: bool = False) -> None:
+        if not incomplete and path.stem == "first_flag_by_outcome":
+            path.write_bytes(b"PAR1interrupted before the footer")
+            raise RuntimeError("synthetic partial final table")
+        parquet_write(path, table, incomplete=incomplete)
+
+    monkeypatch.setattr(local, "followup_values", observed_followup)
+    monkeypatch.setattr(local, "_write", interrupted_write)
+    output = tmp_path / "partial-finals"
+    with pytest.raises(RuntimeError, match="partial final table"):
+        local.run_followup(cast(Any, inputs), "R1", {}, output)
+    assert kernels == ["TW:0001", "TW:0002"]
+    assert local.completed_results(output) is None
+    retained = {path: (path.read_bytes(), path.stat().st_mtime_ns) for path in output.glob("*.parquet") if path.stem != "first_flag_by_outcome"}
+    retained.update({path: (path.read_bytes(), path.stat().st_mtime_ns) for path in (output / "_temporary").rglob("*.parquet")})
+    assert len(retained) == 15  # Seven complete final tables and eight projections.
+
+    def forbidden(*args: Any, **kwargs: Any) -> Any:
+        pytest.fail("retry must reuse stock projections and the complete other summary family")
+
+    reductions: list[int] = []
+
+    class ObservedFailure(FailureAccumulator):
+        def __init__(self, groups: Any, *, horizons: Any) -> None:
+            reductions.extend(horizons)
+            super().__init__(groups, horizons=horizons)
+
+    monkeypatch.setattr(local, "_write", parquet_write)
+    monkeypatch.setattr(local, "followup_values", forbidden)
+    monkeypatch.setattr(inputs, "stock", forbidden)
+    monkeypatch.setattr(local.followup_summary, "FollowupAccumulator", forbidden)
+    monkeypatch.setattr(local.failure_summary, "FailureAccumulator", ObservedFailure)
+    for name in ("file_digest", "object_digest", "describe_file", "verify_files"):
+        monkeypatch.setattr(artifact_store, name, forbidden)
+    paths = local.run_followup(cast(Any, inputs), "R1", {}, output)
+    assert reductions == [126, 252]
+    assert kernels == ["TW:0001", "TW:0002"]
+    assert retained == {path: (path.read_bytes(), path.stat().st_mtime_ns) for path in retained}
+    for path in paths:
+        pd.testing.assert_frame_equal(pd.read_parquet(path), expected[path.stem], check_exact=True)
+
+    all_retained = {path: (path.read_bytes(), path.stat().st_mtime_ns) for path in paths}
+    monkeypatch.setattr(inputs, "bound", forbidden)
+    monkeypatch.setattr(inputs, "holding", forbidden)
+    monkeypatch.setattr(local, "_summaries", forbidden)
+    assert local.completed_results(output) == paths
+    assert local.run_followup(cast(Any, inputs), "R1", {}, output) == paths
+    assert all_retained == {path: (path.read_bytes(), path.stat().st_mtime_ns) for path in paths}
+
+
+def test_missing_followup_table_skips_failure_family_and_holding(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    inputs = SyntheticInputs()
+    inputs.codes = ()
+    output = tmp_path / "followup-family"
+    paths = local.run_followup(cast(Any, inputs), "R1", {}, output)
+    damaged = output / "flag_summary.parquet"
+    expected = pd.read_parquet(damaged)
+    retained = {path: (path.read_bytes(), path.stat().st_mtime_ns) for path in paths if path != damaged}
+    damaged.write_bytes(b"PAR1unfinished")
+
+    def forbidden(*args: Any, **kwargs: Any) -> Any:
+        pytest.fail("missing followup member must not calculate the complete failure family or holding")
+
+    reductions: list[int] = []
+
+    class ObservedFollowup(FollowupAccumulator):
+        def __init__(self, groups: Any, *, horizons: Any) -> None:
+            reductions.extend(horizons)
+            super().__init__(groups, horizons=horizons)
+
+    monkeypatch.setattr(local.followup_summary, "FollowupAccumulator", ObservedFollowup)
+    monkeypatch.setattr(local.failure_summary, "FailureAccumulator", forbidden)
+    monkeypatch.setattr(inputs, "holding", forbidden)
+    assert local.run_followup(cast(Any, inputs), "R1", {}, output) == paths
+    assert reductions == [126, 252]
+    pd.testing.assert_frame_equal(pd.read_parquet(damaged), expected, check_exact=True)
+    assert retained == {path: (path.read_bytes(), path.stat().st_mtime_ns) for path in retained}
+
+
+def test_completed_results_rejects_readable_wrong_schema(tmp_path: Path) -> None:
+    inputs = SyntheticInputs()
+    inputs.codes = ()
+    output = tmp_path / "wrong-schema"
+    local.run_followup(cast(Any, inputs), "R1", {}, output)
+    assert local.completed_results(output) is not None
+    pd.DataFrame({"wrong_column": [1]}).to_parquet(output / "path_summary.parquet", compression="zstd")
+    assert local.completed_results(output) is None
 
 
 @pytest.mark.parametrize("candidates", [{"bad": ()}, {f"candidate-{n}": (Atom("synthetic", "F", "selected"),) for n in range(11)}])

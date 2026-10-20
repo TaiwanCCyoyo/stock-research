@@ -198,7 +198,8 @@ def test_final_q4_equals_legacy_pure_kernels_without_payload_hashes(tmp_path: Pa
         "draws.parquet",
         "quotas.parquet",
     }
-    assert set(output.iterdir()) == set(paths)
+    assert {path for path in output.iterdir() if path.is_file()} == set(paths)
+    assert (output / "_temporary/progress.json").is_file()
     actual = pd.read_parquet(output / "coverage.parquet")
     pd.testing.assert_frame_equal(actual.loc[:, expected_coverage.columns], expected_coverage, check_dtype=False)
     pd.testing.assert_frame_equal(pd.read_parquet(output / "draws.parquet"), expected_draws, check_dtype=False)
@@ -243,14 +244,144 @@ def test_zero_episodes_keep_all_final_coverage_cells(tmp_path: Path) -> None:
     assert pd.read_parquet(output / "examples.parquet").empty
 
 
-def test_scope_and_existing_output_are_rejected_without_reads(tmp_path: Path) -> None:
+def test_invalid_scope_is_rejected_without_reads(tmp_path: Path) -> None:
     inputs = Inputs()
     cases: tuple[tuple[str, dict[str, tuple[Atom, ...]]], ...] = (("unknown", {}), ("B1", {str(index): (_atom(),) for index in range(11)}))
     for target, candidates in cases:
         with pytest.raises(ValueError, match="at most ten"):
             module.run_q4(cast(Any, inputs), target, candidates, tmp_path / "unused")
-    output = tmp_path / "existing"
-    output.mkdir()
-    with pytest.raises(FileExistsError):
-        module.run_q4(cast(Any, inputs), "B1", {}, output)
     assert inputs.bound_calls == []
+
+
+def test_partial_final_retry_preserves_valid_bytes_and_reuses_stock_projections(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    candidates: dict[str, tuple[Atom, ...]] = {"ma": (_atom(),)}
+    expected_rows, expected_draws, expected_quotas = _legacy_rows(Inputs(), candidates)
+    oracle_paths = module.run_q4(cast(Any, Inputs()), "B1", candidates, tmp_path / "oracle")
+    oracle = {path.name: pd.read_parquet(path) for path in oracle_paths}
+    output = tmp_path / "q4"
+    write = module._write
+    episode_builder = module.per_stock_episodes
+    built: list[str] = []
+
+    def counted_episodes(*args: Any, **kwargs: Any) -> Any:
+        built.append(str(args[3]))
+        return episode_builder(*args, **kwargs)
+
+    def interrupted_write(directory: Path, name: str, frame: pd.DataFrame) -> Path:
+        if name == "examples.parquet":
+            # Model interruption during a non-atomic old final write as well
+            # as the missing files that have not been reached yet.
+            (directory / name).write_bytes(b"partial parquet")
+            raise OSError("synthetic interruption after two final tables")
+        return write(directory, name, frame)
+
+    monkeypatch.setattr(module, "per_stock_episodes", counted_episodes)
+    monkeypatch.setattr(module, "_write", interrupted_write)
+    with pytest.raises(OSError, match="synthetic interruption"):
+        module.run_q4(cast(Any, Inputs()), "B1", candidates, output)
+    assert built == ["TW:0050", "TW:2330"]
+    assert module.completed_results(output) is None
+    preserved = {name: ((output / name).read_bytes(), (output / name).stat().st_mtime_ns) for name in ("coverage.parquet", "timing.parquet")}
+
+    def forbidden(*args: object, **kwargs: object) -> Any:
+        pytest.fail("partial final recovery must reuse completed stock projections")
+
+    retry = Inputs()
+    monkeypatch.setattr(retry, "stock", forbidden)
+    monkeypatch.setattr(retry, "global_values", forbidden)
+    monkeypatch.setattr(retry, "bound", forbidden)
+    monkeypatch.setattr(module, "per_stock_episodes", forbidden)
+    monkeypatch.setattr(module, "daily_candidate_states", forbidden)
+    monkeypatch.setattr("research_core.artifact_store.file_digest", forbidden)
+    monkeypatch.setattr("research_core.artifact_store.describe_file", forbidden)
+    monkeypatch.setattr("research_core.artifact_store.verify_files", forbidden)
+    monkeypatch.setattr(module, "_write", write)
+    paths = module.run_q4(cast(Any, retry), "B1", candidates, output)
+    assert paths == module.completed_results(output)
+    assert len(paths) == 6
+    for name, (payload, modified) in preserved.items():
+        assert (output / name).read_bytes() == payload
+        assert (output / name).stat().st_mtime_ns == modified
+    expected_coverage = pd.DataFrame([row for row in grouped_coverage(expected_rows) if row["split"] != "all"])
+    pd.testing.assert_frame_equal(pd.read_parquet(output / "coverage.parquet").loc[:, expected_coverage.columns], expected_coverage, check_dtype=False)
+    pd.testing.assert_frame_equal(pd.read_parquet(output / "draws.parquet"), expected_draws, check_dtype=False)
+    pd.testing.assert_frame_equal(pd.read_parquet(output / "quotas.parquet"), expected_quotas, check_dtype=False)
+    pd.testing.assert_frame_equal(pd.read_parquet(output / "examples.parquet"), select_q4_examples(expected_rows), check_dtype=False)
+    for path in paths:
+        pd.testing.assert_frame_equal(pd.read_parquet(path), oracle[path.name], check_exact=True)
+    assert not list(output.rglob("*receipt*")) and not list(output.rglob("*manifest*"))
+
+
+def test_all_complete_retry_never_accesses_inputs_or_reduces_again(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    output = tmp_path / "q4"
+    paths = module.run_q4(cast(Any, Inputs()), "B1", {}, output)
+    before = {path: (path.read_bytes(), path.stat().st_mtime_ns) for path in paths}
+
+    class UnavailableInputs:
+        def __getattr__(self, name: str) -> Any:
+            pytest.fail(f"complete Q4 must not access inputs.{name}")
+
+    def forbidden(*args: object, **kwargs: object) -> Any:
+        pytest.fail("complete Q4 must not invoke calculation or writing")
+
+    for name in ("per_stock_episodes", "daily_candidate_states", "grouped_coverage", "select_q4_examples", "_write"):
+        monkeypatch.setattr(module, name, forbidden)
+    assert module.completed_results(output) == paths
+    assert module.run_q4(cast(Any, UnavailableInputs()), "B1", {}, output) == paths
+    for path, (payload, modified) in before.items():
+        assert path.read_bytes() == payload
+        assert path.stat().st_mtime_ns == modified
+
+
+@pytest.mark.parametrize("damage", ("missing", "corrupt", "schema"))
+def test_completed_results_rejects_missing_corrupt_or_wrong_schema_tables(tmp_path: Path, damage: str) -> None:
+    output = tmp_path / "q4"
+    assert module.completed_results(output) is None
+    paths = module.run_q4(cast(Any, Inputs()), "B1", {}, output)
+    assert module.completed_results(output) == paths
+    path = output / "quotas.parquet"
+    if damage == "missing":
+        path.unlink()
+    elif damage == "corrupt":
+        path.write_bytes(b"truncated footer")
+    else:
+        pd.DataFrame({"unexpected": [1]}).to_parquet(path, index=False)
+    assert module.completed_results(output) is None
+
+
+def test_interrupted_stock_loop_restarts_only_unfinished_stock(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    class InterruptedInputs(Inputs):
+        def stock(self, code: str) -> dict[str, pd.DataFrame]:
+            if code == "2330":
+                raise OSError("synthetic stock interruption")
+            return super().stock(code)
+
+    output = tmp_path / "q4"
+    with pytest.raises(OSError, match="synthetic stock interruption"):
+        module.run_q4(cast(Any, InterruptedInputs()), "B1", {}, output)
+    built: list[str] = []
+    episode_builder = module.per_stock_episodes
+
+    def counted_episodes(*args: Any, **kwargs: Any) -> Any:
+        built.append(str(args[3]))
+        return episode_builder(*args, **kwargs)
+
+    monkeypatch.setattr(module, "per_stock_episodes", counted_episodes)
+    assert len(module.run_q4(cast(Any, Inputs()), "B1", {}, output)) == 6
+    assert built == ["TW:2330"]
+
+
+@pytest.mark.parametrize("reader", ("footer", "projection"))
+def test_permission_errors_propagate_instead_of_recomputing(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, reader: str) -> None:
+    def denied(*args: object, **kwargs: object) -> Any:
+        raise PermissionError("synthetic read permission failure")
+
+    if reader == "footer":
+        monkeypatch.setattr(module.pq, "ParquetFile", denied)
+        with pytest.raises(PermissionError, match="synthetic read permission"):
+            module.completed_results(tmp_path)
+    else:
+        monkeypatch.setattr(module, "_readable", lambda path, columns: True)
+        monkeypatch.setattr(module.pd, "read_parquet", denied)
+        with pytest.raises(PermissionError, match="synthetic read permission"):
+            module._cached_stock(tmp_path)

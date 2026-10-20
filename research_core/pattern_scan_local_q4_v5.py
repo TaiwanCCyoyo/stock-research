@@ -1,20 +1,24 @@
 """One-target Q4 results over the original study inputs, without payload pins.
 
-Only final tables and the promised bounded examples/draw records are written.
-The caller owns completed-phase reuse, final-result hashes and the run receipt.
+Narrow target-local projections permit interrupted final reduction to resume.
+The caller owns temporary retirement, final-result hashes and the run receipt.
 """
 
 from __future__ import annotations
 
 import logging
+import os
+from dataclasses import asdict
 from itertools import product
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 import pandas as pd
+import pyarrow as pa
+import pyarrow.parquet as pq
 
-from research_core.artifact_store import object_digest
+from research_core.artifact_store import object_digest, read_json
 from research_core.hhhl_variants_selection import Atom
 from research_core.pattern_scan_candidate_daily_v1 import daily_candidate_states
 from research_core.pattern_scan_conditions_v1 import PATTERNS
@@ -29,6 +33,7 @@ from research_core.pattern_scan_episode_tables_v1 import (
     summarize_coverage,
 )
 from research_core.pattern_scan_events_v1 import Episode
+from research_core.pattern_scan_local_inputs_v5 import write_progress
 from research_core.pattern_scan_reporting_v1 import ERAS, MARKETS, candidate_membership
 from research_core.pattern_scan_retained_v3 import select_q4_examples
 
@@ -37,6 +42,72 @@ if TYPE_CHECKING:
 
 LOGGER = logging.getLogger(__name__)
 QUOTA_COLUMNS = ("security_id", "year", "quota_n", "available_n", "drawn_n", "shortfall_n", "shortfall", "coverage_status", "seed")
+GROUP_COLUMNS = ("group_id", "split", "era", "mkt", "pattern_id", "candidate_id", "control_id")
+TIMING_COLUMNS = ("late_known_n", "late_n") + tuple(
+    f"{name}_{suffix}" for name in ("timing", "entry_return", "remaining_return") for suffix in ("known_n", "unknown_n", "q25", "median", "q75")
+)
+RESULT_COLUMNS = {
+    "coverage.parquet": GROUP_COLUMNS
+    + (
+        "episode_n",
+        "distinct_stock_n",
+        "matched_n",
+        "unmatched_n",
+        "unknown_n",
+        "coverage_rate",
+        "coverage_lower_bound",
+        "coverage_upper_bound",
+    )
+    + TIMING_COLUMNS,
+    "timing.parquet": GROUP_COLUMNS + ("episode_n",) + TIMING_COLUMNS,
+    "examples.parquet": OBSERVATION_COLUMNS,
+    "admission-counts.parquet": ("security_id", "measure", "count"),
+    "draws.parquet": CONTROL_COLUMNS + ("group_id",),
+    "quotas.parquet": QUOTA_COLUMNS + ("group_id",),
+}
+PROJECTION_COLUMNS = {
+    "observations": OBSERVATION_COLUMNS,
+    "draws": RESULT_COLUMNS["draws.parquet"],
+    "quotas": RESULT_COLUMNS["quotas.parquet"],
+    "admission": RESULT_COLUMNS["admission-counts.parquet"],
+}
+
+
+def _readable(path: Path, columns: tuple[str, ...]) -> bool:
+    """Check only the Parquet footer/schema, without a payload digest or scan."""
+    try:
+        with pq.ParquetFile(path) as parquet:
+            names = parquet.schema_arrow.names
+            return len(names) == len(columns) and set(names) == set(columns)
+    except PermissionError:
+        raise
+    except (OSError, ValueError, pa.ArrowException):
+        return False
+
+
+def completed_results(output: Path) -> list[Path] | None:
+    """Return the six readable final tables; the caller owns phase identity."""
+    paths = [output / name for name in RESULT_COLUMNS]
+    return paths if all(_readable(path, RESULT_COLUMNS[path.name]) for path in paths) else None
+
+
+def _store_frame(path: Path, frame: pd.DataFrame) -> None:
+    """Atomically replace one owned projection or an invalid final table."""
+    staged = path.with_name(f".{path.name}.incomplete")
+    with staged.open("wb") as stream:
+        frame.to_parquet(stream, index=False, compression="zstd")
+    os.replace(staged, path)
+
+
+def _cached_stock(directory: Path) -> dict[str, pd.DataFrame] | None:
+    if not all(_readable(directory / f"{name}.parquet", columns) for name, columns in PROJECTION_COLUMNS.items()):
+        return None
+    try:
+        return {name: pd.read_parquet(directory / f"{name}.parquet") for name in PROJECTION_COLUMNS}
+    except PermissionError:
+        raise
+    except (OSError, ValueError, pa.ArrowException):
+        return None
 
 
 def random_matched_control(pool: pd.DataFrame, targets: pd.DataFrame, group_id: str) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -114,31 +185,66 @@ def _group_registry(target: str, candidates: dict[str, tuple[Atom, ...]]) -> dic
 
 def _write(output: Path, name: str, frame: pd.DataFrame) -> Path:
     path = output / name
-    with path.open("xb") as stream:
-        frame.to_parquet(stream, index=False, compression="zstd")
+    if not _readable(path, RESULT_COLUMNS[name]):
+        _store_frame(path, frame)
     return path
 
 
 def run_q4(inputs: LocalInputs, target: str, candidates: dict[str, tuple[Atom, ...]], output: Path) -> list[Path]:
     """Reduce one target and its supplied top <=10 candidates; never reselect.
 
-    All stock/event detail stays in memory, limited to this target. Exact
-    quantiles use the narrow observations until final reduction. No ancestor
-    verification, intermediate inventory or permanent detailed copy is added.
+    Target-local narrow projections preserve exact quantiles and random draws
+    across a restart, without per-file inventories or hashes. Completed final
+    tables are never replaced; the caller retires ``output/_temporary`` only
+    after all six final tables have been handed off.
     """
     if target not in PATTERNS or len(candidates) > 10 or any(not isinstance(key, str) or not key.strip() or not atoms for key, atoms in candidates.items()):
         raise ValueError("Q4 requires one approved target and at most ten fixed nonempty candidates")
+    complete = completed_results(output)
+    if complete is not None:
+        return complete
     if not inputs.codes or len(set(inputs.codes)) != len(inputs.codes):
         raise ValueError("Q4 requires a fixed unique stock pool")
-    if output.exists():
-        raise FileExistsError(f"Q4 output already exists: {output}")
     dates = tuple(inputs.calendar.strftime("%Y-%m-%d"))
+    codes = tuple(sorted(inputs.codes))
+    output.mkdir(parents=True, exist_ok=True)
+    temporary = output / "_temporary"
+    temporary.mkdir(exist_ok=True)
+    progress_path = temporary / "progress.json"
+    scope = {
+        "schema": "pattern-scan-local-q4-projections.v1",
+        "target": target,
+        "source_id": inputs.source_id,
+        "input_id": inputs.input_id,
+        "candidates": [{"candidate_id": key, "atoms": [asdict(atom) for atom in atoms]} for key, atoms in candidates.items()],
+        "codes": list(codes),
+        "calendar": list(dates),
+    }
+    progress = read_json(progress_path) if progress_path.exists() else {**scope, "completed": []}
+    if any(progress.get(key) != value for key, value in scope.items()):
+        raise ValueError("Q4 temporary projection scope differs")
+    completed = set(progress["completed"])
+    if not completed.issubset(codes):
+        raise ValueError("Q4 temporary stock coverage differs")
     groups = _group_registry(target, candidates)
     observations: list[pd.DataFrame] = []
     all_draws: list[pd.DataFrame] = []
     all_quotas: list[pd.DataFrame] = []
-    counts: list[dict[str, object]] = []
-    for code in sorted(inputs.codes):
+    counts: list[pd.DataFrame] = []
+    for position, code in enumerate(codes):
+        directory = temporary / f"stock-{position:05d}"
+        cached = _cached_stock(directory) if code in completed else None
+        if cached is not None:
+            observations.append(cached["observations"])
+            all_draws.append(cached["draws"])
+            all_quotas.append(cached["quotas"])
+            counts.append(cached["admission"])
+            LOGGER.info("Reused Q4 target=%s stock=%s", target, code)
+            continue
+        stock_observations: list[pd.DataFrame] = []
+        stock_draws: list[pd.DataFrame] = []
+        stock_quotas: list[pd.DataFrame] = []
+        stock_counts: list[dict[str, object]] = []
         security_id = f"TW:{code}"
         tables = inputs.stock(code)
         prices = tables["prices"]
@@ -150,10 +256,10 @@ def run_q4(inputs: LocalInputs, target: str, candidates: dict[str, tuple[Atom, .
         episodes, admission = per_stock_episodes(closes, tables["base_labels"], reasons, security_id, dates=dates)
         admitted = admission_counts(admission)
         for name in ("start_n", "admitted_n", "excluded_n"):
-            counts.append({"security_id": security_id, "measure": name, "count": admitted[name]})
-        counts.append({"security_id": security_id, "measure": "episode_n", "count": len(episodes)})
+            stock_counts.append({"security_id": security_id, "measure": name, "count": admitted[name]})
+        stock_counts.append({"security_id": security_id, "measure": "episode_n", "count": len(episodes)})
         for reason, count in cast(dict[str, int], admitted["exclusion_counts"]).items():
-            counts.append({"security_id": security_id, "measure": f"excluded:{reason}", "count": count})
+            stock_counts.append({"security_id": security_id, "measure": f"excluded:{reason}", "count": count})
         anchor_mkt = global_values.MKT.fillna("unknown").tolist()
         bound = inputs.bound(target, code)
         daily = pd.DataFrame(bound.daily_groups)
@@ -167,7 +273,9 @@ def run_q4(inputs: LocalInputs, target: str, candidates: dict[str, tuple[Atom, .
         pool = inputs.group_frame(bound, "C-base-all", 126)
         pool = cast(pd.DataFrame, pool.loc[pool.base_eligible.eq(True)]).copy()
         c52 = inputs.group_frame(bound, "C-52w", 126)
-        observations.append(daily_base_coverage(episodes, closes, dates, daily["C-base-daily"].tolist(), anchor_mkt, security_id, group_id="C-base-daily"))
+        stock_observations.append(
+            daily_base_coverage(episodes, closes, dates, daily["C-base-daily"].tolist(), anchor_mkt, security_id, group_id="C-base-daily")
+        )
         candidate_states: dict[str, np.ndarray] = {}
         if candidates:
             common = tables["common_values"].copy()
@@ -190,10 +298,10 @@ def run_q4(inputs: LocalInputs, target: str, candidates: dict[str, tuple[Atom, .
             identifier = f"{target}:original" if candidate is None else f"{target}:candidate:{candidate}"
             targets = retained if candidate is None else cast(pd.DataFrame, retained.loc[candidate_membership(retained, candidates[candidate]) == 1])
             states = daily["pattern:union"].tolist() if candidate is None else candidate_states[candidate].tolist()
-            observations.append(
+            stock_observations.append(
                 observe_group(episodes, closes, dates, targets.calendar_index.astype(int).tolist(), states, anchor_mkt, security_id, identifier)
             )
-            observations.append(
+            stock_observations.append(
                 observe_group(
                     episodes, closes, dates, c52.calendar_index.astype(int).tolist(), daily["C-52w"].tolist(), anchor_mkt, security_id, identifier + ":C-52w"
                 )
@@ -208,10 +316,25 @@ def run_q4(inputs: LocalInputs, target: str, candidates: dict[str, tuple[Atom, .
                 anchor_regime=anchor_mkt,
                 security_id=security_id,
             )
-            observations.append(random_rows)
+            stock_observations.append(random_rows)
             drawn["group_id"], quota["group_id"] = identifier + ":C-base-random", identifier + ":C-base-random"
-            all_draws.append(drawn)
-            all_quotas.append(quota)
+            stock_draws.append(drawn)
+            stock_quotas.append(quota)
+        projections = {
+            "observations": pd.concat(stock_observations, ignore_index=True),
+            "draws": pd.concat(stock_draws, ignore_index=True),
+            "quotas": pd.concat(stock_quotas, ignore_index=True),
+            "admission": pd.DataFrame(stock_counts),
+        }
+        directory.mkdir(exist_ok=True)
+        for name, frame in projections.items():
+            _store_frame(directory / f"{name}.parquet", frame)
+        completed.add(code)
+        write_progress(progress_path, {**scope, "completed": sorted(completed)})
+        observations.append(projections["observations"])
+        all_draws.append(projections["draws"])
+        all_quotas.append(projections["quotas"])
+        counts.append(projections["admission"])
         LOGGER.info("Q4 target=%s stock=%s episodes=%d candidates=%d", target, code, len(episodes), len(candidates))
     all_rows = pd.concat(observations, ignore_index=True) if observations else pd.DataFrame(columns=pd.Index(OBSERVATION_COLUMNS))
     coverage = [row for row in grouped_coverage(all_rows) if row["split"] != "all"]
@@ -224,12 +347,11 @@ def run_q4(inputs: LocalInputs, target: str, candidates: dict[str, tuple[Atom, .
     coverage_frame = pd.DataFrame([{**row, **groups[cast(str, row["group_id"])]} for row in coverage])
     keys = ["group_id", "split", "era", "mkt", "pattern_id", "candidate_id", "control_id"]
     timing_columns = [name for name in coverage_frame if name.startswith(("timing_", "entry_return_", "remaining_return_", "late_"))]
-    output.mkdir(parents=True)
     frames = {
         "coverage.parquet": coverage_frame,
         "timing.parquet": coverage_frame.loc[:, [*keys, "episode_n", *timing_columns]],
         "examples.parquet": select_q4_examples(all_rows),
-        "admission-counts.parquet": pd.DataFrame(counts),
+        "admission-counts.parquet": pd.concat(counts, ignore_index=True),
         "draws.parquet": pd.concat(all_draws, ignore_index=True),
         "quotas.parquet": pd.concat(all_quotas, ignore_index=True),
     }

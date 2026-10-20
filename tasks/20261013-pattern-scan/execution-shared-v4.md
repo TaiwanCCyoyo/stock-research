@@ -72,6 +72,16 @@ limited to 8 GiB committed memory, one serial target and a finite timeout, with
 4 GiB additional available host memory required. Measurements distinguish
 process memory, Job committed memory and disk space.
 
+Interrupted publication resumes from sibling staging. Complete final tables
+can finish their receipt and no-replace publication without repeating stock
+work. Partial final writes preserve valid tables and reuse completed temporary
+stock projections to fill the missing summary family. One small phase-start
+record keeps the original executor; a later recovery commit is recorded
+separately when it computes or finalizes the remainder. A legacy unfinished
+phase without that record requires an explicit recovery of its known executor,
+never a guessed commit. Reusing an already receipted final bundle verifies its
+stored result digests once in that process; intermediate files remain unhashed.
+
 Only this continuation's new temporary projections are cleaned after a target's
 three final components are saved, readable and receipt-recorded. Original
 inputs/checkpoints, Q1 and preview are retained. Q2–Q6 completion is reported only
