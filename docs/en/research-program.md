@@ -207,6 +207,10 @@ primary 本機位置、查詢／重算與未知／相依／current-reference 限
 
 ## 已做研究的定位表：非完整清單
 
+| 資產                    | 契約                                      | 取得與邊界                                                                                                                                                                         |
+| ----------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `shared-data-viewer.v1` | [共用資料唯讀檢視](shared-data-viewer.md) | `research_core.shared_data_view`、`research_api.shared_data`，local-private `/#data` 與 `/#data/<code>`；現行世代的日價／技術指標及既有 catalog 原位讀取，不下載、重算或發布資料。 |
+
 波段的時間調整展示：[`wave-growth-display.v1` 契約](opportunity-presentation.md#time-adjusted-wave-display)、[預先記錄的規則](../../tasks/20261005-opportunity-growth-display/mission.md)、[共享計算](../../research_core/wave_growth.py)、[CLI](../../scripts/score_wave_growth.py)。滿一年採 CAGR，未滿一年採實際漲幅，初始門檻 100%；完整事後波段不刪除。此為同一保存波段的查詢日投影，非新回測、PIT 訊號或完整市場認證；程式／契約可由 Git 取得，原價格快照仍沿用原取得限制。
 
 2026-10-05 可攜消費入口（不需來源 worktree 或行情 submodule）：

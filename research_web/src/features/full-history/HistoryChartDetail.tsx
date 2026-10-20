@@ -189,6 +189,11 @@ export function HistoryChartDetail({ detail }: { detail: HistoryDetail }) {
                     <h2>
                         {sample.code} {sample.name}
                     </h2>
+                    {sample.code && (
+                        <a href={`#data/${encodeURIComponent(sample.code)}`}>
+                            在 K 線檢視
+                        </a>
+                    )}
                 </div>
                 <strong>{detail.date}</strong>
             </div>

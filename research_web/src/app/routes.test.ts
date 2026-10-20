@@ -2,6 +2,17 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { studioRoute } from "./routes.ts";
 
+test("shared data accepts stock codes without unsafe route traversal", () => {
+    assert.deepEqual(studioRoute("#data/2330"), {
+        page: "data",
+        runId: null,
+        code: "2330",
+    });
+    assert.equal(studioRoute("#data").page, "data");
+    assert.equal(studioRoute("#data/%zz").code, undefined);
+    assert.equal(studioRoute("#data/..%2Fsecret").code, undefined);
+});
+
 test("empty routes lead to home and market deep links preserve page", () => {
     assert.equal(studioRoute("").page, "home");
     assert.equal(
