@@ -448,7 +448,7 @@ def test_receipt_sees_a_source_rewritten_and_restored_during_the_run(repo: Path,
         expected_code=started,
     )
     assert restored["code_drift"]["sources_changed"] == ["runner.py"], "the rewritten source is named"
-    assert restored["code_drift"]["sources_identified"] is False
+    assert restored["code_drift"]["sources_unchanged_observed"] is False
     unstatted = write_run_receipt(
         repo / "r2.json",
         run_id="r",
@@ -460,7 +460,7 @@ def test_receipt_sees_a_source_rewritten_and_restored_during_the_run(repo: Path,
         sources=[runner],
         expected_code=without_stats,
     )
-    assert unstatted["code_drift"]["sources_identified"] is False and unstatted["code_drift"]["sources_changed"] is None, (
+    assert unstatted["code_drift"]["sources_unchanged_observed"] is False and unstatted["code_drift"]["sources_changed"] is None, (
         "without start stats nothing is proven"
     )
 
@@ -492,11 +492,11 @@ def test_receipt_records_code_drift_during_the_run_instead_of_refusing(repo: Pat
     )
     assert unrelated["code_drift"]["started"] == started and unrelated["code_drift"]["ended"]["commit"] != started["commit"]
     assert unrelated["code"] == started, "the standard code field names the code the run started from"
-    assert unrelated["code_drift"]["sources_identified"] is True, "an unrelated commit leaves the executed code known"
+    assert unrelated["code_drift"]["sources_unchanged_observed"] is True, "an unrelated commit leaves the executed code known"
     unlisted = write_run_receipt(
         repo / "r1b.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, repo_root=repo, expected_code=started
     )
-    assert unlisted["code_drift"]["sources_identified"] is False, "without listed sources the drift may have touched the code that ran"
+    assert unlisted["code_drift"]["sources_unchanged_observed"] is False, "without listed sources the drift may have touched the code that ran"
     assert unrelated["code_drift"]["sources_changed"] == [], "an unrelated commit is recorded, never refused"
 
     runner.write_text("print('b')", encoding="utf-8")
@@ -513,12 +513,24 @@ def test_receipt_records_code_drift_during_the_run_instead_of_refusing(repo: Pat
         expected_code=started,
     )
     assert edited["code_drift"]["sources_changed"] == ["runner.py"], "the executed source that changed is named"
-    assert edited["code_drift"]["sources_identified"] is False, "a late import may have run the edited source"
+    assert edited["code_drift"]["sources_unchanged_observed"] is False, "a late import may have run the edited source"
 
     same = write_run_receipt(
-        repo / "r3.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, repo_root=repo, expected_code=code_identity(repo)
+        repo / "r3.json",
+        run_id="r",
+        definition="d",
+        parameters={},
+        inputs=inputs,
+        results={"s": result},
+        repo_root=repo,
+        sources=[runner],
+        expected_code=code_identity(repo, sources=[runner]),
     )
     assert "code_drift" not in same
+    assert same["runtime_code_verified"] is False, "a clean start and end with no drift is still only an observation"
+    plain = write_run_receipt(repo / "r3b.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, repo_root=repo)
+    assert plain["runtime_code_verified"] is False
+    assert unrelated["runtime_code_verified"] is False and edited["runtime_code_verified"] is False
 
     clean = code_identity(repo, sources=[runner])
     runner.write_text("print('c, not committed')", encoding="utf-8")  # edited during the run, left uncommitted
@@ -526,7 +538,7 @@ def test_receipt_records_code_drift_during_the_run_instead_of_refusing(repo: Pat
         repo / "r4.json", run_id="r", definition="d", parameters={}, inputs=inputs, results={"s": result}, repo_root=repo, sources=[runner], expected_code=clean
     )
     assert uncommitted["code_drift"]["ended"]["dirty"] is True and uncommitted["code_drift"]["sources_changed"] == ["runner.py"]
-    assert uncommitted["code_drift"]["sources_identified"] is False
+    assert uncommitted["code_drift"]["sources_unchanged_observed"] is False
     dirty_start = code_identity(repo)
     assert dirty_start["dirty"] is True  # runner.py still holds the uncommitted edit before this run
     unidentified = write_run_receipt(
@@ -540,7 +552,7 @@ def test_receipt_records_code_drift_during_the_run_instead_of_refusing(repo: Pat
         sources=[runner],
         expected_code=dirty_start,
     )
-    assert unidentified["code_drift"]["sources_identified"] is False and unidentified["code_drift"]["sources_changed"] is None
+    assert unidentified["code_drift"]["sources_unchanged_observed"] is False and unidentified["code_drift"]["sources_changed"] is None
     with pytest.raises(ValueError, match="not in the starting commit"):
         write_run_receipt(
             repo / "r5.json",

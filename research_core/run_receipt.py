@@ -261,8 +261,9 @@ def code_identity(repo_root: Path = REPO_ROOT, sources: Sequence[Path] = ()) -> 
     """Commit and dirty flag; with `sources`, also each source's size and modification time.
 
     Before a long run, take it with the sources the run executes and pass it as
-    `write_run_receipt(expected_code=)` with the same `sources=`: the stats show a source
-    rewritten during the run even when its content was restored before the end. Never a hash.
+    `write_run_receipt(expected_code=)` with the same `sources=`: the stats may show a source
+    rewritten during the run even when its content was restored before the end. Never a hash,
+    and a description only: it does not verify the bytes a run executed.
     """
 
     def git(*arguments: str) -> str:
@@ -344,20 +345,21 @@ def _require_in_commit(path: Path, repo_root: Path, commit: str, label: str = "r
 
 
 def _code_drift(started: dict[str, Any], ended: dict[str, Any], executed: Sequence[str], documents: Sequence[str], repo_root: Path) -> dict[str, Any] | None:
-    """Start and end code identity when they differ, with the executed sources that changed.
+    """Observed start and end code identity when they differ, with the sources seen to change.
 
     `sources_changed` lists executed sources (and documents such as the preregistration)
     whose content differs from the starting commit, plus executed sources whose size or
     modification time differs from `started["source_stats"]`: a source rewritten and
     restored during the run may have been loaded by a late import or a new worker. It is
     None when that cannot be said: the run started dirty (no commit holds what it ran), or
-    `started` has no stats for an executed source. `sources_identified` is true only when
-    executed sources are listed and none changed; an unrelated commit leaves it true.
+    `started` has no stats for an executed source. `sources_unchanged_observed` is true only
+    when executed sources are listed and none was seen to change; an unrelated commit leaves
+    it true.
 
-    This covers the listed sources only: an unlisted lazily imported module, or a rewrite
-    that keeps size and modification time, is not seen. Running from a dedicated worktree
-    at the starting commit is what guarantees the code did not change. Never a reason to
-    refuse the receipt.
+    These are observations at two moments, not verification: an unlisted lazily imported
+    module, or a rewrite that keeps size and modification time, is not seen, and no drift
+    does not prove the code that ran was unchanged (the receipt's `runtime_code_verified` is
+    always false). Never a reason to refuse the receipt.
     """
     start_stats = started.get("source_stats") or {}
     end_stats = _source_stats(repo_root, [repo_root / source for source in executed])
@@ -367,7 +369,7 @@ def _code_drift(started: dict[str, Any], ended: dict[str, Any], executed: Sequen
     if base == ended and ended.get("dirty") is False and not unstatted and not rewritten:
         return None
     if started.get("dirty") is not False:
-        return {"started": started, "ended": ended, "sources_identified": False, "sources_changed": None}
+        return {"started": started, "ended": ended, "sources_unchanged_observed": False, "sources_changed": None}
     changed: list[str] | None = []
     for source in [*executed, *documents]:
         diff = subprocess.run(
@@ -385,7 +387,7 @@ def _code_drift(started: dict[str, Any], ended: dict[str, Any], executed: Sequen
             changed.append(source)
     if unstatted:
         changed = None  # taken without stats, a rewrite restored before the end would not show
-    return {"started": started, "ended": ended, "sources_identified": bool(executed) and changed == [], "sources_changed": changed}
+    return {"started": started, "ended": ended, "sources_unchanged_observed": bool(executed) and changed == [], "sources_changed": changed}
 
 
 def write_run_receipt(
@@ -409,7 +411,9 @@ def write_run_receipt(
     `research_core.maintained_adjusted_daily`) describe the sources; they never block saving
     a finished result. An input that changed during the run is listed under
     `inputs_changed_during_run` and logged, not refused; a shared generation pruned since
-    it was read does not matter.
+    it was read does not matter. `code`, `sources` and `code_drift` likewise describe the
+    code as observed at the start and at the end; nothing verifies the bytes the run
+    actually executed, so every receipt carries `runtime_code_verified: false`.
     """
     start_commit = None if expected_code is None else expected_code.get("commit")
     # The recorded code is the starting commit when expected_code is given, so the
@@ -423,8 +427,8 @@ def write_run_receipt(
     # The runner, strategy and imported study modules the run executed: an untracked or
     # edited one would leave a clean-looking commit that does not contain the code.
     if start_commit:
-        # The run started from the starting commit's sources; later edits, committed or not,
-        # are recorded in code_drift rather than refusing the finished result.
+        # The run was started from the starting commit's sources; later edits seen, committed
+        # or not, are recorded in code_drift rather than refusing the finished result.
         executed = [_require_in_commit(source, repo_root, str(start_commit)) for source in sources]
     else:
         executed = [_require_committed(source, repo_root, "run source") for source in sources]
@@ -445,8 +449,10 @@ def write_run_receipt(
         "parameters": dict(parameters),
         # The preregistration is a source: its path plus the code commit identify it, unhashed.
         "preregistration": None if preregistration is None else {"path": _display_path(preregistration, repo_root)},
-        # With expected_code this is the code the run started from; code_drift says whether it ran unchanged.
+        # With expected_code this is the code observed when the run started; code_drift
+        # describes what was seen to change by the end. Neither verifies the executed bytes.
         "code": code if expected_code is None else dict(expected_code),
+        "runtime_code_verified": False,
         "input_fingerprint": dict(inputs),
         **({"shared_data": shared} if shared else {}),
         **({"sources": executed} if executed else {}),

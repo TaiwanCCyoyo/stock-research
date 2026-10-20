@@ -19,7 +19,9 @@ its `run-receipt.v1` (`research_core/run_receipt.py`):
    may be saved: an input that changed during the run is listed in the receipt
    (`inputs_changed_during_run`), not refused.
 3. **How it ran**: Git commit plus dirty flag, definition, parameters and
-   preregistration.
+   preregistration. The commit and any `code_drift` (start and end identity, executed
+   sources seen to change) are descriptions observed at the start and the end, not
+   verification of the code that ran: every receipt says `runtime_code_verified: false`.
 
 A new study does **not**:
 
@@ -57,7 +59,7 @@ new work.
 | Producer inputs (parquet, sqlite) | Description of the live input read: path, size, modification time, rows and date range, producer as-of; no hash (receipts before 2026-10-19 also carry a file SHA-256 and stay valid) | `run-receipt.v1` receipt |
 | Maintained shared derived data    | The reader's record (family, generation, as-of), kept as information                                                                                                                  | receipt `shared_data`    |
 | Parameters                        | Git                                                                                                                                                                                   | `tasks/<id>/params/`     |
-| Code of a run                     | Git commit plus dirty flag; loaded modules are not hashed                                                                                                                             | `run-receipt.v1` receipt |
+| Code of a run                     | Git commit plus dirty flag, as a description; loaded modules are not hashed or verified                                                                                               | `run-receipt.v1` receipt |
 | Final results                     | SHA-256 of each published result file                                                                                                                                                 | `run-receipt.v1` receipt |
 | Intermediate files                | None                                                                                                                                                                                  | not recorded             |
 | Reports and prose                 | Git only                                                                                                                                                                              | `tasks/<id>/`            |
