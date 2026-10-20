@@ -80,6 +80,30 @@ def _rebase_results(receipt_path: Path, staging: Path, destination: Path) -> dic
     return receipt
 
 
+def _preregistration_matches(record: dict[str, Any], mission: Path, mission_sha256: str) -> bool:
+    """Read legacy SHA pins or the committed-path/code receipt form.
+
+    The new form is tied to this audit's original execution code and retained
+    mission parent pin, not whichever mission is currently checked out.
+    """
+    preregistration = record.get("preregistration")
+    if not isinstance(preregistration, dict):
+        return False
+    if "sha256" in preregistration:  # Named legacy form; preserve its original contract.
+        return preregistration["sha256"] == mission_sha256
+    parent = record.get("input_fingerprint", {}).get("inputs", {}).get(str(mission), {})
+    code = record.get("code")
+    return (
+        preregistration == {"path": f"tasks/{TASK}/mission.md"}
+        and isinstance(code, dict)
+        and isinstance(code.get("commit"), str)
+        and bool(code["commit"])
+        and isinstance(parent, dict)
+        and parent.get("path") == str(mission)
+        and parent.get("sha256") == mission_sha256
+    )
+
+
 def _ancestors(
     run: Path,
     result: dict[str, Any],
@@ -343,7 +367,7 @@ def audit_computed_scan(
             or record.get("definition") != DEFINITION
             or record.get("run_id") != output_id
             or record.get("parameters") != {"source_id": source_id, "input_id": input_id, **PARAMETERS}
-            or record.get("preregistration", {}).get("sha256") != identity["preregistration_sha256"]
+            or not _preregistration_matches(record, mission, identity["preregistration_sha256"])
         ):
             raise ValueError("retained audit result descriptors differ")
         if changed_results(output / "run-receipt.json", CODE_ROOT):
@@ -366,6 +390,9 @@ def audit_computed_scan(
             if path.stat().st_size != row["bytes"] or file_digest(path) != row["sha256"]:
                 raise ValueError("retained audit parent hashes changed")
         return saved
+    code_mission = _checked_path(CODE_ROOT / "tasks" / TASK / "mission.md")
+    if mission.read_bytes() != code_mission.read_bytes():
+        raise ValueError("retained mission differs from the audit executor's committed mission")
     execution_code = code_identity(CODE_ROOT)
     parents: dict[str, Any] = {}
     for path, digest in (
@@ -460,7 +487,7 @@ def audit_computed_scan(
         parameters={"source_id": source_id, "input_id": input_id, **PARAMETERS},
         inputs={"captured_at_utc": datetime.now(timezone.utc).isoformat(), "producer_as_of": None, "inputs": parents},
         results=files,
-        preregistration=mission,
+        preregistration=code_mission,
         repo_root=CODE_ROOT,
     )
     record = _rebase_results(run_receipt, staging, output)

@@ -27,7 +27,7 @@ def completed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]
     run.mkdir(parents=True)
     task = primary / "tasks" / runner.TASK
     (task / "params").mkdir(parents=True)
-    (task / "mission.md").write_text("Synthetic preregistration", encoding="utf-8")
+    (task / "mission.md").write_bytes((runner.CODE_ROOT / "tasks" / runner.TASK / "mission.md").read_bytes())
     dates = ["2010-01-04", "2026-10-12"]
     (task / "params/input-pins-v1.json.gz").write_bytes(
         gzip.compress(
@@ -211,12 +211,57 @@ def test_deferred_full_scope_no_legacy_response_or_published_pins_and_reuse(comp
     output = Path(result["output_path"])
     assert output == completed["run"] / "audits/candidate-reconstruction/audit"
     assert run_receipt.changed_results(output / "run-receipt.json", runner.CODE_ROOT) == []
+    record = read_json(output / "run-receipt.json")
+    mission = completed["roots"].primary / "tasks" / runner.TASK / "mission.md"
+    assert record["preregistration"] == {"path": f"tasks/{runner.TASK}/mission.md"}
+    assert record["input_fingerprint"]["inputs"][str(mission)]["sha256"] == result["identity"]["preregistration_sha256"]
     engine_calls = len(completed["calls"]["engine"])
     assert _run(completed) == result and len(completed["calls"]["engine"]) == engine_calls
     payload = next(output.glob("*-memberships.parquet"))
     payload.write_bytes(b"tampered")
     with pytest.raises(ValueError, match="changed|mismatch"):
         _run(completed)
+
+
+def test_new_audit_refuses_a_different_retained_mission_before_engine(completed: dict[str, Any]) -> None:
+    mission = completed["roots"].primary / "tasks" / runner.TASK / "mission.md"
+    mission.write_bytes(b"A different retained preregistration.\n")
+    with pytest.raises(ValueError, match="retained mission differs.*committed mission"):
+        _run(completed)
+    assert not completed["calls"]["engine"] and not completed["calls"]["code"]
+    assert not (completed["run"] / "audits/candidate-reconstruction/audit").exists()
+
+
+@pytest.mark.parametrize("legacy_sha_form", (False, True))
+def test_retained_preregistration_forms_reuse_recorded_code_and_mission_pin(
+    completed: dict[str, Any], tmp_path: Path, monkeypatch: pytest.MonkeyPatch, legacy_sha_form: bool
+) -> None:
+    result = _run(completed)
+    output = Path(result["output_path"])
+    run_path, saved_path = output / "run-receipt.json", output / "receipt.json"
+    mission = completed["roots"].primary / "tasks" / runner.TASK / "mission.md"
+    if legacy_sha_form:
+        # Construct a historical SHA-form fixture; production reuse must never
+        # rewrite it into the new committed-path form.
+        record = read_json(run_path)
+        record["preregistration"] = {"path": str(mission), "sha256": result["identity"]["preregistration_sha256"]}
+        run_path.write_bytes(canonical(record))
+        descriptor = describe_file(output, run_path)
+        result["artifacts"] = [descriptor if row["path"] == "run-receipt.json" else row for row in result["artifacts"]]
+        saved_path.write_bytes(canonical(result))
+    before = {path: path.read_bytes() for path in (run_path, saved_path)}
+    engine_calls, code_calls = len(completed["calls"]["engine"]), len(completed["calls"]["code"])
+    # A newer checkout can contain a different mission. Historical reuse is
+    # anchored in the stored code/path plus retained mission pin, not this file.
+    checkout = tmp_path / "later-checkout"
+    later_mission = checkout / "tasks" / runner.TASK / "mission.md"
+    later_mission.parent.mkdir(parents=True)
+    later_mission.write_bytes(b"A later checkout's revised mission.\n")
+    monkeypatch.setattr(runner, "CODE_ROOT", checkout)
+    assert _run(completed) == result
+    assert len(completed["calls"]["engine"]) == engine_calls
+    assert len(completed["calls"]["code"]) == code_calls
+    assert all(path.read_bytes() == contents for path, contents in before.items())
 
 
 @pytest.mark.parametrize("mutation", ("index", "payload", "stock-reference", "event-receipt", "summary-receipt", "selection", "active"))

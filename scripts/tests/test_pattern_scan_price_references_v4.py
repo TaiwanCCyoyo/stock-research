@@ -210,6 +210,7 @@ def test_real_maintained_generation_adapter_handoff_retirement_exact(case: dict[
     writers: dict[str, Any] = {
         basis: pq.ParquetWriter(directory / f"{basis}.parquet", maintained.ARROW_SCHEMA, compression="zstd") for basis in maintained.BASES
     }
+    writers.update({name: pq.ParquetWriter(directory / file, schema, compression="zstd") for name, (file, schema) in maintained.TECHNICAL_TABLES.items()})
     try:
         summary = maintained.compute(bars, actions, writers)
     finally:
@@ -218,6 +219,9 @@ def test_real_maintained_generation_adapter_handoff_retirement_exact(case: dict[
     for basis in maintained.BASES:
         path = directory / f"{basis}.parquet"
         summary["bases"][basis].update({"file": path.name, "bytes": path.stat().st_size, "sha256": file_digest(path)})
+    for name, (file, _) in maintained.TECHNICAL_TABLES.items():
+        path = directory / file
+        summary["technical"]["tables"][name].update({"file": file, "bytes": path.stat().st_size, "sha256": file_digest(path)})
     prepared = read_json(case["run"] / "derived-preparation.json")
     write_json(
         directory / "status.json",
