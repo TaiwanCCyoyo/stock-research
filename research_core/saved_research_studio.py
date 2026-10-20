@@ -470,6 +470,17 @@ def _validate_studio_package(value: dict[str, Any]) -> None:
         for key in ("dateBasis", "summarySource"):
             if key in item:
                 _package_text(item[key], f"history.items.{key}")
+        if "sharedDataReason" in item:
+            _package_text(item["sharedDataReason"], "history.items.sharedDataReason", nullable=True, allow_empty=True)
+        if "sharedData" in item:
+            references = _package_array(item["sharedData"], "history.items.sharedData")
+            if any(not isinstance(reference, str) or not re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}", reference) for reference in references):
+                raise StudioError("invalid history.items.sharedData identifier")
+        if "webReportHref" in item:
+            href = item["webReportHref"]
+            _package_text(href, "history.items.webReportHref", nullable=True)
+            if href is not None and not re.fullmatch(r"#report/[A-Za-z0-9][A-Za-z0-9._-]*", href):
+                raise StudioError("invalid history.items.webReportHref route")
 
 
 def read_studio_package(path: Path) -> dict[str, Any]:
