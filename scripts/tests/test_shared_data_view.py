@@ -326,6 +326,18 @@ def test_catalog_enrichment_keeps_entries_with_missing_or_mismatched_manifests(t
     assert "viewer_metadata" not in entries[0], "enrichment must not mutate catalog records"
 
 
+def test_manifest_dictionary_inventory_counts_members_without_opening_them(tmp_path: Path) -> None:
+    path = tmp_path / "manifest.json"
+    write_json(
+        path,
+        {
+            "schema_version": "hhhl-probability.v4",
+            "artifacts": {"events.parquet": {"sha256": "synthetic"}, "summary.json": {"sha256": "synthetic"}},
+        },
+    )
+    assert shared_data_view.manifest_metadata(path, file_digest(path))["manifest_member_count"] == 2
+
+
 def test_manifest_changed_during_read_is_rejected(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     path = tmp_path / "manifest.json"
     write_json(path, {"schema": "synthetic"})

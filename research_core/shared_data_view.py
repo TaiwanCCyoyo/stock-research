@@ -118,7 +118,7 @@ def manifest_metadata(path: Path, expected_digest: str) -> dict[str, Any]:
         "columns": columns,
         "security_count": security_count if type(security_count) is int and security_count >= 0 else None,
         "analyzed_security_count": analyzed_count if type(analyzed_count) is int and analyzed_count >= 0 else None,
-        "manifest_member_count": len(artifacts) if isinstance(artifacts, list) else None,
+        "manifest_member_count": len(artifacts) if isinstance(artifacts, (list, dict)) else None,
     }
 
 
