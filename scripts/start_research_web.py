@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import logging
 import os
@@ -326,6 +327,11 @@ def run(*, no_browser: bool = False, check: bool = False, api_port: int = 8517, 
 
 
 def main() -> int:
+    # Windows redirected streams can default to cp1252 even though this CLI
+    # deliberately speaks Chinese. Set only this process's console transport.
+    for stream in (sys.stdout, sys.stderr):
+        if isinstance(stream, io.TextIOWrapper):
+            stream.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(description="啟動研究網站與歷史 API")
     parser.add_argument("--no-browser", action="store_true", help="啟動後不開啟瀏覽器")
     parser.add_argument("--check", action="store_true", help="只檢查兩個服務身份與可用狀態")

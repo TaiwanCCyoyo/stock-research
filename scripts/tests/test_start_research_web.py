@@ -15,9 +15,24 @@ from scripts import start_research_web as launcher
 def test_direct_script_entry_imports_shared_helpers() -> None:
     import sys
 
-    result = subprocess.run([sys.executable, str(Path(launcher.__file__)), "--help"], capture_output=True, text=True, check=False)
+    result = subprocess.run([sys.executable, str(Path(launcher.__file__)), "--help"], capture_output=True, text=True, encoding="utf-8", check=False)
     assert result.returncode == 0, result.stderr
     assert "--api-port" in result.stdout
+
+
+def test_help_uses_utf8_even_when_redirected_stream_defaults_to_cp1252() -> None:
+    import sys
+
+    result = subprocess.run(
+        [sys.executable, str(Path(launcher.__file__)), "--help"],
+        env={**launcher.os.environ, "PYTHONIOENCODING": "cp1252"},
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    assert "啟動研究網站與歷史 API" in result.stdout
 
 
 @pytest.fixture(autouse=True)

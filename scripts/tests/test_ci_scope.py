@@ -321,6 +321,19 @@ def test_new_file_is_routed_only_when_a_domain_names_its_exact_path() -> None:
     assert ci_scope.make_plan([("A", "research_core/new_module.py")])["full"]  # wildcard owner only
 
 
+def test_dashboard_identity_selects_api_and_launcher_consumers() -> None:
+    plan = ci_scope.make_plan([("A", "research_core/dashboard_identity.py")])
+    assert not plan["full"]
+    assert "opportunity" in plan["domains"]
+    assert plan["frontend"]
+    assert {
+        "scripts/tests/test_dashboard_identity.py",
+        "scripts/tests/test_start_research_web.py",
+        "tests/test_research_api.py",
+    } <= set(plan["python_tests"])
+    assert ci_scope.make_plan([("M", "research_api/main.py")])["full"]
+
+
 def test_new_path_and_union_fail_safe() -> None:
     assert ci_scope.make_plan([("M", "research_web/src/app/App.tsx"), ("A", "docs/new.md")])["full"]
     plan = ci_scope.make_plan([("M", "research_core/hhhl_transition.py"), ("M", ".codex/skills/new/SKILL.md")])
