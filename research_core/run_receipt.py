@@ -321,10 +321,14 @@ def _code_drift(started: dict[str, Any], ended: dict[str, Any], sources: Sequenc
     """Start and end code identity when they differ, with the executed sources that changed.
 
     An unrelated commit leaves `sources_changed` empty; a listed source means the result
-    came from the starting commit's version of it. Never a reason to refuse the receipt.
+    came from the starting commit's version of it. A run that started dirty may have
+    executed uncommitted source content no commit holds: `sources_identified` is then
+    false and `sources_changed` is None. Never a reason to refuse the receipt.
     """
     if started == ended and ended.get("dirty") is False:
         return None
+    if started.get("dirty") is not False:
+        return {"started": started, "ended": ended, "sources_identified": False, "sources_changed": None}
     changed: list[str] | None = []
     for source in sources:
         diff = subprocess.run(
@@ -340,7 +344,7 @@ def _code_drift(started: dict[str, Any], ended: dict[str, Any], sources: Sequenc
         elif diff.returncode:
             changed = None  # the starting commit is unknown here; which sources changed cannot be said
             break
-    return {"started": started, "ended": ended, "sources_changed": changed}
+    return {"started": started, "ended": ended, "sources_identified": changed is not None, "sources_changed": changed}
 
 
 def write_run_receipt(
@@ -394,7 +398,8 @@ def write_run_receipt(
         "parameters": dict(parameters),
         # The preregistration is a source: its path plus the code commit identify it, unhashed.
         "preregistration": None if preregistration is None else {"path": _display_path(preregistration, repo_root)},
-        "code": code,
+        # With expected_code the result was produced by the starting code; the end state is in code_drift.
+        "code": code if expected_code is None else dict(expected_code),
         "input_fingerprint": dict(inputs),
         **({"shared_data": shared} if shared else {}),
         **({"sources": executed} if executed else {}),

@@ -43,8 +43,9 @@ Historical packets keep their existing byte-level verification contract.
 5. Execute the authorized study using those fixed files. An unrelated commit during the
    run needs nothing more than its `code_drift` entry. If an executed source is listed in
    `code_drift.sources_changed`, the result came from the starting commit's code: cite
-   that commit and say so; a dirty flag must not be presented as a clean committed
-   implementation. A historical byte-sealed packet is the
+   that commit and say so. Start from a clean tree: a run that starts dirty is still
+   recorded, but with `sources_identified: false`, because no commit holds the code it
+   executed; a dirty flag must not be presented as a clean committed implementation. A historical byte-sealed packet is the
    exception: use its original raw-byte hashes and verification rules without
    changing or re-pinning them. That exception does not authorize sealing a new
    study with the retired workflow.
