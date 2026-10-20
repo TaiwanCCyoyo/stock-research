@@ -351,7 +351,14 @@ def _active_launch(output: Path) -> Iterator[None]:
             # Only this OS lock, never file age or PID probing, establishes
             # that a compatible stale diagnostic marker may be replaced.
             marker = {"schema": ACTIVE_SCHEMA, "owner": uuid.uuid4().hex, "pid": os.getpid(), "lock_path": str(lock_path)}
-            write_progress(active, marker)
+            if previous is None:
+                # An older launcher does not hold this OS lock and may have
+                # exclusive-created its marker since our first read.
+                staged = active.with_name(f".active-start-{uuid.uuid4().hex}")
+                write_json(staged, marker)
+                publish_noreplace(staged, active)
+            else:
+                write_progress(active, marker)
             yield
         finally:
             try:

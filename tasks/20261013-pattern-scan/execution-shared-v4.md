@@ -100,6 +100,25 @@ over. This protects the still-running original executor. The legacy analysis
 selection also publishes atomically; an already consumed or receipted selection
 is never repaired in place.
 
+First creation of the local diagnostic marker also uses atomic no-replace
+publication. A legacy launcher that enters after the initial absence check
+therefore wins its exclusive-create without being overwritten by the new one.
+
+Legacy `continue_pattern_scan` and `pattern_scan_run_v2` launchers deliberately
+remain fail-closed. An operator recovering their marker must first prevent all
+concurrent launches for that run, identify its owned request/launch record,
+recorded code and exact marker bytes, and establish that the original
+coordinator **and its owned Job/workers have ended**. A reused or absent PID,
+file age or an idle-looking log is insufficient. Confirmation from the exact
+owned Job teardown, or a verified machine reboot after the recorded launch,
+can establish that boundary. If ownership or Job termination is unknown, retain
+the marker and do not start another writer. Only after that verified quiescent
+boundary may the owner remove the matching stale marker and resume the recorded
+phase with its existing checkpoints. Preserve the data and receipts; do not
+restart stock/global/Q1 or retire a generation as part of marker recovery.
+This is a recovery procedure, not authorization to stop or take over the live
+`4f5daaa` study, and no legacy marker was removed by this change.
+
 Only this continuation's new temporary projections are cleaned after a target's
 three final components are saved, readable and receipt-recorded. Original
 inputs/checkpoints, Q1 and preview are retained. Q2–Q6 completion is reported only

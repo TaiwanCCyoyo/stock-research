@@ -583,6 +583,38 @@ def test_unknown_active_marker_is_preserved(tmp_path: Path, monkeypatch: pytest.
         module.release_os_lock(handle)
 
 
+def test_first_marker_publication_preserves_interleaved_legacy_launcher(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from research_core import pattern_scan_execution_v1, research_measurement_v1
+
+    repo = tmp_path / "repo"
+    output = repo / ".tmp/run"
+    active = output / ".active"
+    publish = module.publish_noreplace
+    legacy = b"1234\n"
+    preserved: list[int] = []
+
+    def interleave(source: Path, destination: Path) -> None:
+        if destination == active:
+            with active.open("xb") as stream:
+                stream.write(legacy)
+            preserved.append(active.stat().st_mtime_ns)
+        publish(source, destination)
+
+    def unexpected_job(limit: int) -> None:
+        pytest.fail("mixed-version marker race must not start another Job")
+
+    monkeypatch.setattr(module, "publish_noreplace", interleave)
+    monkeypatch.setattr(pattern_scan_execution_v1, "_MemoryBoundJob", unexpected_job)
+    monkeypatch.setattr(research_measurement_v1, "host_resources", lambda: {"physical_available_bytes": 16 * 1024**3})
+    with pytest.raises(FileExistsError):
+        module.launch_remaining([], repo, output, timeout_seconds=10)
+    assert active.read_bytes() == legacy
+    assert preserved == [active.stat().st_mtime_ns]
+    with (output / ".active.lock").open("a+b") as handle:
+        assert module.try_os_lock(handle)
+        module.release_os_lock(handle)
+
+
 def test_active_cleanup_preserves_a_different_owner(tmp_path: Path) -> None:
     output = tmp_path / "run"
     output.mkdir()
