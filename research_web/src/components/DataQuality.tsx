@@ -1,102 +1,150 @@
 import type { DataQualityCheckName, DataQualityResponse } from "../api/types";
+import type { ReactNode } from "react";
+import type { DataQualityState } from "./dataQualityState";
+import { formatQualityShare as formatShare } from "./dataQualityState";
 
 interface DataQualityProps {
-    data: DataQualityResponse | null;
+    state: DataQualityState;
+    onRetry: () => void;
 }
 
 const CHECK_LABELS: Record<DataQualityCheckName, string> = {
-    price_gap_without_ca_event: "漲跌幅無法解釋的價格跳空",
-    ca_event_without_price_gap: "公司行為未反映在價格",
-    unexplained_fallback: "官方涵蓋範圍內卻由備援填補",
+    price_gap_without_ca_event: "價格缺口未對應公司行動",
+    ca_event_without_price_gap: "公司行動未反映於價格缺口",
+    unexplained_fallback: "備援資料未能說明",
 };
 
-function formatShare(share: number | null | undefined): string {
-    if (share === null || share === undefined) return "—";
-    return `${Math.round(share * 100)}%`;
+const RETRY_STYLE = {
+    marginTop: 8,
+    padding: "8px 12px",
+    color: "var(--text)",
+    background: "var(--bg-hover)",
+    border: "1px solid var(--border-strong)",
+    borderRadius: 6,
+    cursor: "pointer",
+};
+
+function ReadStatus({
+    children,
+    onRetry,
+}: {
+    children: ReactNode;
+    onRetry: () => void;
+}) {
+    return (
+        <div className="empty-state">
+            <div>{children}</div>
+            <button type="button" onClick={onRetry} style={RETRY_STYLE}>
+                重新讀取
+            </button>
+        </div>
+    );
 }
 
-/** Global data-completeness panel fed by stock-data-downloader's health-check report.
- * Unlike StrategyHealth, this renders a neutral empty state rather than hiding —
- * "not yet checked" is itself useful signal, not a state to suppress. */
-export function DataQuality({ data }: DataQualityProps) {
-    if (!data || !data.available || !data.report) {
+/** Global data-completeness panel for the local price archive report. */
+export function DataQuality({ state, onRetry }: DataQualityProps) {
+    if (state.status === "loading")
         return (
             <section className="panel">
-                <h3 className="panel-title">資料完整性</h3>
-                <div className="empty-state">
-                    尚未檢查（於 stock-data-downloader 執行 run_daily.py
-                    後即可產生報告）
-                </div>
+                <h3 className="panel-title">資料品質</h3>
+                <ReadStatus onRetry={onRetry}>正在讀取資料品質報告…</ReadStatus>
             </section>
         );
-    }
+    if (state.status === "failure")
+        return (
+            <section className="panel">
+                <h3 className="panel-title">資料品質讀取失敗</h3>
+                <ReadStatus onRetry={onRetry}>
+                    讀取資料品質報告失敗：{state.message}
+                </ReadStatus>
+            </section>
+        );
+    if (state.status === "missing")
+        return (
+            <section className="panel">
+                <h3 className="panel-title">資料品質</h3>
+                <ReadStatus onRetry={onRetry}>
+                    目前沒有可用的資料品質報告。
+                </ReadStatus>
+            </section>
+        );
 
-    const { report } = data;
+    const data: DataQualityResponse = state.data;
+    const report = data.report;
+    if (!report) return null;
     const coverage = report.coverage ?? {};
     const checks = report.checks ?? {};
-    // v3 lists only symbols with a finding, so the scanned total comes from
-    // coverage rather than the size of the symbols map.
-    const flaggedCount = Object.keys(report.symbols ?? {}).length;
-    const scanned = coverage.symbol_count ?? 0;
-
+    const flaggedCount = report.symbols
+        ? Object.keys(report.symbols).length
+        : null;
     const warnings: string[] = [];
     for (const [name, label] of Object.entries(CHECK_LABELS) as [
         DataQualityCheckName,
         string,
     ][]) {
         const check = checks[name];
-        if (check && check.symbol_count > 0) {
+        if (check && check.symbol_count > 0)
             warnings.push(
-                `${label}：${check.symbol_count} 檔 / ${check.finding_count} 筆`,
+                `${label}：${check.symbol_count} 個代號 / ${check.finding_count} 項`,
             );
-        }
     }
-    // The newest bar is provisional while the official feed lags a trading day.
     const officialShare = coverage.latest_day_official_share;
     if (
         officialShare !== null &&
         officialShare !== undefined &&
         officialShare < 1
-    ) {
+    )
         warnings.push(
-            `最新一日 ${coverage.last_date ?? ""} 僅 ${formatShare(officialShare)} 來自官方，其餘為備援值，待回補後改寫`,
+            `最新交易日 ${coverage.last_date ?? "未知"} 有 ${formatShare(officialShare)} 來自官方來源，其餘資料暫為備援，待回補更新`,
         );
-    }
 
     return (
         <section className="panel">
             <h3 className="panel-title">
-                資料完整性 · {report.subject ?? "price_daily.parquet"} · 產出於{" "}
-                {report.generated_at}
+                資料品質 · {report.subject ?? "price_daily.parquet"} ·
+                報告產生於 {report.generated_at}
+                {state.status === "stale" &&
+                    ` · 舊報告（約 ${state.ageHours} 小時）`}
             </h3>
+            {state.status === "stale" && (
+                <div className="empty-state">
+                    此報告超過 72 小時，僅供參考；可以重新讀取最新報告。
+                </div>
+            )}
             <div className="health-grid">
                 <div className="health-cell">
-                    <div className="label">涵蓋股票數</div>
-                    <div className="value num">{scanned}</div>
-                </div>
-                <div className="health-cell">
-                    <div className="label">交易日數</div>
+                    <div className="label">掃描代號</div>
                     <div className="value num">
-                        {coverage.trading_day_count ?? 0}
+                        {coverage.symbol_count ?? "未知"}
                     </div>
                 </div>
                 <div className="health-cell">
-                    <div className="label">被標記股票</div>
-                    <div className="value num">{flaggedCount}</div>
+                    <div className="label">交易日</div>
+                    <div className="value num">
+                        {coverage.trading_day_count ?? "未知"}
+                    </div>
                 </div>
                 <div className="health-cell">
-                    <div className="label">官方來源占比</div>
+                    <div className="label">有標記代號</div>
+                    <div className="value num">{flaggedCount ?? "未知"}</div>
+                </div>
+                <div className="health-cell">
+                    <div className="label">官方來源列占比</div>
                     <div className="value num">
-                        {coverage.row_count
-                            ? `${Math.round(((coverage.rows_by_source?.official ?? 0) / coverage.row_count) * 100)}%`
-                            : "—"}
+                        {coverage.row_count &&
+                        coverage.rows_by_source?.official !== undefined
+                            ? formatShare(
+                                  coverage.rows_by_source.official /
+                                      coverage.row_count,
+                              )
+                            : "未知"}
                     </div>
                 </div>
             </div>
             {coverage.first_date && coverage.last_date && (
                 <div className="empty-state" style={{ marginTop: 8 }}>
-                    {coverage.first_date} ～ {coverage.last_date} ·{" "}
-                    {coverage.row_count?.toLocaleString() ?? 0} 筆
+                    報告涵蓋 {coverage.first_date} 至 {coverage.last_date} ·{" "}
+                    {coverage.row_count?.toLocaleString() ?? "未知"} 列
                 </div>
             )}
             {warnings.length > 0 && (
@@ -106,6 +154,9 @@ export function DataQuality({ data }: DataQualityProps) {
                     ))}
                 </div>
             )}
+            <button type="button" onClick={onRetry} style={RETRY_STYLE}>
+                重新讀取報告
+            </button>
         </section>
     );
 }
