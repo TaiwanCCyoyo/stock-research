@@ -305,15 +305,15 @@ def _describe_shared_read(record: Mapping[str, Any]) -> dict[str, Any]:
     return describe(record)
 
 
-def _require_in_commit(path: Path, repo_root: Path, commit: str) -> str:
+def _require_in_commit(path: Path, repo_root: Path, commit: str, label: str = "run source") -> str:
     """Require a repository path tracked in `commit` (the run's starting commit)."""
     resolved, root = path.resolve(), repo_root.resolve()
     if not resolved.is_relative_to(root):
-        raise ValueError(f"run source {path} is outside the repository; the recorded commit cannot identify it")
+        raise ValueError(f"{label} {path} is outside the repository; the recorded commit cannot identify it")
     relative = resolved.relative_to(root).as_posix()
     present = subprocess.run(["git", "-C", str(root), "cat-file", "-e", f"{commit}:{relative}"], capture_output=True, text=True, check=False)
     if present.returncode:
-        raise ValueError(f"run source {relative} is not in the starting commit {commit}; commit it before the run")
+        raise ValueError(f"{label} {relative} is not in the starting commit {commit}; commit it before the run")
     return relative
 
 
@@ -370,11 +370,17 @@ def write_run_receipt(
     `inputs_changed_during_run` and logged, not refused; a shared generation pruned since
     it was read does not matter.
     """
+    start_commit = None if expected_code is None else expected_code.get("commit")
+    # The recorded code is the starting commit when expected_code is given, so the
+    # preregistration must be in that commit; a later edit is recorded in code_drift.
+    tracked_for_drift: list[str] = []
     if preregistration is not None:
-        _require_committed(preregistration, repo_root, "preregistration")
+        if start_commit:
+            tracked_for_drift.append(_require_in_commit(preregistration, repo_root, str(start_commit), "preregistration"))
+        else:
+            _require_committed(preregistration, repo_root, "preregistration")
     # The runner, strategy and imported study modules the run executed: an untracked or
     # edited one would leave a clean-looking commit that does not contain the code.
-    start_commit = None if expected_code is None else expected_code.get("commit")
     if start_commit:
         # The run executed the starting commit's sources; later edits, committed or not,
         # are recorded in code_drift rather than refusing the finished result.
@@ -384,7 +390,7 @@ def write_run_receipt(
     code = code_identity(repo_root)
     # Pass `code_identity()` taken before the run: a commit, checkout or edit during a long
     # run is recorded, not refused, so a finished result is always saved with its provenance.
-    drift = None if expected_code is None else _code_drift(dict(expected_code), code, executed, repo_root)
+    drift = None if expected_code is None else _code_drift(dict(expected_code), code, [*executed, *tracked_for_drift], repo_root)
     if drift:
         LOGGER.warning("Code changed during run %s: %s", run_id, drift)
     changed = changed_inputs(inputs)
