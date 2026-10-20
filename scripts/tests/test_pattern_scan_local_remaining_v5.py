@@ -1,6 +1,8 @@
 """Target completion, retained results and owned scratch boundaries."""
 
 from pathlib import Path
+from types import SimpleNamespace
+from typing import Any
 
 import pandas as pd
 import pytest
@@ -83,3 +85,44 @@ def test_scratch_cleanup_refuses_original_or_result_paths(tmp_path: Path) -> Non
         with pytest.raises(ValueError, match="scratch cleanup"):
             module._remove_owned_temporary(path, output)
         assert path.exists()
+
+
+@pytest.mark.parametrize("finished", (False, True))
+def test_launcher_releases_only_after_all_original_components(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, finished: bool) -> None:
+    import subprocess
+
+    from research_core import pattern_scan_execution_v1, research_measurement_v1
+
+    repo = tmp_path / "repo"
+    output = repo / ".tmp" / "run"
+    output.mkdir(parents=True)
+    completed: dict[str, dict[str, dict[str, str]]] = {"H1": dict.fromkeys(module.PHASES if finished else ("conditions",), {})}
+    # Even an accidentally true completion flag cannot release a partial run.
+    write_json(output / "progress.json", {"complete": True, "release_pending": True, "completed": completed})
+    calls: list[list[str]] = []
+
+    class Job:
+        def __init__(self, limit: int) -> None:
+            assert limit == 8 * 1024**3
+
+        def start(self, command: list[str], root: Path) -> SimpleNamespace:
+            return SimpleNamespace(poll=lambda: 0, returncode=0, args=command)
+
+        def memory_receipt(self) -> dict[str, int]:
+            return {"peak_committed_bytes": 10}
+
+        def close(self) -> None:
+            pass
+
+    def release(command: list[str], **kwargs: Any) -> SimpleNamespace:
+        assert command[-3:] == ["release", "--holder", "pr17-pattern-scan"]
+        calls.append(command)
+        return SimpleNamespace(stdout="released")
+
+    monkeypatch.setattr(pattern_scan_execution_v1, "_MemoryBoundJob", Job)
+    monkeypatch.setattr(research_measurement_v1, "host_resources", lambda: {"physical_available_bytes": 16 * 1024**3})
+    monkeypatch.setattr(subprocess, "run", release)
+    monkeypatch.setattr(module, "PATTERNS", ("H1",))
+    module.launch_remaining([], repo, output, timeout_seconds=10)
+    assert len(calls) == int(finished)
+    assert read_json(output / "progress.json")["release_pending"] is (not finished)

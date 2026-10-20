@@ -193,6 +193,25 @@ def launch_remaining(arguments: list[str], repo_root: Path, output: Path, *, tim
         write_progress(output / "job-memory.json", {**job.memory_receipt(), "wall_seconds": time.monotonic() - started, "exit_code": process.returncode})
         if process.returncode:
             raise subprocess.CalledProcessError(process.returncode, process.args)
+        progress_path = output / "progress.json"
+        progress = read_json(progress_path)
+        completed = progress.get("completed", {})
+        all_finished = set(completed) == set(PATTERNS) and all(set(value) == set(PHASES) for value in completed.values())
+        if progress.get("complete") is True and progress.get("release_pending") is True and all_finished:
+            # Owner authorized release after every original Q2--Q6 component.
+            # This CLI only removes the holder; it does not run an update or
+            # delete a generation. Failed/partial calculations never reach it.
+            released = subprocess.run(
+                [sys.executable, "-m", "scripts.maintain_adjusted_daily", "release", "--holder", "pr17-pattern-scan"],
+                cwd=repo_root,
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            progress["release_pending"] = False
+            progress["release"] = {"holder": "pr17-pattern-scan", "result": released.stdout.strip()}
+            write_progress(progress_path, progress)
+            LOGGER.info("All Q2--Q6 complete; released holder=pr17-pattern-scan")
     finally:
         job.close()
         active.unlink(missing_ok=True)
