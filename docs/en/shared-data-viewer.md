@@ -46,6 +46,12 @@ Entries without an explicit recommendation say 未標示現行版. Existing immu
 manifests and catalog entries are unchanged. Coverage is the catalog's declared
 scope; presence does not certify research validity. Contract and asset-index
 links explain column definitions and access locations.
+Each catalog card also projects the pinned JSON manifest (bounded to 2 MB),
+without opening or verifying payload members. Declared security counts, analyzed
+security counts and manifest member counts remain distinct. Missing physical
+column schemas and counts are labeled unavailable; feature definitions and event
+counts are never substituted for them. A missing or mismatched manifest affects
+only its card. These metadata checks do not certify member validity.
 
 The legacy `?legacy=1` workbench remains a separate archived-task viewer.
 Use the new shared-data page for maintained indicators. The strategy detail

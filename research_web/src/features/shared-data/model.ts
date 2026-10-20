@@ -54,6 +54,14 @@ export interface CatalogEntry {
     manifest?: { scope: string; path: string; sha256: string };
     recommended?: boolean;
     superseded_by?: string;
+    viewer_metadata?: {
+        schema: string | null;
+        columns: string[] | null;
+        security_count: number | null;
+        analyzed_security_count: number | null;
+        manifest_member_count: number | null;
+    };
+    metadata_error?: string | null;
 }
 export interface Families {
     families: Family[];

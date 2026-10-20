@@ -19,6 +19,7 @@ import pandas as pd
 
 from research_core import live_producer
 from research_core import maintained_adjusted_daily as maintained
+from research_core.artifact_store import file_digest, read_json
 from research_core.opportunity_history_bundle import history_data_roots
 from research_core.producer_data import producer_data_root
 from research_core.research_data_catalog import DataCatalog
@@ -65,11 +66,60 @@ def symbol_names() -> dict[str, tuple[str, str]]:
 def catalog_summary() -> tuple[dict[str, Any] | None, str | None]:
     """Discover the real catalog; absence is explicit, never a hand-written list."""
     try:
-        catalog = DataCatalog(history_data_roots()).read()
-        return {key: catalog.get(key, []) for key in ("version_id", "entries", "retired")}, None
+        store = DataCatalog(history_data_roots())
+        catalog = store.read()
+        entries = []
+        for entry in catalog.get("entries", []):
+            try:
+                pin = entry["manifest"]
+                path = store.roots.artifact_path(pin["scope"], pin["path"])
+                metadata = manifest_metadata(path, pin["sha256"])
+                entries.append({**entry, "viewer_metadata": metadata, "metadata_error": None})
+            except (OSError, ValueError, KeyError, TypeError) as exc:
+                LOGGER.warning("Catalog manifest unavailable data_id=%s: %s", entry.get("data_id"), exc)
+                entries.append({**entry, "viewer_metadata": None, "metadata_error": "Manifest 缺失、過大或驗證失敗；欄位與證券數未知。"})
+        return {**{key: catalog.get(key, []) for key in ("version_id", "retired")}, "entries": entries}, None
     except (OSError, ValueError, RuntimeError, KeyError) as exc:
         LOGGER.warning("Shared catalog unavailable: %s", exc)
         return None, "資料目錄無法讀取或驗證；請檢查 STOCK_RESEARCH_DATA_ROOT。"
+
+
+def manifest_metadata(path: Path, expected_digest: str) -> dict[str, Any]:
+    """Project bounded, pinned JSON only; never open or verify its members."""
+    if path.stat().st_size > 2_000_000:
+        raise ValueError("manifest exceeds the viewer metadata size limit")
+    if file_digest(path) != expected_digest:
+        raise ValueError("manifest pin mismatch")
+    manifest = read_json(path, max_bytes=2_000_000)
+    if file_digest(path) != expected_digest:
+        raise ValueError("manifest changed during metadata read")
+    if not isinstance(manifest, dict):
+        raise ValueError("manifest must be an object")
+    schema = manifest.get("schema_version", manifest.get("schema"))
+    columns = manifest.get("columns")
+    if not isinstance(columns, list) or not all(isinstance(column, str) for column in columns):
+        columns = None
+    security_count = analyzed_count = None
+    if schema == "feature-discrimination-atlas.v1":
+        tables = manifest.get("tables")
+        if isinstance(tables, list) and all(isinstance(table, dict) and isinstance(table.get("security_id"), str) for table in tables):
+            security_count = len({table["security_id"] for table in tables})
+    elif schema == "hhhl-probability.v4":
+        counts = manifest.get("counts")
+        security_count = counts.get("securities") if isinstance(counts, dict) else None
+    elif schema == "market-context-manifest.v2":
+        security_count = 1 if isinstance(manifest.get("security_id"), str) and manifest["security_id"] else None
+    elif schema == "opportunity-local-history-preview.v1":
+        security_count = manifest.get("security_count")
+        analyzed_count = manifest.get("analyzed_security_count")
+    artifacts = manifest.get("artifacts")
+    return {
+        "schema": schema if isinstance(schema, str) else None,
+        "columns": columns,
+        "security_count": security_count if type(security_count) is int and security_count >= 0 else None,
+        "analyzed_security_count": analyzed_count if type(analyzed_count) is int and analyzed_count >= 0 else None,
+        "manifest_member_count": len(artifacts) if isinstance(artifacts, list) else None,
+    }
 
 
 def family_summary(status: dict[str, Any]) -> dict[str, Any]:

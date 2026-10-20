@@ -276,3 +276,80 @@ def test_concurrent_file_change_is_503_but_programming_error_surfaces(
     else:
         with pytest.raises(RuntimeError, match="unexpected programming failure"):
             client.get(path)
+
+
+@pytest.mark.parametrize(
+    ("manifest", "securities", "analyzed"),
+    [
+        ({"schema_version": "feature-discrimination-atlas.v1", "tables": [{"security_id": "A"}, {"security_id": "A"}, {"security_id": "B"}]}, 2, None),
+        ({"schema_version": "hhhl-probability.v4", "counts": {"securities": 7}}, 7, None),
+        ({"schema_version": "market-context-manifest.v2", "security_id": "TEST"}, 1, None),
+        ({"schema_version": "opportunity-local-history-preview.v1", "security_count": 8, "analyzed_security_count": 6}, 8, 6),
+        ({"schema": "research-data-bundle.v1"}, None, None),
+        ({"schema_version": "unknown", "security_count": 99}, None, None),
+        ({"schema_version": "hhhl-probability.v4", "counts": {"securities": True}}, None, None),
+    ],
+)
+def test_manifest_metadata_uses_schema_specific_counts_without_opening_members(
+    tmp_path: Path, manifest: dict[str, Any], securities: int | None, analyzed: int | None
+) -> None:
+    path = tmp_path / "manifest.json"
+    write_json(path, {**manifest, "artifacts": [{"path": "nonexistent-payload.parquet", "sha256": "not-a-real-hash"}]})
+    result = shared_data_view.manifest_metadata(path, file_digest(path))
+    assert result["security_count"] == securities
+    assert result["analyzed_security_count"] == analyzed
+    assert result["columns"] is None
+    assert result["manifest_member_count"] == 1
+    assert "artifacts" not in result
+
+
+def test_catalog_enrichment_keeps_entries_with_missing_or_mismatched_manifests(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    path = tmp_path / "good.json"
+    write_json(path, {"schema": "synthetic", "columns": ["Code", "Date"], "counts": {"rows": 99}})
+    entries = [
+        {"data_id": "good", "manifest": {"scope": "data", "path": "good.json", "sha256": file_digest(path)}},
+        {"data_id": "mismatch", "manifest": {"scope": "data", "path": "good.json", "sha256": "0" * 64}},
+        {"data_id": "absent", "manifest": {"scope": "data", "path": "absent.json", "sha256": "0" * 64}},
+    ]
+    roots = SimpleNamespace(artifact_path=lambda scope, name: tmp_path / name)
+    store = SimpleNamespace(roots=roots, read=lambda: {"version_id": "synthetic", "entries": entries, "retired": []})
+    monkeypatch.setattr(shared_data_view, "history_data_roots", lambda: roots)
+    monkeypatch.setattr(shared_data_view, "DataCatalog", lambda roots: store)
+    result, error = shared_data_view.catalog_summary()
+    assert error is None and result is not None
+    good, mismatch, absent = result["entries"]
+    assert good["viewer_metadata"]["columns"] == ["Code", "Date"]
+    assert good["viewer_metadata"]["security_count"] is None
+    assert good["metadata_error"] is None
+    for failed in (mismatch, absent):
+        assert failed["viewer_metadata"] is None and failed["metadata_error"]
+    assert "viewer_metadata" not in entries[0], "enrichment must not mutate catalog records"
+
+
+def test_manifest_changed_during_read_is_rejected(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    path = tmp_path / "manifest.json"
+    write_json(path, {"schema": "synthetic"})
+    digest = file_digest(path)
+    read = shared_data_view.read_json
+
+    def changing(source: Path, **kwargs: Any) -> Any:
+        result = read(source, **kwargs)
+        source.write_text('{"schema":"changed"}', encoding="utf-8")
+        return result
+
+    monkeypatch.setattr(shared_data_view, "read_json", changing)
+    with pytest.raises(ValueError, match="changed during"):
+        shared_data_view.manifest_metadata(path, digest)
+
+
+def test_oversized_manifest_is_refused_before_hashing(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    path = tmp_path / "manifest.json"
+    with path.open("wb") as stream:
+        stream.truncate(2_000_001)
+
+    def forbidden(*args: Any, **kwargs: Any) -> None:
+        pytest.fail("oversized manifest must not be hashed")
+
+    monkeypatch.setattr(shared_data_view, "file_digest", forbidden)
+    with pytest.raises(ValueError, match="size limit"):
+        shared_data_view.manifest_metadata(path, "0" * 64)

@@ -116,6 +116,28 @@ export function SharedCatalog({
                             <p>
                                 版本：<code>{entry.version_id}</code>
                             </p>
+                            <p>
+                                涵蓋股票：
+                                {entry.viewer_metadata?.security_count != null
+                                    ? `${entry.viewer_metadata.security_count.toLocaleString()} 檔`
+                                    : "manifest 未提供"}
+                                {entry.viewer_metadata
+                                    ?.analyzed_security_count != null && (
+                                    <>
+                                        ；已分析{" "}
+                                        {entry.viewer_metadata.analyzed_security_count.toLocaleString()}{" "}
+                                        檔
+                                    </>
+                                )}
+                            </p>
+                            <p>
+                                資料欄位：
+                                {entry.viewer_metadata?.columns?.join("、") ||
+                                    "manifest 未提供實體欄位清單"}
+                            </p>
+                            {entry.metadata_error && (
+                                <p role="alert">{entry.metadata_error}</p>
+                            )}
                             <details>
                                 <summary>定義、限制與取得位置</summary>
                                 <p>
@@ -128,8 +150,11 @@ export function SharedCatalog({
                                 </p>
                                 <p>Manifest：{metadataText(entry.manifest)}</p>
                                 <p>
-                                    欄位與檔數請依該版本
-                                    manifest／資料說明核對；此目錄摘要不提供逐日行情。
+                                    Manifest 成員檔案：
+                                    {entry.viewer_metadata?.manifest_member_count?.toLocaleString() ??
+                                        "未提供"}
+                                    ； 此處只驗證 manifest
+                                    本身，未驗證或載入成員資料。
                                 </p>
                             </details>
                             <footer>
