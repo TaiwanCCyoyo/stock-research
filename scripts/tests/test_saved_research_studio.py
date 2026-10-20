@@ -49,6 +49,31 @@ def test_request_mode_mismatch_rejects_before_reading_private_package(tmp_path: 
         assert "mode mismatch" in response.json()["detail"]
 
 
+def test_snapshot_metadata_stays_bound_to_cached_response(tmp_path: Path) -> None:
+    package = synthetic_studio_package()
+    package["asOf"] = "2023-12-29"
+    path = tmp_path / "studio.json.gz"
+    path.write_bytes(gzip.compress(json.dumps(package).encode()))
+    service = SavedResearchStudio(path, history_presentation_path=None)
+    first = service.source_metadata()
+    assert first["mode"] == "local-private"
+    assert first["asOf"] == package["asOf"]
+    assert first["through"] == max(run["through"] for run in package["runs"])
+    assert first["historyThrough"] is None
+    package["asOf"] = "2099-01-01"
+    path.write_bytes(gzip.compress(json.dumps(package).encode()))
+    assert service.source_metadata() == first
+    assert SavedResearchStudio(path).source_metadata()["version"] != first["version"]
+
+
+def test_studio_route_source_matches_the_served_mode() -> None:
+    app = FastAPI()
+    app.include_router(create_studio_router(history_presentation_path=None))
+    response = TestClient(app).get("/saved-research-studio/v1/runs").json()
+    assert response["source"]["mode"] == response["dataMode"] == "public-synthetic"
+    assert len(response["source"]["version"]) == 64
+
+
 def evidence() -> tuple[dict, dict, list, list, dict]:
     run_id = "stock:test:normal"
     originals = [
@@ -851,6 +876,8 @@ def test_history_projection_excludes_only_explicit_infrastructure_without_changi
     assert response.status_code == 200
     assert response.json()["items"] == expected_items
     assert response.json()["excludedInfrastructureCount"] == 1
+    assert response.json()["source"]["historyThrough"] == "2026-10-07"
+    assert response.json()["source"]["version"] != service.source_metadata()["version"]
 
 
 def test_history_without_presentation_path_keeps_every_saved_item(tmp_path: Path) -> None:
@@ -862,7 +889,7 @@ def test_history_without_presentation_path_keeps_every_saved_item(tmp_path: Path
     app.include_router(create_studio_router(path, history_presentation_path=None))
     response = TestClient(app).get("/saved-research-studio/v1/research-history")
     assert response.status_code == 200
-    assert response.json() == {**projected, "dataMode": "local-private", "synthetic": False}
+    assert response.json() == {**projected, "source": SavedResearchStudio(path).source_metadata(projected), "dataMode": "local-private", "synthetic": False}
 
 
 @pytest.mark.parametrize("category", [None, "engineering", "Research", False, ["infrastructure"], {}])

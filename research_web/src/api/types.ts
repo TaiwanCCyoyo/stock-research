@@ -194,20 +194,22 @@ export interface DataQualityCoverage {
 }
 
 export interface DataQualityReport {
-    schema_version: number;
     generated_at: string;
-    subject: string;
-    coverage: DataQualityCoverage;
-    checks: Record<
-        DataQualityCheckName,
-        {
-            description?: string;
-            threshold?: number;
-            symbol_count: number;
-            finding_count: number;
-        }
+    schema_version?: number;
+    subject?: string;
+    coverage?: DataQualityCoverage;
+    checks?: Partial<
+        Record<
+            DataQualityCheckName,
+            {
+                description?: string;
+                threshold?: number;
+                symbol_count: number;
+                finding_count: number;
+            }
+        >
     >;
-    symbols: Record<string, DataQualitySymbolEntry>;
+    symbols?: Record<string, DataQualitySymbolEntry>;
 }
 
 /** GET /data-quality response; `report` is null when the submodule has not produced one yet. */

@@ -1,3 +1,4 @@
+import type { SnapshotSource } from "../../components/sourceMetadata";
 /** Read-only saved accounting evidence. Money is TWD; returns/weights are fractions. */
 export interface StudioCandle {
     date: string;
@@ -195,6 +196,7 @@ export interface StudioRun extends StudioSummary {
     accountDates: string[];
 }
 export interface StudioIndex {
+    source?: SnapshotSource;
     synthetic?: boolean;
     dataMode?: "public-synthetic" | "local-private";
     schema: "saved-research-studio.v1";
@@ -224,6 +226,7 @@ export interface StudioHistoryItem {
     sourceNote?: string | null;
 }
 export interface StudioHistory {
+    source?: SnapshotSource;
     schema: "saved-research-history.v1";
     historyComplete: false;
     items: StudioHistoryItem[];

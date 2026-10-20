@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { SourceNotice } from "../../components/SourceNotice";
 import { useStudioHistory, useStudioIndex } from "../../api/strategyStudio";
 import { readHistoryWhenReady, type HistoryStatus } from "../full-history/api";
 import {
@@ -89,6 +90,12 @@ export function HomePage() {
     const maxIndustry = summary?.industries[0]?.rows.length ?? 1;
     return (
         <div className="ss-page">
+            {strategies.data && (
+                <SourceNotice source={strategies.data.source} />
+            )}
+            {history.data && (
+                <SourceNotice source={history.data.source} history />
+            )}
             <h1>研究與發現</h1>
             <p className="ss-muted">
                 先看市場正在發生什麼，再看研究過的策略有沒有跟上。

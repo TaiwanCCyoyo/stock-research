@@ -35,6 +35,22 @@ def read_private_artifact(name: str, root: Path) -> object:
 def create_private_artifact_router() -> APIRouter:
     router = APIRouter(prefix="/private-artifacts/v1")
 
+    @router.get("/shared-status")
+    def shared_status() -> dict[str, str]:
+        if os.environ.get("STOCK_RESEARCH_DATA_MODE", "public-synthetic") != "local-private":
+            raise HTTPException(503, "private data unavailable", headers={"X-Research-Evidence-Error": "unavailable"})
+        try:
+            from research_core.maintained_adjusted_daily import current_generation
+
+            status = current_generation()
+            fields = ("family", "generation", "asof", "built_at_utc", "status_sha256")
+            result = {key: status[key] for key in fields}
+            if not all(isinstance(value, str) and value for value in result.values()):
+                raise ValueError("invalid shared generation metadata")
+            return result
+        except Exception:
+            raise HTTPException(503, "shared data status unavailable", headers={"X-Research-Evidence-Error": "unavailable"}) from None
+
     @router.get("/{name}")
     def artifact(name: str) -> object:
         if name not in NAMES:
