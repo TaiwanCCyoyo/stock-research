@@ -49,8 +49,14 @@ series into these JSON files.
 `task_publications` current-publication selection for opted-in task directories only.
 It requires a bounded registration
 and report, contained task paths, matching SHA-256, exact title and excerpt.
-Invalid opted-in registrations fail explicitly, instead of silently replacing
-their evidence. A report change requires reviewing and updating its registration.
+Invalid opted-in registrations show only that card as `登錄需更新`, with its
+task ID and a safe reason; other registered and legacy cards remain available.
+Warnings identify the affected task without exposing invalid payloads or paths.
+The strict `read_study_presentation` reader still raises validation errors, and
+the repository test validates every `tasks/*/presentation.json` through it.
+When modifying an already registered report, review and update its presentation
+title, verbatim summary and SHA-256 in the same commit. Never edit pinned evidence
+to make a registration pass; correct the registration or record the limitation.
 
 The private studio first validates its original package and title-origins
 sidecar. Only then does it append/replace registered task cards in the response.

@@ -96,10 +96,17 @@ export function ResearchHistoryPage() {
                                 <span
                                     className={`ss-status ${item.outcome === "candidate_failed" ? "ss-status-failed" : "ss-status-research"}`}
                                 >
-                                    {historyOutcome(item)}
+                                    {item.status === "登錄需更新"
+                                        ? item.status
+                                        : historyOutcome(item)}
                                 </span>
                             </div>
                             <h2>{item.title}</h2>
+                            {item.status === "登錄需更新" && (
+                                <p className="ss-warning">
+                                    {item.id}：{item.sourceNote}
+                                </p>
+                            )}
                             <ResearchMarkdown text={historyConclusion(item)} />
                             {!item.webReportHref && item.webReportReason && (
                                 <p className="ss-small ss-muted">

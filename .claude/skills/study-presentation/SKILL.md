@@ -25,6 +25,10 @@ Deliver a reading view of saved evidence, not new study conclusions.
 - Add the small `presentation.json` described in the contract. Format its source
   report before hashing; use a verbatim excerpt and the current publication.
   Do not re-pin frozen evidence to make a card load.
+  When changing an already registered report, update its presentation title,
+  verbatim summary and SHA-256 in the same commit. The repository's strict
+  registration test checks every card; a dashboard `登錄需更新` placeholder is
+  a visible failure to repair, not successful validation.
 - Reference existing shared family/catalog IDs in `shared_data`; link the report
   to `/#data` and relevant symbols to `/#data/<code>`. A saved strategy trade
   and a current-generation chart have different price/date semantics: label them.

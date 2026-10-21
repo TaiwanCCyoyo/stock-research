@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from research_core.evidence import EvidenceError
-from research_core.study_presentation import project_study_history
+from research_core.study_presentation import project_study_history, read_study_presentation
 
 
 def registration(tmp_path: Path) -> tuple[Path, dict]:
@@ -72,7 +72,7 @@ def test_task_identity_must_be_report_route_safe(tmp_path: Path, identity: str) 
     metadata["task_id"] = identity
     save(destination, metadata)
     with pytest.raises(EvidenceError, match="report-route-safe"):
-        project_study_history({"items": []}, tmp_path)
+        read_study_presentation(destination)
 
 
 @pytest.mark.parametrize("shared", [[], ["adjusted-daily-v1"]])
@@ -82,7 +82,7 @@ def test_shared_reason_rejects_objects_for_all_reference_states(tmp_path: Path, 
     metadata.update(shared_data=shared, shared_data_reason=reason)
     save(task, metadata)
     with pytest.raises(EvidenceError, match="shared_data_reason must be text or null"):
-        project_study_history({"items": []}, tmp_path)
+        read_study_presentation(task)
 
 
 def test_nonempty_references_allow_null_reason(tmp_path: Path) -> None:
@@ -98,7 +98,7 @@ def test_web_report_reason_rejects_nontext(tmp_path: Path, reason: object) -> No
     metadata["web_report_reason"] = reason
     save(task, metadata)
     with pytest.raises(EvidenceError, match="web_report_reason must be text or null"):
-        project_study_history({"items": []}, tmp_path)
+        read_study_presentation(task)
 
 
 @pytest.mark.parametrize("reason", [None, "Reading page deferred; saved report is preserved."])
@@ -135,7 +135,7 @@ def test_invalid_registration_fails_closed(tmp_path: Path, key: str, value: obje
     metadata[key] = value
     save(task, metadata)
     with pytest.raises((EvidenceError, ValueError)):
-        project_study_history({"items": []}, tmp_path)
+        read_study_presentation(task)
 
 
 def test_current_publication_required_and_nested_report_supported(tmp_path: Path) -> None:
@@ -170,7 +170,7 @@ def test_current_publication_required_and_nested_report_supported(tmp_path: Path
         encoding="utf-8",
     )
     with pytest.raises(EvidenceError, match="current publication"):
-        project_study_history({"items": []}, tmp_path)
+        read_study_presentation(task)
     metadata.update(publication="v2", report_path="publications/v2/report.md")
     save(task, metadata)
     result = project_study_history({"items": []}, tmp_path)
@@ -191,7 +191,7 @@ def test_web_report_link_requires_real_local_entry(tmp_path: Path) -> None:
     metadata["web_report"] = True
     save(task, metadata)
     with pytest.raises(EvidenceError):
-        project_study_history({"items": []}, tmp_path)
+        read_study_presentation(task)
     (task / "web-report").mkdir()
     (task / "web-report/index.html").write_text("<h1>Synthetic</h1>", encoding="utf-8")
     assert project_study_history({"items": []}, tmp_path)["items"][0]["webReportHref"] == f"#report/{task.name}"
@@ -201,14 +201,14 @@ def test_report_change_requires_registration_refresh(tmp_path: Path) -> None:
     task, _ = registration(tmp_path)
     (task / "report.md").write_text("# New report\n\nNo accepted result.", encoding="utf-8")
     with pytest.raises(EvidenceError, match="digest"):
-        project_study_history({"items": []}, tmp_path)
+        read_study_presentation(task)
 
 
 def test_registration_size_bound(tmp_path: Path) -> None:
     task, _ = registration(tmp_path)
     (task / "presentation.json").write_bytes(b" " * (64 * 1024 + 1))
     with pytest.raises(EvidenceError, match="size bound"):
-        project_study_history({"items": []}, tmp_path)
+        read_study_presentation(task)
 
 
 def test_saved_reader_projects_only_private_and_keeps_package_bytes(tmp_path: Path) -> None:
@@ -249,3 +249,98 @@ def test_legacy_title_integrity_check_precedes_new_registration(tmp_path: Path) 
     )
     with pytest.raises(StudioError, match="do not match saved history"):
         SavedResearchStudio(package, history_title_origins_path=origins, history_tasks_root=tasks).history()
+
+
+REGISTERED_TASKS = sorted((Path(__file__).resolve().parents[2] / "tasks").glob("*/presentation.json"))
+
+
+@pytest.mark.parametrize("path", REGISTERED_TASKS, ids=lambda path: path.parent.name)
+def test_repository_registrations_strictly_match_report_bytes(path: Path) -> None:
+    assert read_study_presentation(path.parent)["id"] == path.parent.name
+
+
+@pytest.mark.parametrize(
+    ("damage", "reason"),
+    [
+        ("digest", "報告 SHA-256 與登錄不符"),
+        ("title", "登錄標題或摘要與報告原文不符"),
+        ("schema", "JSON／schema 無效"),
+        ("json", "JSON／schema 無效"),
+        ("escape", "非法或越界路徑"),
+        ("section", "登錄欄位格式不符合契約"),
+        ("missing", "登錄或來源檔案無法讀取"),
+        ("publication", "JSON／schema 無效"),
+        ("publication-version", "目前 publication 不一致"),
+        ("utf8", "不是有效的 UTF-8"),
+    ],
+)
+def test_bad_card_is_isolated_and_http_history_still_serves_valid_and_legacy(
+    tmp_path: Path, damage: str, reason: str, caplog: pytest.LogCaptureFixture
+) -> None:
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+
+    from research_api.saved_research_studio import create_studio_router
+    from research_core.saved_research_studio import synthetic_studio_package
+
+    tasks = tmp_path / "tasks"
+    tasks.mkdir()
+    bad, metadata = registration(tasks)
+    valid = tasks / "20261021-valid"
+    valid.mkdir()
+    (valid / "report.md").write_bytes((bad / "report.md").read_bytes())
+    save(valid, {**metadata, "task_id": valid.name})
+    legacy = {**read_study_presentation(valid), "id": "20200101-legacy", "date": "2020-01-01"}
+    if damage == "digest":
+        metadata["report_sha256"] = "0" * 64
+    elif damage == "title":
+        metadata["title"] = "<script>private-secret</script>"
+    elif damage == "schema":
+        metadata["schema"] = "<script>private-secret</script>"
+    elif damage == "escape":
+        metadata["report_path"] = "../private-secret"
+    elif damage == "section":
+        metadata["section"] = {}
+    elif damage == "missing":
+        (bad / "report.md").unlink()
+    elif damage == "publication":
+        (bad / "publications.json").write_text('{"schema":"private-secret"}', encoding="utf-8")
+    elif damage == "publication-version":
+        metadata["publication"] = "private-secret"
+    elif damage == "utf8":
+        (bad / "report.md").write_bytes(b"\xff")
+        metadata["report_sha256"] = hashlib.sha256(b"\xff").hexdigest()
+    save(bad, metadata)
+    if damage == "json":
+        (bad / "presentation.json").write_text("{invalid-private-secret", encoding="utf-8")
+    package = tmp_path / "studio.json"
+    payload = synthetic_studio_package()
+    payload["researchHistory"]["items"] = [legacy]
+    package.write_text(json.dumps(payload), encoding="utf-8")
+    app = FastAPI()
+    app.include_router(create_studio_router(package, history_presentation_path=None, history_tasks_root=tasks))
+    response = TestClient(app).get("/saved-research-studio/v1/research-history")
+    assert response.status_code == 200
+    rows = {item["id"]: item for item in response.json()["items"]}
+    assert set(rows) == {bad.name, valid.name, legacy["id"]}
+    assert rows[bad.name]["status"] == "登錄需更新"
+    assert reason in rows[bad.name]["sourceNote"]
+    assert reason in caplog.text
+    assert rows[valid.name]["conclusion"] == "No accepted result."
+    assert rows[legacy["id"]]["conclusion"] == legacy["conclusion"]
+    assert "private-secret" not in response.text
+    assert "private-secret" not in caplog.text
+    assert "Study registration needs update" in caplog.text
+
+
+def test_unexpected_programming_error_is_not_hidden(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import research_core.study_presentation as presentation
+
+    registration(tmp_path)
+
+    def broken_reader(root: Path) -> dict:
+        raise TypeError("unexpected implementation defect")
+
+    monkeypatch.setattr(presentation, "read_study_presentation", broken_reader)
+    with pytest.raises(TypeError, match="unexpected implementation defect"):
+        project_study_history({"items": []}, tmp_path)
