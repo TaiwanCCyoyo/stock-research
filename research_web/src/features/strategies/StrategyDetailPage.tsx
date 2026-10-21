@@ -10,6 +10,7 @@ import { duration, gainClass, money, percentage, ratio } from "./format";
 import { Metric, StatusBadge, StudioState } from "./shared";
 import { strategyIdea, strategyTitle } from "./presentation";
 import { savedReturnDistribution } from "./distributionModel";
+import { realizedTradeExtremes } from "./model";
 import "./strategies.css";
 
 function ProfitDistribution({ run }: { run: StudioRun }) {
@@ -64,14 +65,8 @@ export function StrategyDetailPage({ runId }: { runId: string }) {
         [accountDate, setAccountDate] = useState<string | null>(null);
     const closeTrade = useCallback(() => setTradeId(null), []),
         closeAccount = useCallback(() => setAccountDate(null), []);
-    const closed = useMemo(
-        () =>
-            (run?.positions ?? [])
-                .filter(
-                    (trade) =>
-                        trade.closeDate !== null && trade.realizedPnl !== null,
-                )
-                .sort((a, b) => b.realizedPnl! - a.realizedPnl!),
+    const { mostProfitable, mostLosing } = useMemo(
+        () => realizedTradeExtremes(run?.positions ?? []),
         [run],
     );
     const benchmarkFinal = run?.nav.at(-1)?.benchmarkEquity;
@@ -285,28 +280,37 @@ export function StrategyDetailPage({ runId }: { runId: string }) {
                             <div>
                                 <h3>最賺的幾筆</h3>
                                 <div className="ss-trade-grid">
-                                    {closed.slice(0, 5).map((trade) => (
-                                        <TradeCard
-                                            trade={trade}
-                                            key={trade.id}
-                                            onAudit={setTradeId}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                            <div>
-                                <h3>最賠的幾筆</h3>
-                                <div className="ss-trade-grid">
-                                    {closed
-                                        .slice(-5)
-                                        .reverse()
-                                        .map((trade) => (
+                                    {mostProfitable.length ? (
+                                        mostProfitable.map((trade) => (
                                             <TradeCard
                                                 trade={trade}
                                                 key={trade.id}
                                                 onAudit={setTradeId}
                                             />
-                                        ))}
+                                        ))
+                                    ) : (
+                                        <p className="ss-muted ss-small">
+                                            尚無符合條件的已結束獲利交易。
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                            <div>
+                                <h3>最賠的幾筆</h3>
+                                <div className="ss-trade-grid">
+                                    {mostLosing.length ? (
+                                        mostLosing.map((trade) => (
+                                            <TradeCard
+                                                trade={trade}
+                                                key={trade.id}
+                                                onAudit={setTradeId}
+                                            />
+                                        ))
+                                    ) : (
+                                        <p className="ss-muted ss-small">
+                                            尚無符合條件的已結束虧損交易。
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         </div>

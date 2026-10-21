@@ -1,0 +1,14 @@
+{
+    "schema": "study-presentation.v1",
+    "task_id": "20261013-pattern-scan",
+    "publication": null,
+    "section": "method",
+    "report_path": "report.md",
+    "report_sha256": "2d8b03c490e0b4672bd81846afd588415b12b6a687aaa1e466795f2a055d764c",
+    "title": "Pattern-scan v1 階段報告",
+    "summary": "**2026-10-21：研究已執行，尚未全部完成。** 主要成果入口是\n[HTML 報告](web-report/index.html)，不是以下歷史準備紀錄。\n\n- Q1：12 家族全部完成；首頁以同一個全體、無額外條件口徑，比較 C-base-daily 倍數、C-base-all 差距／K 與虧損率。\n- Q2–Q6：B1、H1 已完成；B2 原程序計算中，其餘家族接續。不重跑已完成工作。",
+    "web_report": true,
+    "web_report_reason": null,
+    "shared_data": [],
+    "shared_data_reason": "此頁只讀 PR17 沿用原輸入產生的既有終表；完整研究與正式資料引用移交尚未完成。歷史共用 generation 僅為價格等價交接參考，不代表本次報告重新讀取共用家族。"
+}

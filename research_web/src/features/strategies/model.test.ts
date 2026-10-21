@@ -19,6 +19,7 @@ import {
 import {
     alignComparisons,
     periodMetrics,
+    realizedTradeExtremes,
     selectTrades,
     strategyStatus,
     walkthroughTrades,
@@ -337,6 +338,70 @@ test("closed gain/loss filters exclude open estimates and unknown PnL", () => {
     assert.deepEqual(
         selectTrades(rows, "open", "", "pnl", -1).map((row) => row.id),
         ["open"],
+    );
+});
+test("realized extremes keep only positive and negative closed cycles", () => {
+    const rows = [
+        trade("gain-small", { realizedPnl: 10 }),
+        trade("loss-small", { realizedPnl: -10 }),
+        trade("gain-large", { realizedPnl: 30 }),
+        trade("loss-large", { realizedPnl: -30 }),
+        trade("zero", { realizedPnl: 0 }),
+        trade("unknown", { realizedPnl: null }),
+        trade("open-gain", { closeDate: null, realizedPnl: 100 }),
+    ];
+    assert.deepEqual(realizedTradeExtremes(rows), {
+        mostProfitable: [rows[2], rows[0]],
+        mostLosing: [rows[3], rows[1]],
+    });
+});
+test("realized extremes provide empty states for all-winning, all-losing, and empty inputs", () => {
+    const wins = [trade("first", { realizedPnl: 20 }), trade("second")];
+    const losses = [
+        trade("first", { realizedPnl: -20 }),
+        trade("second", { realizedPnl: -10 }),
+    ];
+    assert.deepEqual(realizedTradeExtremes(wins), {
+        mostProfitable: [wins[1], wins[0]],
+        mostLosing: [],
+    });
+    assert.deepEqual(realizedTradeExtremes(losses), {
+        mostProfitable: [],
+        mostLosing: [losses[0], losses[1]],
+    });
+    assert.deepEqual(realizedTradeExtremes([]), {
+        mostProfitable: [],
+        mostLosing: [],
+    });
+});
+test("realized extreme ties preserve source order and the limit applies per side", () => {
+    const rows = [
+        trade("win-first", { realizedPnl: 5 }),
+        trade("win-second", { realizedPnl: 5 }),
+        trade("loss-first", { realizedPnl: -5 }),
+        trade("loss-second", { realizedPnl: -5 }),
+        trade("win-third", { realizedPnl: 4 }),
+        trade("loss-third", { realizedPnl: -4 }),
+    ];
+    const result = realizedTradeExtremes(rows, 2);
+    assert.deepEqual(
+        result.mostProfitable.map((row) => row.id),
+        ["win-first", "win-second"],
+    );
+    assert.deepEqual(
+        result.mostLosing.map((row) => row.id),
+        ["loss-first", "loss-second"],
+    );
+    assert.deepEqual(
+        rows.map((row) => row.id),
+        [
+            "win-first",
+            "win-second",
+            "loss-first",
+            "loss-second",
+            "win-third",
+            "loss-third",
+        ],
     );
 });
 test("capture unknown stays separate from known zero; null sorts last in both directions", () => {

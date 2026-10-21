@@ -21,6 +21,7 @@ from scripts import ci_scope
         ("research_core/patterns/hhhl/v4/sources.zip", "hhhl", "scripts/tests/test_hhhl_v4_source.py"),
         ("research_core/patterns/hhhl/sources.json", "hhhl", "scripts/tests/test_pattern_sources.py"),
         ("tasks/20261010-hhhl-v4-probability/sources/hhhl_rule_v4.zip", "hhhl", "scripts/tests/test_validate_hhhl_v4_source.py"),
+        ("research_core/multiple_outcomes_v1.py", "hhhl", "scripts/tests/test_multiple_outcomes_v1.py"),
         ("research_core/feature_atlas_features.py", "atlas", "scripts/tests/test_build_feature_discrimination_atlas.py"),
         ("research_core/sector_waves.py", "sector", "scripts/tests/test_sector_wave_catalog_io.py"),
         ("research_core/market_context.py", "market_context", "scripts/tests/test_market_context.py"),
@@ -56,7 +57,7 @@ def test_domain_and_downstream_union(path: str, domain: str, consumer: str) -> N
         (
             path,
             {"hhhl", "opportunity", "research_data", "annual", "pattern_scan"},
-            {"tests/test_opportunity_history_api.py"},
+            {"tests/test_opportunity_history_api.py", "scripts/tests/test_multiple_outcomes_v1.py"},
         )
         for path in ("research_core/hhhl_variants_paths.py", "research_core/hhhl_variants_observations.py")
     ],

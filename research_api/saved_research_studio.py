@@ -22,11 +22,14 @@ def create_studio_router(
     capture_provider: Callable[[str, str], dict[str, Any] | None] | None = None,
     history_presentation_path: Path | None = DEFAULT_HISTORY_PRESENTATION,
     history_title_origins_path: Path | None = None,
+    history_tasks_root: Path | None = None,
 ) -> APIRouter:
     configuration_error: OSError | StudioError | None = None
     if package_path is None:
         mode = os.environ.get("STOCK_RESEARCH_DATA_MODE", "public-synthetic")
         if mode == "local-private":
+            if history_tasks_root is None:
+                history_tasks_root = Path(__file__).resolve().parents[1] / "tasks"
             configured = os.environ.get("STOCK_SAVED_STUDIO_PACKAGE", "")
             if not configured:
                 configuration_error = FileNotFoundError("private saved studio package is not configured")
@@ -43,7 +46,13 @@ def create_studio_router(
             history_title_origins_path = None
         elif history_title_origins_path is None:
             history_title_origins_path = DEFAULT_HISTORY_TITLE_ORIGINS
-    service = SavedResearchStudio(package_path, capture_provider, history_presentation_path, history_title_origins_path)
+    service = SavedResearchStudio(
+        package_path,
+        capture_provider,
+        history_presentation_path,
+        history_title_origins_path,
+        history_tasks_root=history_tasks_root if package_path is not None else None,
+    )
 
     def verify_request_mode(x_research_data_mode: str | None = Header(None)) -> None:
         actual_mode = "public-synthetic" if package_path is None else "local-private"

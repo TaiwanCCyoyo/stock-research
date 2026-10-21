@@ -1,0 +1,13 @@
+{
+    "schema": "study-presentation.v1",
+    "task_id": "20261012-hhhl-v4-variants",
+    "publication": null,
+    "section": "method",
+    "report_path": "report.md",
+    "report_sha256": "ab2d2aeeaae08a50b3e5e655723bbc8526bc42aa8492d5bf555bd42fc8c8bec7",
+    "title": "HHHL v4 條件與後續翻倍：描述研究 v1",
+    "summary": "高過高事件與後續翻倍有可描述的關聯，但本版沒有顯示它比新高量能事件更強。全部原合格事件的翻倍率，在 126／252 個交易日內分別為 **7.81%／15.97%**；一般合格股票日為 5.66%／14.06%，新高量能控制為 8.25%／16.90%。這些都是事件比例，不能解讀成「多少股票必然成為飆股」。",
+    "web_report": true,
+    "shared_data": [],
+    "shared_data_reason": "本次僅登錄 publication-v1 的既有彙總；固定 pins 與現行 maintained family 身分不同，尚未確認可連結的目錄版本。"
+}

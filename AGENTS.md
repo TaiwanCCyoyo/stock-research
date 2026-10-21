@@ -100,6 +100,8 @@ These rules govern requested local reviews and hosted pull request reviews. See 
 
 ## Research And Data
 
+- For study closeout presentation, follow [research-program closeout](docs/en/research-program.md#收尾條件) and [study-presentation](docs/en/study-presentation.md): web-report, history registration and shared-data references, or explicit reasons for missing items.
+
 - Before a new study, start at `docs/en/research-program.md` for current work and prior-method pointers, then read `docs/en/research-owner-contract.md`, relevant parts of `docs/en/research-objective.md`, and its `mission.md`. Preregister changed requirements before evaluation; preserve historical missions and results.
 - Follow `docs/en/research-foundation.md` for new research infrastructure. A working runner or passing infrastructure checks do not approve a strategy or make an already-viewed period unseen again.
 - Prioritize project-wide discoverability, readability, maintainability and reuse when designing experiments and accumulating strategies. Follow `docs/en/research-program.md#reusable-research-artifacts`: check existing assets first, index useful outputs with their data contracts and access paths, and complete the handoff only when another session can locate, obtain, understand and assess them without relying on chat.

@@ -294,6 +294,9 @@ verify-*.png
 !tasks/20261013-pattern-scan/resource-probe-v3.json.gz
 
 # Public checksum metadata travels losslessly in a bounded annual publication.
+# Source-backed dashboard registrations contain report excerpts, never quote series.
+!tasks/*/presentation.json
+
 # Applies to every named publication version (completion-v2, completion-v3, ...).
 /tasks/20261013-annual-winner-rotation/publications/*/admission-audit.json
 /tasks/20261013-annual-winner-rotation/publications/*/run-receipt.json
