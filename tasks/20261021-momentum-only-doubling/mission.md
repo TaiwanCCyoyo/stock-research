@@ -103,8 +103,11 @@ PR17 B1、H1 各自的 development-half selector 都選出幾乎相同的 atoms�
   `technical-daily.v1` 的 RSI14／ATR 與 PR17 使用的 atlas／derived_features 版本逐位元相同，
   但 PR17 先遮罩品質無效的 OHLC 再算 RSI；20 檔探測須逐值比對共用 `RSI14` 與 PR17 adapter，
   全部相同才讀共用欄，任何一列不同就改用 PR17 adapter（`pattern_scan_indicators_v1`）；
-  C3（MA240）、D2、F、G2_limit、H 不在共用家族，用上列 `research_core` 原程式計算，
-  **不加入共用資料**（研究專屬條件留在研究）。
+  C3（MA240）、D2、F、G2_limit 目前不在共用家族；之後若讀取的 generation 已有對應的共用數值欄，
+  且 20 檔探測逐值比對與 PR17 原程式完全相同，就讀共用欄，否則用上列 `research_core` 原程式計算
+  （與 RSI14 同一規則）。本研究**不等待**共用欄上線。H 是跨股排名，一律用 PR17 cross-section 程式計算。
+  分箱門檻（ge60、ge250 等）、S6 資格、PAT 與結果標籤都留在研究內。這只改「數值從哪裡讀」，
+  不改任何定義、分箱或判讀規則。
 - **日曆與期間：** PR17 common calendar，2010-01-04..2026-10-12，4,110 sessions；年代 2010–2012、
   2013–2018、2019+。不得刪缺價縮短 H126／H252。
 - **起點固定 2010-01-04，不得改成 2019：** 過去多個研究從 2019 起算，本研究不沿用。執行前斷言
