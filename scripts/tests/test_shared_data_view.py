@@ -263,6 +263,62 @@ def test_empty_names_retry_in_background_only_after_cooldown(tmp_path: Path, mon
         store.close()
 
 
+@pytest.mark.parametrize("completed", [True, False])
+@pytest.mark.parametrize("stale", [{}, {"2330": ("過期名稱", "TEST")}])
+def test_new_generation_names_supersede_completed_or_running_retry(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, completed: bool, stale: dict[str, tuple[str, str]]
+) -> None:
+    monkeypatch.setenv("STOCK_RESEARCH_DATA_MODE", "local-private")
+    _publish(tmp_path, "generation-one")
+    clock = [100.0]
+    monkeypatch.setattr(shared_data_view, "time", SimpleNamespace(monotonic=lambda: clock[0], perf_counter=shared_data_view.time.perf_counter))
+    entered, release = Event(), Event()
+    calls: list[float] = []
+    latest = {"2330": ("新世代名稱", "TEST")}
+
+    def names() -> dict[str, tuple[str, str]]:
+        calls.append(clock[0])
+        if len(calls) == 1:
+            return {}
+        if len(calls) == 2:
+            entered.set()
+            assert release.wait(5), "old metadata retry was not released"
+            return stale
+        return latest
+
+    monkeypatch.setattr(shared_data_view, "symbol_names", names)
+    store = SharedDataView(tmp_path)
+    try:
+        store.prepare(wait=True)
+        clock[0] = 160.0
+        store.prepare(wait=True)
+        pending = store._names_future
+        assert pending is not None and entered.wait(5)
+        if completed:
+            release.set()
+            pending.result(timeout=5)
+        else:
+            assert pending.running()
+        _publish(tmp_path, "generation-two")
+        store.prepare(wait=True)
+        assert store._names_future is None
+        release.set()
+        assert pending.result(timeout=5) == stale
+        # The stale result must not be harvested by a later API request.
+        response = _client(store).get("/shared-data/v1/adjusted-daily-v1/symbols")
+        assert response.status_code == 200
+        result = response.json()
+        assert result["generation"] == "generation-two"
+        assert result["namesAvailable"]
+        assert result["symbols"][0]["name"] == "新世代名稱"
+        clock[0] = 1000.0
+        store.prepare()
+        assert len(calls) == 3, "fresh names must remain cached after the old retry finishes"
+    finally:
+        release.set()
+        store.close()
+
+
 def test_discovery_labels_read_the_index_without_mutating_catalog(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     path = tmp_path / "index.md"
     path.write_text("\n".join([shared_data_view.LABELS_START, "| `synthetic` | 中文名稱 | 能回答的問題 |", shared_data_view.LABELS_END]), encoding="utf-8")

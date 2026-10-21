@@ -213,6 +213,11 @@ class SharedDataView:
         ]
         names = symbol_names()
         with self._lock:
+            # A new warmup supersedes every older optional metadata retry.
+            # Running reads may not cancel, so detach their result as well.
+            if self._names_future is not None:
+                self._names_future.cancel()
+                self._names_future = None
             self._names = names
             self._names_retry_after = time.monotonic() + NAMES_RETRY_SECONDS
         self.warm_seconds = time.perf_counter() - started
