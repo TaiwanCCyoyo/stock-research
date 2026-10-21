@@ -163,7 +163,7 @@ def test_check_uses_identity_only_never_studio_runs(tmp_path: Path) -> None:
     environment = {"VITE_ARTIFACT_MODE": "public-synthetic", "STOCK_RESEARCH_DATA_MODE": "public-synthetic"}
     response = MagicMock()
     response.__enter__.return_value.read.return_value = json.dumps({
-        **launcher.dashboard_identity(environment),
+        **launcher.dashboard_identity({**environment, "RESEARCH_WEB_URL": "http://127.0.0.1:15177"}),
         "apiTarget": "http://127.0.0.1:18517",
     }).encode()
     with (
@@ -347,3 +347,36 @@ def test_run_reports_children_that_exit_simultaneously(tmp_path: Path, capsys: p
     assert result == 1
     assert "意外結束（結束碼 0）" in capsys.readouterr().err
     assert stop.call_args_list == [call(children[1]), call(children[0])]
+
+
+def test_run_tells_the_api_which_website_url_to_point_to(tmp_path: Path) -> None:
+    root = tmp_path / "checkout"
+    root.mkdir()
+    child = launcher.ManagedChild("history-api", MagicMock(), io.BytesIO())
+
+    with (
+        patch.object(launcher, "project_root", return_value=root),
+        patch.object(launcher, "_inspect_service", return_value="stopped"),
+        patch.object(launcher, "_configure_logging", return_value=tmp_path),
+        patch.object(launcher, "_start_child", return_value=child) as start,
+        patch.object(launcher, "_wait_until_ready", side_effect=RuntimeError("stop after first start")),
+        patch.object(launcher, "_verify_live_mode"),
+        patch.object(launcher, "_stop_child"),
+    ):
+        launcher.run(no_browser=True, api_port=18517, web_port=15177)
+
+    environment = start.call_args.args[3]
+    assert environment["RESEARCH_WEB_URL"] == "http://127.0.0.1:15177"
+
+
+def test_reused_api_must_point_to_the_same_website_url() -> None:
+    environment = {"VITE_ARTIFACT_MODE": "public-synthetic", "RESEARCH_WEB_URL": "http://127.0.0.1:15177"}
+    running = launcher.dashboard_identity({"RESEARCH_WEB_URL": "http://127.0.0.1:5177"})
+    response = MagicMock()
+    response.__enter__.return_value.read.return_value = json.dumps(running).encode()
+    with patch.object(launcher.urllib.request, "urlopen", return_value=response):
+        with pytest.raises(RuntimeError, match="網站網址"):
+            launcher._verify_live_mode("history-api", 18517, environment)
+        running["webUrl"] = "http://127.0.0.1:15177"
+        response.__enter__.return_value.read.return_value = json.dumps(running).encode()
+        launcher._verify_live_mode("history-api", 18517, environment)
