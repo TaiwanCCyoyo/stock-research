@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { readShared } from "./api.ts";
+import { readShared, recoverSymbolNames } from "./api.ts";
+import { resolveSymbolInput } from "./model.ts";
 
 test("explicit warmup retries then returns JSON", async () => {
     let calls = 0;
@@ -70,4 +71,156 @@ test("aborted requests cannot return stale JSON", async () => {
     await assert.rejects(readShared("fixture", controller.signal, fetcher), {
         name: "AbortError",
     });
+});
+
+function symbolResponse(available: boolean, generation = "synthetic-v1") {
+    return {
+        generation,
+        status_sha256: "synthetic-sha",
+        namesAvailable: available,
+        symbols: [
+            {
+                code: "SYNTH",
+                name: available ? "合成公司" : "",
+                market: "TEST",
+                first: "2020-01-01",
+                last: "2020-01-03",
+            },
+        ],
+    };
+}
+test("names recover in place on minute intervals and stop immediately on success", async () => {
+    const waits: number[] = [];
+    let calls = 0;
+    let active = 0;
+    let symbols = symbolResponse(false).symbols;
+    const result = await recoverSymbolNames(
+        new AbortController().signal,
+        "synthetic-v1",
+        (data) => {
+            symbols = data.symbols;
+        },
+        (async (path) => {
+            assert.equal(path, "/api/shared-data/v1/adjusted-daily-v1/symbols");
+            assert.equal(++active, 1);
+            calls++;
+            active--;
+            return Response.json(symbolResponse(calls === 3));
+        }) as typeof fetch,
+        async (ms) => {
+            waits.push(ms);
+            assert.equal(resolveSymbolInput("合成公司", symbols), null);
+        },
+    );
+    assert.equal(result, "available");
+    assert.equal(calls, 3);
+    assert.deepEqual(waits, [60_000, 60_000]);
+    assert.equal(symbols[0].name, "合成公司");
+    assert.equal(resolveSymbolInput("合成公司", symbols), "SYNTH");
+    assert.equal(resolveSymbolInput("SYNTH 合成公司", symbols), "SYNTH");
+});
+test("names stop after exactly sixty low-frequency retries and a fresh pump restarts", async () => {
+    let calls = 0;
+    let waits = 0;
+    const fetcher = (async () => {
+        calls++;
+        return Response.json(symbolResponse(false));
+    }) as typeof fetch;
+    assert.equal(
+        await recoverSymbolNames(
+            new AbortController().signal,
+            "synthetic-v1",
+            () => {},
+            fetcher,
+            async (ms) => {
+                assert.equal(ms, 60_000);
+                waits++;
+            },
+        ),
+        "exhausted",
+    );
+    assert.equal(calls, 61);
+    assert.equal(waits, 60);
+    assert.equal(
+        await recoverSymbolNames(
+            new AbortController().signal,
+            "synthetic-v1",
+            () => {},
+            (async () => Response.json(symbolResponse(true))) as typeof fetch,
+        ),
+        "available",
+    );
+});
+test("aborting a real pending retry timer prevents another request", async () => {
+    const controller = new AbortController();
+    let calls = 0;
+    const pending = recoverSymbolNames(
+        controller.signal,
+        "synthetic-v1",
+        () => {
+            queueMicrotask(() => controller.abort());
+        },
+        (async () => {
+            calls++;
+            return Response.json(symbolResponse(false));
+        }) as typeof fetch,
+    );
+    await assert.rejects(pending, { name: "AbortError" });
+    assert.equal(calls, 1);
+});
+test("aborted in-flight names cannot update options even when fetch ignores cancellation", async () => {
+    const controller = new AbortController();
+    let release!: (value: Response) => void;
+    let updates = 0;
+    const pending = recoverSymbolNames(
+        controller.signal,
+        "synthetic-v1",
+        () => {
+            updates++;
+        },
+        (() =>
+            new Promise<Response>((resolve) => {
+                release = resolve;
+            })) as typeof fetch,
+    );
+    controller.abort();
+    release(Response.json(symbolResponse(true)));
+    await assert.rejects(pending, { name: "AbortError" });
+    assert.equal(updates, 0);
+});
+test("generation mismatch never applies and initial unpinned pump pins first generation", async () => {
+    let updates = 0;
+    assert.equal(
+        await recoverSymbolNames(
+            new AbortController().signal,
+            "synthetic-v2",
+            () => {
+                updates++;
+            },
+            (async () => Response.json(symbolResponse(true))) as typeof fetch,
+        ),
+        "generation-changed",
+    );
+    assert.equal(updates, 0);
+    let calls = 0;
+    assert.equal(
+        await recoverSymbolNames(
+            new AbortController().signal,
+            "",
+            () => {
+                updates++;
+            },
+            (async () =>
+                Response.json(
+                    symbolResponse(
+                        ++calls > 1,
+                        calls === 1 ? "synthetic-v1" : "synthetic-v2",
+                    ),
+                )) as typeof fetch,
+            async () => {},
+        ),
+        "generation-changed",
+    );
+    assert.equal(updates, 1);
+    assert.equal(calls, 2);
 });

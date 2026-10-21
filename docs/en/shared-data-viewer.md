@@ -45,6 +45,13 @@ date and display `confirmed_at` separately.
 Missing optional stock names retry on subsequent requests after a 60-second
 cooldown in the background, with at most one retry in flight. Busy producers
 still return codes immediately through the existing guarded metadata reader.
+The page receives that recovery through a serial symbols-only request loop while
+names are unavailable: one initial request, then at most 60 retries spaced 60
+seconds apart. Success stops it. Leaving the page, retrying or changing the
+observed generation cancels the request and timer; mismatched generations are
+never applied. A separate manual name retry restarts that bounded loop without
+reloading prices or catalog metadata. Exhaustion and generation changes explain
+the next action on screen. Restored names update both suggestions and lookup.
 
 ## Catalog and scope
 

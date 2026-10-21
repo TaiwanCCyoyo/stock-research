@@ -1,3 +1,5 @@
+import type { SymbolsResponse } from "./model.ts";
+
 function pause(ms: number, signal: AbortSignal) {
     return new Promise<void>((resolve, reject) => {
         signal.throwIfAborted();
@@ -11,6 +13,35 @@ function pause(ms: number, signal: AbortSignal) {
         }, ms);
         signal.addEventListener("abort", abort, { once: true });
     });
+}
+
+/** One serial pump: initial request, then at most 60 minute-spaced name retries. */
+export async function recoverSymbolNames(
+    signal: AbortSignal,
+    expectedGeneration: string,
+    onSymbols: (data: SymbolsResponse) => void,
+    fetcher: typeof fetch = fetch,
+    wait: (ms: number, signal: AbortSignal) => Promise<void> = pause,
+): Promise<"available" | "exhausted" | "generation-changed"> {
+    let generation = expectedGeneration;
+    for (let attempt = 0; attempt <= 60; attempt++) {
+        if (attempt > 0) await wait(60_000, signal);
+        signal.throwIfAborted();
+        const data = await readShared<SymbolsResponse>(
+            "adjusted-daily-v1/symbols",
+            signal,
+            fetcher,
+            wait,
+        );
+        signal.throwIfAborted();
+        // Before a series has loaded, pin the first response's generation too.
+        if (generation && data.generation !== generation)
+            return "generation-changed";
+        generation = data.generation;
+        onSymbols(data);
+        if (data.namesAvailable) return "available";
+    }
+    return "exhausted";
 }
 /** Only retry explicit warmup responses. Every retry remains cancellable. */
 export async function readShared<T>(

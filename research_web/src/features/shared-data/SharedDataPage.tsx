@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { artifactMode } from "../../api/artifactMode";
-import { readShared } from "./api";
+import { readShared, recoverSymbolNames } from "./api";
 import {
     MA_PERIODS,
+    resolveSymbolInput,
     formatNumber as fmt,
     formatFeature,
     featureLabels,
@@ -46,6 +47,8 @@ export function SharedDataPage({
         [symbols],
     );
     const [namesAvailable, setNamesAvailable] = useState(true);
+    const [namesRetry, setNamesRetry] = useState(0);
+    const [namesNotice, setNamesNotice] = useState("");
     const [loaded, setLoaded] = useState<{
         series: SharedSeries;
         requestedAt: number;
@@ -67,7 +70,7 @@ export function SharedDataPage({
         const controller = new AbortController();
         setMetadataError("");
         setFamilies(null);
-        setSymbols([]);
+
         readShared<Families>("families", controller.signal)
             .then((data) => {
                 if (!controller.signal.aborted) setFamilies(data);
@@ -76,26 +79,45 @@ export function SharedDataPage({
                 if (!controller.signal.aborted)
                     setMetadataError(reason.message);
             });
-        readShared<{ symbols: SharedSymbol[]; namesAvailable: boolean }>(
-            "adjusted-daily-v1/symbols",
-            controller.signal,
-        )
-            .then((data) => {
-                if (!controller.signal.aborted) {
-                    setSymbols(data.symbols);
-                    setNamesAvailable(data.namesAvailable);
-                }
-            })
-            .catch((reason: Error) => {
-                if (!controller.signal.aborted) {
-                    setNamesAvailable(false);
-                    setMetadataError((old) =>
-                        [old, reason.message].filter(Boolean).join("；"),
-                    );
-                }
-            });
         return () => controller.abort();
     }, [privateMode, retry, metadataGeneration]);
+    useEffect(() => {
+        if (!privateMode) return;
+        // A dedicated controller lets manual name recovery avoid reloading
+        // families, prices or the chart while sharing the metadata lifecycle.
+        const controller = new AbortController();
+        setSymbols([]);
+        setNamesAvailable(false);
+        setNamesNotice("正在讀取股票名稱…");
+        recoverSymbolNames(controller.signal, metadataGeneration, (data) => {
+            if (controller.signal.aborted) return;
+            setSymbols(data.symbols);
+            setNamesAvailable(data.namesAvailable);
+            setNamesNotice(
+                data.namesAvailable
+                    ? ""
+                    : "每 60 秒自動重試名稱，最多 60 次；仍可用代號查詢。",
+            );
+        })
+            .then((result) => {
+                if (controller.signal.aborted) return;
+                if (result === "exhausted")
+                    setNamesNotice(
+                        "名稱自動重試已達 60 次上限；可手動重新啟動。",
+                    );
+                if (result === "generation-changed")
+                    setNamesNotice(
+                        "名稱資料世代已變更，已停止套用；請重新載入頁面以取得新世代。",
+                    );
+            })
+            .catch((reason: Error) => {
+                if (!controller.signal.aborted)
+                    setNamesNotice(
+                        `名稱讀取停止：${reason.message}。可手動重試。`,
+                    );
+            });
+        return () => controller.abort();
+    }, [privateMode, retry, metadataGeneration, namesRetry]);
     useEffect(() => {
         if (!privateMode) return;
         const controller = new AbortController();
@@ -139,13 +161,8 @@ export function SharedDataPage({
             ? values.filter((x) => x !== value)
             : [...values, value].sort((a, b) => a - b);
     const openSymbol = () => {
-        const input = search.trim();
-        const found = symbols.find(
-            (item) =>
-                item.code === input.split(/\s+/)[0] || item.name === input,
-        );
-        const target = found?.code || input;
-        if (/^[A-Za-z0-9._-]+$/.test(target)) {
+        const target = resolveSymbolInput(search, symbols);
+        if (target) {
             location.hash = `data/${encodeURIComponent(target)}`;
             setSearch("");
         }
@@ -292,7 +309,14 @@ export function SharedDataPage({
                                     </div>
                                     {!namesAvailable && (
                                         <p className="shared-note">
-                                            股票名稱目前不可讀，仍可用代號查詢。
+                                            {namesNotice}
+                                            <button
+                                                onClick={() =>
+                                                    setNamesRetry((n) => n + 1)
+                                                }
+                                            >
+                                                重試股票名稱
+                                            </button>
                                         </p>
                                     )}
                                     <div

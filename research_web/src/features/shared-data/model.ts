@@ -29,6 +29,23 @@ export interface SharedSymbol {
     first: string;
     last: string;
 }
+export interface SymbolsResponse {
+    generation: string;
+    status_sha256: string;
+    namesAvailable: boolean;
+    symbols: SharedSymbol[];
+}
+export function resolveSymbolInput(
+    input: string,
+    symbols: SharedSymbol[],
+): string | null {
+    const query = input.trim();
+    const found = symbols.find(
+        (item) => item.code === query.split(/\s+/)[0] || item.name === query,
+    );
+    const code = found?.code || query;
+    return /^[A-Za-z0-9._-]+$/.test(code) ? code : null;
+}
 export interface Family {
     display_title?: string | null;
     purpose?: string | null;
