@@ -8,6 +8,9 @@ import os
 import sys
 from pathlib import Path
 
+# Only new invocations read this default. An existing worker keeps its tuple.
+DEFAULT_TARGET_ORDER = ("B1", "H1", "B2", "B4", "B3", "L1", "P1", "R1", "R2", "R3", "L2", "L3")
+
 
 def main() -> None:
     for name in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "BLIS_NUM_THREADS", "NUMEXPR_NUM_THREADS"):
@@ -28,7 +31,7 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     root = Path(__file__).resolve().parents[1]
     if args.worker:
-        run_remaining(args.stock_result, args.output, repo_root=root, targets=tuple(args.target or PATTERNS), phases=tuple(args.phase or PHASES))
+        run_remaining(args.stock_result, args.output, repo_root=root, targets=tuple(args.target or DEFAULT_TARGET_ORDER), phases=tuple(args.phase or PHASES))
     else:
         launch_remaining(sys.argv[1:], root, args.output, timeout_seconds=args.timeout_seconds)
 

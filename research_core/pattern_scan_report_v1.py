@@ -38,6 +38,208 @@ FACETS = {
 }
 
 
+def _report_slice(frame: pd.DataFrame, **facets: Any) -> pd.DataFrame:
+    for key, value in facets.items():
+        frame = frame.loc[frame[key].eq(value)]
+    return frame
+
+
+def _records(frame: pd.DataFrame) -> list[dict[str, Any]]:
+    return [{key: _json_value(value) for key, value in row.items()} for row in frame.to_dict("records")]
+
+
+def _difference(left: Any, right: Any) -> float | None:
+    left, right = _json_value(left), _json_value(right)
+    return None if left is None or right is None else (left - right) * 100
+
+
+def _report_table(table_id: str, title: str, frame: pd.DataFrame, *, collapsible: bool = False) -> dict[str, Any]:
+    labels = {
+        "target": "家族",
+        "candidate": "原固定候選",
+        "atoms": "原條件",
+        "horizon": "觀察期（交易日）",
+        "pattern_minus_no_pattern_pp": "型態 − 同條件排除型態（百分點）",
+        "pattern_minus_all_pp": "型態 − 同條件全部（百分點）",
+        "pattern_known_n": "型態 K",
+        "no_pattern_known_n": "排除型態 K",
+        "all_known_n": "全部 K",
+        "loss_rate": "虧損率",
+        "group": "型態／原固定候選",
+        "episode_n": "段落數",
+        "pattern_coverage_rate": "型態覆蓋率",
+        "random_coverage_rate": "同配額 random 覆蓋率",
+        "coverage_delta_pp": "覆蓋差距（百分點）",
+        "pattern_matched_n": "型態命中段落",
+        "pattern_unmatched_n": "型態未命中",
+        "pattern_unknown_n": "型態未知",
+        "random_matched_n": "random 命中段落",
+        "random_unmatched_n": "random 未命中",
+        "random_unknown_n": "random 未知",
+    }
+
+    def kind(column: str) -> str:
+        if column.endswith("_pp"):
+            return "percentage_points"
+        if column.endswith(("_rate", "_bound")):
+            return "percent"
+        if column.endswith("_n") or column == "horizon":
+            return "integer"
+        return "number" if pd.api.types.is_numeric_dtype(frame[column]) else "text"
+
+    return {
+        "id": table_id,
+        "title": title,
+        "scope": "既有終表：cross-check、era=all、mkt=all；候選沿用原固定清單，未重新選取",
+        "denominator": "known 分母排除未知／資格排除；unknown 與 censored 可重疊。零分母保留 N/A。",
+        "collapsible": collapsible,
+        "columns": [{"key": column, "label": labels.get(column, column), "kind": kind(column)} for column in frame.columns],
+        "rows": _records(frame),
+    }
+
+
+def add_stored_comparisons(report: dict[str, Any], q1_root: Path, remaining_root: Path) -> None:
+    """Present existing final statistics; no research, receipt creation or integrity pass.
+
+    A phase's existing terminal receipt is its completion marker. Active phases
+    are omitted, so a report never promotes a partially written checkpoint.
+    """
+    headline = []
+    baselines = []
+    for target in PATTERNS:
+        summary = read_frame(q1_root / target / f"{target}-summary.parquet")
+        selected = _report_slice(summary, **{**FACETS, "split": "all"})
+        for horizon in HORIZONS:
+            rows = selected.loc[selected["horizon"].eq(horizon)].set_index("control_id")
+            pattern, daily, control = (rows.loc[key] for key in ("pattern", "C-base-daily", "C-base-all"))
+            hit, base = _json_value(pattern["hit_rate"]), _json_value(daily["hit_rate"])
+            headline.append({
+                "target": target,
+                "horizon": horizon,
+                "baseline_multiple": None if hit is None or base is None or base == 0 else hit / base,
+                "delta_pp": _difference(hit, control["hit_rate"]),
+                "known_n": _json_value(pattern["known_n"]),
+                "control_known_n": _json_value(control["known_n"]),
+                "loss_rate": _json_value(pattern["loss_rate"]),
+            })
+            if target == PATTERNS[0]:
+                baselines.append({"horizon": horizon, "hit_rate": base, "known_n": _json_value(daily["known_n"])})
+    report["comparisonSummary"] = {
+        "scope": "Q1 無額外條件，split=all／era=all／mkt=all、full、union、known；候選差距另見 Q2–Q3。倍數不是報酬倍數。",
+        "rows": headline,
+        "baselines": baselines,
+    }
+    for question in report["questions"]:
+        if question["id"] != "Q1":
+            question.update(
+                status="partial", conclusion="B1／H1 已完成；B2 原程序計算中，其餘家族待接續。十事件與固定五候選 40-case 稽核已完成。", tables=[], notes=[]
+            )
+    candidate_rows, candidate_details, coverage_rows, coverage_details = [], [], [], []
+    followups: dict[str, list[pd.DataFrame]] = {}
+    completed = []
+    for target in PATTERNS:
+        root = remaining_root / target
+        conditions = root / "conditions"
+        if not (conditions / "run-receipt.json").is_file():
+            continue
+        completed.append(target)
+        candidates = json.loads((conditions / "top-candidates.json").read_text(encoding="utf-8"))
+        for horizon in HORIZONS:
+            controls = {}
+            for control, folder in (
+                ("pattern", "pattern%3Aunion"),
+                ("C-base-no-pattern", "C-base-no-pattern"),
+                ("C-base-all", "C-base-all"),
+                (PRIMARY[target], PRIMARY[target]),
+            ):
+                name = f"{folder}-h{horizon}"
+                frame = read_frame(conditions / name / f"{target}-{name}-summary.parquet")
+                selected = _report_slice(frame, split="cross-check", era="all", mkt="all", row_kind="full", feature_id="candidate", condition_status="known")
+                selected = selected.loc[selected["candidate_id"].isin(candidates)]
+                controls[control] = selected.set_index("candidate_id")
+                candidate_details.extend(_records(selected))
+            for candidate, atoms in candidates.items():
+                pattern, no_pattern, all_rows = (controls[key].loc[candidate] for key in ("pattern", "C-base-no-pattern", "C-base-all"))
+                candidate_rows.append({
+                    "target": target,
+                    "candidate": candidate,
+                    "atoms": " & ".join(f"{atom['feature_id']}={atom['bin_id']}" for atom in atoms),
+                    "horizon": horizon,
+                    "pattern_minus_no_pattern_pp": _difference(pattern["hit_rate"], no_pattern["hit_rate"]),
+                    "pattern_minus_all_pp": _difference(pattern["hit_rate"], all_rows["hit_rate"]),
+                    "pattern_known_n": pattern["known_n"],
+                    "no_pattern_known_n": no_pattern["known_n"],
+                    "all_known_n": all_rows["known_n"],
+                    "loss_rate": pattern["loss_rate"],
+                })
+        if (root / "q4/run-receipt.json").is_file():
+            coverage = _report_slice(read_frame(root / "q4/coverage.parquet"), split="cross-check", era="all", mkt="all")
+            coverage_details.extend(_records(coverage))
+            indexed = coverage.set_index("group_id")
+            for group in (f"{target}:original", *(f"{target}:candidate:{candidate}" for candidate in candidates)):
+                pattern, random = indexed.loc[group], indexed.loc[group + ":C-base-random"]
+                coverage_rows.append({
+                    "group": group,
+                    "episode_n": pattern["episode_n"],
+                    "pattern_coverage_rate": pattern["coverage_rate"],
+                    "random_coverage_rate": random["coverage_rate"],
+                    "coverage_delta_pp": _difference(pattern["coverage_rate"], random["coverage_rate"]),
+                    "pattern_matched_n": pattern["matched_n"],
+                    "pattern_unmatched_n": pattern["unmatched_n"],
+                    "pattern_unknown_n": pattern["unknown_n"],
+                    "random_matched_n": random["matched_n"],
+                    "random_unmatched_n": random["unmatched_n"],
+                    "random_unknown_n": random["unknown_n"],
+                })
+        if (root / "followup/run-receipt.json").is_file():
+            for name in ("path_by_outcome", "holding_by_outcome", "first_flag_by_outcome", "flag_summary", "landmark_summary", "tradeoff_points"):
+                frame = _report_slice(read_frame(root / f"followup/{name}.parquet"), split_id="cross-check", era="all", mkt="all")
+                frame = frame.loc[frame["group_id"].eq(target)]
+                if name == "landmark_summary":
+                    # Keep the page bounded; every candidate landmark remains in
+                    # the original final table, without a second table copy.
+                    frame = frame.loc[frame["landmark"].eq(10)]
+                followups.setdefault(name, []).append(frame)
+    questions = {question["id"]: question for question in report["questions"]}
+    if candidate_rows:
+        questions["Q2"]["tables"] = [_report_table("candidate-deltas", "固定候選：型態減去同條件無型態（百分點）", pd.DataFrame(candidate_rows))]
+        questions["Q2"]["notes"] = ["全部原固定 top-10 均保留原順序；不是重新選出的最佳組合。差距為描述，未作顯著性或策略通過宣稱。"]
+        questions["Q3"]["tables"] = [
+            _report_table("candidate-details", "附錄：候選四組絕對值、母數與上下界", pd.DataFrame(candidate_details), collapsible=True)
+        ]
+        questions["Q3"]["notes"] = ["C-base-no-pattern 排除該型態；C-base-all 包含型態，兩者不能互稱。上方同時並列兩種差距與各自 K。"]
+    if coverage_rows:
+        questions["Q4"]["tables"] = [
+            _report_table("coverage-pairs", "每列型態／候選與自己的同配額 random", pd.DataFrame(coverage_rows)),
+            _report_table("coverage-details", "附錄：完整覆蓋、時機、上下界與其他控制診斷", pd.DataFrame(coverage_details), collapsible=True),
+        ]
+        questions["Q4"]["notes"] = [
+            "原型態配 original:C-base-random；各候選配自己的 :C-base-random，未重抽。"
+            "C-52w／daily 診斷留在附錄；原資料未為它們提供獨立同配額 random，不混用候選對照。"
+        ]
+    for name, frames in followups.items():
+        question = questions["Q6" if name in ("flag_summary", "landmark_summary", "tradeoff_points") else "Q5"]
+        question["tables"].append(_report_table(name, f"既有終表附錄：{name}", pd.concat(frames, ignore_index=True), collapsible=True))
+    questions["Q5"]["notes"] = ["此頁 Q5–Q6 附錄呈現原型態 union 群組；全部固定候選的終表仍在原 followup/，未刪除或重算。"]
+    questions["Q6"]["notes"] = [
+        "landmark 附錄固定呈現原型態群組第 10 日；其他 landmark、全部候選與年代／市場列仍在原 followup/landmark_summary.parquet。"
+        "X8 的 earliest-flag 分布不代表全部高點降低事件。"
+    ]
+    report["overview"] = [
+        {"label": "已完成", "value": "Q1 全 12 家族；B1／H1 Q2–Q6", "note": "十事件及固定五候選 40-case 稽核已完成，不再增加稽核層。"},
+        {"label": "待完成", "value": "B2 計算中；其餘家族由原程序接續", "note": "不重啟、不重算已完成工作；全研究尚未完成。"},
+    ]
+    report["limitations"] = [
+        "Q2–Q6 目前只呈現已完成家族；其餘不填入檢查點的暫時數字。",
+        "cross-check 已暴露，不是 unseen holdout；多重候選、重疊事件及小樣本使差距不能直接解讀為策略優勢。",
+        "這是事件標籤率，不是投資組合報酬；價格與公司行動品質、reference industry 非 PIT 等原限制仍適用。",
+        "Q4–Q6 為描述。未知與截尾可重疊；return bin 為價格比而非百分比，1.10 表示 +10%。",
+        "Q2–Q6 附錄為 cross-check／全期／全市場切片；其他年代、市場、年度與敏感度列仍保留於原執行目錄，不另複製。",
+        "iframe 實際檔案下載仍待人工驗收，DOM／點擊／SSR 測試不作下載完成證據。",
+    ]
+    LOGGER.info("Report presentation reads completed condition families: %s", ", ".join(completed))
+
+
 def _json_value(value: Any) -> Any:
     if value is None or value is pd.NA or value is pd.NaT:
         return None

@@ -5,12 +5,145 @@ html {
 body {
     min-width: 0;
 }
+.rk-hero {
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+}
+.rk-hero h1 {
+    margin-block: 4px 8px;
+    font-size: clamp(24px, 3vw, 34px);
+}
+.rk-hero .rk-lede {
+    margin-block: 6px 10px;
+    font-size: 14px;
+}
 .rk-page,
 .rk-section,
 .rk-card,
 .rk-grid-2 > *,
 #questions {
     min-width: 0;
+}
+.family-summary {
+    margin: 0 0 12px;
+    padding: 9px 12px;
+}
+.family-summary-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+}
+.family-summary-header h2 {
+    margin: 1px 0 0;
+    font-size: 19px;
+    line-height: 1.15;
+}
+.family-summary-header label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--muted);
+    font-size: 12px;
+    white-space: nowrap;
+}
+#family-summary-horizon {
+    min-height: 32px;
+    border: 1px solid var(--line-strong);
+    border-radius: 5px;
+    padding: 3px 8px;
+    color: var(--ink);
+    background: var(--surface);
+}
+.family-summary-scope,
+.family-summary-baseline,
+.family-summary-status,
+.family-summary-units,
+.family-summary-candidates {
+    margin: 5px 0 0;
+    overflow-wrap: anywhere;
+}
+.family-summary-scope {
+    color: var(--muted);
+    font-size: 11px;
+}
+.family-summary-baseline {
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+}
+.family-summary-table-wrap {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    margin-top: 5px;
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+}
+.family-summary-table {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+.family-summary-table th,
+.family-summary-table td {
+    box-sizing: border-box;
+    padding: 4px 3px;
+    border-bottom: 1px solid var(--line);
+    font-size: 11px;
+    line-height: 1.15;
+    overflow-wrap: anywhere;
+    vertical-align: middle;
+}
+.family-summary-table th {
+    color: var(--muted);
+    font-weight: 600;
+    text-align: right;
+}
+.family-summary-table th:first-child,
+.family-summary-table td:first-child {
+    width: 12%;
+    text-align: left;
+}
+.family-summary-table th:nth-child(2),
+.family-summary-table td:nth-child(2) {
+    width: 18%;
+}
+.family-summary-table th:nth-child(3),
+.family-summary-table td:nth-child(3) {
+    width: 20%;
+}
+.family-summary-table th:nth-child(4),
+.family-summary-table td:nth-child(4) {
+    width: 13%;
+}
+.family-summary-table th:nth-child(5),
+.family-summary-table td:nth-child(5) {
+    width: 14%;
+}
+.family-summary-table th:nth-child(6),
+.family-summary-table td:nth-child(6) {
+    width: 23%;
+}
+.family-summary-table td {
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+.family-summary-table td.family-name {
+    font-weight: 600;
+}
+.family-summary-table tbody tr:nth-child(even) {
+    background: var(--surface-2);
+}
+.family-summary-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+.family-summary-units,
+.family-summary-candidates,
+.family-summary-status {
+    font-size: 10px;
+    line-height: 1.25;
 }
 .skip-link {
     position: absolute;
@@ -82,6 +215,35 @@ body {
     margin: 0 0 12px;
     font-size: 16px;
     font-weight: 600;
+}
+.table-details-summary {
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+.table-details-summary:focus-visible,
+.evidence-details > summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+.evidence-details {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+}
+.evidence-details > summary {
+    cursor: pointer;
+    padding: 11px 14px;
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 600;
+}
+.evidence-content {
+    padding: 0 12px 12px;
+}
+.evidence-content > .rk-card {
+    margin-top: 12px;
 }
 .rk-table-wrap {
     max-width: 100%;
@@ -199,6 +361,42 @@ body {
     }
     .rk-card {
         padding: 13px;
+    }
+    .family-summary {
+        padding: 8px;
+    }
+    .family-summary-header h2 {
+        font-size: 17px;
+    }
+    .family-summary-table th,
+    .family-summary-table td {
+        padding: 4px 2px;
+        font-size: 10px;
+        line-height: 1.1;
+    }
+    .family-summary-table th:first-child,
+    .family-summary-table td:first-child {
+        width: 11%;
+    }
+    .family-summary-table th:nth-child(2),
+    .family-summary-table td:nth-child(2) {
+        width: 19%;
+    }
+    .family-summary-table th:nth-child(3),
+    .family-summary-table td:nth-child(3) {
+        width: 20%;
+    }
+    .family-summary-table th:nth-child(4),
+    .family-summary-table td:nth-child(4) {
+        width: 13%;
+    }
+    .family-summary-table th:nth-child(5),
+    .family-summary-table td:nth-child(5) {
+        width: 14%;
+    }
+    .family-summary-table th:nth-child(6),
+    .family-summary-table td:nth-child(6) {
+        width: 23%;
     }
     .report-nav .rk-toc {
         gap: 6px 4px;

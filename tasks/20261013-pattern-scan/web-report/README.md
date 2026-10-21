@@ -1,12 +1,34 @@
 # 全市場型態掃描：可讀成果頁
 
 此目錄呈現 PR17 已產生的結果，不會讀取即時行情或啟動研究計算。
-初次交付是階段成果：Q2–Q6 與重建稽核的未完成範圍須依實際資料標示，
+目前是階段成果：Q2–Q6 的未完成範圍須依實際資料標示，
 不能以報告頁存在、程式測試通過或某一題完成，宣稱整份研究已完成或策略通過。
 
-本次僅交付 Q1：12 種型態、48 列交叉檢核主表，附上全部 24 張 Q1
+目前交付 Q1：12 種型態、48 列交叉檢核主表，附上全部 24 張 Q1
 摘要／年度 Parquet 終表。其他條件、年代、市場切片及 drop-best-year 列仍在
-完整下載表中；主表的固定範圍不代表那些列被刪除。Q2–Q6 尚未完整交付。
+完整下載表中；主表的固定範圍不代表那些列被刪除。另呈現 B1／H1 既有
+Q2–Q6 切片，其他家族仍由原程序接續，整份研究尚未完整交付。
+
+首頁另外採 Q1 全體（split=all、era=all、mkt=all、full、union、unconditional、known）
+的統一口徑，不混用 cross-check 候選數字。每家族顯示相對 C-base-daily 倍數、
+相對同條件 C-base-all 的百分點差距及各自 K、loss rate。候選的主要比較是
+同條件 C-base-no-pattern；C-base-all 包含型態，兩種對照不互稱。
+
+`research_core.pattern_scan_report_v1.add_stored_comparisons` 只讀既有終表並整理顯示，
+不新增稽核、收據、雜湊、抽樣或完整表副本。現有 phase 的原終端收據作為完成標記；
+不把未完成 checkpoint 的數字填進報告。Q4 各原型態／候選只配自己的
+`:C-base-random`；C-52w／daily 診斷留於展開附錄，不冒稱有獨立同配額 random。
+
+原始終表位置（local-only，維持原處）：
+
+- `D:/Project/stock-research/.worktrees/pr17-retention-review/.tmp/pr17-q1-local-20261016/<family>/`
+- `D:/Project/stock-research/.worktrees/pr17-retention-review/.tmp/pr17-q2-q6-local-20261020/<family>/conditions/`
+- 同家族 `q4/coverage.parquet` 及 `followup/*.parquet`。
+
+Q2–Q3 保留原固定 top-10 的四組／兩期限與上下界；Q4 的完整主切片也留在展開區。
+Q5–Q6 網頁附錄限原型態 union，landmark 限第 10 日；其他候選、landmark、年代、
+市場與敏感度列仍在上述完整終表，沒有刪除。這些 local-only 表尚未正式引用移交。
+十事件與固定五候選 40-case audit 已完成，只引用既有證據，不再加驗證流程。
 
 ## 從已存成果匯出
 
@@ -57,7 +79,9 @@ secret-scanner baseline 或放寬檢查。原收據中的相對終表檔名，
 - `questions`：Q1–Q6 各自的 `id`、`title`、`status`（`complete`、`partial`、
   `pending`）、`conclusion`、`notes`、`tables`。
 - 每張表的 `columns` 指定 `key`、`label`、`kind`（`text`、`integer`、
-  `number`、`percent`）；`rows` 是以欄位名稱為鍵的物件。
+  `number`、`percent`、`percentage_points`、`multiple`）；`rows` 是以欄位名稱為鍵的物件。
+- `comparisonSummary`：首頁固定口徑、兩期限 rows 與基準率；`delta_pp` 已乘 100，不能再乘一次。
+- 表格 `collapsible=true` 時置於原生展開區，全部提供的列仍可分頁讀取。
 - `audit`：`status` 與 `notes`。本題完成與整份稽核完成分開呈現。
 - `provenance`：`label`、`value` 與可選的本報告 `data/` 內連結。
 - 表格與報告層可有 `downloads`，每筆為 `label`、`href`、`rows`、`bytes`。
@@ -71,7 +95,7 @@ secret-scanner baseline 或放寬檢查。原收據中的相對終表檔名，
 
 ## 更新與驗證
 
-更新時先核對實際成果與收據，再匯出資料。報告不改寫原輸入、checkpoint、
+更新時沿用已完成成果與原收據，不新增分批稽核。報告不改寫原輸入、checkpoint、
 既有成果或 hold，也不因共用資料更新而使歷史結果失效。
 新階段尚未完成時，保留部分結果狀態與明確缺口；整份研究及既定稽核完成後，
 才同步更新資料狀態、頁首說明與 `report:summary`、`report:date`。
@@ -84,3 +108,16 @@ secret-scanner baseline 或放寬檢查。原收據中的相對終表檔名，
 `kit/report-kit.css` 與 `kit/report-kit.js` 是
 `research_web/report-kit/v1/` 的原封副本；主題與 iframe 自動高度沿用原套件。
 研究專屬版面在 `report.css`，資料呈現在 `report.js`。外觀修正不修改固定 kit。
+
+## iframe 實際下載人工驗收（待完成）
+
+請在 owner 原有研究網站進入 `/#reports`，開啟本報告的 iframe：
+
+1. 點 B1 摘要 Parquet。等瀏覽器下載清單顯示完成，再用「在資料夾中顯示」確認
+   實際檔案，記錄檔名（含瀏覽器自動後綴）、路徑與完成時間。檔案內容大小應為 **241,139 bytes**。
+2. 點「原始 Q1 收據」ZIP，同樣確認實際檔案及完成狀態，內容大小應為 **14,361 bytes**。
+3. 瀏覽器若只顯示四捨五入 KB，從檔案內容／屬性讀精確 bytes；不要求瀏覽器顯示它沒有的欄位。
+
+結果待 owner 填回：瀏覽器／頁面 URL、兩筆下載完成狀態、實際檔名／路徑／時間／bytes。
+DOM、按鈕點擊、SSR、連結存在或 HTTP 回應不能代替實際下載完成證據；本次未重試受限工具、
+未修改 iframe 安全設定，也未部署或重啟下載排程。

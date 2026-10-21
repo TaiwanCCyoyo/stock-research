@@ -14,6 +14,14 @@ from research_core.artifact_store import read_json, write_json
 from research_core.hhhl_variants_selection import Atom
 
 
+def test_new_invocation_default_preserves_every_family_in_owner_order() -> None:
+    from scripts.run_pattern_scan_remaining import DEFAULT_TARGET_ORDER
+
+    assert len(DEFAULT_TARGET_ORDER) == len(set(DEFAULT_TARGET_ORDER)) == len(module.PATTERNS)
+    assert set(DEFAULT_TARGET_ORDER) == set(module.PATTERNS)
+    assert DEFAULT_TARGET_ORDER[2:7] == ("B2", "B4", "B3", "L1", "P1")
+
+
 @pytest.mark.parametrize(
     ("corruption", "recovery"),
     [(None, False)] + [(kind, recovered) for kind in ("same-size", "truncate", "scope") for recovered in (False, True)],

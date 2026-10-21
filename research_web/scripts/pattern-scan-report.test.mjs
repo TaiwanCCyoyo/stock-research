@@ -48,6 +48,11 @@ const pageIds = [
     "report-title",
     "study-meta",
     "completion-banner",
+    "family-summary-horizon",
+    "family-summary-scope",
+    "family-summary-baseline",
+    "family-summary-rows",
+    "family-summary-status",
     "as-of",
     "overview-values",
     "question-progress",
@@ -185,6 +190,12 @@ const synthetic = () => ({
                         { key: "count", label: "計數", kind: "integer" },
                         { key: "missing", label: "缺值", kind: "number" },
                         { key: "fraction", label: "比例", kind: "percent" },
+                        {
+                            key: "delta",
+                            label: "百分點",
+                            kind: "percentage_points",
+                        },
+                        { key: "multiple", label: "倍數", kind: "multiple" },
                         { key: "label", label: "標籤", kind: "text" },
                     ],
                     rows: Array.from({ length: 120 }, (_, index) => ({
@@ -192,6 +203,8 @@ const synthetic = () => ({
                         count: index,
                         missing: null,
                         fraction: 0.125,
+                        delta: 1.25,
+                        multiple: 1.5,
                         label: "<img src=x onerror=alert(1)>",
                     })),
                     downloads: [
@@ -207,7 +220,57 @@ const synthetic = () => ({
     downloads: [],
 });
 
-test("the actual renderer preserves zero, null, fraction units and literal markup", () => {
+function familyComparison() {
+    const targets = [
+        "H1",
+        "B1",
+        "B2",
+        "B3",
+        "B4",
+        "R1",
+        "R2",
+        "R3",
+        "P1",
+        "L1",
+        "L2",
+        "L3",
+    ];
+    return {
+        scope: {
+            question: "Q1",
+            split: "all",
+            era: "all",
+            mkt: "all",
+            cohort: "union",
+        },
+        baselines: [
+            { horizon: 126, hit_rate: 0.4, known_n: 1000 },
+            { horizon: 252, hit_rate: 0.5, known_n: 900 },
+        ],
+        rows: targets.flatMap((target, index) => [
+            {
+                target,
+                horizon: 126,
+                baseline_multiple: 1.25 + index / 100,
+                delta_pp: 1.25,
+                known_n: 100 + index,
+                control_known_n: 200 + index,
+                loss_rate: 0.2,
+            },
+            {
+                target,
+                horizon: 252,
+                baseline_multiple: 0.75,
+                delta_pp: -1.25,
+                known_n: 80 + index,
+                control_known_n: 180 + index,
+                loss_rate: 0.25,
+            },
+        ]),
+    };
+}
+
+test("the actual renderer preserves zero, null, fraction, pp and multiple units and literal markup", () => {
     const payload = synthetic();
     const original = JSON.stringify(payload);
     const page = render(payload);
@@ -215,7 +278,15 @@ test("the actual renderer preserves zero, null, fraction units and literal marku
     const first = byTag(q1, "tbody")[0].children[0].children;
     assert.deepEqual(
         first.map((cell) => cell.textContent),
-        ["row-0", "0", "—", "12.5%", "<img src=x onerror=alert(1)>"],
+        [
+            "row-0",
+            "0",
+            "—",
+            "12.5%",
+            "+1.25 pt",
+            "1.5×",
+            "<img src=x onerror=alert(1)>",
+        ],
     );
     assert.match(first[2].title, /不代表零/);
     assert.match(first[3].title, /原始比例：0\.125/);
@@ -290,6 +361,163 @@ test("all 120 supplied rows remain reachable through the real pagination control
     assert.equal(visibleIds()[0], "row-100");
 });
 
+test("the first-screen comparison keeps twelve Q1 families on one scope and switches horizons", () => {
+    const payload = synthetic();
+    payload.comparisonSummary = familyComparison();
+    const page = render(payload);
+    const rows = page.elements.get("family-summary-rows");
+    const selector = page.elements.get("family-summary-horizon");
+    const rowCells = (row) => row.children.map((cell) => cell.textContent);
+
+    assert.equal(selector.value, "126");
+    assert.equal(rows.children.length, 12);
+    assert.deepEqual(rowCells(rows.children[0]), [
+        "H1",
+        "1.25×",
+        "+1.25 pt",
+        "100",
+        "200",
+        "20%",
+    ]);
+    assert.match(
+        page.elements.get("family-summary-baseline").textContent,
+        /C-base-daily 命中率 40%（K=1,000）/,
+    );
+    assert.match(
+        page.elements.get("family-summary-scope").textContent,
+        /Q1 固定口徑.*split=all.*era=all.*mkt=all.*cohort=union/,
+    );
+    assert.match(
+        readFileSync(join(folder, "index.html"), "utf8"),
+        /強動能候選與其控制差距另列於\s+Q2–Q3/,
+    );
+    assert.match(
+        page.elements.get("family-summary-status").textContent,
+        /十二家族/,
+    );
+
+    selector.value = "252";
+    selector.fire("change");
+
+    assert.equal(rows.children.length, 12);
+    assert.deepEqual(rowCells(rows.children[0]), [
+        "H1",
+        "0.75×",
+        "−1.25 pt",
+        "80",
+        "180",
+        "25%",
+    ]);
+    assert.match(
+        page.elements.get("family-summary-baseline").textContent,
+        /C-base-daily 命中率 50%（K=900）/,
+    );
+});
+
+test("summary denominators show N/A while real zero counts and rates remain zero", () => {
+    const payload = synthetic();
+    payload.comparisonSummary = {
+        scope: "synthetic-only",
+        baselines: [{ horizon: 126, hit_rate: 0, known_n: 0 }],
+        rows: [
+            {
+                target: "H1",
+                horizon: 126,
+                baseline_multiple: 0,
+                delta_pp: 0,
+                known_n: 0,
+                control_known_n: 0,
+                loss_rate: 0,
+            },
+            {
+                target: "B1",
+                horizon: 126,
+                baseline_multiple: null,
+                delta_pp: null,
+                known_n: 9,
+                control_known_n: 0,
+                loss_rate: null,
+            },
+            {
+                target: "B2",
+                horizon: 126,
+                baseline_multiple: 0,
+                delta_pp: 0,
+                known_n: 10,
+                control_known_n: 12,
+                loss_rate: 0,
+            },
+        ],
+    };
+    const page = render(payload);
+    const rows = page.elements.get("family-summary-rows").children;
+    const rowCells = (row) => row.children.map((cell) => cell.textContent);
+
+    assert.deepEqual(rowCells(rows[0]), ["H1", "N/A", "N/A", "0", "0", "N/A"]);
+    assert.deepEqual(rowCells(rows[1]), ["B1", "N/A", "N/A", "9", "0", "N/A"]);
+    assert.deepEqual(rowCells(rows[2]), [
+        "B2",
+        "N/A",
+        "0 pt",
+        "10",
+        "12",
+        "0%",
+    ]);
+    assert.match(
+        page.elements.get("family-summary-baseline").textContent,
+        /N\/A（K=0）/,
+    );
+});
+
+test("older payloads without a comparison summary remain readable without invented values", () => {
+    const page = render(synthetic());
+
+    assert.equal(page.elements.get("family-summary-horizon").value, "126");
+    assert.equal(page.elements.get("family-summary-rows").children.length, 0);
+    assert.match(
+        page.elements.get("family-summary-status").textContent,
+        /尚未提供/,
+    );
+    assert.equal(byTag(questionById(page, "Q1"), "table").length, 1);
+});
+
+test("collapsible table definitions use native details without dropping paginated rows", () => {
+    const payload = synthetic();
+    payload.questions[0].tables[0].collapsible = true;
+    const page = render(payload);
+    const q1 = questionById(page, "Q1");
+    const details = byTag(q1, "details")[0];
+    const tbody = byTag(details, "tbody")[0];
+
+    assert.ok(details);
+    assert.equal(byTag(details, "summary")[0].textContent, "120 列合成資料");
+    assert.equal(tbody.children.length, 50);
+    byTag(details, "button")[1].fire("click");
+    assert.equal(tbody.children[0].children[0].textContent, "row-50");
+    assert.match(
+        byTag(details, "table")[0].children[0].textContent,
+        /共 120 列/,
+    );
+});
+
+test("the overview and evidence disclosure preserve the current completion boundaries", () => {
+    const html = readFileSync(join(folder, "index.html"), "utf8");
+
+    assert.match(html, /Q1 已涵蓋十二個家族/);
+    assert.match(html, /B1、H1 的 Q2–Q6 已有結果/);
+    assert.match(html, /既定範圍核對已完成/);
+    assert.doesNotMatch(html, /獨立重建稽核尚未完成/);
+    assert.match(html, /<details class="evidence-details">/);
+    for (const id of [
+        "audit-status",
+        "audit-notes",
+        "limitations",
+        "provenance",
+        "downloads",
+    ])
+        assert.match(html, new RegExp(`id="${id}"`));
+});
+
 test("downloads accept report-local data files and refuse traversal or URLs", () => {
     const payload = synthetic();
     payload.downloads = [
@@ -324,7 +552,7 @@ test("missing Q2–Q6 and missing payload stay explicitly pending", () => {
         assert.match(question.textContent, /尚未提供成果表/);
         assert.equal(byTag(question, "table").length, 0);
     }
-    assert.match(page.elements.get("audit-status").textContent, /尚未完成/);
+    assert.match(page.elements.get("audit-status").textContent, /狀態尚未提供/);
     const missing = render();
     assert.match(
         missing.elements.get("completion-banner").textContent,

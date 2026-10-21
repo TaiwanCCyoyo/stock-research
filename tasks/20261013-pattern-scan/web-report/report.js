@@ -13,6 +13,9 @@
     const numberFormat = new Intl.NumberFormat("zh-TW", {
         maximumFractionDigits: 6,
     });
+    const headlineFormat = new Intl.NumberFormat("zh-TW", {
+        maximumFractionDigits: 2,
+    });
     const statuses = {
         complete: "本題完成",
         partial: "部分完成",
@@ -93,22 +96,47 @@
             cell.textContent = numberFormat.format(value);
         else if (kind === "percent")
             cell.textContent = `${numberFormat.format(value * 100)}%`;
+        else if (kind === "percentage_points" || kind === "pp")
+            cell.textContent = `${formatPoints(value)} pt`;
+        else if (kind === "multiple")
+            cell.textContent = `${numberFormat.format(value)}×`;
         else cell.textContent = String(value);
         if (numeric(value))
             cell.title =
                 kind === "percent"
                     ? `原始比例：${String(value)}；百分比：${String(value * 100)}%`
-                    : `原始值：${String(value)}`;
+                    : kind === "percentage_points" || kind === "pp"
+                      ? `原始百分點：${String(value)}；顯示未再乘 100`
+                      : kind === "multiple"
+                        ? `原始倍數：${String(value)}`
+                        : `原始值：${String(value)}`;
         return cell;
     }
 
+    function formatPoints(value) {
+        if (value > 0) return `+${numberFormat.format(value)}`;
+        if (value < 0) return `−${numberFormat.format(Math.abs(value))}`;
+        return "0";
+    }
+
     function renderTable(definition, index, questionId) {
-        const article = node("article", null, "rk-card question-table");
+        const collapsible = definition.collapsible === true;
+        const article = node(
+            collapsible ? "details" : "article",
+            null,
+            "rk-card question-table",
+        );
         const title = definition.title || `資料表 ${index + 1}`;
         const headingId = `${questionId}-table-${index + 1}`;
-        const heading = node("h3", title);
-        heading.id = headingId;
-        article.append(heading);
+        if (collapsible) {
+            const summary = node("summary", title, "table-details-summary");
+            summary.id = headingId;
+            article.append(summary);
+        } else {
+            const heading = node("h3", title);
+            heading.id = headingId;
+            article.append(heading);
+        }
         const columns = array(definition.columns).filter(
             (column) => column && typeof column.key === "string",
         );
@@ -217,6 +245,113 @@
         return article;
     }
 
+    function renderFamilySummary(comparison) {
+        const selector = byId("family-summary-horizon");
+        const rowsElement = byId("family-summary-rows");
+        const scopeElement = byId("family-summary-scope");
+        const baselineElement = byId("family-summary-baseline");
+        const statusElement = byId("family-summary-status");
+        const fixedScope =
+            "Q1 固定口徑：無額外條件 · split=all · era=all · mkt=all · cohort=union";
+        selector.value = "126";
+        scopeElement.textContent = fixedScope;
+
+        const recordedScope = comparison?.scope;
+        if (typeof recordedScope === "string" && recordedScope.trim()) {
+            scopeElement.textContent += ` · 記錄 scope：${recordedScope}`;
+        } else if (
+            recordedScope &&
+            typeof recordedScope === "object" &&
+            !Array.isArray(recordedScope)
+        ) {
+            const details = Object.entries(recordedScope)
+                .map(([key, value]) => {
+                    const text =
+                        value && typeof value === "object"
+                            ? JSON.stringify(value)
+                            : String(value);
+                    return `${key}=${text}`;
+                })
+                .join(" · ");
+            if (details)
+                scopeElement.textContent += ` · 記錄 scope：${details}`;
+        }
+
+        if (!comparison || !Array.isArray(comparison.rows)) {
+            statusElement.textContent =
+                "尚未提供跨家族對照摘要；不以空白或零代替資料。";
+            baselineElement.textContent =
+                "C-base-daily 基準：N/A（比較摘要尚未提供）。";
+            return;
+        }
+
+        const baselines = array(comparison.baselines);
+        const countText = (value) =>
+            Number.isInteger(value) && value >= 0
+                ? intFormat.format(value)
+                : "N/A";
+        const rateText = (value, count) =>
+            numeric(value) && Number.isInteger(count) && count > 0
+                ? `${headlineFormat.format(value * 100)}%`
+                : "N/A";
+        const cell = (value, className) => node("td", value, className);
+
+        function renderHorizon() {
+            const horizon = Number(selector.value);
+            const rows = comparison.rows.filter(
+                (row) => row && row.horizon === horizon,
+            );
+            const familyCount = new Set(
+                rows.map((row) => row.target).filter(present),
+            ).size;
+            const baseline = baselines.find(
+                (row) => row && row.horizon === horizon,
+            );
+            const baselineKnown =
+                baseline && Number.isInteger(baseline.known_n)
+                    ? baseline.known_n
+                    : null;
+            baselineElement.textContent = `H${horizon} 倍數基準：C-base-daily 命中率 ${rateText(baseline?.hit_rate, baselineKnown)}（K=${countText(baselineKnown)}）。`;
+
+            const fragment = document.createDocumentFragment();
+            for (const row of rows) {
+                const known = row.known_n;
+                const controlKnown = row.control_known_n;
+                const tr = node("tr");
+                tr.append(
+                    cell(
+                        present(row.target) ? row.target : "N/A",
+                        "family-name",
+                    ),
+                    cell(
+                        baselineKnown > 0 &&
+                            known > 0 &&
+                            numeric(row.baseline_multiple)
+                            ? `${headlineFormat.format(row.baseline_multiple)}×`
+                            : "N/A",
+                    ),
+                    cell(
+                        known > 0 && controlKnown > 0 && numeric(row.delta_pp)
+                            ? `${row.delta_pp > 0 ? "+" : row.delta_pp < 0 ? "−" : ""}${headlineFormat.format(Math.abs(row.delta_pp))} pt`
+                            : "N/A",
+                    ),
+                    cell(countText(known)),
+                    cell(countText(controlKnown)),
+                    cell(rateText(row.loss_rate, known)),
+                );
+                fragment.append(tr);
+            }
+            rowsElement.replaceChildren(fragment);
+            statusElement.textContent =
+                rows.length === 12 && familyCount === 12
+                    ? `已列出 H${horizon} 的十二家族資料。`
+                    : `H${horizon} 目前提供 ${intFormat.format(rows.length)} 列／${intFormat.format(familyCount)} 個家族；未提供的家族不推定為零。`;
+        }
+
+        selector.addEventListener("change", renderHorizon);
+        renderHorizon();
+    }
+
     const data = window.REPORT_DATA;
     if (!data || typeof data !== "object") {
         byId("completion-banner").replaceChildren(
@@ -236,9 +371,9 @@
     if (report.status === "complete") {
         byId("completion-banner").className = "rk-note";
         byId("completion-banner").replaceChildren(
-            node("strong", "研究結果已彙整。"),
+            node("strong", "本頁提供的資料已彙整。"),
             document.createTextNode(
-                " 各題結果、稽核狀態與使用限制分別列於下方；此狀態不代表策略通過。",
+                " 全研究進度與稽核範圍依下方說明；此狀態不代表策略通過。",
             ),
         );
     }
@@ -253,6 +388,8 @@
     if (present(study.cutoff)) meta.push(`資料截止 ${study.cutoff}`);
     for (const text of meta)
         byId("study-meta").append(node("span", text, "rk-badge"));
+
+    renderFamilySummary(report.comparisonSummary);
 
     for (const item of array(report.overview)) {
         const li = node("li", null, "rk-finding");
@@ -310,11 +447,11 @@
     const audit = report.audit || {};
     byId("audit-status").textContent =
         audit.status === "complete"
-            ? "已完成（範圍與結果依下列紀錄）"
+            ? "既定範圍核對已完成；不代表全研究驗收。"
             : audit.status === "partial"
-              ? "部分完成；尚有稽核未完成"
-              : "尚未完成";
-    list(byId("audit-notes"), audit.notes, "尚未提供完整稽核結果。 ");
+              ? "已完成固定範圍核對；其他研究階段仍未完成。"
+              : "稽核狀態尚未提供；既定範圍核對不代表全研究驗收。";
+    list(byId("audit-notes"), audit.notes, "未提供其他稽核細節。 ");
     list(byId("limitations"), report.limitations, "尚未提供完整限制說明。 ");
     const provenance = [...array(report.provenance)];
     if (present(study.generation))

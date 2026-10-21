@@ -4,6 +4,7 @@ import hashlib
 import json
 from io import BytesIO
 from pathlib import Path
+from typing import Any
 from zipfile import ZipFile
 
 import pandas as pd
@@ -136,3 +137,83 @@ def test_publication_is_new_directory_only(tmp_path: Path) -> None:
     assert (output / "tables" / "H1-summary.parquet").read_bytes() == (root / "H1" / "H1-summary.parquet").read_bytes()
     with pytest.raises(FileExistsError):
         export_q1_report_data(root, output, as_of="2026-10-21")
+
+
+def test_stored_comparisons_keep_scopes_deltas_and_own_quota_random(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from research_core import pattern_scan_report_v1 as module
+
+    monkeypatch.setattr(module, "PATTERNS", ("B1",))
+    candidate = "fixed-candidate"
+    family = tmp_path / "remaining/B1"
+    conditions = family / "conditions"
+    conditions.mkdir(parents=True)
+    (conditions / "run-receipt.json").write_text("{}")
+    (conditions / "top-candidates.json").write_text(json.dumps({candidate: [{"feature_id": "C3", "bin_id": "ge60"}]}))
+    (family / "q4").mkdir()
+    (family / "q4/run-receipt.json").write_text("{}")
+
+    def read(path: Path) -> pd.DataFrame:
+        if path.name == "B1-summary.parquet":
+            return pd.DataFrame([
+                {**module.FACETS, "split": "all", "control_id": control, "horizon": horizon, "known_n": 10, "hit_rate": rate, "loss_rate": 0.4}
+                for horizon in (126, 252)
+                for control, rate in (("pattern", 0.3), ("C-base-all", 0.2), ("C-base-daily", 0.1 if horizon == 126 else None))
+            ])
+        if path.name == "coverage.parquet":
+            return pd.DataFrame([
+                {
+                    "group_id": group,
+                    "split": "cross-check",
+                    "era": "all",
+                    "mkt": "all",
+                    "episode_n": 100,
+                    "coverage_rate": rate,
+                    "matched_n": int(rate * 100),
+                    "unmatched_n": 100 - int(rate * 100),
+                    "unknown_n": 0,
+                }
+                for group, rate in (
+                    ("B1:original", 0.8),
+                    ("B1:original:C-base-random", 0.6),
+                    ("B1:candidate:fixed-candidate", 0.1),
+                    ("B1:candidate:fixed-candidate:C-base-random", 0.02),
+                )
+            ])
+        control = path.parent.name.rsplit("-h", 1)[0]
+        rate, count = {"pattern%3Aunion": (0.3, 10), "C-base-no-pattern": (0.2, 20), "C-base-all": (0.25, 30), "C-52w": (0.15, 40)}[control]
+        return pd.DataFrame([
+            {
+                "split": "cross-check",
+                "era": "all",
+                "mkt": "all",
+                "row_kind": "full",
+                "feature_id": "candidate",
+                "condition_status": "known",
+                "candidate_id": candidate,
+                "control_id": control,
+                "hit_rate": rate,
+                "known_n": count,
+                "loss_rate": 0.0,
+            }
+        ])
+
+    monkeypatch.setattr(module, "read_frame", read)
+    report: dict[str, Any] = {"questions": [{"id": f"Q{i}", "tables": []} for i in range(1, 7)]}
+    module.add_stored_comparisons(report, tmp_path / "q1", tmp_path / "remaining")
+    headline = report["comparisonSummary"]["rows"]
+    assert headline[0]["baseline_multiple"] == pytest.approx(3)
+    assert headline[0]["delta_pp"] == pytest.approx(10)
+    assert headline[1]["baseline_multiple"] is None
+    row = report["questions"][1]["tables"][0]["rows"][0]
+    assert row["pattern_minus_no_pattern_pp"] == pytest.approx(10)
+    assert row["pattern_minus_all_pp"] == pytest.approx(5)
+    assert (row["pattern_known_n"], row["no_pattern_known_n"], row["all_known_n"]) == (10, 20, 30)
+    assert row["loss_rate"] == 0.0
+    pairs = report["questions"][3]["tables"][0]["rows"]
+    assert pairs[0]["random_coverage_rate"] == 0.6
+    assert pairs[1]["random_coverage_rate"] == 0.02
+    assert pairs[0]["coverage_delta_pp"] == pytest.approx(20)
+    # A checkpoint without its existing phase completion marker is not promoted.
+    (conditions / "run-receipt.json").unlink()
+    module.add_stored_comparisons(report, tmp_path / "q1", tmp_path / "remaining")
+    assert report["questions"][1]["tables"] == []

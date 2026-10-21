@@ -7,7 +7,7 @@
         <meta name="report:title" content="2010 起全市場型態掃描" />
         <meta
             name="report:summary"
-            content="Q1 階段成果：12 種型態的無條件統計與完整終表；Q2–Q6 與獨立重建稽核尚未完成。"
+            content="Q1 十二家族摘要；B1、H1 的 Q2–Q6 已有結果，其餘家族仍在計算。既定範圍核對已完成，完整研究尚未完成。"
         />
         <meta name="report:date" content="2026-10-21" />
         <meta name="report:status" content="exploratory" />
@@ -27,15 +27,79 @@
                 <p class="rk-eyebrow">台股 · 描述性研究 · 階段成果</p>
                 <h1 id="report-title">2010 起全市場型態掃描</h1>
                 <p class="rk-lede">
-                    從全市場的型態出發，逐步檢查條件、對照組與後續表現。
-                    以下分開呈現已完成結果與尚待完成的問題。
+                    Q1 已涵蓋十二個家族；B1、H1 的 Q2–Q6
+                    已有階段結果，其他家族仍在計算。
+                    既定範圍核對已完成，但不代表完整研究或策略驗收完成。
                 </p>
                 <div class="rk-meta" id="study-meta"></div>
             </header>
 
+            <section
+                class="family-summary rk-card"
+                id="family-summary"
+                aria-labelledby="family-summary-title"
+            >
+                <header class="family-summary-header">
+                    <div>
+                        <span class="rk-q">Q1 · 十二家族</span>
+                        <h2 id="family-summary-title">同一口徑的家族摘要</h2>
+                    </div>
+                    <label for="family-summary-horizon">
+                        期限
+                        <select id="family-summary-horizon">
+                            <option value="126" selected>H126</option>
+                            <option value="252">H252</option>
+                        </select>
+                    </label>
+                </header>
+                <p class="family-summary-scope" id="family-summary-scope">
+                    Q1 無額外條件 · split=all · era=all · mkt=all · cohort=union
+                </p>
+                <p
+                    class="family-summary-baseline"
+                    id="family-summary-baseline"
+                ></p>
+                <div class="family-summary-table-wrap">
+                    <table class="family-summary-table">
+                        <caption>
+                            所有家族使用同一個 Q1 全體口徑；強動能候選留在
+                            Q2–Q3。
+                        </caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">家族</th>
+                                <th scope="col">× C-base-daily</th>
+                                <th scope="col">Δ vs C-base-all (pt)</th>
+                                <th scope="col">型態 K</th>
+                                <th scope="col">C-base-all K</th>
+                                <th scope="col">Loss rate</th>
+                            </tr>
+                        </thead>
+                        <tbody id="family-summary-rows"></tbody>
+                    </table>
+                </div>
+                <p
+                    class="family-summary-status rk-foot"
+                    id="family-summary-status"
+                    aria-live="polite"
+                >
+                    尚未提供跨家族對照摘要；不以空白或零代替資料。
+                </p>
+                <p class="family-summary-units rk-foot">
+                    Δ 已是百分點，直接顯示 pt；倍數以 × 顯示。Rate
+                    由比例轉成百分比；K 是各自已知母數。 null 或零分母顯示
+                    N/A，真實零值仍保留。
+                </p>
+                <p class="family-summary-candidates rk-foot">
+                    這張表只用 Q1 無額外條件口徑；強動能候選與其控制差距另列於
+                    Q2–Q3，不混入此表。
+                </p>
+            </section>
+
             <div class="rk-banner" id="completion-banner" role="status">
-                <strong>階段成果，尚未完成整份研究。</strong>
-                本頁只呈現已交付的資料；尚未完成的研究與稽核不會以零或推估值代替。
+                <strong>階段成果，完整研究仍在進行。</strong>
+                Q1 十二家族已有摘要，B1、H1 的 Q2–Q6
+                已有結果；其餘家族仍在計算。既定範圍核對已完成，並非全研究驗收。
             </div>
 
             <nav class="report-nav" aria-label="研究內容">
@@ -84,35 +148,45 @@
                         <h2 id="evidence-title">稽核、來源與使用限制</h2>
                     </div>
                 </header>
-                <div class="rk-grid-2">
-                    <article class="rk-card">
-                        <h3>重建與驗證</h3>
-                        <p id="audit-status">尚未完成</p>
-                        <ul id="audit-notes"></ul>
-                    </article>
-                    <article class="rk-card">
-                        <h3>如何解讀</h3>
-                        <ul id="limitations"></ul>
-                        <p class="rk-foot">
-                            歷史關聯與描述性統計不等於可交易策略，也不構成策略通過或獲利保證。
-                        </p>
-                    </article>
-                </div>
-                <article class="rk-card provenance-card">
-                    <h3>本次資料與程式紀錄</h3>
-                    <dl id="provenance"></dl>
-                    <p class="rk-foot">
-                        來源與世代紀錄用來說明本次讀了什麼，不表示永久保存每個歷史輸入快照。
-                        後續共用資料更新也不會改寫本頁既有的結果。
-                    </p>
-                </article>
-                <article class="rk-card provenance-card" id="download-card">
-                    <h3>可下載的成果</h3>
-                    <div id="downloads"></div>
-                    <p class="rk-foot">
-                        下載內容以實際列出的檔案為準。表格僅呈現已提供的資料，不會在瀏覽器重新執行研究。
-                    </p>
-                </article>
+                <details class="evidence-details">
+                    <summary>展開稽核紀錄、來源、下載與使用限制</summary>
+                    <div class="evidence-content">
+                        <div class="rk-grid-2">
+                            <article class="rk-card">
+                                <h3>重建與驗證</h3>
+                                <p id="audit-status">
+                                    既定範圍核對已完成；不等於全研究驗收。
+                                </p>
+                                <ul id="audit-notes"></ul>
+                            </article>
+                            <article class="rk-card">
+                                <h3>如何解讀</h3>
+                                <ul id="limitations"></ul>
+                                <p class="rk-foot">
+                                    歷史關聯與描述性統計不等於可交易策略，也不構成策略通過或獲利保證。
+                                </p>
+                            </article>
+                        </div>
+                        <article class="rk-card provenance-card">
+                            <h3>本次資料與程式紀錄</h3>
+                            <dl id="provenance"></dl>
+                            <p class="rk-foot">
+                                來源與世代紀錄用來說明本次讀了什麼，不表示永久保存每個歷史輸入快照。
+                                後續共用資料更新也不會改寫本頁既有的結果。
+                            </p>
+                        </article>
+                        <article
+                            class="rk-card provenance-card"
+                            id="download-card"
+                        >
+                            <h3>可下載的成果</h3>
+                            <div id="downloads"></div>
+                            <p class="rk-foot">
+                                下載內容以實際列出的檔案為準。表格僅呈現已提供的資料，不會在瀏覽器重新執行研究。
+                            </p>
+                        </article>
+                    </div>
+                </details>
             </section>
             <footer class="report-footer">
                 <p>2010 起全市場型態掃描 · 可逐題查看進度、表格與來源。</p>
