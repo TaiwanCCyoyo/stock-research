@@ -19,6 +19,7 @@ from typing import Literal, cast
 from fastapi import APIRouter, FastAPI, Header, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.types import Receive, Scope, Send
 
 from research_api.history import history_router
 from research_api.private_artifacts import create_private_artifact_router
@@ -261,7 +262,7 @@ def built_frontend_mode(frontend_dist: Path) -> str | None:
     except (OSError, ValueError):
         return None
     mode = release.get("artifactMode") if isinstance(release, dict) else None
-    return mode if mode in {"public-synthetic", "local-private"} else None
+    return mode if isinstance(mode, str) and mode in {"public-synthetic", "local-private"} else None
 
 
 def _wrong_frontend_page(server_mode: str, built_mode: str | None, web_url: str | None) -> str:
@@ -282,21 +283,39 @@ background:#14201b;color:#e7efe9}}a{{color:#9fd8b4}}code{{background:#22322b;pad
 </body></html>"""
 
 
+class ModeCheckedFrontend:
+    """Serve dist only while its recorded mode matches the API; dist may be republished while running."""
+
+    def __init__(self, frontend_dist: Path, server_mode: str, web_url: str | None) -> None:
+        self.frontend_dist = frontend_dist
+        self.server_mode = server_mode
+        self.web_url = web_url
+        self.static = StaticFiles(directory=frontend_dist, html=True, check_dir=False)
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        # Non-GET requests keep StaticFiles' 405 so read-only API routes stay 405.
+        if scope["type"] != "http" or scope.get("method") not in {"GET", "HEAD"}:
+            await self.static(scope, receive, send)
+            return
+        built_mode = built_frontend_mode(self.frontend_dist)
+        if built_mode == self.server_mode:
+            await self.static(scope, receive, send)
+            return
+        logger.warning("Built frontend mode %s does not match API mode %s; serving guidance instead", built_mode, self.server_mode)
+        if scope.get("path", "/") in {"/", "/index.html"}:
+            response: HTMLResponse | JSONResponse = HTMLResponse(_wrong_frontend_page(self.server_mode, built_mode, self.web_url))
+        else:
+            response = JSONResponse({"detail": "Not Found"}, status_code=404)
+        await response(scope, receive, send)
+
+
 def mount_frontend(application: FastAPI, frontend_dist: Path, environment: dict[str, str]) -> None:
     """Serve the built frontend only when it was built for the same data mode as this API."""
     if not frontend_dist.joinpath("index.html").is_file():
         return
     server_mode = environment.get("STOCK_RESEARCH_DATA_MODE", "public-synthetic")
-    built_mode = built_frontend_mode(frontend_dist)
-    if built_mode == server_mode:
-        application.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
-        return
-    logger.warning("Built frontend mode %s does not match API mode %s; serving guidance instead", built_mode, server_mode)
-    page = _wrong_frontend_page(server_mode, built_mode, environment.get("RESEARCH_WEB_URL"))
-
-    @application.get("/", include_in_schema=False)
-    def wrong_frontend() -> HTMLResponse:
-        return HTMLResponse(page)
+    frontend = ModeCheckedFrontend(frontend_dist, server_mode, environment.get("RESEARCH_WEB_URL"))
+    application.mount("/", frontend, name="frontend")
 
 
 app = create_app()

@@ -436,6 +436,8 @@ def test_serves_frontend_built_for_the_same_mode(tmp_path: Path, mode: str) -> N
         ({"schema": "research-web-release.v1", "version": "v"}, "未記錄"),
         (None, "未記錄"),
         ("not an object", "未記錄"),
+        ({"schema": "research-web-release.v1", "version": "v", "artifactMode": []}, "未記錄"),
+        ({"schema": "research-web-release.v1", "version": "v", "artifactMode": {}}, "未記錄"),
     ],
 )
 def test_mismatched_or_unrecorded_frontend_points_to_the_website(tmp_path: Path, release: object | None, shown: str) -> None:
@@ -451,6 +453,22 @@ def test_mismatched_or_unrecorded_frontend_points_to_the_website(tmp_path: Path,
     assert 'href="http://127.0.0.1:15177"' in response.text
     assert shown in response.text
     assert TestClient(application).get("/assets/app.js").status_code == 404
+
+
+def test_republished_frontend_is_checked_on_each_request(tmp_path: Path) -> None:
+    application = FastAPI()
+    dist = _built_frontend(tmp_path, {"schema": "research-web-release.v1", "version": "v", "artifactMode": "local-private"})
+    api_main.mount_frontend(application, dist, {"STOCK_RESEARCH_DATA_MODE": "local-private"})
+    client = TestClient(application)
+    assert 'id="root"' in client.get("/").text
+
+    release = {"schema": "research-web-release.v1", "version": "w", "artifactMode": "public-synthetic"}
+    (dist / "release.json").write_text(json.dumps(release), encoding="utf-8")
+    assert 'id="root"' not in client.get("/").text
+
+    release["artifactMode"] = "local-private"
+    (dist / "release.json").write_text(json.dumps(release), encoding="utf-8")
+    assert 'id="root"' in client.get("/").text
 
 
 def test_no_built_frontend_mounts_nothing(tmp_path: Path) -> None:
