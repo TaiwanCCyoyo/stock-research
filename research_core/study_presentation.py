@@ -136,6 +136,8 @@ def _safe_error_reason(error: ValueError | OSError) -> str:
     if isinstance(error, OSError) or isinstance(error.__cause__, OSError):
         return "登錄或來源檔案無法讀取，請檢查本機檔案。"
     message = str(error)
+    if message == "JSON nesting exceeds supported depth":
+        return "來源 JSON 巢狀過深，請縮減資料層級並重新驗證登錄。"
     if message == "study presentation report digest mismatch":
         return "報告 SHA-256 與登錄不符，請核對報告版本並更新登錄。"
     if message == "study presentation title and summary must quote its report":
@@ -185,6 +187,11 @@ def _unavailable_card(identity: str, previous: dict[str, Any] | None, error: Val
             "registryEventIds": [],
             "dateBasis": "task-identifier-date-not-certified-completion-date",
         }
+    # A saved conclusion remains evidence, but its current-checkout reading
+    # destination is no longer verified after registration validation failed.
+    if item.get("webReportHref"):
+        item["webReportReason"] = "登錄需更新，已暫停目前閱讀入口；保留舊結論供核對。"
+    item["webReportHref"] = None
     item["status"] = "登錄需更新"
     item["sourceNote"] = reason
     return item

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 from pathlib import Path
@@ -344,3 +345,113 @@ def test_unexpected_programming_error_is_not_hidden(tmp_path: Path, monkeypatch:
     monkeypatch.setattr(presentation, "read_study_presentation", broken_reader)
     with pytest.raises(TypeError, match="unexpected implementation defect"):
         project_study_history({"items": []}, tmp_path)
+
+
+def history_scenario(tmp_path: Path) -> tuple[Path, Path, Path, dict]:
+    tasks = tmp_path / "tasks"
+    tasks.mkdir()
+    bad, metadata = registration(tasks)
+    metadata["web_report"] = True
+    (bad / "web-report").mkdir()
+    (bad / "web-report/index.html").write_text("<h1>Synthetic report</h1>", encoding="utf-8")
+    save(bad, metadata)
+    valid = tasks / "20261021-valid"
+    valid.mkdir()
+    (valid / "report.md").write_bytes((bad / "report.md").read_bytes())
+    save(valid, {**metadata, "task_id": valid.name, "web_report": False})
+    previous = {**read_study_presentation(bad), "outcome": "candidate_failed"}
+    legacy = {**read_study_presentation(valid), "id": "20200101-legacy", "date": "2020-01-01"}
+    history = {"schema": "saved-research-history.v1", "historyComplete": False, "items": [previous, legacy]}
+    return tasks, bad, valid, history
+
+
+def http_history(tmp_path: Path, tasks: Path, history: dict) -> dict:
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+
+    from research_api.saved_research_studio import create_studio_router
+    from research_core.saved_research_studio import synthetic_studio_package
+
+    payload = synthetic_studio_package()
+    payload["researchHistory"] = history
+    package = tmp_path / "studio.json"
+    package.write_text(json.dumps(payload), encoding="utf-8")
+    app = FastAPI()
+    app.include_router(create_studio_router(package, history_presentation_path=None, history_tasks_root=tasks))
+    response = TestClient(app).get("/saved-research-studio/v1/research-history")
+    assert response.status_code == 200
+    return response.json()
+
+
+@pytest.mark.parametrize("missing", ["report.md", "web-report/index.html"])
+def test_unavailable_existing_card_clears_link_without_rewriting_saved_provenance(tmp_path: Path, missing: str) -> None:
+    tasks, bad, valid, history = history_scenario(tmp_path)
+    original = copy.deepcopy(history)
+    previous, legacy = original["items"]
+    assert previous["webReportHref"] == f"#report/{bad.name}"
+    (bad / missing).unlink()
+    for projected in (project_study_history(history, tasks), http_history(tmp_path, tasks, history)):
+        rows = {item["id"]: item for item in projected["items"]}
+        assert set(rows) == {bad.name, valid.name, legacy["id"]}
+        failed = rows[bad.name]
+        assert failed["status"] == "登錄需更新"
+        assert failed.get("webReportHref") is None
+        for field in (
+            "title",
+            "originalTitle",
+            "conclusion",
+            "originalSummary",
+            "outcome",
+            "reportPath",
+            "reportSha256",
+            "currentPublication",
+            "registryEventIds",
+        ):
+            assert failed[field] == previous[field]
+        assert rows[valid.name]["conclusion"] == "No accepted result."
+        assert rows[legacy["id"]]["conclusion"] == legacy["conclusion"]
+    assert history == original
+
+
+@pytest.mark.parametrize("source", ["presentation.json", "publications.json", "research_result.json"])
+def test_deep_json_source_is_rejected_strictly_but_isolated_in_history(tmp_path: Path, source: str) -> None:
+    tasks, bad, valid, history = history_scenario(tmp_path)
+    # Keep only a distinct legacy card, so the bad registration creates a placeholder.
+    history["items"] = history["items"][1:]
+    nested = "[" * 1500 + "0" + "]" * 1500
+    assert len(nested.encode()) < 64 * 1024
+    (bad / source).write_text(nested, encoding="utf-8")
+    with pytest.raises(EvidenceError):
+        read_study_presentation(bad)
+    for projected in (project_study_history(history, tasks), http_history(tmp_path, tasks, history)):
+        rows = {item["id"]: item for item in projected["items"]}
+        assert set(rows) == {bad.name, valid.name, "20200101-legacy"}
+        assert rows[bad.name]["status"] == "登錄需更新"
+        assert rows[bad.name].get("webReportHref") is None
+        assert rows[valid.name]["conclusion"] == "No accepted result."
+        assert rows["20200101-legacy"]["conclusion"] == "No accepted result."
+
+
+def deep_json_tree() -> object:
+    tree: object = 0
+    for _ in range(1500):
+        tree = [tree]
+    return tree
+
+
+def test_public_finite_json_rejects_excessive_python_tree_depth() -> None:
+    from research_core.evidence import finite_json
+
+    with pytest.raises(EvidenceError):
+        finite_json(deep_json_tree())
+
+
+def test_read_json_translates_recursion_in_finite_validation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import research_core.evidence as evidence
+
+    path = tmp_path / "synthetic.json"
+    path.write_text("{}", encoding="utf-8")
+    tree = deep_json_tree()
+    monkeypatch.setattr(evidence.json, "loads", lambda *args, **kwargs: tree)
+    with pytest.raises(EvidenceError):
+        evidence.read_json(path)
