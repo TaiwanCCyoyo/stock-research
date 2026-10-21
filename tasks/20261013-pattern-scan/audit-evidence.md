@@ -56,9 +56,21 @@ changed = changed_results(root / ".tmp/pr17-bounded-audit-receipt-20261021.json"
 
 ## 程式與保留責任
 
-`evidence/pr17-audits-20261021` 輕量 Git tag 保留 PR17 squash 前的 head
-`171f106166a49b3a2e450a180def2a25d25ed1e2` 及其祖先，讓原 audit executor
-commits 持續可取得。這只保留 Git 引用，不建立程式或資料 snapshot。
+已發布至 `origin` 的輕量 Git tag
+[`evidence/pr17-audits-20261021`](https://github.com/TaiwanCCyoyo/stock-research/tree/evidence/pr17-audits-20261021)
+保留 PR17 squash 前的
+[`171f106166a49b3a2e450a180def2a25d25ed1e2`](https://github.com/TaiwanCCyoyo/stock-research/commit/171f106166a49b3a2e450a180def2a25d25ed1e2)
+及其祖先。2026-10-22 已以 `git ls-remote --tags origin` 確認遠端
+`refs/tags/evidence/pr17-audits-20261021` 正是此 commit。
+只取得 PR branch 的 checkout 不一定自動取得這個 tag；需要原 executor 程式時明確執行：
+
+```powershell
+git fetch origin refs/tags/evidence/pr17-audits-20261021:refs/tags/evidence/pr17-audits-20261021
+git rev-parse evidence/pr17-audits-20261021
+```
+
+第二行應得到上述 `171f106...` 完整 commit。這只保留既有 Git 引用，
+不建立程式或資料 snapshot；原 executor commits 可由該遠端 ref 取得。
 原 case 收據仍是各案例實際 executor 的來源；tag head 不被冒稱為全部案例的 executor。
 早期 scratch checks 沒有記錄的執行 commit 仍是未知，保存原始 source 不補造來源。
 

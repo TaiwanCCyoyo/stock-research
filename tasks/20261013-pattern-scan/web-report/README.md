@@ -34,7 +34,8 @@ Q5–Q6 網頁附錄限原型態 union，landmark 限第 10 日；其他候選�
 
 ## 從已存成果匯出
 
-在 PR17 交付 checkout 執行已提交的 `scripts.export_pattern_scan_report`：
+在包含 PR17 已合併程式的現存 checkout（例如已同步 main 的 primary）
+執行 `scripts.export_pattern_scan_report`；Q1 與 Q2–Q6 仍使用上列原有絕對輸入路徑：
 
 ```powershell
 uv run python -m scripts.export_pattern_scan_report --q1-root <原有Q1根目錄> --remaining-root <原有Q2–Q6根目錄> --output <尚不存在的report-data目錄> --as-of 2026-10-21

@@ -21,8 +21,11 @@
 
 ## 固定入口與權責
 
-2026-10-21 PR17 [Q1 階段成果頁](../../tasks/20261013-pattern-scan/web-report/index.html)：
-12 種型態的已存無條件主表，以及完整摘要／年度終表；Q2–Q6 與獨立重建稽核未完成。
+2026-10-22 PR17 [階段成果頁](../../tasks/20261013-pattern-scan/web-report/index.html)：
+12 種型態的 Q1 主表與完整摘要／年度終表，以及 B1／H1 已存 Q2–Q6。
+既定十事件與固定五候選 40-case 稽核已完成，見
+[正式保存位置與原收據](../../tasks/20261013-pattern-scan/audit-evidence.md)；
+其餘家族 Q2–Q6、完整判讀與 final handoff 仍待完成，不重做已完成的限定稽核。
 匯出入口及相對收據路徑見 [報告資料契約](../../tasks/20261013-pattern-scan/web-report/README.md)。
 
 2026-10-20 PR17 Q2–Q6 接續：`scripts.run_pattern_scan_remaining` 讀取原始 stock/global/labels，
