@@ -504,7 +504,7 @@ test("the overview and evidence disclosure preserve the current completion bound
     const html = readFileSync(join(folder, "index.html"), "utf8");
 
     assert.match(html, /Q1 已涵蓋十二個家族/);
-    assert.match(html, /B1、H1 的 Q2–Q6 已有結果/);
+    assert.match(html, /各題進度依實際已提供終表呈現/);
     assert.match(html, /既定範圍核對已完成/);
     assert.doesNotMatch(html, /獨立重建稽核尚未完成/);
     assert.match(html, /<details class="evidence-details">/);

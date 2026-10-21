@@ -15,7 +15,7 @@ from research_core.pattern_scan_groups_v1 import PRIMARY
 from research_core.pattern_scan_report_v1 import build_q1_report_data, export_q1_report_data
 
 
-def _fixture(root: Path) -> dict[str, tuple[bytes, int]]:
+def _fixture(root: Path, *, comparisons: bool = False) -> dict[str, tuple[bytes, int]]:
     root.mkdir()
     before: dict[str, tuple[bytes, int]] = {}
     for target in PATTERNS:
@@ -46,6 +46,12 @@ def _fixture(root: Path) -> dict[str, tuple[bytes, int]]:
                     "hit_rate": None,
                     "loss_rate": 0.0,
                 })
+        if comparisons:
+            rows.extend(
+                {**rows[0], "split": "all", "horizon": horizon, "control_id": control}
+                for horizon in (126, 252)
+                for control in ("pattern", "C-base-all", "C-base-daily")
+            )
         summary = family / f"{target}-summary.parquet"
         annual = family / f"{target}-annual.parquet"
         pd.DataFrame(rows).to_parquet(summary, index=False)
@@ -217,3 +223,41 @@ def test_stored_comparisons_keep_scopes_deltas_and_own_quota_random(tmp_path: Pa
     (conditions / "run-receipt.json").unlink()
     module.add_stored_comparisons(report, tmp_path / "q1", tmp_path / "remaining")
     assert report["questions"][1]["tables"] == []
+    assert report["questions"][1]["status"] == "pending"
+
+
+@pytest.mark.parametrize("families", [(), ("B1",), ("B1", "B4"), ("B1", "H1", "B4")])
+def test_available_status_tracks_zero_new_and_all_families(families: tuple[str, ...], monkeypatch: pytest.MonkeyPatch) -> None:
+    from research_core import pattern_scan_report_v1 as module
+
+    monkeypatch.setattr(module, "PATTERNS", ("B1", "H1", "B4"))
+    report: dict[str, Any] = {"status": "complete", "questions": [{"id": f"Q{i}"} for i in range(1, 7)]}
+    provided = {f"Q{i}": list(families) for i in range(2, 7)}
+    provided["Q4"] = []  # Conditions do not imply Q4 completion.
+    module._set_available_status(report, provided)
+    expected = "pending" if not families else "complete" if len(families) == 3 else "partial"
+    assert report["questions"][1]["status"] == expected
+    assert report["questions"][3]["status"] == "pending"
+    assert f"{len(families)}/3" in report["questions"][1]["conclusion"]
+    assert all(family in report["questions"][1]["conclusion"] for family in families)
+    assert "計算中" not in json.dumps(report, ensure_ascii=False)
+    assert report["status"] == "partial"  # No automatic acceptance or hold release.
+    assert str(len(families)) in report["overview"][0]["value"]
+
+
+def test_cli_exports_comparisons_and_rejects_remaining_root_overlap(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import sys
+
+    from scripts.export_pattern_scan_report import main
+
+    q1, remaining, output = tmp_path / "q1", tmp_path / "remaining", tmp_path / "report/data"
+    _fixture(q1, comparisons=True)
+    remaining.mkdir()
+    monkeypatch.setattr(sys, "argv", ["export", "--q1-root", str(q1), "--remaining-root", str(remaining), "--output", str(output), "--as-of", "2026-10-21"])
+    assert main() == 0
+    report = json.loads((output / "summary.js").read_text(encoding="utf-8").removeprefix("window.REPORT_DATA = ").rstrip(";\n"))
+    assert len(report["comparisonSummary"]["rows"]) == 24
+    assert report["audit"]["status"] == "unrecorded"
+    assert all(question["status"] == "pending" for question in report["questions"][1:])
+    with pytest.raises(ValueError, match="overlap original remaining"):
+        export_q1_report_data(q1, remaining / "output", as_of="2026-10-21", remaining_root=remaining)

@@ -98,6 +98,31 @@ def _report_table(table_id: str, title: str, frame: pd.DataFrame, *, collapsible
     }
 
 
+def _set_available_status(report: dict[str, Any], provided: dict[str, list[str]]) -> None:
+    """Describe supplied terminal tables, without inferring a running process."""
+    for question in report["questions"]:
+        if question["id"] not in provided:
+            continue
+        families = provided[question["id"]]
+        missing = [target for target in PATTERNS if target not in families]
+        question["status"] = "pending" if not families else "partial" if missing else "complete"
+        question["conclusion"] = (
+            f"已提供終表 {len(families)}/{len(PATTERNS)} 家族：{'／'.join(families) or '無'}。"
+            + (f"待完成：{'／'.join(missing)}。" if missing else "此題數值階段終表齊備。")
+            + "這是終表提供狀態，不代表程序正在執行、完整網頁交付、owner 驗收、final handoff 或 hold 可釋放。"
+        )
+    # Table availability alone cannot certify the study's final handoff.
+    report["status"] = "partial"
+    report["overview"] = [
+        {
+            "label": "已提供終表",
+            "value": f"Q1 {len(PATTERNS)} 家族；Q2–Q3 {len(provided['Q2'])}；Q4 {len(provided['Q4'])}；Q5–Q6 {len(provided['Q5'])}",
+            "note": "只根據同一讀表迴圈已取得的原終表；缺少 phase 收據的家族標為待完成。",
+        },
+        {"label": "交付狀態", "value": "完整報告／final handoff 與 owner 驗收仍分開確認", "note": "終表齊備不自動釋放 hold；iframe 實際下載仍待人工驗收。"},
+    ]
+
+
 def add_stored_comparisons(report: dict[str, Any], q1_root: Path, remaining_root: Path) -> None:
     """Present existing final statistics; no research, receipt creation or integrity pass.
 
@@ -131,18 +156,15 @@ def add_stored_comparisons(report: dict[str, Any], q1_root: Path, remaining_root
     }
     for question in report["questions"]:
         if question["id"] != "Q1":
-            question.update(
-                status="partial", conclusion="B1／H1 已完成；B2 原程序計算中，其餘家族待接續。十事件與固定五候選 40-case 稽核已完成。", tables=[], notes=[]
-            )
+            question.update(tables=[], notes=[])
     candidate_rows, candidate_details, coverage_rows, coverage_details = [], [], [], []
     followups: dict[str, list[pd.DataFrame]] = {}
-    completed = []
+    provided: dict[str, list[str]] = {f"Q{i}": [] for i in range(2, 7)}
     for target in PATTERNS:
         root = remaining_root / target
         conditions = root / "conditions"
         if not (conditions / "run-receipt.json").is_file():
             continue
-        completed.append(target)
         candidates = json.loads((conditions / "top-candidates.json").read_text(encoding="utf-8"))
         for horizon in HORIZONS:
             controls = {}
@@ -172,6 +194,8 @@ def add_stored_comparisons(report: dict[str, Any], q1_root: Path, remaining_root
                     "all_known_n": all_rows["known_n"],
                     "loss_rate": pattern["loss_rate"],
                 })
+        provided["Q2"].append(target)
+        provided["Q3"].append(target)
         if (root / "q4/run-receipt.json").is_file():
             coverage = _report_slice(read_frame(root / "q4/coverage.parquet"), split="cross-check", era="all", mkt="all")
             coverage_details.extend(_records(coverage))
@@ -191,6 +215,7 @@ def add_stored_comparisons(report: dict[str, Any], q1_root: Path, remaining_root
                     "random_unmatched_n": random["unmatched_n"],
                     "random_unknown_n": random["unknown_n"],
                 })
+            provided["Q4"].append(target)
         if (root / "followup/run-receipt.json").is_file():
             for name in ("path_by_outcome", "holding_by_outcome", "first_flag_by_outcome", "flag_summary", "landmark_summary", "tradeoff_points"):
                 frame = _report_slice(read_frame(root / f"followup/{name}.parquet"), split_id="cross-check", era="all", mkt="all")
@@ -200,6 +225,8 @@ def add_stored_comparisons(report: dict[str, Any], q1_root: Path, remaining_root
                     # the original final table, without a second table copy.
                     frame = frame.loc[frame["landmark"].eq(10)]
                 followups.setdefault(name, []).append(frame)
+            provided["Q5"].append(target)
+            provided["Q6"].append(target)
     questions = {question["id"]: question for question in report["questions"]}
     if candidate_rows:
         questions["Q2"]["tables"] = [_report_table("candidate-deltas", "固定候選：型態減去同條件無型態（百分點）", pd.DataFrame(candidate_rows))]
@@ -225,10 +252,7 @@ def add_stored_comparisons(report: dict[str, Any], q1_root: Path, remaining_root
         "landmark 附錄固定呈現原型態群組第 10 日；其他 landmark、全部候選與年代／市場列仍在原 followup/landmark_summary.parquet。"
         "X8 的 earliest-flag 分布不代表全部高點降低事件。"
     ]
-    report["overview"] = [
-        {"label": "已完成", "value": "Q1 全 12 家族；B1／H1 Q2–Q6", "note": "十事件及固定五候選 40-case 稽核已完成，不再增加稽核層。"},
-        {"label": "待完成", "value": "B2 計算中；其餘家族由原程序接續", "note": "不重啟、不重算已完成工作；全研究尚未完成。"},
-    ]
+    _set_available_status(report, provided)
     report["limitations"] = [
         "Q2–Q6 目前只呈現已完成家族；其餘不填入檢查點的暫時數字。",
         "cross-check 已暴露，不是 unseen holdout；多重候選、重疊事件及小樣本使差距不能直接解讀為策略優勢。",
@@ -237,7 +261,7 @@ def add_stored_comparisons(report: dict[str, Any], q1_root: Path, remaining_root
         "Q2–Q6 附錄為 cross-check／全期／全市場切片；其他年代、市場、年度與敏感度列仍保留於原執行目錄，不另複製。",
         "iframe 實際檔案下載仍待人工驗收，DOM／點擊／SSR 測試不作下載完成證據。",
     ]
-    LOGGER.info("Report presentation reads completed condition families: %s", ", ".join(completed))
+    LOGGER.info("Report presentation reads completed condition families: %s", ", ".join(provided["Q2"]))
 
 
 def _json_value(value: Any) -> Any:
@@ -437,7 +461,7 @@ def build_q1_report_data(q1_root: Path, *, as_of: str) -> tuple[dict[str, Any], 
                 "status": "complete" if i == 1 else "pending",
                 "conclusion": "12 種型態的 Q1 表格均已存在。這些描述性統計不代表策略獲准，也不構成超額表現證據。"
                 if i == 1
-                else "尚未完成；獨立重建 10 個事件／5 個候選的確認程序仍待進行。",
+                else "此 Q1 匯出未提供本題終表；完整報告請傳入既有 Q2–Q6 根目錄。",
                 "notes": [
                     (
                         "範圍：12 種型態；交叉檢核 split=cross-check、全期間 era=all、"
@@ -467,7 +491,7 @@ def build_q1_report_data(q1_root: Path, *, as_of: str) -> tuple[dict[str, Any], 
             }
             for i in range(1, 7)
         ],
-        "audit": {"status": "pending", "notes": ["Q2–Q6 尚未完成；獨立重建 10 個事件／5 個候選的確認程序仍待進行。"]},
+        "audit": {"status": "unrecorded", "notes": ["此匯出未附稽核完成紀錄；沿用研究既有證據，不執行或重做稽核，也不由終表存在推定稽核完成。"]},
         "provenance": [
             {"label": "輸入識別", "value": input_id},
             {"label": "數值來源識別", "value": source_id},
@@ -486,7 +510,7 @@ def build_q1_report_data(q1_root: Path, *, as_of: str) -> tuple[dict[str, Any], 
     return report, files
 
 
-def export_q1_report_data(q1_root: Path, output: Path, *, as_of: str) -> dict[str, Any]:
+def export_q1_report_data(q1_root: Path, output: Path, *, as_of: str, remaining_root: Path | None = None) -> dict[str, Any]:
     """Build and publish a new report data directory without replacing an existing one."""
     output = safe_path(Path(output))
     root = safe_path(Path(q1_root))
@@ -494,7 +518,13 @@ def export_q1_report_data(q1_root: Path, output: Path, *, as_of: str) -> dict[st
         raise ValueError("report output must not overlap original Q1 results")
     if output.exists():
         raise FileExistsError(f"report data destination already exists: {output}")
+    remaining = safe_path(Path(remaining_root)) if remaining_root is not None else None
+    if remaining is not None and (output.is_relative_to(remaining) or remaining.is_relative_to(output)):
+        raise ValueError("report output must not overlap original remaining results")
     report, files = build_q1_report_data(q1_root, as_of=as_of)
+    if remaining is not None:
+        add_stored_comparisons(report, root, remaining)
+        files["summary.js"] = ("window.REPORT_DATA = " + json.dumps(report, ensure_ascii=False, separators=(",", ":"), allow_nan=False) + ";\n").encode("utf-8")
     publish_new_directory(output, files)
     LOGGER.info("Published partial Q1 report data families=%d tables=%d output=%s", len(PATTERNS), 2 * len(PATTERNS), output)
     return report

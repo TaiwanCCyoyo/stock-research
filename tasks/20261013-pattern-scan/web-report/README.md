@@ -35,12 +35,16 @@ Q5–Q6 網頁附錄限原型態 union，landmark 限第 10 日；其他候選�
 在 PR17 交付 checkout 執行已提交的 `scripts.export_pattern_scan_report`：
 
 ```powershell
-uv run python -m scripts.export_pattern_scan_report --q1-root <原有Q1根目錄> --output tasks/20261013-pattern-scan/web-report/data --as-of 2026-10-21
+uv run python -m scripts.export_pattern_scan_report --q1-root <原有Q1根目錄> --remaining-root <原有Q2–Q6根目錄> --output <尚不存在的report-data目錄> --as-of 2026-10-21
 ```
 
 輸出目錄必須尚不存在，也不得與原 Q1 根目錄重疊。匯出器只讀 12 份原收據及
 其 24 張最終表，對最終表各驗證一次，從相同 bytes 讀出主表並提供下載；
 不讀原價格、逐筆事件、舊 manifest 或共用資料，也不重算研究統計。
+正式 CLI 在序列化前接入 `add_stored_comparisons`，因此首頁比較與已完成的 Q2–Q6
+不會退回 Q1-only。各題狀態與 overview 由同一次已讀終表的家族產生；缺少既有 phase
+完成收據就列待完成，不推定程序正在跑。全家族終表齊備只代表數值階段，完整交付、
+owner 驗收、final handoff 與 hold 釋放仍分開確認。
 `publish_new_directory` 先寫 sibling staging，再以 no-replace 移交整個新目錄。
 
 `data/q1-receipts.zip` 無損保留 12 份原始 `<型態>-receipt.json` bytes；不是新的
@@ -83,6 +87,8 @@ secret-scanner baseline 或放寬檢查。原收據中的相對終表檔名，
 - `comparisonSummary`：首頁固定口徑、兩期限 rows 與基準率；`delta_pp` 已乘 100，不能再乘一次。
 - 表格 `collapsible=true` 時置於原生展開區，全部提供的列仍可分頁讀取。
 - `audit`：`status` 與 `notes`。本題完成與整份稽核完成分開呈現。
+  通用匯出未提供稽核紀錄時為 `unrecorded`；不能由終表存在推定完成，
+  也不能把它解讀成要重做既有稽核。本次頁面保留已提供的既定範圍完成證據。
 - `provenance`：`label`、`value` 與可選的本報告 `data/` 內連結。
 - 表格與報告層可有 `downloads`，每筆為 `label`、`href`、`rows`、`bytes`。
   連結只接受本目錄下的 `data/` 相對路徑；匯出方負責確認檔案存在、列數與
