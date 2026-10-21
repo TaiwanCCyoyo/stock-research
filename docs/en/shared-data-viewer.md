@@ -13,8 +13,8 @@ mode; the latter displays a local-data requirement.
   metadata. A missing catalog is explicit and does not hide the maintained family.
 - `adjusted-daily-v1/symbols`: code, optional name/market and first/last stored dates.
   Live producer names use idle-window guards and a stable read-only SQLite read;
-  unavailable/busy metadata falls back to codes. Cached names describe startup,
-  while generation identity is resolved on every request.
+  unavailable/busy metadata falls back to codes. Names arrive independently of
+  price warmup, while generation identity is resolved on every request.
 - `adjusted-daily-v1/series/{code}?basis=&from=&to=`: aligned date and OHLCV
   column arrays, quality flags/reasons, daily technical columns and pivots.
   Null values stay null; invalid bars and indicators render whitespace.
@@ -42,9 +42,15 @@ Only 4 ATR pivots are enabled initially. All indicator colors use theme CSS toke
 Pivots draw on their extreme
 date and display `confirmed_at` separately.
 
-Missing optional stock names retry on subsequent requests after a 60-second
-cooldown in the background, with at most one retry in flight. Busy producers
-still return codes immediately through the existing guarded metadata reader.
+Verified codes and series become available without waiting for optional stock
+names. A separate single-worker executor handles names; even across repeated
+generation changes it retains at most one in-flight read, with no replacement
+queue. Completed results apply only to the generation/status identity that
+requested them; obsolete work drains before a fresh read starts. Current-identity
+empty results retry on demand after a 60-second cooldown. Busy producers still
+return codes immediately through the guarded metadata reader. One five-second
+deadline bounds its scheduler probes, SQLite lock waits and query progress; a
+timeout fails closed to codes without disabling producer guards.
 The page receives that recovery through a serial symbols-only request loop while
 names are unavailable: one initial request, then at most 60 retries spaced 60
 seconds apart. Success stops it. Leaving the page, retrying or changing the

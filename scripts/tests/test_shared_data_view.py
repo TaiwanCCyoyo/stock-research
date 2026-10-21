@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
+import sqlite3
 from collections.abc import Iterator
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from threading import Event
 from types import SimpleNamespace
@@ -80,6 +82,9 @@ def viewer(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[SharedDa
     monkeypatch.setattr(shared_data_view, "symbol_names", lambda: {"2330": ("Synthetic", "TEST")})
     store = SharedDataView(tmp_path)
     store.prepare(wait=True)
+    assert store._names_future is not None
+    store._names_future.result(timeout=3)
+    store.prepare()
     try:
         yield store
     finally:
@@ -203,7 +208,7 @@ def test_public_mode_refuses_before_accessing_private_data(viewer: SharedDataVie
 
 
 def test_busy_producer_declines_metadata_before_resolving_or_reading_root(monkeypatch: pytest.MonkeyPatch) -> None:
-    def busy() -> None:
+    def busy(**kwargs: Any) -> None:
         raise live_producer.ProducerBusyError("synthetic producer writer running")
 
     def forbidden(*args: Any, **kwargs: Any) -> None:
@@ -220,102 +225,105 @@ def test_empty_names_retry_in_background_only_after_cooldown(tmp_path: Path, mon
     clock = [100.0]
     monkeypatch.setattr(shared_data_view, "time", SimpleNamespace(monotonic=lambda: clock[0], perf_counter=shared_data_view.time.perf_counter))
     attempts = []
-    release = Event()
 
     def names() -> dict[str, tuple[str, str]]:
         attempts.append(clock[0])
-        if len(attempts) <= 2:
-            return {}  # Initial warmup and first retry encounter a busy producer.
-        assert release.wait(3), "metadata retry was not released"
-        return {"2330": ("合成名稱", "TEST")}
+        return {} if len(attempts) == 1 else {"2330": ("合成名稱", "TEST")}
 
     monkeypatch.setattr(shared_data_view, "symbol_names", names)
     store = SharedDataView(tmp_path)
     try:
         store.prepare(wait=True)
-        assert not store.symbols()["namesAvailable"]
-        clock[0] = 159.9
-        store.prepare()
+        pending = store._names_future
+        assert pending is not None
+        pending.result(timeout=3)
+        assert not store.symbols()["namesAvailable"]  # Harvest the empty result.
+        for moment in (100.0, 130.0, 159.99):
+            clock[0] = moment
+            store.prepare()
         assert len(attempts) == 1
         clock[0] = 160.0
         store.prepare()
-        assert store._names_future is not None
-        store._names_future.result(timeout=3)
-        store.prepare()
-        assert len(attempts) == 2 and not store.symbols()["namesAvailable"]
-        clock[0] = 220.0
-        store.prepare()
         pending = store._names_future
         assert pending is not None
-        # The pending metadata read must not block repeated chart requests.
-        for _ in range(5):
-            assert not store.symbols()["namesAvailable"]
-            assert store._names_future is pending
-        release.set()
         pending.result(timeout=3)
-        result = store.symbols()
-        assert result["namesAvailable"] and result["symbols"][0]["name"] == "合成名稱"
+        assert store.symbols()["symbols"][0]["name"] == "合成名稱"
         clock[0] = 1000.0
         store.prepare()
-        assert len(attempts) == 3, "successful names must remain cached"
+        assert len(attempts) == 2
     finally:
-        release.set()
         store.close()
 
 
 @pytest.mark.parametrize("completed", [True, False])
 @pytest.mark.parametrize("stale", [{}, {"2330": ("過期名稱", "TEST")}])
-def test_new_generation_names_supersede_completed_or_running_retry(
+def test_first_names_read_never_blocks_http_or_overwrites_new_generation(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, completed: bool, stale: dict[str, tuple[str, str]]
 ) -> None:
     monkeypatch.setenv("STOCK_RESEARCH_DATA_MODE", "local-private")
     _publish(tmp_path, "generation-one")
-    clock = [100.0]
-    monkeypatch.setattr(shared_data_view, "time", SimpleNamespace(monotonic=lambda: clock[0], perf_counter=shared_data_view.time.perf_counter))
-    entered, release = Event(), Event()
-    calls: list[float] = []
-    latest = {"2330": ("新世代名稱", "TEST")}
+    entered, release, fresh_entered, fresh_release = Event(), Event(), Event(), Event()
+    calls: list[int] = []
 
     def names() -> dict[str, tuple[str, str]]:
-        calls.append(clock[0])
+        calls.append(len(calls) + 1)
         if len(calls) == 1:
-            return {}
-        if len(calls) == 2:
             entered.set()
-            assert release.wait(5), "old metadata retry was not released"
+            assert release.wait(10), "first metadata read was not released"
             return stale
-        return latest
+        fresh_entered.set()
+        assert fresh_release.wait(10), "fresh metadata read was not released"
+        return {"2330": ("新世代名稱", "TEST")}
 
     monkeypatch.setattr(shared_data_view, "symbol_names", names)
     store = SharedDataView(tmp_path)
+    requests = ThreadPoolExecutor(max_workers=1)
+    client = _client(store)
+
+    def check_http(generation: str) -> None:
+        for endpoint in ("symbols", "series/2330"):
+            response = requests.submit(client.get, f"/shared-data/v1/adjusted-daily-v1/{endpoint}").result(timeout=3)
+            assert response.status_code == 200
+            assert response.json()["generation"] == generation
+            if endpoint == "symbols":
+                assert not response.json()["namesAvailable"]
+                assert response.json()["symbols"][0]["name"] == "2330"
+
     try:
-        store.prepare(wait=True)
-        clock[0] = 160.0
-        store.prepare(wait=True)
-        pending = store._names_future
-        assert pending is not None and entered.wait(5)
+        requests.submit(store.prepare, wait=True).result(timeout=3)
+        assert entered.wait(3)
+        old = store._names_future
+        assert old is not None
+        check_http("generation-one")
         if completed:
             release.set()
-            pending.result(timeout=5)
-        else:
-            assert pending.running()
-        _publish(tmp_path, "generation-two")
-        store.prepare(wait=True)
-        assert store._names_future is None
-        release.set()
-        assert pending.result(timeout=5) == stale
-        # The stale result must not be harvested by a later API request.
-        response = _client(store).get("/shared-data/v1/adjusted-daily-v1/symbols")
+            assert old.result(timeout=3) == stale
+        _publish(tmp_path, "generation-two", 20.0)
+        requests.submit(store.prepare, wait=True).result(timeout=3)
+        check_http("generation-two")
+        if not completed:
+            assert store._names_future is old and calls == [1]
+            assert not fresh_entered.is_set(), "stale running work must prevent replacement reads"
+            release.set()
+            old.result(timeout=3)
+            store.prepare()
+        assert fresh_entered.wait(3)
+        assert calls == [1, 2]
+        check_http("generation-two")
+        current = store._names_future
+        assert current is not None and current is not old
+        fresh_release.set()
+        current.result(timeout=3)
+        response = client.get("/shared-data/v1/adjusted-daily-v1/symbols")
         assert response.status_code == 200
-        result = response.json()
-        assert result["generation"] == "generation-two"
-        assert result["namesAvailable"]
-        assert result["symbols"][0]["name"] == "新世代名稱"
-        clock[0] = 1000.0
-        store.prepare()
-        assert len(calls) == 3, "fresh names must remain cached after the old retry finishes"
+        assert response.json()["symbols"][0]["name"] == "新世代名稱"
+        assert response.json()["namesAvailable"]
+        assert client.get("/shared-data/v1/adjusted-daily-v1/series/2330").json()["close"] == [20.0, None, None, 20.0]
+        assert calls == [1, 2], "stale empty results must not trigger a current-generation cooldown or extra read"
     finally:
         release.set()
+        fresh_release.set()
+        requests.shutdown(wait=True)
         store.close()
 
 
@@ -486,3 +494,80 @@ def test_oversized_manifest_is_refused_before_hashing(tmp_path: Path, monkeypatc
     monkeypatch.setattr(shared_data_view, "file_digest", forbidden)
     with pytest.raises(ValueError, match="size limit"):
         shared_data_view.manifest_metadata(path, "0" * 64)
+
+
+def test_symbol_names_share_one_deadline_across_probes_and_sqlite(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    path = tmp_path / "symbol_meta.sqlite"
+    connection = sqlite3.connect(path)
+    connection.execute("CREATE TABLE symbol_meta (code TEXT, name TEXT, market TEXT)")
+    connection.execute("INSERT INTO symbol_meta VALUES ('2330', 'Synthetic', 'TEST')")
+    connection.commit()
+    connection.close()
+    clock = [100.0]
+    monkeypatch.setattr(shared_data_view, "time", SimpleNamespace(monotonic=lambda: clock[0]))
+    monkeypatch.setattr(shared_data_view, "producer_data_root", lambda: tmp_path)
+    probes: list[float] = []
+    sqlite_budgets: list[float] = []
+    original = live_producer.readonly_sqlite
+
+    def idle(*, task_timeout: float) -> None:
+        probes.append(task_timeout)
+        clock[0] += 1.0
+
+    def connect(source: Path, *, timeout: float) -> sqlite3.Connection:
+        sqlite_budgets.append(timeout)
+        clock[0] += 2.0
+        return original(source, timeout=timeout)
+
+    monkeypatch.setattr(live_producer, "assert_producer_idle", idle)
+    monkeypatch.setattr(live_producer, "readonly_sqlite", connect)
+    assert shared_data_view.symbol_names() == {"2330": ("Synthetic", "TEST")}
+    assert probes == [5.0, 2.0]
+    assert sqlite_budgets == [4.0]
+
+
+def test_symbol_names_sqlite_progress_deadline_interrupts_and_closes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    clock = [100.0]
+    closed: list[bool] = []
+    handlers: list[Any] = []
+
+    class Connection:
+        row_factory: Any = None
+
+        def set_progress_handler(self, callback: Any, steps: int) -> None:
+            assert steps > 0
+            handlers.append(callback)
+
+        def execute(self, query: str) -> Any:
+            assert handlers[0]() == 0
+            clock[0] = 105.0
+            assert handlers[0]() != 0, "SQLite work must stop at the overall deadline"
+            raise sqlite3.OperationalError("interrupted")
+
+        def close(self) -> None:
+            closed.append(True)
+
+    monkeypatch.setattr(shared_data_view, "time", SimpleNamespace(monotonic=lambda: clock[0]))
+    monkeypatch.setattr(shared_data_view, "producer_data_root", lambda: tmp_path)
+    monkeypatch.setattr(live_producer, "assert_producer_idle", lambda **kwargs: None)
+    monkeypatch.setattr(live_producer, "readonly_sqlite", lambda path, **kwargs: Connection())
+    monkeypatch.setattr(live_producer, "read_stable", lambda path, read: read(path))
+    assert shared_data_view.symbol_names() == {}
+    assert closed == [True]
+
+
+def test_symbol_names_expired_probe_budget_prevents_sqlite_read(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    clock = [100.0]
+
+    def idle(**kwargs: Any) -> None:
+        clock[0] = 105.0
+
+    def forbidden(*args: Any, **kwargs: Any) -> None:
+        pytest.fail("expired I/O budget must not start a SQLite read")
+
+    monkeypatch.setattr(shared_data_view, "time", SimpleNamespace(monotonic=lambda: clock[0]))
+    monkeypatch.setattr(shared_data_view, "producer_data_root", lambda: tmp_path)
+    monkeypatch.setattr(live_producer, "assert_producer_idle", idle)
+    monkeypatch.setattr(live_producer, "read_stable", lambda path, read: read(path))
+    monkeypatch.setattr(live_producer, "readonly_sqlite", forbidden)
+    assert shared_data_view.symbol_names() == {}

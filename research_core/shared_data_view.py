@@ -31,6 +31,7 @@ PRICE_COLUMNS = ["Code", "Date", "Open", "High", "Low", "Close", "VolumeLots", "
 READ_ERRORS = (OSError, ValueError, KeyError, live_producer.ProducerChangedError)
 WARM_RETRY_SECONDS = 1.0
 NAMES_RETRY_SECONDS = 60.0
+NAMES_TIMEOUT_SECONDS = 5.0
 ASSET_INDEX = Path(__file__).resolve().parents[1] / "docs/en/research-program.md"
 LABELS_START = "<!-- shared-data-labels:start -->"
 LABELS_END = "<!-- shared-data-labels:end -->"
@@ -66,14 +67,23 @@ class ViewUnavailable(RuntimeError):
 
 
 def symbol_names() -> dict[str, tuple[str, str]]:
-    """Optional live metadata, guarded before and after the stable read."""
+    """Optional guarded metadata with one deadline for probes, locks and query."""
+    deadline = time.monotonic() + NAMES_TIMEOUT_SECONDS
+
+    def remaining() -> float:
+        budget = deadline - time.monotonic()
+        if budget <= 0:
+            raise TimeoutError("symbol metadata read timed out")
+        return budget
+
     try:
-        live_producer.assert_producer_idle()
+        live_producer.assert_producer_idle(task_timeout=remaining())
         path = producer_data_root() / "symbol_meta.sqlite"
 
         def read(source: Path) -> dict[str, tuple[str, str]]:
-            connection = live_producer.readonly_sqlite(source)
+            connection = live_producer.readonly_sqlite(source, timeout=remaining())
             try:
+                connection.set_progress_handler(lambda: time.monotonic() >= deadline, 1000)
                 connection.row_factory = sqlite3.Row
                 rows = connection.execute("SELECT * FROM symbol_meta").fetchall()
                 return {str(row["code"]): (str(dict(row).get("name") or row["code"]), str(dict(row).get("market") or "")) for row in rows}
@@ -81,7 +91,7 @@ def symbol_names() -> dict[str, tuple[str, str]]:
                 connection.close()
 
         names = live_producer.read_stable(path, read)
-        live_producer.assert_producer_idle()
+        live_producer.assert_producer_idle(task_timeout=remaining())
         return names
     except (OSError, ValueError, sqlite3.Error, RuntimeError) as exc:
         LOGGER.info("Symbol names unavailable; displaying codes: %s", exc)
@@ -172,11 +182,13 @@ class SharedDataView:
         self._lock = threading.Lock()
         self._read_lock = threading.Lock()
         self._executor = ThreadPoolExecutor(max_workers=3, thread_name_prefix="shared-data-read")
+        self._names_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="shared-data-names")
         self._future: Future[list[dict[str, Any]]] | None = None
         self._identity: tuple[str, str] | None = None
         self._retry_after: float | None = None
         self._names: dict[str, tuple[str, str]] = {}
         self._names_future: Future[dict[str, tuple[str, str]]] | None = None
+        self._names_identity: tuple[str, str] | None = None
         self._names_retry_after = 0.0
         self.warm_seconds: float | None = None
 
@@ -188,6 +200,7 @@ class SharedDataView:
 
     def close(self) -> None:
         self._executor.shutdown(wait=True, cancel_futures=True)
+        self._names_executor.shutdown(wait=True, cancel_futures=True)
 
     def status(self) -> dict[str, Any]:
         try:
@@ -211,30 +224,33 @@ class SharedDataView:
             {"code": str(code), "first": cast(pd.Timestamp, row["min"]).date().isoformat(), "last": cast(pd.Timestamp, row["max"]).date().isoformat()}
             for code, row in periods.iterrows()
         ]
-        names = symbol_names()
         with self._lock:
-            # A new warmup supersedes every older optional metadata retry.
-            # Running reads may not cancel, so detach their result as well.
-            if self._names_future is not None:
-                self._names_future.cancel()
-                self._names_future = None
-            self._names = names
-            self._names_retry_after = time.monotonic() + NAMES_RETRY_SECONDS
+            # Publish verified codes without waiting for optional producer data.
+            # Retain any older in-flight name read until it drains; never queue
+            # a replacement per generation while that bounded read is running.
+            self._names = {}
+            self._names_retry_after = 0.0
         self.warm_seconds = time.perf_counter() - started
         LOGGER.info("Verified shared viewer generation=%s symbols=%d seconds=%.3f", generation, len(symbols), self.warm_seconds)
         return symbols
 
-    def _refresh_names(self) -> None:
+    def _refresh_names(self, identity: tuple[str, str]) -> None:
         """Retry missing optional metadata on demand, without delaying a request."""
         with self._lock:
+            if self._identity != identity:
+                return
             if self._names_future is not None:
                 if not self._names_future.done():
                     return
-                self._names = self._names_future.result()
+                future = self._names_future
                 self._names_future = None
+                if self._names_identity == identity:
+                    self._names = future.result()
+                self._names_identity = None
             if not self._names and time.monotonic() >= self._names_retry_after:
                 self._names_retry_after = time.monotonic() + NAMES_RETRY_SECONDS
-                self._names_future = self._executor.submit(symbol_names)
+                self._names_identity = identity
+                self._names_future = self._names_executor.submit(symbol_names)
 
     def prepare(self, *, wait: bool = False) -> tuple[dict[str, Any], list[dict[str, Any]]]:
         """Re-resolve current.json on every call and pin all reads to that identity."""
@@ -267,7 +283,7 @@ class SharedDataView:
             current = self.status()
             if (current["generation"], current["status_sha256"]) != identity:
                 raise ViewWarming("共用資料世代已更新，正在重新核對。")
-            self._refresh_names()
+            self._refresh_names(identity)
             return status, symbols
         except READ_ERRORS as exc:
             with self._lock:
