@@ -6,7 +6,9 @@ hashes. No event projection, input snapshot or parent hash chain is written.
 
 from __future__ import annotations
 
+import hashlib
 import io
+import json
 import logging
 import time
 import uuid
@@ -109,6 +111,71 @@ def _reuse_case(destination: Path, parameters: dict[str, Any]) -> dict[str, Any]
     return dict(case)
 
 
+def _complete(
+    output: Path,
+    overview: dict[str, Any],
+    inputs: AuditInputs,
+    fingerprint: dict[str, Any],
+    repo_root: Path,
+    started_code: dict[str, Any],
+) -> None:
+    """Publish summary and receipt together; orphaned legacy metadata is kept."""
+    destination = output / "completion"
+    if destination.exists():
+        saved = read_json(destination / "run-receipt.json")
+        if saved.get("definition") != DEFINITION or set(saved.get("results", {})) != {"audit-summary.json"}:
+            raise ValueError("completed audit summary receipt scope differs")
+        record = saved["results"]["audit-summary.json"]
+        locator = Path(record["path"])
+        path = checked_path(locator if locator.is_absolute() else repo_root / locator)
+        if path != checked_path(destination / "audit-summary.json"):
+            raise ValueError("completed audit summary final locator differs")
+        payload = path.read_bytes()
+        if len(payload) != record["bytes"] or hashlib.sha256(payload).hexdigest() != record["sha256"]:
+            raise ValueError("completed audit summary final result differs")
+        retained = json.loads(payload)
+        expected = {
+            "audit_complete": True,
+            "completed_case_n": 40,
+            "aggregate_checks": 54720,
+            "original_source_id": inputs.source_id,
+            "original_input_id": inputs.input_id,
+            "original_stock_n": len(inputs.codes),
+        }
+        if any(retained.get(name) != value for name, value in expected.items()):
+            raise ValueError("completed audit summary coverage differs")
+        return
+    for name in ("audit-summary.json", "run-receipt.json"):
+        if (output / name).exists():
+            LOGGER.warning("Preserve legacy/orphan completion metadata %s; publish canonical completion directory", output / name)
+    staging = checked_path(output / f".staging-completion-{uuid.uuid4().hex}")
+    staging.mkdir()
+    path = staging / "audit-summary.json"
+    write_json(path, overview)
+    mission = repo_root / "tasks/20261013-pattern-scan/mission.md"
+    receipt = write_run_receipt(
+        staging / "run-receipt.json",
+        run_id=output.name,
+        definition=DEFINITION,
+        parameters={
+            "expected_cases": 40,
+            "expected_comparison_rows": 54720,
+            "original_code": inputs.original_code,
+            "original_source_id": inputs.source_id,
+            "original_input_id": inputs.input_id,
+        },
+        inputs=fingerprint,
+        results={path.name: path},
+        repo_root=repo_root,
+        shared_data=[inputs.shared_record],
+        expected_code=started_code if started_code.get("commit") else None,
+        preregistration=mission if mission.is_file() else None,
+    )
+    receipt["results"][path.name]["path"] = str(destination / path.name)
+    (staging / "run-receipt.json").write_bytes(canonical(receipt))
+    publish_noreplace(staging, destination)
+
+
 def run_candidate_audit(
     inputs: AuditInputs,
     conditions: Path,
@@ -173,8 +240,6 @@ def _run(
         if not path.is_relative_to(conditions) or path != checked_path(conditions / name):
             raise ValueError("original final result escaped its conditions root")
         if path not in verified:
-            import hashlib
-
             payload = path.read_bytes()
             if len(payload) != record["bytes"] or hashlib.sha256(payload).hexdigest() != record["sha256"]:
                 raise ValueError("original final result differs from its receipt")
@@ -182,8 +247,6 @@ def _run(
         return verified[path]
 
     # Selection itself is an original final result, not reselected from outcomes.
-    import json
-
     if min(PATTERNS) != "B1":
         raise ValueError("local audit requires the original lexically first B1 family")
     selected = select_audit_candidates({"B1": json.loads(final_bytes("B1-selection.json"))})
@@ -291,42 +354,14 @@ def _run(
         "completed_case_n": len(cases),
         "aggregate_checks": sum(case["aggregate_checks"] for case in cases),
         "original_stock_n": len(inputs.codes),
+        "original_source_id": inputs.source_id,
+        "original_input_id": inputs.input_id,
         "event_files_written": 0,
         "input_or_intermediate_hashes_added": False,
         "cases": cases,
         "measurement": phase_receipt("local_candidate_audit", before, resource_sample()),
     }
-    write_progress(output / "progress.json", overview)
     if overview["audit_complete"]:
-        path = output / "audit-summary.json"
-        receipt_path = output / "run-receipt.json"
-        if receipt_path.exists():
-            saved = read_json(receipt_path)
-            record = saved.get("results", {}).get(path.name, {})
-            if (
-                saved.get("definition") != DEFINITION
-                or record.get("path") != str(path)
-                or path.stat().st_size != record.get("bytes")
-                or file_digest(path) != record.get("sha256")
-            ):
-                raise ValueError("completed audit summary final result differs")
-        else:
-            write_json(path, overview)
-            write_run_receipt(
-                receipt_path,
-                run_id=output.name,
-                definition=DEFINITION,
-                parameters={
-                    "expected_cases": 40,
-                    "expected_comparison_rows": 54720,
-                    "original_code": inputs.original_code,
-                    "original_source_id": inputs.source_id,
-                    "original_input_id": inputs.input_id,
-                },
-                inputs=fingerprint,
-                results={path.name: path},
-                repo_root=repo_root,
-                shared_data=[inputs.shared_record],
-                expected_code=started_code if started_code.get("commit") else None,
-            )
+        _complete(output, overview, inputs, fingerprint, repo_root, started_code)
+    write_progress(output / "progress.json", overview)
     return overview

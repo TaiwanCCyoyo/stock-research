@@ -317,7 +317,13 @@ No membership/event table is retained. A mismatch publishes no passing case.
 Completed cases are final evidence and resume without re-binding stocks; they
 retain their original audit executor. Interrupted unpublished staging is kept
 for diagnosis. An OS lock prevents two workers writing one audit output.
-Only all 40 cases produce `audit-summary.json` and the top-level final receipt.
+Only all 40 cases publish `completion/audit-summary.json` and its final receipt
+together as one no-replace directory. Existing completed locators may be
+absolute or repo-relative and are read without rewriting their receipts. Legacy
+root-level summary/receipt remnants, even truncated ones, are preserved;
+verified cases can publish the canonical completion without binding stocks or
+reconstructing again. A failed unpublished staging remains diagnostic material,
+and corruption of an already published canonical completion fails explicitly.
 These bounded comparison tables, their receipts and summary belong to the
 study's retained audit evidence, not the maintained shared-data family.
 
