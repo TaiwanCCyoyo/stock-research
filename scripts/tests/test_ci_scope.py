@@ -109,8 +109,6 @@ def test_instructions_and_prose_keep_contracts_without_market_compute(path: str)
         "research_core/json_integrity.py",
         "research_core/jobs.py",
         "uv.lock",
-        "stock-data-downloader",
-        "research_web/package-lock.json",
         "pyproject.toml",
         "tests/conftest.py",
         ".github/dependabot.yml",
@@ -367,33 +365,106 @@ def test_ci_only_exception_does_not_cover_other_workflows_or_mixed_changes() -> 
     assert mixed["full"]
 
 
-@pytest.mark.parametrize("path", ["tasks/20991231-new-study/mission.md", "tasks/20991231-new-study/report.md", "docs/en/new-guide.md"])
-def test_new_prose_document_selects_prose_contracts_without_full_suite(path: str) -> None:
-    plan = ci_scope.make_plan([("A", path)])
-    assert not plan["full"]
-    assert "prose" in plan["domains"]
-    assert {"scripts/tests/test_file_hygiene.py", "scripts/tests/test_agent_instruction_contract.py"} <= set(plan["python_tests"])
-    assert "scripts/tests/test_research_execution_prices.py" not in plan["python_tests"]
+MARKET_TEST = "scripts/tests/test_research_execution_prices.py"
 
 
 @pytest.mark.parametrize(
-    "path",
-    ["tasks/20991231-new-study/run_study.py", "tasks/20991231-new-study/presentation.json", "docs/en/new-registry.json", "research_core/new_notes.md"],
+    ("path", "domain", "required"),
+    [
+        ("tasks/20991231-new-study/mission.md", "task_records", "scripts/tests/test_file_hygiene.py"),
+        ("tasks/20991231-new-study/run_study.py", "task_records", "scripts/tests/test_research_evidence.py"),
+        ("tasks/20991231-new-study/presentation.json", "task_records", "scripts/tests/test_study_presentation.py"),
+        ("docs/en/new-guide.md", "prose", "scripts/tests/test_agent_instruction_contract.py"),
+        ("docs/en/new-registry.json", "prose", "scripts/tests/test_file_hygiene.py"),
+    ],
 )
-def test_new_non_prose_or_code_adjacent_file_keeps_full_fallback(path: str) -> None:
+def test_unreferenced_new_record_selects_record_contracts_without_full_suite(path: str, domain: str, required: str) -> None:
+    plan = ci_scope.make_plan([("A", path)])
+    assert not plan["full"]
+    assert domain in plan["domains"]
+    assert required in plan["python_tests"]
+    assert MARKET_TEST not in plan["python_tests"]
+
+
+def test_task_web_report_adds_frontend_without_full_suite() -> None:
+    plan = ci_scope.make_plan([("A", "tasks/20991231-new-study/web-report/index.html")])
+    assert not plan["full"] and plan["frontend"]
+
+
+def test_new_file_in_owned_area_routes_like_a_modified_file() -> None:
+    for path, domain in (
+        ("research_core/hhhl_new_helper.py", "hhhl"),
+        (".claude/skills/new/SKILL.md", "hooks"),
+        ("tasks/20261013-pattern-scan/new-note.md", "pattern_scan"),
+    ):
+        plan = ci_scope.make_plan([("A", path)])
+        assert not plan["full"], path
+        assert domain in plan["domains"], path
+
+
+@pytest.mark.parametrize("path", ["research_core/new_module.py", "research_core/new_notes.md", "unknown/new.py"])
+def test_unowned_new_code_keeps_full_fallback(path: str) -> None:
     assert ci_scope.make_plan([("A", path)])["full"]
 
 
-def test_new_prose_in_existing_task_keeps_its_domain() -> None:
-    plan = ci_scope.make_plan([("A", "tasks/20261013-pattern-scan/new-note.md")])
+def test_unmapped_test_file_runs_itself_without_full_suite() -> None:
+    plan = ci_scope.make_plan([("M", "tests/test_generate_nightly_report.py")])
     assert not plan["full"]
-    assert {"prose", "pattern_scan"} <= set(plan["domains"])
+    assert "tests/test_generate_nightly_report.py" in plan["python_tests"]
+    assert MARKET_TEST not in plan["python_tests"]
 
 
-def test_new_file_is_routed_only_when_a_domain_names_its_exact_path() -> None:
-    named = ci_scope.make_plan([("A", "scripts/ci_test_domains.json")])
-    assert not named["full"] and "scripts/tests/test_ci_scope.py" in named["python_tests"]
-    assert ci_scope.make_plan([("A", "research_core/new_module.py")])["full"]  # wildcard owner only
+@pytest.mark.parametrize(
+    ("path", "required", "frontend"),
+    [
+        ("stock-data-downloader", "scripts/tests/test_ci_scope.py", False),
+        (".gitmodules", "tests/test_producer_data_root.py", False),
+        ("research_web/package-lock.json", "scripts/tests/test_opportunity_node_runtime.py", True),
+        ("research_web/package.json", "scripts/tests/test_start_research_web.py", True),
+        (".gitignore", "scripts/tests/test_audit_public_readiness.py", False),
+    ],
+)
+def test_links_and_tool_manifests_select_their_readers(path: str, required: str, frontend: bool) -> None:
+    plan = ci_scope.make_plan([("M", path)])
+    assert not plan["full"]
+    assert required in plan["python_tests"]
+    assert plan["frontend"] is frontend
+    assert MARKET_TEST not in plan["python_tests"]
+
+
+def _record_fixture(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, reader: str) -> None:
+    manifest = ci_scope.load_manifest()
+    manifest["test_roots"] = ["scripts/tests"]
+    manifest["reviewed_tests"] = ["scripts/tests/test_old_study.py", "scripts/tests/test_x.py"]
+    manifest["domains"] = {
+        "task_records": {"paths": [], "tests": []},
+        "prose": {"paths": ["docs/*.md"], "tests": []},
+        "x": {"paths": ["research_core/x_*"], "tests": ["scripts/tests/test_x.py"]},
+    }
+    monkeypatch.setattr(ci_scope, "load_manifest", lambda: manifest)
+    for name, text in (
+        ("scripts/tests/test_old_study.py", 'TASK = "tasks/20200101-old-study"\n'),
+        ("scripts/tests/test_x.py", "def test_x(): pass\n"),
+        ("tasks/20200101-old-study/run.py", 'SELF = "20200101-old-study"\n'),
+        (reader, 'SOURCE = "tasks/20200101-old-study/data.json"\n'),
+    ):
+        (tmp_path / name).parent.mkdir(parents=True, exist_ok=True)
+        (tmp_path / name).write_text(text, encoding="utf-8")
+
+
+def test_record_read_by_tests_and_owned_code_selects_those_readers(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    _record_fixture(tmp_path, monkeypatch, "research_core/x_reader.py")
+    plan = ci_scope.make_plan([("M", "tasks/20200101-old-study/mission.md")], root=tmp_path)
+    assert not plan["full"]
+    assert {"task_records", "x"} <= set(plan["domains"])
+    assert plan["python_tests"] == ["scripts/tests/test_old_study.py", "scripts/tests/test_x.py"]
+
+
+def test_record_read_by_unmapped_code_keeps_full_fallback(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    _record_fixture(tmp_path, monkeypatch, "scripts/unmapped_reader.py")
+    plan = ci_scope.make_plan([("M", "tasks/20200101-old-study/mission.md")], root=tmp_path)
+    assert plan["full"]
+    assert any("referenced by unmapped code" in reason for reason in plan["reasons"])
 
 
 def test_dashboard_identity_selects_api_and_launcher_consumers() -> None:
@@ -410,7 +481,7 @@ def test_dashboard_identity_selects_api_and_launcher_consumers() -> None:
 
 
 def test_new_path_and_union_fail_safe() -> None:
-    assert ci_scope.make_plan([("M", "research_web/src/app/App.tsx"), ("A", "docs/new.json")])["full"]
+    assert ci_scope.make_plan([("M", "research_web/src/app/App.tsx"), ("A", "unknown/new.py")])["full"]
     plan = ci_scope.make_plan([("M", "research_core/hhhl_transition.py"), ("M", ".codex/skills/new/SKILL.md")])
     assert not plan["full"]
     assert "scripts/tests/test_hhhl_transition.py" in plan["python_tests"]
