@@ -326,8 +326,13 @@ reconstructing again. A failed unpublished staging remains diagnostic material,
 and corruption of an already published canonical completion fails explicitly.
 These bounded comparison tables, their receipts and summary belong to the
 study's retained audit evidence, not the maintained shared-data family.
+The completed 40-case evidence now lives once in the primary task's
+`evidence/audits-20261021/`; see [retained evidence and locator handoff](audit-evidence.md).
+Original receipts remain byte-identical. Their old absolute paths describe the
+execution location; current readers use the documented archive paths. The
+completed archive is not a continuation output root.
 
-Example, from the delivery worktree (absolute original paths omitted here):
+Historical production example (already completed; not an archive-reading command):
 
 ```powershell
 uv run python -m scripts.audit_pattern_scan_local_candidates --stock-result <original-stock-result> --conditions <completed-B1-conditions> --output <delivery-worktree>/.tmp/pr17-candidate-audit
@@ -359,7 +364,7 @@ The 15-case inspection is explicitly partial, not the live worker's progress or
 the complete 40-case audit. Numerical acquisition/price/indicator and historical
 PIT limitations remain unchanged.
 
-From this checkout, after committing the retained entry point:
+Historical adoption invocation (already recorded; do not repeat for relocation):
 
 ```powershell
 uv run python -m tasks.20261013-pattern-scan.evidence.adopt_bounded_audits_20261021 --results-root .tmp --output .tmp/pr17-bounded-audit-receipt-20261021.json
@@ -367,3 +372,8 @@ uv run python -m tasks.20261013-pattern-scan.evidence.adopt_bounded_audits_20261
 
 The four expected filenames are explicit in the entry point. A pre-existing
 receipt is preserved and refused, and no existing result is rewritten.
+The original four results and receipt have now moved together, retaining their
+`.tmp/` relative layout beneath the [formal evidence root](audit-evidence.md).
+The existing `changed_results` reader accepts that root explicitly. The later
+complete 40-case record is separately retained; the dated 15-case adoption
+never changes into a complete-audit receipt.

@@ -29,6 +29,8 @@ Q2–Q3 保留原固定 top-10 的四組／兩期限與上下界；Q4 的完整�
 Q5–Q6 網頁附錄限原型態 union，landmark 限第 10 日；其他候選、landmark、年代、
 市場與敏感度列仍在上述完整終表，沒有刪除。這些 local-only 表尚未正式引用移交。
 十事件與固定五候選 40-case audit 已完成，只引用既有證據，不再加驗證流程。
+其唯一正式位置、原收據與讀取方式見 [保存的稽核證據](../audit-evidence.md)；
+資料已從 delivery worktree 單份搬到 primary task 的 `evidence/audits-20261021/`。
 
 ## 從已存成果匯出
 
