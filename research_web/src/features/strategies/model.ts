@@ -20,6 +20,29 @@ export function filterStrategies(
         : runs.filter((run) => strategyStatus(run) === status);
 }
 export type TradeFilter = "all" | "gain" | "loss" | "captured" | "open";
+export interface RealizedTradeExtremes {
+    mostProfitable: StudioTrade[];
+    mostLosing: StudioTrade[];
+}
+/** Top closed cycles by saved realized PnL, separated by sign. */
+export function realizedTradeExtremes(
+    trades: StudioTrade[],
+    limit = 5,
+): RealizedTradeExtremes {
+    const closed = trades.filter(
+        (trade) => trade.closeDate !== null && trade.realizedPnl !== null,
+    );
+    return {
+        mostProfitable: closed
+            .filter((trade) => trade.realizedPnl! > 0)
+            .sort((a, b) => b.realizedPnl! - a.realizedPnl!)
+            .slice(0, limit),
+        mostLosing: closed
+            .filter((trade) => trade.realizedPnl! < 0)
+            .sort((a, b) => a.realizedPnl! - b.realizedPnl!)
+            .slice(0, limit),
+    };
+}
 export type TradeSort =
     | "code"
     | "openDate"
