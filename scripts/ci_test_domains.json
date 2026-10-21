@@ -16,7 +16,6 @@
         "*conftest.py",
         "research_core/__init__.py",
         "research_api/__init__.py",
-        "research_api/main.py",
         "research_core/price*",
         "research_core/producer_data.py",
         "research_core/derived_*",
@@ -339,6 +338,11 @@
                 "scripts/tests/test_start_research_web.py"
             ],
             "frontend": true
+        },
+        "research_api_app": {
+            "paths": ["research_api/main.py", "research_api/__main__.py"],
+            "tests": ["scripts/tests/test_windows_viewer_launcher.py"],
+            "consumers": ["opportunity"]
         },
         "annual": {
             "paths": [

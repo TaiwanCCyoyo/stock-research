@@ -477,7 +477,16 @@ def test_dashboard_identity_selects_api_and_launcher_consumers() -> None:
         "scripts/tests/test_start_research_web.py",
         "tests/test_research_api.py",
     } <= set(plan["python_tests"])
-    assert ci_scope.make_plan([("M", "research_api/main.py")])["full"]
+    app = ci_scope.make_plan([("M", "research_api/main.py")])
+    assert not app["full"] and app["frontend"]
+    assert {
+        "tests/test_research_api.py",
+        "tests/test_research_api_security.py",
+        "scripts/tests/test_private_artifacts.py",
+        "scripts/tests/test_windows_viewer_launcher.py",
+    } <= set(app["python_tests"])
+    assert "scripts/tests/test_research_execution_prices.py" not in app["python_tests"]
+    assert ci_scope.make_plan([("M", "research_api/__init__.py")])["full"]
 
 
 def test_new_path_and_union_fail_safe() -> None:
