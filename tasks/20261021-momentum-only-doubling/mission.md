@@ -1,9 +1,10 @@
-# Momentum-only v1：不看型態，只看強勢條件，能解釋多少翻倍機率？
+# Momentum-only v1：不看型態，只看強勢條件，能解釋多少翻倍與大漲機率？
 
 狀態：**mission 草稿，尚未合併；沒有任何本研究的市場計算。**
 本研究承接 [PR17 pattern-scan](../20261013-pattern-scan/mission.md)（TaiwanCCyoyo/stock-research PR 17，
 分支 `codex/pattern-scan-execution`，**未合併**）。PR17 的定義、分箱、母體與標籤全部沿用，
-本 mission 不新增任何條件、型態或標籤定義。
+本 mission 不新增條件或型態定義；唯一新增的是[倍數 × 期限標籤](#結果標籤倍數--期限格子)，
+它在 2 倍時必須與 PR17 標籤逐值相同。
 
 ## 給 owner 的白話摘要
 
@@ -17,6 +18,10 @@
   第一次評估約在 **2028 年 4 月**（252 日版本約 2028 年 10 月）。最嚴格的三條件組合，
   從 PR17 表粗估全市場一年至少二、三十個獨立事件（這是下限，正式計算會給實際年頻率）；
   若一年不夠，就再累積一年，規則不變。單一條件會快得多。
+- **不只看翻倍：** 同一批條件也看 3 倍、5 倍、10 倍，期限半年、一年、兩年，共 12 種，
+  放在同一張表並列比較。主結論仍是 PR17 的「半年／一年翻倍」；其他 10 種用同一套規則判讀，
+  樣本不夠的格子會直接標「分不開」，不硬下結論。兩年 5 倍、10 倍另看「這些大飆股有多少
+  曾符合強勢條件、符合時已經漲了多少、還剩多少」。兩年期的前瞻結果最早約 **2029 年 10 月**。
 - **替 owner 預設的選擇**（理由見下方「預設決定」）：固定 24 組條件、不事後加減；
   `PAT_other_B4`（近期出現跳空突破型態）算「型態」，不算「強勢條件」；
   「沒有型態」只排除 9 個形狀型態，不排除 L1/L2/L3 這三個單根 K 線趨勢旗標
@@ -100,12 +105,38 @@ PR17 B1、H1 各自的 development-half selector 都選出幾乎相同的 atoms�
   2013–2018、2019+。不得刪缺價縮短 H126／H252。
 - **逐日母體：** PR17 S6 `base_eligible`（ordinary reference、60 個連續有效研究價、當日正量、
   前 20 日原始成交額均可知且平均 ≥ NT$1m）。新上市／下市依當日資格進出。
-- **標籤：** `outcomes_for_closes`，t0+1..t0+H 首次 close ≥ 2×anchor 為 hit；完整路徑未 hit
-  且末 close < anchor 為 loss，其餘 flat-win；缺價先發生為 unknown；截尾不進主分母。
+- **標籤：** PR17 `outcomes_for_closes` 的規則（見下方格子），t0+1..t0+H 首次 close ≥ 倍數×anchor
+  為 hit；完整路徑未 hit 且末 close < anchor 為 loss，其餘 flat-win；缺價先發生為 unknown；
+  截尾不進主分母。
   所有每日組別（條件集合、基準、有／無型態）一律使用 **PR17 `C-base-daily` 的 effective-label
   與 `event_main_eligible` 規則**，使組別間唯一差異是成員資格。分母、上下界、零分母 null、
   drop-best-year 與欄位語意照 PR17 [data dictionary](../20261013-pattern-scan/data-dictionary-v1.md)
   （PR17 分支）。
+
+### 結果標籤：倍數 × 期限格子
+
+事前固定 12 個標籤，不事後增減：
+
+| 期限（common sessions） | 2 倍                    | 3 倍 | 5 倍 | 10 倍 |
+| ----------------------- | ----------------------- | ---- | ---- | ----- |
+| H126（約半年）          | **主要**（PR17 原標籤） | 次要 | 次要 | 次要  |
+| H252（約一年）          | **主要**（PR17 原標籤） | 次要 | 次要 | 次要  |
+| H504（約兩年）          | 次要                    | 次要 | 次要 | 次要  |
+
+- **實作：** `outcomes_for_closes` 把 2 倍寫死（`research_core/hhhl_variants_paths.py` 第 83 行），
+  不改它。新增有版本的 `research_core` 標籤函式（`multiple-outcomes.v1`，倍數為參數，一次算完
+  同一期限的四個倍數），缺價先後、截尾與 hit／loss／flat-win 語意與原函式相同。
+  合成測試與 [parity gate](#計算前的對齊檢查parity-gate) 都要求：倍數 2、H126／H252 時與
+  `outcomes_for_closes` **逐列相同**。完成時在 `docs/en/research-program.md` 定位表登記。
+- **截尾：** H504 需要 t0 之後 504 個 sessions，固定日曆上最後可判定的 t0 約在 2024 年 9 月
+  （由日曆決定，報告列出確切日期）；之後的起點全是 censored。H504 的 2019+ 年代因此只涵蓋
+  約 2019-01..2024-09，報告照實標示。
+- **價格錯誤放大：** 5 倍、10 倍對還原因子錯誤、減資與不明跳動特別敏感。H504 的**每一個
+  10 倍 episode 都人工核對**，5 倍 episode 以 seed 20261021 抽 20 個核對：原始 close 路徑、
+  公司行動、因子與 unexplained-jump 標記。核出價格錯誤者記 `audit_price_error`，移出主分母並列
+  筆數，報告同時給移出前後兩版；不因核對結果改其他規則。
+- **集中度：** 所有標籤都加報 `drop_best_stock`（刪 eligible hit 最多的股票，平手取 security_id
+  字典序最小，重算全部 counts），與 `drop_best_year` 並列。大倍數常集中在少數股票與年份。
 
 ### 七個 atoms
 
@@ -168,7 +199,8 @@ PR17 pattern-specific detection 回看 quality overlay 不套到每日 `P`；連
 
 ## 主要估計量與判讀規則（事前固定）
 
-B = `C-base-daily`。對每個領先家族（B1、H1）× horizon（H126、H252），全期間每日口徑：
+B = 同標籤的 `C-base-daily`。對每個領先家族（B1、H1）× 12 個標籤，全期間每日口徑套用同一規則；
+**主結論只看 2 倍 H126／H252 的 4 格**，其餘 20 格是次要判讀，報告分開呈現：
 
 - `share = (Q − B) ／ (P − B)`，以 hit_rate 計；`P − B ≤ 0` 時不計 share。
 - 不確定性：以股票為 cluster 的 bootstrap，2,000 次、seed 20261021、百分位 95% 區間；
@@ -178,32 +210,57 @@ B = `C-base-daily`。對每個領先家族（B1、H1）× horizon（H126、H252�
 | ------------------- | ------------------------------------------------------------------------------------------------- |
 | `inseparable`       | P 或 Q 的**冷卻口徑** known_n < 100 或 distinct_stock_n < 30（PR17 最小樣本原本即以冷卻事件定義） |
 | `no_pattern_lift`   | P − B ≤ 0                                                                                         |
-| `momentum_dominant` | share ≥ 0.5，drop-best-year 後 share 仍 ≥ 0.5，且 (Q − B) 區間下界 > 0                            |
+| `momentum_dominant` | share ≥ 0.5，drop-best-year 與 drop-best-stock 後 share 仍 ≥ 0.5，且 (Q − B) 區間下界 > 0         |
 | `pattern_adds`      | share < 0.5 且 (P − Q) 區間下界 > 0                                                               |
 | `unresolved`        | 其他                                                                                              |
 
 型態分解 `not_evaluated` 時，主判讀改報核心問題：`CORE` 與 `LEAD_B1` 每日 hit_rate 相對
 `C-base-daily` 的倍數與差距、相對 `C-52w-daily` 的差距，各附 stock-cluster 區間；
 不另造 share。年代、分半與 drop-best-year 表全部呈現，但不進判讀規則（避免挑格）。
-不在看到結果後改門檻、改集合或改 cluster 方式。
+次要 20 格中個別出現 `momentum_dominant` 或 `pattern_adds`，不能單獨當結論；報告列出 24 格
+全部判讀，並說明不同倍數／期限之間方向是否一致。
+不在看到結果後改門檻、改集合、改標籤格子或改 cluster 方式。
 
 ## 報表（每列都報，好壞都列）
 
-- 每集合 × horizon × 口徑：`event_n`、`distinct_stock_n`、每股事件中位數／最大值、
+- 每集合 × 標籤（倍數 × 期限）× 口徑：`event_n`、`distinct_stock_n`、每股事件中位數／最大值、
   `known_n`、`unknown_n`、`censored_n`、`hit_n`／`loss_n`／`flat_win_n`、**hit_rate 與 loss_rate 並列**、
   full-calendar 上下界、相對 B 的倍數與差距、相對 `C-52w-daily` 的差距、前 10 檔股票占 hit 比例。
+- **綜合比較表**（報告主表）：每集合一列，12 個標籤的 hit_rate／loss_rate 與相對 B 的倍數並排，
+  加 `C-base-daily`、`C-52w-daily` 兩列基準，讓「翻倍」與「大漲」一眼對照。
 - 分層：全期 + 2010–2012 + 2013–2018 + 2019+；split all／development／cross-check；
-  每格附 `drop_best_year`（PR17 規則：刪 eligible hit 最多的年，平手取早，重算全部 counts）及逐年表。
+  每格附 `drop_best_year`（PR17 規則：刪 eligible hit 最多的年，平手取早，重算全部 counts）、
+  `drop_best_stock` 及逐年表。
 - 0050 市場背景分層不在本研究範圍（PR17 已有），不新增比較。
-- 比較帳：24 集合 × 2 horizon × 2 口徑 × 4 年代 × 3 split，加 drop-best-year 與逐年，
-  均為描述；只有上表 4 個（2 家族 × 2 horizon）判讀格是事前指定的主結論。
+- 比較帳：24 集合 × 12 標籤 × 2 口徑 × 4 年代 × 3 split，加 drop-best-year／drop-best-stock
+  與逐年，均為描述；判讀格 24 個（2 家族 × 12 標籤），其中 4 個是事前指定的主結論。
 - 產出 tidy parquet：`set_summary`、`set_annual`、`decomposition_summary`、`bootstrap_intervals`、
-  `parity_check`、`verdicts`；欄位語意引用 PR17 data dictionary，新增欄位在本 task data contract 說明。
+  `big_runner_coverage`、`audit_episodes`、`parity_check`、`verdicts`（標籤以 `target_multiple`、
+  `horizon` 兩欄識別）；欄位語意引用 PR17 data dictionary，新增欄位在本 task data contract 說明。
+
+## 大飆股覆蓋：兩年 5 倍與 10 倍
+
+大倍數的命中率樣本很少，所以另從「飆股」這一側看：所有大飆股中，強勢條件抓到多少、抓到時
+已經漲了多少。只對 H504 5 倍與 H504 10 倍做（需 PR17 episode 程式，見開始條件 2）。
+
+- **Episode：** 沿用 PR17 Q4 規則，換成本標籤：合格起點 = calendar-full、已知、結果窗口無不明跳動的
+  hit 日；同股相鄰起點差 ≤ 20 鏈式合併；段內起點最低 close 為 anchor（平手取早）；
+  頂點 = anchor 後 1..504 最高 close（平手取早），窗口不完整為 unknown。
+- **觀察窗口：** anchor−20..頂點（含）。比 PR17 的 anchor−20..anchor+40 長，因為兩年飆股的
+  強勢條件（例如 D2 要先漲 1.5 倍）常在起漲很久後才成立；頂點之後出現不算抓到。
+- **每集合報：** matched／unmatched／unknown（PR17 三態規則，已知 match 吸收之後的 unknown）、
+  覆蓋率與上下界、首次符合距 anchor 的 sessions、`close[t0]/anchor − 1`（已漲）、
+  `peak/close[t0] − 1`（剩餘）的中位數／Q25／Q75，以及 episode 數與 distinct 股票數。
+- **隨機對照：** 條件出現越頻繁，覆蓋率自然越高。每集合依其每日成立天數，按 stock × year 從
+  `C-base-daily` 合格日不放回抽同數量日期（seed 20261021，沿用 PR17 `C-base` 隨機對照的抽法與
+  shortfall 記錄），報覆蓋率差距；配額不足記 shortfall，不換股票或年度。
+- 只描述，不設判讀規則；2 倍 H126 的 episode 覆蓋已由 PR17 Q4 處理，不重做。
 
 ## 計算前的對齊檢查（parity gate）
 
-在計算任何條件集合之前，先用同一 generation 重算 `C-base-daily` 與 `C-52w-daily`
-（split=all、era=all、row_kind=full），與上方 PR17 數字逐項比較 `known_n`、`hit_n`、`loss_n`。
+在計算任何條件集合之前，先用同一 generation、**新標籤函式的 2 倍 H126／H252** 重算 `C-base-daily`
+與 `C-52w-daily`（split=all、era=all、row_kind=full），與上方 PR17 數字逐項比較 `known_n`、`hit_n`、
+`loss_n`。這同時檢查資料與新標籤函式；3／5／10 倍與 H504 沒有 PR17 數字可對，只靠合成測試。
 
 - 完全相同：照常進行。
 - 有差異但 known_n 差 ≤ 1% 且 hit_rate 差 ≤ 0.2 個百分點：多半是 PR17 generation 之後的公司行動
@@ -233,6 +290,8 @@ B = `C-base-daily`。對每個領先家族（B1、H1）× horizon（H126、H252�
   （與 PR17 標籤同一價格基礎）；atoms 用凍結值。
     - E1（H126）：累積期最後一筆走完 126 sessions 後（約 2028-04）。
     - E2（H252）：走完 252 sessions 後（約 2028-10）。
+    - E3（H504）：走完 504 sessions 後（約 2029-10）。
+    - 每次評估報該期限的四個倍數；主結論仍只看 2 倍 H126／H252。
     - 每集合冷卻口徑 known_n ≥ 100 且 distinct_stock_n ≥ 30 才判讀；不足記 `insufficient`，
       累積期延長一年、同規則累計再評。
     - 前瞻主結論：`CORE` 與 `LEAD_B1` 每日 hit_rate 減同期 `C-base-daily` 的 stock-cluster 95%
@@ -250,15 +309,18 @@ B = `C-base-daily`。對每個領先家族（B1、H1）× horizon（H126、H252�
 | 讀共用價格＋指標                      | 讀一檔價格＋指標約 1.2 秒；整個 basis 三欄 0.31 秒（2026-10-19）   | 批次讀取 < 2 分鐘             |
 | 逐股 atoms＋資格＋標籤                | 共用更新全市場指標重算 742 秒／2,065 檔（≈0.36 秒／檔，含寫入）    | 1,942 檔約 15–40 分鐘串行     |
 | H 全市場 barrier                      | PR17 四股 barrier 2.39 秒；全市場未量測                            | 數分鐘，unknown               |
-| 集合彙總、逐年、drop-best-year        | PR17 一組 integer feed 15.26 秒（含 92 候選）                      | < 10 分鐘                     |
-| stock-cluster bootstrap               | 由每股 counts 重組，2,000 次                                       | 數分鐘                        |
+| 12 個標籤                             | 每期限一次掃描算四個倍數；原函式為 NumPy 整段位移                  | 每檔 < 0.1 秒，合計數分鐘     |
+| 集合彙總、逐年、drop-best-year／stock | PR17 一組 integer feed 15.26 秒（含 92 候選）；標籤 2→12 約 ×6     | < 60 分鐘                     |
+| 大飆股覆蓋與隨機對照                  | 只限 H504 5／10 倍 episode，數量少                                 | 數分鐘                        |
+| 人工核對 episode                      | 全部 10 倍 + 20 個 5 倍；人工時間，不是計算                        | 依 episode 數，unknown        |
+| stock-cluster bootstrap               | 由每股 counts 重組，2,000 次；24 判讀格                            | 數分鐘到半小時                |
 | 型態分解（PR17 狀態可得）             | 讀約 96 MB int8 陣列                                               | 數分鐘                        |
 | 型態分解（重跑 detector，**不授權**） | PR17 四股／48 targets event binding 721.83 秒                      | 約 97 小時串行                |
 | 記憶體                                | 逐股處理，只保留 int8 bins、標籤與 counts（約 6.6M 列 × 20 bytes） | 主程序 < 1 GB，unknown        |
 | 磁碟                                  | 終表小型 parquet                                                   | < 100 MB                      |
 | 前瞻紀錄一天                          | 每股只讀尾段約 400 sessions 重算 atoms，加當日 H barrier；未量測   | 估數分鐘，unknown；探測時另量 |
 
-核心合計估 30–90 分鐘串行。正式執行前先跑 20 檔探測：PR17 六個 strata
+核心合計估 1–2.5 小時串行（不含人工核對）。正式執行前先跑 20 檔探測：PR17 六個 strata
 （1104、1416、1589、2330、6236、6986）加依 CRC 排序前 14 檔，記錄各階段 wall／CPU、RSS、I/O、
 啟動與序列化時間；量不到者記 unknown。同輸入比較串行與 2、4 workers（PR17 實測設定上限），
 結果須逐值相同，H barrier 與固定股票順序不變。停止規則：外推串行 > 4 小時且有限 workers 實測
@@ -266,8 +328,8 @@ B = `C-base-daily`。對每個領先家族（B1、H1）× horizon（H126、H252�
 
 ## 交付
 
-- `report.md`：開頭一段白話結論，回答「只看強勢條件能解釋多少」，附 4 個判讀格與基準對照表；
-  附錄放全部表。
+- `report.md`：開頭一段白話結論，回答「只看強勢條件能解釋多少」，附 4 個主判讀格、綜合比較表
+  （12 標籤並排）與大飆股覆蓋表；次要 20 格判讀與全部表放附錄。
 - `research_result.json`、`write_run_receipt` 收據（只對最終表計 SHA-256，記錄 generation、
   code commit、參數與本 mission；不對中間檔計 hash）。
 - `data-contract.md` 與 `docs/en/research-program.md` 定位表一列（同一變更）。
@@ -275,13 +337,16 @@ B = `C-base-daily`。對每個領先家族（B1、H1）× horizon（H126、H252�
 
 ## 預設決定（owner 未指定，以下為本 mission 採用值）
 
-| 決定               | 採用                                            | 理由                                                                              |
-| ------------------ | ----------------------------------------------- | --------------------------------------------------------------------------------- |
-| 條件集合           | 6 單一 + 15 兩兩 + `LEAD_B1` + 2 含型態 = 24 組 | 全部兩兩免挑選；三條件只取 PR17 已列的兩組，避免再搜尋                            |
-| `PAT_other_B4`     | 視為型態 atom，含它的集合標 `pattern_involved`  | 它本身就是「最近出現 B4 跳空突破型態」，放進「只有條件」會自相矛盾                |
-| 「沒有型態」的範圍 | 主要排除 9 個形狀家族；12 家族為次要            | L1／L2／L3 是新高、拉回、收復的單根旗標，幾乎等同強勢條件，全部排除會把強勢也拿掉 |
-| 主要口徑           | 每日（與每日基準比）；冷卻只作 PR17 連續性      | owner 指定的兩個基準都是每日口徑，必須同口徑才可比                                |
-| 不確定性           | stock-cluster bootstrap 2,000 次、seed 20261021 | 同一檔連續多日不是獨立樣本，按股票重抽才不會高估信心                              |
-| 判讀門檻           | share ≥ 0.5、最小樣本冷卻 100 事件／30 檔       | 「解釋大部分」取過半；樣本門檻沿用 PR17 selector                                  |
-| 前瞻累積期與評估   | 一年累積，H126 約 2028-04、H252 約 2028-10      | 半年累積幾乎只有個位數事件；一年讓單一及兩兩條件有機會達樣本門檻                  |
-| 型態分解資料來源   | 只用 PR17 發布的原始狀態，不重跑 detector       | 重跑約 97 小時，與本題核心（只看條件）無關，不值得                                |
+| 決定               | 採用                                                                  | 理由                                                                              |
+| ------------------ | --------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| 條件集合           | 6 單一 + 15 兩兩 + `LEAD_B1` + 2 含型態 = 24 組                       | 全部兩兩免挑選；三條件只取 PR17 已列的兩組，避免再搜尋                            |
+| `PAT_other_B4`     | 視為型態 atom，含它的集合標 `pattern_involved`                        | 它本身就是「最近出現 B4 跳空突破型態」，放進「只有條件」會自相矛盾                |
+| 「沒有型態」的範圍 | 主要排除 9 個形狀家族；12 家族為次要                                  | L1／L2／L3 是新高、拉回、收復的單根旗標，幾乎等同強勢條件，全部排除會把強勢也拿掉 |
+| 主要口徑           | 每日（與每日基準比）；冷卻只作 PR17 連續性                            | owner 指定的兩個基準都是每日口徑，必須同口徑才可比                                |
+| 不確定性           | stock-cluster bootstrap 2,000 次、seed 20261021                       | 同一檔連續多日不是獨立樣本，按股票重抽才不會高估信心                              |
+| 判讀門檻           | share ≥ 0.5、最小樣本冷卻 100 事件／30 檔                             | 「解釋大部分」取過半；樣本門檻沿用 PR17 selector                                  |
+| 標籤格子           | 2／3／5／10 倍 × H126／H252／H504 = 12 個；主結論只用 2 倍 H126／H252 | 完整格子免挑選；主結論維持 PR17 原標籤，其餘同規則判讀，樣本不足自動標分不開      |
+| 大飆股覆蓋窗口     | anchor−20..頂點，只做 H504 5／10 倍                                   | 兩年飆股的強勢條件常在起漲很久後才成立，PR17 的 +40 日窗口會漏掉                  |
+| 大倍數核對         | 10 倍全部、5 倍抽 20 個人工核對                                       | 大倍數對價格錯誤最敏感，10 倍數量少可全查                                         |
+| 前瞻累積期與評估   | 一年累積，H126 約 2028-04、H252 約 2028-10、H504 約 2029-10           | 半年累積幾乎只有個位數事件；一年讓單一及兩兩條件有機會達樣本門檻                  |
+| 型態分解資料來源   | 只用 PR17 發布的原始狀態，不重跑 detector                             | 重跑約 97 小時，與本題核心（只看條件）無關，不值得                                |
