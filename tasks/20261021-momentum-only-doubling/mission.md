@@ -2,7 +2,7 @@
 
 狀態：**mission 草稿，尚未合併；沒有任何本研究的市場計算。**
 本研究承接 [PR17 pattern-scan](../20261013-pattern-scan/mission.md)（TaiwanCCyoyo/stock-research PR 17，
-分支 `codex/pattern-scan-execution`，**未合併**）。PR17 的定義、分箱、母體與標籤全部沿用，
+2026-10-21 合併進 `main`，merge commit `5116fa8`）。PR17 的定義、分箱、母體與標籤全部沿用，
 本 mission 不新增條件或型態定義；唯一新增的是[倍數 × 期限標籤](#結果標籤倍數--期限格子)，
 它在 2 倍時必須與 PR17 標籤逐值相同。
 
@@ -74,14 +74,17 @@ PR17 B1、H1 各自的 development-half selector 都選出幾乎相同的 atoms�
 市場計算須同時滿足：
 
 1. owner 合併本 mission。
-2. **PR17 已合併進 `main`**。本研究需要的下列程式目前只在 PR17 分支：
-   `pattern_scan_inputs_v1.daily_qualification`（S6 逐日資格）、
-   `pattern_scan_controls_v1`（`C-52w`、`C-base`、`base_no_pattern`）、
-   `pattern_scan_conditions_v1`（RSI／F／PAT 分箱 inventory）、
-   `pattern_scan_cross_section_v1`（H 的全市場 barrier adapter）、
-   `pattern_scan_indicators_v1`、`pattern_scan_cross_section_v1.recent_pattern_values`。
-   已在 `main` 的核心：`hhhl_variants_daily.calculate_daily_features`（C3／D2／F／G2_limit）、
-   `hhhl_variants_run.cross_section`（H）、`hhhl_variants_paths.outcomes_for_closes`（標籤）、
+2. ~~PR17 合併進 `main`~~ **已滿足**（`5116fa8`）。本研究使用的 PR17 程式現在都在 `main`：
+   `research_core/pattern_scan_inputs_v1.py::daily_qualification`（S6 逐日資格）、
+   `research_core/pattern_scan_controls_v1.py::scan_controls`／`base_no_pattern`（`C-52w`、`C-base`、無型態對照）、
+   `research_core/pattern_scan_conditions_v1.py`（RSI／F／PAT 分箱 inventory）、
+   `research_core/pattern_scan_cross_section_v1.py::cross_section`（H 的全市場 barrier）與
+   `recent_pattern_values`（PAT）、`research_core/pattern_scan_indicators_v1.py::prepare_detector_frame`、
+   `research_core/pattern_scan_daily_values_v1.py::calculate_common_values`、
+   `research_core/pattern_scan_episode_coverage_v1.py`（episode 覆蓋）。
+   既有核心：`hhhl_variants_daily.calculate_daily_features`（C3／D2／F／G2_limit）、
+   `hhhl_variants_run.cross_section`（H）、`hhhl_variants_paths.outcomes_for_closes`（2 倍標籤）、
+   `multiple_outcomes_v1.outcomes_for_targets`（倍數標籤，PR #49 已合併）、
    `hhhl_variants_selection.split_for_code`（CRC 分半）、
    `pattern_scan_cohorts_v1.build_pattern_cohorts`（20 session 冷卻）、
    `pattern_scan_event_outcomes_v1.apply_event_overlay`。
@@ -121,8 +124,7 @@ PR17 B1、H1 各自的 development-half selector 都選出幾乎相同的 atoms�
   截尾不進主分母。
   所有每日組別（條件集合、基準、有／無型態）一律使用 **PR17 `C-base-daily` 的 effective-label
   與 `event_main_eligible` 規則**，使組別間唯一差異是成員資格。分母、上下界、零分母 null、
-  drop-best-year 與欄位語意照 PR17 [data dictionary](../20261013-pattern-scan/data-dictionary-v1.md)
-  （PR17 分支）。
+  drop-best-year 與欄位語意照 PR17 [data dictionary](../20261013-pattern-scan/data-dictionary-v1.md)。
 
 ### 結果標籤：倍數 × 期限格子
 
@@ -135,7 +137,7 @@ PR17 B1、H1 各自的 development-half selector 都選出幾乎相同的 atoms�
 | H504（約兩年）          | 次要                    | 次要 | 次要 | 次要  |
 
 - **實作：** `outcomes_for_closes` 把 2 倍寫死（`research_core/hhhl_variants_paths.py` 第 83 行），
-  不改它。新增有版本的 `research_core` 標籤函式（`multiple-outcomes.v1`，倍數為參數，一次算完
+  不改它。改用已合併的 `research_core/multiple_outcomes_v1.py::outcomes_for_targets`（`multiple-outcomes.v1`，PR #49，倍數為參數，一次算完
   同一期限的四個倍數），缺價先後、截尾與 hit／loss／flat-win 語意與原函式相同。
   合成測試與 [parity gate](#計算前的對齊檢查parity-gate) 都要求：倍數 2、H126／H252 時與
   `outcomes_for_closes` **逐列相同**。完成時在 `docs/en/research-program.md` 定位表登記。
