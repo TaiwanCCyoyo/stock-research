@@ -12,7 +12,7 @@ import stat
 import sys
 import uuid
 from pathlib import Path, PurePosixPath, PureWindowsPath
-from typing import Any
+from typing import IO, Any
 
 
 def safe_path(path: Path) -> Path:
@@ -36,6 +36,35 @@ def relative_name(value: str) -> str:
     if any(not part for part in value.split("/")):
         raise ValueError(f"unsafe artifact name: {value}")
     return value
+
+
+def try_os_lock(handle: IO[bytes]) -> bool:
+    """Take an exclusive OS lock on the first byte; the OS drops it when the process ends."""
+    handle.seek(0)
+    try:
+        if sys.platform == "win32":
+            import msvcrt
+
+            msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
+        else:
+            import fcntl
+
+            fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        return False
+    return True
+
+
+def release_os_lock(handle: IO[bytes]) -> None:
+    handle.seek(0)
+    if sys.platform == "win32":
+        import msvcrt
+
+        msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+    else:
+        import fcntl
+
+        fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
 
 
 def _linux_publish_noreplace(source: Path, destination: Path) -> None:
@@ -69,6 +98,24 @@ def publish_noreplace(source: Path, destination: Path) -> None:
         _linux_publish_noreplace(source, destination)
     else:
         raise OSError(errno.ENOTSUP, "atomic no-replace publication unavailable", str(destination))
+
+
+def relocate_noreplace(source: Path, destination: Path) -> None:
+    """Transfer owned files within one filesystem without copying or replacing.
+
+    Unlike final publication, a journaled handoff can cross parent directories.
+    The native no-replace operation still fails closed and never falls back to
+    copy/delete across filesystems.
+    """
+    source, destination = map(safe_path, (source, destination))
+    if source.stat().st_dev != destination.parent.stat().st_dev:
+        raise OSError(errno.EXDEV, "single-copy handoff requires the same filesystem", str(destination))
+    if sys.platform == "win32":
+        os.rename(source, destination)
+    elif sys.platform == "linux":
+        _linux_publish_noreplace(source, destination)
+    else:
+        raise OSError(errno.ENOTSUP, "atomic no-replace handoff unavailable", str(destination))
 
 
 def publish_new_directory(destination: Path, files: dict[str, bytes]) -> None:
@@ -112,6 +159,31 @@ def write_json(path: Path, value: Any) -> None:
         stream.write(canonical(value))
         stream.flush()
         os.fsync(stream.fileno())
+
+
+def publish_generated_bytes(path: Path, payload: bytes, *, scratch: Path) -> None:
+    """Atomically publish generated metadata; retain interrupted scratch for its owner.
+
+    Scratch must be outside the payload tree at the caller's chosen location.
+    A fresh file on every attempt lets a crash leave partial bytes without making
+    the intended destination visible or preventing a retry. Existing destinations
+    are never replaced. The caller owns scratch retirement after its handoff.
+    """
+    path, scratch = map(safe_path, (path, scratch))
+    if path.exists():
+        raise FileExistsError(errno.EEXIST, "generated destination already exists", str(path))
+    scratch.mkdir(parents=True, exist_ok=True)
+    if scratch.stat().st_dev != path.parent.stat().st_dev:
+        raise OSError(errno.EXDEV, "generated metadata requires the same filesystem", str(path))
+    staged = safe_path(scratch / f"{uuid.uuid4().hex}.metadata")
+    with staged.open("xb") as stream:
+        if stream.write(payload) != len(payload):
+            raise OSError("incomplete generated metadata write")
+        stream.flush()
+        os.fsync(stream.fileno())
+    if staged.stat().st_size != len(payload) or file_digest(staged) != hashlib.sha256(payload).hexdigest():
+        raise ValueError("generated metadata differs before publication")
+    relocate_noreplace(staged, path)
 
 
 def read_json(path: Path, *, max_bytes: int = 8_000_000) -> dict[str, Any]:

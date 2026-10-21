@@ -53,6 +53,8 @@ import pyarrow.parquet as pq
 
 from research_core import price_basis, technical_daily_v1
 from research_core.artifact_store import file_digest, object_digest, publish_noreplace, read_json, write_json
+from research_core.artifact_store import release_os_lock as _release_os_lock
+from research_core.artifact_store import try_os_lock as _try_os_lock
 from research_core.live_producer import read_stable, readonly_sqlite
 from research_core.run_receipt import InputSpec, assert_inputs_unchanged, code_identity, fingerprint_inputs
 from research_core.shared_data import shared_data_root
@@ -298,35 +300,6 @@ def held_generations(root: Path | None = None) -> dict[str, list[dict[str, Any]]
 
 
 HOLDS_LOCK_WAIT_SECONDS = 120.0
-
-
-def _try_os_lock(handle: IO[bytes]) -> bool:
-    """Take an exclusive OS lock on the first byte; the OS drops it when the process ends."""
-    handle.seek(0)
-    try:
-        if sys.platform == "win32":
-            import msvcrt
-
-            msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
-        else:
-            import fcntl
-
-            fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
-    except OSError:
-        return False
-    return True
-
-
-def _release_os_lock(handle: IO[bytes]) -> None:
-    handle.seek(0)
-    if sys.platform == "win32":
-        import msvcrt
-
-        msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
-    else:
-        import fcntl
-
-        fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
 
 
 @contextmanager

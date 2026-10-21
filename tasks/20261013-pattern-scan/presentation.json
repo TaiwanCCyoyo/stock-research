@@ -2,13 +2,13 @@
     "schema": "study-presentation.v1",
     "task_id": "20261013-pattern-scan",
     "publication": null,
-    "section": "design",
+    "section": "method",
     "report_path": "report.md",
-    "report_sha256": "2f6d2287b0cb80e37f056d488a52447db0e6e7ef5cf760d6e20b073407f40da8",
-    "title": "Pattern-scan v1 準備報告",
-    "summary": "**研究尚未執行；本次完成handoff盤點、mission提案、原始來源覆蓋與snapshot準備，\n以及pure helper、獨立cohort與event overlay。**",
-    "web_report": false,
-    "web_report_reason": "此登錄引用的已提交報告仍是研究準備狀態，尚未提供研究結果閱讀頁；不代表其他工作目錄的後續進度。",
+    "report_sha256": "2d8b03c490e0b4672bd81846afd588415b12b6a687aaa1e466795f2a055d764c",
+    "title": "Pattern-scan v1 階段報告",
+    "summary": "**2026-10-21：研究已執行，尚未全部完成。** 主要成果入口是\n[HTML 報告](web-report/index.html)，不是以下歷史準備紀錄。\n\n- Q1：12 家族全部完成；首頁以同一個全體、無額外條件口徑，比較 C-base-daily 倍數、C-base-all 差距／K 與虧損率。\n- Q2–Q6：B1、H1 已完成；B2 原程序計算中，其餘家族接續。不重跑已完成工作。",
+    "web_report": true,
+    "web_report_reason": null,
     "shared_data": [],
-    "shared_data_reason": "僅呈現目前 main 已提交的準備報告，不代表其他 worktree 或未提交證據的後續研究進度；此報告未發布全市場研究版本。"
+    "shared_data_reason": "此頁只讀 PR17 沿用原輸入產生的既有終表；完整研究與正式資料引用移交尚未完成。歷史共用 generation 僅為價格等價交接參考，不代表本次報告重新讀取共用家族。"
 }

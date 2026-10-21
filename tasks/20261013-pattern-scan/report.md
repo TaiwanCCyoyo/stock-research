@@ -1,14 +1,39 @@
-# Pattern-scan v1 準備報告
+# Pattern-scan v1 階段報告
 
-**研究尚未執行；本次完成handoff盤點、mission提案、原始來源覆蓋與snapshot準備，
-以及pure helper、獨立cohort與event overlay。** [逐項狀態](handoff-status.md)保留每項證據與未完成限制。
+**2026-10-21：研究已執行，尚未全部完成。** 主要成果入口是
+[HTML 報告](web-report/index.html)，不是以下歷史準備紀錄。
+
+- Q1：12 家族全部完成；首頁以同一個全體、無額外條件口徑，比較 C-base-daily 倍數、C-base-all 差距／K 與虧損率。
+- Q2–Q6：B1、H1 已完成；B2 原程序計算中，其餘家族接續。不重跑已完成工作。
+- 候選：沿用固定 top-10，重點是型態減去同條件排除型態的百分點差距，並列包含型態的 C-base-all 與各自 K。小樣本及已暴露 cross-check 不支持直接宣稱策略優勢。
+- Q4：原型態及各候選逐列並列自己的同配額 random；其他控制、上下界、未知與時機留在附錄。
+- 稽核：十事件及固定五個 B1 候選 40/40 cases 已完成。引用[既有完成確認](https://github.com/TaiwanCCyoyo/stock-research/pull/17#issuecomment-6316134172)，不再加新稽核、收據或分批檢查。
+- 待完成：其餘家族終表、全家族判讀／final handoff，以及 iframe 實際下載人工驗收。全研究完成前不 release hold，不清理原始執行目錄／Q1。
+
+Owner 指定 B2 後依 B4 → B3 → L1 → P1 → 其餘排序，不改定義、不略過家族。
+交付程式的新呼叫預設已採用此順序；目前執行中的 worker 在啟動時就固定整個 targets tuple，
+沒有熱切換入口，因此尚未套用到該程序。遵守不中斷／不重啟的指示，保留原程序；
+任何需要停止它才能切換的處理留給 owner 決定，不自行注入或另開運算。
+
+Claude 以剩餘約十家族、每家族約 16 小時估算約 6–7 日；這是工作量級估計，
+不是承諾完成時間。不同家族耗時與既有 48 小時程序上限可能影響實際日程。
+
+本次只整理既有終表的呈現。Q2–Q6 沿用原輸入、原選取與定義，沒有接入更新的共用 generation。
+來源表、checkpoint、原收據與全部既有明細繼續保留，沒有資料刪除、共用區寫入或正式部署。
+價格品質、公司行動、reference industry 非 PIT、多重候選與事件重疊等原限制仍適用。
+
+<details>
+<summary>歷史準備紀錄（截至 2026-10-13；不是目前研究狀態）</summary>
+
+當時完成 handoff 盤點、mission 提案、原始來源覆蓋與 snapshot 準備，
+以及 pure helper、獨立 cohort 與 event overlay。[逐項狀態](handoff-status.md)保留當時證據與限制。
 
 已確認raw來源有2010-01-04..2026-10-12的6,653,745列／2,076代碼／4,110日期；
 不是合格股票數或完整還原價認證。既有catalog七筆中，唯一2010起complete是0050背景；
 本次全市場universe/prices/pivots/features/patterns/labels/episodes尚未發布。
 期間不得縮成2019；之前任務固定2019並不證明搬遷造成資料範圍遺失。
 
-## Q1–Q6：目前沒有研究結論
+## Q1–Q6：準備階段當時的待辦
 
 | 問題 | 尚需產出                                                               |
 | ---- | ---------------------------------------------------------------------- |
@@ -73,3 +98,5 @@ Owner 2026-10-13明確要求沿用handoff已列型態，H1=HHHL v4、L3=legacy F
 本PR準備可轉ready接正常CI／review，完整研究仍依合併後execution plan。
 本次只改文件；既有196 focused結果及v1–v3 source pins保持原驗證身份，
 正常完整hosted CI依最新ready HEAD另核實，不能把draft 95測試當full suite。
+
+</details>
