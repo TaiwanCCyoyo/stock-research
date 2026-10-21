@@ -224,8 +224,13 @@ export interface StudioHistoryItem {
     draftStatus?: string | null;
     summarySource?: "formal-report" | "presentation-metadata" | "mission";
     sourceNote?: string | null;
+    webReportHref?: string | null;
+    webReportReason?: string | null;
+    sharedData?: string[];
+    sharedDataReason?: string | null;
 }
 export interface StudioHistory {
+    historyProjection?: string;
     source?: SnapshotSource;
     schema: "saved-research-history.v1";
     historyComplete: false;
