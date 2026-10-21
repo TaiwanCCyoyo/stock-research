@@ -367,6 +367,29 @@ def test_ci_only_exception_does_not_cover_other_workflows_or_mixed_changes() -> 
     assert mixed["full"]
 
 
+@pytest.mark.parametrize("path", ["tasks/20991231-new-study/mission.md", "tasks/20991231-new-study/report.md", "docs/en/new-guide.md"])
+def test_new_prose_document_selects_prose_contracts_without_full_suite(path: str) -> None:
+    plan = ci_scope.make_plan([("A", path)])
+    assert not plan["full"]
+    assert "prose" in plan["domains"]
+    assert {"scripts/tests/test_file_hygiene.py", "scripts/tests/test_agent_instruction_contract.py"} <= set(plan["python_tests"])
+    assert "scripts/tests/test_research_execution_prices.py" not in plan["python_tests"]
+
+
+@pytest.mark.parametrize(
+    "path",
+    ["tasks/20991231-new-study/run_study.py", "tasks/20991231-new-study/presentation.json", "docs/en/new-registry.json", "research_core/new_notes.md"],
+)
+def test_new_non_prose_or_code_adjacent_file_keeps_full_fallback(path: str) -> None:
+    assert ci_scope.make_plan([("A", path)])["full"]
+
+
+def test_new_prose_in_existing_task_keeps_its_domain() -> None:
+    plan = ci_scope.make_plan([("A", "tasks/20261013-pattern-scan/new-note.md")])
+    assert not plan["full"]
+    assert {"prose", "pattern_scan"} <= set(plan["domains"])
+
+
 def test_new_file_is_routed_only_when_a_domain_names_its_exact_path() -> None:
     named = ci_scope.make_plan([("A", "scripts/ci_test_domains.json")])
     assert not named["full"] and "scripts/tests/test_ci_scope.py" in named["python_tests"]
@@ -387,7 +410,7 @@ def test_dashboard_identity_selects_api_and_launcher_consumers() -> None:
 
 
 def test_new_path_and_union_fail_safe() -> None:
-    assert ci_scope.make_plan([("M", "research_web/src/app/App.tsx"), ("A", "docs/new.md")])["full"]
+    assert ci_scope.make_plan([("M", "research_web/src/app/App.tsx"), ("A", "docs/new.json")])["full"]
     plan = ci_scope.make_plan([("M", "research_core/hhhl_transition.py"), ("M", ".codex/skills/new/SKILL.md")])
     assert not plan["full"]
     assert "scripts/tests/test_hhhl_transition.py" in plan["python_tests"]

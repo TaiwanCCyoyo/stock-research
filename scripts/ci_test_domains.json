@@ -35,6 +35,7 @@
         "research_core/json_integrity.py"
     ],
     "full_path_exceptions": [".github/workflows/ci.yml"],
+    "new_path_patterns": ["docs/*.md", "tasks/*.md"],
     "domains": {
         "research_data": {
             "paths": [
@@ -284,6 +285,7 @@
             "paths": [
                 "docs/*.md",
                 "docs/*.rst",
+                "tasks/*.md",
                 "README.md",
                 "CONTRIBUTING.md",
                 "CHANGELOG.md",
