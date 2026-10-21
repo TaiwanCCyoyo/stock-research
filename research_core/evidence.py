@@ -25,16 +25,24 @@ class EvidenceError(ValueError):
 
 
 def finite_json(value: Any) -> None:
+    """Validate JSON data; excessive nesting is invalid evidence, not a crash."""
+    try:
+        _finite_json(value)
+    except RecursionError as error:
+        raise EvidenceError("JSON nesting exceeds supported depth") from error
+
+
+def _finite_json(value: Any) -> None:
     if isinstance(value, float) and not math.isfinite(value):
         raise EvidenceError("non-finite JSON number")
     if isinstance(value, dict):
         for key, item in value.items():
             if not isinstance(key, str):
                 raise EvidenceError("JSON object keys must be strings")
-            finite_json(item)
+            _finite_json(item)
     elif isinstance(value, list):
         for item in value:
-            finite_json(item)
+            _finite_json(item)
     elif value is not None and not isinstance(value, (str, bool, int, float)):
         raise EvidenceError("unsupported JSON value")
 
@@ -50,6 +58,8 @@ def read_json(path: Path) -> Any:
 
     try:
         value = json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=unique_object)
+    except RecursionError as error:
+        raise EvidenceError("JSON nesting exceeds supported depth") from error
     except (OSError, ValueError) as error:
         raise EvidenceError(f"cannot read JSON {path}: {error}") from error
     finite_json(value)

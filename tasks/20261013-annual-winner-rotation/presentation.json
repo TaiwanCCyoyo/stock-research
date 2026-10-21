@@ -1,0 +1,13 @@
+{
+    "schema": "study-presentation.v1",
+    "task_id": "20261013-annual-winner-rotation",
+    "publication": "completion-v2",
+    "section": "method",
+    "report_path": "publications/completion-v2/report.md",
+    "report_sha256": "1274660ed63005c29489f35ed1343cd9b22f0cd341bd9575fed4e5c8a8a9db05",
+    "title": "前一年領先股輪動：持有期補全 v2",
+    "summary": "2011–2025 的 15 個完整持有年度已全部可計。固定沿用 v1 選出的股票與買賣日，扣成本後總報酬在兩種認股權情境都低於連續持有 0050。這是原選股序列的探索性補全，不是重排全市場。",
+    "web_report": true,
+    "shared_data": [],
+    "shared_data_reason": "目錄中的 annual-rotation partial 版本尚未標示與 completion-v2 的等價關係；本登錄不指定推薦版本。"
+}

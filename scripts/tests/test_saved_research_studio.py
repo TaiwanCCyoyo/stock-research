@@ -49,6 +49,76 @@ def test_request_mode_mismatch_rejects_before_reading_private_package(tmp_path: 
         assert "mode mismatch" in response.json()["detail"]
 
 
+@pytest.mark.parametrize(
+    ("field", "invalid"),
+    [
+        ("sharedDataReason", {}),
+        ("sharedDataReason", []),
+        ("webReportReason", {}),
+        ("webReportReason", []),
+        ("sharedData", "adjusted-daily-v1"),
+        ("sharedData", ["../outside"]),
+        ("sharedData", [{}]),
+        ("webReportHref", "https://example.com/report"),
+        ("webReportHref", "#report/task#extra"),
+        ("webReportHref", "#report/task with spaces"),
+        ("webReportHref", {}),
+    ],
+)
+def test_private_history_optional_presentation_fields_fail_at_reader_boundary(tmp_path: Path, field: str, invalid: object) -> None:
+    path = tmp_path / "studio.json"
+    value = synthetic_studio_package()
+    value["researchHistory"]["items"] = [
+        {
+            "id": "20261020-synthetic",
+            "date": "2026-10-20",
+            "title": "Synthetic",
+            "status": "Not evaluated",
+            "evidenceState": "synthetic",
+            "conclusion": "",
+            "originalSummary": "",
+            "reportPath": None,
+            "reviewConfirmed": False,
+            "registryEventIds": [],
+            field: invalid,
+        }
+    ]
+    path.write_text(json.dumps(value), encoding="utf-8")
+    with pytest.raises(StudioError, match=field):
+        read_studio_package(path)
+
+
+@pytest.mark.parametrize(
+    "optional",
+    [
+        {},
+        {"sharedDataReason": None, "sharedData": [], "webReportHref": None, "webReportReason": None},
+        {"webReportReason": "Reading page deferred; saved report is preserved."},
+        {"sharedDataReason": "Saved summary", "sharedData": ["adjusted-daily-v1"], "webReportHref": "#report/20261020-synthetic"},
+    ],
+)
+def test_private_history_optional_presentation_fields_preserve_legacy_compatibility(tmp_path: Path, optional: dict[str, object]) -> None:
+    path = tmp_path / "studio.json"
+    value = synthetic_studio_package()
+    value["researchHistory"]["items"] = [
+        {
+            "id": "20261020-synthetic",
+            "date": "2026-10-20",
+            "title": "Synthetic",
+            "status": "Not evaluated",
+            "evidenceState": "synthetic",
+            "conclusion": "",
+            "originalSummary": "",
+            "reportPath": None,
+            "reviewConfirmed": False,
+            "registryEventIds": [],
+            **optional,
+        }
+    ]
+    path.write_text(json.dumps(value), encoding="utf-8")
+    assert read_studio_package(path)["researchHistory"] == value["researchHistory"]
+
+
 def test_snapshot_metadata_stays_bound_to_cached_response(tmp_path: Path) -> None:
     package = synthetic_studio_package()
     package["asOf"] = "2023-12-29"

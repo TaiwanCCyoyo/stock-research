@@ -1,5 +1,9 @@
 # Pattern-scan 執行順序與邊界
 
+2026-10-15：PR14 已合併、PR17 接手已同步最新 main。
+新執行順序與資料政策見 [live-input v2](execution-live-v2.md)；以下為 mission
+準備時的歷史計畫，當中的輸入複製／封存要求不再適用新執行。
+
 本次只有mission準備與純合成 helper；市場計算需本mission owner merge。
 沿用已保留的 D:/Project/stock-research/.worktrees/research-data-entry，
 新branch codex/pattern-scan-mission從origin/main 061cde2開始，原PR12分支與producer

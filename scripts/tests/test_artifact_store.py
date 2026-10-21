@@ -133,3 +133,29 @@ def test_new_directory_is_published_whole_and_never_merged_into_an_existing_one(
     with pytest.raises(ValueError, match="unsafe artifact name"):
         store.publish_new_directory(tmp_path / "v3", {"../escape": b"x"})
     assert not (tmp_path / "v3").exists()
+
+
+def test_generated_metadata_is_verified_before_visibility_and_never_replaced(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    target = tmp_path / "payload/metadata.json"
+    target.parent.mkdir()
+    scratch = tmp_path / "owned-scratch"
+    original = store.relocate_noreplace
+    payload = b'{"complete":true}'
+    observed: list[Path] = []
+
+    def publish(source: Path, destination: Path) -> None:
+        assert source.parent == scratch and destination == target
+        assert source.read_bytes() == payload and not target.exists()
+        observed.append(source)
+        original(source, destination)
+
+    monkeypatch.setattr(store, "relocate_noreplace", publish)
+    store.publish_generated_bytes(target, payload, scratch=scratch)
+    assert len(observed) == 1 and not observed[0].exists()
+    assert target.read_bytes() == payload and list(scratch.iterdir()) == []
+    before = target.stat()
+    with pytest.raises(FileExistsError):
+        store.publish_generated_bytes(target, b"different", scratch=scratch)
+    after = target.stat()
+    assert (before.st_dev, before.st_ino, before.st_mtime_ns) == (after.st_dev, after.st_ino, after.st_mtime_ns)
+    assert target.read_bytes() == payload and list(scratch.iterdir()) == []

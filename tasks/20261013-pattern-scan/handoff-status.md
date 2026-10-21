@@ -1,5 +1,15 @@
 # Handoff逐項盤點：2026-10-13
 
+2026-10-19 接續政策：先讀 [shared-price continuation v4 的最新政策](execution-shared-v4.md#current-continuation-policy-owner-update-2026-10-19)。
+PR #34 合併前不執行 `update`；Q2–Q6 沿用原衍生表，完成後執行
+`release --holder pr17-pattern-scan`。新寫的階段依 owner 決定只雜湊最終成果，
+不對中間檔做雜湊、逐檔收據／manifest 或階段間重複驗證；既有紀錄與完成成果保留。
+
+2026-10-15 最新接續：PR14 mission 已合併；新 session 接手原 PR17 branch/worktree，
+合併 main `758348df` 為 `0a8dc6f`。接手安全檢查、外置 root 與新資料政策見
+[live-input v2](execution-live-v2.md)。以下準備盤點保留歷史狀態；完整市場、正式新版本、
+Q1–Q6、獨立事件／組合驗算及最終報告仍未完成，不重問 H1／L3 定義。
+
 基準：main 061cde2（PR #12合併）；原本機handoff的固定bytes見input pins。
 「完成」僅在這一列宣稱的範圍；「部分」不能視為完成研究。
 初版40個合成測試補selection/cooldown/episode/path；新增19個cohort及42個event overlay cases，

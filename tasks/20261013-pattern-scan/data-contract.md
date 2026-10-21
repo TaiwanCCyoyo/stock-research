@@ -1,6 +1,17 @@
 # Pattern-scan v1 資料與存取契約
 
-目前可直接使用的是純函數，不是正式market pattern-scan dataset：
+新 PR17 執行的保留與發布規則以 owner 2026-10-16 核准的
+[execution / retention v3](execution-retention-v3.md) 為準：ZSTD、僅保留彙總與必要稽核、
+單份正式移交後立即清理；下列逐筆永久存取承諾保留為歷史契約，不適用新成果。
+
+新執行入口：[`pattern-scan live-input execution.v2`](execution-live-v2.md)。
+它沿用本頁全部研究欄位／分母，改以 live 唯讀來源、input fingerprint 及
+Git code identity 執行；舊 bundle／manifest reader、packets 與 source archives 保留。
+
+以下是保留的 preparation public APIs。完整 fixed-input runner 與讀取／封存／續跑規格
+已接線，見 [execution contract](execution-contract.md)；各彙總欄位與分母見
+[data dictionary](data-dictionary-v1.md)。目前正在代表樣本的資源預檢，尚無正式
+full-period pattern-scan completion 或 Q1–Q6 市場結論。
 
 - research_core.pattern_scan_selection_v1.select_pattern_candidates：
   重用原Atom／SelectionEvent／CRC／counts／candidate編碼，新增100/30、8單項、
@@ -24,17 +35,33 @@
 - describe_price_path：只描述caller一股aligned closes，unknown不當false，
   完整未缺價窗才報max/min/first threshold與互斥類別；hit outcome另欄，不代表策略。
 
-所有新增函式不讀市場／producer，亦不更動舊selection/episode/evidence。
+上述 pure APIs 不讀市場／producer，亦不更動舊selection/episode/evidence。
 [mission](mission.md)固定public caller規格；[input pins](params/input-pins-v1.json.gz)
 是UTF-8 JSON的gzip，包含原handoff、原始footers/date-key projection、physical snapshot
 identity及catalog snapshot。解壓取得metadata，不需要Library。source/SQLite main-only
 observations與frozen snapshot身份分開；不是跨來源PIT認證。
 
-## 後續正式資料（尚未生成）
+## 正式資料的發布與固定存取（完整研究尚未完成）
 
 公用資料由primary research_data/catalog固定版本取得，底層research_cache或
 既有task dataset原位保存；外部STOCK_RESEARCH_DATA_ROOT，不copy/link共享版本。
 fixed-input snapshots是可變producer來源的物理副本，與共享衍生資料不是同一層。
+
+本次 runner 的 universe/prices/pivots/features/patterns/labels/market bundles，以及
+event-outcomes 與 episodes，使用 `research_cache/shared-bundles-v1/<kind>/<data-id>/<version>/`。
+研究 report bundle 使用 primary `tasks/20261013-pattern-scan/datasets/<data-id>/<version>/`。
+Catalog manifest 的明示 scope/path 才是存取依據，不由上述範例猜測檔名。
+`DataCatalog.get_verified(data_id, version_id, manifest_sha256=...)` 在 process 初次使用時
+驗證一次並回傳 manifest；caller 留存 descriptor，每次解碼核對實際同一 buffer。
+不存在 latest、worktree copies、filesystem links 或 silent recomputation。
+
+Git 中可交付明示 allowlist 的研究 aggregate reading copies，不能交付上述共享
+inputs／features 的 worktree 副本。`pattern_scan_transport_v1.export_aggregates`
+逐表保留原始 Parquet 全部列，以既有 `binary-chunks.v1` 的 480 KiB 分塊保存；
+manifest 記錄 source/input IDs、原始 bytes/SHA/rows 與各 chunk descriptor。
+`read_aggregate` 核對 inventory、重建 buffer 的 SHA/rows，再用同一 buffer 解碼，
+支援既有 SR-a codec。逐筆 observations、audits、價格與 holding-context 名稱被拒絕。
+此工具的合成驗證不代表本研究已有正式彙總結果。
 
 正式manifest必須包含definition_id、input/source/raw-byte implementation hashes、
 calendar、price-basis及quality/missing/warmup/availability policy、參數、runtime、
@@ -69,8 +96,9 @@ peak/timing各別known_n遵mission；不以缺峰值或未知detector假裝沒�
 Union同日member的完整metadata另存，representative按mission固定subtype順序，不按後來結果挑。
 Q1 subtype與union都有獨立的事件／label母體，不相加，不把union冷卻後樣本當子型全部事件。
 
-event-outcomes.parquet隨`patterns/<pattern-id>/<version>/`固定发布，與patterns manifest
-一起登記catalog。每bundle只引用唯一base-label version+manifest pin；改引用建立新bundle版本，
+Event-outcomes 使用獨立、固定的 `pattern-scan-event-outcomes-full-2010-v1` catalog entry，
+按 stock/target 分檔並保留 event_id/horizon 鍵；不假設單一 event-outcomes.parquet 檔名。
+每bundle只引用唯一base-label version+manifest pin；改引用建立新bundle版本，
 舊base及overlay不覆寫。reader驗foreign key的stock/t0/horizon及固定版本，mismatch停止。
 同日B1長回看有jump、L1短回看無jump可引用同一base hit；兩個event鍵同時存在，
 B1 effective unknown／主分母0，L1 effective hit／主分母1。不能在共用labels表存B1的理由。

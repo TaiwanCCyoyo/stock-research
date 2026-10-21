@@ -21,6 +21,7 @@ from scripts import ci_scope
         ("research_core/patterns/hhhl/v4/sources.zip", "hhhl", "scripts/tests/test_hhhl_v4_source.py"),
         ("research_core/patterns/hhhl/sources.json", "hhhl", "scripts/tests/test_pattern_sources.py"),
         ("tasks/20261010-hhhl-v4-probability/sources/hhhl_rule_v4.zip", "hhhl", "scripts/tests/test_validate_hhhl_v4_source.py"),
+        ("research_core/multiple_outcomes_v1.py", "hhhl", "scripts/tests/test_multiple_outcomes_v1.py"),
         ("research_core/feature_atlas_features.py", "atlas", "scripts/tests/test_build_feature_discrimination_atlas.py"),
         ("research_core/sector_waves.py", "sector", "scripts/tests/test_sector_wave_catalog_io.py"),
         ("research_core/market_context.py", "market_context", "scripts/tests/test_market_context.py"),
@@ -43,7 +44,7 @@ def test_domain_and_downstream_union(path: str, domain: str, consumer: str) -> N
     [
         (
             path,
-            {"market_context", "method_environment", "sector", "opportunity", "research_data", "annual"},
+            {"market_context", "method_environment", "sector", "opportunity", "research_data", "annual", "pattern_scan"},
             {
                 "scripts/tests/test_method_environment_runner.py",
                 "scripts/tests/test_sector_wave_catalog_io.py",
@@ -55,8 +56,8 @@ def test_domain_and_downstream_union(path: str, domain: str, consumer: str) -> N
     + [
         (
             path,
-            {"hhhl", "opportunity", "research_data", "annual"},
-            {"tests/test_opportunity_history_api.py"},
+            {"hhhl", "opportunity", "research_data", "annual", "pattern_scan"},
+            {"tests/test_opportunity_history_api.py", "scripts/tests/test_multiple_outcomes_v1.py"},
         )
         for path in ("research_core/hhhl_variants_paths.py", "research_core/hhhl_variants_observations.py")
     ],
@@ -68,6 +69,7 @@ def test_research_data_upstreams_keep_all_downstream_tests(path: str, expected_d
     assert set(plan["domains"]) == expected_domains
     assert set(manifest["domains"]["research_data"]["tests"]) <= set(plan["python_tests"])
     assert set(manifest["domains"]["annual"]["tests"]) <= set(plan["python_tests"])
+    assert "scripts/tests/test_pattern_scan_shared_v1.py" in plan["python_tests"]
     assert existing_consumer_tests <= set(plan["python_tests"])
     assert plan["frontend"]
     assert "scripts/tests/test_research_ledger.py" not in plan["python_tests"]
@@ -139,10 +141,14 @@ def test_feature_block_upstreams_select_research_data_consumers(path: str) -> No
     manifest = ci_scope.load_manifest()
     plan = ci_scope.make_plan([("M", path)])
     assert not plan["full"]
-    assert set(plan["domains"]) == {"feature_blocks", "research_data", "annual"}
+    assert set(plan["domains"]) == {"feature_blocks", "research_data", "annual", "pattern_scan"}
     expected_tests = set(manifest["domains"]["feature_blocks"]["tests"]) | set(manifest["domains"]["research_data"]["tests"])
     expected_tests |= set(manifest["domains"]["annual"]["tests"])
+    expected_tests |= {
+        test for test in ci_scope.test_inventory(ci_scope.ROOT, manifest) if ci_scope.matches(test, manifest["domains"]["pattern_scan"]["tests"])
+    }
     assert set(plan["python_tests"]) == expected_tests
+    assert "scripts/tests/test_pattern_scan_shared_v1.py" in plan["python_tests"]
     assert not plan["frontend"]
     assert "scripts/tests/test_research_ledger.py" not in plan["python_tests"]
 
@@ -238,11 +244,11 @@ def test_shared_json_integrity_preserves_full_fallback(status: str) -> None:
 @pytest.mark.parametrize(
     ("source", "expected_domains"),
     [
-        ("research_core/research_data_builder.py", {"research_data", "annual"}),
-        ("research_core/research_data_catalog.py", {"research_data", "annual"}),
-        ("research_core/research_data_paths.py", {"research_data", "annual"}),
-        ("research_core/research_measurement_v1.py", {"feature_blocks", "research_data", "annual"}),
-        ("research_core/feature_identity_v1.py", {"feature_blocks", "research_data", "annual"}),
+        ("research_core/research_data_builder.py", {"research_data", "annual", "pattern_scan"}),
+        ("research_core/research_data_catalog.py", {"research_data", "annual", "pattern_scan"}),
+        ("research_core/research_data_paths.py", {"research_data", "annual", "pattern_scan"}),
+        ("research_core/research_measurement_v1.py", {"feature_blocks", "research_data", "annual", "pattern_scan"}),
+        ("research_core/feature_identity_v1.py", {"feature_blocks", "research_data", "annual", "pattern_scan"}),
     ],
 )
 def test_annual_upstream_dependency_closure_selects_annual_consumers(source: str, expected_domains: set[str]) -> None:
@@ -251,6 +257,52 @@ def test_annual_upstream_dependency_closure_selects_annual_consumers(source: str
     assert not plan["full"]
     assert set(plan["domains"]) == expected_domains
     assert ANNUAL_TESTS <= set(plan["python_tests"])
+    assert "scripts/tests/test_pattern_scan_shared_v1.py" in plan["python_tests"]
+
+
+@pytest.mark.parametrize("status", ["A", "M"])
+@pytest.mark.parametrize(
+    ("source", "expected_domains", "required_tests"),
+    [
+        (
+            "scripts/pattern_scan.py",
+            {"pattern_scan"},
+            {"scripts/tests/test_pattern_scan_run_v1.py", "scripts/tests/test_pattern_scan_shared_v1.py"},
+        ),
+        (
+            "research_core/pattern_scan_report_v1.py",
+            {"pattern_scan"},
+            {"scripts/tests/test_pattern_scan_report_v1.py"},
+        ),
+        (
+            "scripts/export_pattern_scan_report.py",
+            {"pattern_scan"},
+            {"scripts/tests/test_pattern_scan_report_v1.py"},
+        ),
+        (
+            "scripts/audit_pattern_scan_local_candidates.py",
+            {"pattern_scan"},
+            {"scripts/tests/test_pattern_scan_local_candidate_audit_v5.py"},
+        ),
+        (
+            "research_core/research_data_file_bundle_v1.py",
+            {"research_data", "annual", "pattern_scan"},
+            {
+                "scripts/tests/test_research_data_file_bundle_v1.py",
+                "scripts/tests/test_annual_publication.py",
+                "scripts/tests/test_pattern_scan_shared_v1.py",
+            },
+        ),
+    ],
+)
+def test_known_pattern_scan_entry_and_shared_bundle_route_consumers(status: str, source: str, expected_domains: set[str], required_tests: set[str]) -> None:
+    plan = ci_scope.make_plan([(status, source)])
+
+    assert not plan["full"]
+    assert not plan["frontend"]
+    assert set(plan["domains"]) == expected_domains
+    assert required_tests <= set(plan["python_tests"])
+    assert "scripts/tests/test_research_ledger.py" not in plan["python_tests"]
 
 
 def test_price_basis_keeps_global_full_fallback_and_includes_annual_tests() -> None:

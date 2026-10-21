@@ -4,6 +4,58 @@ import { appears } from "../full-history/model.ts";
 import { HISTORY_SCHEMA, type HistoryRow } from "../full-history/types.ts";
 import { latestMarketSummary } from "./model.ts";
 import { researchLinkHref } from "../research-history/markdownLinks.ts";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { RecentResearchNotice } from "./RecentResearchNotice.ts";
+
+test("recent home research marks a same-ID invalid registration while preserving its old conclusion", () => {
+    const previous = {
+        id: "20261021-synthetic",
+        status: "已保存報告",
+        title: "已驗證舊標題",
+        conclusion: "保留的舊結論。",
+        outcome: "candidate_failed",
+        evidenceState: "published_report_not_owner_adoption",
+        sourceNote: "原有來源說明。",
+    };
+    const item = {
+        ...previous,
+        status: "登錄需更新",
+        sourceNote: "報告 SHA-256 與登錄不符，請更新登錄。",
+    };
+    const before = structuredClone(item);
+    const html = renderToStaticMarkup(
+        createElement(RecentResearchNotice, { item }),
+    );
+    assert.match(html, /role="status"/);
+    for (const text of ["登錄需更新", "保留舊版", item.id, item.sourceNote])
+        assert.ok(html.includes(text));
+    assert.equal(item.conclusion, previous.conclusion);
+    assert.equal(item.outcome, previous.outcome);
+    assert.deepEqual(item, before);
+    assert.equal(
+        renderToStaticMarkup(
+            createElement(RecentResearchNotice, { item: previous }),
+        ),
+        "",
+    );
+});
+
+test("recent home research does not claim retained evidence for a new unavailable card and escapes reason text", () => {
+    const item = {
+        id: "20261021-synthetic",
+        status: "登錄需更新",
+        evidenceState: "registration_unavailable",
+        sourceNote: "<script>unsafe</script>",
+    };
+    const html = renderToStaticMarkup(
+        createElement(RecentResearchNotice, { item }),
+    );
+    assert.ok(html.includes("登錄需更新"));
+    assert.ok(!html.includes("保留舊版"));
+    assert.ok(!html.includes("<script>"));
+    assert.ok(html.includes("&lt;script&gt;"));
+});
 
 test("report file links never resolve into unavailable website routes; HTTPS sources remain navigable", () => {
     for (const href of [

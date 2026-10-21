@@ -13,6 +13,7 @@ import { money, percentage } from "../strategies/format";
 import { strategyStatus } from "../strategies/model";
 import { StudioState } from "../strategies/shared";
 import { latestMarketSummary } from "./model";
+import { RecentResearchNotice } from "./RecentResearchNotice";
 import { ResearchMarkdown } from "../research-history/ResearchMarkdown";
 import { marketCaptureLink } from "../full-history/navigation.ts";
 import "../strategies/strategies.css";
@@ -326,6 +327,7 @@ export function HomePage() {
                                     <h3 style={{ marginTop: 3 }}>
                                         {item.title}
                                     </h3>
+                                    <RecentResearchNotice item={item} />
                                     <ResearchMarkdown
                                         text={historyConclusion(item)}
                                         preview
