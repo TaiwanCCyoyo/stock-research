@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
@@ -13,14 +13,29 @@ let buildOutDir = "";
 const releaseVersion = process.env.RESEARCH_WEB_VERSION ?? "development";
 
 // https://vite.dev/config/
-export default defineConfig(({ command }) => {
+export default defineConfig(({ command, mode }) => {
     if (command === "build" && !process.env.RESEARCH_WEB_BUILD_OUT_DIR)
         throw new Error(
             "Run npm run build to stage and publish the frontend safely.",
         );
+    // The same resolution Vite uses for import.meta.env (env files and process).
+    const artifactMode =
+        loadEnv(mode, fileURLToPath(new URL(".", import.meta.url)), "VITE_")
+            .VITE_ARTIFACT_MODE || "public-synthetic";
     return {
         plugins: [
             react(),
+            {
+                name: "research-web-artifact-mode",
+                apply: "build",
+                generateBundle() {
+                    this.emitFile({
+                        type: "asset",
+                        fileName: "artifact-mode.json",
+                        source: JSON.stringify({ artifactMode }),
+                    });
+                },
+            },
             {
                 name: "research-web-release-version",
                 transformIndexHtml(html) {
