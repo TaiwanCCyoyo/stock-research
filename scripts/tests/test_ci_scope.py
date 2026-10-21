@@ -279,6 +279,11 @@ def test_annual_upstream_dependency_closure_selects_annual_consumers(source: str
             {"scripts/tests/test_pattern_scan_report_v1.py"},
         ),
         (
+            "scripts/audit_pattern_scan_local_candidates.py",
+            {"pattern_scan"},
+            {"scripts/tests/test_pattern_scan_local_candidate_audit_v5.py"},
+        ),
+        (
             "research_core/research_data_file_bundle_v1.py",
             {"research_data", "annual", "pattern_scan"},
             {

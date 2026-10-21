@@ -271,3 +271,64 @@ generation read through the as-of adapter, handoff and retirement without mocked
 price reads. Actual execution, equality, retirement
 counts and resource measurements are reported in their run receipts; passing
 tests alone never establishes any of those facts.
+
+## Local candidate audit v5
+
+`scripts.audit_pattern_scan_local_candidates` is the results-only adapter for
+the existing `pattern_scan_candidate_audit_v2.reconstruct_candidate` and
+`compare_candidate` kernels. It does not use the legacy v4 audit entry point's
+input/intermediate verification chain or change a numerical definition.
+
+The original completed B1 selection has 92 declared candidates. B1 is the
+lexically first approved target, so the first five sorted target/candidate IDs
+are already fixed while other families continue. No outcomes are re-ranked.
+The full audit is five candidates × four groups (`pattern:union`,
+`C-base-no-pattern`, `C-base-all`, `C-52w`) × two horizons (126/252): 40 cases,
+54,720 comparison rows. These cover cross-check, all eras/markets, all three
+condition states, full/drop-best-year summaries and annual counts. A partial
+group/horizon run stays incomplete, and this does not replace the ten-event
+condition/availability audit or full-study acceptance.
+
+The reader uses the original local stock/global/label tables. Existing original
+event projections are read in place. Missing projections are bound for one
+stock in RAM with the existing binder; neither the price/indicator/detector
+phases nor development selection are repeated. Only one slim group/horizon is
+collected at a time, with a default 512 MiB deep-frame limit. There is no
+on-disk event, membership, price, shared-family or cache copy.
+
+The Windows entry point owns a separate 4 GiB committed-memory Job, requires
+12 GiB additional available host memory alongside the original executor, sets
+one numerical thread and enforces a six-hour timeout. The original research
+process, active marker and generation hold are untouched. Each case records
+wall/CPU, cached-I/O counters and the clearly labelled process-lifetime memory
+peak; the native Job receipt provides its committed peak. These are memory
+limits, not disk reservations or a forecast of full-market runtime.
+
+Required original final selection/summary/annual files are checked once against
+their existing final receipts in each audit process. Inputs, source code and
+intermediate projections receive no new digests. The original source/input IDs,
+price-lineage generation and original executor are descriptions; each new case
+records its actual audit executor separately. Later shared updates do not
+invalidate completed results.
+
+Each passing case publishes only `summary.parquet`, `annual.parquet` (ZSTD)
+and a final run receipt through sibling staging plus `publish_noreplace`.
+No membership/event table is retained. A mismatch publishes no passing case.
+Completed cases are final evidence and resume without re-binding stocks; they
+retain their original audit executor. Interrupted unpublished staging is kept
+for diagnosis. An OS lock prevents two workers writing one audit output.
+Only all 40 cases produce `audit-summary.json` and the top-level final receipt.
+These bounded comparison tables, their receipts and summary belong to the
+study's retained audit evidence, not the maintained shared-data family.
+
+Example, from the delivery worktree (absolute original paths omitted here):
+
+```powershell
+uv run python -m scripts.audit_pattern_scan_local_candidates --stock-result <original-stock-result> --conditions <completed-B1-conditions> --output <delivery-worktree>/.tmp/pr17-candidate-audit
+```
+
+`--group pattern:union --horizon 126` performs the first full-stock group only;
+calling the same output later without these options reuses its completed cases.
+The final report must distinguish representative batches, completed full-stock
+cases and the full 40-case audit. A synthetic test or a four-stock measurement
+does not certify a full-stock comparison.
