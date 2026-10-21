@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import gzip
+import io
 import json
 import logging
 import sys
@@ -27,7 +28,9 @@ import pyarrow.parquet as pq
 
 from research_core import count_cube_v1 as cube
 from research_core import momentum_only_v1 as study
-from research_core.maintained_adjusted_daily import read_adjusted_daily
+from research_core.artifact_store import publish_new_directory
+from research_core.maintained_adjusted_daily import current_generation, read_adjusted_daily
+from research_core.run_receipt import code_identity, write_run_receipt
 
 LOGGER = logging.getLogger(__name__)
 CUTOFF = "2026-10-12"
@@ -375,6 +378,208 @@ def run_coverage(work: Path) -> None:
     LOGGER.info("Coverage written episodes=%d observations=%d groups=%d", len(episodes_out), len(frame), len(summary))
 
 
+AUDIT_SAMPLE_5X = 20
+DAILY_LIMIT = 0.105  # above the 10% daily price limit (7% before 2015-06-01)
+
+
+def _audit_row(episode: pd.Series, prepared: pd.DataFrame, closes: np.ndarray, actions: pd.DataFrame, calendar: pd.DatetimeIndex) -> dict[str, Any]:
+    """Price evidence for one episode window, anchor..peak. Screening only; decisions are manual."""
+    anchor, peak = int(episode["anchor_index"]), int(episode["peak_index"])
+    window = prepared.iloc[anchor : peak + 1]
+    raw = window["RawClose"].to_numpy(dtype=float)
+    adjusted = closes[anchor : peak + 1]
+    with np.errstate(divide="ignore", invalid="ignore"):
+        adjusted_returns = adjusted[1:] / adjusted[:-1] - 1
+        raw_returns = raw[1:] / raw[:-1] - 1
+    first, last = calendar[anchor], calendar[peak]
+    events = actions.loc[(pd.to_datetime(actions["ex_date"]) > first) & (pd.to_datetime(actions["ex_date"]) <= last)]
+    big_days = [
+        {
+            "date": str(pd.Series(calendar[anchor + 1 + i : anchor + 2 + i]).dt.strftime("%Y-%m-%d").iloc[0]),
+            "adjusted_return": float(adjusted_returns[i]),
+            "raw_return": float(raw_returns[i]),
+        }
+        for i in np.flatnonzero(np.abs(adjusted_returns) > DAILY_LIMIT)
+    ]
+    reasons = window["quality_reason"].dropna()
+    flags = []
+    if big_days:
+        flags.append("adjusted_move_beyond_daily_limit")
+    if (window["quality_reason"].astype(str).str.contains("ambiguous_or_missing_action_factor")).any():
+        flags.append("ambiguous_or_missing_action_factor")
+    if not np.isfinite(raw).all():
+        flags.append("missing_raw_close")
+    return {
+        "code": episode["code"],
+        "target_multiple": float(episode["target_multiple"]),
+        "anchor_date": episode["anchor_date"],
+        "peak_date": episode["peak_date"],
+        "sessions": peak - anchor,
+        "adjusted_ratio": float(adjusted[-1] / adjusted[0]),
+        "raw_ratio": float(raw[-1] / raw[0]) if np.isfinite(raw[[0, -1]]).all() else None,
+        "action_events": json.dumps(events[["ex_date", "event_type", "price_factor"]].to_dict(orient="records"), default=str),
+        "action_event_n": len(events),
+        "max_adjusted_daily_return": float(np.nanmax(adjusted_returns)) if len(adjusted_returns) else None,
+        "min_adjusted_daily_return": float(np.nanmin(adjusted_returns)) if len(adjusted_returns) else None,
+        "beyond_limit_days": json.dumps(big_days),
+        "quality_reasons": json.dumps(sorted({str(value) for value in reasons})),
+        "screen_flags": json.dumps(flags),
+    }
+
+
+def run_audit(work: Path) -> None:
+    """Screen every H504 10x episode and 20 seeded 5x episodes with price evidence."""
+    calendar = pr17_calendar()
+    generation = json.loads((work / "stocks.json").read_text(encoding="utf-8"))["generation"]
+    episodes = pd.read_parquet(work / "episodes.parquet")
+    known = episodes.loc[episodes["status"].eq("known")]
+    tens = known.loc[known["target_multiple"].eq(10.0)]
+    fives = known.loc[known["target_multiple"].eq(5.0)].sort_values(["code", "anchor_index"]).reset_index(drop=True)
+    picked = np.sort(np.random.default_rng(SEEDS["stock"]).choice(len(fives), size=min(AUDIT_SAMPLE_5X, len(fives)), replace=False))
+    selected = pd.concat([tens, fives.iloc[picked]], ignore_index=True)
+    actions = pd.read_parquet(Path(current_generation(generation=generation)["path"]) / "actions.parquet")
+    rows: list[dict[str, Any]] = []
+    for code, group in selected.groupby("code", sort=True):
+        prices, _ = read_adjusted_daily("reference_factor_adjusted", codes=[str(code)], as_of=CUTOFF, calendar=calendar, generation=generation)
+        prepared = prices.drop(columns="Code").set_index("Date")
+        closes = study.masked_close(prepared)
+        stock_actions = actions.loc[actions["code"].eq(code)]
+        rows.extend(_audit_row(episode, prepared, closes, stock_actions, calendar) for _, episode in group.iterrows())
+    audit = pd.DataFrame(rows)
+    audit.to_parquet(work / "audit_screen.parquet", index=False)
+    flagged = int(audit["screen_flags"].ne("[]").sum())
+    LOGGER.info("Audit screen rows=%d (10x=%d, 5x sample=%d) flagged=%d", len(audit), len(tens), len(picked), flagged)
+
+
+TASK = Path("tasks/20261021-momentum-only-doubling")
+REPO_ROOT = Path(__file__).resolve().parents[1]
+PHASES = ("stocks", "parity", "study", "coverage", "audit")
+FINAL_TABLES = ("set_summary", "set_annual", "bootstrap_intervals", "big_runner_coverage", "coverage_quotas", "parity_check")
+DECOMPOSITION_REASON = "PR17 daily raw union pattern states are not published with a data contract (mission start condition 3)"
+
+
+def _verdicts(summary: pd.DataFrame, intervals: pd.DataFrame) -> pd.DataFrame:
+    """Core-question cells (decomposition not_evaluated): no share; both bootstraps must agree."""
+    keep = summary.split.eq("all") & summary.era.eq("all") & summary.row_kind.eq("full")
+    full = summary.loc[keep].set_index(["group_id", "horizon", "target_multiple"])
+    rows = []
+    for focus in FOCUS:
+        cooled_id = focus.replace(":daily", ":cooled")
+        for horizon, target in study.LABELS:
+            cell = full.loc[(focus, horizon, target)]
+            sample = full.loc[(cooled_id, horizon, target)]
+            sufficient = bool(sample["known_n"] >= 100 and sample["distinct_stock_n"] >= 30)
+            bounds = intervals.loc[intervals.group_id.eq(focus) & intervals.horizon.eq(horizon) & intervals.target_multiple.eq(target)]
+            record: dict[str, Any] = {
+                "group_id": focus,
+                "horizon": horizon,
+                "target_multiple": target,
+                "primary": target == 2.0 and horizon in (126, 252),
+                "hit_rate": cell["hit_rate"],
+                "loss_rate": cell["loss_rate"],
+                "hit_ratio_vs_base": cell["hit_ratio_vs_base"],
+                "hit_diff_vs_base": cell["hit_diff_vs_base"],
+                "loss_diff_vs_base": cell["loss_diff_vs_base"],
+                "hit_diff_vs_c52w": cell["hit_diff_vs_c52w"],
+                "cooled_known_n": int(sample["known_n"]),
+                "cooled_distinct_stock_n": int(sample["distinct_stock_n"]),
+                "sample_sufficient": sufficient,
+            }
+            for statistic in ("hit_diff_vs_base", "loss_diff_vs_base", "hit_diff_vs_c52w"):
+                chosen = bounds.loc[bounds.statistic.eq(statistic)]
+                above = bool((chosen["lower"].astype(float) > 0).all())
+                below = bool((chosen["upper"].astype(float) < 0).all())
+                direction = "above_zero" if above else "below_zero" if below else "unresolved"
+                record[f"{statistic}_direction"] = direction if sufficient else "insufficient_sample"
+            rows.append(record)
+    return pd.DataFrame(rows)
+
+
+def _decomposition() -> pd.DataFrame:
+    rows: list[dict[str, Any]] = [
+        {"family": family, "horizon": horizon, "target_multiple": target, "status": "not_evaluated", "reason": DECOMPOSITION_REASON}
+        for family in ("B1", "H1")
+        for horizon, target in study.LABELS
+    ]
+    rows += [
+        {"family": name, "horizon": None, "target_multiple": None, "status": "not_evaluated", "reason": DECOMPOSITION_REASON}
+        for name in ("A7", "LEAD_H1", "share")
+    ]
+    return pd.DataFrame(rows)
+
+
+def _audit_episodes(work: Path) -> pd.DataFrame:
+    screen = pd.read_parquet(work / "audit_screen.parquet")
+    decisions = json.loads((TASK / "audit-decisions.json").read_text(encoding="utf-8"))["decisions"]
+    by_key = {(str(d["code"]), float(d["target_multiple"]), str(d["anchor_date"])): d for d in decisions}
+    keys = [(str(c), float(t), str(a)) for c, t, a in zip(screen["code"], screen["target_multiple"], screen["anchor_date"], strict=True)]
+    flagged = screen["screen_flags"].ne("[]").to_list()
+    undecided = [key for key, flag in zip(keys, flagged, strict=True) if flag and key not in by_key]
+    if undecided:
+        raise ValueError(f"screen-flagged episodes need a recorded manual decision: {undecided}")
+    screen["review"] = ["manual" if flag or key in by_key else "screen_only" for key, flag in zip(keys, flagged, strict=True)]
+    screen["audit_price_error"] = [bool(by_key.get(key, {}).get("audit_price_error", False)) for key in keys]
+    screen["review_note"] = [by_key.get(key, {}).get("note") for key in keys]
+    episodes = pd.read_parquet(work / "episodes.parquet")
+    unknown = episodes.loc[episodes.target_multiple.eq(10.0) & episodes.status.ne("known")]
+    unknown_rows = pd.DataFrame({
+        "code": unknown.code,
+        "target_multiple": 10.0,
+        "anchor_date": unknown.anchor_date,
+        "review": "not_screenable_unknown_episode",
+        "audit_price_error": False,
+        "review_note": unknown.reason,
+    })
+    return pd.concat([screen, unknown_rows], ignore_index=True)
+
+
+def run_finalize(work: Path, output: Path) -> None:
+    """Publish final tables and a results-only receipt after checking all phases ran from one clean commit."""
+    phases = json.loads((work / "phases.json").read_text(encoding="utf-8"))
+    missing = [phase for phase in PHASES if phase not in phases]
+    identities = {json.dumps(phases[phase]["code"], sort_keys=True) for phase in PHASES if phase in phases}
+    if missing or len(identities) != 1 or any(phases[phase]["code"]["dirty"] for phase in PHASES):
+        raise SystemExit(f"every phase must run from one clean commit; missing={missing} identities={identities}")
+    identity = phases["stocks"]["code"]
+    stocks = json.loads((work / "stocks.json").read_text(encoding="utf-8"))
+    verdicts = _verdicts(pd.read_parquet(work / "set_summary.parquet"), pd.read_parquet(work / "bootstrap_intervals.parquet"))
+    audit = _audit_episodes(work)
+    if bool(audit["audit_price_error"].astype(bool).any()):
+        raise SystemExit("audit_price_error episodes require the second (removed) count version before publication")
+    tables = {name: pd.read_parquet(work / f"{name}.parquet") for name in FINAL_TABLES}
+    tables.update({"verdicts": verdicts, "decomposition_summary": _decomposition(), "audit_episodes": audit})
+    files: dict[str, bytes] = {}
+    for name, frame in tables.items():
+        buffer = io.BytesIO()
+        frame.to_parquet(buffer, index=False, compression="zstd")
+        files[f"{name}.parquet"] = buffer.getvalue()
+    result = {
+        "definition": study.DEFINITION_ID,
+        "generation": stocks["generation"],
+        "cutoff": CUTOFF,
+        "parity": json.loads((work / "parity_check.json").read_text(encoding="utf-8"))["verdict"],
+        "primary_cells": json.loads(verdicts.loc[verdicts.primary].to_json(orient="records")),
+        "decomposition": "not_evaluated",
+        "audit": {"rows": len(audit), "audit_price_error": int(audit["audit_price_error"].sum())},
+    }
+    files["research_result.json"] = (json.dumps(result, indent=2, ensure_ascii=False) + chr(10)).encode("utf-8")
+    publish_new_directory(output, files)
+    _, record = read_adjusted_daily("reference_factor_adjusted", codes=["2330"], as_of=CUTOFF, calendar=pr17_calendar(), generation=stocks["generation"])
+    write_run_receipt(
+        output / "run-receipt.json",
+        run_id=f"momentum-only-{stocks['generation']}",
+        definition=study.DEFINITION_ID,
+        parameters={"cutoff": CUTOFF, "targets": list(study.TARGETS), "horizons": list(study.HORIZONS), "bootstrap_reps": REPS, "seeds": SEEDS},
+        inputs={"pr17_calendar_pins": str(PINS), "pr17_universe": str(PR17_PREPARATION), "pr17_parity_reference": str(PR17_Q1), "phases": phases},
+        results={name: output / name for name in files},
+        preregistration=TASK / "mission.md",
+        repo_root=REPO_ROOT,
+        shared_data=[record],
+        expected_code=identity,
+    )
+    LOGGER.info("Published %d final files to %s", len(files), output)
+
+
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -382,17 +587,29 @@ def main() -> None:
     stocks = sub.add_parser("stocks")
     stocks.add_argument("--work", type=Path, required=True)
     stocks.add_argument("--generation", required=True)
-    for name in ("parity", "study", "coverage"):
+    for name in ("parity", "study", "coverage", "audit"):
         sub.add_parser(name).add_argument("--work", type=Path, required=True)
+    final = sub.add_parser("finalize")
+    final.add_argument("--work", type=Path, required=True)
+    final.add_argument("--output", type=Path, default=TASK / "results")
     args = parser.parse_args()
+    identity = code_identity(REPO_ROOT)
+    started = time.monotonic()
     if args.command == "stocks":
         run_stocks(args.work, args.generation)
     elif args.command == "parity":
         sys.stdout.write(json.dumps(run_parity(args.work), indent=2, default=float) + chr(10))
+    elif args.command == "finalize":
+        run_finalize(args.work, args.output)
+        return
     else:
         if json.loads((args.work / "parity_check.json").read_text(encoding="utf-8"))["verdict"] == "stop":
             raise SystemExit("parity gate failed; the mission forbids computing condition sets")
-        run_study(args.work) if args.command == "study" else run_coverage(args.work)
+        {"study": run_study, "coverage": run_coverage, "audit": run_audit}[args.command](args.work)
+    phases_path = args.work / "phases.json"
+    phases = json.loads(phases_path.read_text(encoding="utf-8")) if phases_path.exists() else {}
+    phases[args.command] = {"code": identity, "wall_seconds": round(time.monotonic() - started, 1)}
+    phases_path.write_text(json.dumps(phases, indent=2), encoding="utf-8")
 
 
 if __name__ == "__main__":

@@ -185,29 +185,30 @@ def cooled(members: NDArray[np.bool_], eligible: NDArray[np.bool_]) -> NDArray[n
 BASELINE_LOOKBACK = {"C-base-daily": LOOKBACK["C-base"], "C-52w-daily": LOOKBACK["C-52w"]}
 
 
-def h_states(stocks: list[StockDaily]) -> list[NDArray[np.int8]]:
-    """A4 for every stock: PR17's H (120-day return percentile among same-day eligible stocks) >= 90.
+def h_values(stocks: list[StockDaily]) -> list[NDArray[np.float64]]:
+    """PR17's H for every stock: 120-day return percentile among same-day eligible stocks.
 
     Same pandas expression as `hhhl_variants_run.cross_section`: rank(method="average",
-    pct=True) * 100 within each calendar position over eligible stocks with a finite ret120.
-    Days outside that pool are unknown. The pool is the whole fixed universe, so this is a
-    full-market barrier and must see every stock.
+    pct=True) * 100 within each calendar position over eligible stocks with a finite ret120;
+    NaN outside that pool. The pool is the whole fixed universe, so this is a full-market
+    barrier and must see every stock.
     """
     n = len(stocks[0].eligible)
     frames = []
     for position, stock in enumerate(stocks):
-        mask = stock.eligible & np.isfinite(stock.ret120)
-        days = np.flatnonzero(mask)
+        days = np.flatnonzero(stock.eligible & np.isfinite(stock.ret120))
         frames.append(pd.DataFrame({"stock": position, "calendar_index": days, "ret120": stock.ret120[days]}))
     pool = pd.concat(frames, ignore_index=True)
     pool["H"] = pool.groupby("calendar_index")["ret120"].rank(method="average", pct=True) * 100
-    states = []
+    values = [np.full(n, np.nan) for _ in stocks]
     for position, rows in pool.groupby("stock", sort=True):
-        values = np.full(n, np.nan)
-        values[rows["calendar_index"].to_numpy()] = rows["H"].to_numpy()
-        states.append((int(cast(int, position)), _atom_state("H", "ge90", pd.Series(values))))
-    by_stock = dict(states)
-    return [by_stock.get(position, np.full(n, -1, dtype=np.int8)) for position in range(len(stocks))]
+        values[int(cast(int, position))][rows["calendar_index"].to_numpy()] = rows["H"].to_numpy()
+    return values
+
+
+def h_states(stocks: list[StockDaily]) -> list[NDArray[np.int8]]:
+    """A4 for every stock: PR17's `H` bin `ge90`; days outside the ranked pool are unknown."""
+    return [_atom_state("H", "ge90", pd.Series(values)) for values in h_values(stocks)]
 
 
 def set_members(atoms: dict[str, NDArray[np.int8]], names: tuple[str, ...]) -> NDArray[np.bool_]:

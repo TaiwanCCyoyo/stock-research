@@ -1,0 +1,43 @@
+{
+    "schema": "momentum-only.audit-decisions.v1",
+    "reviewed_at": "2026-10-22",
+    "reviewer": "Claude (session executing tasks/20261021-momentum-only-doubling)",
+    "method": "Every H504 10x episode and 20 seeded 5x episodes were screened automatically (adjusted vs raw path ratio, corporate actions with factors in anchor..peak, single-day adjusted moves beyond the daily price limit, ambiguous-factor and raw-close flags). Screen-flagged episodes and the largest adjusted/raw ratio gap were read by hand against raw closes, volume, listing date and the generation's corporate actions. Unflagged episodes were not read by hand.",
+    "decisions": [
+        {
+            "code": "3176",
+            "target_multiple": 10.0,
+            "anchor_date": "2011-11-25",
+            "audit_price_error": false,
+            "note": "+11.2% on 2011-11-29 is the fourth session after the first quote (2011-11-23); new listings trade without a daily price limit for their first five sessions. Raw and adjusted moves are equal; no action factor involved."
+        },
+        {
+            "code": "4943",
+            "target_multiple": 10.0,
+            "anchor_date": "2016-11-15",
+            "audit_price_error": false,
+            "note": "+18.5% on 2016-11-16 is the fourth session after the first quote (2016-11-11), inside the no-limit first five sessions. Raw and adjusted moves are equal."
+        },
+        {
+            "code": "4991",
+            "target_multiple": 10.0,
+            "anchor_date": "2024-04-29",
+            "audit_price_error": false,
+            "note": "2025-12-22 is the ex-right date (factor 0.984): raw close +9.87% against the previous close is +11.66% against the ex-right reference price, which is what the adjusted series shows."
+        },
+        {
+            "code": "6739",
+            "target_multiple": 10.0,
+            "anchor_date": "2024-09-02",
+            "audit_price_error": false,
+            "note": "+14.2% on 2024-09-03 is the second session after the first quote (2024-09-02), inside the no-limit first five sessions."
+        },
+        {
+            "code": "9906",
+            "target_multiple": 10.0,
+            "anchor_date": "2012-03-29",
+            "audit_price_error": false,
+            "note": "Largest adjusted/raw ratio gap (10.65x adjusted vs 4.56x raw). The 2013-08-13 EX_RIGHT factor 0.443 matches the raw close falling from 110.0 to 52.1 on that date (+7% over the ex-right reference 48.7), so the adjustment is consistent with the raw prices."
+        }
+    ]
+}
