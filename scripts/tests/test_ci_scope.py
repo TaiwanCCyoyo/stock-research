@@ -529,8 +529,18 @@ def test_executor_passes_actual_selected_paths_and_failure(monkeypatch: pytest.M
 
     monkeypatch.setattr(ci_scope.subprocess, "run", fake_run)
     assert ci_scope.execute_plan(plan) == exit_code
-    assert observed == [[sys.executable, "-m", "pytest", "--durations=20", *plan["python_tests"]]]
+    assert observed == [ci_scope.pytest_command(plan["python_tests"])]
+    assert observed[0][-len(plan["python_tests"]) :] == plan["python_tests"]
     assert "scripts/tests/test_research_ledger.py" not in observed[0]
+
+
+def test_large_plans_use_bounded_workers_and_small_plans_stay_serial(monkeypatch: pytest.MonkeyPatch) -> None:
+    many = [f"scripts/tests/test_{index}.py" for index in range(ci_scope.PARALLEL_MIN_FILES)]
+    monkeypatch.setattr(ci_scope.os, "cpu_count", lambda: 16)
+    assert ci_scope.pytest_command(many)[:6] == [sys.executable, "-m", "pytest", "--durations=20", "-n", "4"]
+    assert "-n" not in ci_scope.pytest_command(many[:-1])
+    monkeypatch.setattr(ci_scope.os, "cpu_count", lambda: 1)
+    assert "-n" not in ci_scope.pytest_command(many)
 
 
 def test_executor_rejects_unsafe_or_empty_plan() -> None:

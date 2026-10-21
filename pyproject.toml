@@ -27,6 +27,7 @@ dev = [
   "detect-secrets>=1.5.0",
   "httpx>=0.28.1",
   "pre-commit-hooks==6.0.0",
+  "pytest-xdist>=3.6",
 ]
 
 [tool.mypy]
