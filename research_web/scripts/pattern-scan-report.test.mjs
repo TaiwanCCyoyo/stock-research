@@ -4,11 +4,46 @@ import { join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { runInNewContext } from "node:vm";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { createServer } from "vite";
 
 const folder = fileURLToPath(
     new URL("../../tasks/20261013-pattern-scan/web-report/", import.meta.url),
 );
 const source = readFileSync(join(folder, "report.js"), "utf8");
+
+test("the actual viewer permits result downloads while retaining other sandbox restrictions", async () => {
+    const server = await createServer({
+        logLevel: "silent",
+        server: { middlewareMode: true, hmr: false },
+    });
+    try {
+        const { ReportViewer } = await server.ssrLoadModule(
+            "/src/features/report-library/ReportViewer.tsx",
+        );
+        const html = renderToStaticMarkup(
+            createElement(ReportViewer, {
+                reportId: "20261013-pattern-scan",
+                palette: "forest",
+                appearance: "dark",
+            }),
+        );
+        const frame = html.match(/<iframe\b[^>]*>/)?.[0];
+        assert.ok(frame, "the report must be rendered inside its viewer");
+        const sandbox = frame.match(/\bsandbox="([^"]*)"/)?.[1].split(/\s+/);
+        assert.deepEqual(
+            new Set(sandbox),
+            new Set(["allow-scripts", "allow-same-origin", "allow-downloads"]),
+        );
+        assert.match(
+            frame,
+            /src="\/reports\/20261013-pattern-scan\/index\.html#/,
+        );
+    } finally {
+        await server.close();
+    }
+});
 const pageIds = [
     "report-title",
     "study-meta",

@@ -356,10 +356,12 @@
                 "research_core/pattern_scan_live_inputs_v2.py",
                 "research_core/pattern_scan_run_v2.py",
                 "research_core/pattern_scan_storage_profile_v2.py",
+                "research_core/pattern_scan_report_v1.py",
                 "scripts/pattern_scan_live.py",
                 "scripts/continue_pattern_scan.py",
                 "scripts/audit_pattern_scan_candidates.py",
-                "scripts/run_pattern_scan_remaining.py"
+                "scripts/run_pattern_scan_remaining.py",
+                "scripts/export_pattern_scan_report.py"
             ],
             "tests": ["scripts/tests/test_pattern_scan*.py"]
         }
@@ -540,6 +542,7 @@
         "scripts/tests/test_pattern_scan_rates_v1.py",
         "scripts/tests/test_pattern_scan_receipt_io_v2.py",
         "scripts/tests/test_pattern_scan_report_provenance_v2.py",
+        "scripts/tests/test_pattern_scan_report_v1.py",
         "scripts/tests/test_pattern_scan_reporting_v1.py",
         "scripts/tests/test_pattern_scan_result_lifecycle_v3.py",
         "scripts/tests/test_pattern_scan_retained_v3.py",

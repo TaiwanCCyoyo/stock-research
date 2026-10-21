@@ -17,7 +17,7 @@ import "./reports.css";
  * built-in Chromium browser (tested 2026-10-13), such a frame could not load
  * scripts, images or fetch anything from 127.0.0.1, which left a report without its
  * kit and data. Other browsers were not tested. No popup permission is granted;
- * reports open nothing in new windows.
+ * reports open nothing in new windows. Retained result links may download files.
  */
 export function ReportViewer({
     reportId,
@@ -97,7 +97,7 @@ export function ReportViewer({
                     className="rv-frame"
                     title={report?.title || reportId}
                     src={src}
-                    sandbox="allow-scripts allow-same-origin"
+                    sandbox="allow-scripts allow-same-origin allow-downloads"
                     referrerPolicy="no-referrer"
                     style={height ? { height } : undefined}
                     onLoad={() =>
