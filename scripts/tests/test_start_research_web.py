@@ -347,3 +347,23 @@ def test_run_reports_children_that_exit_simultaneously(tmp_path: Path, capsys: p
     assert result == 1
     assert "意外結束（結束碼 0）" in capsys.readouterr().err
     assert stop.call_args_list == [call(children[1]), call(children[0])]
+
+
+def test_run_tells_the_api_which_website_url_to_point_to(tmp_path: Path) -> None:
+    root = tmp_path / "checkout"
+    root.mkdir()
+    child = launcher.ManagedChild("history-api", MagicMock(), io.BytesIO())
+
+    with (
+        patch.object(launcher, "project_root", return_value=root),
+        patch.object(launcher, "_inspect_service", return_value="stopped"),
+        patch.object(launcher, "_configure_logging", return_value=tmp_path),
+        patch.object(launcher, "_start_child", return_value=child) as start,
+        patch.object(launcher, "_wait_until_ready", side_effect=RuntimeError("stop after first start")),
+        patch.object(launcher, "_verify_live_mode"),
+        patch.object(launcher, "_stop_child"),
+    ):
+        launcher.run(no_browser=True, api_port=18517, web_port=15177)
+
+    environment = start.call_args.args[3]
+    assert environment["RESEARCH_WEB_URL"] == "http://127.0.0.1:15177"

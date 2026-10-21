@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from pytest import MonkeyPatch
 
@@ -406,13 +407,57 @@ def test_non_get_methods_are_rejected_405(client: TestClient, tasks_root: Path, 
     assert response.json()["detail"]
 
 
-@pytest.mark.skipif(not (Path(__file__).resolve().parents[1] / "research_web" / "dist" / "index.html").is_file(), reason="frontend not built")
-def test_serves_frontend_at_root_when_built(client: TestClient) -> None:
+def _built_frontend(root: Path, release: object | None) -> Path:
+    dist = root / "dist"
+    dist.mkdir()
+    (dist / "index.html").write_text('<div id="root"></div>', encoding="utf-8")
+    if release is not None:
+        (dist / "release.json").write_text(json.dumps(release), encoding="utf-8")
+    return dist
+
+
+@pytest.mark.parametrize("mode", ["public-synthetic", "local-private"])
+def test_serves_frontend_built_for_the_same_mode(tmp_path: Path, mode: str) -> None:
     """The API process also serves the built research_web frontend (dashboard v2)."""
-    response = client.get("/")
+    application = FastAPI()
+    dist = _built_frontend(tmp_path, {"schema": "research-web-release.v1", "version": "v", "artifactMode": mode})
+    api_main.mount_frontend(application, dist, {"STOCK_RESEARCH_DATA_MODE": mode} if mode == "local-private" else {})
+
+    response = TestClient(application).get("/")
 
     assert response.status_code == 200
     assert 'id="root"' in response.text
+
+
+@pytest.mark.parametrize(
+    ("release", "shown"),
+    [
+        ({"schema": "research-web-release.v1", "version": "v", "artifactMode": "public-synthetic"}, "public-synthetic"),
+        ({"schema": "research-web-release.v1", "version": "v"}, "未記錄"),
+        (None, "未記錄"),
+        ("not an object", "未記錄"),
+    ],
+)
+def test_mismatched_or_unrecorded_frontend_points_to_the_website(tmp_path: Path, release: object | None, shown: str) -> None:
+    application = FastAPI()
+    dist = _built_frontend(tmp_path, release)
+    environment = {"STOCK_RESEARCH_DATA_MODE": "local-private", "RESEARCH_WEB_URL": "http://127.0.0.1:15177"}
+    api_main.mount_frontend(application, dist, environment)
+
+    response = TestClient(application).get("/")
+
+    assert response.status_code == 200
+    assert 'id="root"' not in response.text
+    assert 'href="http://127.0.0.1:15177"' in response.text
+    assert shown in response.text
+    assert TestClient(application).get("/assets/app.js").status_code == 404
+
+
+def test_no_built_frontend_mounts_nothing(tmp_path: Path) -> None:
+    application = FastAPI()
+    api_main.mount_frontend(application, tmp_path / "dist", {})
+
+    assert TestClient(application).get("/").status_code == 404
 
 
 def test_unexpected_errors_return_consistent_json_500(tasks_root: Path, monkeypatch: MonkeyPatch) -> None:

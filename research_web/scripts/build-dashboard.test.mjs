@@ -8,6 +8,7 @@ import {
     hasBuildDependencies,
     isCurrentRelease,
     publishDirectory,
+    releaseArtifactMode,
     sourceVersion,
 } from "./build-dashboard.mjs";
 
@@ -225,6 +226,34 @@ test("failed directory swap restores the previous dist", async () => {
             "old frontend",
         );
     } finally {
+        await rm(root, { recursive: true, force: true });
+    }
+});
+
+test("release records the frontend data mode and rebuilds when it is missing", async () => {
+    const { root, web } = await fixture();
+    const previous = process.env.VITE_ARTIFACT_MODE;
+    try {
+        const build = (atRoot, stage, version) =>
+            fakeBuild(atRoot, stage, version);
+        process.env.VITE_ARTIFACT_MODE = "local-private";
+        assert.equal(await ensureRelease({ root, build }), "built");
+        const dist = join(web, "dist");
+        const release = JSON.parse(
+            await readFile(join(dist, "release.json"), "utf8"),
+        );
+        assert.equal(release.artifactMode, "local-private");
+
+        delete release.artifactMode;
+        await writeFile(join(dist, "release.json"), JSON.stringify(release));
+        assert.equal(isCurrentRelease(dist), false);
+        assert.equal(await ensureRelease({ root, build }), "built");
+
+        assert.equal(releaseArtifactMode(""), "public-synthetic");
+        assert.throws(() => releaseArtifactMode("other"));
+    } finally {
+        if (previous === undefined) delete process.env.VITE_ARTIFACT_MODE;
+        else process.env.VITE_ARTIFACT_MODE = previous;
         await rm(root, { recursive: true, force: true });
     }
 });

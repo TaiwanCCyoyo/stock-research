@@ -6,6 +6,7 @@ scripts.stock_research_query; no new query logic lives here.
 
 from __future__ import annotations
 
+import html
 import json
 import logging
 import os
@@ -16,7 +17,7 @@ from pathlib import Path
 from typing import Literal, cast
 
 from fastapi import APIRouter, FastAPI, Header, HTTPException, Query, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from research_api.history import history_router
@@ -249,10 +250,53 @@ def create_app() -> FastAPI:
     application.include_router(create_studio_router(capture_provider=HistoryCapture(historical)), prefix="/history-api")
 
     # API routes take precedence over the optional built frontend.
-    frontend_dist = REPO_ROOT / "research_web" / "dist"
-    if frontend_dist.joinpath("index.html").is_file():
-        application.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
+    mount_frontend(application, REPO_ROOT / "research_web" / "dist", dict(os.environ))
     return application
+
+
+def built_frontend_mode(frontend_dist: Path) -> str | None:
+    """Return the data mode recorded by build-dashboard.mjs, or None for an unrecorded build."""
+    try:
+        release = json.loads(frontend_dist.joinpath("release.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    mode = release.get("artifactMode") if isinstance(release, dict) else None
+    return mode if mode in {"public-synthetic", "local-private"} else None
+
+
+def _wrong_frontend_page(server_mode: str, built_mode: str | None, web_url: str | None) -> str:
+    target = html.escape(web_url or "http://127.0.0.1:5177", quote=True)
+    built = html.escape(built_mode or "未記錄（較舊的建置）")
+    server_mode = html.escape(server_mode)
+    return f"""<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>請改開研究網站</title>
+<style>body{{font-family:system-ui,sans-serif;max-width:40rem;margin:4rem auto;padding:0 1rem;line-height:1.7;
+background:#14201b;color:#e7efe9}}a{{color:#9fd8b4}}code{{background:#22322b;padding:.1rem .3rem;border-radius:4px}}</style>
+</head><body>
+<h1>這個網址只提供資料 API</h1>
+<p>請改開研究網站：<a href="{target}">{target}</a></p>
+<p>這裡附帶的前端與 API 的資料模式不同（API：<code>{server_mode}</code>；前端建置：<code>{built}</code>），
+直接使用會讓研究歷程等頁面讀取失敗，所以不提供。</p>
+<p>研究網站沒在執行時，用 <code>uv run python scripts/start_research_web.py</code> 啟動。</p>
+</body></html>"""
+
+
+def mount_frontend(application: FastAPI, frontend_dist: Path, environment: dict[str, str]) -> None:
+    """Serve the built frontend only when it was built for the same data mode as this API."""
+    if not frontend_dist.joinpath("index.html").is_file():
+        return
+    server_mode = environment.get("STOCK_RESEARCH_DATA_MODE", "public-synthetic")
+    built_mode = built_frontend_mode(frontend_dist)
+    if built_mode == server_mode:
+        application.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
+        return
+    logger.warning("Built frontend mode %s does not match API mode %s; serving guidance instead", built_mode, server_mode)
+    page = _wrong_frontend_page(server_mode, built_mode, environment.get("RESEARCH_WEB_URL"))
+
+    @application.get("/", include_in_schema=False)
+    def wrong_frontend() -> HTMLResponse:
+        return HTMLResponse(page)
 
 
 app = create_app()

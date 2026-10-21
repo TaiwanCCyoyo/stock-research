@@ -95,6 +95,7 @@ function readReleaseVersion(directory) {
             release.schema === VERSION_SCHEMA &&
             index.schema === "research-reports.v1" &&
             release.version === index.version &&
+            release.artifactMode === releaseArtifactMode() &&
             html.includes(
                 `name="research-web-version" content="${release.version}"`,
             )
@@ -102,6 +103,15 @@ function readReleaseVersion(directory) {
             return release.version;
     } catch {}
     return null;
+}
+
+/** The data mode baked into the frontend, recorded so the API can refuse a mismatched build. */
+export function releaseArtifactMode(value = process.env.VITE_ARTIFACT_MODE) {
+    if (!value || value === "public-synthetic") return "public-synthetic";
+    if (value === "local-private") return value;
+    throw new Error(
+        "Unknown VITE_ARTIFACT_MODE; use public-synthetic or local-private.",
+    );
 }
 
 export function isCurrentRelease(directory = dist, version = sourceVersion()) {
@@ -142,7 +152,11 @@ export function ensureRelease({ root = repoRoot, build = buildStage } = {}) {
             );
         writeFileSync(
             join(stage, "release.json"),
-            JSON.stringify({ schema: VERSION_SCHEMA, version }),
+            JSON.stringify({
+                schema: VERSION_SCHEMA,
+                version,
+                artifactMode: releaseArtifactMode(),
+            }),
         );
         if (readReleaseVersion(stage) !== version)
             throw new Error(
