@@ -166,6 +166,7 @@
                 "research_core/hhhl_variants_features.py",
                 "research_core/hhhl_variants_observations.py",
                 "research_core/hhhl_variants_selection.py",
+                "research_core/multiple_outcomes_v1.py",
                 "research_core/patterns/hhhl/*",
                 "scripts/*hhhl*",
                 "tasks/20261009-hhhl-pattern-probability/*",
@@ -175,6 +176,7 @@
             "tests": [
                 "scripts/tests/test_*hhhl*.py",
                 "scripts/tests/test_hhhl_variants_checkout_identity.py",
+                "scripts/tests/test_multiple_outcomes_v1.py",
                 "scripts/tests/test_pattern_sources.py",
                 "scripts/tests/test_cache_execution.py"
             ],
