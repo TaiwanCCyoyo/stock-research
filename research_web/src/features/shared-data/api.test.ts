@@ -1,7 +1,55 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { apiUrl } from "../../api/base.ts";
 import { readShared, recoverSymbolNames } from "./api.ts";
 import { resolveSymbolInput } from "./model.ts";
+
+test("default API root preserves shared discovery, symbols and series paths", () => {
+    for (const path of [
+        "families",
+        "adjusted-daily-v1/symbols",
+        "adjusted-daily-v1/series?code=SYNTH&basis=raw",
+    ]) {
+        assert.equal(
+            apiUrl(`/shared-data/v1/${path}`),
+            `/api/shared-data/v1/${path}`,
+        );
+    }
+    assert.equal(apiUrl("/tasks"), "/api/tasks");
+});
+
+test("configured remote API root applies to shared endpoints without changing queries", () => {
+    for (const base of [
+        "https://api.example.test/research",
+        "https://api.example.test/research/",
+    ]) {
+        for (const path of [
+            "families",
+            "adjusted-daily-v1/symbols",
+            "adjusted-daily-v1/series?code=SYNTH&basis=raw",
+        ]) {
+            assert.equal(
+                apiUrl(`/shared-data/v1/${path}`, base),
+                `https://api.example.test/research/shared-data/v1/${path}`,
+            );
+        }
+        assert.equal(
+            apiUrl("/tasks", base),
+            "https://api.example.test/research/tasks",
+        );
+    }
+});
+
+test("same-origin custom and empty API roots remain supported", () => {
+    assert.equal(
+        apiUrl("shared-data/v1/families", "/custom-api/"),
+        "/custom-api/shared-data/v1/families",
+    );
+    assert.equal(
+        apiUrl("/shared-data/v1/families", ""),
+        "/shared-data/v1/families",
+    );
+});
 
 test("explicit warmup retries then returns JSON", async () => {
     let calls = 0;

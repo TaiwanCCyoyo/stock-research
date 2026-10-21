@@ -1,3 +1,4 @@
+import { apiUrl } from "../../api/base.ts";
 import type { SymbolsResponse } from "./model.ts";
 
 function pause(ms: number, signal: AbortSignal) {
@@ -52,7 +53,7 @@ export async function readShared<T>(
 ): Promise<T> {
     for (let attempt = 0; ; attempt++) {
         signal.throwIfAborted();
-        const response = await fetcher(`/api/shared-data/v1/${path}`, {
+        const response = await fetcher(apiUrl(`/shared-data/v1/${path}`), {
             signal,
         });
         if (
