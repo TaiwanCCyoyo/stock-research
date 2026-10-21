@@ -78,6 +78,12 @@ export default defineConfig(({ command }) => {
                                 JSON.stringify({
                                     schema: "stock-research-service.v1",
                                     service: "research-web",
+                                    dataMode:
+                                        process.env.VITE_ARTIFACT_MODE ??
+                                        "public-synthetic",
+                                    apiTarget:
+                                        process.env.RESEARCH_WEB_API_TARGET ??
+                                        "http://127.0.0.1:8517",
                                     projectRoot: fileURLToPath(
                                         new URL("..", import.meta.url),
                                     ),
@@ -93,7 +99,9 @@ export default defineConfig(({ command }) => {
             // An explicitly configured older API can still be used for /api.
             proxy: {
                 "/history-api": {
-                    target: "http://127.0.0.1:8517",
+                    target:
+                        process.env.RESEARCH_WEB_API_TARGET ??
+                        "http://127.0.0.1:8517",
                     changeOrigin: true,
                 },
                 "/api": {

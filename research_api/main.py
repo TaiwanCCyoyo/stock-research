@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import time
 from dataclasses import dataclass
 from datetime import datetime
@@ -21,6 +22,7 @@ from fastapi.staticfiles import StaticFiles
 from research_api.history import history_router
 from research_api.private_artifacts import create_private_artifact_router
 from research_api.saved_research_studio import create_studio_router
+from research_core.dashboard_identity import dashboard_identity
 from research_core.opportunity_history_store import LazyHistoryStore
 from research_core.strategy_map_capture import HistoryCapture
 from research_lab import dashboard_core
@@ -56,12 +58,13 @@ def health() -> dict[str, str]:
 
 
 @router.get("/__research_service__")
-def service_identity() -> dict[str, str]:
+def service_identity(request: Request) -> dict[str, str]:
     """Identify this local checkout without loading the historical catalog."""
     return {
         "schema": "stock-research-service.v1",
         "service": "history-api",
         "projectRoot": str(Path(__file__).resolve().parents[1]),
+        **request.app.state.dashboard_identity,
     }
 
 
@@ -231,6 +234,7 @@ def create_app() -> FastAPI:
         title="Research API",
         description="Read-only view over backtest task artifacts.",
     )
+    application.state.dashboard_identity = dashboard_identity(dict(os.environ))
     application.add_exception_handler(QueryError, query_error_handler)
     application.add_exception_handler(Exception, unexpected_error_handler)
     application.include_router(router)
