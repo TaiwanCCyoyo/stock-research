@@ -441,6 +441,7 @@
         "scripts/tests/test_method_environment_interactions.py",
         "scripts/tests/test_method_environment_publication.py",
         "scripts/tests/test_method_environment_runner.py",
+        "scripts/tests/test_multiple_outcomes_v1.py",
         "scripts/tests/test_mypy_scopes.py",
         "scripts/tests/test_opportunity_artifact_publication.py",
         "scripts/tests/test_opportunity_history_catalog.py",
