@@ -294,7 +294,8 @@ class ModeCheckedFrontend:
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         # Non-GET requests keep StaticFiles' 405 so read-only API routes stay 405.
-        if scope["type"] != "http" or scope.get("method") not in {"GET", "HEAD"}:
+        # Study reports are static pages that never call the data-mode APIs.
+        if scope["type"] != "http" or scope.get("method") not in {"GET", "HEAD"} or scope.get("path", "").startswith("/reports/"):
             await self.static(scope, receive, send)
             return
         built_mode = built_frontend_mode(self.frontend_dist)

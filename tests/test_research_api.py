@@ -455,6 +455,19 @@ def test_mismatched_or_unrecorded_frontend_points_to_the_website(tmp_path: Path,
     assert TestClient(application).get("/assets/app.js").status_code == 404
 
 
+def test_mismatched_frontend_still_serves_study_reports(tmp_path: Path) -> None:
+    application = FastAPI()
+    dist = _built_frontend(tmp_path, {"schema": "research-web-release.v1", "version": "v", "artifactMode": "public-synthetic"})
+    (dist / "reports" / "study").mkdir(parents=True)
+    (dist / "reports" / "study" / "data.zip").write_bytes(b"zip-bytes")
+    api_main.mount_frontend(application, dist, {"STOCK_RESEARCH_DATA_MODE": "local-private"})
+
+    response = TestClient(application).get("/reports/study/data.zip")
+
+    assert response.status_code == 200
+    assert response.content == b"zip-bytes"
+
+
 def test_republished_frontend_is_checked_on_each_request(tmp_path: Path) -> None:
     application = FastAPI()
     dist = _built_frontend(tmp_path, {"schema": "research-web-release.v1", "version": "v", "artifactMode": "local-private"})
