@@ -6,6 +6,40 @@ explorer, a saved-research library and the dated ETF field guide. The earlier K-
 
 ## Start
 
+### Local data selection
+
+The launcher reads only its four configuration keys from the primary checkout's
+ignored `.env.local`, including when launched from a linked worktree. Configure
+absolute paths to your existing private presentation directory and saved studio
+package (JSON, gzip or split manifest); no data is created or refreshed:
+
+```dotenv
+STOCK_PRIVATE_ARTIFACT_ROOT=D:/your-existing-private-presentation
+STOCK_SAVED_STUDIO_PACKAGE=D:/your-existing-private-presentation/saved-research-studio.manifest.json
+```
+
+With both paths configured, the launcher selects `local-private` for the API and
+frontend. With no configuration it displays a clearly labelled synthetic demo.
+An explicit process `STOCK_RESEARCH_DATA_MODE` or `VITE_ARTIFACT_MODE` overrides
+file modes for both services; conflicting explicit modes are rejected. Set either
+to `public-synthetic` to intentionally use the demo. Incomplete private settings
+or an unreadable/invalid studio package fail visibly without switching to demo.
+Do not commit `.env.local` or private presentation data.
+
+`--check` prints the selected mode and validates the private studio package with
+the existing reader before checking services; exit 1 also means a service is not
+running. To preview alongside another dashboard, use
+`--api-port 18517 --web-port 15177 --no-browser`. Both proxies follow the chosen
+API port. The launcher refuses existing services with another mode or proxy
+target and never terminates them. Ctrl+C stops only children it started.
+The API identity also fingerprints its startup private directory and package
+paths, so changing those settings cannot silently reuse an API serving an older
+package. Identity checks do not request saved runs or start history capture
+verification. Package contents at the same path remain immutable evidence;
+publish revisions at a new path and restart your own service.
+
+### Run the services
+
 The normal website entry is `http://127.0.0.1:5177/#home`; the opportunity map
 is `http://127.0.0.1:5177/#market`. From the intended checkout root, use the
 launcher to start both services or reuse verified services from that checkout:
