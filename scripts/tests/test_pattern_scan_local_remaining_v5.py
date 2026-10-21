@@ -428,13 +428,98 @@ def test_publication_retry_reuses_finished_phase_and_original_executor(tmp_path:
         else:
             assert saved_after["finalized_by_code"] == executor
             assert "execution_codes" not in saved_after
-    assert len(digest_calls) - digests_before == len(saved_after["results"])  # Final-only, once per new process.
+    # A partial scoped phase also consumes the one retained fixed-selection
+    # result. It does not rehash the other conditions tables.
+    upstream_selection = int(phase != "conditions" and crash_point == "partial")
+    assert len(digest_calls) - digests_before == len(saved_after["results"]) + upstream_selection
     assert progress["completed"]["H1"][phase]["executor"] == {"commit": "first-executor", "dirty": False}
     assert not working.exists()
     assert all((destination / relative).read_bytes() == data for relative, data in payload_before.items())
     verified = len(digest_calls)
     module.run_remaining(stock, output, repo_root=repo, targets=("H1",), phases=(phase,))
     assert len(digest_calls) == verified  # Process-local verified final reuse.
+
+
+@pytest.mark.parametrize("phase", ("q4", "followup"))
+@pytest.mark.parametrize("damage", (None, "same-size", "scope", "missing-entry", "path", "missing-receipt"))
+def test_scoped_phase_checks_only_its_fixed_selection_before_computing(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, phase: str, damage: str | None) -> None:
+    repo = tmp_path / "repo"
+    output = repo / ".tmp/remaining"
+    original = tmp_path / "original"
+    original.mkdir()
+    stock = original / "stock.json"
+    stock.write_text("{}", encoding="utf-8")
+    conditions = output / "H1/conditions"
+    conditions.mkdir(parents=True)
+    selected = conditions / "top-candidates.json"
+    atom = Atom("MA", "C3", "ge60")
+    write_json(selected, {"old": [asdict(atom)]})
+    other = conditions / "unrelated-final.txt"
+    other.write_text("retained final", encoding="utf-8")
+    receipt: dict[str, Any] = {
+        "schema": "run-receipt.v1",
+        "definition": module.DEFINITION,
+        "parameters": {"target": "H1", "phase": "conditions", "original_source_id": "source", "original_input_id": "input"},
+        "code": {"commit": "original", "dirty": False},
+        "results": {path.name: {"path": str(path), "bytes": path.stat().st_size, "sha256": module.file_digest(path)} for path in (selected, other)},
+    }
+    if damage == "same-size":
+        selected.write_bytes(selected.read_bytes().replace(b'"old"', b'"new"'))
+    elif damage == "scope":
+        receipt["parameters"]["original_input_id"] = "foreign"
+    elif damage == "missing-entry":
+        del receipt["results"][selected.name]
+    elif damage == "path":
+        receipt["results"][selected.name]["path"] = str(other)
+    if damage != "missing-receipt":
+        write_json(conditions / "run-receipt.json", receipt)
+    write_json(
+        output / "progress.json",
+        {
+            "schema": module.DEFINITION,
+            "stock_result": str(stock),
+            "source_id": "source",
+            "input_id": "input",
+            "complete": False,
+            "completed": {"H1": {"conditions": {"receipt": str(conditions / "run-receipt.json")}}},
+        },
+    )
+    inputs = SimpleNamespace(
+        stock_result=stock,
+        temporary=output / "_temporary",
+        run=original,
+        source_id="source",
+        input_id="input",
+        codes=("1101",),
+        cache_target=lambda *args: None,
+    )
+    monkeypatch.setattr(module, "LocalInputs", lambda *args: inputs)
+    monkeypatch.setattr(module, "code_identity", lambda root: {"commit": "current", "dirty": False})
+    monkeypatch.setattr(module, "fingerprint_inputs", lambda specs: {})
+    digests: list[Path] = []
+    digest = module.file_digest
+
+    def selection_digest(path: Path) -> str:
+        assert path == selected  # No pass over other final or intermediate files.
+        digests.append(path)
+        return digest(path)
+
+    calls: list[dict] = []
+
+    def compute(inputs: object, target: str, candidates: dict, destination: Path) -> list[Path]:
+        calls.append(candidates)
+        raise RuntimeError("synthetic phase reached")
+
+    monkeypatch.setattr(module, "file_digest", selection_digest)
+    monkeypatch.setattr(module, "run_q4" if phase == "q4" else "run_followup", compute)
+    if damage is None:
+        with pytest.raises(RuntimeError, match="synthetic phase reached"):
+            module.run_remaining(stock, output, repo_root=repo, targets=("H1",), phases=(phase,))
+        assert calls == [{"old": (atom,)}] and digests == [selected]
+    else:
+        with pytest.raises((ValueError, FileNotFoundError)):
+            module.run_remaining(stock, output, repo_root=repo, targets=("H1",), phases=(phase,))
+        assert not calls
 
 
 def test_phase_start_keeps_original_executor_and_rejects_unknown_legacy_work(tmp_path: Path) -> None:

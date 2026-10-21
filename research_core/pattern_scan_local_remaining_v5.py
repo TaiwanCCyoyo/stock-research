@@ -88,6 +88,30 @@ def _published_files(receipt: dict[str, Any], final: Path, repo_root: Path, para
     return files
 
 
+def _fixed_candidates(output: Path, repo_root: Path, parameters: dict[str, str]) -> dict[str, tuple[Atom, ...]]:
+    """Use the existing final-selection receipt even when conditions is skipped.
+
+    Only this small dependency is consumed here. Other conditions tables and
+    intermediate projections do not need another integrity pass.
+    """
+    final = output / parameters["target"] / "conditions"
+    receipt = read_json(final / "run-receipt.json")
+    scope = {**parameters, "phase": "conditions"}
+    _check_receipt_scope(receipt, scope)
+    selected_path = checked_path(final / "top-candidates.json")
+    descriptor = receipt["results"].get("top-candidates.json")
+    if not isinstance(descriptor, dict):
+        raise ValueError("completed conditions lack their fixed candidate result")
+    selection_receipt = {**receipt, "results": {"top-candidates.json": descriptor}}
+    files = _published_files(selection_receipt, final, repo_root, scope)
+    if files != [selected_path]:
+        raise ValueError("fixed candidate result path differs from its conditions receipt")
+    _verify_final_results(selection_receipt, files)
+    selected = read_json(selected_path)
+    LOGGER.info("Reuse fixed candidates target=%s original_executor=%s", parameters["target"], receipt["code"]["commit"])
+    return {name: tuple(Atom(**atom) for atom in atoms) for name, atoms in selected.items()}
+
+
 def _remove_owned_temporary(path: Path, output: Path) -> None:
     """Retire this run's new scratch only after its final results are recorded."""
     if not path.exists():
@@ -229,8 +253,7 @@ def run_remaining(stock_result: Path, output: Path, *, repo_root: Path, targets:
                             write_progress(start_path, phase_start)
                     candidates = {}
                     if phase != "conditions":
-                        selected = read_json(output / target / "conditions" / "top-candidates.json")
-                        candidates = {name: tuple(Atom(**atom) for atom in atoms) for name, atoms in selected.items()}
+                        candidates = _fixed_candidates(output, repo_root, parameters)
                     if phase == "conditions":
                         _, candidates, files = run_conditions(inputs, target, working)
                         top_path = checked_path(working / "top-candidates.json")
