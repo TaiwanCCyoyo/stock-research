@@ -81,6 +81,8 @@ def _verify_live_mode(name: str, port: int, environment: dict[str, str]) -> None
             raise ValueError("資料模式不符或服務版本尚未提供模式")
         if name == "history-api" and payload.get("configId") != dashboard_identity(environment)["configId"]:
             raise ValueError("私有來源設定不符或服務版本尚未提供設定身份")
+        if name == "history-api" and "RESEARCH_WEB_URL" in environment and payload.get("webUrl") != environment["RESEARCH_WEB_URL"]:
+            raise ValueError("API 記錄的網站網址不符")
         if name == "research-web" and payload.get("apiTarget") != environment["RESEARCH_WEB_API_TARGET"]:
             raise ValueError("前端 API proxy 目標不符")
     except (OSError, ValueError) as exc:

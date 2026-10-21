@@ -48,6 +48,12 @@ function fakeBuild(root, stage, version) {
         JSON.stringify({ schema: "research-reports.v1", version, reports: [] }),
     );
     writeFileSync(
+        join(stage, "artifact-mode.json"),
+        JSON.stringify({
+            artifactMode: process.env.VITE_ARTIFACT_MODE || "public-synthetic",
+        }),
+    );
+    writeFileSync(
         join(stage, "app.js"),
         readFileSync(join(web, "src", "main.tsx")),
     );
@@ -251,6 +257,20 @@ test("release records the frontend data mode and rebuilds when it is missing", a
 
         assert.equal(releaseArtifactMode(""), "public-synthetic");
         assert.throws(() => releaseArtifactMode("other"));
+
+        await writeFile(join(web, "src", "main.tsx"), "source-v3");
+        const broken = (atRoot, stage, version) => {
+            fakeBuild(atRoot, stage, version);
+            writeFileSync(
+                join(stage, "artifact-mode.json"),
+                JSON.stringify({ artifactMode: "unknown" }),
+            );
+        };
+        assert.throws(
+            () => ensureRelease({ root, build: broken }),
+            /Unknown VITE_ARTIFACT_MODE/,
+        );
+        assert.equal(isCurrentRelease(dist), false);
     } finally {
         if (previous === undefined) delete process.env.VITE_ARTIFACT_MODE;
         else process.env.VITE_ARTIFACT_MODE = previous;

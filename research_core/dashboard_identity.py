@@ -17,4 +17,4 @@ def dashboard_identity(environment: Mapping[str, str]) -> dict[str, str]:
             value = environment.get(key, "")
             configuration[key] = os.path.normcase(os.path.abspath(value)) if value else ""
     raw = json.dumps(configuration, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    return {"dataMode": mode, "configId": hashlib.sha256(raw).hexdigest()}
+    return {"dataMode": mode, "configId": hashlib.sha256(raw).hexdigest(), "webUrl": environment.get("RESEARCH_WEB_URL", "")}
