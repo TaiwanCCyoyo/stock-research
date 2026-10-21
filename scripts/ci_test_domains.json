@@ -54,6 +54,7 @@
                 "research_core/maintained_adjusted_daily.py",
                 "research_core/technical_daily_v1.py",
                 "research_core/daily_conditions_v1.py",
+                "research_core/pattern_scan_daily_values_v1.py",
                 "scripts/maintain_adjusted_daily.py",
                 "scripts/check_adjusted_daily_asof.py",
                 "scripts/check_daily_conditions.py",
