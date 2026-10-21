@@ -13,18 +13,13 @@ import {
     candleRows,
     featureRows,
     numeric,
+    formatNumber,
+    formatFeature,
+    featureLabels,
     validPrice,
     type SharedSeries,
 } from "./model";
 
-const colors = [
-    "#d9822b",
-    "#b59b2b",
-    "#9775cf",
-    "#448fbe",
-    "#7c9d4b",
-    "#ad8970",
-];
 export function SharedChart({
     series,
     requestedAt,
@@ -104,7 +99,7 @@ export function SharedChart({
             ma.forEach((n) => {
                 chart
                     .addSeries(LineSeries, {
-                        color: colors[[5, 10, 20, 60, 120, 240].indexOf(n)],
+                        color: color(`--shared-ma${n}`),
                         lineWidth: 1,
                         priceLineVisible: false,
                         lastValueVisible: false,
@@ -116,7 +111,7 @@ export function SharedChart({
                 ["BB20_Upper", "BB20_Middle", "BB20_Lower"].forEach((key) => {
                     chart
                         .addSeries(LineSeries, {
-                            color: "#72a99c",
+                            color: color("--shared-bb"),
                             lineWidth: 1,
                             priceLineVisible: false,
                             lastValueVisible: false,
@@ -151,7 +146,14 @@ export function SharedChart({
         chart
             .addSeries(
                 HistogramSeries,
-                { priceFormat: { type: "volume" }, priceLineVisible: false },
+                {
+                    priceFormat: {
+                        type: "custom",
+                        minMove: 1,
+                        formatter: (value: number) => formatNumber(value, 0),
+                    },
+                    priceLineVisible: false,
+                },
                 1,
             )
             .setData(
@@ -169,18 +171,40 @@ export function SharedChart({
                 ),
             );
         if (reference && oscillator !== "none") {
-            chart
-                .addSeries(
-                    LineSeries,
-                    {
-                        color: "#a991d1",
-                        lineWidth: 1,
-                        priceLineVisible: false,
-                        title: oscillator,
-                    },
-                    2,
-                )
-                .setData(indicatorRows(oscillator));
+            const options = {
+                priceLineVisible: false,
+                title: featureLabels[oscillator] ?? oscillator,
+                priceFormat: {
+                    type: "custom" as const,
+                    minMove: oscillator === "atr14_pct" ? 0.0001 : 0.01,
+                    formatter: (value: number) =>
+                        formatFeature(oscillator, value),
+                },
+            };
+            if (oscillator === "MACDHist") {
+                chart.addSeries(HistogramSeries, options, 2).setData(
+                    indicatorRows(oscillator).map((row) =>
+                        "value" in row
+                            ? {
+                                  ...row,
+                                  color: row.value! >= 0 ? gain : loss,
+                              }
+                            : row,
+                    ),
+                );
+            } else {
+                chart
+                    .addSeries(
+                        LineSeries,
+                        {
+                            ...options,
+                            color: color("--shared-osc"),
+                            lineWidth: 1,
+                        },
+                        2,
+                    )
+                    .setData(indicatorRows(oscillator));
+            }
         }
         chart
             .panes()

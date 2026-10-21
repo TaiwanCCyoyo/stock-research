@@ -35,8 +35,16 @@ to 85–87 ms. This excludes JSON transport and chart rendering.
 
 Only reference-factor-adjusted prices have attached technical values. Other
 bases hide those layers; no browser indicator calculations are used. Volume is
-in lots, including fractions; `atr14_pct` is a ratio. Pivots draw on their extreme
+stored in lots, including fractions (rounded to whole lots for display);
+`atr14_pct` is a ratio displayed as a percentage. Prices show at most two decimals.
+The legend compares against the previous valid close across missing dates.
+Only 4 ATR pivots are enabled initially. All indicator colors use theme CSS tokens.
+Pivots draw on their extreme
 date and display `confirmed_at` separately.
+
+Missing optional stock names retry on subsequent requests after a 60-second
+cooldown in the background, with at most one retry in flight. Busy producers
+still return codes immediately through the existing guarded metadata reader.
 
 ## Catalog and scope
 
@@ -46,6 +54,11 @@ Entries without an explicit recommendation say 未標示現行版. Existing immu
 manifests and catalog entries are unchanged. Coverage is the catalog's declared
 scope; presence does not certify research validity. Contract and asset-index
 links explain column definitions and access locations.
+Chinese names and purposes come from the marked discovery-label table in
+`docs/en/research-program.md`, maintained beside the authoritative definitions.
+The API reads it without editing catalog snapshots or frozen manifests; missing
+labels are explicit. Versions of one data ID share a card with a version selector;
+hashes and manifest details are collapsed, and maintained families appear first.
 Each catalog card also projects the pinned JSON manifest (bounded to 2 MB),
 without opening or verifying payload members. Declared security counts, analyzed
 security counts and manifest member counts remain distinct. Missing physical

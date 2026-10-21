@@ -215,6 +215,69 @@ def test_busy_producer_declines_metadata_before_resolving_or_reading_root(monkey
     assert shared_data_view.symbol_names() == {}
 
 
+def test_empty_names_retry_in_background_only_after_cooldown(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    _publish(tmp_path, "generation-one")
+    clock = [100.0]
+    monkeypatch.setattr(shared_data_view, "time", SimpleNamespace(monotonic=lambda: clock[0], perf_counter=shared_data_view.time.perf_counter))
+    attempts = []
+    release = Event()
+
+    def names() -> dict[str, tuple[str, str]]:
+        attempts.append(clock[0])
+        if len(attempts) <= 2:
+            return {}  # Initial warmup and first retry encounter a busy producer.
+        assert release.wait(3), "metadata retry was not released"
+        return {"2330": ("合成名稱", "TEST")}
+
+    monkeypatch.setattr(shared_data_view, "symbol_names", names)
+    store = SharedDataView(tmp_path)
+    try:
+        store.prepare(wait=True)
+        assert not store.symbols()["namesAvailable"]
+        clock[0] = 159.9
+        store.prepare()
+        assert len(attempts) == 1
+        clock[0] = 160.0
+        store.prepare()
+        assert store._names_future is not None
+        store._names_future.result(timeout=3)
+        store.prepare()
+        assert len(attempts) == 2 and not store.symbols()["namesAvailable"]
+        clock[0] = 220.0
+        store.prepare()
+        pending = store._names_future
+        assert pending is not None
+        # The pending metadata read must not block repeated chart requests.
+        for _ in range(5):
+            assert not store.symbols()["namesAvailable"]
+            assert store._names_future is pending
+        release.set()
+        pending.result(timeout=3)
+        result = store.symbols()
+        assert result["namesAvailable"] and result["symbols"][0]["name"] == "合成名稱"
+        clock[0] = 1000.0
+        store.prepare()
+        assert len(attempts) == 3, "successful names must remain cached"
+    finally:
+        release.set()
+        store.close()
+
+
+def test_discovery_labels_read_the_index_without_mutating_catalog(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    path = tmp_path / "index.md"
+    path.write_text("\n".join([shared_data_view.LABELS_START, "| `synthetic` | 中文名稱 | 能回答的問題 |", shared_data_view.LABELS_END]), encoding="utf-8")
+    labels = shared_data_view.discovery_labels(path)
+    assert labels == {"synthetic": {"display_title": "中文名稱", "purpose": "能回答的問題"}}
+    monkeypatch.setattr(shared_data_view, "discovery_labels", lambda: labels)
+    assert shared_data_view.family_summary({"family": "synthetic"})["purpose"] == "能回答的問題"
+
+
+def test_repo_index_has_display_metadata_for_maintained_family() -> None:
+    labels = shared_data_view.discovery_labels()
+    assert labels["adjusted-daily-v1"]["display_title"] == "每日行情與技術指標"
+    assert labels["adjusted-daily-v1"]["purpose"]
+
+
 def test_failed_warmup_retries_same_generation_only_after_cooldown(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     _publish(tmp_path, "generation-one")
     monkeypatch.setattr(shared_data_view, "symbol_names", lambda: {})
@@ -315,12 +378,14 @@ def test_catalog_enrichment_keeps_entries_with_missing_or_mismatched_manifests(t
     store = SimpleNamespace(roots=roots, read=lambda: {"version_id": "synthetic", "entries": entries, "retired": []})
     monkeypatch.setattr(shared_data_view, "history_data_roots", lambda: roots)
     monkeypatch.setattr(shared_data_view, "DataCatalog", lambda roots: store)
+    monkeypatch.setattr(shared_data_view, "discovery_labels", lambda: {"good": {"display_title": "測試資料", "purpose": "測試用途"}})
     result, error = shared_data_view.catalog_summary()
     assert error is None and result is not None
     good, mismatch, absent = result["entries"]
     assert good["viewer_metadata"]["columns"] == ["Code", "Date"]
     assert good["viewer_metadata"]["security_count"] is None
     assert good["metadata_error"] is None
+    assert good["display_title"] == "測試資料" and good["purpose"] == "測試用途"
     for failed in (mismatch, absent):
         assert failed["viewer_metadata"] is None and failed["metadata_error"]
     assert "viewer_metadata" not in entries[0], "enrichment must not mutate catalog records"

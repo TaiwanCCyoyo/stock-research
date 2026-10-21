@@ -30,6 +30,8 @@ export interface SharedSymbol {
     last: string;
 }
 export interface Family {
+    display_title?: string | null;
+    purpose?: string | null;
     family: string;
     generation: string;
     asof: string;
@@ -41,6 +43,8 @@ export interface Family {
     technical: unknown;
 }
 export interface CatalogEntry {
+    display_title?: string | null;
+    purpose?: string | null;
     data_id: string;
     version_id: string;
     kind: string;
@@ -123,4 +127,69 @@ export function metadataText(value: unknown): string {
         : typeof value === "string"
           ? value
           : JSON.stringify(value);
+}
+
+export function groupCatalog(entries: CatalogEntry[]) {
+    const groups = new Map<string, CatalogEntry[]>();
+    entries.forEach((entry) => {
+        const versions = groups.get(entry.data_id) ?? [];
+        versions.push(entry);
+        groups.set(entry.data_id, versions);
+    });
+    return [...groups.entries()];
+}
+export function selectedCatalogVersion(
+    entries: CatalogEntry[],
+    version?: string,
+) {
+    return (
+        entries.find((entry) => entry.version_id === version) ??
+        entries.find((entry) => entry.recommended === true) ??
+        entries[0]
+    );
+}
+export const featureLabels: Record<string, string> = {
+    BB20_Upper: "布林上軌",
+    BB20_Middle: "布林中軌",
+    BB20_Lower: "布林下軌",
+    RSI14: "相對強弱 RSI14",
+    MACDHist: "MACD 柱狀值",
+    ADX14: "趨勢強度 ADX14",
+    atr14_pct: "平均真實波幅 ATR14",
+    none: "隱藏",
+};
+export function formatNumber(value: unknown, digits = 2): string {
+    if (!numeric(value)) return "—";
+    const rounded = Number(value.toFixed(digits));
+    return (Object.is(rounded, -0) ? 0 : rounded).toLocaleString("zh-TW", {
+        maximumFractionDigits: digits,
+    });
+}
+export function formatFeature(key: string, value: unknown): string {
+    return key === "atr14_pct"
+        ? numeric(value)
+            ? `${formatNumber(value * 100)}%`
+            : "—"
+        : formatNumber(value);
+}
+export function priceChange(series: SharedSeries, day: number) {
+    if (day < 0 || !validPrice(series, day))
+        return { amount: null, percent: null, direction: "flat" };
+    for (let i = day - 1; i >= 0; i--) {
+        if (!validPrice(series, i)) continue;
+        const previous = series.close[i]!;
+        const amount = series.close[day]! - previous;
+        // Non-positive denominators cannot express a meaningful stock return.
+        return {
+            amount,
+            percent: previous > 0 ? (amount / previous) * 100 : null,
+            direction: amount > 0 ? "gain" : amount < 0 ? "loss" : "flat",
+        };
+    }
+    return { amount: null, percent: null, direction: "flat" };
+}
+export function formatSigned(value: number | null): string {
+    return value === null
+        ? "—"
+        : `${value > 0 ? "+" : ""}${formatNumber(value)}`;
 }

@@ -2,6 +2,12 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
     candleRows,
+    groupCatalog,
+    selectedCatalogVersion,
+    priceChange,
+    formatNumber,
+    formatFeature,
+    formatSigned,
     featureRows,
     qualityCounts,
     versionLabel,
@@ -57,4 +63,86 @@ test("catalog does not infer current version from partial status or version id",
         }),
         "未標示現行版",
     );
+});
+
+test("catalog groups all versions without recommending the first or latest", () => {
+    const versions = ["old", "latest"].map((version_id) => ({
+        data_id: "one",
+        version_id,
+        status: "partial",
+        kind: "features",
+    }));
+    const groups = groupCatalog([
+        ...versions,
+        { ...versions[0], data_id: "two" },
+    ]);
+    assert.equal(groups.length, 2);
+    assert.deepEqual(groups[0][1], versions);
+    assert.equal(
+        selectedCatalogVersion(versions, "latest").version_id,
+        "latest",
+    );
+    assert.equal(
+        versionLabel(selectedCatalogVersion(versions)),
+        "未標示現行版",
+    );
+    assert.equal(
+        selectedCatalogVersion([
+            versions[0],
+            { ...versions[1], recommended: true },
+        ]).version_id,
+        "latest",
+    );
+    assert.equal(selectedCatalogVersion(versions, "removed").version_id, "old");
+});
+test("quote change skips invalid gaps and uses previous valid close", () => {
+    const sample = {
+        ...fixture,
+        open: [10, 20, 13],
+        high: [12, 22, 14],
+        low: [9, 19, 12],
+        close: [11, 21, 13],
+    };
+    const change = priceChange(sample, 2);
+    assert.equal(change.amount, 2);
+    assert.equal(change.percent, (2 / 11) * 100);
+    assert.equal(change.direction, "gain");
+    assert.equal(priceChange(sample, 1).amount, null);
+    assert.equal(priceChange(sample, 0).percent, null);
+    assert.equal(priceChange(sample, -1).amount, null);
+});
+test("quote change preserves zero and losses without dividing by non-positive prices", () => {
+    const sample = {
+        ...fixture,
+        open: [10, 20, 10],
+        high: [12, 22, 12],
+        low: [9, 19, 9],
+        close: [11, 21, 10],
+    };
+    assert.equal(priceChange(sample, 2).direction, "loss");
+    assert.equal(priceChange({ ...sample, close: [11, 21, 11] }, 2).amount, 0);
+    assert.equal(
+        priceChange({ ...sample, close: [0, 21, 10] }, 2).percent,
+        null,
+    );
+    assert.equal(
+        priceChange({ ...sample, close: [-1, 21, 10] }, 2).percent,
+        null,
+    );
+});
+test("price, volume and indicator display projections keep units and missing values distinct", () => {
+    assert.equal(formatNumber(1234.567), "1,234.57");
+    assert.equal(formatNumber(-1.235), "-1.24");
+    assert.equal(formatNumber(-0.001), "0");
+    assert.equal(formatNumber(0), "0");
+    assert.equal(formatNumber(null), "—");
+    assert.equal(formatNumber(NaN), "—");
+    assert.equal(formatNumber(1234.56, 0), "1,235");
+    assert.equal(formatFeature("atr14_pct", 0.023456), "2.35%");
+    assert.equal(formatFeature("atr14_pct", 0), "0%");
+    assert.equal(formatFeature("atr14_pct", null), "—");
+    assert.equal(formatFeature("MACDHist", -0.123), "-0.12");
+    assert.equal(formatSigned(-2), "-2");
+    assert.equal(formatSigned(2), "+2");
+    assert.equal(formatSigned(0), "0");
 });

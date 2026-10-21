@@ -3,7 +3,11 @@ import { artifactMode } from "../../api/artifactMode";
 import { readShared } from "./api";
 import {
     MA_PERIODS,
-    numeric,
+    formatNumber as fmt,
+    formatFeature,
+    featureLabels,
+    priceChange,
+    formatSigned,
     qualityCounts,
     validPrice,
     type Basis,
@@ -15,8 +19,6 @@ import { SharedChart } from "./SharedChart";
 import { SharedCatalog } from "./SharedCatalog";
 import "./shared-data.css";
 
-const fmt = (v: unknown) =>
-    numeric(v) ? v.toLocaleString("zh-TW", { maximumFractionDigits: 3 }) : "—";
 export function SharedDataPage({
     code,
     theme,
@@ -55,7 +57,7 @@ export function SharedDataPage({
     const [retry, setRetry] = useState(0);
     const [ma, setMa] = useState([5, 20, 60]);
     const [bb, setBb] = useState(true);
-    const [pivots, setPivots] = useState([1.5]);
+    const [pivots, setPivots] = useState([4]);
     const [oscillator, setOscillator] = useState("RSI14");
     const [range, setRange] = useState(240);
     const [cursor, setCursor] = useState(-1);
@@ -126,6 +128,7 @@ export function SharedDataPage({
         current && cursor >= 0
             ? Math.min(cursor, current.dates.length - 1)
             : -1;
+    const change = current ? priceChange(current, day) : null;
     const reasons = useMemo(
         () => (current ? qualityCounts(current) : []),
         [current],
@@ -358,9 +361,27 @@ export function SharedDataPage({
                                                 <span>
                                                     收 {fmt(current.close[day])}
                                                 </span>
+                                                <span
+                                                    className={`shared-change-${change?.direction ?? "flat"}`}
+                                                >
+                                                    漲跌{" "}
+                                                    {formatSigned(
+                                                        change?.amount ?? null,
+                                                    )}{" "}
+                                                    · 漲跌幅{" "}
+                                                    {formatSigned(
+                                                        change?.percent ?? null,
+                                                    )}
+                                                    {change?.percent != null
+                                                        ? "%"
+                                                        : ""}
+                                                </span>
                                                 <span>
                                                     量{" "}
-                                                    {fmt(current.volume[day])}{" "}
+                                                    {fmt(
+                                                        current.volume[day],
+                                                        0,
+                                                    )}{" "}
                                                     張
                                                 </span>
                                                 {!validPrice(current, day) && (
@@ -490,12 +511,7 @@ export function SharedDataPage({
                                                             key={key}
                                                             value={key}
                                                         >
-                                                            {key === "none"
-                                                                ? "隱藏"
-                                                                : key ===
-                                                                    "atr14_pct"
-                                                                  ? "ATR14 比例"
-                                                                  : key}
+                                                            {featureLabels[key]}
                                                         </option>
                                                     ))}
                                                 </select>
@@ -519,13 +535,15 @@ export function SharedDataPage({
                                                     ].map((key) => (
                                                         <div key={key}>
                                                             <dt>
-                                                                {key ===
-                                                                "atr14_pct"
-                                                                    ? "ATR14 比例"
-                                                                    : key}
+                                                                {
+                                                                    featureLabels[
+                                                                        key
+                                                                    ]
+                                                                }
                                                             </dt>
                                                             <dd>
-                                                                {fmt(
+                                                                {formatFeature(
+                                                                    key,
                                                                     current
                                                                         .tech[
                                                                         key

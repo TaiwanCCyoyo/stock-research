@@ -30,6 +30,31 @@ REFERENCE = "reference_factor_adjusted"
 PRICE_COLUMNS = ["Code", "Date", "Open", "High", "Low", "Close", "VolumeLots", "Quality", "quality_reason"]
 READ_ERRORS = (OSError, ValueError, KeyError, live_producer.ProducerChangedError)
 WARM_RETRY_SECONDS = 1.0
+NAMES_RETRY_SECONDS = 60.0
+ASSET_INDEX = Path(__file__).resolve().parents[1] / "docs/en/research-program.md"
+LABELS_START = "<!-- shared-data-labels:start -->"
+LABELS_END = "<!-- shared-data-labels:end -->"
+
+
+def discovery_labels(path: Path = ASSET_INDEX) -> dict[str, dict[str, str]]:
+    """Read display metadata from the asset index, separate from frozen pins."""
+    try:
+        if path.stat().st_size > 2_000_000:
+            raise ValueError("asset index exceeds metadata limit")
+        text = path.read_text(encoding="utf-8")
+        section = text.split(LABELS_START, 1)[1].split(LABELS_END, 1)[0]
+        labels = {}
+        for line in section.splitlines():
+            cells = [cell.strip().strip("`") for cell in line.strip().strip("|").split("|")]
+            if len(cells) == 3 and line.startswith("| `"):
+                data_id, title, purpose = cells
+                if data_id in labels or not title or not purpose:
+                    raise ValueError("duplicate or empty discovery label")
+                labels[data_id] = {"display_title": title, "purpose": purpose}
+        return labels
+    except (OSError, ValueError, IndexError) as exc:
+        LOGGER.warning("Shared-data asset labels unavailable: %s", exc)
+        return {}
 
 
 class ViewWarming(RuntimeError):
@@ -68,16 +93,18 @@ def catalog_summary() -> tuple[dict[str, Any] | None, str | None]:
     try:
         store = DataCatalog(history_data_roots())
         catalog = store.read()
+        labels = discovery_labels()
         entries = []
         for entry in catalog.get("entries", []):
+            description = labels.get(entry["data_id"], {})
             try:
                 pin = entry["manifest"]
                 path = store.roots.artifact_path(pin["scope"], pin["path"])
                 metadata = manifest_metadata(path, pin["sha256"])
-                entries.append({**entry, "viewer_metadata": metadata, "metadata_error": None})
+                entries.append({**entry, **description, "viewer_metadata": metadata, "metadata_error": None})
             except (OSError, ValueError, KeyError, TypeError) as exc:
                 LOGGER.warning("Catalog manifest unavailable data_id=%s: %s", entry.get("data_id"), exc)
-                entries.append({**entry, "viewer_metadata": None, "metadata_error": "Manifest 缺失、過大或驗證失敗；欄位與證券數未知。"})
+                entries.append({**entry, **description, "viewer_metadata": None, "metadata_error": "Manifest 缺失、過大或驗證失敗；欄位與證券數未知。"})
         return {**{key: catalog.get(key, []) for key in ("version_id", "retired")}, "entries": entries}, None
     except (OSError, ValueError, RuntimeError, KeyError) as exc:
         LOGGER.warning("Shared catalog unavailable: %s", exc)
@@ -124,8 +151,11 @@ def manifest_metadata(path: Path, expected_digest: str) -> dict[str, Any]:
 
 def family_summary(status: dict[str, Any]) -> dict[str, Any]:
     return {
-        key: status.get(key)
-        for key in ("family", "generation", "asof", "status_sha256", "codes", "calendar", "definition", "bases", "technical", "built_at_utc")
+        **discovery_labels().get(status["family"], {}),
+        **{
+            key: status.get(key)
+            for key in ("family", "generation", "asof", "status_sha256", "codes", "calendar", "definition", "bases", "technical", "built_at_utc")
+        },
     }
 
 
@@ -146,6 +176,8 @@ class SharedDataView:
         self._identity: tuple[str, str] | None = None
         self._retry_after: float | None = None
         self._names: dict[str, tuple[str, str]] = {}
+        self._names_future: Future[dict[str, tuple[str, str]]] | None = None
+        self._names_retry_after = 0.0
         self.warm_seconds: float | None = None
 
     @property
@@ -179,10 +211,25 @@ class SharedDataView:
             {"code": str(code), "first": cast(pd.Timestamp, row["min"]).date().isoformat(), "last": cast(pd.Timestamp, row["max"]).date().isoformat()}
             for code, row in periods.iterrows()
         ]
-        self._names = symbol_names()
+        names = symbol_names()
+        with self._lock:
+            self._names = names
+            self._names_retry_after = time.monotonic() + NAMES_RETRY_SECONDS
         self.warm_seconds = time.perf_counter() - started
         LOGGER.info("Verified shared viewer generation=%s symbols=%d seconds=%.3f", generation, len(symbols), self.warm_seconds)
         return symbols
+
+    def _refresh_names(self) -> None:
+        """Retry missing optional metadata on demand, without delaying a request."""
+        with self._lock:
+            if self._names_future is not None:
+                if not self._names_future.done():
+                    return
+                self._names = self._names_future.result()
+                self._names_future = None
+            if not self._names and time.monotonic() >= self._names_retry_after:
+                self._names_retry_after = time.monotonic() + NAMES_RETRY_SECONDS
+                self._names_future = self._executor.submit(symbol_names)
 
     def prepare(self, *, wait: bool = False) -> tuple[dict[str, Any], list[dict[str, Any]]]:
         """Re-resolve current.json on every call and pin all reads to that identity."""
@@ -215,6 +262,7 @@ class SharedDataView:
             current = self.status()
             if (current["generation"], current["status_sha256"]) != identity:
                 raise ViewWarming("共用資料世代已更新，正在重新核對。")
+            self._refresh_names()
             return status, symbols
         except READ_ERRORS as exc:
             with self._lock:
