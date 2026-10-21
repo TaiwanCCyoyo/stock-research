@@ -1,3 +1,4 @@
+import { apiUrl } from "./base.ts";
 import type {
     DataQualityResponse,
     PricesResponse,
@@ -6,12 +7,6 @@ import type {
     TradeDetail,
     TradesResponse,
 } from "./types";
-
-/**
- * Base URL for the research API. In dev the Vite proxy maps /api -> :8503,
- * so the default works with `open_research_api.cmd` running locally.
- */
-const API_BASE: string = import.meta.env.VITE_API_BASE ?? "/api";
 
 export class ApiError extends Error {
     status: number;
@@ -26,7 +21,7 @@ async function getJson<T>(
     path: string,
     cache: RequestCache = "default",
 ): Promise<T> {
-    const response = await fetch(`${API_BASE}${path}`, { cache });
+    const response = await fetch(apiUrl(path), { cache });
     if (!response.ok) {
         let detail = `HTTP ${response.status}`;
         try {
@@ -171,7 +166,7 @@ const CSRF_HEADERS = { "X-Requested-With": "research-web" };
  */
 export async function sendHeartbeat(): Promise<void> {
     try {
-        await fetch(`${API_BASE}/heartbeat`, {
+        await fetch(apiUrl("/heartbeat"), {
             method: "POST",
             headers: CSRF_HEADERS,
         });
@@ -183,7 +178,7 @@ export async function sendHeartbeat(): Promise<void> {
 /** Requests a graceful server shutdown. Returns whether the request succeeded. */
 export async function shutdownDashboard(): Promise<boolean> {
     try {
-        const response = await fetch(`${API_BASE}/shutdown`, {
+        const response = await fetch(apiUrl("/shutdown"), {
             method: "POST",
             headers: CSRF_HEADERS,
         });

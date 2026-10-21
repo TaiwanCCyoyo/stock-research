@@ -11,13 +11,25 @@ export type StudioPage =
     | "market-legacy"
     | "market-preview"
     | "reports"
+    | "data"
     | "report";
 export function studioRoute(hash: string): {
     page: StudioPage;
     runId: string | null;
     reportId?: string;
+    code?: string;
 } {
     const value = hash.replace(/^#/, "").split("?")[0];
+    if (value.startsWith("data/")) {
+        try {
+            const code = decodeURIComponent(value.slice("data/".length));
+            return /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(code)
+                ? { page: "data", runId: null, code }
+                : { page: "data", runId: null };
+        } catch {
+            return { page: "data", runId: null };
+        }
+    }
     if (value.startsWith("report/")) {
         try {
             const reportId = decodeURIComponent(value.slice("report/".length));
@@ -50,6 +62,7 @@ export function studioRoute(hash: string): {
         "market-legacy",
         "market-preview",
         "reports",
+        "data",
     ]);
     return {
         page: pages.has(value as StudioPage) ? (value as StudioPage) : "home",

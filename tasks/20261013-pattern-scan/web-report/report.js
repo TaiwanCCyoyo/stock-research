@@ -466,6 +466,7 @@
         if (href) {
             const a = node("a", present(item.value) ? item.value : "未提供");
             a.href = href;
+            a.setAttribute("download", "");
             dd.append(a);
         } else
             dd.textContent = present(item.value)
