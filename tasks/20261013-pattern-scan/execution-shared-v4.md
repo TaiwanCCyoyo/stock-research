@@ -338,3 +338,32 @@ calling the same output later without these options reuses its completed cases.
 The final report must distinguish representative batches, completed full-stock
 cases and the full 40-case audit. A synthetic test or a four-stock measurement
 does not certify a full-stock comparison.
+
+### Bounded audit evidence adoption
+
+The retained one-off entry point
+`tasks/20261013-pattern-scan/evidence/adopt_bounded_audits_20261021.py` records
+the already computed ten-event structure/local-condition/global-scalar checks
+and the dated 15-case final-file inspection. It checks sample/coverage metadata,
+then writes a normal `run-receipt.v1` beside those four existing final comparison
+JSON files through sibling staging and no-replace publication. It neither copies
+them nor binds/reconstructs a stock, and adds no input/source/intermediate hashes.
+The receipt's four digests belong only to these retained final audit results.
+
+The adoption commit describes this later receipt operation. Earlier scratch
+checks did not record an execution receipt, so their exact execution commit is
+unavailable and is never manufactured from the adoption commit. Candidate case
+receipts retain their own actual executor. All results and original scratch
+checkers remain local; this entry point creates no shared family or publication.
+The 15-case inspection is explicitly partial, not the live worker's progress or
+the complete 40-case audit. Numerical acquisition/price/indicator and historical
+PIT limitations remain unchanged.
+
+From this checkout, after committing the retained entry point:
+
+```powershell
+uv run python -m tasks.20261013-pattern-scan.evidence.adopt_bounded_audits_20261021 --results-root .tmp --output .tmp/pr17-bounded-audit-receipt-20261021.json
+```
+
+The four expected filenames are explicit in the entry point. A pre-existing
+receipt is preserved and refused, and no existing result is rewritten.

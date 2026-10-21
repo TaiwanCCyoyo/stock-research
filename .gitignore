@@ -278,6 +278,8 @@ verify-*.png
 !tasks/20261012-hhhl-v4-variants/evidence/verify_ten_events.py
 !tasks/20261012-hhhl-v4-variants/evidence/verify_peer_features.py
 !tasks/20261012-hhhl-v4-variants/evidence/verify_summary.py
+!tasks/20261013-pattern-scan/evidence/
+!tasks/20261013-pattern-scan/evidence/adopt_bounded_audits_20261021.py
 !tasks/20261012-hhhl-v4-variants/legacy-extension-map.csv
 # Small portable synthetic measurement receipt; invented payloads remain scratch.
 !tasks/20261012-research-feature-reuse/benchmark-v1.json.gz
