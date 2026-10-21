@@ -1,0 +1,399 @@
+"""Momentum-only study runner (tasks/20261021-momentum-only-doubling/mission.md).
+
+    uv run python -m scripts.run_momentum_only stocks --work <dir> --generation <id>
+    uv run python -m scripts.run_momentum_only parity --work <dir>
+
+`stocks` computes each PR17 stock's eligibility, C-52w, local atoms, ret120 and the
+12 labels at the PR17 cutoff and calendar, one `.npz` per code under `<work>/stocks/`
+(intermediate, resumable, not hashed). `parity` is the mission's gate: it recounts
+C-base-daily and C-52w-daily at 2x H126/H252 (split=all, era=all, full) and compares
+known/hit/loss with PR17's stored Q1 rows.
+"""
+
+from __future__ import annotations
+
+import argparse
+import gzip
+import json
+import logging
+import sys
+import time
+from pathlib import Path
+from typing import Any, cast
+
+import numpy as np
+import pandas as pd
+import pyarrow.parquet as pq
+
+from research_core import count_cube_v1 as cube
+from research_core import momentum_only_v1 as study
+from research_core.maintained_adjusted_daily import read_adjusted_daily
+
+LOGGER = logging.getLogger(__name__)
+CUTOFF = "2026-10-12"
+PINS = Path("tasks/20261013-pattern-scan/params/input-pins-v1.json.gz")
+PR17_Q1 = Path("tasks/20261013-pattern-scan/web-report/data/tables/B1-summary.parquet")
+PR17_PREPARATION = Path("D:/Project/stock-research/.tmp/pattern-scan-execution/full-2010-20261016-retention-v3/derived-preparation.json")
+
+
+def _years(calendar: pd.DatetimeIndex) -> np.ndarray:
+    return pd.Series(calendar).dt.year.to_numpy()
+
+
+def pr17_calendar() -> pd.DatetimeIndex:
+    pins = json.loads(gzip.decompress(PINS.read_bytes()))
+    if str(pins["cutoff"]) != CUTOFF:
+        raise ValueError("PR17 pins cutoff differs from the mission cutoff")
+    calendar = pd.DatetimeIndex(pd.to_datetime(pins["price_observation"]["calendar"]["dates"]))
+    eras = {
+        "2010-2012": (_years(calendar) <= 2012).sum(),
+        "2013-2018": ((_years(calendar) >= 2013) & (_years(calendar) <= 2018)).sum(),
+        "2019+": (_years(calendar) >= 2019).sum(),
+    }
+    if calendar[0] != pd.Timestamp("2010-01-04") or len(calendar) != 4110 or list(eras.values()) != [748, 1475, 1887]:
+        raise ValueError(f"calendar must start 2010-01-04 with 748/1475/1887 sessions per era, got {eras}")
+    return calendar
+
+
+def pr17_codes() -> list[str]:
+    record = json.loads(PR17_PREPARATION.read_text(encoding="utf-8"))
+    if record.get("scope") != "full_ordinary_reference" or record.get("ordinary_reference_n") != len(record["requests"]):
+        raise ValueError("PR17 preparation is not the full ordinary-reference universe")
+    return sorted(str(request["code"]) for request in record["requests"])
+
+
+def _save(path: Path, stock: study.StockDaily) -> None:
+    arrays: dict[str, Any] = {"eligible": stock.eligible, "jump": stock.jump, "c52w": stock.c52w, "ret120": stock.ret120}
+    arrays.update({f"atom_{name}": values for name, values in stock.atoms.items()})
+    arrays.update({f"label_{h}_{t:g}": values for (h, t), values in stock.labels.items()})
+    arrays.update({f"main_{h}_{t:g}": values for (h, t), values in stock.main_eligible.items()})
+    arrays.update({f"full_{h}": values for h, values in stock.calendar_full.items()})
+    staging = path.with_name(path.stem + ".partial.npz")
+    np.savez(staging, **arrays)
+    staging.replace(path)
+
+
+def load(path: Path, code: str) -> study.StockDaily:
+    with np.load(path) as data:
+        return study.StockDaily(
+            code=code,
+            split=study.split_for_code(code),
+            eligible=data["eligible"],
+            jump=data["jump"],
+            c52w=data["c52w"],
+            atoms={name: data[f"atom_{name}"] for name in study.LOCAL_ATOMS},
+            ret120=data["ret120"],
+            labels={(h, t): data[f"label_{h}_{t:g}"] for h in study.HORIZONS for t in study.TARGETS},
+            main_eligible={(h, t): data[f"main_{h}_{t:g}"] for h in study.HORIZONS for t in study.TARGETS},
+            calendar_full={h: data[f"full_{h}"] for h in study.HORIZONS},
+        )
+
+
+def run_stocks(work: Path, generation: str) -> None:
+    calendar, codes = pr17_calendar(), pr17_codes()
+    directory = work / "stocks"
+    directory.mkdir(parents=True, exist_ok=True)
+    started = time.monotonic()
+    done = 0
+    for position, code in enumerate(codes, 1):
+        target = directory / f"{code}.npz"
+        if target.exists():
+            continue
+        prices, _ = read_adjusted_daily("reference_factor_adjusted", codes=[code], as_of=CUTOFF, calendar=calendar, generation=generation)
+        prepared = prices.drop(columns="Code").set_index("Date")
+        _save(target, study.stock_daily(code, prepared))
+        done += 1
+        if position % 100 == 0:
+            LOGGER.info("Stocks %d/%d (%d new) %.0fs", position, len(codes), done, time.monotonic() - started)
+    (work / "stocks.json").write_text(
+        json.dumps(
+            {"generation": generation, "cutoff": CUTOFF, "codes": len(codes), "new": done, "wall_seconds": round(time.monotonic() - started, 1)}, indent=2
+        ),
+        encoding="utf-8",
+    )
+    LOGGER.info("Stock phase complete codes=%d new=%d", len(codes), done)
+
+
+def _pr17_rows() -> pd.DataFrame:
+    rows = pq.read_table(PR17_Q1).to_pandas()
+    keep = (
+        rows.control_id.isin(["C-base-daily", "C-52w-daily"])
+        & rows.cohort_id.eq("union")
+        & rows.split.eq("all")
+        & rows.era.eq("all")
+        & rows.mkt.eq("all")
+        & rows.row_kind.eq("full")
+    )
+    return rows.loc[keep, ["control_id", "horizon", "known_n", "hit_n", "loss_n", "hit_rate", "loss_rate"]].reset_index(drop=True)
+
+
+def run_parity(work: Path) -> dict[str, Any]:
+    calendar, codes = pr17_calendar(), pr17_codes()
+    year_index = np.asarray(_years(calendar) - study.FIRST_YEAR, dtype=np.intp)
+    n_years = int(year_index.max()) + 1
+    columns = [study.METRICS.index(name) for name in ("known_n", "hit_n", "loss_n")]
+    totals = {(group, horizon): np.zeros(3, dtype=np.int64) for group in study.BASELINE_LOOKBACK for horizon in (126, 252)}
+    for code in codes:
+        stock = load(work / "stocks" / f"{code}.npz", code)
+        for group, members in (("C-base-daily", np.ones(len(calendar), dtype=bool)), ("C-52w-daily", stock.c52w)):
+            counts = study.group_counts(stock, members, lookback=study.BASELINE_LOOKBACK[group], year_index=year_index, n_years=n_years)
+            for horizon in (126, 252):
+                totals[group, horizon] += counts[study.LABELS.index((horizon, 2.0))].sum(axis=0)[columns]
+    ours = pd.DataFrame([{"group": g, "horizon": h, "known_n": int(v[0]), "hit_n": int(v[1]), "loss_n": int(v[2])} for (g, h), v in totals.items()])
+    reference = _pr17_rows().rename(columns={"control_id": "group", "hit_rate": "hit_rate_pr17", "loss_rate": "loss_rate_pr17"})
+    merged = ours.merge(reference, on=["group", "horizon"], suffixes=("", "_pr17"), validate="one_to_one")
+    merged["hit_rate"] = merged.hit_n / merged.known_n
+    merged["loss_rate"] = merged.loss_n / merged.known_n
+    merged["known_rel_diff"] = (merged.known_n - merged.known_n_pr17).abs() / merged.known_n_pr17
+    merged["hit_pp_diff"] = (merged.hit_rate - merged.hit_rate_pr17).abs() * 100
+    merged["loss_pp_diff"] = (merged.loss_rate - merged.loss_rate_pr17).abs() * 100
+    exact = bool((merged[["known_n", "hit_n", "loss_n"]].to_numpy() == merged[["known_n_pr17", "hit_n_pr17", "loss_n_pr17"]].to_numpy()).all())
+    within = bool(((merged.known_rel_diff <= 0.01) & (merged.hit_pp_diff <= 0.2) & (merged.loss_pp_diff <= 0.2)).all())
+    verdict = "exact" if exact else "within_tolerance" if within else "stop"
+    report = {"verdict": verdict, "cells": merged.to_dict(orient="records")}
+    (work / "parity_check.json").write_text(json.dumps(report, indent=2, default=float), encoding="utf-8")
+    merged.to_parquet(work / "parity_check.parquet", index=False)
+    LOGGER.info("Parity verdict=%s", verdict)
+    return report
+
+
+ERAS = {"all": (2010, 2026), "2010-2012": (2010, 2012), "2013-2018": (2013, 2018), "2019+": (2019, 2026)}
+SPLITS = ("all", "development", "cross-check")
+REPS = 2000
+SEEDS = {"stock": 20261021, "two_way": 20261022}
+FOCUS = ("A1&A2:daily", "LEAD_B1:daily")
+
+
+def _comparison(row: dict[str, Any], base: dict[str, Any] | None, prefix: str) -> dict[str, Any]:
+    empty = {f"hit_ratio_vs_{prefix}": None, f"hit_diff_vs_{prefix}": None, f"loss_diff_vs_{prefix}": None}
+    if base is None or row["hit_rate"] is None or base["hit_rate"] is None:
+        return empty
+    return {
+        f"hit_ratio_vs_{prefix}": row["hit_rate"] / base["hit_rate"] if base["hit_rate"] else None,
+        f"hit_diff_vs_{prefix}": row["hit_rate"] - base["hit_rate"],
+        f"loss_diff_vs_{prefix}": row["loss_rate"] - base["loss_rate"],
+    }
+
+
+def _slice_rows(key: dict[str, Any], sliced: np.ndarray, years: np.ndarray, split_codes: list[str]) -> list[dict[str, Any]]:
+    rows = [{**key, "row_kind": "full", "removed": None, **cube.summarize(sliced, study.METRICS)}]
+    year = cube.best_year(sliced, study.METRICS)
+    keep_years = np.ones(sliced.shape[1], dtype=bool)
+    if year is not None:
+        keep_years[year] = False
+    removed_year = None if year is None else str(years[year])
+    rows.append({**key, "row_kind": "drop_best_year", "removed": removed_year, **cube.summarize(sliced, study.METRICS, years=keep_years)})
+    best = cube.best_stock(sliced, study.METRICS, split_codes)
+    keep_stocks = np.ones(sliced.shape[0], dtype=bool)
+    if best is not None:
+        keep_stocks[best] = False
+    removed_stock = None if best is None else split_codes[best]
+    rows.append({**key, "row_kind": "drop_best_stock", "removed": removed_stock, **cube.summarize(sliced, study.METRICS, stocks=keep_stocks)})
+    return rows
+
+
+def run_study(work: Path) -> None:
+    calendar, codes = pr17_calendar(), pr17_codes()
+    started = time.monotonic()
+    stocks = [load(work / "stocks" / f"{code}.npz", code) for code in codes]
+    loaded = time.monotonic()
+    a4 = study.h_states(stocks)
+    ranked = time.monotonic()
+    year_index = np.asarray(_years(calendar) - study.FIRST_YEAR, dtype=np.intp)
+    n_years = int(year_index.max()) + 1
+    counts = np.stack([study.stock_group_counts(stock, h, year_index=year_index, n_years=n_years) for stock, h in zip(stocks, a4, strict=True)])
+    np.save(work / "counts.npy", counts)
+    counted = time.monotonic()
+    names = list(study.groups())
+    splits = np.array([stock.split for stock in stocks])
+    stock_masks = {"all": np.ones(len(codes), dtype=bool), **{name: splits == name for name in SPLITS[1:]}}
+    year_values = np.arange(study.FIRST_YEAR, study.FIRST_YEAR + n_years)
+    rows: list[dict[str, Any]] = []
+    annual: list[dict[str, Any]] = []
+    for g, group in enumerate(names):
+        for label, (horizon, target) in enumerate(study.LABELS):
+            full = counts[:, g, label]
+            for split, smask in stock_masks.items():
+                split_codes = [code for code, keep in zip(codes, smask, strict=True) if keep]
+                for era, (first, last) in ERAS.items():
+                    ymask = (year_values >= first) & (year_values <= last)
+                    key = {"group_id": group, "horizon": horizon, "target_multiple": target, "split": split, "era": era}
+                    rows.extend(_slice_rows(key, full[smask][:, ymask], year_values[ymask], split_codes))
+            for y, year in enumerate(year_values):
+                annual.append({
+                    "group_id": group,
+                    "horizon": horizon,
+                    "target_multiple": target,
+                    "year": int(year),
+                    **cube.summarize(full[:, [y]], study.METRICS),
+                })
+
+    def row_key(group: object, row: dict[str, Any]) -> tuple[object, ...]:
+        return (group, row["horizon"], row["target_multiple"], row["split"], row["era"], row["row_kind"])
+
+    index: dict[tuple[object, ...], dict[str, Any]] = {row_key(r["group_id"], r): r for r in rows}
+    extra = []
+    for r in rows:
+        is_cooled = r["group_id"].endswith(":cooled") or r["group_id"] in ("C-base", "C-52w")
+        base_id, c52_id = ("C-base", "C-52w") if is_cooled else ("C-base-daily", "C-52w-daily")
+        extra.append({**_comparison(r, index.get(row_key(base_id, r)), "base"), **_comparison(r, index.get(row_key(c52_id, r)), "c52w")})
+    summary = pd.concat([pd.DataFrame(rows), pd.DataFrame(extra)], axis=1)
+    summary.to_parquet(work / "set_summary.parquet", index=False)
+    pd.DataFrame(annual).to_parquet(work / "set_annual.parquet", index=False)
+    summarized = time.monotonic()
+    weights = {
+        "stock": (cube.bootstrap_weights(len(codes), REPS, SEEDS["stock"]), None),
+        "two_way": (cube.bootstrap_weights(len(codes), REPS, SEEDS["two_way"]), cube.bootstrap_weights(n_years, REPS, SEEDS["two_way"] + 1)),
+    }
+    known, hit, loss = (study.METRICS.index(name) for name in ("known_n", "hit_n", "loss_n"))
+    intervals = []
+    for focus in FOCUS:
+        for label, (horizon, target) in enumerate(study.LABELS):
+            for mode, (stock_weights, year_weights) in weights.items():
+                totals = {
+                    g: cube.resampled_totals(counts[:, names.index(g), label], stock_weights, year_weights) for g in (focus, "C-base-daily", "C-52w-daily")
+                }
+                with np.errstate(divide="ignore", invalid="ignore"):
+                    rate = {g: (t[:, hit] / t[:, known], t[:, loss] / t[:, known]) for g, t in totals.items()}
+                stats = {
+                    "hit_diff_vs_base": rate[focus][0] - rate["C-base-daily"][0],
+                    "hit_ratio_vs_base": rate[focus][0] / rate["C-base-daily"][0],
+                    "loss_diff_vs_base": rate[focus][1] - rate["C-base-daily"][1],
+                    "hit_diff_vs_c52w": rate[focus][0] - rate["C-52w-daily"][0],
+                    "loss_diff_vs_c52w": rate[focus][1] - rate["C-52w-daily"][1],
+                }
+                for statistic, samples in stats.items():
+                    low, high = cube.percentile_interval(samples)
+                    intervals.append({
+                        "group_id": focus,
+                        "horizon": horizon,
+                        "target_multiple": target,
+                        "bootstrap": mode,
+                        "seed": SEEDS[mode],
+                        "reps": REPS,
+                        "statistic": statistic,
+                        "lower": low,
+                        "upper": high,
+                    })
+    pd.DataFrame(intervals).to_parquet(work / "bootstrap_intervals.parquet", index=False)
+    finished = time.monotonic()
+    timings = {
+        "load": round(loaded - started, 1),
+        "h_barrier": round(ranked - loaded, 1),
+        "count": round(counted - ranked, 1),
+        "summarize": round(summarized - counted, 1),
+        "bootstrap": round(finished - summarized, 1),
+    }
+    record = {"codes": len(codes), "groups": names, "labels": [list(label) for label in study.LABELS], "timings_seconds": timings}
+    (work / "study.json").write_text(json.dumps(record, indent=2), encoding="utf-8")
+    LOGGER.info("Study tables written rows=%d annual=%d intervals=%d timings=%s", len(summary), len(annual), len(intervals), timings)
+
+
+def _coverage_summary(rows: pd.DataFrame) -> dict[str, Any]:
+    status = rows["coverage_status"]
+    matched, unmatched, unknown = (int(status.eq(value).sum()) for value in ("matched", "unmatched", "unknown"))
+    total = len(rows)
+    timed = rows.loc[status.eq("matched") & rows["first_timing_certain"].eq(True)]
+    entries = rows.loc[status.eq("matched"), "entry_return"].astype(float)
+    remaining = rows.loc[status.eq("matched"), "remaining_return"].astype(float)
+
+    def quantiles(values: pd.Series) -> dict[str, float | None]:
+        if values.empty:
+            return {"q25": None, "median": None, "q75": None}
+        return {"q25": float(values.quantile(0.25)), "median": float(values.median()), "q75": float(values.quantile(0.75))}
+
+    return {
+        "episode_n": total,
+        "distinct_stock_n": int(rows["code"].nunique()),
+        "matched_n": matched,
+        "unmatched_n": unmatched,
+        "unknown_n": unknown,
+        "coverage_rate": matched / (matched + unmatched) if matched + unmatched else None,
+        "coverage_lower_bound": matched / total if total else None,
+        "coverage_upper_bound": (matched + unknown) / total if total else None,
+        "timing_known_n": len(timed),
+        **{f"offset_{k}": v for k, v in quantiles(timed["observed_offset"].astype(float)).items()},
+        **{f"entry_return_{k}": v for k, v in quantiles(entries).items()},
+        **{f"remaining_return_{k}": v for k, v in quantiles(remaining).items()},
+    }
+
+
+def run_coverage(work: Path) -> None:
+    """Big-runner coverage for H504 5x/10x episodes, with a daily random control per set."""
+    calendar, codes = pr17_calendar(), pr17_codes()
+    generation = json.loads((work / "stocks.json").read_text(encoding="utf-8"))["generation"]
+    stocks = [load(work / "stocks" / f"{code}.npz", code) for code in codes]
+    a4 = study.h_states(stocks)
+    years = _years(calendar)
+    iso = [str(day) for day in pd.Series(calendar).dt.strftime("%Y-%m-%d")]
+    sets = study.condition_sets()
+    observations: list[dict[str, Any]] = []
+    quotas: list[dict[str, Any]] = []
+    episodes_out: list[dict[str, Any]] = []
+    for stock, h in zip(stocks, a4, strict=True):
+        prices, _ = read_adjusted_daily("reference_factor_adjusted", codes=[stock.code], as_of=CUTOFF, calendar=calendar, generation=generation)
+        closes = study.masked_close(prices.drop(columns="Code").set_index("Date"))
+        episodes = {label: study.merge_episodes(study.episode_starts(stock, *label), closes, label[0]) for label in study.EPISODE_LABELS}
+        if not any(episodes.values()):
+            continue
+        for (horizon, target), found in episodes.items():
+            for episode in found:
+                episodes_out.append({
+                    "code": stock.code,
+                    "horizon": horizon,
+                    "target_multiple": target,
+                    "anchor_index": episode.anchor_index,
+                    "peak_index": episode.peak_index,
+                    "anchor_date": None if episode.anchor_index is None else iso[episode.anchor_index],
+                    "peak_date": None if episode.peak_index is None else iso[episode.peak_index],
+                    "status": episode.status,
+                    "reason": episode.reason,
+                    "start_n": len(episode.start_indices),
+                    "peak_return": None if episode.peak_index is None else float(closes[episode.peak_index] / closes[episode.anchor_index] - 1),
+                })
+        atoms = {**stock.atoms, "A4": h}
+        for name, members in sets.items():
+            states = study.set_states(atoms, members, stock.eligible)
+            drawn, quota = study.random_daily_draws(stock.eligible, states == 1, years, group_id=name, code=stock.code)
+            quotas.extend(quota)
+            short_years = [int(str(q["year"])) for q in quota if q["shortfall_n"]]
+            random_states = np.where(np.isin(years, np.array(short_years, dtype=np.int64)), np.int8(-1), drawn.astype(np.int8)).astype(np.int8)
+            for (horizon, target), found in episodes.items():
+                for episode in found:
+                    for group, values in ((name, states), (f"{name}:random", random_states)):
+                        observed = study.observe_to_peak(episode, closes, values)
+                        observations.append({"group_id": group, "code": stock.code, "horizon": horizon, "target_multiple": target, **observed})
+    frame = pd.DataFrame(observations)
+    frame.to_parquet(work / "coverage_observations.parquet", index=False)
+    pd.DataFrame(quotas).to_parquet(work / "coverage_quotas.parquet", index=False)
+    pd.DataFrame(episodes_out).to_parquet(work / "episodes.parquet", index=False)
+    summary = [
+        {"group_id": group, "horizon": horizon, "target_multiple": target, **_coverage_summary(rows)}
+        for (group, horizon, target), rows in cast(Any, frame.groupby(["group_id", "horizon", "target_multiple"], sort=True))
+    ]
+    pd.DataFrame(summary).to_parquet(work / "big_runner_coverage.parquet", index=False)
+    LOGGER.info("Coverage written episodes=%d observations=%d groups=%d", len(episodes_out), len(frame), len(summary))
+
+
+def main() -> None:
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    sub = parser.add_subparsers(dest="command", required=True)
+    stocks = sub.add_parser("stocks")
+    stocks.add_argument("--work", type=Path, required=True)
+    stocks.add_argument("--generation", required=True)
+    for name in ("parity", "study", "coverage"):
+        sub.add_parser(name).add_argument("--work", type=Path, required=True)
+    args = parser.parse_args()
+    if args.command == "stocks":
+        run_stocks(args.work, args.generation)
+    elif args.command == "parity":
+        sys.stdout.write(json.dumps(run_parity(args.work), indent=2, default=float) + chr(10))
+    else:
+        if json.loads((args.work / "parity_check.json").read_text(encoding="utf-8"))["verdict"] == "stop":
+            raise SystemExit("parity gate failed; the mission forbids computing condition sets")
+        run_study(args.work) if args.command == "study" else run_coverage(args.work)
+
+
+if __name__ == "__main__":
+    main()
