@@ -1,0 +1,217 @@
+.shared-data {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+.shared-data h1 {
+    font-family: "Noto Serif TC", serif;
+    margin: 0;
+    font-size: 30px;
+}
+.shared-data h2 {
+    margin: 0;
+    font-size: 20px;
+}
+.shared-data h3 {
+    margin: 0 0 10px;
+    font-size: 14px;
+    color: var(--muted);
+}
+.shared-data p {
+    margin: 8px 0;
+}
+.shared-heading,
+.shared-controls,
+.shared-generation,
+.shared-legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 14px;
+}
+.shared-heading {
+    justify-content: space-between;
+    margin-bottom: 18px;
+}
+.shared-controls {
+    margin: 8px 0;
+}
+.shared-data button,
+.shared-data input,
+.shared-data select {
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    padding: 5px 9px;
+    max-width: 100%;
+    min-width: 0;
+}
+.shared-data button[aria-pressed="true"],
+.shared-data button[aria-selected="true"] {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+}
+.shared-data a {
+    color: var(--accent);
+}
+.shared-generation {
+    background: var(--accent-soft);
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 16px;
+    font-size: 13px;
+}
+.shared-generation details {
+    min-width: 0;
+}
+.shared-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 280px;
+    gap: 16px;
+}
+.shared-card {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px;
+    background: var(--surface);
+    min-width: 0;
+}
+.shared-chart {
+    width: 100%;
+    height: 560px;
+    min-width: 0;
+}
+.shared-layout aside {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+}
+.shared-legend {
+    border-block: 1px dashed var(--line);
+    padding: 10px 0;
+    min-height: 70px;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+}
+.shared-data dl {
+    margin: 8px 0;
+    font-size: 13px;
+}
+.shared-data dl > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+}
+.shared-data dt,
+.shared-note,
+.shared-data small {
+    color: var(--muted);
+}
+.shared-data dd {
+    margin: 0;
+    text-align: right;
+}
+.shared-note {
+    font-size: 12px;
+}
+.shared-data fieldset {
+    border: 0;
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+}
+.shared-data legend {
+    font-size: 12px;
+    color: var(--muted);
+}
+.shared-data form {
+    margin-left: auto;
+    max-width: 100%;
+}
+.shared-search {
+    display: flex;
+    gap: 6px;
+}
+.shared-search input {
+    width: 160px;
+}
+.shared-catalog {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr));
+    gap: 14px;
+}
+.shared-catalog .shared-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.shared-catalog footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px dashed var(--line);
+    font-size: 12px;
+}
+.shared-badge {
+    color: var(--accent);
+    font-size: 12px;
+}
+.shared-data pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+@media (max-width: 1000px) {
+    .shared-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .shared-layout aside {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+    }
+}
+@media (max-width: 600px) {
+    .shared-card {
+        padding: 10px;
+    }
+    .shared-data form {
+        margin-left: 0;
+    }
+    .shared-controls {
+        gap: 6px;
+    }
+}
+
+/* Technical overlays use the same theme boundary as the studio palette. */
+.shared-data {
+    --shared-ma5: #a95a0c;
+    --shared-ma10: #88700b;
+    --shared-ma20: #7651af;
+    --shared-ma60: #236e9c;
+    --shared-ma120: #567721;
+    --shared-ma240: #866344;
+    --shared-bb: #397d70;
+    --shared-osc: #7651af;
+}
+.studio[data-appearance="dark"] .shared-data {
+    --shared-ma5: #f0a35a;
+    --shared-ma10: #e4cc63;
+    --shared-ma20: #b49be6;
+    --shared-ma60: #74b6e2;
+    --shared-ma120: #a6c879;
+    --shared-ma240: #c7a98f;
+    --shared-bb: #8fc1b6;
+    --shared-osc: #b49be6;
+}
+.shared-change-gain {
+    color: var(--gain);
+}
+.shared-change-loss {
+    color: var(--loss);
+}
+.shared-change-flat {
+    color: var(--muted);
+}

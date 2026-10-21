@@ -8,6 +8,8 @@ import subprocess
 from contextlib import closing
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from types import SimpleNamespace
+from typing import Any
 
 import pandas as pd
 import pytest
@@ -774,3 +776,55 @@ def test_receipt_records_code_drift_during_the_run_instead_of_refusing(repo: Pat
             preregistration=late,
             expected_code=clean,
         )
+
+
+def test_idle_guard_forwards_optional_query_timeout_and_preserves_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls: list[dict[str, Any]] = []
+
+    def tasks(**kwargs: Any) -> list[str]:
+        calls.append(kwargs)
+        return []
+
+    monkeypatch.setattr(live_producer, "running_producer_tasks", tasks)
+    assert_producer_idle(WEEKDAY_NIGHT)
+    assert_producer_idle(WEEKDAY_NIGHT, task_timeout=1.25)
+    assert calls == [{}, {"timeout": 1.25}]
+    with pytest.raises(ProducerBusyError, match="write window"):
+        assert_producer_idle(WEEKDAY_EVENING, task_timeout=1.25)
+    assert len(calls) == 2, "write window must reject before a task query"
+
+
+@pytest.mark.parametrize("outcome", ["timeout", "failure", "running"])
+def test_task_query_timeout_and_fail_closed_results(monkeypatch: pytest.MonkeyPatch, outcome: str) -> None:
+    monkeypatch.setattr(live_producer, "sys", SimpleNamespace(platform="win32"))
+    budgets = []
+
+    def run(*args: Any, **kwargs: Any) -> Any:
+        budgets.append(kwargs["timeout"])
+        if outcome == "timeout":
+            raise subprocess.TimeoutExpired("synthetic-task-query", kwargs["timeout"])
+        return SimpleNamespace(returncode=1 if outcome == "failure" else 0, stderr="synthetic failure", stdout="StockProject-Synthetic\n")
+
+    monkeypatch.setattr(live_producer.subprocess, "run", run)
+    with pytest.raises(ProducerBusyError):
+        assert_producer_idle(WEEKDAY_NIGHT, task_timeout=0.75)
+    assert budgets == [0.75]
+
+
+@pytest.mark.parametrize("timeout", [None, 0.25])
+def test_readonly_sqlite_default_and_bounded_timeout(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, timeout: float | None) -> None:
+    path = tmp_path / "synthetic.sqlite"
+    path.touch()
+    captured: dict[str, Any] = {}
+
+    def connect(database: str, **kwargs: Any) -> Any:
+        captured.update(database=database, **kwargs)
+        return None
+
+    monkeypatch.setattr(live_producer.sqlite3, "connect", connect)
+    if timeout is None:
+        readonly_sqlite(path)
+    else:
+        readonly_sqlite(path, timeout=timeout)
+    assert captured["timeout"] == (30.0 if timeout is None else timeout)
+    assert captured["uri"] is True and captured["database"].endswith("?mode=ro")

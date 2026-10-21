@@ -13,6 +13,7 @@ import { StrategyComparePage } from "../features/strategies/StrategyComparePage"
 import { ResearchHistoryPage } from "../features/research-history/ResearchHistoryPage";
 import { ReportsPage } from "../features/report-library/ReportsPage";
 import { ReportViewer } from "../features/report-library/ReportViewer";
+import { SharedDataPage } from "../features/shared-data/SharedDataPage";
 import { studioRoute, type StudioPage } from "./routes";
 import "./studio.css";
 
@@ -99,6 +100,7 @@ export default function Studio() {
                             { id: "compare", label: "比較" },
                             { id: "reports", label: "研究報告" },
                             { id: "history", label: "研究歷程" },
+                            { id: "data", label: "共用資料" },
                             { id: "funds", label: "ETF 圖鑑" },
                         ] as const
                     ).map((n) => (
@@ -193,6 +195,12 @@ export default function Studio() {
                 )}
                 {page === "compare" && <StrategyComparePage />}
                 {page === "history" && <ResearchHistoryPage />}
+                {page === "data" && (
+                    <SharedDataPage
+                        code={route.code}
+                        theme={`${palette}:${resolvedAppearance}`}
+                    />
+                )}
                 {page === "reports" && <ReportsPage />}
                 {page === "report" && reportId && (
                     <ReportViewer

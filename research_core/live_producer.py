@@ -57,17 +57,20 @@ def in_write_window(now: datetime) -> bool:
     return local.weekday() < 5 and start <= local.time() < end
 
 
-def running_producer_tasks() -> list[str]:
+def running_producer_tasks(*, timeout: float | None = None) -> list[str]:
     """Names of `StockProject-*` scheduled tasks now running; empty off Windows."""
     if sys.platform != "win32":
         return []
-    result = subprocess.run(["powershell.exe", "-NoProfile", "-Command", TASK_QUERY], capture_output=True, text=True, check=False)
+    try:
+        result = subprocess.run(["powershell.exe", "-NoProfile", "-Command", TASK_QUERY], capture_output=True, text=True, check=False, timeout=timeout)
+    except subprocess.TimeoutExpired as error:
+        raise ProducerBusyError("producer scheduled-task query timed out") from error
     if result.returncode != 0:
         raise ProducerBusyError(f"cannot read producer scheduled-task state: {result.stderr.strip()}")
     return [line.strip() for line in result.stdout.splitlines() if line.strip()]
 
 
-def assert_producer_idle(now: datetime | None = None) -> None:
+def assert_producer_idle(now: datetime | None = None, *, task_timeout: float | None = None) -> None:
     """Refuse a research read of live producer data while a writer runs or may run.
 
     A point-in-time probe: pair it with an end-of-run check of the inputs read.
@@ -75,17 +78,17 @@ def assert_producer_idle(now: datetime | None = None) -> None:
     moment = producer_time(now)
     if in_write_window(moment):
         raise ProducerBusyError("inside the weekday producer write window 18:00-18:45; read live producer data outside it")
-    running = running_producer_tasks()
+    running = running_producer_tasks() if task_timeout is None else running_producer_tasks(timeout=task_timeout)
     if running:
         raise ProducerBusyError(f"producer writers are running: {running}")
     LOGGER.debug("Producer idle at %s", moment.isoformat(timespec="seconds"))
 
 
-def readonly_sqlite(path: Path) -> sqlite3.Connection:
+def readonly_sqlite(path: Path, *, timeout: float = 30.0) -> sqlite3.Connection:
     """Read-only connection; on a WAL database SQLite may still create its own -shm/-wal files."""
     if not path.is_file():
         raise FileNotFoundError(f"SQLite input missing: {path}")
-    return sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True, timeout=30)
+    return sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True, timeout=timeout)
 
 
 def stat_identity(path: Path) -> tuple[int, int]:

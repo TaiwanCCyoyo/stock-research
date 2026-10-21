@@ -68,6 +68,7 @@
                 "scripts/tests/test_research_data_paths.py",
                 "scripts/tests/test_research_data_windows_deletion.py",
                 "scripts/tests/test_run_receipt.py",
+                "scripts/tests/test_shared_data_view.py",
                 "scripts/tests/test_technical_daily_v1.py"
             ],
             "consumers": ["annual"]
@@ -124,7 +125,9 @@
                 "research_api/saved_research_studio.py",
                 "research_api/private_artifacts.py",
                 "research_core/dashboard_identity.py",
+                "research_api/shared_data.py",
                 "research_core/opportunity_*",
+                "research_core/shared_data_view.py",
                 "research_core/saved_research_studio.py",
                 "research_core/study_presentation.py",
                 "research_core/strategy_map_capture.py",
@@ -151,6 +154,7 @@
                 "scripts/tests/test_history_title_origins_export.py",
                 "scripts/tests/test_studio_review_coverage.py",
                 "scripts/tests/test_strategy_map_capture.py",
+                "scripts/tests/test_shared_data_view.py",
                 "scripts/tests/test_start_research_web.py",
                 "scripts/tests/test_dashboard_identity.py",
                 "scripts/tests/test_study_presentation.py",
@@ -528,6 +532,7 @@
         "scripts/tests/test_sector_wave_catalog_io.py",
         "scripts/tests/test_sector_waves.py",
         "scripts/tests/test_seed_worktree_inputs.py",
+        "scripts/tests/test_shared_data_view.py",
         "scripts/tests/test_start_research_web.py",
         "scripts/tests/test_stock_feature_pool_v1.py",
         "scripts/tests/test_stock_feature_pool_v2.py",
