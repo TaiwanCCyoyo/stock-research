@@ -387,10 +387,15 @@
             "paths": [
                 "research_core/momentum_only_v1.py",
                 "research_core/count_cube_v1.py",
+                "research_core/momentum_forward_v1.py",
                 "scripts/run_momentum_only.py",
+                "scripts/record_momentum_forward_day.py",
                 "tasks/20261021-momentum-only-doubling/*"
             ],
-            "tests": ["scripts/tests/test_momentum_only_v1.py"]
+            "tests": [
+                "scripts/tests/test_momentum_only_v1.py",
+                "scripts/tests/test_momentum_forward_v1.py"
+            ]
         }
     },
     "reviewed_tests": [
@@ -487,6 +492,7 @@
         "scripts/tests/test_method_environment_interactions.py",
         "scripts/tests/test_method_environment_publication.py",
         "scripts/tests/test_method_environment_runner.py",
+        "scripts/tests/test_momentum_forward_v1.py",
         "scripts/tests/test_momentum_only_v1.py",
         "scripts/tests/test_multiple_outcomes_v1.py",
         "scripts/tests/test_mypy_scopes.py",

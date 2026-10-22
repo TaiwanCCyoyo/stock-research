@@ -13,7 +13,6 @@ known/hit/loss with PR17's stored Q1 rows.
 from __future__ import annotations
 
 import argparse
-import gzip
 import io
 import json
 import logging
@@ -33,36 +32,13 @@ from research_core.maintained_adjusted_daily import current_generation, read_adj
 from research_core.run_receipt import InputSpec, code_identity, fingerprint_inputs, write_run_receipt
 
 LOGGER = logging.getLogger(__name__)
-CUTOFF = "2026-10-12"
-PINS = Path("tasks/20261013-pattern-scan/params/input-pins-v1.json.gz")
+CUTOFF = study.CUTOFF
+PINS = study.PR17_PINS
 PR17_Q1 = Path("tasks/20261013-pattern-scan/web-report/data/tables/B1-summary.parquet")
-PR17_PREPARATION = Path("D:/Project/stock-research/.tmp/pattern-scan-execution/full-2010-20261016-retention-v3/derived-preparation.json")
-
-
-def _years(calendar: pd.DatetimeIndex) -> np.ndarray:
-    return pd.Series(calendar).dt.year.to_numpy()
-
-
-def pr17_calendar() -> pd.DatetimeIndex:
-    pins = json.loads(gzip.decompress(PINS.read_bytes()))
-    if str(pins["cutoff"]) != CUTOFF:
-        raise ValueError("PR17 pins cutoff differs from the mission cutoff")
-    calendar = pd.DatetimeIndex(pd.to_datetime(pins["price_observation"]["calendar"]["dates"]))
-    eras = {
-        "2010-2012": (_years(calendar) <= 2012).sum(),
-        "2013-2018": ((_years(calendar) >= 2013) & (_years(calendar) <= 2018)).sum(),
-        "2019+": (_years(calendar) >= 2019).sum(),
-    }
-    if calendar[0] != pd.Timestamp("2010-01-04") or len(calendar) != 4110 or list(eras.values()) != [748, 1475, 1887]:
-        raise ValueError(f"calendar must start 2010-01-04 with 748/1475/1887 sessions per era, got {eras}")
-    return calendar
-
-
-def pr17_codes() -> list[str]:
-    record = json.loads(PR17_PREPARATION.read_text(encoding="utf-8"))
-    if record.get("scope") != "full_ordinary_reference" or record.get("ordinary_reference_n") != len(record["requests"]):
-        raise ValueError("PR17 preparation is not the full ordinary-reference universe")
-    return sorted(str(request["code"]) for request in record["requests"])
+PR17_PREPARATION = study.PR17_UNIVERSE
+pr17_calendar = study.pr17_calendar
+pr17_codes = study.pr17_codes
+_years = study.calendar_years
 
 
 def _save(path: Path, stock: study.StockDaily) -> None:

@@ -16,9 +16,12 @@ The main denominator holds events whose base label is main-eligible and not unkn
 
 from __future__ import annotations
 
+import gzip
+import json
 import logging
 from dataclasses import dataclass
 from itertools import combinations
+from pathlib import Path
 from typing import cast
 
 import numpy as np
@@ -53,6 +56,39 @@ ATOMS: dict[str, tuple[str, str, str]] = {
     "A6": ("F", "gt100", "F"),
 }
 LOCAL_ATOMS = ("A1", "A2", "A3", "A5", "A6")
+
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+TASK = REPO_ROOT / "tasks" / "20261021-momentum-only-doubling"
+CUTOFF = "2026-10-12"
+PR17_PINS = REPO_ROOT / "tasks" / "20261013-pattern-scan" / "params" / "input-pins-v1.json.gz"
+PR17_UNIVERSE = TASK / "pr17-universe-v1.json"
+
+
+def calendar_years(calendar: pd.DatetimeIndex) -> NDArray[np.int64]:
+    return pd.Series(calendar).dt.year.to_numpy(dtype=np.int64)
+
+
+def pr17_calendar() -> pd.DatetimeIndex:
+    """PR17's approved 4,110-session calendar, 2010-01-04..2026-10-12; refuses anything else."""
+    pins = json.loads(gzip.decompress(PR17_PINS.read_bytes()))
+    if str(pins["cutoff"]) != CUTOFF:
+        raise ValueError("PR17 pins cutoff differs from the mission cutoff")
+    calendar = pd.DatetimeIndex(pd.to_datetime(pins["price_observation"]["calendar"]["dates"]))
+    years = calendar_years(calendar)
+    eras = [int((years <= 2012).sum()), int(((years >= 2013) & (years <= 2018)).sum()), int((years >= 2019).sum())]
+    if calendar[0] != pd.Timestamp("2010-01-04") or len(calendar) != 4110 or eras != [748, 1475, 1887]:
+        raise ValueError(f"calendar must start 2010-01-04 with 748/1475/1887 sessions per era, got {eras}")
+    return calendar
+
+
+def pr17_codes() -> list[str]:
+    """PR17's 1,942 ordinary-reference codes, frozen in the task directory."""
+    record = json.loads(PR17_UNIVERSE.read_text(encoding="utf-8"))
+    codes = [str(code) for code in record["codes"]]
+    if len(codes) != record["ordinary_reference_n"] or codes != sorted(set(codes)):
+        raise ValueError("PR17 universe file is inconsistent")
+    return codes
 
 
 def condition_sets() -> dict[str, tuple[str, ...]]:
