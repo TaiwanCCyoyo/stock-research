@@ -430,7 +430,7 @@ def run_audit(work: Path) -> None:
 TASK = Path("tasks/20261021-momentum-only-doubling")
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PHASES = ("stocks", "parity", "study", "coverage", "audit")
-FINAL_TABLES = ("set_summary", "set_annual", "bootstrap_intervals", "big_runner_coverage", "coverage_quotas", "parity_check")
+FINAL_TABLES = ("set_annual", "bootstrap_intervals", "big_runner_coverage", "coverage_quotas", "parity_check")
 DECOMPOSITION_REASON = "PR17 daily raw union pattern states are not published with a data contract (mission start condition 3)"
 
 
@@ -524,6 +524,10 @@ def run_finalize(work: Path, output: Path) -> None:
         raise SystemExit("audit_price_error episodes require the second (removed) count version before publication")
     tables = {name: pd.read_parquet(work / f"{name}.parquet") for name in FINAL_TABLES}
     tables.update({"verdicts": verdicts, "decomposition_summary": _decomposition(), "audit_episodes": audit})
+    # One set_summary file per split x row_kind keeps every file under the 500 KiB commit limit.
+    summary = pd.read_parquet(work / "set_summary.parquet")
+    for (split, kind), part in cast(Any, summary.groupby(["split", "row_kind"], sort=True)):
+        tables[f"set_summary-{split}-{kind}"] = part.reset_index(drop=True)
     files: dict[str, bytes] = {}
     for name, frame in tables.items():
         buffer = io.BytesIO()
