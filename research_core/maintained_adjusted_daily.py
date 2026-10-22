@@ -15,6 +15,8 @@ Layout under ``<shared root>/derived/adjusted-daily-v1/``::
     generations/<id>/technical_daily.parquet   technical-daily.v1 indicators, one row per
                                                reference_factor_adjusted row
     generations/<id>/technical_pivots.parquet  confirmed 1.5/4 ATR highs and lows
+    generations/<id>/daily_conditions.parquet  daily-conditions.v1 condition values, one row
+                                               per reference_factor_adjusted row
     holds/<holder>.json           a generation a running study marked in use; never pruned
 
 Every new ex-date restates the whole earlier history of that symbol, so an update builds
@@ -51,7 +53,7 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from research_core import price_basis, technical_daily_v1
+from research_core import daily_conditions_v1, price_basis, technical_daily_v1
 from research_core.artifact_store import file_digest, object_digest, publish_noreplace, read_json, write_json
 from research_core.artifact_store import release_os_lock as _release_os_lock
 from research_core.artifact_store import try_os_lock as _try_os_lock
@@ -83,6 +85,7 @@ CALENDAR_SCHEMA = pa.schema([("Date", pa.timestamp("ns"))])
 TECHNICAL_TABLES = {
     "daily": ("technical_daily.parquet", technical_daily_v1.DAILY_SCHEMA),
     "pivots": ("technical_pivots.parquet", technical_daily_v1.PIVOTS_SCHEMA),
+    "conditions": ("daily_conditions.parquet", daily_conditions_v1.SCHEMA),
 }
 RAW_QUOTE_COLUMNS = {"RawOpen": "Open", "RawHigh": "High", "RawLow": "Low", "RawClose": "Close", "VolumeLots": "Volume"}
 
@@ -165,7 +168,10 @@ def compute(bars: pd.DataFrame, actions: pd.DataFrame, writers: dict[str, Any] |
             if writers is not None:
                 writers[basis].write_table(pa.Table.from_pandas(frame, schema=ARROW_SCHEMA, preserve_index=False))
             if basis == technical_daily_v1.BASIS:
-                tables = dict(zip(TECHNICAL_TABLES, technical_daily_v1.compute_technical(code, frame.set_index("Date"))))
+                prepared = frame.set_index("Date")
+                daily, pivots = technical_daily_v1.compute_technical(code, prepared)
+                conditions = daily_conditions_v1.compute_conditions(code, prepared, daily, pivots)
+                tables = {"daily": daily, "pivots": pivots, "conditions": conditions}
                 for name, table in tables.items():
                     technical[name]["rows"] += len(table)
                     if writers is not None:
@@ -185,7 +191,11 @@ def compute(bars: pd.DataFrame, actions: pd.DataFrame, writers: dict[str, Any] |
         "codes": len(selected),
         "actions": {"rows": len(actions), "after_asof_excluded": after_cutoff, "unsupported_event_rows": unsupported},
         "bases": counts,
-        "technical": {"definition": technical_daily_v1.definition_metadata(), "tables": technical},
+        "technical": {
+            "definition": technical_daily_v1.definition_metadata(),
+            "conditions_definition": daily_conditions_v1.definition_metadata(),
+            "tables": technical,
+        },
     }
 
 
@@ -557,34 +567,39 @@ def read_technical(
     root: Path | None = None,
     generation: str | None = None,
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
-    """Read a `technical-daily.v1` table of the current generation, or of `generation`.
+    """Read a technical table of the current generation, or of `generation`.
 
-    `table="daily"` has one row per `reference_factor_adjusted` row; `prices=["Close", ...]`
-    joins those columns of that basis from the same generation on `Code, Date`, so the
-    indicators and the prices they were computed from always match. `table="pivots"` is
-    one row per confirmed high/low; it is known from `confirmed_at`, not `extreme_date`.
-    These values are computed at the generation's asof. For an earlier cutoff, read the
-    prices with `read_adjusted_daily(..., as_of=)` and call
-    `technical_daily_v1.compute_technical` on them instead of truncating this table.
+    `table="daily"` (`technical-daily.v1` indicators) and `table="conditions"`
+    (`daily-conditions.v1` condition values) have one row per `reference_factor_adjusted`
+    row; `prices=["Close", ...]` joins those columns of that basis from the same
+    generation on `Code, Date`, so the values and the prices they were computed from
+    always match. `table="pivots"` is one row per confirmed high/low; it is known from
+    `confirmed_at`, not `extreme_date`. These values are computed at the generation's
+    asof. For an earlier cutoff, read the prices with `read_adjusted_daily(..., as_of=)`
+    and call `technical_daily_v1.compute_technical` (then
+    `daily_conditions_v1.compute_conditions`) on them instead of truncating this table.
     """
     if table not in TECHNICAL_TABLES:
         raise ValueError(f"unknown technical table {table!r}; choose one of {tuple(TECHNICAL_TABLES)}")
-    if prices is not None and table != "daily":
+    daily_rows = table in ("daily", "conditions")
+    if prices is not None and not daily_rows:
         raise ValueError("prices= joins daily rows; the pivots table has one row per pivot")
     status = current_generation(root, generation=generation)
     technical = status.get("technical")
     if technical is None:
         raise ValueError(f"generation {status['generation']} has no technical tables; run scripts.maintain_adjusted_daily update")
-    expected = technical["tables"][table]
+    expected = technical["tables"].get(table)
+    if expected is None:
+        raise ValueError(f"generation {status['generation']} has no {table!r} table; run scripts.maintain_adjusted_daily update")
     path = Path(status["path"]) / expected["file"]
     filters = None if codes is None else [("Code", "in", [str(code) for code in codes])]
-    selected = None if columns is None else list(dict.fromkeys(["Code", *(["Date"] if table == "daily" else []), *columns]))
+    selected = None if columns is None else list(dict.fromkeys(["Code", *(["Date"] if daily_rows else []), *columns]))
     frame = cast(pd.DataFrame, _read_verified(path, expected, lambda source: pq.read_table(source, columns=selected, filters=filters)).to_pandas())
     record = {
         "family": FAMILY,
         "generation": status["generation"],
         "asof": status["asof"],
-        "definition": technical["definition"]["version"],
+        "definition": technical["conditions_definition"]["version"] if table == "conditions" else technical["definition"]["version"],
         "table": table,
         "file": str(path),
         "sha256": expected["sha256"],
