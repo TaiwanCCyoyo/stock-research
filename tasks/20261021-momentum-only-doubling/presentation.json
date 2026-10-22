@@ -1,0 +1,14 @@
+{
+    "schema": "study-presentation.v1",
+    "task_id": "20261021-momentum-only-doubling",
+    "publication": null,
+    "section": "method",
+    "report_path": "report.md",
+    "report_sha256": "9d0a3c1f8be12c1623eff55783a1f5b4e2f0b16bcca191d2fbb6ad56316e4a9e",
+    "title": "Momentum-only v1 歷史報告：只看強勢條件的翻倍與大漲機率",
+    "summary": "**先說明兩件事。** hit（翻倍）只代表期限內收盤**曾經**達到倍數，不等於實際可取得的帳戶報酬（不含進出時點、成本與持有決策）。\n本報告所有數字都是 2010-01-04..2026-10-12 這段**已看過**歷史上的描述性比較；條件本身就是從這段資料選出來的，不是因果證明，也不批准任何策略。",
+    "web_report": true,
+    "web_report_reason": null,
+    "shared_data": ["adjusted-daily-v1"],
+    "shared_data_reason": null
+}
