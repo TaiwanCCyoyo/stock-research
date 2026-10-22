@@ -10,6 +10,12 @@ each stock has the full calendar up to that day (a stock without a quote that da
 ineligible). A day is `recorded_late=False` only when it is the current generation's
 as-of day at recording time (after that day's 20:30 shared update, before the next one).
 Outcomes are never read here.
+
+Every invocation appends one line to `attempts.jsonl` (`record_with_ledger`): on time, late,
+cohort recovered, already frozen, refused (producer busy, uncommitted code) or failed,
+with the generation it saw and any error, plus the confirmatory trading days of the
+current calendar that still have no frozen file. A missed or failed day therefore leaves
+a dated trace instead of silence, and a later backfill cannot pass for an on-time row.
 """
 
 from __future__ import annotations
@@ -17,7 +23,9 @@ from __future__ import annotations
 import io
 import json
 import logging
-from collections.abc import Sequence
+import os
+import time
+from collections.abc import Callable, Sequence
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -213,3 +221,148 @@ def _write_cohort(root: Path, day: str, *, late: bool, recorded: str) -> None:
 def read_cohort(root: Path) -> dict[str, Any] | None:
     path = root / "cohort.json"
     return read_json(path) if path.exists() else None
+
+
+ATTEMPTS = "attempts.jsonl"
+
+
+def append_attempt(root: Path, entry: dict[str, Any]) -> None:
+    """Append one JSON line to the attempt ledger; earlier lines are never rewritten."""
+    root.mkdir(parents=True, exist_ok=True)
+    with (root / ATTEMPTS).open("a", encoding="utf-8", newline="\n") as stream:
+        stream.write(json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n")
+        stream.flush()
+        os.fsync(stream.fileno())
+
+
+def read_attempts(root: Path) -> list[dict[str, Any]]:
+    path = root / ATTEMPTS
+    if not path.exists():
+        return []
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
+def missing_days(root: Path, status: dict[str, Any]) -> list[str]:
+    """Confirmatory-period sessions of the generation calendar, up to its as-of, without a frozen file."""
+    calendar = pd.read_parquet(Path(status["path"]) / "calendar.parquet")["Date"]
+    days = [str(day) for day in pd.Series(calendar).dt.strftime("%Y-%m-%d") if FIRST_CONFIRMATORY_DAY <= str(day) <= status["asof"]]
+    return [day for day in days if not (root / "days" / f"{day}.parquet").exists()]
+
+
+def record_with_ledger(
+    root: Path,
+    codes: Sequence[str],
+    *,
+    day: str | None,
+    code_commit: str,
+    workers: int = 1,
+    now: pd.Timestamp | None = None,
+    refusal: str | None = None,
+) -> Path | None:
+    """`record_day` with an attempt line written whatever happens.
+
+    `refusal` lets the caller log a precondition it already refused (producer busy,
+    uncommitted code) without recording. Exceptions are logged and re-raised.
+    """
+    started = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    entry: dict[str, Any] = {"attempted_at_utc": started, "requested_day": day, "code_commit": code_commit}
+    try:
+        status = current_generation()
+        entry.update({"generation": status["generation"], "generation_asof": status["asof"]})
+        entry["target_day"] = day or status["asof"]
+        clock_now = now if now is not None else cast(pd.Timestamp, pd.Timestamp.now(tz=TAIPEI))
+        if day is None and clock_now >= freeze_deadline(status["asof"]):
+            entry["stale_generation"] = f"current generation as-of {status['asof']} was not refreshed before {freeze_deadline(status['asof'])}"
+        if refusal is not None:
+            entry.update({"outcome": "refused", "reason": refusal})
+            return None
+        destination = root / "days" / f"{entry['target_day']}.parquet"
+        existed = destination.exists()
+        had_cohort = (root / "cohort.json").exists()
+        try:
+            path = record_day(root, codes, day=day, code_commit=code_commit, workers=workers, now=now)
+        except FileExistsError as error:
+            entry.update({"outcome": "already_frozen", "reason": str(error)})
+            raise
+        if existed:
+            entry["outcome"] = "cohort_recovered" if not had_cohort else "already_frozen"
+        else:
+            frozen = pd.read_parquet(path, columns=["recorded_late"])
+            entry.update({"outcome": "late" if bool(frozen["recorded_late"].any()) else "on_time", "rows": len(frozen)})
+        return path
+    except BaseException as error:
+        entry.setdefault("outcome", "failed")
+        entry.setdefault("reason", f"{type(error).__name__}: {error}")
+        raise
+    finally:
+        entry["finished_at_utc"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        try:
+            entry["missing_confirmatory_days"] = missing_days(root, current_generation())
+        except Exception as error:  # noqa: BLE001 - the ledger line must still be written
+            entry["missing_confirmatory_days_error"] = f"{type(error).__name__}: {error}"
+        append_attempt(root, entry)
+        LOGGER.info("Forward attempt %s day=%s", entry.get("outcome"), entry.get("target_day"))
+
+
+def scheduled_record(
+    root: Path,
+    codes: Sequence[str],
+    *,
+    code_commit: str,
+    workers: int = 1,
+    poll_seconds: float = 900.0,
+    max_wait_seconds: float = 12 * 3600.0,
+    clock: Callable[[], pd.Timestamp] | None = None,
+    sleep: Callable[[float], None] = time.sleep,
+    producer_idle: Callable[[], None] | None = None,
+) -> Path | None:
+    """Wait for today's shared generation, then record it once; never guess a day.
+
+    Started after the weekday 20:30 shared update, it polls until the current generation's
+    as-of is today (Asia/Taipei), the producer is idle, and the freeze window is still open,
+    then calls `record_with_ledger`. If the generation is not refreshed in time, or was
+    rebuilt today without a session for today (a holiday), it writes one `not_recorded`
+    ledger line with the reason and returns None. An already frozen day is a success.
+    """
+    now = clock or (lambda: cast(pd.Timestamp, pd.Timestamp.now(tz=TAIPEI)))
+    start = now()
+    today = str(start.strftime("%Y-%m-%d"))
+    reason = ""
+    while True:
+        status = current_generation()
+        busy = None
+        if producer_idle is not None:
+            try:
+                producer_idle()
+            except RuntimeError as error:
+                busy = str(error)
+        if status["asof"] >= today and busy is None:
+            if (root / "days" / f"{status['asof']}.parquet").exists() and (root / "cohort.json").exists():
+                LOGGER.info("Forward day %s already frozen", status["asof"])
+                return root / "days" / f"{status['asof']}.parquet"
+            try:
+                return record_with_ledger(root, codes, day=None, code_commit=code_commit, workers=workers, now=now())
+            except FileExistsError:
+                return root / "days" / f"{status['asof']}.parquet"
+        built = cast(pd.Timestamp, pd.Timestamp(status.get("built_at_utc") or "1970-01-01T00:00:00+00:00")).tz_convert(TAIPEI)
+        if status["asof"] < today and built.strftime("%Y-%m-%d") == today and built.hour * 60 + built.minute >= 20 * 60 + 30:
+            reason = f"no session today: generation {status['generation']} built {built.isoformat()} is still as-of {status['asof']}"
+            break
+        reason = busy and f"producer busy: {busy}" or f"generation not refreshed: current {status['generation']} as-of {status['asof']}"
+        if now() >= freeze_deadline(today) or (now() - start).total_seconds() + poll_seconds > max_wait_seconds:
+            break
+        LOGGER.info("Waiting for today's generation (%s); next check in %.0fs", reason, poll_seconds)
+        sleep(poll_seconds)
+    append_attempt(
+        root,
+        {
+            "attempted_at_utc": start.tz_convert("UTC").isoformat(timespec="seconds"),
+            "finished_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "target_day": today,
+            "outcome": "not_recorded",
+            "reason": reason,
+            "code_commit": code_commit,
+        },
+    )
+    LOGGER.warning("Forward day %s not recorded: %s", today, reason)
+    return None

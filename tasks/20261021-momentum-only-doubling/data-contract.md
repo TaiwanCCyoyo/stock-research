@@ -79,3 +79,12 @@
 - `recorded_late=False` 只給記錄當下就是 current generation as-of 的那一天，而且必須在下一個平日 09:00（Asia/Taipei）以前開始並完成；共用世代停滯或超過時限一律記為 late，不啟動確認樣本。mission 合併（2026-10-21 19:48 UTC）後
   第一個準時凍結的日子寫入 `forward-log/cohort.json`（no-replace），開始 12 個月的確認樣本；之前與補記的日子只作描述。
 - 評估前只能看列數、資格與 unknown 等營運計數，不看任何 hit／loss。
+- **執行紀錄**：每次執行（含拒絕、失敗、等不到資料）都在 `forward-log/attempts.jsonl` 追加一行，只增不改：
+  `outcome` 為 `on_time`／`late`／`cohort_recovered`／`already_frozen`／`refused`／`failed`／`not_recorded`，
+  附 `reason`、看到的 generation 與 as-of、`code_commit`、起訖時間，以及目前日曆中確認期內仍沒有日檔的交易日
+  （`missing_confirmatory_days`）。漏跑或失敗因此留下有日期的紀錄，事後補記也不會被當成準時。
+- **排程**：Windows `StockResearch-MomentumForwardLog`，週一至週五 21:00 在 primary checkout 執行
+  `record_momentum_forward_day --scheduled --workers 4`。它等到共用世代的 as-of 等於當天且 producer 閒置才記錄，
+  最多等 12 小時且不超過隔日 09:00；等不到或當天沒有交易（世代在 20:30 後重建仍是前一日）就寫一行 `not_recorded` 說明原因。
+  程式乾淨判定忽略 `stock-data-downloader` 子模組指標，前瞻紀錄不執行子模組程式。紀錄寫到
+  `D:/StockData/stock-research/logs/momentum-forward.log`。

@@ -301,6 +301,7 @@ verify-*.png
 !tasks/20261021-momentum-only-doubling/pr17-universe-v1.json
 !tasks/20261021-momentum-only-doubling/forward-log/
 !tasks/20261021-momentum-only-doubling/forward-log/cohort.json
+!tasks/20261021-momentum-only-doubling/forward-log/attempts.jsonl
 !tasks/20261021-momentum-only-doubling/forward-log/days/
 !tasks/20261021-momentum-only-doubling/forward-log/days/*.parquet
 
