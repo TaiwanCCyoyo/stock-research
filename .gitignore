@@ -293,6 +293,17 @@ verify-*.png
 !tasks/20261013-pattern-scan/resource-probe-v2.json.gz
 !tasks/20261013-pattern-scan/resource-probe-v3.json.gz
 
+# Momentum-only study: audit decisions and final aggregate tables (counts and rates, no quotes).
+!tasks/20261021-momentum-only-doubling/audit-decisions.json
+!tasks/20261021-momentum-only-doubling/results/
+!tasks/20261021-momentum-only-doubling/results/*.parquet
+!tasks/20261021-momentum-only-doubling/results/*.json
+!tasks/20261021-momentum-only-doubling/pr17-universe-v1.json
+!tasks/20261021-momentum-only-doubling/forward-log/
+!tasks/20261021-momentum-only-doubling/forward-log/cohort.json
+!tasks/20261021-momentum-only-doubling/forward-log/days/
+!tasks/20261021-momentum-only-doubling/forward-log/days/*.parquet
+
 # Public checksum metadata travels losslessly in a bounded annual publication.
 # Source-backed dashboard registrations contain report excerpts, never quote series.
 !tasks/*/presentation.json
