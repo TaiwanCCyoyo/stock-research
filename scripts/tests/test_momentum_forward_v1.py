@@ -162,6 +162,8 @@ def test_scheduled_mode_logs_a_generation_that_never_arrives(tmp_path: Path, fak
     assert forward.scheduled_record(tmp_path, ["1101"], code_commit="c" * 40, clock=clock, sleep=clock.sleep) is None
     line = forward.read_attempts(tmp_path)[-1]
     assert line["outcome"] == "not_recorded" and "not refreshed" in line["reason"] and line["target_day"] == "2026-10-22"
+    assert line["generation"] == "g21" and line["generation_asof"] == "2026-10-21"
+    assert "missing_confirmatory_days" in line or "missing_confirmatory_days_error" in line
     assert clock.now <= taipei("2026-10-23 09:00") and not (tmp_path / "days").exists()
 
 
@@ -183,3 +185,18 @@ def test_scheduled_mode_waits_out_a_busy_producer(tmp_path: Path, fake_generatio
     path = forward.scheduled_record(tmp_path, ["1101"], code_commit="c" * 40, clock=clock, sleep=clock.sleep, producer_idle=idle)
     assert path is not None and clock.now >= taipei("2026-10-22 22:00")
     assert forward.read_attempts(tmp_path)[-1]["outcome"] == "on_time"
+
+
+def test_scheduled_mode_logs_an_already_frozen_day(tmp_path: Path, fake_generation: dict[str, Any]) -> None:
+    clock = _Clock("2026-10-22 21:00")
+    first = forward.scheduled_record(tmp_path, ["1101"], code_commit="c" * 40, clock=clock, sleep=clock.sleep)
+    again = forward.scheduled_record(tmp_path, ["1101"], code_commit="c" * 40, clock=clock, sleep=clock.sleep)
+    assert first == again == tmp_path / "days" / "2026-10-22.parquet"
+    assert [line["outcome"] for line in forward.read_attempts(tmp_path)] == ["on_time", "already_frozen"]
+
+
+def test_scheduled_mode_logs_uncommitted_code_as_refused(tmp_path: Path, fake_generation: dict[str, Any]) -> None:
+    clock = _Clock("2026-10-22 21:00")
+    assert forward.scheduled_record(tmp_path, ["1101"], code_commit="c" * 40, clock=clock, sleep=clock.sleep, refusal="uncommitted code") is None
+    line = forward.read_attempts(tmp_path)[-1]
+    assert line["outcome"] == "refused" and line["reason"] == "uncommitted code" and not (tmp_path / "days").exists()

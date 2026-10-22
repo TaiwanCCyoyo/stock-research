@@ -86,5 +86,6 @@
 - **排程**：Windows `StockResearch-MomentumForwardLog`，週一至週五 21:00 在 primary checkout 執行
   `record_momentum_forward_day --scheduled --workers 4`。它等到共用世代的 as-of 等於當天且 producer 閒置才記錄，
   最多等 12 小時且不超過隔日 09:00；等不到或當天沒有交易（世代在 20:30 後重建仍是前一日）就寫一行 `not_recorded` 說明原因。
-  程式乾淨判定忽略 `stock-data-downloader` 子模組指標，前瞻紀錄不執行子模組程式。紀錄寫到
+  程式乾淨判定忽略 `stock-data-downloader` 子模組指標（前瞻紀錄不執行子模組程式）與 `forward-log/` 自身的輸出；
+  不乾淨時寫一行 `refused` 後結束。紀錄寫到
   `D:/StockData/stock-research/logs/momentum-forward.log`。

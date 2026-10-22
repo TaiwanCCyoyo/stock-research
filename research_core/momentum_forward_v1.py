@@ -315,6 +315,7 @@ def scheduled_record(
     clock: Callable[[], pd.Timestamp] | None = None,
     sleep: Callable[[float], None] = time.sleep,
     producer_idle: Callable[[], None] | None = None,
+    refusal: str | None = None,
 ) -> Path | None:
     """Wait for today's shared generation, then record it once; never guess a day.
 
@@ -323,10 +324,13 @@ def scheduled_record(
     then calls `record_with_ledger`. If the generation is not refreshed in time, or was
     rebuilt today without a session for today (a holiday), it writes one `not_recorded`
     ledger line with the reason and returns None. An already frozen day is a success.
+    `refusal` (uncommitted code) is logged as `refused` without waiting.
     """
     now = clock or (lambda: cast(pd.Timestamp, pd.Timestamp.now(tz=TAIPEI)))
     start = now()
     today = str(start.strftime("%Y-%m-%d"))
+    if refusal is not None:
+        return record_with_ledger(root, codes, day=None, code_commit=code_commit, workers=workers, now=start, refusal=refusal)
     reason = ""
     while True:
         status = current_generation()
@@ -337,9 +341,6 @@ def scheduled_record(
             except RuntimeError as error:
                 busy = str(error)
         if status["asof"] >= today and busy is None:
-            if (root / "days" / f"{status['asof']}.parquet").exists() and (root / "cohort.json").exists():
-                LOGGER.info("Forward day %s already frozen", status["asof"])
-                return root / "days" / f"{status['asof']}.parquet"
             try:
                 return record_with_ledger(root, codes, day=None, code_commit=code_commit, workers=workers, now=now())
             except FileExistsError:
@@ -353,16 +354,20 @@ def scheduled_record(
             break
         LOGGER.info("Waiting for today's generation (%s); next check in %.0fs", reason, poll_seconds)
         sleep(poll_seconds)
-    append_attempt(
-        root,
-        {
-            "attempted_at_utc": start.tz_convert("UTC").isoformat(timespec="seconds"),
-            "finished_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-            "target_day": today,
-            "outcome": "not_recorded",
-            "reason": reason,
-            "code_commit": code_commit,
-        },
-    )
+    entry: dict[str, Any] = {
+        "attempted_at_utc": start.tz_convert("UTC").isoformat(timespec="seconds"),
+        "finished_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "target_day": today,
+        "outcome": "not_recorded",
+        "reason": reason,
+        "code_commit": code_commit,
+        "generation": status["generation"],
+        "generation_asof": status["asof"],
+    }
+    try:
+        entry["missing_confirmatory_days"] = missing_days(root, status)
+    except Exception as error:  # noqa: BLE001 - the ledger line must still be written
+        entry["missing_confirmatory_days_error"] = f"{type(error).__name__}: {error}"
+    append_attempt(root, entry)
     LOGGER.warning("Forward day %s not recorded: %s", today, reason)
     return None
