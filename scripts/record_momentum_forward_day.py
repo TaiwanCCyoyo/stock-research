@@ -29,7 +29,7 @@ OUTPUT_PATHSPEC = "tasks/20261021-momentum-only-doubling/forward-log"
 UNCOMMITTED = "uncommitted code: record from a clean commit so the frozen rows name the code that produced them"
 
 
-def _code_identity() -> dict[str, str | bool]:
+def _code_identity(repo: Path = REPO_ROOT) -> dict[str, str | bool]:
     """Commit and dirty flag of this checkout, ignoring the producer submodule's gitlink.
 
     The primary checkout usually carries a moved `stock-data-downloader` pointer; the forward
@@ -38,7 +38,7 @@ def _code_identity() -> dict[str, str | bool]:
     """
 
     def git(*arguments: str) -> str:
-        return subprocess.run(["git", "-C", str(REPO_ROOT), *arguments], capture_output=True, text=True, check=True).stdout.strip()
+        return subprocess.run(["git", "-C", str(repo), *arguments], capture_output=True, text=True, check=True).stdout.strip()
 
     dirty = bool(git("status", "--porcelain", "--untracked-files=no", "--ignore-submodules=all", "--", ".", f":(exclude){OUTPUT_PATHSPEC}"))
     return {"commit": git("rev-parse", "HEAD"), "dirty": dirty}

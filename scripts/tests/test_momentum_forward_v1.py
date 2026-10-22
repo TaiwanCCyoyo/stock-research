@@ -167,12 +167,14 @@ def test_scheduled_mode_logs_a_generation_that_never_arrives(tmp_path: Path, fak
     assert clock.now <= taipei("2026-10-23 09:00") and not (tmp_path / "days").exists()
 
 
-def test_scheduled_mode_recognises_a_holiday(tmp_path: Path, fake_generation: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+def test_scheduled_mode_never_reads_a_stale_rebuild_as_a_holiday(tmp_path: Path, fake_generation: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
     clock = _Clock("2026-10-22 21:00")
     rebuilt = {"generation": "g21b", "asof": "2026-10-21", "built_at_utc": "2026-10-22T12:45:00+00:00"}
-    monkeypatch.setattr(forward, "current_generation", lambda generation=None: rebuilt)
-    assert forward.scheduled_record(tmp_path, ["1101"], code_commit="c" * 40, clock=clock, sleep=clock.sleep) is None
-    assert forward.read_attempts(tmp_path)[-1]["reason"].startswith("no session today")
+    fresh = {"generation": "g22", "asof": "2026-10-22", "built_at_utc": "2026-10-22T16:10:00+00:00"}
+    monkeypatch.setattr(forward, "current_generation", lambda generation=None: fresh if clock.now >= taipei("2026-10-23 00:10") else rebuilt)
+    path = forward.scheduled_record(tmp_path, ["1101"], code_commit="c" * 40, clock=clock, sleep=clock.sleep)
+    assert path == tmp_path / "days" / "2026-10-22.parquet"
+    assert [line["outcome"] for line in forward.read_attempts(tmp_path)] == ["on_time"]
 
 
 def test_scheduled_mode_waits_out_a_busy_producer(tmp_path: Path, fake_generation: dict[str, Any]) -> None:
@@ -200,3 +202,59 @@ def test_scheduled_mode_logs_uncommitted_code_as_refused(tmp_path: Path, fake_ge
     assert forward.scheduled_record(tmp_path, ["1101"], code_commit="c" * 40, clock=clock, sleep=clock.sleep, refusal="uncommitted code") is None
     line = forward.read_attempts(tmp_path)[-1]
     assert line["outcome"] == "refused" and line["reason"] == "uncommitted code" and not (tmp_path / "days").exists()
+
+
+def test_scheduled_mode_is_late_when_the_run_crosses_the_deadline(tmp_path: Path, fake_generation: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    clock = _Clock("2026-10-22 21:00")
+    original = forward.day_frame
+
+    def slow(*args: Any, **kwargs: Any) -> pd.DataFrame:
+        clock.sleep(12 * 3600 + 60)  # started on time, finished after 09:00
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(forward, "day_frame", slow)
+    path = forward.scheduled_record(tmp_path, ["1101"], code_commit="c" * 40, clock=clock, sleep=clock.sleep)
+    assert path is not None and bool(pd.read_parquet(path)["recorded_late"].all())
+    assert forward.read_cohort(tmp_path) is None
+    assert [line["outcome"] for line in forward.read_attempts(tmp_path)] == ["late"]
+
+
+def test_scheduled_mode_logs_an_unreadable_generation_once(tmp_path: Path, fake_generation: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    clock = _Clock("2026-10-22 21:00")
+    monkeypatch.setattr(forward, "current_generation", lambda generation=None: (_ for _ in ()).throw(FileNotFoundError("no current pointer")))
+    with pytest.raises(FileNotFoundError):
+        forward.scheduled_record(tmp_path, ["1101"], code_commit="c" * 40, clock=clock, sleep=clock.sleep)
+    lines = forward.read_attempts(tmp_path)
+    assert len(lines) == 1 and lines[0]["outcome"] == "failed" and lines[0]["generation"] is None
+    assert lines[0]["missing_confirmatory_days_error"].startswith("unavailable")
+
+
+def test_a_failed_record_leaves_one_line_not_two(tmp_path: Path, fake_generation: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    clock = _Clock("2026-10-22 21:00")
+    monkeypatch.setattr(forward, "day_frame", lambda *args, **kwargs: (_ for _ in ()).throw(OSError("disk full")))
+    with pytest.raises(OSError):
+        forward.scheduled_record(tmp_path, ["1101"], code_commit="c" * 40, clock=clock, sleep=clock.sleep)
+    assert [line["outcome"] for line in forward.read_attempts(tmp_path)] == ["failed"]
+
+
+def test_a_tracked_ledger_may_grow_but_code_changes_stay_dirty(tmp_path: Path) -> None:
+    import subprocess
+
+    from scripts.record_momentum_forward_day import OUTPUT_PATHSPEC, _code_identity
+
+    def git(*arguments: str) -> None:
+        subprocess.run(["git", "-C", str(tmp_path), *arguments], check=True, capture_output=True)
+
+    ledger = tmp_path / OUTPUT_PATHSPEC / "attempts.jsonl"
+    ledger.parent.mkdir(parents=True)
+    ledger.write_text("{}\n", encoding="utf-8")
+    (tmp_path / "code.py").write_text("x = 1\n", encoding="utf-8")
+    git("init", "-q")
+    git("add", ".")
+    git("-c", "user.name=t", "-c", "user.email=t@example.invalid", "commit", "-q", "-m", "init")
+    assert _code_identity(tmp_path)["dirty"] is False
+    with ledger.open("a", encoding="utf-8") as stream:
+        stream.write("{}\n")
+    assert _code_identity(tmp_path)["dirty"] is False
+    (tmp_path / "code.py").write_text("x = 2\n", encoding="utf-8")
+    assert _code_identity(tmp_path)["dirty"] is True

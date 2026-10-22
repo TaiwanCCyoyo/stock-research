@@ -30,7 +30,7 @@ from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, TypeAlias, cast
 
 import numpy as np
 import pandas as pd
@@ -152,13 +152,26 @@ def day_frame(codes: Sequence[str], *, generation: str, day: str, late: bool, wo
     return frame
 
 
-def record_day(root: Path, codes: Sequence[str], *, day: str | None, code_commit: str, workers: int = 1, now: pd.Timestamp | None = None) -> Path:
+Clock: TypeAlias = pd.Timestamp | Callable[[], pd.Timestamp] | None
+
+
+def _clock(now: Clock) -> Callable[[], pd.Timestamp]:
+    """A fixed `Timestamp` (tests), a callable clock, or the wall clock in Asia/Taipei."""
+    if callable(now):
+        return now
+    if now is not None:
+        fixed = now
+        return lambda: fixed
+    return lambda: cast(pd.Timestamp, pd.Timestamp.now(tz=TAIPEI))
+
+
+def record_day(root: Path, codes: Sequence[str], *, day: str | None, code_commit: str, workers: int = 1, now: Clock = None) -> Path:
     """Freeze one day under `root/days/<day>.parquet`; never overwrite an existing day.
 
     A day is on time only while `is_on_time` holds at the start and again just before
     publication; anything else, including a stale current generation, is recorded late.
     """
-    clock = (lambda: now) if now is not None else (lambda: pd.Timestamp.now(tz=TAIPEI))
+    clock = _clock(now)
     status = current_generation()
     target_day = day or status["asof"]
     late = not is_on_time(target_day, status["asof"], clock())
@@ -256,7 +269,7 @@ def record_with_ledger(
     day: str | None,
     code_commit: str,
     workers: int = 1,
-    now: pd.Timestamp | None = None,
+    now: Clock = None,
     refusal: str | None = None,
 ) -> Path | None:
     """`record_day` with an attempt line written whatever happens.
@@ -270,7 +283,7 @@ def record_with_ledger(
         status = current_generation()
         entry.update({"generation": status["generation"], "generation_asof": status["asof"]})
         entry["target_day"] = day or status["asof"]
-        clock_now = now if now is not None else cast(pd.Timestamp, pd.Timestamp.now(tz=TAIPEI))
+        clock_now = _clock(now)()
         if day is None and clock_now >= freeze_deadline(status["asof"]):
             entry["stale_generation"] = f"current generation as-of {status['asof']} was not refreshed before {freeze_deadline(status['asof'])}"
         if refusal is not None:
@@ -320,54 +333,66 @@ def scheduled_record(
     """Wait for today's shared generation, then record it once; never guess a day.
 
     Started after the weekday 20:30 shared update, it polls until the current generation's
-    as-of is today (Asia/Taipei), the producer is idle, and the freeze window is still open,
-    then calls `record_with_ledger`. If the generation is not refreshed in time, or was
-    rebuilt today without a session for today (a holiday), it writes one `not_recorded`
-    ledger line with the reason and returns None. An already frozen day is a success.
-    `refusal` (uncommitted code) is logged as `refused` without waiting.
+    as-of is today (Asia/Taipei) and the producer is idle, then calls `record_with_ledger`
+    with a clock that keeps moving, so a run that finishes after the deadline is late. It
+    waits until `freeze_deadline(today)` or `max_wait_seconds`: the generation calendar is
+    the union of producer quote dates, not an exchange calendar, so a stale generation is
+    never read as a holiday. Whatever happens, the invocation leaves exactly one ledger
+    line: `record_with_ledger`'s own, or a `not_recorded`/`failed` line with the last
+    generation seen. An already frozen day is a success; `refusal` (uncommitted code) is
+    logged as `refused` without waiting.
     """
     now = clock or (lambda: cast(pd.Timestamp, pd.Timestamp.now(tz=TAIPEI)))
     start = now()
     today = str(start.strftime("%Y-%m-%d"))
     if refusal is not None:
-        return record_with_ledger(root, codes, day=None, code_commit=code_commit, workers=workers, now=start, refusal=refusal)
-    reason = ""
-    while True:
-        status = current_generation()
-        busy = None
-        if producer_idle is not None:
-            try:
-                producer_idle()
-            except RuntimeError as error:
-                busy = str(error)
-        if status["asof"] >= today and busy is None:
-            try:
-                return record_with_ledger(root, codes, day=None, code_commit=code_commit, workers=workers, now=now())
-            except FileExistsError:
-                return root / "days" / f"{status['asof']}.parquet"
-        built = cast(pd.Timestamp, pd.Timestamp(status.get("built_at_utc") or "1970-01-01T00:00:00+00:00")).tz_convert(TAIPEI)
-        if status["asof"] < today and built.strftime("%Y-%m-%d") == today and built.hour * 60 + built.minute >= 20 * 60 + 30:
-            reason = f"no session today: generation {status['generation']} built {built.isoformat()} is still as-of {status['asof']}"
-            break
-        reason = busy and f"producer busy: {busy}" or f"generation not refreshed: current {status['generation']} as-of {status['asof']}"
-        if now() >= freeze_deadline(today) or (now() - start).total_seconds() + poll_seconds > max_wait_seconds:
-            break
-        LOGGER.info("Waiting for today's generation (%s); next check in %.0fs", reason, poll_seconds)
-        sleep(poll_seconds)
+        return record_with_ledger(root, codes, day=None, code_commit=code_commit, workers=workers, now=now, refusal=refusal)
+    last: dict[str, Any] | None = None
+    try:
+        while True:
+            last = current_generation()
+            busy = None
+            if producer_idle is not None:
+                try:
+                    producer_idle()
+                except RuntimeError as error:
+                    busy = str(error)
+            if last["asof"] >= today and busy is None:
+                break
+            built = last.get("built_at_utc")
+            reason = f"producer busy: {busy}" if busy else f"generation not refreshed: current {last['generation']} as-of {last['asof']} built {built}"
+            if now() >= freeze_deadline(today) or (now() - start).total_seconds() + poll_seconds > max_wait_seconds:
+                _append_terminal(root, start, today, code_commit, last, "not_recorded", reason)
+                LOGGER.warning("Forward day %s not recorded: %s", today, reason)
+                return None
+            LOGGER.info("Waiting for today's generation (%s); next check in %.0fs", reason, poll_seconds)
+            sleep(poll_seconds)
+    except BaseException as error:
+        _append_terminal(root, start, today, code_commit, last, "failed", f"{type(error).__name__}: {error}")
+        raise
+    try:
+        return record_with_ledger(root, codes, day=None, code_commit=code_commit, workers=workers, now=now)
+    except FileExistsError:
+        return root / "days" / f"{last['asof']}.parquet"
+
+
+def _append_terminal(root: Path, start: pd.Timestamp, today: str, code_commit: str, status: dict[str, Any] | None, outcome: str, reason: str) -> None:
+    """The scheduled run's own ledger line, with the last generation it saw or why that is unavailable."""
     entry: dict[str, Any] = {
         "attempted_at_utc": start.tz_convert("UTC").isoformat(timespec="seconds"),
         "finished_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "target_day": today,
-        "outcome": "not_recorded",
+        "outcome": outcome,
         "reason": reason,
         "code_commit": code_commit,
-        "generation": status["generation"],
-        "generation_asof": status["asof"],
+        "generation": None if status is None else status["generation"],
+        "generation_asof": None if status is None else status["asof"],
     }
-    try:
-        entry["missing_confirmatory_days"] = missing_days(root, status)
-    except Exception as error:  # noqa: BLE001 - the ledger line must still be written
-        entry["missing_confirmatory_days_error"] = f"{type(error).__name__}: {error}"
+    if status is None:
+        entry["missing_confirmatory_days_error"] = "unavailable: no generation was read"
+    else:
+        try:
+            entry["missing_confirmatory_days"] = missing_days(root, status)
+        except Exception as error:  # noqa: BLE001 - the ledger line must still be written
+            entry["missing_confirmatory_days_error"] = f"{type(error).__name__}: {error}"
     append_attempt(root, entry)
-    LOGGER.warning("Forward day %s not recorded: %s", today, reason)
-    return None
