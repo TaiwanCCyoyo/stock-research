@@ -52,10 +52,13 @@
 - **隨機對照的種子推導** 與 PR17 `random_matched_control` 不同：PR17 對已冷卻的池子用 `object_digest`；
   本研究的池子是每日合格日（未冷卻），種子由 `(20261021, 集合, 股票, 年)` 的字串位元組推導。
   抽法（每股每年、不放回、不足記 shortfall 並把該股票年份標為 unknown）相同。
-- **10 倍 episode 核對：** 全部可判定的 10 倍 episode 與 20 個抽樣 5 倍 episode 都做程式篩檢；
-  被篩出的與調整前後落差最大的一段由人工對照原始收盤、上市日與除權息核對，其餘未逐一人工閱讀。
+- **10 倍 episode 核對：** 全部可判定的 10 倍 episode 與 20 個抽樣 5 倍 episode 逐段人工核對三項價格事實
+  （調整前後比的差距等於窗口內除權息因子乘積、沒有品質旗標、每日調整後漲跌在當時漲跌幅限制內），
+  超出限制的 4 段與落差最大的一段另對照原始收盤、上市日與除權參考價。`finalize` 要求每一段都有紀錄。
   頂點不可判定的 10 倍 episode 列為 `not_screenable_unknown_episode`。
   判定為 `audit_price_error` 的數量為 0，所以「移出前後」兩版相同。決定與理由見 [audit-decisions.json](audit-decisions.json)。
+- **刪最好年份／股票的平手規則** 同 PR17 `drop_best_hit_year`：所有年份都沒有 hit 時刪最早的年份（股票則刪代號最小者）；
+  只有完全沒有事件的切片不刪。
 - **對齊檢查** 結果為逐項完全相同（見 `parity_check.parquet`），未使用容差。
 
 ## 前瞻紀錄

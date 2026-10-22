@@ -208,7 +208,7 @@ def build() -> str:
         ]
         for p in [pd.Series(record) for record in parity.to_dict(orient="records")]
     ]
-    flagged = int(audit["review"].eq("manual").sum())
+    flagged_limit = int(audit["screen_flags"].fillna("[]").ne("[]").sum())
     screened = int(audit["review"].isin(["manual", "screen_only"]).sum())
     unknown_tens = int(audit["review"].eq("not_screenable_unknown_episode").sum())
 
@@ -327,11 +327,9 @@ def build() -> str:
                 <ul>
                     <li>價格：共用 adjusted-daily-v1 世代 {esc(result["generation"])}，依截止日 {esc(result["cutoff"])} 與 PR17 的 4,110 日日曆重算。</li>
                     <li>宇宙：PR17 的 1,942 檔普通股；之後新上市的股票不在內。</li>
-                    <li>價格核對：{screened} 段（全部可判定的 10 倍飆股與 20 段抽樣 5 倍）程式篩檢；
-                    被篩出的 {flagged} 段由人工對照原始收盤與除權息，
-                    都是新股上市前五天無漲跌幅限制或除權參考價，
-
-                    判定價格錯誤 {result["audit"]["audit_price_error"]} 段。另有 {unknown_tens} 段 10 倍頂點無法判定。其餘未逐一人工閱讀。</li>
+                    <li>價格核對：{screened} 段（全部可判定的 10 倍飆股與 20 段抽樣 5 倍）逐段核對調整因子、品質旗標與單日漲跌；
+                    其中 {flagged_limit} 段有超過漲跌幅的單日變動，另讀原始收盤確認是新股上市前五天或除權參考價；
+                    判定價格錯誤 {result["audit"]["audit_price_error"]} 段。另有 {unknown_tens} 段 10 倍頂點無法判定。</li>
                     <li>完整表格在 <code>tasks/20261021-momentum-only-doubling/results/</code>；定義見 mission.md 與 data-contract.md。</li>
                 </ul>
                 </details>
