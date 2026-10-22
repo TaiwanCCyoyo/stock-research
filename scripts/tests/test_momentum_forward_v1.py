@@ -54,3 +54,10 @@ def test_frozen_universe_matches_the_pr17_count_and_calendar() -> None:
     assert len(codes) == 1942 and codes == sorted(set(codes))
     calendar = study.pr17_calendar()
     assert calendar[0] == pd.Timestamp("2010-01-04") and calendar[-1] == pd.Timestamp("2026-10-12")
+
+
+def test_days_before_the_merge_date_stay_prereg_even_when_current(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, fake_generation: dict[str, Any]) -> None:
+    fake_generation.update({"asof": "2026-10-21"})
+    forward.record_day(tmp_path, ["1101"], day=None, code_commit="c" * 40)
+    assert bool(pd.read_parquet(tmp_path / "days" / "2026-10-21.parquet")["recorded_late"].all())
+    assert forward.read_cohort(tmp_path) is None

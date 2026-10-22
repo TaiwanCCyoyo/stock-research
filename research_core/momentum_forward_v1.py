@@ -39,6 +39,9 @@ from research_core.patterns.scan_contract_v1 import Bars
 LOGGER = logging.getLogger(__name__)
 DEFINITION_ID = "momentum-only-forward.v1"
 MISSION_MERGED_UTC = "2026-10-21T19:48:47+00:00"
+# The merge happened at 2026-10-22 03:48 Asia/Taipei, so 2026-10-21 and earlier are the
+# mission's prereg_backfill days even when one of them is still the current generation.
+FIRST_CONFIRMATORY_DAY = "2026-10-22"
 VALUE_COLUMNS = {"A1": "C3", "A2": "D2", "A3": "G2_limit", "A5": "RSI", "A6": "F"}
 PATTERN_NULL_REASON = "PR17 daily raw union pattern states are not maintained incrementally; A7, LEAD_H1 and pattern states are null"
 
@@ -127,7 +130,7 @@ def record_day(root: Path, codes: Sequence[str], *, day: str | None, code_commit
     """Freeze one day under `root/days/<day>.parquet`; never overwrite an existing day."""
     status = current_generation()
     target_day = day or status["asof"]
-    late = target_day != status["asof"]
+    late = target_day != status["asof"] or target_day < FIRST_CONFIRMATORY_DAY
     destination = root / "days" / f"{target_day}.parquet"
     if destination.exists():
         raise FileExistsError(f"{destination} is already frozen; corrections go to a separate correction file")
@@ -149,7 +152,7 @@ def record_day(root: Path, codes: Sequence[str], *, day: str | None, code_commit
 def _write_cohort(root: Path, day: str, *, late: bool, recorded: str) -> None:
     """The first on-time day after the mission merge starts the 12-month confirmatory sample."""
     path = root / "cohort.json"
-    if path.exists() or late or recorded < MISSION_MERGED_UTC:
+    if path.exists() or late or recorded < MISSION_MERGED_UTC or day < FIRST_CONFIRMATORY_DAY:
         return
     start = pd.Timestamp(day)
     end = start + pd.DateOffset(months=12) - pd.Timedelta(days=1)
