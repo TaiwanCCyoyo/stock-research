@@ -42,6 +42,24 @@ MISSION_MERGED_UTC = "2026-10-21T19:48:47+00:00"
 # The merge happened at 2026-10-22 03:48 Asia/Taipei, so 2026-10-21 and earlier are the
 # mission's prereg_backfill days even when one of them is still the current generation.
 FIRST_CONFIRMATORY_DAY = "2026-10-22"
+TAIPEI = "Asia/Taipei"
+
+
+def freeze_deadline(day: str) -> pd.Timestamp:
+    """Latest on-time recording moment for `day`: 09:00 Asia/Taipei on the next weekday.
+
+    The next session cannot open earlier, so a row frozen before then has seen no later
+    price. A holiday only makes the window conservative (an earlier deadline), never longer.
+    """
+    next_weekday = cast(pd.Timestamp, pd.Timestamp(day) + pd.offsets.BDay(1))
+    return cast(pd.Timestamp, pd.Timestamp(next_weekday.strftime("%Y-%m-%d") + " 09:00", tz=TAIPEI))
+
+
+def is_on_time(day: str, generation_asof: str, now: pd.Timestamp) -> bool:
+    """On time: the current generation is that day, the mission was merged, and the next session has not opened."""
+    return day == generation_asof and day >= FIRST_CONFIRMATORY_DAY and now < freeze_deadline(day)
+
+
 VALUE_COLUMNS = {"A1": "C3", "A2": "D2", "A3": "G2_limit", "A5": "RSI", "A6": "F"}
 PATTERN_NULL_REASON = "PR17 daily raw union pattern states are not maintained incrementally; A7, LEAD_H1 and pattern states are null"
 
@@ -126,17 +144,25 @@ def day_frame(codes: Sequence[str], *, generation: str, day: str, late: bool, wo
     return frame
 
 
-def record_day(root: Path, codes: Sequence[str], *, day: str | None, code_commit: str, workers: int = 1) -> Path:
-    """Freeze one day under `root/days/<day>.parquet`; never overwrite an existing day."""
+def record_day(root: Path, codes: Sequence[str], *, day: str | None, code_commit: str, workers: int = 1, now: pd.Timestamp | None = None) -> Path:
+    """Freeze one day under `root/days/<day>.parquet`; never overwrite an existing day.
+
+    A day is on time only while `is_on_time` holds at the start and again just before
+    publication; anything else, including a stale current generation, is recorded late.
+    """
+    clock = (lambda: now) if now is not None else (lambda: pd.Timestamp.now(tz=TAIPEI))
     status = current_generation()
     target_day = day or status["asof"]
-    late = target_day != status["asof"] or target_day < FIRST_CONFIRMATORY_DAY
+    late = not is_on_time(target_day, status["asof"], clock())
     destination = root / "days" / f"{target_day}.parquet"
     if destination.exists():
         if _recover_cohort(root, destination, target_day):
             return destination
         raise FileExistsError(f"{destination} is already frozen; corrections go to a separate correction file")
     frame = day_frame(codes, generation=status["generation"], day=target_day, late=late, workers=workers)
+    if not late and not is_on_time(target_day, status["asof"], clock()):
+        late = True  # the window closed while computing
+        frame["recorded_late"] = True
     recorded = datetime.now(timezone.utc).isoformat(timespec="seconds")
     frame["recorded_at_utc"] = recorded
     frame["code_commit"] = code_commit

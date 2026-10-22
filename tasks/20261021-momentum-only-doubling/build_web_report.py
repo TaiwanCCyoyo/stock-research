@@ -116,7 +116,7 @@ def build() -> str:
             cards.append(
                 f'<li class="rk-finding"><b>{esc(short(group))} · {"半年" if horizon == 126 else "一年"}內翻倍</b>'
                 f"<p>翻倍 {pct(r.hit_rate)}（基準 {pct(base.hit_rate)}，{times(r.hit_ratio_vs_base)}）；"
-                f"期末賠錢 {pct(r.loss_rate)}（基準 {pct(base.loss_rate)}）。已知樣本 {count(r.known_n)} 筆、{count(r.distinct_stock_n)} 檔。</p></li>"
+                f"沒翻倍又收低 {pct(r.loss_rate)}（基準 {pct(base.loss_rate)}）。已知樣本 {count(r.known_n)} 筆、{count(r.distinct_stock_n)} 檔。</p></li>"
             )
 
     primary_rows = []
@@ -218,7 +218,7 @@ def build() -> str:
     lead19 = row("LEAD_B1:daily", 126, era="2019+")
     base19 = row("C-base-daily", 126, era="2019+")
     block_1 = table(
-        ["格子", "翻倍率 vs 基準", "賠錢率 vs 基準", "翻倍率 vs 52 週新高", "冷卻樣本 K / 檔數"],
+        ["格子", "翻倍率 vs 基準", "未翻倍收低 vs 基準", "翻倍率 vs 52 週新高", "冷卻樣本 K / 檔數"],
         verdict_rows,
         "above_zero／below_zero：兩種 bootstrap 區間都同一方向；unresolved：不一致或跨 0；insufficient_sample：冷卻口徑樣本不足 100 筆或 30 檔。",
     )
@@ -229,12 +229,12 @@ def build() -> str:
         numeric_from=2,
     )
     table_1 = table(
-        ["組別", "翻倍率差距（股票重抽 ／ 股票×年份重抽）", "賠錢率差距", "相對 52 週新高的翻倍率差距"],
+        ["組別", "翻倍率差距（股票重抽 ／ 股票×年份重抽）", "未翻倍收低比例差距", "相對 52 週新高的翻倍率差距"],
         primary_rows,
         "差距是相對全市場每日基準的百分點；括號內兩種 95% 區間都要大於 0 才算確定較高。",
     )
     table_2 = table(
-        ["條件", "半年翻倍", "半年賠錢", "× 基準", "已知 K", "一年翻倍", "一年賠錢", "× 基準", "已知 K"],
+        ["條件", "半年翻倍", "半年未翻倍收低", "× 基準", "已知 K", "一年翻倍", "一年未翻倍收低", "× 基準", "已知 K"],
         set_rows,
         "每日口徑、全期間、全部股票；倍數是相對任何合格股票日。好壞全部列出。",
     )
@@ -256,7 +256,7 @@ def build() -> str:
         <title>只看強勢條件的翻倍機率</title>
         <meta name="report:title" content="只看強勢條件的翻倍機率" />
         <meta name="report:summary" content="不看型態、只用 PR17 選出的強勢條件：半年翻倍機率是全市場基準的數倍，
-            但期末賠錢的比例也同時變高。型態分解尚未評估。" />
+            但沒翻倍又收低的比例也同時變高。型態分解尚未評估。" />
         <meta name="report:date" content="2026-10-22" />
         <meta name="report:status" content="descriptive" />
         <meta name="report:period" content="2010-01-04 – 2026-10-12" />
@@ -273,19 +273,19 @@ def build() -> str:
                 <p class="rk-lede">
                     不看任何型態，只要股價已經很強（收盤高於年線六成、是一年低點的 2.5 倍），半年內翻倍的比例是
                     {pct(core126.hit_rate)}，全市場任何一天是 {pct(base126.hit_rate)}；再加上當天漲停，升到 {pct(lead126.hit_rate)}。
-                    但這些股票期末賠錢的比例也比較高：強勢條件讓「翻倍」和「賠錢」同時變多，是高波動的股票，不是穩賺的訊號。
+                    但這些股票「沒翻倍又收低」的比例也比較高：強勢條件讓兩者同時變多，是高波動的股票，不是穩賺的訊號。
                 </p>
             </header>
 
             <div class="rk-banner" role="note">
                 <strong>怎麼讀這頁：</strong>
-                「翻倍」只代表期限內收盤<b>曾經</b>達到兩倍，不等於實際買賣能拿到的報酬（沒有進出時點、成本與持有決策）。
+                「翻倍」只代表期限內收盤<b>曾經</b>達到兩倍；「未翻倍收低」是期限內沒有翻倍、且期末收盤低於起點的比例（先翻倍後又跌回起點以下的算翻倍，不算在這裡），不是持有到期末的虧損機率。「翻倍」也不等於實際買賣能拿到的報酬（沒有進出時點、成本與持有決策）。
                 所有數字都是 2010–2026 已看過的歷史描述，條件本身就是從這段資料挑出來的，不能當作新證據。
                 型態到底額外貢獻多少（型態分解）這次<b>沒有評估</b>：需要 PR17 把每天各型態的原始狀態發布成可重用資料。
             </div>
 
             <section class="rk-section" id="main">
-                <header><div><span class="rk-q">主結論 · 4 格</span><h2>只看強勢條件時，翻倍和賠錢各多少？</h2></div></header>
+                <header><div><span class="rk-q">主結論 · 4 格</span><h2>只看強勢條件時，翻倍和「沒翻倍又收低」各多少？</h2></div></header>
                 <ul class="rk-findings">{"".join(cards)}</ul>
                 {table_1}
                 <p class="rk-foot">
@@ -295,7 +295,7 @@ def build() -> str:
             </section>
 
             <section class="rk-section" id="sets">
-                <header><div><span class="rk-q">22 組純強勢條件</span><h2>每組條件的翻倍率與賠錢率</h2></div></header>
+                <header><div><span class="rk-q">22 組純強勢條件</span><h2>每組條件的翻倍率與未翻倍收低比例</h2></div></header>
                 {table_2}
             </section>
 
@@ -306,7 +306,7 @@ def build() -> str:
             </section>
 
             <section class="rk-section" id="grid">
-                <header><div><span class="rk-q">2／3／5／10 倍 × 半年／一年／兩年</span><h2>大漲格子：翻倍率 / 賠錢率</h2></div></header>
+                <header><div><span class="rk-q">2／3／5／10 倍 × 半年／一年／兩年</span><h2>大漲格子：翻倍率 / 未翻倍收低比例</h2></div></header>
                 {table_5}
                 {block_1}
             </section>

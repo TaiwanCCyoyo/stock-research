@@ -28,6 +28,9 @@
 | `audit_episodes.parquet`                         | 每一個 H504 10 倍 episode 與 20 個抽樣 5 倍 episode                                                                                                                                  | 調整後與原始價格比、窗口內除權息與因子、超過漲跌幅的單日變動、篩檢旗標、`review`（manual／screen_only／not_screenable_unknown_episode）、`audit_price_error`、人工註記                                                                                                                                                                                    |
 | `parity_check.parquet`                           | `C-base-daily`、`C-52w-daily` × H126／H252（2 倍）                                                                                                                                   | 本研究與 PR17 的 known／hit／loss 與差距                                                                                                                                                                                                                                                                                                                  |
 
+`loss_n`／`loss_rate` 沿用 PR17 吸收式標籤：期限內**未曾**達到倍數且期末收盤低於起點才算；先達倍數後跌回的仍是 hit。
+報告稱之為「未翻倍收低」，不是持有到期末的虧損機率。
+
 ## 組別
 
 - `C-base-daily`、`C-52w-daily`：每日、無冷卻基準；`C-base`、`C-52w`：PR17 的 20 session 冷卻版本。
@@ -73,6 +76,6 @@
 - 每一天都以當時 current generation 的 `read_adjusted_daily(..., as_of=該日)` 計算到該日為止的完整歷史，
   與歷史研究同一套程式；2026-10-22 抽 25 檔以截止日 2026-10-12 重算，資格、C-52w 與 5 個個股條件都與歷史研究最後一天相同。
   A4 是當日全宇宙排名。
-- `recorded_late=False` 只給記錄當下就是 current generation as-of 的那一天。mission 合併（2026-10-21 19:48 UTC）後
+- `recorded_late=False` 只給記錄當下就是 current generation as-of 的那一天，而且必須在下一個平日 09:00（Asia/Taipei）以前開始並完成；共用世代停滯或超過時限一律記為 late，不啟動確認樣本。mission 合併（2026-10-21 19:48 UTC）後
   第一個準時凍結的日子寫入 `forward-log/cohort.json`（no-replace），開始 12 個月的確認樣本；之前與補記的日子只作描述。
 - 評估前只能看列數、資格與 unknown 等營運計數，不看任何 hit／loss。

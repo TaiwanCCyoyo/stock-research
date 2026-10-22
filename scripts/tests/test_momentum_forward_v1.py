@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import pandas as pd
 import pytest
@@ -11,9 +11,20 @@ from research_core import momentum_forward_v1 as forward
 from research_core import momentum_only_v1 as study
 
 
+def taipei(text: str) -> pd.Timestamp:
+    return cast(pd.Timestamp, pd.Timestamp(text, tz="Asia/Taipei"))
+
+
 @pytest.fixture()
 def fake_generation(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
     status = {"generation": "2026-10-22-20261022T123008Z", "asof": "2026-10-22"}
+    original = forward.record_day
+
+    def evening(*args: Any, **kwargs: Any) -> Path:
+        kwargs.setdefault("now", taipei("2026-10-22 21:00"))
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(forward, "record_day", evening)
     monkeypatch.setattr(forward, "current_generation", lambda generation=None: status)
 
     def frame(codes: list[str], *, generation: str, day: str, late: bool, workers: int = 1) -> pd.DataFrame:
@@ -75,3 +86,26 @@ def test_a_crash_between_day_and_cohort_is_recoverable(tmp_path: Path, monkeypat
     assert cohort is not None and cohort["confirmatory_start"] == "2026-10-22"
     with pytest.raises(FileExistsError):
         forward.record_day(tmp_path, ["1101"], day=None, code_commit="c" * 40)
+
+
+@pytest.mark.parametrize(
+    ("now", "on_time"),
+    [
+        ("2026-10-22 20:50", True),
+        ("2026-10-23 08:59", True),
+        ("2026-10-23 09:00", False),
+        ("2026-10-26 21:00", False),
+    ],
+)
+def test_on_time_needs_the_next_session_not_yet_open(now: str, on_time: bool) -> None:
+    assert forward.is_on_time("2026-10-22", "2026-10-22", taipei(now)) is on_time
+
+
+def test_a_friday_is_on_time_until_monday_open() -> None:
+    assert forward.freeze_deadline("2026-10-23") == taipei("2026-10-26 09:00")
+
+
+def test_a_stale_generation_records_late_and_never_starts_the_cohort(tmp_path: Path, fake_generation: dict[str, Any]) -> None:
+    forward.record_day(tmp_path, ["1101"], day=None, code_commit="c" * 40, now=taipei("2026-10-26 21:00"))
+    assert bool(pd.read_parquet(tmp_path / "days" / "2026-10-22.parquet")["recorded_late"].all())
+    assert forward.read_cohort(tmp_path) is None
