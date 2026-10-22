@@ -148,3 +148,15 @@ def test_random_daily_draws_are_seeded_per_stock_year_and_record_shortfall() -> 
     second, _ = study.random_daily_draws(eligible, quota, years, group_id="A1", code="2330")
     assert np.array_equal(first, second) and first[:50].sum() == 3 and first[50:].sum() == 3
     assert [(r["year"], r["quota_n"], r["drawn_n"], r["shortfall_n"]) for r in records] == [(2015, 3, 3, 0), (2016, 5, 3, 2)]
+
+
+def test_drop_best_ties_follow_pr17_even_when_every_hit_count_is_zero() -> None:
+    from research_core import count_cube_v1 as cube
+
+    counts = np.zeros((3, 4, len(study.METRICS)), dtype=np.int32)
+    assert cube.best_year(counts, study.METRICS) is None and cube.best_stock(counts, study.METRICS, ["3", "1", "2"]) is None
+    counts[:, 2, study.METRICS.index("event_n")] = 5
+    assert cube.best_year(counts, study.METRICS) == 0, "all-zero hits: earliest year, as drop_best_hit_year"
+    assert cube.best_stock(counts, study.METRICS, ["3", "1", "2"]) == 1, "all-zero hits: smallest code"
+    counts[2, 3, study.METRICS.index("hit_n")] = 1
+    assert cube.best_year(counts, study.METRICS) == 3 and cube.best_stock(counts, study.METRICS, ["3", "1", "2"]) == 2

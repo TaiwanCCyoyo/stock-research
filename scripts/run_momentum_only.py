@@ -72,6 +72,16 @@ def run_stocks(work: Path, generation: str) -> None:
     calendar, codes = pr17_calendar(), pr17_codes()
     directory = work / "stocks"
     directory.mkdir(parents=True, exist_ok=True)
+    identity = {"generation": generation, "definition": study.DEFINITION_ID, "code": code_identity(REPO_ROOT)}
+    started_path = work / "stocks-started.json"
+    if started_path.exists():
+        previous = json.loads(started_path.read_text(encoding="utf-8"))
+        if previous != identity:
+            raise SystemExit(f"{work} was started with {previous}; resume only with the same generation, definition and clean code, or use a new --work")
+    else:
+        if any(directory.iterdir()):
+            raise SystemExit(f"{directory} holds stock files without a start record; use a new --work")
+        started_path.write_text(json.dumps(identity, indent=2), encoding="utf-8")
     started = time.monotonic()
     done = 0
     for position, code in enumerate(codes, 1):
@@ -489,11 +499,10 @@ def _audit_episodes(work: Path) -> pd.DataFrame:
     decisions = json.loads((TASK / "audit-decisions.json").read_text(encoding="utf-8"))["decisions"]
     by_key = {(str(d["code"]), float(d["target_multiple"]), str(d["anchor_date"])): d for d in decisions}
     keys = [(str(c), float(t), str(a)) for c, t, a in zip(screen["code"], screen["target_multiple"], screen["anchor_date"], strict=True)]
-    flagged = screen["screen_flags"].ne("[]").to_list()
-    undecided = [key for key, flag in zip(keys, flagged, strict=True) if flag and key not in by_key]
+    undecided = [key for key in keys if key not in by_key]
     if undecided:
-        raise ValueError(f"screen-flagged episodes need a recorded manual decision: {undecided}")
-    screen["review"] = ["manual" if flag or key in by_key else "screen_only" for key, flag in zip(keys, flagged, strict=True)]
+        raise ValueError(f"every screened episode needs a recorded manual decision (mission: all 10x and the 20 sampled 5x): {undecided}")
+    screen["review"] = "manual"
     screen["audit_price_error"] = [bool(by_key.get(key, {}).get("audit_price_error", False)) for key in keys]
     screen["review_note"] = [by_key.get(key, {}).get("note") for key in keys]
     episodes = pd.read_parquet(work / "episodes.parquet")

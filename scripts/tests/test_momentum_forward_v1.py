@@ -61,3 +61,17 @@ def test_days_before_the_merge_date_stay_prereg_even_when_current(tmp_path: Path
     forward.record_day(tmp_path, ["1101"], day=None, code_commit="c" * 40)
     assert bool(pd.read_parquet(tmp_path / "days" / "2026-10-21.parquet")["recorded_late"].all())
     assert forward.read_cohort(tmp_path) is None
+
+
+def test_a_crash_between_day_and_cohort_is_recoverable(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, fake_generation: dict[str, Any]) -> None:
+    original = forward._write_cohort
+    monkeypatch.setattr(forward, "_write_cohort", lambda *args, **kwargs: (_ for _ in ()).throw(OSError("crash")))
+    with pytest.raises(OSError):
+        forward.record_day(tmp_path, ["1101"], day=None, code_commit="c" * 40)
+    assert (tmp_path / "days" / "2026-10-22.parquet").exists() and forward.read_cohort(tmp_path) is None
+    monkeypatch.setattr(forward, "_write_cohort", original)
+    forward.record_day(tmp_path, ["1101"], day=None, code_commit="c" * 40)
+    cohort = forward.read_cohort(tmp_path)
+    assert cohort is not None and cohort["confirmatory_start"] == "2026-10-22"
+    with pytest.raises(FileExistsError):
+        forward.record_day(tmp_path, ["1101"], day=None, code_commit="c" * 40)

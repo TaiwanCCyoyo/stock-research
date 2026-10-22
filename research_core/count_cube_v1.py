@@ -54,16 +54,22 @@ def summarize(
 
 
 def best_year(counts: NDArray[np.integer], metrics: Sequence[str]) -> int | None:
-    """Index of the year with the most main-denominator hits; ties pick the earlier year."""
+    """Index of the year with the most main-denominator hits; ties (all-zero included) pick the earlier year.
+
+    Matches `pattern_scan_rates_v1.drop_best_hit_year`: only a slice without any event has
+    no year to remove.
+    """
+    if counts[:, :, list(metrics).index("event_n")].sum() == 0:
+        return None
     hits = counts[:, :, list(metrics).index("hit_n")].sum(axis=0)
-    return int(np.argmax(hits)) if hits.max(initial=0) > 0 else None
+    return int(np.argmax(hits))
 
 
 def best_stock(counts: NDArray[np.integer], metrics: Sequence[str], codes: Sequence[str]) -> int | None:
-    """Index of the stock with the most main-denominator hits; ties pick the smallest code."""
-    hits = counts[:, :, list(metrics).index("hit_n")].sum(axis=1)
-    if hits.max(initial=0) <= 0:
+    """Index of the stock with the most main-denominator hits; ties (all-zero included) pick the smallest code."""
+    if counts[:, :, list(metrics).index("event_n")].sum() == 0:
         return None
+    hits = counts[:, :, list(metrics).index("hit_n")].sum(axis=1)
     tied = np.flatnonzero(hits == hits.max())
     return min((int(position) for position in tied), key=lambda position: codes[position])
 

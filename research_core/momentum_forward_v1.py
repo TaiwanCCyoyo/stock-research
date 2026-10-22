@@ -133,6 +133,8 @@ def record_day(root: Path, codes: Sequence[str], *, day: str | None, code_commit
     late = target_day != status["asof"] or target_day < FIRST_CONFIRMATORY_DAY
     destination = root / "days" / f"{target_day}.parquet"
     if destination.exists():
+        if _recover_cohort(root, destination, target_day):
+            return destination
         raise FileExistsError(f"{destination} is already frozen; corrections go to a separate correction file")
     frame = day_frame(codes, generation=status["generation"], day=target_day, late=late, workers=workers)
     recorded = datetime.now(timezone.utc).isoformat(timespec="seconds")
@@ -147,6 +149,18 @@ def record_day(root: Path, codes: Sequence[str], *, day: str | None, code_commit
     _write_cohort(root, target_day, late=late, recorded=recorded)
     LOGGER.info("Froze forward day %s rows=%d late=%s generation=%s", target_day, len(frame), late, status["generation"])
     return destination
+
+
+def _recover_cohort(root: Path, destination: Path, day: str) -> bool:
+    """Start the cohort from an already frozen on-time day if a crash skipped `cohort.json`."""
+    if (root / "cohort.json").exists():
+        return False
+    frozen = pd.read_parquet(destination, columns=["recorded_late", "recorded_at_utc"])
+    if frozen.empty or bool(frozen["recorded_late"].any()):
+        return False
+    recorded = str(frozen["recorded_at_utc"].iloc[0])
+    _write_cohort(root, day, late=False, recorded=recorded)
+    return (root / "cohort.json").exists()
 
 
 def _write_cohort(root: Path, day: str, *, late: bool, recorded: str) -> None:
