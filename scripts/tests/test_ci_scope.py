@@ -39,6 +39,17 @@ def test_domain_and_downstream_union(path: str, domain: str, consumer: str) -> N
     assert plan["reasons"]
 
 
+@pytest.mark.parametrize("path", ["research_core/pattern_scan_daily_values_v1.py", "research_core/hhhl_variants_daily.py"])
+def test_daily_conditions_kernels_select_the_shared_table_tests(path: str) -> None:
+    """daily_conditions_v1 calls these PR17 kernels; changing one must still test the shared table."""
+    plan = ci_scope.make_plan([("M", path)])
+    assert not plan["full"]
+    assert {"pattern_scan", "research_data"} <= set(plan["domains"])
+    assert {"scripts/tests/test_daily_conditions_v1.py", "scripts/tests/test_maintained_adjusted_daily.py"} <= set(plan["python_tests"])
+    if path.endswith("pattern_scan_daily_values_v1.py"):
+        assert "scripts/tests/test_pattern_scan_daily_values_v1.py" in plan["python_tests"]
+
+
 @pytest.mark.parametrize(
     ("path", "expected_domains", "existing_consumer_tests"),
     [

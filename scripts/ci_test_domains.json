@@ -54,8 +54,11 @@
                 "research_core/shared_data.py",
                 "research_core/maintained_adjusted_daily.py",
                 "research_core/technical_daily_v1.py",
+                "research_core/daily_conditions_v1.py",
+                "research_core/pattern_scan_daily_values_v1.py",
                 "scripts/maintain_adjusted_daily.py",
                 "scripts/check_adjusted_daily_asof.py",
+                "scripts/check_daily_conditions.py",
                 "tasks/20261012-research-data-entry/*"
             ],
             "tests": [
@@ -73,6 +76,7 @@
                 "scripts/tests/test_run_receipt.py",
                 "scripts/tests/test_shared_data_view.py",
                 "scripts/tests/test_technical_daily_v1.py",
+                "scripts/tests/test_daily_conditions_v1.py",
                 "scripts/tests/test_momentum_only_v1.py"
             ],
             "consumers": ["annual", "pattern_scan"]
@@ -432,6 +436,7 @@
         "scripts/tests/test_close_review_source_modules.py",
         "scripts/tests/test_commit_hook_entrypoint.py",
         "scripts/tests/test_correct_hhhl_v4_noise_first.py",
+        "scripts/tests/test_daily_conditions_v1.py",
         "scripts/tests/test_dashboard_identity.py",
         "scripts/tests/test_derived_cache.py",
         "scripts/tests/test_derived_features.py",
