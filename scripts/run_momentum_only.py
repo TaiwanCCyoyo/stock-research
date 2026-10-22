@@ -30,7 +30,7 @@ from research_core import count_cube_v1 as cube
 from research_core import momentum_only_v1 as study
 from research_core.artifact_store import publish_new_directory
 from research_core.maintained_adjusted_daily import current_generation, read_adjusted_daily
-from research_core.run_receipt import code_identity, write_run_receipt
+from research_core.run_receipt import InputSpec, code_identity, fingerprint_inputs, write_run_receipt
 
 LOGGER = logging.getLogger(__name__)
 CUTOFF = "2026-10-12"
@@ -569,8 +569,19 @@ def run_finalize(work: Path, output: Path) -> None:
         output / "run-receipt.json",
         run_id=f"momentum-only-{stocks['generation']}",
         definition=study.DEFINITION_ID,
-        parameters={"cutoff": CUTOFF, "targets": list(study.TARGETS), "horizons": list(study.HORIZONS), "bootstrap_reps": REPS, "seeds": SEEDS},
-        inputs={"pr17_calendar_pins": str(PINS), "pr17_universe": str(PR17_PREPARATION), "pr17_parity_reference": str(PR17_Q1), "phases": phases},
+        parameters={
+            "cutoff": CUTOFF,
+            "targets": list(study.TARGETS),
+            "horizons": list(study.HORIZONS),
+            "bootstrap_reps": REPS,
+            "seeds": SEEDS,
+            "phases": phases,
+        },
+        inputs=fingerprint_inputs([
+            InputSpec("pr17_calendar_pins", PINS, live_producer=False),
+            InputSpec("pr17_universe", PR17_PREPARATION, live_producer=False),
+            InputSpec("pr17_parity_reference", PR17_Q1, live_producer=False),
+        ]),
         results={name: output / name for name in files},
         preregistration=TASK / "mission.md",
         repo_root=REPO_ROOT,
