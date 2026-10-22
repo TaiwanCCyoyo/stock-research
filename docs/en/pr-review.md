@@ -15,7 +15,8 @@ verified for this repository; see [PR setup](pr-setup.md).
   whitespace, YAML, large-file, secret, encoding and Ruff checks remain enabled.
 - `scripts/ci_scope.py` selects Python tests by domain from
   `scripts/ci_test_domains.json`. New files route like modified ones, by the
-  domain that owns their location. An unmapped test file runs itself. An unmapped
+  domain that owns their location. A changed test file runs itself and every test that directly or
+  indirectly imports it. An unmapped
   `tasks/` or `docs/` record selects the record contracts plus the tests and owned
   code that mention its task id or file name; a task `web-report/` adds frontend
   checks. Shared and configuration paths, unowned code, and records read by unowned

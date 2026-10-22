@@ -157,7 +157,7 @@ def make_plan(changes: list[tuple[str, str]], *, root: Path = ROOT, force_full: 
             if not owners:
                 owners = ["web"]
         if not owners and path in inventory:
-            reasons.append(f"{status} {path}: unmapped test file runs itself and the tests that import it")
+            reasons.append(f"{status} {path}: unmapped test file runs itself and every test that directly or indirectly imports it")
             continue
         if not owners and reference_key(path) is not None:
             routed = route_by_reference(path, manifest, references)
