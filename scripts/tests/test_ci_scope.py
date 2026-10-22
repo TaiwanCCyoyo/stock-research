@@ -421,6 +421,39 @@ def test_changed_test_also_selects_tests_that_import_it(changed: str, importer: 
     assert {changed, importer} <= set(plan["python_tests"])
 
 
+def test_changed_test_selects_the_transitive_importer_closure() -> None:
+    plan = ci_scope.make_plan([("M", "scripts/tests/test_research_cohort_lifecycle.py")])
+    assert not plan["full"]
+    chain = [
+        "scripts/tests/test_research_cohort_lifecycle.py",
+        "scripts/tests/test_research_chronology.py",
+        "scripts/tests/test_research_attempt_stress.py",
+        "scripts/tests/test_research_capital_return_consumers.py",
+    ]
+    assert set(chain) <= set(plan["python_tests"])
+
+
+def test_importer_closure_follows_chains_and_terminates_on_cycles(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    sources = {
+        "test_a.py": "def test_a(): pass\n",
+        "test_b.py": "from scripts.tests.test_a import test_a  # noqa: F401\nfrom scripts.tests import test_d  # noqa: F401\n",
+        "test_c.py": "from scripts.tests.test_b import test_a  # noqa: F401\n",
+        "test_d.py": "from scripts.tests import test_b  # noqa: F401\n",
+        "test_e.py": "def test_e(): pass\n",
+    }
+    manifest = ci_scope.load_manifest()
+    manifest["test_roots"] = ["scripts/tests"]
+    manifest["reviewed_tests"] = [f"scripts/tests/{name}" for name in sources]
+    manifest["domains"] = {"t": {"paths": [], "tests": ["scripts/tests/test_a.py"]}}
+    monkeypatch.setattr(ci_scope, "load_manifest", lambda: manifest)
+    for name, text in sources.items():
+        (tmp_path / "scripts/tests" / name).parent.mkdir(parents=True, exist_ok=True)
+        (tmp_path / "scripts/tests" / name).write_text(text, encoding="utf-8")
+    plan = ci_scope.make_plan([("M", "scripts/tests/test_a.py")], root=tmp_path)
+    assert not plan["full"]
+    assert plan["python_tests"] == ["scripts/tests/test_a.py", "scripts/tests/test_b.py", "scripts/tests/test_c.py", "scripts/tests/test_d.py"]
+
+
 def test_unmapped_test_file_runs_itself_without_full_suite() -> None:
     plan = ci_scope.make_plan([("M", "tests/test_generate_nightly_report.py")])
     assert not plan["full"]

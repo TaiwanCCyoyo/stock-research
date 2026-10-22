@@ -176,13 +176,15 @@ def make_plan(changes: list[tuple[str, str]], *, root: Path = ROOT, force_full: 
             selected_domains.add(name)
             reasons.append(f"{status} {path}: {name} and declared downstream consumers")
     # Tests import other test modules as fixtures (for example scripts.tests.test_x import helper),
-    # so a changed test also selects every test file that names its module.
-    for test in sorted(changed_tests & set(inventory)):
-        stem = Path(test).stem
-        importers = [path for path in references.referencing(stem) if path in inventory and path != test]
+    # and those importers are imported in turn, so a changed test selects the full importer closure.
+    pending = sorted(changed_tests & set(inventory))
+    while pending:
+        test = pending.pop()
+        importers = [path for path in references.referencing(Path(test).stem) if path in inventory and path not in changed_tests]
         if importers:
             changed_tests.update(importers)
-            reasons.append(f"{test}: {len(importers)} test file(s) that import it")
+            pending.extend(importers)
+            reasons.append(f"{test}: {len(importers)} more test file(s) that import it")
     if not changes and not force_full:
         selected_domains.add("hooks")
         reasons.append("Empty diff: repository and selector contracts remain checked")
