@@ -1,0 +1,1072 @@
+{
+    "schema": "momentum-only.audit-decisions.v1",
+    "reviewed_at": "2026-10-22",
+    "reviewer": "Claude (session executing tasks/20261021-momentum-only-doubling)",
+    "method": "Every selected episode (all H504 10x episodes with a known peak and 20 seeded 5x episodes) was reviewed against three price facts from the screen: the adjusted/raw ratio gap equals the product of the window's corporate-action factors, no quality flag, and every adjusted daily move within the daily price limit (a wrong ex-date factor would breach it). The four episodes with a move beyond the limit and the largest factor gap (9906) were also read against raw closes, volume, listing date and the ex-right reference price.",
+    "decisions": [
+        {
+            "code": "1325",
+            "target_multiple": 10.0,
+            "anchor_date": "2019-05-29",
+            "audit_price_error": false,
+            "note": "Adjusted 13.37x vs raw 12.96x; the 1.032 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "1471",
+            "target_multiple": 10.0,
+            "anchor_date": "2020-03-19",
+            "audit_price_error": false,
+            "note": "Adjusted 10.82x vs raw 10.82x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "1476",
+            "target_multiple": 10.0,
+            "anchor_date": "2011-12-19",
+            "audit_price_error": false,
+            "note": "Adjusted 11.30x vs raw 9.52x; the 1.187 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-6.9% to +7.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "1514",
+            "target_multiple": 5.0,
+            "anchor_date": "2022-01-25",
+            "audit_price_error": false,
+            "note": "Adjusted 5.15x vs raw 4.58x; the 1.125 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "1519",
+            "target_multiple": 10.0,
+            "anchor_date": "2022-06-20",
+            "audit_price_error": false,
+            "note": "Adjusted 32.41x vs raw 31.18x; the 1.039 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.9% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "1608",
+            "target_multiple": 5.0,
+            "anchor_date": "2020-03-19",
+            "audit_price_error": false,
+            "note": "Adjusted 5.97x vs raw 5.57x; the 1.071 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.9% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "1618",
+            "target_multiple": 5.0,
+            "anchor_date": "2022-10-13",
+            "audit_price_error": false,
+            "note": "Adjusted 5.15x vs raw 5.02x; the 1.026 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.9% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "1799",
+            "target_multiple": 10.0,
+            "anchor_date": "2023-09-21",
+            "audit_price_error": false,
+            "note": "Adjusted 11.16x vs raw 11.01x; the 1.014 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.9% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "2007",
+            "target_multiple": 10.0,
+            "anchor_date": "2020-03-19",
+            "audit_price_error": false,
+            "note": "Adjusted 10.27x vs raw 10.27x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "2009",
+            "target_multiple": 10.0,
+            "anchor_date": "2020-03-19",
+            "audit_price_error": false,
+            "note": "Adjusted 13.26x vs raw 13.26x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "2014",
+            "target_multiple": 10.0,
+            "anchor_date": "2020-03-19",
+            "audit_price_error": false,
+            "note": "Adjusted 11.35x vs raw 11.35x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "2038",
+            "target_multiple": 10.0,
+            "anchor_date": "2020-03-19",
+            "audit_price_error": false,
+            "note": "Adjusted 13.72x vs raw 13.72x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "2049",
+            "target_multiple": 10.0,
+            "anchor_date": "2010-01-05",
+            "audit_price_error": false,
+            "note": "Adjusted 10.19x vs raw 9.95x; the 1.024 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-7.0% to +7.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "2059",
+            "target_multiple": 10.0,
+            "anchor_date": "2024-08-05",
+            "audit_price_error": false,
+            "note": "Adjusted 15.47x vs raw 15.13x; the 1.023 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "2230",
+            "target_multiple": 10.0,
+            "anchor_date": "2021-11-11",
+            "audit_price_error": false,
+            "note": "Adjusted 13.47x vs raw 11.93x; the 1.129 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.9% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "2231",
+            "target_multiple": 10.0,
+            "anchor_date": "2012-06-12",
+            "audit_price_error": false,
+            "note": "Adjusted 11.41x vs raw 10.44x; the 1.092 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-6.9% to +7.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "2344",
+            "target_multiple": 10.0,
+            "anchor_date": "2024-08-05",
+            "audit_price_error": false,
+            "note": "Adjusted 10.14x vs raw 10.09x; the 1.005 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "2344",
+            "target_multiple": 10.0,
+            "anchor_date": "2024-09-10",
+            "audit_price_error": false,
+            "note": "Adjusted 10.91x vs raw 10.86x; the 1.005 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "2359",
+            "target_multiple": 5.0,
+            "anchor_date": "2022-09-28",
+            "audit_price_error": false,
+            "note": "Adjusted 8.56x vs raw 8.22x; the 1.042 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "2360",
+            "target_multiple": 10.0,
+            "anchor_date": "2024-04-22",
+            "audit_price_error": false,
+            "note": "Adjusted 10.82x vs raw 10.32x; the 1.049 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.9% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "2360",
+            "target_multiple": 10.0,
+            "anchor_date": "2024-08-05",
+            "audit_price_error": false,
+            "note": "Adjusted 10.01x vs raw 9.76x; the 1.025 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.9% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "2383",
+            "target_multiple": 10.0,
+            "anchor_date": "2024-04-22",
+            "audit_price_error": false,
+            "note": "Adjusted 14.66x vs raw 14.15x; the 1.036 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "2390",
+            "target_multiple": 5.0,
+            "anchor_date": "2012-07-25",
+            "audit_price_error": false,
+            "note": "Adjusted 8.52x vs raw 8.52x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-7.0% to +7.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "2408",
+            "target_multiple": 10.0,
+            "anchor_date": "2024-09-10",
+            "audit_price_error": false,
+            "note": "Adjusted 12.24x vs raw 12.20x; the 1.003 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "2457",
+            "target_multiple": 10.0,
+            "anchor_date": "2020-03-19",
+            "audit_price_error": false,
+            "note": "Adjusted 10.34x vs raw 10.34x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.9% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "2465",
+            "target_multiple": 10.0,
+            "anchor_date": "2020-02-03",
+            "audit_price_error": false,
+            "note": "Adjusted 10.53x vs raw 10.53x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "2465",
+            "target_multiple": 10.0,
+            "anchor_date": "2020-03-19",
+            "audit_price_error": false,
+            "note": "Adjusted 17.58x vs raw 17.58x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "2486",
+            "target_multiple": 10.0,
+            "anchor_date": "2020-03-19",
+            "audit_price_error": false,
+            "note": "Adjusted 13.47x vs raw 13.20x; the 1.021 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "2486",
+            "target_multiple": 5.0,
+            "anchor_date": "2020-03-19",
+            "audit_price_error": false,
+            "note": "Adjusted 13.47x vs raw 13.20x; the 1.021 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "2498",
+            "target_multiple": 5.0,
+            "anchor_date": "2010-02-08",
+            "audit_price_error": false,
+            "note": "Adjusted 5.14x vs raw 4.68x; the 1.100 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-6.9% to +6.9%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "2543",
+            "target_multiple": 10.0,
+            "anchor_date": "2022-07-12",
+            "audit_price_error": false,
+            "note": "Adjusted 10.02x vs raw 8.00x; the 1.253 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.9% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "2603",
+            "target_multiple": 10.0,
+            "anchor_date": "2020-04-01",
+            "audit_price_error": false,
+            "note": "Adjusted 24.62x vs raw 24.62x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "2609",
+            "target_multiple": 10.0,
+            "anchor_date": "2020-03-19",
+            "audit_price_error": false,
+            "note": "Adjusted 45.77x vs raw 45.77x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "2615",
+            "target_multiple": 10.0,
+            "anchor_date": "2020-03-19",
+            "audit_price_error": false,
+            "note": "Adjusted 29.30x vs raw 28.24x; the 1.038 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "2636",
+            "target_multiple": 10.0,
+            "anchor_date": "2020-03-19",
+            "audit_price_error": false,
+            "note": "Adjusted 18.56x vs raw 17.44x; the 1.064 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.9% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3013",
+            "target_multiple": 10.0,
+            "anchor_date": "2022-07-06",
+            "audit_price_error": false,
+            "note": "Adjusted 10.67x vs raw 10.60x; the 1.007 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3013",
+            "target_multiple": 10.0,
+            "anchor_date": "2022-09-28",
+            "audit_price_error": false,
+            "note": "Adjusted 12.21x vs raw 12.07x; the 1.011 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3017",
+            "target_multiple": 10.0,
+            "anchor_date": "2022-07-06",
+            "audit_price_error": false,
+            "note": "Adjusted 10.48x vs raw 9.82x; the 1.068 gap equals the product of the 3 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3026",
+            "target_multiple": 10.0,
+            "anchor_date": "2024-08-05",
+            "audit_price_error": false,
+            "note": "Adjusted 13.01x vs raw 12.08x; the 1.077 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3035",
+            "target_multiple": 10.0,
+            "anchor_date": "2020-03-19",
+            "audit_price_error": false,
+            "note": "Adjusted 11.42x vs raw 11.06x; the 1.032 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.9% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3043",
+            "target_multiple": 10.0,
+            "anchor_date": "2020-03-23",
+            "audit_price_error": false,
+            "note": "Adjusted 11.33x vs raw 11.33x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.8% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3051",
+            "target_multiple": 5.0,
+            "anchor_date": "2011-12-19",
+            "audit_price_error": false,
+            "note": "Adjusted 5.42x vs raw 5.42x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-7.0% to +7.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3081",
+            "target_multiple": 10.0,
+            "anchor_date": "2024-01-17",
+            "audit_price_error": false,
+            "note": "Adjusted 13.06x vs raw 13.00x; the 1.005 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3131",
+            "target_multiple": 10.0,
+            "anchor_date": "2022-10-25",
+            "audit_price_error": false,
+            "note": "Adjusted 12.60x vs raw 12.12x; the 1.040 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3141",
+            "target_multiple": 10.0,
+            "anchor_date": "2020-03-19",
+            "audit_price_error": false,
+            "note": "Adjusted 19.79x vs raw 18.93x; the 1.045 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3149",
+            "target_multiple": 10.0,
+            "anchor_date": "2020-03-19",
+            "audit_price_error": false,
+            "note": "Adjusted 11.81x vs raw 11.81x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-7.5% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3163",
+            "target_multiple": 10.0,
+            "anchor_date": "2024-04-22",
+            "audit_price_error": false,
+            "note": "Adjusted 15.02x vs raw 14.37x; the 1.045 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3163",
+            "target_multiple": 10.0,
+            "anchor_date": "2024-08-06",
+            "audit_price_error": false,
+            "note": "Adjusted 10.21x vs raw 10.04x; the 1.017 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3167",
+            "target_multiple": 10.0,
+            "anchor_date": "2024-05-24",
+            "audit_price_error": false,
+            "note": "Adjusted 17.99x vs raw 17.78x; the 1.012 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3176",
+            "target_multiple": 10.0,
+            "anchor_date": "2011-11-25",
+            "audit_price_error": false,
+            "note": "+11.2% on 2011-11-29 is the fourth session after the first quote (2011-11-23); new listings trade without a daily price limit for their first five sessions. Raw and adjusted moves are equal; no action factor involved."
+        },
+        {
+            "code": "3189",
+            "target_multiple": 10.0,
+            "anchor_date": "2024-06-13",
+            "audit_price_error": false,
+            "note": "Adjusted 10.50x vs raw 9.82x; the 1.069 gap equals the product of the 3 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.9% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3189",
+            "target_multiple": 10.0,
+            "anchor_date": "2024-09-10",
+            "audit_price_error": false,
+            "note": "Adjusted 11.84x vs raw 11.18x; the 1.059 gap equals the product of the 3 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3205",
+            "target_multiple": 10.0,
+            "anchor_date": "2013-09-23",
+            "audit_price_error": false,
+            "note": "Adjusted 10.13x vs raw 10.13x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3207",
+            "target_multiple": 10.0,
+            "anchor_date": "2021-07-02",
+            "audit_price_error": false,
+            "note": "Adjusted 10.55x vs raw 9.72x; the 1.085 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.8% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3218",
+            "target_multiple": 10.0,
+            "anchor_date": "2018-10-11",
+            "audit_price_error": false,
+            "note": "Adjusted 13.69x vs raw 12.86x; the 1.065 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3228",
+            "target_multiple": 10.0,
+            "anchor_date": "2019-07-03",
+            "audit_price_error": false,
+            "note": "Adjusted 28.02x vs raw 28.02x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3313",
+            "target_multiple": 10.0,
+            "anchor_date": "2016-05-11",
+            "audit_price_error": false,
+            "note": "Adjusted 10.31x vs raw 10.31x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.9% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3317",
+            "target_multiple": 5.0,
+            "anchor_date": "2016-01-15",
+            "audit_price_error": false,
+            "note": "Adjusted 5.01x vs raw 5.01x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3363",
+            "target_multiple": 10.0,
+            "anchor_date": "2022-10-13",
+            "audit_price_error": false,
+            "note": "Adjusted 12.17x vs raw 11.57x; the 1.052 gap equals the product of the 3 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3363",
+            "target_multiple": 10.0,
+            "anchor_date": "2024-03-29",
+            "audit_price_error": false,
+            "note": "Adjusted 10.49x vs raw 10.29x; the 1.019 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3406",
+            "target_multiple": 10.0,
+            "anchor_date": "2010-02-06",
+            "audit_price_error": false,
+            "note": "Adjusted 10.20x vs raw 10.20x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-7.0% to +7.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3406",
+            "target_multiple": 10.0,
+            "anchor_date": "2015-08-24",
+            "audit_price_error": false,
+            "note": "Adjusted 13.80x vs raw 13.80x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.9% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3406",
+            "target_multiple": 10.0,
+            "anchor_date": "2016-01-14",
+            "audit_price_error": false,
+            "note": "Adjusted 12.15x vs raw 12.15x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.9% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3406",
+            "target_multiple": 10.0,
+            "anchor_date": "2016-05-11",
+            "audit_price_error": false,
+            "note": "Adjusted 13.42x vs raw 13.42x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.9% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3490",
+            "target_multiple": 10.0,
+            "anchor_date": "2012-11-06",
+            "audit_price_error": false,
+            "note": "Adjusted 11.30x vs raw 11.17x; the 1.011 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-7.0% to +7.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3490",
+            "target_multiple": 10.0,
+            "anchor_date": "2013-04-12",
+            "audit_price_error": false,
+            "note": "Adjusted 10.44x vs raw 10.32x; the 1.011 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-7.0% to +7.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3491",
+            "target_multiple": 10.0,
+            "anchor_date": "2024-03-14",
+            "audit_price_error": false,
+            "note": "Adjusted 12.50x vs raw 12.14x; the 1.030 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3498",
+            "target_multiple": 10.0,
+            "anchor_date": "2011-11-28",
+            "audit_price_error": false,
+            "note": "Adjusted 10.28x vs raw 10.19x; the 1.009 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-7.0% to +7.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3498",
+            "target_multiple": 10.0,
+            "anchor_date": "2012-08-06",
+            "audit_price_error": false,
+            "note": "Adjusted 12.17x vs raw 12.06x; the 1.009 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-7.0% to +7.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3520",
+            "target_multiple": 10.0,
+            "anchor_date": "2012-11-21",
+            "audit_price_error": false,
+            "note": "Adjusted 14.51x vs raw 14.51x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-7.0% to +7.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3529",
+            "target_multiple": 10.0,
+            "anchor_date": "2020-03-19",
+            "audit_price_error": false,
+            "note": "Adjusted 15.82x vs raw 15.52x; the 1.020 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.7% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3552",
+            "target_multiple": 10.0,
+            "anchor_date": "2020-03-23",
+            "audit_price_error": false,
+            "note": "Adjusted 15.09x vs raw 15.09x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3581",
+            "target_multiple": 10.0,
+            "anchor_date": "2024-04-25",
+            "audit_price_error": false,
+            "note": "Adjusted 10.29x vs raw 10.05x; the 1.024 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3661",
+            "target_multiple": 10.0,
+            "anchor_date": "2018-10-30",
+            "audit_price_error": false,
+            "note": "Adjusted 11.11x vs raw 10.97x; the 1.013 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3661",
+            "target_multiple": 10.0,
+            "anchor_date": "2019-01-03",
+            "audit_price_error": false,
+            "note": "Adjusted 13.79x vs raw 13.54x; the 1.019 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3665",
+            "target_multiple": 10.0,
+            "anchor_date": "2024-05-09",
+            "audit_price_error": false,
+            "note": "Adjusted 13.73x vs raw 13.12x; the 1.046 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3675",
+            "target_multiple": 10.0,
+            "anchor_date": "2020-03-19",
+            "audit_price_error": false,
+            "note": "Adjusted 10.98x vs raw 10.64x; the 1.032 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3680",
+            "target_multiple": 10.0,
+            "anchor_date": "2018-10-11",
+            "audit_price_error": false,
+            "note": "Adjusted 12.39x vs raw 12.20x; the 1.015 gap equals the product of the 3 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3687",
+            "target_multiple": 10.0,
+            "anchor_date": "2020-03-23",
+            "audit_price_error": false,
+            "note": "Adjusted 10.03x vs raw 9.98x; the 1.006 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.8% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3693",
+            "target_multiple": 10.0,
+            "anchor_date": "2021-08-20",
+            "audit_price_error": false,
+            "note": "Adjusted 16.82x vs raw 16.00x; the 1.051 gap equals the product of the 3 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "3693",
+            "target_multiple": 10.0,
+            "anchor_date": "2022-10-26",
+            "audit_price_error": false,
+            "note": "Adjusted 11.19x vs raw 11.07x; the 1.011 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "4171",
+            "target_multiple": 10.0,
+            "anchor_date": "2018-07-13",
+            "audit_price_error": false,
+            "note": "Adjusted 22.39x vs raw 22.39x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "4402",
+            "target_multiple": 5.0,
+            "anchor_date": "2023-05-23",
+            "audit_price_error": false,
+            "note": "Adjusted 8.03x vs raw 8.03x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "4763",
+            "target_multiple": 10.0,
+            "anchor_date": "2022-03-15",
+            "audit_price_error": false,
+            "note": "Adjusted 17.24x vs raw 13.80x; the 1.249 gap equals the product of the 5 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "4909",
+            "target_multiple": 10.0,
+            "anchor_date": "2022-10-28",
+            "audit_price_error": false,
+            "note": "Adjusted 13.34x vs raw 13.29x; the 1.004 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.9% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "4931",
+            "target_multiple": 10.0,
+            "anchor_date": "2024-08-06",
+            "audit_price_error": false,
+            "note": "Adjusted 11.84x vs raw 11.48x; the 1.032 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "4943",
+            "target_multiple": 10.0,
+            "anchor_date": "2016-11-15",
+            "audit_price_error": false,
+            "note": "+18.5% on 2016-11-16 is the fourth session after the first quote (2016-11-11), inside the no-limit first five sessions. Raw and adjusted moves are equal."
+        },
+        {
+            "code": "4961",
+            "target_multiple": 10.0,
+            "anchor_date": "2020-03-19",
+            "audit_price_error": false,
+            "note": "Adjusted 20.27x vs raw 19.64x; the 1.032 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "4968",
+            "target_multiple": 10.0,
+            "anchor_date": "2018-10-26",
+            "audit_price_error": false,
+            "note": "Adjusted 10.55x vs raw 10.31x; the 1.024 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "4968",
+            "target_multiple": 10.0,
+            "anchor_date": "2019-01-04",
+            "audit_price_error": false,
+            "note": "Adjusted 14.54x vs raw 14.20x; the 1.024 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "4971",
+            "target_multiple": 10.0,
+            "anchor_date": "2024-08-06",
+            "audit_price_error": false,
+            "note": "Adjusted 19.02x vs raw 19.02x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "4979",
+            "target_multiple": 10.0,
+            "anchor_date": "2021-10-06",
+            "audit_price_error": false,
+            "note": "Adjusted 12.33x vs raw 12.33x; the 1.000 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "4991",
+            "target_multiple": 10.0,
+            "anchor_date": "2024-04-29",
+            "audit_price_error": false,
+            "note": "2025-12-22 is the ex-right date (factor 0.984): raw close +9.87% against the previous close is +11.66% against the ex-right reference price, which is what the adjusted series shows."
+        },
+        {
+            "code": "5284",
+            "target_multiple": 5.0,
+            "anchor_date": "2022-10-13",
+            "audit_price_error": false,
+            "note": "Adjusted 5.16x vs raw 5.05x; the 1.021 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-8.9% to +9.9%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "5386",
+            "target_multiple": 10.0,
+            "anchor_date": "2024-02-23",
+            "audit_price_error": false,
+            "note": "Adjusted 10.73x vs raw 8.55x; the 1.256 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "5386",
+            "target_multiple": 10.0,
+            "anchor_date": "2024-05-13",
+            "audit_price_error": false,
+            "note": "Adjusted 11.06x vs raw 8.81x; the 1.256 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "5432",
+            "target_multiple": 10.0,
+            "anchor_date": "2023-02-20",
+            "audit_price_error": false,
+            "note": "Adjusted 11.83x vs raw 11.48x; the 1.031 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.9% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "5432",
+            "target_multiple": 5.0,
+            "anchor_date": "2023-02-20",
+            "audit_price_error": false,
+            "note": "Adjusted 11.83x vs raw 11.48x; the 1.031 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.9% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "5475",
+            "target_multiple": 10.0,
+            "anchor_date": "2024-04-22",
+            "audit_price_error": false,
+            "note": "Adjusted 39.80x vs raw 39.80x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "5608",
+            "target_multiple": 10.0,
+            "anchor_date": "2020-03-23",
+            "audit_price_error": false,
+            "note": "Adjusted 16.93x vs raw 16.93x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6104",
+            "target_multiple": 10.0,
+            "anchor_date": "2020-03-19",
+            "audit_price_error": false,
+            "note": "Adjusted 14.62x vs raw 12.85x; the 1.138 gap equals the product of the 3 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6117",
+            "target_multiple": 10.0,
+            "anchor_date": "2022-07-28",
+            "audit_price_error": false,
+            "note": "Adjusted 10.61x vs raw 10.61x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6117",
+            "target_multiple": 10.0,
+            "anchor_date": "2022-10-21",
+            "audit_price_error": false,
+            "note": "Adjusted 13.18x vs raw 13.18x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6122",
+            "target_multiple": 5.0,
+            "anchor_date": "2021-08-26",
+            "audit_price_error": false,
+            "note": "Adjusted 6.01x vs raw 5.30x; the 1.133 gap equals the product of the 4 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-8.8% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6129",
+            "target_multiple": 10.0,
+            "anchor_date": "2020-03-19",
+            "audit_price_error": false,
+            "note": "Adjusted 11.39x vs raw 11.39x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6139",
+            "target_multiple": 10.0,
+            "anchor_date": "2022-07-06",
+            "audit_price_error": false,
+            "note": "Adjusted 14.25x vs raw 12.96x; the 1.100 gap equals the product of the 3 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6150",
+            "target_multiple": 10.0,
+            "anchor_date": "2016-11-16",
+            "audit_price_error": false,
+            "note": "Adjusted 26.35x vs raw 26.35x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6165",
+            "target_multiple": 10.0,
+            "anchor_date": "2018-11-01",
+            "audit_price_error": false,
+            "note": "Adjusted 12.43x vs raw 12.43x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.9% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6165",
+            "target_multiple": 5.0,
+            "anchor_date": "2016-07-06",
+            "audit_price_error": false,
+            "note": "Adjusted 6.79x vs raw 6.79x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.9% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6187",
+            "target_multiple": 10.0,
+            "anchor_date": "2022-10-26",
+            "audit_price_error": false,
+            "note": "Adjusted 10.37x vs raw 9.98x; the 1.039 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.9% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6213",
+            "target_multiple": 10.0,
+            "anchor_date": "2024-09-10",
+            "audit_price_error": false,
+            "note": "Adjusted 11.74x vs raw 11.40x; the 1.030 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6213",
+            "target_multiple": 5.0,
+            "anchor_date": "2024-09-10",
+            "audit_price_error": false,
+            "note": "Adjusted 11.74x vs raw 11.40x; the 1.030 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6223",
+            "target_multiple": 10.0,
+            "anchor_date": "2022-10-13",
+            "audit_price_error": false,
+            "note": "Adjusted 11.69x vs raw 11.08x; the 1.055 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6223",
+            "target_multiple": 10.0,
+            "anchor_date": "2023-11-01",
+            "audit_price_error": false,
+            "note": "Adjusted 11.86x vs raw 11.53x; the 1.028 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6231",
+            "target_multiple": 10.0,
+            "anchor_date": "2022-07-06",
+            "audit_price_error": false,
+            "note": "Adjusted 10.31x vs raw 7.51x; the 1.372 gap equals the product of the 3 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6231",
+            "target_multiple": 10.0,
+            "anchor_date": "2022-09-28",
+            "audit_price_error": false,
+            "note": "Adjusted 11.97x vs raw 9.40x; the 1.273 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6235",
+            "target_multiple": 10.0,
+            "anchor_date": "2021-06-21",
+            "audit_price_error": false,
+            "note": "Adjusted 10.20x vs raw 9.50x; the 1.074 gap equals the product of the 4 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.9% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6235",
+            "target_multiple": 10.0,
+            "anchor_date": "2021-10-04",
+            "audit_price_error": false,
+            "note": "Adjusted 11.62x vs raw 10.82x; the 1.074 gap equals the product of the 4 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.9% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6235",
+            "target_multiple": 5.0,
+            "anchor_date": "2020-03-23",
+            "audit_price_error": false,
+            "note": "Adjusted 6.24x vs raw 6.08x; the 1.026 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.9% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6237",
+            "target_multiple": 10.0,
+            "anchor_date": "2019-03-28",
+            "audit_price_error": false,
+            "note": "Adjusted 10.05x vs raw 9.83x; the 1.023 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6237",
+            "target_multiple": 10.0,
+            "anchor_date": "2019-05-14",
+            "audit_price_error": false,
+            "note": "Adjusted 10.86x vs raw 10.62x; the 1.023 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6237",
+            "target_multiple": 10.0,
+            "anchor_date": "2020-03-19",
+            "audit_price_error": false,
+            "note": "Adjusted 19.28x vs raw 19.13x; the 1.008 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6274",
+            "target_multiple": 10.0,
+            "anchor_date": "2024-08-05",
+            "audit_price_error": false,
+            "note": "Adjusted 14.10x vs raw 13.33x; the 1.057 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6442",
+            "target_multiple": 10.0,
+            "anchor_date": "2022-06-09",
+            "audit_price_error": false,
+            "note": "Adjusted 10.76x vs raw 10.00x; the 1.076 gap equals the product of the 3 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6442",
+            "target_multiple": 10.0,
+            "anchor_date": "2022-10-25",
+            "audit_price_error": false,
+            "note": "Adjusted 14.93x vs raw 14.25x; the 1.047 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.9% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6443",
+            "target_multiple": 10.0,
+            "anchor_date": "2020-03-23",
+            "audit_price_error": false,
+            "note": "Adjusted 11.96x vs raw 11.43x; the 1.046 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.8% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6446",
+            "target_multiple": 5.0,
+            "anchor_date": "2021-10-07",
+            "audit_price_error": false,
+            "note": "Adjusted 8.81x vs raw 8.81x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6449",
+            "target_multiple": 5.0,
+            "anchor_date": "2022-10-11",
+            "audit_price_error": false,
+            "note": "Adjusted 5.12x vs raw 4.84x; the 1.059 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.8% to +9.9%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6510",
+            "target_multiple": 10.0,
+            "anchor_date": "2024-08-06",
+            "audit_price_error": false,
+            "note": "Adjusted 10.57x vs raw 10.47x; the 1.009 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6515",
+            "target_multiple": 10.0,
+            "anchor_date": "2024-03-14",
+            "audit_price_error": false,
+            "note": "Adjusted 13.43x vs raw 13.02x; the 1.031 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6531",
+            "target_multiple": 10.0,
+            "anchor_date": "2019-05-15",
+            "audit_price_error": false,
+            "note": "Adjusted 26.39x vs raw 26.01x; the 1.015 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6538",
+            "target_multiple": 10.0,
+            "anchor_date": "2019-01-07",
+            "audit_price_error": false,
+            "note": "Adjusted 11.80x vs raw 9.40x; the 1.256 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6640",
+            "target_multiple": 10.0,
+            "anchor_date": "2023-05-25",
+            "audit_price_error": false,
+            "note": "Adjusted 12.68x vs raw 11.78x; the 1.077 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6643",
+            "target_multiple": 10.0,
+            "anchor_date": "2022-07-01",
+            "audit_price_error": false,
+            "note": "Adjusted 10.29x vs raw 9.28x; the 1.108 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6669",
+            "target_multiple": 5.0,
+            "anchor_date": "2022-10-21",
+            "audit_price_error": false,
+            "note": "Adjusted 5.10x vs raw 4.81x; the 1.062 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.9% to +9.9%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6727",
+            "target_multiple": 10.0,
+            "anchor_date": "2024-08-05",
+            "audit_price_error": false,
+            "note": "Adjusted 11.65x vs raw 11.17x; the 1.043 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "6739",
+            "target_multiple": 10.0,
+            "anchor_date": "2024-09-02",
+            "audit_price_error": false,
+            "note": "+14.2% on 2024-09-03 is the second session after the first quote (2024-09-02), inside the no-limit first five sessions."
+        },
+        {
+            "code": "8021",
+            "target_multiple": 10.0,
+            "anchor_date": "2024-03-18",
+            "audit_price_error": false,
+            "note": "Adjusted 15.10x vs raw 14.20x; the 1.063 gap equals the product of the 3 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "8046",
+            "target_multiple": 10.0,
+            "anchor_date": "2019-03-08",
+            "audit_price_error": false,
+            "note": "Adjusted 10.06x vs raw 9.81x; the 1.026 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "8046",
+            "target_multiple": 10.0,
+            "anchor_date": "2019-05-27",
+            "audit_price_error": false,
+            "note": "Adjusted 12.44x vs raw 12.13x; the 1.026 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "8046",
+            "target_multiple": 10.0,
+            "anchor_date": "2020-05-22",
+            "audit_price_error": false,
+            "note": "Adjusted 11.76x vs raw 11.57x; the 1.017 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.9% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "8046",
+            "target_multiple": 10.0,
+            "anchor_date": "2024-09-10",
+            "audit_price_error": false,
+            "note": "Adjusted 12.47x vs raw 12.34x; the 1.011 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "8069",
+            "target_multiple": 5.0,
+            "anchor_date": "2020-03-19",
+            "audit_price_error": false,
+            "note": "Adjusted 9.53x vs raw 8.81x; the 1.082 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-8.1% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "8086",
+            "target_multiple": 10.0,
+            "anchor_date": "2013-10-16",
+            "audit_price_error": false,
+            "note": "Adjusted 10.71x vs raw 10.71x; the 1.000 gap equals the product of the 0 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +9.8%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "8358",
+            "target_multiple": 10.0,
+            "anchor_date": "2024-08-06",
+            "audit_price_error": false,
+            "note": "Adjusted 12.27x vs raw 12.05x; the 1.018 gap equals the product of the 1 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "8454",
+            "target_multiple": 10.0,
+            "anchor_date": "2019-08-07",
+            "audit_price_error": false,
+            "note": "Adjusted 10.44x vs raw 7.87x; the 1.326 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-9.1% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "8478",
+            "target_multiple": 10.0,
+            "anchor_date": "2021-02-01",
+            "audit_price_error": false,
+            "note": "Adjusted 10.77x vs raw 10.36x; the 1.039 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "8996",
+            "target_multiple": 10.0,
+            "anchor_date": "2021-10-04",
+            "audit_price_error": false,
+            "note": "Adjusted 10.45x vs raw 10.11x; the 1.034 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "8996",
+            "target_multiple": 10.0,
+            "anchor_date": "2022-05-12",
+            "audit_price_error": false,
+            "note": "Adjusted 10.60x vs raw 10.14x; the 1.046 gap equals the product of the 3 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "9906",
+            "target_multiple": 10.0,
+            "anchor_date": "2012-03-29",
+            "audit_price_error": false,
+            "note": "Largest adjusted/raw ratio gap (10.65x adjusted vs 4.56x raw). The 2013-08-13 EX_RIGHT factor 0.443 matches the raw close falling from 110.0 to 52.1 on that date (+7% over the ex-right reference 48.7), so the adjustment is consistent with the raw prices."
+        },
+        {
+            "code": "9958",
+            "target_multiple": 10.0,
+            "anchor_date": "2016-05-16",
+            "audit_price_error": false,
+            "note": "Adjusted 10.27x vs raw 9.57x; the 1.074 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        },
+        {
+            "code": "9958",
+            "target_multiple": 10.0,
+            "anchor_date": "2017-06-03",
+            "audit_price_error": false,
+            "note": "Adjusted 11.29x vs raw 10.78x; the 1.048 gap equals the product of the 2 action factor(s) in the window; no quality flags; every adjusted daily move stays within the daily price limit (-10.0% to +10.0%), so each ex-date factor agrees with that day's raw close."
+        }
+    ]
+}

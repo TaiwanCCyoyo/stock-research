@@ -1,6 +1,6 @@
 ---
 name: shared-derived-data
-description: Where reusable derived research data lives and how to read, refresh or extend it - adjusted daily prices, technical indicators (SMA, EMA, ATR, Bollinger bands, RSI, ADX, MACD), confirmed highs/lows (pivots) and any future shared family under STOCK_RESEARCH_SHARED_ROOT (D:/StockData/stock-research/derived/). Use whenever a task wants to put data "in the shared area", reuse indicators instead of recomputing them, add a column or a new indicator to shared data, update shared data to the latest day, read Bollinger/moving averages/past highs and lows for a study, or decide whether a study's own features belong in shared data - including requests phrased as "放到共用區", "更新共用資料", "加一個指標", "布林軌道", "過去的高低點", "refresh adjusted prices" or "why is my generation gone".
+description: Where reusable derived research data lives and how to read, refresh or extend it - adjusted daily prices, technical indicators (SMA, EMA, ATR, Bollinger bands, RSI, ADX, MACD), confirmed highs/lows (pivots), daily condition values (distance to MA240, multiple of the one-year low, limit-up proxy, %B, volume ratio, support/resistance gaps) and any future shared family under STOCK_RESEARCH_SHARED_ROOT (D:/StockData/stock-research/derived/). Use whenever a task wants to put data "in the shared area", reuse indicators instead of recomputing them, add a column or a new indicator to shared data, update shared data to the latest day, read Bollinger/moving averages/past highs and lows for a study, or decide whether a study's own features belong in shared data - including requests phrased as "放到共用區", "更新共用資料", "加一個指標", "布林軌道", "過去的高低點", "條件值", "每日條件標記", "refresh adjusted prices" or "why is my generation gone".
 ---
 
 # Shared derived data
@@ -24,7 +24,12 @@ routes you there and names what a finished change must satisfy.
 - Record the returned `record` with `write_run_receipt(..., shared_data=[record])`; it says which
   generation was read and never blocks saving a result. Pass its `generation=` to every later read
   so the study stays on one generation; a later read of a pruned generation fails loudly.
-- Earlier cutoff: `read_adjusted_daily(..., as_of=)` then `technical_daily_v1.compute_technical`.
+- Condition values (`daily-conditions.v1`, PR17 pattern-scan condition ingredients such as
+  `close_to_sma240`, `close_to_prior250_low`, `raw_return1`, `bb_percent_b`, `volume_ratio20`):
+  `read_technical("conditions", codes=, columns=, prices=)`. Values only; each study applies
+  its own cut points. Generations built before 2026-10-22 lack this table.
+- Earlier cutoff: `read_adjusted_daily(..., as_of=)` then `technical_daily_v1.compute_technical`
+  (then `daily_conditions_v1.compute_conditions`).
   Never truncate the latest table to fake a cutoff.
 
 ## Refresh
