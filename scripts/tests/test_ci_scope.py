@@ -407,6 +407,20 @@ def test_unowned_new_code_keeps_full_fallback(path: str) -> None:
     assert ci_scope.make_plan([("A", path)])["full"]
 
 
+@pytest.mark.parametrize(
+    ("changed", "importer"),
+    [
+        ("scripts/tests/test_research_causal_scenarios.py", "scripts/tests/test_research_chronology.py"),
+        ("scripts/tests/test_research_cohort_lifecycle.py", "scripts/tests/test_research_chronology.py"),
+        ("scripts/tests/test_close_review_execution.py", "scripts/tests/test_h05_allocation.py"),
+    ],
+)
+def test_changed_test_also_selects_tests_that_import_it(changed: str, importer: str) -> None:
+    plan = ci_scope.make_plan([("M", changed)])
+    assert not plan["full"]
+    assert {changed, importer} <= set(plan["python_tests"])
+
+
 def test_unmapped_test_file_runs_itself_without_full_suite() -> None:
     plan = ci_scope.make_plan([("M", "tests/test_generate_nightly_report.py")])
     assert not plan["full"]

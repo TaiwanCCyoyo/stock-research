@@ -157,7 +157,7 @@ def make_plan(changes: list[tuple[str, str]], *, root: Path = ROOT, force_full: 
             if not owners:
                 owners = ["web"]
         if not owners and path in inventory:
-            reasons.append(f"{status} {path}: unmapped test file runs itself")
+            reasons.append(f"{status} {path}: unmapped test file runs itself and the tests that import it")
             continue
         if not owners and reference_key(path) is not None:
             routed = route_by_reference(path, manifest, references)
@@ -175,6 +175,14 @@ def make_plan(changes: list[tuple[str, str]], *, root: Path = ROOT, force_full: 
         for name in owners:
             selected_domains.add(name)
             reasons.append(f"{status} {path}: {name} and declared downstream consumers")
+    # Tests import other test modules as fixtures (for example scripts.tests.test_x import helper),
+    # so a changed test also selects every test file that names its module.
+    for test in sorted(changed_tests & set(inventory)):
+        stem = Path(test).stem
+        importers = [path for path in references.referencing(stem) if path in inventory and path != test]
+        if importers:
+            changed_tests.update(importers)
+            reasons.append(f"{test}: {len(importers)} test file(s) that import it")
     if not changes and not force_full:
         selected_domains.add("hooks")
         reasons.append("Empty diff: repository and selector contracts remain checked")
