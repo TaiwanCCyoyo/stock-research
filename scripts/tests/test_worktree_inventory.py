@@ -329,7 +329,7 @@ def test_subprocess_failures_are_bounded(monkeypatch: pytest.MonkeyPatch, failur
         wi.run_command(["git", "status"], Path.cwd())
 
 
-def test_tracked_citation_of_a_worktree_path_is_reported(tmp_path: Path) -> None:
+def test_tracked_citation_of_a_worktree_path_is_reported_from_any_checkout(tmp_path: Path) -> None:
     repo = tmp_path / "repo"
     repo.mkdir()
     run_git(repo, "init", "--initial-branch=main")
@@ -343,8 +343,9 @@ def test_tracked_citation_of_a_worktree_path_is_reported(tmp_path: Path) -> None
     run_git(repo, "worktree", "add", "-b", "results", str(cited))
     run_git(repo, "worktree", "add", "-b", "quiet", str(quiet))
 
-    result = wi.inventory(repo, no_pr=True)
-    entries = {Path(entry["path"]).resolve(): entry for entry in result["worktrees"]}
-    assert entries[cited.resolve()]["cited_by"] == {"ref": "HEAD", "files": ["notes.md", "report.md"]}
-    assert entries[quiet.resolve()]["cited_by"] == {"ref": "HEAD", "files": []}
-    assert "cited_by" not in entries[repo.resolve()]
+    for caller in (repo, cited, quiet):
+        result = wi.inventory(caller, no_pr=True)
+        entries = {Path(entry["path"]).resolve(): entry for entry in result["worktrees"]}
+        assert entries[cited.resolve()]["cited_by"] == {"ref": "HEAD", "files": ["notes.md", "report.md"]}, caller
+        assert entries[quiet.resolve()]["cited_by"] == {"ref": "HEAD", "files": []}, caller
+        assert "cited_by" not in entries[repo.resolve()], caller

@@ -134,6 +134,9 @@ def ignored_size(repo: Path, output: bytes, excluded_worktrees: list[Path] | Non
 def cited_by(repo: Path, worktree: Path) -> dict[str, Any]:
     """Tracked files on the default branch that cite this worktree's path.
 
+    ``repo`` is the primary checkout: relative citations such as ``.worktrees/<name>`` are
+    spelled from there, whichever linked worktree runs the inventory.
+
     A study whose tracked report or handoff points at results inside a worktree has not
     delivered them, so a citation keeps the worktree out of the safe-to-clean set until each
     one is either handed off or reads as historical provenance (docs/en/research-program.md
@@ -240,6 +243,8 @@ def query_pr(repo: Path, branch: str, head: str) -> dict[str, Any]:
 def inventory(repo: Path, no_pr: bool = False) -> dict[str, Any]:
     entries = parse_worktrees(git(repo, "worktree", "list", "--porcelain", "-z"))
     registered_paths = [Path(entry["path"]) for entry in entries]
+    # `git worktree list` always lists the main worktree first, whichever checkout runs it.
+    primary = registered_paths[0] if registered_paths else repo
     LOGGER.info("Inspecting %s worktrees", len(entries))
     for entry in entries:
         path = Path(entry["path"])
@@ -260,9 +265,9 @@ def inventory(repo: Path, no_pr: bool = False) -> dict[str, Any]:
                 entry[name] = action()
             except RuntimeError as exc:
                 entry["errors"].append(f"{name}: {exc}")
-        if lexical_path(path) != lexical_path(repo):
+        if lexical_path(path) != lexical_path(primary):
             try:
-                entry["cited_by"] = cited_by(repo, path)
+                entry["cited_by"] = cited_by(primary, path)
             except RuntimeError as exc:
                 entry["errors"].append(f"cited_by: {exc}")
         if entry.get("detached"):
