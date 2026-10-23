@@ -807,6 +807,15 @@ finally:
         assert not starts
         child.kill()
         child.wait(timeout=5)
+        # Windows releases a dead process's file locks asynchronously; on a busy runner
+        # (parallel test workers) that can lag the exit, so wait for the OS release itself.
+        release_deadline = time.monotonic() + 10.0
+        with lock_path.open("a+b") as probe:
+            while not module.try_os_lock(probe):
+                if time.monotonic() >= release_deadline:
+                    pytest.fail("OS did not release the dead child's lock before timeout")
+                time.sleep(0.05)
+            module.release_os_lock(probe)
         assert read_json(active)["owner"] == "synthetic-child"
         if close_failure:
             with pytest.raises(OSError, match="Job close failure"):
