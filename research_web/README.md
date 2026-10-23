@@ -48,6 +48,12 @@ launcher to start both services or reuse verified services from that checkout:
 uv run python scripts/start_research_web.py
 ```
 
+Port 8517 is the data API. It serves the built `dist/` frontend only when
+`dist/release.json` records the same data mode as the API (`artifactMode`,
+written by `scripts/build-dashboard.mjs`); otherwise its root page points to the
+website above instead of loading a frontend that would fail with 503. Study
+reports under `/reports/` are static and stay available either way.
+
 Keep the launcher running. Use `--no-browser` when the browser is already open,
 or `--check` to inspect both services without starting anything. Logs are under
 `.tmp/research-web-launcher/`. An old temporary preview URL on port 8518 is not

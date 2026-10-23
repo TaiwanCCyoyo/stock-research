@@ -66,8 +66,10 @@ def make_plan(changes: list[tuple[str, str]], *, root: Path = ROOT, force_full: 
         if path in inventory:
             changed_tests.add(path)
         shared = matches(path, manifest["full_paths"]) and not matches(path, manifest.get("full_path_exceptions", []))
-        # a new file is unknown unless a reviewed domain names its exact path; a wildcard match is not enough
+        # a new file is unknown unless a reviewed domain names its exact path; a wildcard match is not enough,
+        # except reviewed new-path patterns (prose documents) that no test imports or executes
         named = any(path in domain["paths"] or path in domain["tests"] for domain in manifest["domains"].values())
+        named = named or matches(path, manifest.get("new_path_patterns", []))
         if (status == "A" and not named) or shared:
             full = True
             reasons.append(f"{status} {path}: new path or shared/configuration safety fallback")

@@ -21,3 +21,5 @@ tasks/20261005-industry-role-comparison/publication-v2/**
 /tasks/20261012-hhhl-v4-variants/publication-v1/**
 # Generated report data scripts are single-line JSON; formatting would bloat them past the size limit.
 /tasks/*/web-report/data/
+# Momentum-only final results are hashed in results/run-receipt.json; formatting would break the digests.
+tasks/20261021-momentum-only-doubling/results/**

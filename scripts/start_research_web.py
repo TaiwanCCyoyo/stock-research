@@ -81,6 +81,8 @@ def _verify_live_mode(name: str, port: int, environment: dict[str, str]) -> None
             raise ValueError("資料模式不符或服務版本尚未提供模式")
         if name == "history-api" and payload.get("configId") != dashboard_identity(environment)["configId"]:
             raise ValueError("私有來源設定不符或服務版本尚未提供設定身份")
+        if name == "history-api" and "RESEARCH_WEB_URL" in environment and payload.get("webUrl") != environment["RESEARCH_WEB_URL"]:
+            raise ValueError("API 記錄的網站網址不符")
         if name == "research-web" and payload.get("apiTarget") != environment["RESEARCH_WEB_API_TARGET"]:
             raise ValueError("前端 API proxy 目標不符")
     except (OSError, ValueError) as exc:
@@ -267,6 +269,8 @@ def run(*, no_browser: bool = False, check: bool = False, api_port: int = 8517, 
         raise RuntimeError("API 與網站 port 必須不同，且介於 1–65535。")
     environment = launch_environment(root, dict(os.environ))
     environment["RESEARCH_WEB_API_TARGET"] = f"http://127.0.0.1:{api_port}"
+    # The API points visitors of its own port to the real website.
+    environment["RESEARCH_WEB_URL"] = f"http://127.0.0.1:{web_port}"
     mode = environment[MODE_KEYS[0]]
     _announce(f"資料模式：{mode}")
     _announce(
