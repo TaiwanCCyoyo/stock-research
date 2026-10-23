@@ -327,3 +327,24 @@ def test_subprocess_failures_are_bounded(monkeypatch: pytest.MonkeyPatch, failur
     monkeypatch.setattr(subprocess, "run", fail)
     with pytest.raises(RuntimeError):
         wi.run_command(["git", "status"], Path.cwd())
+
+
+def test_tracked_citation_of_a_worktree_path_is_reported(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    run_git(repo, "init", "--initial-branch=main")
+    (repo / ".gitignore").write_text(".worktrees/\n", encoding="utf-8")
+    cited = repo / ".worktrees" / "results-here"
+    quiet = repo / ".worktrees" / "nothing-cites-me"
+    (repo / "report.md").write_text(f"Final tables: `{os.path.abspath(cited)}/.tmp/run/`\n", encoding="utf-8")
+    (repo / "notes.md").write_text("Older handoff used .worktrees/results-here as its checkout.\n", encoding="utf-8")
+    run_git(repo, "add", ".")
+    run_git(repo, "commit", "-m", "Cite a worktree")
+    run_git(repo, "worktree", "add", "-b", "results", str(cited))
+    run_git(repo, "worktree", "add", "-b", "quiet", str(quiet))
+
+    result = wi.inventory(repo, no_pr=True)
+    entries = {Path(entry["path"]).resolve(): entry for entry in result["worktrees"]}
+    assert entries[cited.resolve()]["cited_by"] == {"ref": "HEAD", "files": ["notes.md", "report.md"]}
+    assert entries[quiet.resolve()]["cited_by"] == {"ref": "HEAD", "files": []}
+    assert "cited_by" not in entries[repo.resolve()]
