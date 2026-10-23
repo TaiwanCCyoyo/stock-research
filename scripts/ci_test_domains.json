@@ -16,7 +16,6 @@
         "*conftest.py",
         "research_core/__init__.py",
         "research_api/__init__.py",
-        "research_api/main.py",
         "research_core/price*",
         "research_core/producer_data.py",
         "research_core/derived_*",
@@ -28,14 +27,15 @@
         "StockProject/*",
         "docker-compose.yml",
         "Dockerfile*",
-        "stock-data-downloader",
-        ".gitmodules",
         "research_core/artifact_*",
         "research_core/evidence.py",
         "research_core/json_integrity.py"
     ],
-    "full_path_exceptions": [".github/workflows/ci.yml"],
-    "new_path_patterns": ["docs/*.md", "tasks/*.md"],
+    "full_path_exceptions": [
+        ".github/workflows/ci.yml",
+        "research_web/package.json",
+        "research_web/package-lock.json"
+    ],
     "domains": {
         "research_data": {
             "paths": [
@@ -267,7 +267,10 @@
                 "scripts/seed_worktree_inputs.py",
                 "scripts/check_mypy_scopes.py",
                 "scripts/check_added_large_files.py",
-                "scripts/audit_public_readiness.py"
+                "scripts/audit_public_readiness.py",
+                ".gitignore",
+                ".prettierignore",
+                ".dockerignore"
             ],
             "tests": [
                 ".codex/hooks/tests/test_*.py",
@@ -290,7 +293,6 @@
             "paths": [
                 "docs/*.md",
                 "docs/*.rst",
-                "tasks/*.md",
                 "README.md",
                 "CONTRIBUTING.md",
                 "CHANGELOG.md",
@@ -303,6 +305,49 @@
                 "tests/test_experiment_spec.py",
                 "tests/test_dashboard_task_index.py"
             ]
+        },
+        "task_records": {
+            "paths": [],
+            "tests": [
+                "scripts/tests/test_agent_instruction_contract.py",
+                "scripts/tests/test_file_hygiene.py",
+                "scripts/tests/test_research_chronology.py",
+                "scripts/tests/test_research_evidence.py",
+                "scripts/tests/test_study_presentation.py",
+                "tests/test_dashboard_task_index.py",
+                "tests/test_experiment_spec.py"
+            ]
+        },
+        "producer_link": {
+            "paths": ["stock-data-downloader", ".gitmodules"],
+            "tests": [
+                "scripts/tests/test_ci_scope.py",
+                "scripts/tests/test_agent_instruction_contract.py",
+                "scripts/tests/test_artifact_backup.py",
+                "scripts/tests/test_research_data_paths.py",
+                "scripts/tests/test_seed_worktree_inputs.py",
+                "tests/test_build_price_parquet.py",
+                "tests/test_producer_data_root.py"
+            ]
+        },
+        "web_dependencies": {
+            "paths": [
+                "research_web/package.json",
+                "research_web/package-lock.json"
+            ],
+            "tests": [
+                "scripts/tests/test_dashboard_identity.py",
+                "scripts/tests/test_history_title_origins_export.py",
+                "scripts/tests/test_opportunity_history_source_runs.py",
+                "scripts/tests/test_opportunity_node_runtime.py",
+                "scripts/tests/test_start_research_web.py"
+            ],
+            "frontend": true
+        },
+        "research_api_app": {
+            "paths": ["research_api/main.py", "research_api/__main__.py"],
+            "tests": ["scripts/tests/test_windows_viewer_launcher.py"],
+            "consumers": ["opportunity"]
         },
         "annual": {
             "paths": [
