@@ -82,6 +82,10 @@ def _check_tree(root: Path) -> int:
     return checked
 
 
+check_tree = _check_tree
+"""Public name for the per-entry alias check below an already checked root."""
+
+
 def _overlaps(left: Path, right: Path) -> bool:
     return left == right or left.is_relative_to(right) or right.is_relative_to(left)
 

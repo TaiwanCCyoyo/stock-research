@@ -271,7 +271,9 @@ primary 本機位置、查詢／重算與未知／相依／current-reference 限
 | 研究保存的證據程式與其本機輸入           | `tasks/<task-id>/evidence/`                    | 程式進 Git 且以自身位置解析路徑；同層輸入只留本機；凍結證據不重構                           |
 | 維護中的共用衍生資料                     | 共用根目錄 `derived/<family>-v<N>/`（repo 外） | 每個定義一份現行資料，依[衍生資料](research-derived-data.md#維護中的共用衍生資料)更新       |
 | 舊雜湊命名快取（legacy）                 | `research_cache/`                              | 不再新增版本                                                                                |
-| 暫存探查                                 | `.tmp/`                                        | 不是正式位置；有後續價值的內容須移回上列位置                                                |
+| 實驗暫存（中間檔、續跑進度）             | 共用根目錄 `scratch/<task-id>/<run-id>/`       | 只用 `research_core/scratch_runs.py` 建立並標狀態；`scripts.scratch_runs list               | clean` 依狀態判定可否清理（[決策紀錄](decision-records/2026-10-24-data-homes-and-scratch.md)） |
+| 太大不進 Git 的最終成果                  | 共用根目錄 `tasks/<task-id>/`                  | 交付後由 scratch run 的 `delivered` 記錄位置；不放 worktree 或 `.tmp/`                      |
+| 暫存探查                                 | `.tmp/`                                        | 只放當次 session 用完即丟的診斷；實驗中間檔改放上面的 scratch                               |
 
 - 已被封存 packet／receipt 以 SHA-256 固定的程式是凍結證據：原地保持位元組不變，不為整理而搬移或改寫；新工作改用 `research_core/` 的新版本。改用共用工具也不得改寫已存資料或重新固定其雜湊，必要時保留具名的舊格式（例如 `research_core.owner_hhhl_labels.contract_digest`）。
 - 通用行情擷取與正規化屬於 `stock-data-downloader`；任務特有證據沿用 `tasks/<task-id>/`，暫存探查沿用 `.tmp/`。持續需要的資料說明與決定回到正式任務紀錄，並從本頁連入。
