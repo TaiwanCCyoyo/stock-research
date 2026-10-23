@@ -72,7 +72,9 @@ conditions 每個家族有 9 個對照組 × 2 個期限，加上 union 與各�
 
 1. 確認前置 PR 都已合併、primary `main` 已更新，執行 `git worktree list` 與 `scripts/worktree_inventory.py`，不要另開一份 PR17 worktree。
 2. 用 scratch helper 建立 run（例如 `q2-q6-v6-<日期>`），`run.json` 的狀態從「程式合併」開始，執行中隨時更新。
-3. **複製**（不是搬移）原始輸入、B1/H1 最終表與五個家族已完成的分組到 run 目錄，逐檔比對 SHA-256。
+3. **原始輸入留在原處直接讀，不複製**：它的 `phase-stock-result.json` 把每檔股票的 part 記成 primary `.tmp/` 下的絕對路徑，
+   搬走後 runner 仍會讀舊路徑；run.json 要把它列為依賴。**複製**（不是搬移）B1/H1 最終表與五個家族已完成的分組到 run 目錄，逐檔比對 SHA-256，
+   不要複製舊的頂層 `progress.json`（裡面是舊 worktree 的絕對收據路徑），讓 runner 依已存在的 final 目錄重建。
    每個家族要連同家族目錄下的 `.phase-start-*.json` 一起複製（B2、B4、P1、R1、R3 的 `.phase-start-conditions.json`，
    B1、H1 的三份），只複製 `.staging-conditions/` 會讓續跑被拒絕；
    原位置的檔案一律保留，不要跳過驗證就刪。`_temporary/` 不要複製，讓 runner 重建。
