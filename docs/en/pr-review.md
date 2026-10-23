@@ -14,8 +14,14 @@ verified for this repository; see [PR setup](pr-setup.md).
   and Pyright; the hosted job runs them on Windows. Formatting,
   whitespace, YAML, large-file, secret, encoding and Ruff checks remain enabled.
 - `scripts/ci_scope.py` selects Python tests by domain from
-  `scripts/ci_test_domains.json`. Shared, configuration, unmapped and newly added
-  paths that no domain names exactly fall back to the full suite.
+  `scripts/ci_test_domains.json`. New files route like modified ones, by the
+  domain that owns their location. A changed test file runs itself and every test that directly or
+  indirectly imports it. An unmapped
+  `tasks/` or `docs/` record selects the record contracts plus the tests and owned
+  code that mention its task id or file name; a task `web-report/` adds frontend
+  checks. Shared and configuration paths, unowned code, and records read by unowned
+  code fall back to the full suite. The producer gitlink selects only its link
+  contracts, because CI never checks out or runs producer code.
   Legacy files outside the change are not newly subjected to targeted type checks.
   It does not download market data, initialize the data submodule or run studies.
 - Reviews check placement as well as behavior: AGENTS.md

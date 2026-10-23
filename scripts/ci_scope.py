@@ -48,6 +48,84 @@ def inventory_domains(root: Path, manifest: dict[str, Any]) -> dict[str, list[st
     return {path: [name for name, domain in manifest["domains"].items() if matches(path, domain["tests"])] for path in test_inventory(root, manifest)}
 
 
+REFERENCE_ROOTS = (
+    "research_core",
+    "research_api",
+    "scripts",
+    "StockProject",
+    "tests",
+    "tasks",
+    "research_web/src",
+    "research_web/scripts",
+    ".claude/hooks",
+    ".codex/hooks",
+)
+REFERENCE_SUFFIXES = {".py", ".ts", ".tsx", ".js", ".mjs"}
+# Code may name a record through its configuration, so code roots also count config files as readers.
+CONFIG_SUFFIXES = {".json", ".toml", ".yaml", ".yml"}
+REFERENCE_SKIP_PARTS = {"node_modules", "__pycache__", ".venv", "dist"}
+
+
+def domain_owners(path: str, manifest: dict[str, Any]) -> list[str]:
+    return [name for name, domain in manifest["domains"].items() if matches(path, domain["paths"]) or matches(path, domain["tests"])]
+
+
+def reference_key(path: str) -> str | None:
+    """Text by which code would reach an unmapped record: its task id, or a docs file name."""
+    parts = path.split("/")
+    if parts[0] == "tasks" and len(parts) >= 3:
+        return parts[1]
+    if parts[0] == "docs" and len(parts) >= 2 and not path.endswith(".py"):
+        return parts[-1]
+    return None
+
+
+class ReferenceIndex:
+    """Lazily read source files once to find which code or tests mention a record."""
+
+    def __init__(self, root: Path) -> None:
+        self.root = root
+        self._texts: dict[str, str] | None = None
+
+    def texts(self) -> dict[str, str]:
+        if self._texts is None:
+            self._texts = {}
+            for folder in REFERENCE_ROOTS:
+                suffixes = REFERENCE_SUFFIXES if folder == "tasks" else REFERENCE_SUFFIXES | CONFIG_SUFFIXES
+                for file in (self.root / folder).rglob("*"):
+                    if file.suffix in suffixes and file.is_file() and not REFERENCE_SKIP_PARTS & set(file.parts):
+                        self._texts[file.relative_to(self.root).as_posix()] = file.read_text(encoding="utf-8", errors="replace")
+        return self._texts
+
+    def referencing(self, key: str) -> list[str]:
+        return sorted(path for path, text in self.texts().items() if key in text)
+
+
+def route_by_reference(path: str, manifest: dict[str, Any], references: ReferenceIndex) -> tuple[list[str], set[str], bool] | None:
+    """Route an unmapped task/docs record to the tests and owned code that mention it.
+
+    Returns None (full validation) when unmapped or shared code reads it. Files in the same
+    task directory are that study's own material, not readers of it.
+    """
+    key = reference_key(path)
+    assert key is not None
+    task_dir = f"tasks/{key}/" if path.startswith("tasks/") else None
+    inventory = set(manifest["reviewed_tests"])
+    owners = {"task_records" if task_dir else "prose"}
+    tests: set[str] = set()
+    for reference in references.referencing(key):
+        if task_dir and reference.startswith(task_dir):
+            continue
+        if reference in inventory:
+            tests.add(reference)
+            continue
+        code_owners = domain_owners(reference, manifest)
+        if not code_owners or matches(reference, manifest["full_paths"]):
+            return None
+        owners.update(code_owners)
+    return sorted(owners), tests, "/web-report/" in path
+
+
 def make_plan(changes: list[tuple[str, str]], *, root: Path = ROOT, force_full: bool = False) -> dict[str, Any]:
     manifest = load_manifest()
     inventory = test_inventory(root, manifest)
@@ -61,31 +139,52 @@ def make_plan(changes: list[tuple[str, str]], *, root: Path = ROOT, force_full: 
         reasons.append("Test inventory differs from reviewed domain manifest; full safety fallback")
     if force_full:
         reasons.append("Explicit full validation (manual request or initial history)")
+    references = ReferenceIndex(root)
     for status, raw_path in changes:
         path = raw_path.replace("\\", "/")
         if path in inventory:
             changed_tests.add(path)
-        shared = matches(path, manifest["full_paths"]) and not matches(path, manifest.get("full_path_exceptions", []))
-        # a new file is unknown unless a reviewed domain names its exact path; a wildcard match is not enough,
-        # except reviewed new-path patterns (prose documents) that no test imports or executes
-        named = any(path in domain["paths"] or path in domain["tests"] for domain in manifest["domains"].values())
-        named = named or matches(path, manifest.get("new_path_patterns", []))
-        if (status == "A" and not named) or shared:
+        if matches(path, manifest["full_paths"]) and not matches(path, manifest.get("full_path_exceptions", [])):
             full = True
-            reasons.append(f"{status} {path}: new path or shared/configuration safety fallback")
+            reasons.append(f"{status} {path}: shared/configuration safety fallback")
             continue
-        owners = [name for name, domain in manifest["domains"].items() if matches(path, domain["paths"]) or matches(path, domain["tests"])]
+        # New and modified files route alike: no unchanged code can import a file that did not exist,
+        # so a new file's impact is the domain that owns its location plus the changed tests that use it.
+        owners = domain_owners(path, manifest)
         if path.startswith("research_web/"):
             frontend = True
             reasons.append(f"{status} {path}: frontend lint/build/tests")
             if not owners:
                 owners = ["web"]
+        if not owners and path in inventory:
+            reasons.append(f"{status} {path}: unmapped test file runs itself and every test that directly or indirectly imports it")
+            continue
+        if not owners and reference_key(path) is not None:
+            routed = route_by_reference(path, manifest, references)
+            if routed is None:
+                full = True
+                reasons.append(f"{status} {path}: referenced by unmapped code; full validation")
+                continue
+            owners, referencing_tests, needs_frontend = routed
+            changed_tests.update(referencing_tests)
+            frontend = frontend or needs_frontend
+            reasons.append(f"{status} {path}: unmapped record; {len(referencing_tests)} referencing test file(s)")
         if not owners:
             full = True
             reasons.append(f"{status} {path}: no reviewed impact mapping; full validation")
         for name in owners:
             selected_domains.add(name)
             reasons.append(f"{status} {path}: {name} and declared downstream consumers")
+    # Tests import other test modules as fixtures (for example scripts.tests.test_x import helper),
+    # and those importers are imported in turn, so a changed test selects the full importer closure.
+    pending = sorted(changed_tests & set(inventory))
+    while pending:
+        test = pending.pop()
+        importers = [path for path in references.referencing(Path(test).stem) if path in inventory and path not in changed_tests]
+        if importers:
+            changed_tests.update(importers)
+            pending.extend(importers)
+            reasons.append(f"{test}: {len(importers)} more test file(s) that import it")
     if not changes and not force_full:
         selected_domains.add("hooks")
         reasons.append("Empty diff: repository and selector contracts remain checked")
