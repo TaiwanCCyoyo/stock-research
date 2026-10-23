@@ -61,13 +61,18 @@ conditions 每個家族有 9 個對照組 × 2 個期限，加上 union 與各�
       改成只比對 `source_id`、`input_id`，這兩個是輸入內容的身分。
     - 收據裡的最終表路徑是 worktree 內的絕對路徑，`_published_files` 要求它在目前 phase 目錄下。
       改成以檔名在目前 phase 目錄找檔，並用收據的 SHA-256 驗證。
+    - 未完成階段的原始執行紀錄 `<家族>/.phase-start-<階段>.json`（`pattern-scan-local-phase-start.v5`，記錄原執行 commit `40bf6fd`）。
+      `_phase_start` 遇到已有內容的 working 目錄卻沒有這份紀錄會拒絕續跑，遇到 definition 不同也會拒絕；
+      新版本要接受搬來的 v5 紀錄，保留原 `code`，把新執行 commit 追加到 `execution_codes`。
     - 新版本另立定義名稱，舊收據不改寫，維持可讀。
 
 ## 4. 重跑步驟（Codex）
 
 1. 確認前置 PR 都已合併、primary `main` 已更新，執行 `git worktree list` 與 `scripts/worktree_inventory.py`，不要另開一份 PR17 worktree。
 2. 用 scratch helper 建立 run（例如 `q2-q6-v6-<日期>`），`run.json` 的狀態從「程式合併」開始，執行中隨時更新。
-3. **複製**（不是搬移）原始輸入、B1/H1 最終表與五個家族已完成的分組到 run 目錄，逐檔比對 SHA-256；
+3. **複製**（不是搬移）原始輸入、B1/H1 最終表與五個家族已完成的分組到 run 目錄，逐檔比對 SHA-256。
+   每個家族要連同家族目錄下的 `.phase-start-*.json` 一起複製（B2、B4、P1、R1、R3 的 `.phase-start-conditions.json`，
+   B1、H1 的三份），只複製 `.staging-conditions/` 會讓續跑被拒絕；
    原位置的檔案一律保留，不要跳過驗證就刪。`_temporary/` 不要複製，讓 runner 重建。
 4. 以單一程序依 `DEFAULT_TARGET_ORDER` 續跑剩下的 10 個家族。中斷後用同一個 run 目錄重跑即可，已完成分組會沿用。
 5. 全部 12 個家族都有三個階段的終端收據後，才算「研究完成」：
