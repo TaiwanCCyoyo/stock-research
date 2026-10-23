@@ -163,7 +163,7 @@ def test_scheduled_mode_logs_a_generation_that_never_arrives(tmp_path: Path, fak
     line = forward.read_attempts(tmp_path)[-1]
     assert line["outcome"] == "not_recorded" and "not refreshed" in line["reason"] and line["target_day"] == "2026-10-22"
     assert line["generation"] == "g21" and line["generation_asof"] == "2026-10-21"
-    assert "missing_confirmatory_days" in line or "missing_confirmatory_days_error" in line
+    assert "missing_days_before_cohort" in line or "missing_days_error" in line
     assert clock.now <= taipei("2026-10-23 09:00") and not (tmp_path / "days").exists()
 
 
@@ -226,7 +226,7 @@ def test_scheduled_mode_logs_an_unreadable_generation_once(tmp_path: Path, fake_
         forward.scheduled_record(tmp_path, ["1101"], code_commit="c" * 40, clock=clock, sleep=clock.sleep)
     lines = forward.read_attempts(tmp_path)
     assert len(lines) == 1 and lines[0]["outcome"] == "failed" and lines[0]["generation"] is None
-    assert lines[0]["missing_confirmatory_days_error"].startswith("unavailable")
+    assert lines[0]["missing_days_error"].startswith("unavailable")
 
 
 def test_a_failed_record_leaves_one_line_not_two(tmp_path: Path, fake_generation: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
@@ -258,3 +258,18 @@ def test_a_tracked_ledger_may_grow_but_code_changes_stay_dirty(tmp_path: Path) -
     assert _code_identity(tmp_path)["dirty"] is False
     (tmp_path / "code.py").write_text("x = 2\n", encoding="utf-8")
     assert _code_identity(tmp_path)["dirty"] is True
+
+
+def test_missing_days_follow_the_cohort_window(tmp_path: Path) -> None:
+    generation = tmp_path / "generation"
+    generation.mkdir()
+    sessions = ["2026-10-22", "2026-10-23", "2026-10-26", "2027-10-22", "2027-10-25"]
+    pd.DataFrame({"Date": pd.to_datetime(sessions)}).to_parquet(generation / "calendar.parquet")
+    status = {"path": str(generation), "asof": "2027-10-25"}
+    root = tmp_path / "forward-log"
+    (root / "days").mkdir(parents=True)
+    (root / "days" / "2026-10-23.parquet").write_bytes(b"")
+    assert forward.missing_entry(root, status) == {"missing_days_before_cohort": ["2026-10-22", "2026-10-26", "2027-10-22", "2027-10-25"]}
+    (root / "cohort.json").write_text(json.dumps({"confirmatory_start": "2026-10-23", "confirmatory_end": "2027-10-22"}), encoding="utf-8")
+    entry = forward.missing_entry(root, status)
+    assert entry == {"confirmatory_window": ["2026-10-23", "2027-10-22"], "missing_confirmatory_days": ["2026-10-26", "2027-10-22"]}

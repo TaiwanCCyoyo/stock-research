@@ -13,8 +13,8 @@ Outcomes are never read here.
 
 Every invocation appends one line to `attempts.jsonl` (`record_with_ledger`): on time, late,
 cohort recovered, already frozen, refused (producer busy, uncommitted code) or failed,
-with the generation it saw and any error, plus the confirmatory trading days of the
-current calendar that still have no frozen file. A missed or failed day therefore leaves
+with the generation it saw and any error, plus the trading days of the current calendar
+that still have no frozen file (inside the cohort's own confirmatory window once it exists). A missed or failed day therefore leaves
 a dated trace instead of silence, and a later backfill cannot pass for an on-time row.
 """
 
@@ -255,11 +255,26 @@ def read_attempts(root: Path) -> list[dict[str, Any]]:
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
-def missing_days(root: Path, status: dict[str, Any]) -> list[str]:
-    """Confirmatory-period sessions of the generation calendar, up to its as-of, without a frozen file."""
+def missing_days(root: Path, status: dict[str, Any], first: str, last: str) -> list[str]:
+    """Sessions of the generation calendar in [first, min(last, as-of)] without a frozen file."""
+    upper = min(last, status["asof"])
     calendar = pd.read_parquet(Path(status["path"]) / "calendar.parquet")["Date"]
-    days = [str(day) for day in pd.Series(calendar).dt.strftime("%Y-%m-%d") if FIRST_CONFIRMATORY_DAY <= str(day) <= status["asof"]]
+    days = [str(day) for day in pd.Series(calendar).dt.strftime("%Y-%m-%d") if first <= str(day) <= upper]
     return [day for day in days if not (root / "days" / f"{day}.parquet").exists()]
+
+
+def missing_entry(root: Path, status: dict[str, Any]) -> dict[str, Any]:
+    """Ledger fields for unfrozen sessions, split by whether the confirmatory cohort exists.
+
+    Once `cohort.json` exists only its own [confirmatory_start, confirmatory_end] window counts
+    (`missing_confirmatory_days`). Before that there is no confirmatory sample yet, so the gaps
+    since the mission merge are operational only (`missing_days_before_cohort`).
+    """
+    cohort = read_cohort(root)
+    if cohort is None:
+        return {"missing_days_before_cohort": missing_days(root, status, FIRST_CONFIRMATORY_DAY, status["asof"])}
+    first, last = cohort["confirmatory_start"], cohort["confirmatory_end"]
+    return {"confirmatory_window": [first, last], "missing_confirmatory_days": missing_days(root, status, first, last)}
 
 
 def record_with_ledger(
@@ -310,9 +325,9 @@ def record_with_ledger(
     finally:
         entry["finished_at_utc"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
         try:
-            entry["missing_confirmatory_days"] = missing_days(root, current_generation())
+            entry.update(missing_entry(root, current_generation()))
         except Exception as error:  # noqa: BLE001 - the ledger line must still be written
-            entry["missing_confirmatory_days_error"] = f"{type(error).__name__}: {error}"
+            entry["missing_days_error"] = f"{type(error).__name__}: {error}"
         append_attempt(root, entry)
         LOGGER.info("Forward attempt %s day=%s", entry.get("outcome"), entry.get("target_day"))
 
@@ -389,10 +404,10 @@ def _append_terminal(root: Path, start: pd.Timestamp, today: str, code_commit: s
         "generation_asof": None if status is None else status["asof"],
     }
     if status is None:
-        entry["missing_confirmatory_days_error"] = "unavailable: no generation was read"
+        entry["missing_days_error"] = "unavailable: no generation was read"
     else:
         try:
-            entry["missing_confirmatory_days"] = missing_days(root, status)
+            entry.update(missing_entry(root, status))
         except Exception as error:  # noqa: BLE001 - the ledger line must still be written
-            entry["missing_confirmatory_days_error"] = f"{type(error).__name__}: {error}"
+            entry["missing_days_error"] = f"{type(error).__name__}: {error}"
     append_attempt(root, entry)

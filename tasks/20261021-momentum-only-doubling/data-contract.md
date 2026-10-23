@@ -81,8 +81,9 @@
 - 評估前只能看列數、資格與 unknown 等營運計數，不看任何 hit／loss。
 - **執行紀錄**：每次執行（含拒絕、失敗、等不到資料）都在 `forward-log/attempts.jsonl` 追加一行，只增不改：
   `outcome` 為 `on_time`／`late`／`cohort_recovered`／`already_frozen`／`refused`／`failed`／`not_recorded`，
-  附 `reason`、看到的 generation 與 as-of、`code_commit`、起訖時間，以及目前日曆中確認期內仍沒有日檔的交易日
-  （`missing_confirmatory_days`）。漏跑或失敗因此留下有日期的紀錄，事後補記也不會被當成準時。
+  附 `reason`、看到的 generation 與 as-of、`code_commit`、起訖時間，以及目前日曆中仍沒有日檔的交易日：
+  `cohort.json` 建立後只算其 `confirmatory_start`～`confirmatory_end` 內的（`missing_confirmatory_days`，附 `confirmatory_window`）；
+  建立前列 2026-10-22 起的營運缺漏（`missing_days_before_cohort`），它們不屬於確認樣本。漏跑或失敗因此留下有日期的紀錄，事後補記也不會被當成準時。
 - **排程**：Windows `StockResearch-MomentumForwardLog`，週一至週五 21:00 在 primary checkout 執行
   `record_momentum_forward_day --scheduled --workers 4`。它等到共用世代的 as-of 等於當天且 producer 閒置才記錄，
   最多等 12 小時且不超過隔日 09:00，判定準時用執行完成時的時間；等不到（含休市，世代日曆不是交易所行事曆，所以不從舊世代推論休市）
