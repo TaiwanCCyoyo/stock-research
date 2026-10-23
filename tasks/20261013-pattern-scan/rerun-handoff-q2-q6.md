@@ -64,6 +64,8 @@ conditions 每個家族有 9 個對照組 × 2 個期限，加上 union 與各�
     - 未完成階段的原始執行紀錄 `<家族>/.phase-start-<階段>.json`（`pattern-scan-local-phase-start.v5`，記錄原執行 commit `40bf6fd`）。
       `_phase_start` 遇到已有內容的 working 目錄卻沒有這份紀錄會拒絕續跑，遇到 definition 不同也會拒絕；
       新版本要接受搬來的 v5 紀錄，保留原 `code`，把新執行 commit 追加到 `execution_codes`。
+    - `launch_remaining` 在 12 個家族全部算完時會自動執行 `maintain_adjusted_daily release --holder pr17-pattern-scan`，
+      早於成果交付。改成預設不釋放，由交付完成後明確執行（或加明確的選用參數）。
     - 新版本另立定義名稱，舊收據不改寫，維持可讀。
 
 ## 4. 重跑步驟（Codex）
