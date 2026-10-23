@@ -146,7 +146,8 @@ def cited_by(repo: Path, worktree: Path) -> dict[str, Any]:
     absolute = os.path.abspath(worktree)
     needles = {absolute.replace("\\", "/"), absolute.replace("/", "\\")}
     try:
-        needles.add(lexical_path(worktree).relative_to(lexical_path(repo)).as_posix())
+        relative = lexical_path(worktree).relative_to(lexical_path(repo)).as_posix()
+        needles |= {relative, relative.replace("/", "\\")}
     except ValueError:
         pass
     arguments = ["git", "grep", "-l", "-i", "-F", *[part for needle in sorted(needles) for part in ("-e", needle)], ref, "--"]
