@@ -3,6 +3,7 @@ import { apiUrl } from "../../api/base";
 import { CaveatChip, InfoTip } from "../../components/ui/InfoTip";
 import { ProgressLine, SkeletonCards } from "../../components/ui/primitives";
 import { SharedDataPage } from "../shared-data/SharedDataPage";
+import { restoreCoverageScroll } from "./coverageScroll";
 import {
     canUseCodeSeries,
     legacyHasNoMatch,
@@ -56,7 +57,13 @@ async function readCoverage<T>(path: string, signal: AbortSignal): Promise<T> {
         signal,
         cache: "no-store",
     });
-    if (!response.ok) throw new Error("資料暫時讀不到，請重新讀取。");
+    if (!response.ok) {
+        if (response.status === 404 && path.startsWith("securities/"))
+            throw new Error(
+                "這個股票身分已不在目前摘要中。請返回股票清單重新搜尋，或在摘要更新後再試。",
+            );
+        throw new Error("資料暫時讀不到，請重新讀取。");
+    }
     const data = await response.json();
     if (data?.schema !== "security-coverage.v1")
         throw new Error("資料格式無法辨識。");
@@ -156,45 +163,19 @@ export function StockCoverageList() {
     }, [searched]);
     useEffect(() => {
         if (!data) return;
-        const frame = requestAnimationFrame(() => {
-            try {
-                window.scrollTo(
-                    0,
-                    Number(
-                        sessionStorage.getItem(
-                            `coverage-scroll:${requestKey}`,
-                        ) ?? 0,
-                    ),
-                );
-                const savedTable = sessionStorage.getItem(
-                    `coverage-table-scroll:${requestKey}`,
-                );
-                const position = savedTable
-                    ? (JSON.parse(savedTable) as {
-                          top?: number;
-                          left?: number;
-                      })
-                    : null;
-                if (coverageTable.current && position) {
-                    coverageTable.current.scrollTop = Number(position.top ?? 0);
-                    coverageTable.current.scrollLeft = Number(
-                        position.left ?? 0,
-                    );
-                }
-            } catch {
-                /* Storage may be unavailable or contain an old value. */
-            }
+        let storage: Pick<Storage, "getItem" | "setItem">;
+        try {
+            storage = window.sessionStorage;
+        } catch {
+            storage = { getItem: () => null, setItem: () => undefined };
+        }
+        return restoreCoverageScroll(requestKey, {
+            storage,
+            window,
+            table: () => coverageTable.current,
+            requestFrame: (callback) => requestAnimationFrame(callback),
+            cancelFrame: (frame) => cancelAnimationFrame(frame),
         });
-        const saveWindow = () =>
-            saveCoverageScroll(requestKey, coverageTable.current);
-        const table = coverageTable.current;
-        window.addEventListener("scroll", saveWindow, { passive: true });
-        table?.addEventListener("scroll", saveWindow, { passive: true });
-        return () => {
-            cancelAnimationFrame(frame);
-            window.removeEventListener("scroll", saveWindow);
-            table?.removeEventListener("scroll", saveWindow);
-        };
     }, [requestKey, data]);
     const update = (name: string, value: string) => {
         const next = new URLSearchParams(query);

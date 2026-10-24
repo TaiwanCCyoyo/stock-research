@@ -18,7 +18,8 @@ included in screenshots or public build assets.
 | Legacy resolution                 | DEMO's unique partial-summary candidate redirected; X123 offered a choice; NOFIXTURE999 showed an explicit no-match state.                                                               |
 | Summary absent                    | A synthetic-only fault server returned unavailable; the list showed a clear notice/retry, not confirmed-missing counts.                                                                  |
 | One source read fails             | One injected institutional HTTP 503 left other cards visible; its retry restored the synthetic 2020-01-02 / 123 row.                                                                     |
-| Return state                      | At 800px width, matrix scrollTop 2000 and scrollLeft 93 were both restored after opening an individual security and going Back; `kind=&status=all` remained in the URL.                  |
+| Return state                      | At 800 × 1000, page 2 and all query filters survived four native Back cycles and the explicit return link, together with outer scrollY 283 and matrix scrollTop 2797 / scrollLeft 33.    |
+| Expired identity                  | A detail HTTP 404 states that the stock identity is absent from the current summary and offers the list return link; transient read failures retain their independent retry.             |
 | Counts and instrument kinds       | Filters use server totals before pagination; ETF is an explicit independent kind and is excluded by the ordinary-share default. Confirmed-delisted and unresolved counts remain visible. |
 
 The ordinary default is labelled recent observations, not confirmed listed.
@@ -35,10 +36,16 @@ panelPolicy file was changed; their old links are handled by compatible routes.
 
 ## Verification
 
-- Full frontend test run: 503 passed. A later focused route/model run passed
-  17 cases, including the added discovery-link case. The earlier full run had
+- Full frontend test run: 506 passed, including two scroll scheduling regressions.
+  The earlier full run had
   502 passes and one Windows symlink-permission failure; the same normal suite
   passed after formal permission escalation. No check was disabled.
+- Independent integration acceptance exposed a timing-sensitive return failure
+  missed by the initial outer-scroll-zero check. Restoration now snapshots both
+  offsets before installing listeners, separates window and matrix writes, gates
+  restoration events through the next paint and ignores detached/replaced nodes.
+  The stronger browser case above used the real local-private production client
+  against a wholly fictional same-origin API fixture; no private roots were read.
 - TypeScript and the normal production build passed. Focused Oxlint passed on
   the final route, shell and coverage files. Normal commit hooks passed.
 - Build publication initially hit a Windows directory-handle conflict while
@@ -67,6 +74,7 @@ fictional data from the synthetic build, never a private-data screenshot.
 
 Task-local browser diagnostics are in `.worktrees/stock-browser/.tmp/`:
 `coverage-theme-contrast.json`, `coverage-browser-fault-evidence.json` and
-`coverage-browser-scroll.json`. The screenshot set and this record are the
+`coverage-browser-scroll.json` and `coverage-browser-regression/after-fix.json`.
+The screenshot set and this record are the
 durable evidence. Claude's separate visual review has not been substituted by
 the implementing agent's acceptance checks.
