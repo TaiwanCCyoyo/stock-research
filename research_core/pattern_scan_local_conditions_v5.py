@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 import uuid
 from collections.abc import Callable, Iterable
 from dataclasses import asdict
@@ -201,6 +202,8 @@ def _summarize_group(
     horizon: int,
     candidates: dict[str, tuple[Atom, ...]],
     output: Path,
+    *,
+    timings: dict[str, float] | None = None,
 ) -> tuple[list[Path], list[dict[str, Any]]]:
     metadata = _metadata(target, group, horizon)
     # Q1 is already complete; combinations are reported only in confirmation.
@@ -214,9 +217,18 @@ def _summarize_group(
     plan = StockCountPlan(inventory, max_membership_rows=2_000_000)
     coverage = CandidateCoverage(metadata, candidates)
     for _, frame in frames():
-        accumulator.add_stock(plan.matrix(frame))
+        matrix_started = time.perf_counter()
+        matrix = plan.matrix(frame)
+        add_started = time.perf_counter()
+        accumulator.add_stock(matrix)
+        coverage_started = time.perf_counter()
         if candidates:
             coverage.add_stock(frame)
+        if timings is not None:
+            timings["matrix_seconds"] = timings.get("matrix_seconds", 0.0) + add_started - matrix_started
+            timings["add_stock_seconds"] = timings.get("add_stock_seconds", 0.0) + coverage_started - add_started
+            timings["coverage_seconds"] = timings.get("coverage_seconds", 0.0) + time.perf_counter() - coverage_started
+    summary_started = time.perf_counter()
     name = f"{target}-{quote(group, safe='')}-h{horizon}"
     paths = [output / f"{name}-{kind}.parquet" for kind in ("summary", "annual", "candidate-coverage")]
     summary_writer, annual_writer = _SummaryWriter(paths[0], 2048), _SummaryWriter(paths[1], 8192)
@@ -244,6 +256,8 @@ def _summarize_group(
         annual_writer.close()
     with paths[2].open("xb") as stream:
         write_frame(coverage.finalize(), stream, index=False)
+    if timings is not None:
+        timings["summary_write_seconds"] = time.perf_counter() - summary_started
     LOGGER.info(
         "Local Q2/Q3 group complete target=%s group=%s horizon=%d cells=%d count_bytes=%d", target, group, horizon, len(inventory), accumulator.memory_nbytes
     )
@@ -322,6 +336,63 @@ def _confirmation_rows(path: Path) -> list[dict[str, Any]]:
     return cast(list[dict[str, Any]], frame.to_dict("records"))
 
 
+def _parallel_groups(
+    inputs: LocalInputs,
+    target: str,
+    output: Path,
+    groups: tuple[str, ...],
+    candidates: dict[str, tuple[Atom, ...]],
+    progress: dict[str, Any],
+    progress_path: Path,
+    on_progress: Callable[[int, int], None] | None,
+) -> None:
+    from research_core.pattern_scan_local_parallel_v5 import GroupJob, InputSpec, bounded_results, process_pool, summarize_group
+    from research_core.research_measurement_v1 import phase_receipt, resource_sample
+
+    main_groups = {"pattern:union", "C-base-no-pattern", "C-base-all", PRIMARY[target]}
+    jobs = []
+    total = 2 * len(groups)
+    for group in groups:
+        for horizon in (126, 252):
+            name = f"{quote(group, safe='')}-h{horizon}"
+            destination = output / name
+            if name in progress["completed"] and (progress["completed"][name] != name or not destination.is_dir()):
+                raise ValueError("completed Q2/Q3 group directory differs or is missing")
+            if destination.exists():
+                _group_paths(destination, target, group, horizon)
+                progress["completed"][name] = name
+            else:
+                jobs.append(GroupJob(group, horizon, candidates if group in main_groups else {}, output / f".staging-{name}-{uuid.uuid4().hex}"))
+    _progress(progress_path, progress)
+    if on_progress is not None:
+        on_progress(len(progress["completed"]), total)
+    if not jobs:
+        return
+    workers = min(inputs.workers, len(jobs))
+    spec = InputSpec(inputs.stock_result, inputs.temporary, target, inputs.temporary / "events" / target, inputs.codes, True, True)
+    metrics: dict[str, Any] = {}
+    measurements = []
+    before = resource_sample()
+    with process_pool(spec, workers) as pool:
+        for job, result in bounded_results(pool, summarize_group, jobs, workers=workers, metrics=metrics):
+            name = f"{quote(job.group, safe='')}-h{job.horizon}"
+            publish_noreplace(job.staging, output / name)
+            progress["completed"][name] = name
+            _progress(progress_path, progress)
+            measurements.append(result["measurement"])
+            if on_progress is not None:
+                on_progress(len(progress["completed"]), total)
+            LOGGER.info("Parallel group published target=%s group=%s workers=%d done=%d/%d", target, name, workers, len(progress["completed"]), total)
+    _progress(
+        inputs.temporary / f"parallel-conditions-{target}.json",
+        {
+            **metrics,
+            "measurement": phase_receipt("parallel-conditions", before, resource_sample()),
+            "tasks": measurements,
+        },
+    )
+
+
 def run_conditions(
     inputs: LocalInputs, target: str, output: Path, *, on_progress: Callable[[int, int], None] | None = None
 ) -> tuple[dict[str, Any], dict[str, tuple[Atom, ...]], list[Path]]:
@@ -387,6 +458,9 @@ def run_conditions(
     paths = [selection_path]
     main_groups = {"pattern:union", "C-base-no-pattern", "C-base-all", PRIMARY[target]}
     confirmation: list[dict[str, Any]] = []
+    parallel = getattr(inputs, "workers", 1) > 1
+    if parallel:
+        _parallel_groups(inputs, target, output, groups, candidates, progress, progress_path, on_progress)
     for group in groups:
         for horizon in (126, 252):
 
@@ -413,7 +487,7 @@ def run_conditions(
                 progress["completed"][name] = name
                 _progress(progress_path, progress)
             paths.extend(group_paths)
-            if on_progress is not None:
+            if on_progress is not None and not parallel:
                 on_progress(len(progress["completed"]), len(expected_groups))
             if group == "pattern:union" and horizon == 252:
                 confirmation.extend(top_rows if top_rows is not None else _confirmation_rows(group_paths[0]))

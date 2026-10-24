@@ -64,7 +64,9 @@ def test_cli_holds_registered_run_lock_through_launch_and_heartbeats(tmp_path: P
         output = created.path
     stock = tmp_path / "stock.json"
     stock.write_text("{}", encoding="utf-8")
-    monkeypatch.setattr(sys, "argv", ["run_pattern_scan_remaining.py", "--stock-result", str(stock), "--output", str(output), "--target", "H1"])
+    monkeypatch.setattr(
+        sys, "argv", ["run_pattern_scan_remaining.py", "--stock-result", str(stock), "--output", str(output), "--target", "H1", "--workers", "2"]
+    )
 
     reported = {"step": 2, "total": 4, "label": "H1 condition groups"}
 

@@ -1,6 +1,8 @@
 """Synthetic continuity, complete-peer and unhashed progress contracts."""
 
 import json
+import sys
+import types
 from pathlib import Path
 from typing import Any, cast
 
@@ -184,6 +186,8 @@ def _stub_inputs(temporary: Path, calendar: pd.DatetimeIndex, bound: EventTables
     inputs.calendar = calendar
     inputs.existing = {}
     inputs._target_roots, inputs._cached_codes = {}, {}
+    inputs.workers = 1
+    inputs.projection_build_allowed = True
     inputs.label_pin = {"version_id": "synthetic-labels", "manifest_sha256": "historical-description-only"}
 
     def stock(code: str) -> dict[str, pd.DataFrame]:
@@ -193,6 +197,75 @@ def _stub_inputs(temporary: Path, calendar: pd.DatetimeIndex, bound: EventTables
     inputs.stock = stock  # type: ignore[method-assign]
     inputs.global_values = lambda code: pd.DataFrame(index=calendar)  # type: ignore[method-assign]
     return inputs
+
+
+def test_attach_target_requires_complete_cache_without_writing(tmp_path: Path) -> None:
+    calendar = pd.bdate_range("2010-01-04", periods=3)
+    inputs = _stub_inputs(tmp_path / "continuation", calendar, _bound(calendar), [])
+    output = inputs.temporary / "B1"
+    output.mkdir(parents=True)
+    module.write_progress(output / "progress.json", {"target": "B1", "source_id": inputs.source_id, "input_id": inputs.input_id, "completed": ["0050"]})
+    projection = output / "0050"
+    projection.mkdir()
+    for name in module.EVENT_FILES:
+        (projection / f"{name}.parquet").write_bytes(b"cached")
+    before = {path: path.read_bytes() for path in output.rglob("*") if path.is_file()}
+    with pytest.raises(ValueError, match="incomplete"):
+        inputs.attach_target("B1", output, require_complete=True)
+    assert {path: path.read_bytes() for path in output.rglob("*") if path.is_file()} == before
+    inputs.existing["B1", "2330"] = tmp_path / "original-2330"
+    inputs.attach_target("B1", output, require_complete=True)
+    assert inputs._cached_codes["B1"] == {"0050"}
+    assert {path: path.read_bytes() for path in output.rglob("*") if path.is_file()} == before
+
+
+def test_parallel_cache_pending_excludes_original_and_complete_codes_and_parent_records_completion(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    calendar = pd.bdate_range("2010-01-04", periods=3)
+    inputs = _stub_inputs(tmp_path / "continuation", calendar, _bound(calendar), [])
+    inputs.codes = ("0050", "2330", "0001")
+    inputs.workers = 2
+    inputs.existing["B1", "0050"] = tmp_path / "original-0050"
+    output = inputs.temporary / "B1"
+    output.mkdir(parents=True)
+    complete = output / "2330"
+    complete.mkdir()
+    for name in module.EVENT_FILES:
+        (complete / f"{name}.parquet").write_bytes(b"cached")
+    module.write_progress(output / "progress.json", {"target": "B1", "source_id": inputs.source_id, "input_id": inputs.input_id, "completed": ["2330"]})
+    calls: list[tuple[str, ...]] = []
+
+    def fake_project(owner: module.LocalInputs, target: str, root: Path, pending: list[str], *, workers: int, on_completed: Any) -> None:
+        assert owner is inputs and target == "B1" and root == output and workers == 2
+        calls.append(tuple(pending))
+        # Simulate worker publication, then invoke the coordinator callback.
+        staged = root / "0001"
+        staged.mkdir()
+        for name in module.EVENT_FILES:
+            (staged / f"{name}.parquet").write_bytes(b"published")
+        on_completed("0001")
+
+    fake_module = types.ModuleType("research_core.pattern_scan_local_parallel_v5")
+    fake_module.project_in_parallel = fake_project  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, fake_module.__name__, fake_module)
+    restored = _bound(calendar)
+    monkeypatch.setattr(inputs, "_read_bound", lambda directory: restored)
+    assert inputs.cache_target("B1", output) == output
+    assert calls == [("0001",)]
+    assert json.loads((output / "progress.json").read_text(encoding="utf-8"))["completed"] == ["0001", "2330"]
+    assert inputs.bound("B1", "0001") is restored
+
+
+def test_readonly_projection_cache_gap_does_not_rebuild(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    calendar = pd.bdate_range("2010-01-04", periods=3)
+    inputs = _stub_inputs(tmp_path / "continuation", calendar, _bound(calendar), [])
+    inputs.projection_build_allowed = False
+
+    def forbidden(*args: Any, **kwargs: Any) -> Any:
+        pytest.fail("read-only projection readers must not rebuild a missing stock")
+
+    monkeypatch.setattr(module, "build_event_tables", forbidden)
+    with pytest.raises(ValueError, match="read-only projection cache is missing"):
+        inputs.bound("B1", "0050")
 
 
 def test_complete_projection_cache_reuses_after_restart_without_building_or_hashing(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
