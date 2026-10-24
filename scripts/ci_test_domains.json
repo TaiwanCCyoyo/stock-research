@@ -732,6 +732,8 @@
         "scripts/tests/test_stock_feature_pool_v1.py",
         "scripts/tests/test_stock_feature_pool_v2.py",
         "scripts/tests/test_strategy_map_capture.py",
+        "scripts/tests/test_strength_flag_counts_v1.py",
+        "scripts/tests/test_strength_flags_v1.py",
         "scripts/tests/test_studio_review_coverage.py",
         "scripts/tests/test_study_cards.py",
         "scripts/tests/test_study_presentation.py",
