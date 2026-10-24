@@ -9,6 +9,7 @@ import { latestMarketSummary } from "./model";
 import { MarketOverview } from "./HomeView";
 import { ProgressLine, SkeletonCards } from "../../components/ui/primitives";
 import { StudyCardView } from "../studies/StudyCardView";
+import { StudiesRefreshNotice } from "../studies/StudiesRefreshNotice";
 import { useStudyCards } from "../studies/useStudyCards";
 import "../studies/studies.css";
 import "./home.css";
@@ -124,13 +125,26 @@ export function HomePage() {
                 最近的研究 <a href="#studies">全部研究 →</a>
             </h2>
             {studies.cards ? (
-                <div className="hm-studies">
-                    {recent.map((card) => (
-                        <StudyCardView key={card.id} card={card} compact />
-                    ))}
-                </div>
+                <>
+                    {studies.stale && (
+                        <StudiesRefreshNotice onRetry={studies.retry} />
+                    )}
+                    <div className="hm-studies">
+                        {recent.map((card) => (
+                            <StudyCardView key={card.id} card={card} compact />
+                        ))}
+                    </div>
+                </>
             ) : studies.error ? (
-                <p className="u-skeleton">研究資料暫時讀不到。</p>
+                <div className="u-card hm-state">
+                    <p>研究資料暫時讀不到。</p>
+                    <button
+                        className="u-btn u-btn-primary"
+                        onClick={studies.retry}
+                    >
+                        重新讀取
+                    </button>
+                </div>
             ) : (
                 <SkeletonCards
                     count={3}
