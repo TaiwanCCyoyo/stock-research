@@ -6,6 +6,10 @@ explorer, a saved-research library and the dated ETF field guide. The earlier K-
 
 ## Start
 
+Data overview and institutional/revenue chart endpoint contracts, units, and measured
+coverage are documented in [data status](../docs/en/data-status.md). Frontend rendering
+can use `/api/data-status` and `/api/data-series/v1/`; these endpoints acquire no data.
+
 ### Local data selection
 
 The launcher reads only its four configuration keys from the primary checkout's
