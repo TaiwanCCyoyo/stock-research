@@ -306,6 +306,7 @@
     stroke: #ffd3e3;
     stroke-opacity: 0.75;
 }
-.studio[data-palette="sakura"] .opportunity-stock path {
+/* Keep the selected outline (2.2) heavier than the pearl rim. */
+.studio[data-palette="sakura"] .opportunity-stock:not(.is-selected) path {
     stroke-width: 1.4px;
 }

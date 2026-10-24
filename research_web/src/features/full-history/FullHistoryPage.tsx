@@ -1,3 +1,4 @@
+import { nextPanelSnapshot, type PanelSnapshot } from "./panelSnapshot.ts";
 import {
     memo,
     useEffect,
@@ -39,21 +40,21 @@ import "./FullHistoryPage.css";
 const HistoryOpportunityMap = memo(OpportunityMap);
 const MemoHistoryTimeline = memo(HistoryTimeline);
 
-const PANEL_REFRESH = 2000;
-
-/** The frame side panels show: the live frame when paused, and during
- *  playback the live frame at most once every PANEL_REFRESH ms. */
-function usePanelFrame<T>(frame: T, playing: boolean): T {
-    const [shown, setShown] = useState(frame);
-    const shownAt = useRef(0);
+/** The timeline's frame and holdings during playback: one consistent
+ *  snapshot, refreshed at most every PANEL_REFRESH ms (live when paused). */
+function usePanelSnapshot<F, C>(frame: F, comparisons: C, playing: boolean) {
+    const [snapshot, setSnapshot] = useState<PanelSnapshot<F, C> | null>(null);
     useEffect(() => {
-        const now = performance.now();
-        if (!playing || now - shownAt.current >= PANEL_REFRESH) {
-            shownAt.current = now;
-            setShown(frame);
-        }
-    }, [frame, playing]);
-    return playing ? shown : frame;
+        setSnapshot((previous) =>
+            nextPanelSnapshot(
+                previous,
+                { frame, comparisons },
+                playing,
+                performance.now(),
+            ),
+        );
+    }, [frame, comparisons, playing]);
+    return playing && snapshot ? snapshot : { frame, comparisons };
 }
 
 export function FullHistoryPage({ active }: { active: boolean }) {
@@ -119,17 +120,12 @@ export function FullHistoryPage({ active }: { active: boolean }) {
         () => (frame ? toMapView(frame, mode, ended, thresholdPct) : null),
         [frame, mode, ended, thresholdPct],
     );
-    // While playing, the map animates every step but the side panels
-    // (timeline, list, comparisons) refresh at most every PANEL_REFRESH ms and
-    // as low-priority work, so they never take frames from the map.
-    const panelSource = usePanelFrame(frame, history.playing);
-    const panelFrame = useDeferredValue(panelSource);
-    const panelDisplayed = useMemo(
-        () =>
-            panelFrame?.rows.filter((row) =>
-                appears(row, panelFrame.date, mode, thresholdPct),
-            ) ?? [],
-        [panelFrame, mode, thresholdPct],
+    // While playing, the map and every date-paired panel (list, holdings,
+    // comparisons) follow the live frame. Only the timeline, the costliest
+    // panel, refreshes from a snapshot at most every PANEL_REFRESH ms, as
+    // low-priority work, with its frame and holdings captured together.
+    const timeline = useDeferredValue(
+        usePanelSnapshot(frame, comparisons, history.playing),
     );
     const displayed = useMemo(
         () =>
@@ -631,8 +627,8 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                 </div>
                             )}
                             <HistoryRanking
-                                rows={panelDisplayed}
-                                date={panelFrame?.date ?? ""}
+                                rows={displayed}
+                                date={frame?.date ?? ""}
                                 selectedId={selectedId}
                                 onSelect={setSelectedId}
                                 comparisons={datedComparisons}
@@ -748,11 +744,11 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                         <MemoHistoryTimeline
                             directory={directory}
                             metadata={metadata}
-                            frame={panelFrame}
+                            frame={timeline.frame}
                             selectedId={selectedId}
                             onSelect={setSelectedId}
                             onDate={history.goToDate}
-                            comparisons={comparisons}
+                            comparisons={timeline.comparisons}
                             thresholdPct={thresholdPct}
                         />
                     ) : (
