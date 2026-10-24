@@ -1,9 +1,9 @@
 # Q2–Q6 continuation on shared scratch
 
-**Status: continuation paused at the owner's request pending bounded parallelism; research remains incomplete.**
+**Status: parallel runner PR #81 merged; continuation paused pending PR #82's capacity-observation fix. Research remains incomplete.**
 The current runtime amendment and completed engineering probe are
 [bounded parallel execution](parallel-execution-v5.md). Four workers were selected;
-full continuation waits for runner PR #81's owner merge.
+the bounded full-market capacity invocation follows PR #82's owner merge.
 The single-worker process started below was stopped, with its checkpoints retained.
 This implements package D's runner changes from
 [the current handoff](../20261024-data-homes-and-scratch/codex-handoff.md#d-pr17-續跑程式修改與重跑).
@@ -69,10 +69,10 @@ conditions phase-start record. The original generation hold is present.
 
 ## Pending execution and delivery
 
-PR #64, #66, #71 (runner), #73 (study cards) and #78 (run registration) are merged.
-Primary `main` is updated through #78 (`77f5ed0`). The session-owned
+PR #64, #66, #71 (runner), #73 (study cards), #78 (run registration) and #81
+(parallel pools) are merged. Primary `main` is updated through #81 (`24fff65`). The session-owned
 `pr17-scratch-continuation` worktree is now reused on
-`codex/pr17-bounded-parallel` for PR #81. It remains available for review and the
+`codex/pr17-capacity-receipt` for PR #82. It remains available for review and the
 paused continuation. The old `pr17-retention-review` worktree also stays.
 
 The registered run is
@@ -94,11 +94,12 @@ in `continuation.stdout.log`, `continuation.stderr.log` and `launch.json` inside
 the run. `run.json` and the OS writer lock are the authority for current liveness;
 this registration alone does not establish that a worker is still running.
 
-The accepted engineering probe selects four workers. After runner PR #81 merges,
-resume the same run from clean merged code with:
+The accepted engineering probe selects four workers. After follow-up PR #82 merges,
+resume the same run from clean merged code with the bounded full-market capacity
+invocation first (see the runtime amendment's capacity gate):
 
 ```powershell
-uv run python -m scripts.run_pattern_scan_remaining --stock-result D:/Project/stock-research/.tmp/pattern-scan-execution/full-2010-20261016-retention-v3/phase-stock-result.json --output D:/StockData/stock-research/scratch/20261013-pattern-scan/q2-q6-v6 --workers 4
+uv run python -m scripts.run_pattern_scan_remaining --stock-result D:/Project/stock-research/.tmp/pattern-scan-execution/full-2010-20261016-retention-v3/phase-stock-result.json --output D:/StockData/stock-research/scratch/20261013-pattern-scan/q2-q6-v6 --workers 4 --target B2 --phase conditions --timeout-seconds 21600
 ```
 
 Remaining delivery follows
