@@ -43,6 +43,24 @@ import {
 import type { PackedGroup, PackedNode, PackingLayout } from "./packing.ts";
 import type { PackingRequest, PackingResponse } from "./packing.worker.ts";
 import {
+    POP_DURATION,
+    POP_FADE_BY,
+    POP_STAGGER,
+    REGATHER_DURATION,
+    REGATHER_STAGGER,
+    burstPose,
+    delayed,
+    groupWobble,
+    joinScale,
+    mixTo,
+} from "./bubbleMotion.ts";
+import {
+    LAYOUT_CACHE_SIZE,
+    LAYOUT_CACHE_STOCKS,
+    LayoutCache,
+    layoutKey,
+} from "./layoutCache.ts";
+import {
     MAX_BURSTS,
     MAX_JOINS,
     SHAPE_PATH,
@@ -70,7 +88,7 @@ const phaseLabel = {
 };
 const gainLabel = (value: number | null) =>
     value === null ? "不知道" : `${value >= 0 ? "+" : ""}${value.toFixed(0)}%`;
-const mix = (a: number, b: number, t: number) => a + (b - a) * t;
+const mix = mixTo;
 const angleFor = (id: string) =>
     ([...id].reduce(
         (sum, letter) => (sum * 31 + letter.charCodeAt(0)) >>> 0,
@@ -105,6 +123,9 @@ export interface OpportunityMapProps {
      *  step keeps the bubbles moving at an even pace; a new frame picks up from
      *  where each bubble is on screen. */
     glide?: { duration: number; linear: boolean };
+    /** The date is being dragged or jumped faster than the map can follow:
+     *  bubbles pop and stay gone until this clears, then regather. */
+    scrubbing?: boolean;
 }
 
 type Snapshot = {
@@ -116,6 +137,8 @@ type Snapshot = {
 type Result = { snapshot: Snapshot; layout: PackingLayout };
 type Pose = { x: number; y: number; r: number; opacity: number };
 type StockTransition = {
+    /** Share of the glide this bubble waits before it starts. */
+    delay: number;
     node: PackedNode;
     row: MapRow;
     from: Pose;
@@ -130,8 +153,18 @@ type GroupTransition = {
     to: Pose;
     exiting: boolean;
     decorative: boolean;
+    /** Members came or went: the group wobbles a little as it settles. */
+    pulse: boolean;
 };
-type Frame = Result & { stocks: StockTransition[]; groups: GroupTransition[] };
+/** `play`: a normal step. `pop`: every bubble bursts for a fast scrub.
+ *  `empty`: nothing shown while the date is still moving. `regather`: bubbles
+ *  grow back out of their industries once the date has settled. */
+type FrameKind = "play" | "pop" | "empty" | "regather";
+type Frame = Result & {
+    kind: FrameKind;
+    stocks: StockTransition[];
+    groups: GroupTransition[];
+};
 type StockRefs = {
     root: SVGGElement | null;
     body: SVGPathElement | null;
@@ -152,11 +185,80 @@ function rowGainColor(row: MapRow): ReturnType<typeof gainColorBand> {
         : gainColorBand(row.displayMetric.gain);
 }
 
+/** Which of the three hue families an industry (or stock group) belongs to. */
+const familyOf = (groupId: string) =>
+    Math.floor((angleFor(groupId) / (Math.PI * 2)) * 3) + 1;
+/** Each bubble's highlight sits a little differently: tilt it up to 35 degrees. */
+const tiltOf = (id: string) =>
+    (angleFor(`${id}:gloss`) / (Math.PI * 2) - 0.5) * 70;
+const PHASES = ["rising", "slow", "resting", "retreat", "unmarked"] as const;
+/** The rim fades with the phase: strongest while rising, faintest when pulling back. */
+const RIM_STRENGTH = {
+    rising: 1,
+    slow: 0.85,
+    resting: 0.7,
+    retreat: 0.55,
+    unmarked: 0.5,
+};
+const EMPTY_LAYOUT: PackingLayout = {
+    nodes: [],
+    groups: [],
+    bounds: { minX: 0, minY: 0, maxX: 0, maxY: 0, width: 0, height: 0 },
+    fillRatio: 0,
+};
+
+/** Every visible bubble bursts where it is; the groups fade with them. */
+function popFrame(
+    previous: Frame,
+    current: Map<string, Pose>,
+    groupCurrent: Map<string, Pose>,
+): Frame {
+    return {
+        ...previous,
+        kind: "pop",
+        stocks: previous.stocks
+            .filter((item) => !item.exiting)
+            .map((item) => {
+                const from = current.get(item.node.id) ?? item.to;
+                return {
+                    ...item,
+                    from,
+                    to: { ...from, opacity: 0 },
+                    exiting: true,
+                    burst: true,
+                    delay:
+                        (angleFor(item.node.id) / (Math.PI * 2)) * POP_STAGGER,
+                };
+            }),
+        groups: previous.groups
+            .filter((item) => !item.exiting)
+            .map((item) => {
+                const from = groupCurrent.get(item.group.id) ?? item.to;
+                return {
+                    ...item,
+                    from,
+                    to: { ...from, opacity: 0 },
+                    exiting: true,
+                    pulse: false,
+                };
+            }),
+    };
+}
+
+const emptyFrame = (previous: Frame): Frame => ({
+    ...previous,
+    kind: "empty",
+    layout: EMPTY_LAYOUT,
+    stocks: [],
+    groups: [],
+});
+
 function makeFrame(
     result: Result,
     previous: Frame | null,
     current: Map<string, Pose>,
     groupCurrent: Map<string, Pose>,
+    regather: boolean,
 ): Frame {
     const related = sameSource(previous?.snapshot.view, result.snapshot.view);
     const old = new Map(
@@ -178,16 +280,24 @@ function makeFrame(
         const group = groups.get(node.groupId)!;
         const angle = angleFor(node.id);
         const to = { x: node.x, y: node.y, r: node.r, opacity: 1 };
+        // A bubble that is new grows out of its industry's edge, or, when the
+        // map regathers after a scrub, out of its centre one after another.
         const from = existing
             ? (current.get(node.id) ?? existing.to)
-            : {
-                  x: group.x + Math.cos(angle) * (group.r + 12),
-                  y: group.y + Math.sin(angle) * (group.r + 12),
-                  r: 0,
-                  opacity: 0,
-              };
+            : regather
+              ? { x: group.x, y: group.y, r: 0, opacity: 0 }
+              : {
+                    x: group.x + Math.cos(angle) * (group.r + 12),
+                    y: group.y + Math.sin(angle) * (group.r + 12),
+                    r: 0,
+                    opacity: 0,
+                };
         return [
             {
+                delay:
+                    regather && !existing
+                        ? (angle / (Math.PI * 2)) * REGATHER_STAGGER
+                        : 0,
                 node,
                 row,
                 from,
@@ -238,6 +348,9 @@ function makeFrame(
                     ? (groupCurrent.get(group.id) ?? previousGroup.to)
                     : { ...to, r: group.r * 0.8, opacity: 0 },
                 exiting: false,
+                pulse:
+                    !!previousGroup &&
+                    previousGroup.group.nodeIds.length !== group.nodeIds.length,
             };
         },
     );
@@ -249,9 +362,15 @@ function makeFrame(
             from,
             to: { ...from, opacity: 0 },
             exiting: true,
+            pulse: false,
         });
     }
-    return { ...result, stocks, groups: groupTransitions };
+    return {
+        ...result,
+        kind: regather ? "regather" : "play",
+        stocks,
+        groups: groupTransitions,
+    };
 }
 
 export function OpportunityMap({
@@ -266,6 +385,7 @@ export function OpportunityMap({
     colorBasis = "phase",
     fill = false,
     glide,
+    scrubbing = false,
 }: OpportunityMapProps) {
     const glideRef = useRef(glide);
     glideRef.current = glide;
@@ -310,6 +430,20 @@ export function OpportunityMap({
     const active = useRef<Snapshot | null>(null);
     const completed = useRef<Result | null>(null);
     const sequence = useRef(0);
+    // Layouts packed from scratch, so scrubbing back to a date costs no
+    // worker round trip. The key says which request, if any, may fill it.
+    const layouts = useRef(
+        new LayoutCache<PackingLayout>(
+            LAYOUT_CACHE_SIZE,
+            LAYOUT_CACHE_STOCKS,
+            (layout) => layout.nodes.length,
+        ),
+    );
+    const layoutKeyFor = useRef<{ requestId: number; key: string } | null>(
+        null,
+    );
+    // The next layout is the first after a pop: its bubbles regather.
+    const regather = useRef(false);
     const comparisonRef = useRef(comparisons);
     const frameRef = useRef<Frame | null>(null);
     const poses = useRef(new Map<string, Pose>());
@@ -381,6 +515,31 @@ export function OpportunityMap({
             { type: "module" },
         );
         worker.current = geometryWorker;
+        // Publish a finished layout, then start whatever waited behind it.
+        const accept = (snapshot: Snapshot, layout: PackingLayout) => {
+            const accepted = { snapshot, layout };
+            completed.current = accepted;
+            // Publish the geometry and its transition together, rather
+            // than committing the entire old SVG before a layout effect
+            // schedules another synchronous render with the new frame.
+            const nextFrame = makeFrame(
+                accepted,
+                frameRef.current,
+                poses.current,
+                groupPoses.current,
+                regather.current,
+            );
+            regather.current = false;
+            frameRef.current = nextFrame;
+            setFrame(nextFrame);
+            setError(false);
+        };
+        const settle = () => {
+            const next = requests.complete();
+            active.current = null;
+            setBusy(next !== null);
+            if (next) dispatch.current(next);
+        };
         dispatch.current = (snapshot) => {
             active.current = snapshot;
             const old = completed.current;
@@ -389,35 +548,55 @@ export function OpportunityMap({
                     .filter((row) => hasMapIndustry(row, snapshot.groupingMode))
                     .map((row) => row.industry.id),
             );
+            const nodes = snapshot.view.active.map((row) => ({
+                id: row.security.id,
+                groupId: mapGroupId(row, snapshot.groupingMode, knownGroups),
+                weight: row.weight,
+            }));
+            const previous =
+                old && sameSource(old.snapshot.view, snapshot.view)
+                    ? visiblePackingPositions(old.layout.nodes)
+                    : [];
+            // A new frame shape re-tightens from the shown layout.
+            const reshape =
+                Math.round(Math.log(packedAspect.current) * 8) !==
+                Math.round(Math.log(aspectRef.current) * 8);
+            packedAspect.current = aspectRef.current;
+            // Only a layout that carries nothing over is the same every time.
+            const key =
+                previous.length === 0 && !reshape
+                    ? layoutKey({
+                          date: snapshot.view.date,
+                          aspectKey: Math.round(
+                              Math.log(aspectRef.current) * 8,
+                          ),
+                          radiusScale: OPPORTUNITY_RADIUS_SCALE,
+                          nodes,
+                      })
+                    : null;
+            layoutKeyFor.current = key
+                ? { requestId: snapshot.requestId, key }
+                : null;
+            const saved = key ? layouts.current.get(key) : undefined;
+            if (saved) {
+                accept(snapshot, saved);
+                settle();
+                return;
+            }
             const request: PackingRequest = {
                 requestId: snapshot.requestId,
                 date: snapshot.view.date,
                 input: {
-                    nodes: snapshot.view.active.map((row) => ({
-                        id: row.security.id,
-                        groupId: mapGroupId(
-                            row,
-                            snapshot.groupingMode,
-                            knownGroups,
-                        ),
-                        weight: row.weight,
-                    })),
+                    nodes,
                     globalRadiusScale: OPPORTUNITY_RADIUS_SCALE,
-                    previous:
-                        old && sameSource(old.snapshot.view, snapshot.view)
-                            ? visiblePackingPositions(old.layout.nodes)
-                            : [],
+                    previous,
                     gap: 2,
                     groupGap: 12,
                     outlinePadding: 8,
                     aspect: aspectRef.current,
-                    // A new frame shape re-tightens from the shown layout.
-                    reshape:
-                        Math.round(Math.log(packedAspect.current) * 8) !==
-                        Math.round(Math.log(aspectRef.current) * 8),
+                    reshape,
                 },
             };
-            packedAspect.current = aspectRef.current;
             geometryWorker.postMessage(request);
         };
         geometryWorker.onmessage = (event: MessageEvent<PackingResponse>) => {
@@ -430,25 +609,19 @@ export function OpportunityMap({
                 return;
             if ("error" in event.data) setError(true);
             else {
-                const accepted = { snapshot, layout: event.data.layout };
-                completed.current = accepted;
-                // Publish the geometry and its transition together, rather
-                // than committing the entire old SVG before a layout effect
-                // schedules another synchronous render with the new frame.
-                const nextFrame = makeFrame(
-                    accepted,
-                    frameRef.current,
-                    poses.current,
-                    groupPoses.current,
-                );
-                frameRef.current = nextFrame;
-                setFrame(nextFrame);
-                setError(false);
+                const keyed = layoutKeyFor.current;
+                // The map never reads a stock's outline points, only its path.
+                if (keyed?.requestId === snapshot.requestId)
+                    layouts.current.set(keyed.key, {
+                        ...event.data.layout,
+                        nodes: event.data.layout.nodes.map((node) => ({
+                            ...node,
+                            points: [],
+                        })),
+                    });
+                accept(snapshot, event.data.layout);
             }
-            const next = requests.complete();
-            active.current = null;
-            setBusy(next !== null);
-            if (next) dispatch.current(next);
+            settle();
         };
         geometryWorker.onerror = () => {
             requests.reset();
@@ -464,7 +637,23 @@ export function OpportunityMap({
         };
     }, []);
 
+    // A fast scrub: pop what is shown and drop all work for dates being
+    // skipped. Nothing is packed or drawn until the date settles.
     useEffect(() => {
+        if (!scrubbing) return;
+        queue.current.reset();
+        active.current = null;
+        completed.current = null;
+        setBusy(false);
+        const shown = frameRef.current;
+        if (!shown || shown.kind === "empty" || shown.kind === "pop") return;
+        regather.current = true;
+        const popped = popFrame(shown, poses.current, groupPoses.current);
+        frameRef.current = popped;
+        setFrame(popped);
+    }, [scrubbing]);
+    useEffect(() => {
+        if (scrubbing) return;
         const snapshot = {
             requestId: ++sequence.current,
             view,
@@ -475,7 +664,7 @@ export function OpportunityMap({
         setError(false);
         const ready = queue.current.offer(snapshot);
         if (ready && worker.current) dispatch.current(ready);
-    }, [view, groupingMode, aspectKey]);
+    }, [view, groupingMode, aspectKey, scrubbing]);
 
     useLayoutEffect(() => {
         followLevel.current = null;
@@ -579,41 +768,72 @@ export function OpportunityMap({
         // Start on the first painted frame, as the camera does. A large React
         // commit must not consume the entire morph before the browser paints.
         let start = 0;
-        const duration = glideRef.current?.duration ?? DURATION;
-        const linear = glideRef.current?.linear ?? false;
+        // Playback steps glide as the page asks; the pop and the regather
+        // after a scrub have their own timing and always ease.
+        const duration =
+            frame.kind === "pop"
+                ? POP_DURATION
+                : frame.kind === "regather"
+                  ? REGATHER_DURATION
+                  : (glideRef.current?.duration ?? DURATION);
+        const linear =
+            frame.kind === "play" && (glideRef.current?.linear ?? false);
+        const ease = (t: number) => (linear ? t : 1 - (1 - t) ** 3);
         const apply = (fraction: number) => {
-            const eased = linear ? fraction : 1 - (1 - fraction) ** 3;
             for (const item of frame.stocks) {
                 const { node, from, to, body } = item;
-                const pose = {
-                    x: mix(from.x, to.x, eased),
-                    y: mix(from.y, to.y, eased),
-                    r: mix(from.r, to.r, eased),
-                    opacity: mix(from.opacity, to.opacity, eased),
-                };
+                // A bubble may start late (stagger); it still lands exactly
+                // on its data pose when the glide ends.
+                const local = delayed(fraction, item.delay);
+                const eased = ease(local);
+                // New bubbles grow with a small spring; bursting ones swell
+                // and fade out early and then stay gone.
+                const joining = !item.exiting && from.r === 0;
+                let pose: Pose;
+                if (item.burst) {
+                    const burst = burstPose(
+                        local,
+                        motionOff,
+                        frame.kind === "pop" ? POP_FADE_BY : undefined,
+                    );
+                    pose = {
+                        x: from.x,
+                        y: from.y,
+                        r: from.r * burst.scale,
+                        opacity: burst.opacity,
+                    };
+                } else {
+                    pose = {
+                        x: mix(from.x, to.x, eased),
+                        y: mix(from.y, to.y, eased),
+                        r: joining
+                            ? to.r * joinScale(local, motionOff)
+                            : mix(from.r, to.r, eased),
+                        opacity: joining
+                            ? mix(0, to.opacity, Math.min(1, eased * 2.5))
+                            : mix(from.opacity, to.opacity, eased),
+                    };
+                }
                 poses.current.set(node.id, pose);
                 const refs = stockElements.current.get(node.id);
                 refs?.root?.setAttribute(
                     "transform",
                     `translate(${pose.x - node.x} ${pose.y - node.y})`,
                 );
-                refs?.root?.setAttribute(
-                    "opacity",
-                    String(
-                        item.burst
-                            ? pose.opacity * (1 - fraction)
-                            : pose.opacity,
-                    ),
-                );
+                refs?.root?.setAttribute("opacity", String(pose.opacity));
                 if (refs?.body) {
                     const scale = body.r > 0 ? pose.r / body.r : 1;
+                    const tilt = tiltOf(node.id);
                     refs.body.setAttribute(
                         "transform",
-                        `translate(${node.x} ${node.y}) scale(${scale}) translate(${-body.x} ${-body.y})`,
+                        `translate(${node.x} ${node.y}) scale(${scale}) translate(${-body.x} ${-body.y}) rotate(${tilt} ${body.x} ${body.y})`,
                     );
                     if (fraction === 1) {
                         refs.body.setAttribute("d", node.path);
-                        refs.body.removeAttribute("transform");
+                        refs.body.setAttribute(
+                            "transform",
+                            `rotate(${tilt} ${node.x} ${node.y})`,
+                        );
                     }
                 }
                 // Labels that do not fit leave layout entirely (display:none);
@@ -662,6 +882,7 @@ export function OpportunityMap({
                     element.setAttribute("opacity", String(p.opacity));
                 }
             }
+            const eased = ease(fraction);
             for (const item of frame.groups) {
                 const { from, to, group } = item;
                 const pose = {
@@ -671,7 +892,9 @@ export function OpportunityMap({
                     opacity: mix(from.opacity, to.opacity, eased),
                 };
                 groupPoses.current.set(group.id, pose);
-                const scale = group.r > 0 ? pose.r / group.r : 1;
+                const moved = group.r > 0 ? pose.r / group.r : 1;
+                const scale =
+                    moved * (item.pulse ? groupWobble(fraction, motionOff) : 1);
                 const element = groupElements.current.get(group.id);
                 const transform = `translate(${pose.x} ${pose.y}) scale(${scale}) translate(${-group.x} ${-group.y})`;
                 element?.setAttribute("transform", transform);
@@ -682,8 +905,8 @@ export function OpportunityMap({
                 if (label) {
                     const spotX = label.x.baseVal[0]?.value ?? group.x;
                     const spotY = label.y.baseVal[0]?.value ?? group.y;
-                    const dx = pose.x + scale * (spotX - group.x) - spotX;
-                    const dy = pose.y + scale * (spotY - group.y) - spotY;
+                    const dx = pose.x + moved * (spotX - group.x) - spotX;
+                    const dy = pose.y + moved * (spotY - group.y) - spotY;
                     label.setAttribute("transform", `translate(${dx} ${dy})`);
                     const opacity = String(pose.opacity);
                     if (label.getAttribute("opacity") !== opacity)
@@ -709,8 +932,14 @@ export function OpportunityMap({
                 if (!keptGroups.has(id)) groupPoses.current.delete(id);
             for (const [id, refs] of stockElements.current)
                 if (!refs.root) stockElements.current.delete(id);
+            // Everything has burst: leave the map empty until the date settles.
+            if (frame.kind === "pop") {
+                const empty = emptyFrame(frame);
+                frameRef.current = empty;
+                setFrame(empty);
+            }
         };
-        if (motionOff) {
+        if (motionOff || (!frame.stocks.length && !frame.groups.length)) {
             apply(1);
             finish();
             return;
@@ -789,7 +1018,7 @@ export function OpportunityMap({
         renderedView.date !== view.date ||
         !sameSource(renderedView, view) ||
         frame?.snapshot.groupingMode !== groupingMode;
-    const locked = busy || stale || error;
+    const locked = busy || stale || error || scrubbing;
     const shownComparisons = useMemo(() => {
         if (!frame) return [];
         const values = !stale ? comparisons : frame.snapshot.comparisons;
@@ -964,6 +1193,7 @@ export function OpportunityMap({
     };
     const overflow =
         !!frame &&
+        frame.layout.nodes.length > 0 &&
         (frame.layout.bounds.minX <
             camera.x - worldFrame.width / 2 / camera.zoom ||
             frame.layout.bounds.maxX >
@@ -1041,41 +1271,41 @@ export function OpportunityMap({
                                 <stop offset="1" stopColor={color} />
                             </radialGradient>
                         ))}
-                        <radialGradient
-                            id={`${uid}-rising`}
-                            cx=".32"
-                            cy=".25"
-                            r=".9"
+                        {/* Soap bubbles: three hue families times five phases, shared by
+                            every stock (colours come from themes.css). The focal point
+                            puts a small specular spot at the upper left. */}
+                        {[1, 2, 3].flatMap((family) =>
+                            PHASES.map((phase) => (
+                                <radialGradient
+                                    key={`${family}-${phase}`}
+                                    id={`${uid}-b${family}-${phase}`}
+                                    className={`bubble-fam-${family} bubble-phase-${phase}`}
+                                    cx=".5"
+                                    cy=".5"
+                                    r=".5"
+                                    fx=".32"
+                                    fy=".28"
+                                >
+                                    <stop offset="0" className="bubble-s0" />
+                                    <stop offset=".09" className="bubble-s0b" />
+                                    <stop offset=".2" className="bubble-s1" />
+                                    <stop offset=".6" className="bubble-s2" />
+                                    <stop offset="1" className="bubble-s3" />
+                                </radialGradient>
+                            )),
+                        )}
+                        <linearGradient
+                            id={`${uid}-rim`}
+                            x1="0"
+                            y1="0"
+                            x2="1"
+                            y2="1"
                         >
-                            <stop offset="0" stopColor="var(--map-gloss)" />
-                            <stop offset=".7" stopColor="var(--cell-mid)" />
-                            <stop offset="1" stopColor="var(--cell-deep)" />
-                        </radialGradient>
-                        <radialGradient
-                            id={`${uid}-slow`}
-                            cx=".32"
-                            cy=".25"
-                            r=".9"
-                        >
-                            <stop offset="0" stopColor="var(--surface)" />
-                            <stop offset="1" stopColor="var(--cell-light)" />
-                        </radialGradient>
-                        <radialGradient id={`${uid}-resting`} cx=".3" cy=".2">
-                            <stop stopColor="var(--map-gloss)" />
-                            <stop offset="1" stopColor="var(--cell-warm)" />
-                        </radialGradient>
-                        <radialGradient id={`${uid}-retreat`} cx=".3" cy=".2">
-                            <stop stopColor="var(--map-gloss)" />
-                            <stop offset="1" stopColor="var(--map-retreat)" />
-                        </radialGradient>
-                        <radialGradient id={`${uid}-unmarked`} cx=".3" cy=".2">
-                            <stop stopColor="var(--surface)" />
-                            <stop
-                                offset="1"
-                                stopColor="var(--muted)"
-                                stopOpacity=".5"
-                            />
-                        </radialGradient>
+                            <stop offset="0" className="bubble-rim-a" />
+                            <stop offset=".38" className="bubble-rim-b" />
+                            <stop offset=".7" className="bubble-rim-c" />
+                            <stop offset="1" className="bubble-rim-a" />
+                        </linearGradient>
                         <pattern
                             id={`${uid}-unknown`}
                             width="8"
@@ -1102,16 +1332,7 @@ export function OpportunityMap({
                             .filter((item) => item.decorative)
                             .map((item) => {
                                 const group = item.group;
-                                const territoryColor = [
-                                    "var(--cell-deep)",
-                                    "var(--cell-mid)",
-                                    "var(--cell-warm)",
-                                ][
-                                    Math.floor(
-                                        (angleFor(group.id) / (Math.PI * 2)) *
-                                            3,
-                                    )
-                                ];
+                                const territoryColor = `var(--bubble-${familyOf(group.id)})`;
                                 return (
                                     <g
                                         key={group.id}
@@ -1175,14 +1396,14 @@ export function OpportunityMap({
                                               ? "var(--surface)"
                                               : `url(#${uid}-unknown)`
                                         : "var(--compare-1)"
-                                    : `url(#${uid}-${colorBasis === "gain" ? `gain-${rowGainColor(row)}` : phase})`;
+                                    : `url(#${uid}-${colorBasis === "gain" ? `gain-${rowGainColor(row)}` : `b${familyOf(node.groupId)}-${phase}`})`;
                             const opacity =
                                 shownComparisons.length === 1 &&
                                 singleShare !== null
                                     ? 0.18 +
                                       0.82 *
                                           Math.max(0, Math.min(1, singleShare))
-                                    : 0.9;
+                                    : 0.92;
                             const label = description(
                                 row,
                                 frame.snapshot.view.date,
@@ -1239,12 +1460,16 @@ export function OpportunityMap({
                                         d={item.body.path}
                                         fill={fill}
                                         fillOpacity={opacity}
+                                        transform={`rotate(${tiltOf(node.id)} ${node.x} ${node.y})`}
                                         stroke={
                                             selected
                                                 ? "var(--ink)"
-                                                : "var(--map-rim)"
+                                                : `url(#${uid}-rim)`
                                         }
-                                        strokeWidth={selected ? 2.2 : 1.1}
+                                        strokeOpacity={
+                                            selected ? 1 : RIM_STRENGTH[phase]
+                                        }
+                                        strokeWidth={selected ? 2.2 : 1.3}
                                         strokeDasharray={
                                             shownComparisons.length === 1 &&
                                             singleShare === 0
@@ -1556,11 +1781,15 @@ export function OpportunityMap({
                         股票地圖暫時無法完成，請重新整理。
                     </p>
                 )}
-                {frame && !frame.layout.nodes.length && !busy && (
-                    <p className="opportunity-map-message">
-                        這天沒有符合條件的大漲股票。
-                    </p>
-                )}
+                {frame &&
+                    !frame.layout.nodes.length &&
+                    !busy &&
+                    !scrubbing &&
+                    (frame.kind === "play" || frame.kind === "regather") && (
+                        <p className="opportunity-map-message">
+                            這天沒有符合條件的大漲股票。
+                        </p>
+                    )}
                 {overflow && (
                     <p className="opportunity-map-overflow">
                         還有股票在畫面外，可平移或縮小。

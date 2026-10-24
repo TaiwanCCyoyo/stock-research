@@ -369,6 +369,7 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                                 datedComparisons.length > 1
                                             }
                                             glide={glide}
+                                            scrubbing={history.scrubbing}
                                         />
                                     ) : (
                                         <div className="fh-empty">
@@ -434,12 +435,9 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                         min={0}
                                         max={metadata.dates.length - 1}
                                         value={history.index}
-                                        onChange={(e) => {
-                                            history.setPlaying(false);
-                                            history.navigate(
-                                                Number(e.target.value),
-                                            );
-                                        }}
+                                        onChange={(e) =>
+                                            history.seek(Number(e.target.value))
+                                        }
                                     />
                                     <div className="fh-date-labels">
                                         <span>{metadata.dates[0]}</span>

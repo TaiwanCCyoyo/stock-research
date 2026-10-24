@@ -143,20 +143,23 @@
     height: 10px;
     border-radius: 50%;
 }
-.fh-phase-rising {
-    background: var(--cell-deep);
-}
-.fh-phase-slow {
-    background: var(--cell-light);
-}
-.fh-phase-resting {
-    background: var(--cell-warm);
-}
-.fh-phase-retreat {
-    background: var(--map-retreat);
-}
+.fh-phase-rising,
+.fh-phase-slow,
+.fh-phase-resting,
+.fh-phase-retreat,
 .fh-phase-unknown {
-    background: var(--line);
+    background: var(--tint);
+}
+/* The same soft gloss the map's bubbles carry. */
+.fh-phase-legend i {
+    background:
+        radial-gradient(
+            circle at 32% 28%,
+            rgb(255 255 255 / 85%) 0 14%,
+            transparent 30%
+        ),
+        var(--tint);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 14%, transparent);
 }
 .fh-page .fh-caption {
     font-size: 12px;

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { readHistory, readHistoryWhenReady } from "./api.ts";
 import { FrameBuffer, playbackLookahead } from "./frameBuffer.ts";
+import { SCRUB_SETTLE, isFastSeek, scrubStillActive } from "./scrub.ts";
 import {
     dateIndex,
     initialHistoryIndex,
@@ -96,28 +97,80 @@ export function useHistory(active: boolean) {
         },
         [metadata, index, buffer],
     );
+    // A user-driven move (slider, date field, links). Dragging or jumping far
+    // marks a scrub: the map pops its bubbles and regathers them once the
+    // date has been quiet and its own frame is shown. Playback uses
+    // `navigate` directly and never counts as a scrub.
+    const [scrubFlag, setScrubFlag] = useState(false);
+    const [scrubQuiet, setScrubQuiet] = useState(true);
+    const lastSeek = useRef({ at: -Infinity, target: 0 });
+    const settleTimer = useRef(0);
+    const seek = useCallback(
+        (next: number) => {
+            if (!metadata) return;
+            const target = Math.max(
+                0,
+                Math.min(next, metadata.dates.length - 1),
+            );
+            const now = performance.now();
+            const elapsed = now - lastSeek.current.at;
+            const fast = isFastSeek({
+                elapsed,
+                from:
+                    elapsed < SCRUB_SETTLE * 4
+                        ? lastSeek.current.target
+                        : index,
+                to: target,
+            });
+            lastSeek.current = { at: now, target };
+            setPlaying(false);
+            if (fast) {
+                setScrubFlag(true);
+                setScrubQuiet(false);
+            }
+            window.clearTimeout(settleTimer.current);
+            settleTimer.current = window.setTimeout(
+                () => setScrubQuiet(true),
+                SCRUB_SETTLE,
+            );
+            navigate(target);
+        },
+        [metadata, navigate, index],
+    );
+    useEffect(() => () => window.clearTimeout(settleTimer.current), []);
     const goToDate = useCallback(
         (date: string) => {
             if (!metadata || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
-            setPlaying(false);
-            navigate(dateIndex(metadata.dates, date));
+            seek(dateIndex(metadata.dates, date));
         },
-        [metadata, navigate],
+        [metadata, seek],
     );
+    const scrubbing = scrubStillActive({
+        flagged: scrubFlag,
+        quiet: scrubQuiet,
+        frameDate: frame?.date,
+        desiredDate,
+        loading,
+        failed: !!error,
+    });
+    useEffect(() => {
+        if (scrubFlag && !scrubbing) setScrubFlag(false);
+    }, [scrubFlag, scrubbing]);
     useEffect(() => {
         if (!active || !desiredDate) return;
         // Leading updates while dragging, then a trailing update to the exact
         // final date. A continuous gesture must not starve all frame requests.
-        const delay = Math.max(
-            0,
-            180 - (performance.now() - lastQueryAt.current),
-        );
+        // In a fast scrub the map shows nothing for the dates in between, so
+        // none of them is fetched: only the date it settles on.
+        const delay = scrubFlag
+            ? SCRUB_SETTLE
+            : Math.max(0, 180 - (performance.now() - lastQueryAt.current));
         const timer = window.setTimeout(() => {
             lastQueryAt.current = performance.now();
             setQueryDate(desiredDate);
         }, delay);
         return () => window.clearTimeout(timer);
-    }, [active, desiredDate]);
+    }, [active, desiredDate, scrubFlag]);
     useEffect(() => {
         if (!active || metadata) return;
         const controller = new AbortController();
@@ -373,6 +426,8 @@ export function useHistory(active: boolean) {
         step,
         setStep,
         navigate,
+        seek,
+        scrubbing,
         goToDate,
         selectedId,
         setSelectedId,

@@ -53,6 +53,37 @@
 .opportunity-stock > path {
     transition: fill-opacity 180ms ease;
 }
+/* Soap-bubble gradients (defs in OpportunityMap.tsx; colours in themes.css). */
+.bubble-s0 {
+    stop-color: var(--bubble-spec);
+    stop-opacity: var(--bubble-spec-opacity);
+}
+.bubble-s0b {
+    stop-color: var(--bubble-spec);
+    stop-opacity: calc(var(--bubble-spec-opacity) * 0.75);
+}
+.bubble-s1 {
+    stop-color: color-mix(
+        in srgb,
+        var(--bubble-lift) var(--bubble-lit-mix),
+        var(--tint)
+    );
+}
+.bubble-s2 {
+    stop-color: var(--tint);
+}
+.bubble-s3 {
+    stop-color: color-mix(in srgb, var(--bubble-shade) 12%, var(--tint));
+}
+.bubble-rim-a {
+    stop-color: var(--rim-a);
+}
+.bubble-rim-b {
+    stop-color: var(--rim-b);
+}
+.bubble-rim-c {
+    stop-color: var(--rim-c);
+}
 .opportunity-stock:hover > path,
 .opportunity-stock:focus-visible > path {
     stroke: var(--ink);
