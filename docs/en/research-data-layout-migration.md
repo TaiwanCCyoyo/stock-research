@@ -98,8 +98,24 @@ Durable receipt directory:
 It retains `inventory-before.json` (every source-relative path, byte count and
 SHA-256), `transfer.json`, the identical `before.json` / `after.json`, the catalog
 reference audit, phase timings, config patch, website check and diagnostic code.
-The 17-check runner does not load the whole migrated history/studio payload;
-an additional before/after cold-reader comparison is running separately.
+The 17-check runner does not load the whole migrated history/studio payload.
+Supplemental verification used the formal catalog reader (all 12 current manifest
+pins), `query_opportunity_history.query_manifest` for 1101, 2330 and 6488 on
+2026-10-02, and `saved_research_studio.read_studio_package`. Old and new query
+results and the entire parsed studio package were identical (11.515 s before,
+12.266 s after). `reader-comparison.json`, `readers.log` and the exact executed
+`compare_readers_bounded.py` are preserved in the receipt directory.
+
+An initial optional whole-market `HistoryStore` cold load was interrupted because
+it revalidates all six original methods for every saved stock. It supplied no
+completed comparison and is not counted as a pass or a new research result. Its
+original diagnostic code is retained as `compare_readers.py`; no source evidence
+or result was changed. Per-file byte preservation and the specified 17-check
+comparison were already complete before this supplemental check.
+
+`receipt-inventory.json` records every retained receipt member's byte count and
+SHA-256. Receipt artifacts live outside the worktree; the report and code live in
+Git. No production backup was run.
 
 ## Final cutover after owner merge
 
