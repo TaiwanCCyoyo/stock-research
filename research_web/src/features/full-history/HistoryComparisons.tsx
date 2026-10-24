@@ -54,16 +54,38 @@ function readPinned(catalogId: string): string[] {
     }
 }
 
+/** The chosen comparisons, in the order they were selected. */
+function pickSelected(
+    all: PortfolioComparison[],
+    ids: string[],
+): PortfolioComparison[] {
+    const byId = new Map(
+        all.map((comparison) => [comparison.portfolio.id, comparison]),
+    );
+    return ids.flatMap((id) => {
+        const comparison = byId.get(id);
+        return comparison ? [comparison] : [];
+    });
+}
+
 export function HistoryComparisons({
     date,
     rows,
     catalogId,
     onComparisons,
+    shown,
+    concealed = false,
 }: {
     date: string;
     rows: HistoryRow[];
     catalogId: string;
     onComparisons?: (comparisons: PortfolioComparison[]) => void;
+    /** The side panel's snapshot. `date` and `rows` follow the live frame and
+     *  feed the map; the cards below show this snapshot, so they never
+     *  disagree with the ranking beside the map. */
+    shown?: { date: string; rows: HistoryRow[] };
+    /** The panel's cards are hidden mid-swap: keep them out of reach. */
+    concealed?: boolean;
 }) {
     const [bundle, setBundle] = useState<Awaited<
         ReturnType<typeof readComparisonBundle>
@@ -151,36 +173,42 @@ export function HistoryComparisons({
         rowsRef.current = rows;
     }
 
-    const allComparisons = useMemo(
+    const liveComparisons = useMemo(
         () =>
             bundle
                 ? buildPortfolioComparisons(bundle, date, rowsRef.current)
                 : [],
         [bundle, date, rowsKey],
     );
-    const selectedComparisons = useMemo(() => {
-        const byId = new Map(
-            allComparisons.map((comparison) => [
-                comparison.portfolio.id,
-                comparison,
-            ]),
-        );
-        return selectedIds.flatMap((id) => {
-            const comparison = byId.get(id);
-            return comparison ? [comparison] : [];
-        });
-    }, [allComparisons, selectedIds]);
+    const liveSelected = useMemo(
+        () => pickSelected(liveComparisons, selectedIds),
+        [liveComparisons, selectedIds],
+    );
+    // What the cards show: the panel's snapshot, built the same way.
+    const displayDate = shown?.date ?? date;
+    const displayRows = shown?.rows ?? rows;
+    const allComparisons = useMemo(
+        () =>
+            bundle && shown && (shown.date !== date || shown.rows !== rows)
+                ? buildPortfolioComparisons(bundle, shown.date, shown.rows)
+                : liveComparisons,
+        [bundle, shown, date, rows, liveComparisons],
+    );
+    const selectedComparisons = useMemo(
+        () => pickSelected(allComparisons, selectedIds),
+        [allComparisons, selectedIds],
+    );
     const selectedKey = selectedComparisons
         .map((comparison) => comparison.portfolio.id)
         .join("|");
     const rowsById = useMemo(
-        () => new Map(rows.map((row) => [row.securityId, row])),
-        [rows],
+        () => new Map(displayRows.map((row) => [row.securityId, row])),
+        [displayRows],
     );
     const stockNeedle = stockQuery.trim().toLocaleLowerCase();
     useEffect(
         () => setVisibleCounts({}),
-        [date, selectedKey, stockQuery, holdingFilter],
+        [displayDate, selectedKey, stockQuery, holdingFilter],
     );
     const comparisonGroups = useMemo(
         () =>
@@ -250,8 +278,8 @@ export function HistoryComparisons({
         ],
     );
     useEffect(() => {
-        callbackRef.current?.(selectedComparisons);
-    }, [selectedComparisons]);
+        callbackRef.current?.(liveSelected);
+    }, [liveSelected]);
 
     const filteredPortfolios = useMemo(() => {
         const needle = query.trim().toLocaleLowerCase();
@@ -292,7 +320,7 @@ export function HistoryComparisons({
                     <h2 id="fh-comparisons-title">
                         這天各策略、ETF 持有哪些飆股
                     </h2>
-                    <p>{date} · 選取策略或 ETF，對照持股與資金配置。</p>
+                    <p>{displayDate} · 選取策略或 ETF，對照持股與資金配置。</p>
                 </div>
                 <span>
                     {selectedIds.length}/{MAX_SELECTION} 已釘選
@@ -601,7 +629,11 @@ export function HistoryComparisons({
                         </div>
                     )}
 
-                    <div className="fh-comp-holdings">
+                    <div
+                        className="fh-comp-holdings"
+                        inert={concealed}
+                        aria-hidden={concealed || undefined}
+                    >
                         {comparisonGroups.map((group) => {
                             const { comparison } = group;
                             const shownStocks = group.stocks.slice(

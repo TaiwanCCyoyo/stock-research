@@ -116,3 +116,9 @@ test("the default buffer keeps at most24 visited dates", async () => {
     ).filter(Boolean);
     assert.equal(retained.length, 24);
 });
+
+test("playback can prefetch deeper without passing the last date", () => {
+    const dates = ["a", "b", "c", "d", "e", "f", "g"];
+    assert.deepEqual(playbackLookahead(dates, 0, 1, 4), ["b", "c", "d", "e"]);
+    assert.deepEqual(playbackLookahead(dates, 4, 1, 4), ["f", "g"]);
+});

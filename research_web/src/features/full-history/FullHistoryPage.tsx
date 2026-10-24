@@ -1,6 +1,9 @@
+import { nextPanelSnapshot, type PanelSnapshot } from "./panelSnapshot.ts";
 import {
     memo,
     useEffect,
+    useDeferredValue,
+    useLayoutEffect,
     useMemo,
     useRef,
     useState,
@@ -18,10 +21,17 @@ import {
     toMapView,
     type HistoryDisplayMode,
 } from "./model.ts";
-import { useHistory } from "./useHistory.ts";
+import { PLAYBACK_GLIDE, PLAYBACK_SPEEDS, useHistory } from "./useHistory.ts";
 import { readMarketLink } from "./navigation.ts";
 import { HistoryChartDetail } from "./HistoryChartDetail";
 import { HistoryRanking } from "./HistoryRanking";
+import { playPanelPhase } from "./panelMotion.ts";
+import {
+    PANEL_PLAYBACK_SWAP_MS,
+    panelConcealed,
+    panelCue,
+} from "./panelPolicy.ts";
+import { usePanelSwap } from "./usePanelSwap.ts";
 import { frameStatusMessage, historyFrameDisplay } from "./frameDisplay.ts";
 import { HistoryTimeline } from "./HistoryTimeline";
 import { HistoryMethodOptions } from "./HistoryMethodOptions";
@@ -38,8 +48,33 @@ import "./FullHistoryPage.css";
 const HistoryOpportunityMap = memo(OpportunityMap);
 const MemoHistoryTimeline = memo(HistoryTimeline);
 
+/** The timeline's frame and holdings during playback: one consistent
+ *  snapshot, refreshed at most every PANEL_REFRESH ms (live when paused). */
+function usePanelSnapshot<F, C>(frame: F, comparisons: C, playing: boolean) {
+    const [snapshot, setSnapshot] = useState<PanelSnapshot<F, C> | null>(null);
+    useEffect(() => {
+        setSnapshot((previous) =>
+            nextPanelSnapshot(
+                previous,
+                { frame, comparisons },
+                playing,
+                performance.now(),
+            ),
+        );
+    }, [frame, comparisons, playing]);
+    return playing && snapshot ? snapshot : { frame, comparisons };
+}
+
 export function FullHistoryPage({ active }: { active: boolean }) {
     const history = useHistory(active);
+    // Stable identity: the map is memoised and re-renders only when it changes.
+    const glide = useMemo(
+        () =>
+            history.playing
+                ? { duration: PLAYBACK_GLIDE, linear: true }
+                : undefined,
+        [history.playing],
+    );
     const {
         metadata,
         frame,
@@ -92,6 +127,13 @@ export function FullHistoryPage({ active }: { active: boolean }) {
     const view = useMemo(
         () => (frame ? toMapView(frame, mode, ended, thresholdPct) : null),
         [frame, mode, ended, thresholdPct],
+    );
+    // While playing, the map and every date-paired panel (list, holdings,
+    // comparisons) follow the live frame. Only the timeline, the costliest
+    // panel, refreshes from a snapshot at most every PANEL_REFRESH ms, as
+    // low-priority work, with its frame and holdings captured together.
+    const timeline = useDeferredValue(
+        usePanelSnapshot(frame, comparisons, history.playing),
     );
     const displayed = useMemo(
         () =>
@@ -151,6 +193,43 @@ export function FullHistoryPage({ active }: { active: boolean }) {
             comparisons.filter((comparison) => comparison.date === frame?.date),
         [comparisons, frame?.date],
     );
+    // The side panel holds one snapshot (rows, date and holdings together) and
+    // only ever swaps it as a whole, on its own calm schedule (panelPolicy.ts).
+    // The map follows the live frame.
+    const livePanel = useMemo(
+        () =>
+            frame
+                ? {
+                      rows: displayed,
+                      date: frame.date,
+                      key: `${frame.date}|${mode}|${thresholdPct}`,
+                      comparisons: datedComparisons,
+                  }
+                : null,
+        [frame, displayed, datedComparisons, mode, thresholdPct],
+    );
+    const panel = usePanelSwap(
+        livePanel,
+        history.playing,
+        history.scrubbing,
+        reducedMotion,
+    );
+    const sidePanel = panel.shown ?? {
+        rows: [],
+        date: "",
+        key: "",
+        comparisons: datedComparisons,
+    };
+    const panelCues = panelCue(
+        panel.shown?.date ?? null,
+        frame?.date ?? "",
+        history.playing,
+    );
+    const pageElement = useRef<HTMLDivElement>(null);
+    useLayoutEffect(() => {
+        if (pageElement.current)
+            playPanelPhase(pageElement.current, panel.phase);
+    }, [panel.phase]);
     const submitDate = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const submitted = new FormData(e.currentTarget).get("observationDate");
@@ -165,7 +244,11 @@ export function FullHistoryPage({ active }: { active: boolean }) {
         if (field instanceof HTMLInputElement) field.value = actualDate;
     };
     return (
-        <div className="fh-page">
+        <div
+            className="fh-page"
+            ref={pageElement}
+            data-panel-phase={panel.phase}
+        >
             <header className="fh-hero u-card">
                 <div className="fh-hero-title">
                     <h1>飆股地圖</h1>
@@ -334,6 +417,8 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                             showComparisonDots={
                                                 datedComparisons.length > 1
                                             }
+                                            glide={glide}
+                                            scrubbing={history.scrubbing}
                                         />
                                     ) : (
                                         <div className="fh-empty">
@@ -399,12 +484,9 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                         min={0}
                                         max={metadata.dates.length - 1}
                                         value={history.index}
-                                        onChange={(e) => {
-                                            history.setPlaying(false);
-                                            history.navigate(
-                                                Number(e.target.value),
-                                            );
-                                        }}
+                                        onChange={(e) =>
+                                            history.seek(Number(e.target.value))
+                                        }
                                     />
                                     <div className="fh-date-labels">
                                         <span>{metadata.dates[0]}</span>
@@ -452,15 +534,56 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                                 )
                                             }
                                         >
-                                            <option value={20}>慢</option>
-                                            <option value={40}>中</option>
-                                            <option value={60}>快</option>
+                                            {PLAYBACK_SPEEDS.map((speed) => (
+                                                <option
+                                                    key={speed.step}
+                                                    value={speed.step}
+                                                >
+                                                    {speed.label}
+                                                </option>
+                                            ))}
                                         </select>
                                     </label>
                                 </div>
                             </section>
                         </div>
-                        <aside className="fh-card u-card fh-aside">
+                        <aside
+                            className="fh-card u-card fh-aside"
+                            data-stale={panelCues.dimmed || undefined}
+                            title={
+                                panel.shown
+                                    ? `卡片日期：${panel.shown.date}`
+                                    : undefined
+                            }
+                        >
+                            {panelCues.ringVisible && (
+                                <svg
+                                    key={panel.swappedAt}
+                                    className="fh-panel-ring"
+                                    viewBox="0 0 16 16"
+                                    aria-hidden="true"
+                                    style={{
+                                        animationDuration: `${PANEL_PLAYBACK_SWAP_MS}ms`,
+                                    }}
+                                >
+                                    <circle
+                                        className="fh-ring-track"
+                                        cx="8"
+                                        cy="8"
+                                        r="6"
+                                    />
+                                    <circle
+                                        className="fh-ring-fill"
+                                        cx="8"
+                                        cy="8"
+                                        r="6"
+                                        pathLength="100"
+                                        style={{
+                                            animationDuration: `${PANEL_PLAYBACK_SWAP_MS}ms`,
+                                        }}
+                                    />
+                                </svg>
+                            )}
                             <h2>
                                 {mode === "launched"
                                     ? "正在大漲的股票"
@@ -587,12 +710,17 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                 </div>
                             )}
                             <HistoryRanking
-                                rows={displayed}
-                                date={frame?.date ?? ""}
+                                rows={sidePanel.rows}
+                                date={sidePanel.date}
                                 selectedId={selectedId}
                                 onSelect={setSelectedId}
-                                comparisons={datedComparisons}
-                                display={frameDisplay}
+                                comparisons={sidePanel.comparisons}
+                                concealed={panelConcealed(panel.phase)}
+                                display={
+                                    panel.shown
+                                        ? frameDisplay
+                                        : { ...frameDisplay, hasFrame: false }
+                                }
                             />
                             {ended.length > 0 && (
                                 <details>
@@ -690,9 +818,13 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                     </section>
                     {frame && (
                         <div hidden={!showComparisons}>
+                            {/* Live, not throttled: it also feeds the map the
+                                same-day holdings it colours every step. */}
                             <HistoryComparisons
                                 date={frame.date}
                                 rows={displayed}
+                                shown={panel.shown ?? undefined}
+                                concealed={panelConcealed(panel.phase)}
                                 catalogId={frame.catalogId}
                                 onComparisons={setComparisons}
                             />
@@ -702,11 +834,11 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                         <MemoHistoryTimeline
                             directory={directory}
                             metadata={metadata}
-                            frame={frame}
+                            frame={timeline.frame}
                             selectedId={selectedId}
                             onSelect={setSelectedId}
                             onDate={history.goToDate}
-                            comparisons={comparisons}
+                            comparisons={timeline.comparisons}
                             thresholdPct={thresholdPct}
                         />
                     ) : (

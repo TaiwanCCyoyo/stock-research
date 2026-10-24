@@ -186,10 +186,10 @@
     --accent: #f9a8c9;
     --accent-soft: #40202f;
     --positive: #f7bcd3;
-    --cell-light: #6b3a4e;
-    --cell-mid: #57303f;
-    --cell-deep: #452533;
-    --cell-warm: #5c4744;
+    --cell-light: #e597b7;
+    --cell-mid: #c56a92;
+    --cell-deep: #a84d74;
+    --cell-warm: #d9a58f;
     --membrane: #2b1820;
 }
 
@@ -363,4 +363,188 @@
 }
 .studio[data-appearance="dark"][data-palette="ink"] {
     --highlight: #f0f0f0;
+}
+
+/* Map surface (opportunity map). Defaults keep each theme's original look;
+   櫻花粉 turns bubbles into glossy pearls and "pulling back" into lavender. */
+.studio {
+    --map-gloss: var(--cell-light);
+    --map-retreat: var(--muted);
+    --map-rim: var(--membrane);
+}
+.studio[data-palette="sakura"] {
+    --map-gloss: #ffffff;
+    --map-retreat: #c7a5de;
+    --map-rim: #ffffff;
+}
+.studio[data-appearance="dark"][data-palette="sakura"] {
+    --map-gloss: #ffe6f0;
+    --map-retreat: #9c79bd;
+    --map-rim: rgb(255 228 238 / 70%);
+}
+
+/* Soap bubbles (opportunity map). Every industry gets one of three hue
+   families (--bubble-1..3); a stock's phase only tints that family lighter,
+   calmer or dimmer, so one group reads as one colour. The same recipe colours
+   the phase legend, so the legend matches what the map shows. */
+.studio {
+    --bubble-1: #86c2a3;
+    --bubble-2: #a7c98a;
+    --bubble-3: #8fc3c9;
+    --bubble-lift: #ffffff;
+    --bubble-calm: #c9ccc8;
+    --bubble-shade: #857f8e;
+    --bubble-spec: #ffffff;
+    --bubble-spec-opacity: 0.9;
+    --bubble-lit-mix: 30%;
+    --bubble-mix-slow: 46%;
+    --bubble-mix-resting: 44%;
+    --bubble-mix-retreat: 30%;
+    --bubble-mix-unknown: 58%;
+    --rim-a: #f4a3cf;
+    --rim-b: #86d8ee;
+    --rim-c: #f3d684;
+}
+.studio[data-appearance="dark"] {
+    --bubble-lift: #ffffff;
+    --bubble-calm: #7d8581;
+    --bubble-shade: #0d1214;
+    --bubble-spec-opacity: 0.7;
+    --bubble-lit-mix: 12%;
+    --bubble-mix-slow: 22%;
+    --bubble-mix-resting: 34%;
+    --bubble-mix-retreat: 26%;
+    --bubble-mix-unknown: 56%;
+    --rim-a: #ffc2e1;
+    --rim-b: #a2eefa;
+    --rim-c: #ffe9a0;
+}
+.studio[data-palette="forest"] {
+    --bubble-1: #86c2a3;
+    --bubble-2: #a7c98a;
+    --bubble-3: #8fc3c9;
+}
+.studio[data-appearance="dark"][data-palette="forest"] {
+    --bubble-1: #2f6b53;
+    --bubble-2: #4a6a2c;
+    --bubble-3: #2a5f66;
+}
+.studio[data-palette="ocean"] {
+    --bubble-1: #7fb6cf;
+    --bubble-2: #8fc8c2;
+    --bubble-3: #9aa9dc;
+}
+.studio[data-appearance="dark"][data-palette="ocean"] {
+    --bubble-1: #2b5f78;
+    --bubble-2: #266d68;
+    --bubble-3: #3d4f8a;
+}
+.studio[data-palette="plum"] {
+    --bubble-1: #b6a3e3;
+    --bubble-2: #d6a3c9;
+    --bubble-3: #9db0e3;
+}
+.studio[data-appearance="dark"][data-palette="plum"] {
+    --bubble-1: #5a4b9a;
+    --bubble-2: #8a4a7c;
+    --bubble-3: #3f5a99;
+}
+.studio[data-palette="sand"] {
+    --bubble-1: #d8b574;
+    --bubble-2: #c9c27f;
+    --bubble-3: #e0a98a;
+}
+.studio[data-appearance="dark"][data-palette="sand"] {
+    --bubble-1: #7a6232;
+    --bubble-2: #66702f;
+    --bubble-3: #7e4f3a;
+}
+.studio[data-palette="sakura"] {
+    --bubble-1: #f2a0bf;
+    --bubble-2: #cdaeea;
+    --bubble-3: #f8c9b0;
+    --bubble-calm: #d8cbd2;
+}
+.studio[data-appearance="dark"][data-palette="sakura"] {
+    --bubble-1: #b24a78;
+    --bubble-2: #7c58b0;
+    --bubble-3: #b0663f;
+    --bubble-shade: #170c16;
+}
+.studio[data-palette="soda"] {
+    --bubble-1: #b9e36c;
+    --bubble-2: #72d6e6;
+    --bubble-3: #f5a9c9;
+}
+.studio[data-appearance="dark"][data-palette="soda"] {
+    --bubble-1: #5f7a22;
+    --bubble-2: #1f7686;
+    --bubble-3: #8a456a;
+}
+.studio[data-palette="sunset"] {
+    --bubble-1: #f5a574;
+    --bubble-2: #f08c9a;
+    --bubble-3: #f2c26b;
+}
+.studio[data-appearance="dark"][data-palette="sunset"] {
+    --bubble-1: #a8512a;
+    --bubble-2: #9c4350;
+    --bubble-3: #8a6a1e;
+}
+.studio[data-palette="ink"] {
+    --bubble-1: #b8b8b4;
+    --bubble-2: #a9b0b8;
+    --bubble-3: #bdb4a6;
+}
+.studio[data-appearance="dark"][data-palette="ink"] {
+    --bubble-1: #5a5a5a;
+    --bubble-2: #4f565e;
+    --bubble-3: #5c564a;
+}
+
+/* One phase recipe for the map's gradients and the legend swatches. */
+.bubble-fam-1 {
+    --fam: var(--bubble-1);
+}
+.bubble-fam-2 {
+    --fam: var(--bubble-2);
+}
+.bubble-fam-3 {
+    --fam: var(--bubble-3);
+}
+.bubble-phase-rising,
+.fh-phase-rising {
+    --tint: var(--fam, var(--bubble-1));
+}
+.bubble-phase-slow,
+.fh-phase-slow {
+    --tint: color-mix(
+        in srgb,
+        var(--bubble-lift) var(--bubble-mix-slow),
+        var(--fam, var(--bubble-1))
+    );
+}
+.bubble-phase-resting,
+.fh-phase-resting {
+    --tint: color-mix(
+        in srgb,
+        var(--bubble-calm) var(--bubble-mix-resting),
+        var(--fam, var(--bubble-1))
+    );
+}
+.bubble-phase-retreat,
+.fh-phase-retreat {
+    --tint: color-mix(
+        in srgb,
+        var(--bubble-shade) var(--bubble-mix-retreat),
+        var(--fam, var(--bubble-1))
+    );
+}
+.bubble-phase-unmarked,
+.fh-phase-unknown {
+    --tint: color-mix(
+        in srgb,
+        var(--surface) var(--bubble-mix-unknown),
+        var(--fam, var(--bubble-1))
+    );
 }

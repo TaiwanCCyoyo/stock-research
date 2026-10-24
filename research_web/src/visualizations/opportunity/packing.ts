@@ -68,6 +68,10 @@ type LocalGroup = Disk & {
 const TAU = Math.PI * 2;
 const RAYS = 40;
 const STOCK_SEGMENTS = 24;
+/** Boundary wobble of a stock, as a share of its radius. Kept small so the
+ *  bubbles read as round; it was 0.045 and 0.025 before (a third of that). */
+const WOBBLE_A = 0.016;
+const WOBBLE_B = 0.008;
 const CURVE_SAMPLES = 6;
 const ANCHOR_ATTRACTION = 0.28;
 const STOCK_COMPACTION_STEPS = 70;
@@ -139,11 +143,11 @@ function stockShape(id: string, radius: number): Shape {
     const sample = (angle: number) => {
         const r =
             1 +
-            0.045 * Math.sin(3 * angle + phase) +
-            0.025 * Math.cos(5 * angle - phase);
+            WOBBLE_A * Math.sin(3 * angle + phase) +
+            WOBBLE_B * Math.cos(5 * angle - phase);
         const dr =
-            0.135 * Math.cos(3 * angle + phase) -
-            0.125 * Math.sin(5 * angle - phase);
+            3 * WOBBLE_A * Math.cos(3 * angle + phase) -
+            5 * WOBBLE_B * Math.sin(5 * angle - phase);
         return {
             p: point(r * Math.cos(angle), r * Math.sin(angle)),
             d: point(

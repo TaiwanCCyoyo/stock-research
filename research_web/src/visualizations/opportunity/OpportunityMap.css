@@ -53,6 +53,37 @@
 .opportunity-stock > path {
     transition: fill-opacity 180ms ease;
 }
+/* Soap-bubble gradients (defs in OpportunityMap.tsx; colours in themes.css). */
+.bubble-s0 {
+    stop-color: var(--bubble-spec);
+    stop-opacity: var(--bubble-spec-opacity);
+}
+.bubble-s0b {
+    stop-color: var(--bubble-spec);
+    stop-opacity: calc(var(--bubble-spec-opacity) * 0.75);
+}
+.bubble-s1 {
+    stop-color: color-mix(
+        in srgb,
+        var(--bubble-lift) var(--bubble-lit-mix),
+        var(--tint)
+    );
+}
+.bubble-s2 {
+    stop-color: var(--tint);
+}
+.bubble-s3 {
+    stop-color: color-mix(in srgb, var(--bubble-shade) 12%, var(--tint));
+}
+.bubble-rim-a {
+    stop-color: var(--rim-a);
+}
+.bubble-rim-b {
+    stop-color: var(--rim-b);
+}
+.bubble-rim-c {
+    stop-color: var(--rim-c);
+}
 .opportunity-stock:hover > path,
 .opportunity-stock:focus-visible > path {
     stroke: var(--ink);
@@ -245,4 +276,68 @@
 .opportunity-map-svg.is-rescaling .opportunity-industry-labels,
 .opportunity-map-svg.is-rescaling .opportunity-stock-label {
     opacity: 0;
+}
+
+/* Theme effects on the map: decoration only (themeEffects.ts). */
+.opportunity-fx {
+    pointer-events: none;
+    fill: var(--muted);
+}
+.opportunity-fx.fx-dot circle {
+    fill: var(--muted);
+}
+.opportunity-fx.fx-petal path {
+    fill: #f6a5c4;
+}
+.opportunity-fx.fx-heart path {
+    fill: #ff5c93;
+}
+.opportunity-fx.fx-ring circle,
+.opportunity-fx.fx-bubble circle {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 0.6;
+    vector-effect: non-scaling-stroke;
+}
+.opportunity-fx.fx-bubble circle {
+    stroke: var(--highlight);
+}
+.opportunity-fx.fx-star path {
+    fill: #f8d66d;
+}
+.opportunity-fx.fx-glitter path {
+    fill: var(--highlight);
+}
+.opportunity-fx.fx-ember circle {
+    fill: #fb923c;
+}
+.opportunity-fx.fx-firefly circle {
+    fill: #c8f07a;
+}
+.studio[data-appearance="dark"] .opportunity-fx.fx-firefly circle {
+    fill: #e4ff9c;
+}
+
+/* 櫻花粉: a soft blush halo and a string-of-pearls edge instead of a membrane. */
+.studio[data-palette="sakura"] .opportunity-industry-ground {
+    fill-opacity: 0.22;
+    stroke-opacity: 0.1;
+    stroke-width: 22px;
+}
+.studio[data-palette="sakura"] .opportunity-industry-boundary {
+    stroke: #ffffff;
+    stroke-opacity: 0.95;
+    stroke-width: 3.4px;
+    stroke-linecap: round;
+    stroke-dasharray: 0.1 7;
+    filter: none;
+}
+.studio[data-appearance="dark"][data-palette="sakura"]
+    .opportunity-industry-boundary {
+    stroke: #ffd3e3;
+    stroke-opacity: 0.75;
+}
+/* Keep the selected outline (2.2) heavier than the pearl rim. */
+.studio[data-palette="sakura"] .opportunity-stock:not(.is-selected) path {
+    stroke-width: 1.4px;
 }

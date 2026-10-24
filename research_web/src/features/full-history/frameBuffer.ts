@@ -85,9 +85,14 @@ export function playbackLookahead(
     dates: readonly string[],
     index: number,
     step: number,
+    depth = 2,
 ): string[] {
     const result: string[] = [];
-    for (let offset = 1; offset <= 2 && index < dates.length - 1; offset++) {
+    for (
+        let offset = 1;
+        offset <= depth && index < dates.length - 1;
+        offset++
+    ) {
         const next = dates[Math.min(index + step * offset, dates.length - 1)];
         if (next && next !== dates[index] && !result.includes(next))
             result.push(next);
