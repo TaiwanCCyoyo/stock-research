@@ -734,9 +734,11 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                     </section>
                     {frame && (
                         <div hidden={!showComparisons}>
+                            {/* Live, not throttled: it also feeds the map the
+                                same-day holdings it colours every step. */}
                             <HistoryComparisons
-                                date={panelFrame?.date ?? frame.date}
-                                rows={panelDisplayed}
+                                date={frame.date}
+                                rows={displayed}
                                 catalogId={frame.catalogId}
                                 onComparisons={setComparisons}
                             />
