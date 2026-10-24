@@ -41,6 +41,11 @@ export function StudiesPage() {
                 />
             ) : (
                 <>
+                    {studies.partial && (
+                        <p className="u-notice st-partial">
+                            完整研究紀錄暫時讀不到，下面先列出網頁報告。
+                        </p>
+                    )}
                     <div className="st-toolbar">
                         <div
                             className="u-chips"

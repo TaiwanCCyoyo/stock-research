@@ -1,4 +1,5 @@
 import type { Verdict } from "../../components/ui/verdicts.ts";
+import type { ReportEntry } from "../report-library/model.ts";
 import type {
     StudioHistoryItem,
     StudioSummary,
@@ -109,6 +110,39 @@ export function cardFromHistory(item: StudioHistoryItem): StudyCard {
             note: item.sourceNote ?? null,
         },
     };
+}
+
+/** A static web report; listed even when the saved history service is down. */
+export function cardFromReport(report: ReportEntry): StudyCard {
+    return {
+        id: report.id,
+        date: report.date,
+        question: report.title,
+        answer: report.summary,
+        verdict: report.status === "failed" ? "failed" : null,
+        dataPeriod: null,
+        keyNumbers: [],
+        limitation: null,
+        reportHref: `#report/${encodeURIComponent(report.id)}`,
+        accountRun: null,
+        details: {
+            ...NO_DETAILS,
+            note: report.period ? `資料期間：${report.period}` : null,
+        },
+    };
+}
+
+/** History cards win; reports add only studies the history does not list. */
+export function mergeStudyCards(
+    history: readonly StudyCard[] | null,
+    reports: readonly StudyCard[] | null,
+): StudyCard[] | null {
+    if (!history && !reports) return null;
+    const ids = new Set((history ?? []).map((card) => card.id));
+    return [
+        ...(history ?? []),
+        ...(reports ?? []).filter((card) => !ids.has(card.id)),
+    ];
 }
 
 export function cardFromRun(

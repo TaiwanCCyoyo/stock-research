@@ -3,6 +3,8 @@ import test from "node:test";
 import type { StudioHistoryItem } from "../../domain/strategies/types.ts";
 import {
     cardFromHistory,
+    cardFromReport,
+    mergeStudyCards,
     filterStudies,
     groupByMonth,
     historyVerdict,
@@ -80,4 +82,25 @@ test("unconfirmed plain summaries keep their caveat and original text", () => {
     assert.equal(card.details.summaryUnconfirmed, true);
     assert.equal(card.details.originalSummary, "原文摘要");
     assert.deepEqual(card.details.sharedData, ["adjusted-daily-v1"]);
+});
+
+test("web reports stay listed without the history service and are not duplicated", () => {
+    const report = cardFromReport({
+        id: "20261021-momentum-only-doubling",
+        title: "只看強勢條件的翻倍機率",
+        summary: "摘要",
+        date: "2026-10-21",
+        status: "descriptive",
+        period: "2010-01-04..2026-10-12",
+        kit: "v1",
+        tags: [],
+    });
+    assert.equal(report.reportHref, "#report/20261021-momentum-only-doubling");
+    assert.deepEqual(
+        mergeStudyCards(null, [report])?.map((card) => card.id),
+        [report.id],
+    );
+    const history = cardFromHistory(item({ id: report.id }));
+    assert.deepEqual(mergeStudyCards([history], [report]), [history]);
+    assert.equal(mergeStudyCards(null, null), null);
 });
