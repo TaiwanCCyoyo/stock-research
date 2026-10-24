@@ -94,9 +94,17 @@ export function StudiesPage() {
                             </div>
                         </section>
                     ))}
-                    <div className="st-footnote">
-                        <SourceNotice source={studies.source} history />
-                    </div>
+                    {studies.hidden > 0 && (
+                        <p className="u-muted st-hidden">
+                            另有 {studies.hidden}{" "}
+                            個任務的紀錄暫時無法核對，先不顯示。
+                        </p>
+                    )}
+                    {studies.source && (
+                        <div className="st-footnote">
+                            <SourceNotice source={studies.source} history />
+                        </div>
+                    )}
                 </>
             )}
         </div>

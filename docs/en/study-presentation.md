@@ -49,7 +49,11 @@ identical. Record both contexts in delivery verification. The digest check stays
 byte-exact; the new card does not repair or re-pin the retained v1 registration.
 
 The same routes are mounted at `/api/studies` for the web proxy and
-`/history-api/studies` alongside history. Responses are
+`/history-api/studies` alongside history. The dashboard's research page and home
+read `/history-api/studies` (`research_web/src/features/studies/v2.ts`); a card's
+`report_sha256_mismatch`, `source_unavailable` and `scratch_unavailable` warnings
+appear on that card, and only if the route fails does the page fall back to the
+saved history and static report index. Responses are
 `{cards: [...], warnings: [{task_id, code, message}]}`. Engineering cards are
 hidden unless requested. All cards are validated; warnings may concern hidden
 engineering cards too. Missing cards, unavailable legacy sources and invalid

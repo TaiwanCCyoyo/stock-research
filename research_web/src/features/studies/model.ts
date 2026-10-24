@@ -25,6 +25,12 @@ export interface StudyCard {
     accountRun: { runId: string; note: string } | null;
     /** Plain warnings shown beside the answer on every card, compact or not. */
     caveats: string[];
+    /** Live run progress for a running study, from GET /studies. */
+    progress: {
+        step: number | null;
+        total: number | null;
+        label: string | null;
+    } | null;
     details: StudyDetails;
 }
 
@@ -37,6 +43,8 @@ export interface StudyDetails {
     sharedData: string[];
     sharedDataReason: string | null;
     note: string | null;
+    /** Verbatim report excerpts behind each key number. */
+    numberSources: { label: string; excerpt: string }[];
 }
 
 const NO_DETAILS: StudyDetails = {
@@ -47,6 +55,7 @@ const NO_DETAILS: StudyDetails = {
     sharedData: [],
     sharedDataReason: null,
     note: null,
+    numberSources: [],
 };
 
 const OUTCOME_VERDICT: Record<string, Verdict> = {
@@ -113,6 +122,7 @@ export function cardFromHistory(item: StudioHistoryItem): StudyCard {
         reportHref: item.webReportHref ?? null,
         accountRun: null,
         caveats: historyCaveats(item),
+        progress: null,
         details: {
             originalSummary: item.originalSummary || null,
             summaryUnconfirmed:
@@ -125,6 +135,7 @@ export function cardFromHistory(item: StudioHistoryItem): StudyCard {
             sharedData: item.sharedData ?? [],
             sharedDataReason: item.sharedDataReason ?? null,
             note: item.sourceNote ?? null,
+            numberSources: [],
         },
     };
 }
@@ -143,6 +154,7 @@ export function cardFromReport(report: ReportEntry): StudyCard {
         reportHref: `#report/${encodeURIComponent(report.id)}`,
         accountRun: null,
         caveats: [],
+        progress: null,
         details: {
             ...NO_DETAILS,
             note: report.period ? `資料期間：${report.period}` : null,
@@ -183,6 +195,7 @@ export function cardFromRun(
             note: `帳戶模擬 ${run.from.slice(0, 4)}–${run.through.slice(0, 4)}`,
         },
         caveats: [],
+        progress: null,
         details: { ...NO_DETAILS, note: run.name },
     };
 }
