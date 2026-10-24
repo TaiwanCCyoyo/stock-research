@@ -23,7 +23,16 @@ DATASET_IDS = frozenset(item[0] for item in DATASETS)
 
 
 def normalized_market(value: object) -> str:
-    return {"TWSE": "TWSE", "TSE": "TWSE", "TPEx": "TPEx", "OTC": "TPEx"}.get(str(value), "unknown")
+    return {
+        "TWSE": "TWSE",
+        "TSE": "TWSE",
+        "上市": "TWSE",
+        "上市臺灣創新板": "TWSE",
+        "上市台灣創新板": "TWSE",
+        "TPEx": "TPEx",
+        "OTC": "TPEx",
+        "上櫃": "TPEx",
+    }.get(str(value), "unknown")
 
 
 def security_key(market: str, code: str, start: str | None = None) -> str:
@@ -170,6 +179,7 @@ def project_security_coverage(sources: dict[str, dict[str, Any]], metadata: list
                 "market": market,
                 "code": code,
                 "name": None if old_segment or market == "unknown" else meta.get("name"),
+                "industry": None if old_segment or market == "unknown" else meta.get("industry_category"),
                 "kind": "unknown" if old_segment else _kind(meta),
                 "identity_status": "unresolved" if ambiguous else "provisional",
                 "listing_status": listing_status,

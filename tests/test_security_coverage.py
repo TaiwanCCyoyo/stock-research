@@ -106,6 +106,16 @@ def test_market_separation_and_explicit_delisting():
     assert security_key("TWSE", "2330") != security_key("TPEx", "2330")
 
 
+@pytest.mark.parametrize("market,expected", [("上市", "TWSE"), ("上市臺灣創新板", "TWSE"), ("上櫃", "TPEx")])
+def test_canonical_metadata_market_names_join_source_summaries(market: str, expected: str):
+    document = build({"institutional": source(market=expected)}, [meta(market=market)])
+    assert len(document["securities"]) == 1
+    row = document["securities"][0]
+    assert row["name"] == "測試公司"
+    assert row["market"] == expected and row["kind"] == "stock"
+    assert cell(document, "institutional")["mark"] == "partial"
+
+
 def test_atomic_generations_and_cache_switch(tmp_path: Path):
     doc = build({"institutional": source()}, [meta()])
     first = publish_coverage(doc, root=tmp_path)

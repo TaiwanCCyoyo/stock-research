@@ -97,7 +97,7 @@ def _metadata(path: Path, deadline: float, codes: tuple[str, ...] | None = None)
         connection.set_progress_handler(lambda: time.monotonic() >= deadline, 1000)
         records = []
         code_filter, parameters = _code_filter(codes)
-        query = "SELECT code,name,market,listed_date,is_etf,security_category,fetched_at FROM symbol_meta"
+        query = "SELECT code,name,market,listed_date,is_etf,security_category,industry_category,fetched_at FROM symbol_meta"
         if code_filter:
             query += f" WHERE {code_filter}"
         for record in connection.execute(query, parameters):

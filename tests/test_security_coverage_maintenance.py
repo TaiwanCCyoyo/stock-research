@@ -46,17 +46,19 @@ def test_metadata_and_parquet_readers_filter_selected_codes(tmp_path: Path):
     metadata_path = tmp_path / "symbol_meta.sqlite"
     with sqlite3.connect(metadata_path) as connection:
         connection.execute(
-            "CREATE TABLE symbol_meta(code TEXT, name TEXT, market TEXT, listed_date TEXT, is_etf INTEGER, security_category TEXT, fetched_at TEXT)"
+            "CREATE TABLE symbol_meta(code TEXT, name TEXT, market TEXT, listed_date TEXT, is_etf INTEGER, "
+            "security_category TEXT, fetched_at TEXT, industry_category TEXT)"
         )
         connection.executemany(
-            "INSERT INTO symbol_meta VALUES (?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO symbol_meta VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             [
-                ("AAA", "A", "TWSE", "2010-01-04", 0, "股票", "2026-10-24"),
-                ("BBB", "B", "TWSE", "2010-01-04", 0, "股票", "2026-10-24"),
+                ("AAA", "A", "TWSE", "2010-01-04", 0, "股票", "2026-10-24", "測試業"),
+                ("BBB", "B", "TWSE", "2010-01-04", 0, "股票", "2026-10-24", "測試業"),
             ],
         )
     records = _metadata(metadata_path, 10**12, ("BBB",))
     assert [row["code"] for row in records] == ["BBB"]
+    assert records[0]["industry_category"] == "測試業"
 
     parquet_path = tmp_path / "prices.parquet"
     pq.write_table(
