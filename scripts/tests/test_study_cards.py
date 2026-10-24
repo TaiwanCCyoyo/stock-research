@@ -7,6 +7,7 @@ import hashlib
 import json
 import os
 import subprocess
+import zlib
 from pathlib import Path
 
 import pytest
@@ -409,6 +410,32 @@ def test_missing_and_corrupt_packages_only_hide_legacy_cards(tmp_path: Path) -> 
         assert [card["task_id"] for card in result["cards"]] == [good.name]
         assert result["warnings"]
         assert all(warning["task_id"] == legacy.name and warning["code"] == "legacy_unavailable" for warning in result["warnings"])
+
+
+def test_registration_in_an_undated_directory_is_reported_not_silently_skipped(tmp_path: Path) -> None:
+    task, _ = registration(tmp_path / "tasks")
+    renamed = task.with_name("undated-study")
+    task.rename(renamed)
+    result = StudyCards(renamed.parent).read()
+    assert result["cards"] == []
+    assert [(warning["task_id"], warning["code"]) for warning in result["warnings"]] == [(renamed.name, "invalid_card")]
+
+
+def test_damaged_compression_is_isolated_to_legacy_cards(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from research_core import study_cards
+
+    current, _ = registration(tmp_path / "tasks", "20261024-current")
+    legacy, value = registration(tmp_path / "tasks", "20261024-legacy")
+    value["provenance"]["legacy_history_id"] = legacy.name
+    save(legacy, value)
+
+    def damaged_package(path: Path) -> dict:
+        raise zlib.error("damaged compressed data")
+
+    monkeypatch.setattr(study_cards, "read_studio_package", damaged_package)
+    result = StudyCards(current.parent, package_path=tmp_path / "saved-package.json").read()
+    assert [card["task_id"] for card in result["cards"]] == [current.name]
+    assert [warning["code"] for warning in result["warnings"]] == ["legacy_unavailable"]
 
 
 def test_synthetic_cards_match_the_saved_card_schema_after_response_fields_are_removed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

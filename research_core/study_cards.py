@@ -6,6 +6,7 @@ import copy
 import logging
 import re
 import subprocess
+import zlib
 from functools import lru_cache
 from pathlib import Path
 from threading import Lock
@@ -162,17 +163,17 @@ class StudyCards:
         history: dict[str, dict[str, Any]] | None = None
         history_failed = False
         for task in tasks:
-            if not TASK_PATTERN.fullmatch(task.name):
-                continue
             try:
                 if not task.is_dir():
+                    continue
+                if not TASK_PATTERN.fullmatch(task.name) and not (task / "study.json").is_file():
                     continue
                 registration = _json(task / "study.json")
                 if isinstance(registration.get("provenance"), dict) and registration["provenance"].get("legacy_history_id") is not None:
                     if history is None and not history_failed:
                         try:
                             history = self._legacy_history()
-                        except (OSError, ValueError, StudioError):
+                        except (OSError, ValueError, StudioError, EOFError, zlib.error):
                             history_failed = True
                             LOGGER.warning("Original study-card history is unavailable")
                     if history_failed:
