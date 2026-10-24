@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20260904-swap-rule",
+    "kind": "study",
+    "question": "依排名換出持股能否形成穩定高原？",
+    "answer": "九個換股格只有一格通過全部門檻，沒有形成預先要求的連續高原。",
+    "verdict": "failed",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "訓練期只有單一視窗，驗證期未開啟。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "**判定：NEGATIVE，高原不成立，驗證期維持封存。** 九個 swap cell 只有一個（`swap60_3`）通過全部六道閘門，\n沒有任何三格連續通過。依我自己在 §7 訂的規則，單獨一格是巧合不是性質。",
+        "report_sha256": "a2dc3597bc92214c04e4e9f65edd1b42ad1126ed8468be47a325a0e42f8cf4f0",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

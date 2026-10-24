@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20260905-min-hold",
+    "kind": "study",
+    "question": "延長最低持有期能否兼顧報酬與週轉？",
+    "answer": "訓練期雖有三格過關，驗證期三格全未通過，最低持有期這條軸因此關閉。",
+    "verdict": "failed",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "驗證期三格全未通過，訓練期的高數字不能當成樣本外結論。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "**第二，驗證期三格全滅，一格都沒過。** `hold40` 的 pool share 從 0.3147 掉到 **0.1366**，\n**低於驗證期基準的 0.1895**；capture 從 0.984 掉到 0.972、`hold60` 掉到 0.806、`hold80` 掉到 0.722。",
+        "report_sha256": "c44ef40db5e2bbfd132ba87e53988111568381bb44af72a5a3f90be6baffd8f8",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

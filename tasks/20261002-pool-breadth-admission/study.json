@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261002-pool-breadth-admission",
+    "kind": "study",
+    "question": "以市場廣度限制進場，能否改善帳戶結果？",
+    "answer": "廣度規則降低部分負擔，但固定候選的整體比較條件失敗。",
+    "verdict": "failed",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "只檢定這個嚴格多數門檻與觀察期，不能推論所有廣度篩選。",
+    "report": {
+        "web_report": null,
+        "markdown": "execution-v1.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "Overall: **valid candidate/mechanism failure under this card**, not invalid\nmeasurement, missing-data blockage or unfinished execution. Close this exact\nstrict-majority/20-session admission configuration without threshold, lookback,\nsizing or measurement rescue.",
+        "report_sha256": "148b17c975438257df8e97bb503bb225c59511f90f3167ffcabb9f9bcceac456",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

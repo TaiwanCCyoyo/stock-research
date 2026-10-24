@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20260906-equal-risk-sizing",
+    "kind": "study",
+    "question": "等風險下單能否讓帳戶更平穩？",
+    "answer": "等風險降低波動與回落，但只一格通過門檻，未達連續平台要求。",
+    "verdict": "failed",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "結果仍是單一訓練視窗，報酬與穩定度之間有取捨。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "**判決不變：平台長度 1（需要 3），仍然是 NEGATIVE。**",
+        "report_sha256": "8d0665995bc446b128c09dfcd2cdcdfd40c8787b2c9126e3ba80b6f1d56e4ffd",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261008-strategy-studio",
+    "kind": "tooling",
+    "question": "策略工作台加入了哪些研究閱讀功能？",
+    "answer": "網站新增策略總覽、比較、細節頁與可查找的研究歷程。",
+    "verdict": "not_evaluated",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "這張卡記錄網站與帳戶檢視功能，不代表策略獲准。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "The website now provides a latest-day home, saved strategy overview, comparison,\nnine-section detail and discoverable research history. Every holding cycle opens\nits original modeled fills, raw candles and cash-flow calculation. Daily account\naudits include holdings, cash and separately identified receivables/share claims.\nThe market adds a sorted allocation comparison and soft industry backgrounds.",
+        "report_sha256": "78233e6fe74f6c9156a5617ee2c6cfcbcef6dd964e5b84efd7da36ffaafdd177",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": "20261008-strategy-studio"
+    }
+}

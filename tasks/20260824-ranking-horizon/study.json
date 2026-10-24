@@ -1,0 +1,40 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20260824-ranking-horizon",
+    "kind": "study",
+    "question": "排序視窗拉長，真的能帶來更好的策略嗎？",
+    "answer": "名單確實偏向較大公司，但八條做法都沒有通過驗收。",
+    "verdict": "no_edge",
+    "data_period": null,
+    "key_numbers": [
+        {
+            "label": "通過驗收的做法",
+            "value": 0,
+            "unit": "count",
+            "highlight": true,
+            "source_excerpt": "8 條臂裡 0 條達到樣本外 1.5 倍的門檻"
+        },
+        {
+            "label": "名單中位成交額倍數",
+            "value": 2.67,
+            "unit": "ratio",
+            "highlight": false,
+            "source_excerpt": "中位成交金額是基準線的 **2.67 倍**"
+        }
+    ],
+    "limitation": "結果只涵蓋這次固定的八條做法。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "**假設的機制是對的，推論是錯的。** 拉長視窗與風險調整**確實**把持股推向更大、更老、更穩的\n名字——`skip_250_20` 的進場名單中位成交金額是基準線的 **2.67 倍**（每日 10.45 億對 3.92 億）。\n但**沒有任何一條臂通過驗收**：8 條臂裡 0 條達到樣本外 1.5 倍的門檻，0 條形成高原。",
+        "report_sha256": "334b0b89a1e8c77b2a26db1fddaf06a0bd791d96a884e35d542b012cf61cdb50",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": "20260824-ranking-horizon"
+    }
+}

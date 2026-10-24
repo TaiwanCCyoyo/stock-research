@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20260905-weekly-structure",
+    "kind": "study",
+    "question": "週線均線密集能否預告後續大幅上漲？",
+    "answer": "週線密集在長期漲幅方向出現訊號，但目前只是單一訓練視窗的觀察。",
+    "verdict": "mixed",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "長期視窗重疊且不重疊樣本很少，不能把方向性觀察當成顯著結果。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "**250 天的視窗在 5 年訓練期裡只有大約 4 個不重疊區間。** 「65% 的日子贏過基準」是在**重疊**視窗上算的，\n**所以不能當顯著性讀**。這是一個方向正確、而且方向與說法的內容一致的觀察，**不是一個結果**。",
+        "report_sha256": "15ac1f4aa792770432c5ee55c47e43bbccb45fc7131570960716723b0c0ef8cd",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

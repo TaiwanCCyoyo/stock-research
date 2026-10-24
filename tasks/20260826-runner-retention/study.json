@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20260826-runner-retention",
+    "kind": "study",
+    "question": "換賣出規則能抱住飆股更久嗎？",
+    "answer": "13 種賣出規則都沒達標，最佳結果也只保住飆股漲幅的一小部分。",
+    "verdict": "no_edge",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "結果只涵蓋本次測試的賣出規則。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "這次研究的摘要：試了 13 種賣出規則，沒有一種做到；最好的也只拿到飆股漲幅的一小部分。",
+        "report_sha256": "bd8860a36b073e8798ab966eacf1093c13665eb99bdcd7f6e58d80a133a69cb1",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": "20260826-runner-retention"
+    }
+}

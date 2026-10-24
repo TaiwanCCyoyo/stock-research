@@ -1,0 +1,40 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261009-hhhl-pattern-probability",
+    "kind": "study",
+    "question": "頭頭高／底底高突破是否比新高加爆量更容易翻倍？",
+    "answer": "本輪沒有顯示頭頭高／底底高突破比新高加爆量對照更容易翻倍。",
+    "verdict": "no_edge",
+    "data_period": null,
+    "key_numbers": [
+        {
+            "label": "型態事件翻倍率",
+            "value": 7.86,
+            "unit": "percent",
+            "highlight": true,
+            "source_excerpt": "**這輪沒有顯示 v1 突破比單純「新高加爆量」更容易翻倍。** 合格且結果已知的\n型態事件，126 個共用交易觀察內收盤曾達起點兩倍的比例為 **7.86%**；當天沒有任何\nv1 事件的新高爆量對照為 **7.88%**。「站穩後」約 8.8%，只是條件描述，不能視為\n可交易優勢，更不是已找到好策略。"
+        },
+        {
+            "label": "新高爆量對照",
+            "value": 7.88,
+            "unit": "percent",
+            "highlight": false,
+            "source_excerpt": "**這輪沒有顯示 v1 突破比單純「新高加爆量」更容易翻倍。** 合格且結果已知的\n型態事件，126 個共用交易觀察內收盤曾達起點兩倍的比例為 **7.86%**；當天沒有任何\nv1 事件的新高爆量對照為 **7.88%**。「站穩後」約 8.8%，只是條件描述，不能視為\n可交易優勢，更不是已找到好策略。"
+        }
+    ],
+    "limitation": "報告明確說「站穩後」比例只是描述，不能視為可交易優勢。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "**這輪沒有顯示 v1 突破比單純「新高加爆量」更容易翻倍。** 合格且結果已知的\n型態事件，126 個共用交易觀察內收盤曾達起點兩倍的比例為 **7.86%**；當天沒有任何\nv1 事件的新高爆量對照為 **7.88%**。「站穩後」約 8.8%，只是條件描述，不能視為\n可交易優勢，更不是已找到好策略。",
+        "report_sha256": "15eb9f62d2d2136aca70eb7ec6c52ed9a951a6aea49a380bdf5aa0f2920347cc",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": "20261009-hhhl-pattern-probability"
+    }
+}

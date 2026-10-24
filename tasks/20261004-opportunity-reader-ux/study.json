@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261004-opportunity-reader-ux",
+    "kind": "tooling",
+    "question": "閱讀器這輪改善了什麼？",
+    "answer": "歷史地圖補上案例範圍、觀察日期與較易讀的股票數和日期標籤。",
+    "verdict": "not_evaluated",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "技術來源與完整限制仍可在研究工具查看。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "The historical map states its eight-case coverage beside the observation date,\nqualifies stock counts and uses readable date/gain labels. Technical provenance,\ncomplete original limitations, import/export and research parameters remain\naccessible in research tools. Unavailable phases no longer generate empty\nbadges or legends. Identical one-day launch bounds are not repeated.",
+        "report_sha256": "45ef7de0c007072fd2d709971cccefa027f5a56169b9b28acc05c6668ea5fbd2",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": "20261004-opportunity-reader-ux"
+    }
+}

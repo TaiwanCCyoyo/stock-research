@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261002-small-probe",
+    "kind": "study",
+    "question": "這項小型探測目前能得出什麼結論？",
+    "answer": "目前沒有可核對的研究結論。",
+    "verdict": "not_evaluated",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "目前找不到任務報告或舊歷程摘要供核對。",
+    "report": {
+        "web_report": null,
+        "markdown": null
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": null,
+        "report_sha256": null,
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261008-public-synthetic-separation",
+    "kind": "tooling",
+    "question": "公開示範與私有證據如何分開？",
+    "answer": "公開示範使用虛構帳戶；私有證據從本機設定讀取，並只開放核准的唯讀路徑。",
+    "verdict": "not_evaluated",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "其他資料仍留在 Git 歷史中，公開準備尚未完成。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "Default public-synthetic explorer/saved accounts are deterministic invented\ncontrols. Studio generates independent fictional schema-valid accounting evidence\nin memory, without real history metadata or market capture enrichment.\nLocal-private mode uses absolute external artifact/package paths, read-only\nallowlisted API routes, unchanged split-package SHA validation and explicit\nunavailable errors. Frontend and API mode mismatches are rejected before private\nstudio reads and again before rendering. Vite dev and directly served build paths\nboth support the private artifact route.\n\n- Frontend: 345 tests passed, preserving peak, classification packet hashes,\n  receipt checks, provenance, later-wave identity and gap/cutoff assertions.\n- Related Python tests: 216 passed; cover synthetic, external private, missing settings/files,\n  relative paths, missing split parts, tampering, traversal and mode mismatches.\n  Review follow-up covers corrupt DEFLATE with a valid gzip header: both artifact\n  names return 503/unavailable without exposing private paths or payloads.\n  Related frontend mode/build-guard tests: 5 passed after this follow-up; the\n  frontend source and built assets did not change. README now explicitly limits\n  the two original native runs to configured local-private viewing.\n- Frontend lint/build pass; existing unrelated hook-dependency warnings and large\n  JS chunk warning remain. Python lint passes.\n- Final verification checks all nine backup/primary hashes again, removed paths\n  absent in task checkout, all seven served candidates absent in dist, and no dist\n  file equals any of the nine original SHA-256 values.",
+        "report_sha256": "78e22e9655f46afef3ccab392c9b8035c4ee245e8a6224c98f6f253b341fa414",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

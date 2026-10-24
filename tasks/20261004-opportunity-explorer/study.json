@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261004-opportunity-explorer",
+    "kind": "tooling",
+    "question": "機會地圖與研究閱讀入口交付了哪些功能？",
+    "answer": "網站新增機會地圖、已保存研究與 ETF 指南等主要入口。",
+    "verdict": "not_evaluated",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "原有讀者功能仍可使用。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "The Claude prototype has been implemented as a maintainable React feature in\n`research_web`, with a shared browser/CLI comparison model and validated static\nartifacts. The main routes are the opportunity map, saved research and ETF field\nguide. The existing readers remain accessible. See\n`docs/en/opportunity-presentation.md` for the data and visual contracts.",
+        "report_sha256": "556eff40b4f4ad6547afe6095a44954aa2fc258ec7e46e3d1dd032b70a84b4cb",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": "20261004-opportunity-explorer"
+    }
+}

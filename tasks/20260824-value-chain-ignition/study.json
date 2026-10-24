@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20260824-value-chain-ignition",
+    "kind": "study",
+    "question": "同一產業鏈一起發動，能預測後續漲跌嗎？",
+    "answer": "重新測試後沒有訊號；先前看到的效果來自統計方法造成的假象。",
+    "verdict": "no_edge",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "這只回答本次產業鏈分組下的測試，不代表所有族群研究。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "這次研究的摘要：不能。先前看到的效果是統計方法造成的假象。",
+        "report_sha256": "7fc3e9cd9bec02afb49891bb55ebfdcccf9e0e8ed38c5e55818effe0f82b6f28",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": "20260824-value-chain-ignition"
+    }
+}

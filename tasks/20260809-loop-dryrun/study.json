@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20260809-loop-dryrun",
+    "kind": "tooling",
+    "question": "迴圈預跑時有沒有資料警告？",
+    "answer": "執行前檢查沒有資料警告，尚未形成研究結論。",
+    "verdict": "not_evaluated",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "這只反映預檢狀態，不能判斷研究成效。",
+    "report": {
+        "web_report": null,
+        "markdown": "mission.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "Warnings:\n- No data warnings from runner preflight.",
+        "report_sha256": "d60e6a6b62babf69e49a501fa0adf45f8879d0edb2e37e114a71704172fa5558",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": "20260809-loop-dryrun"
+    }
+}

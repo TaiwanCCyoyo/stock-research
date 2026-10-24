@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261002-entry-persistence",
+    "kind": "study",
+    "question": "延長進場確認時間能否通過固定的探索篩選？",
+    "answer": "四項條件必須全部通過，但這個設定未通過，因此候選版本關閉。",
+    "verdict": "failed",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "此失敗只適用於已測設定，尚未做延遲成交或獨立樣本確認。",
+    "report": {
+        "web_report": null,
+        "markdown": "execution-v3.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "All four were required: **this exact configuration fails the fixed exploratory\nscreen and is closed**. This is a completed candidate failure with a limited\nglobal descriptive statistic, not execution incompletion or invalid measurement.",
+        "report_sha256": "77c869ffe4acd298812534dbab58376e7e64c1a5d29c72ed03727e77da2cba43",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

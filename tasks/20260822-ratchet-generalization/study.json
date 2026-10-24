@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20260822-ratchet-generalization",
+    "kind": "study",
+    "question": "箱底停損能通用到其他買法嗎？",
+    "answer": "換到其他買法後表現不穩定，判定不能通用。",
+    "verdict": "no_edge",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "這個結論只涵蓋本次測試的買法與條件。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "這次研究的摘要：換到別的買法上表現不穩定，判定不能通用。",
+        "report_sha256": "8834caf7a242138f8cc4e292a5250e3bbc4ad972fe61c88bb8c0655858227692",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": "20260822-ratchet-generalization"
+    }
+}

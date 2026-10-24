@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20260823-selection-vs-random",
+    "kind": "study",
+    "question": "排名選股能贏過隨機挑選嗎？",
+    "answer": "多數做法原本會贏；扣除頻繁換股成本後，只剩少數仍勝。",
+    "verdict": "mixed",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "結果會隨換股成本而改變，不代表所有排名方式都有效。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "這次研究的摘要：多半贏，但扣掉頻繁換股的成本後，只剩少數幾種做法還贏。",
+        "report_sha256": "646162c03d4ccacc2f947758efe915c14a6e986f88d27ce1f8c296bdfafe5058",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": "20260823-selection-vs-random"
+    }
+}

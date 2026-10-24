@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261005-relative-strength-holding",
+    "kind": "tooling",
+    "question": "相對強度持有政策進到哪一步？",
+    "answer": "已完成兩個可接入共用帳本的決策政策與時序接線。",
+    "verdict": "not_evaluated",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "本任務市場績效評估為零次，沒有候選報酬、晉級或投資建議。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "2026-10-05。已完成兩個可接入共用帳本的決策政策、特徵轉接與時序接線；\n特徵／runtime／政策 **74 項合成測試通過**，本次新增來源／經濟組合\n**31 項合成測試通過**。下文保留原政策與一般日期接線紀錄。\n本任務市場績效評估 **0 次**，沒有候選報酬、晉級或投資建議。\n此進度是從描述性特徵比較推進到可執行帳戶的決策行為，不是又一套回測平台。\n下列分段保留增量完成時的驗證數；最新成本／收盤量測進度與下一步見末段，\n不把舊段落的待辦重新當作未完成工作。",
+        "report_sha256": "81062b4a60bea4964814953b19fe45a0d65fd857018eec8afeeca4c4bc1cea79",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": "20261005-relative-strength-holding"
+    }
+}

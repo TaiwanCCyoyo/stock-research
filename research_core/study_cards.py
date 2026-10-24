@@ -109,6 +109,8 @@ def read_study_card(
         if excerpt is not None and (not excerpt.strip() or not any(excerpt in source for source in sources)):
             raise StudyCardError("excerpt is not contiguous original source text")
     warnings = []
+    if report is None and legacy_id is None:
+        warnings.append(_warning(task.name, "source_unavailable", "原始報告尚未找到，目前只保留待核對的任務卡片。"))
     digest = provenance["report_sha256"]
     if digest is not None:
         if report is None:

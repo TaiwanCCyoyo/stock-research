@@ -23,6 +23,14 @@ report yet, an existing mission or handoff may be the task-relative
 undocumented result. Leave `data_period` unknown and `key_numbers` empty when
 the source does not substantiate them.
 
+For backfill, inspect v1 registrations first, then the original package's
+same-ID history, then saved task reports/results. A legacy entry can contain
+only preflight or introductory text even when its task has a full result.
+Do not turn that short excerpt into a claim that no result exists: inspect the
+full report. If it is needed to substantiate the card, cite that report directly,
+leave `legacy_history_id` null and explain the source selection in the delivery
+record. Keep both the old package and original reports unchanged.
+
 `provenance.report_sha256`, when present, describes the cited report bytes.
 A mismatch produces a warning associated with that card; it never requires
 rewriting reports or v1 registrations. Invalid cards are isolated, so other
@@ -43,6 +51,11 @@ citations are warnings, never conclusions. A mismatched
 `public-synthetic` serves only clearly fictional examples: a completed study,
 a running study, engineering work and an old account simulation. It never
 opens local tasks, packages or scratch runs.
+
+If neither an original report nor a legacy history source can be located,
+retain only an explicitly unassessed card and emit `source_unavailable`.
+Document the missing source and the evidence for its task classification in
+the delivery record; never rebuild a conclusion from code or another study.
 
 With `scratch_run: {"run": "..."}`, the reader obtains
 `<shared root>/scratch/<task-id>/<run>/run.json` through `scratch_runs.read_run`.

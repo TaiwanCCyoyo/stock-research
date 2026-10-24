@@ -212,7 +212,9 @@ def test_null_sources_and_reports_are_valid_when_no_excerpts_are_claimed(tmp_pat
     value["key_numbers"] = []
     value["provenance"].update(answer_source=None, report_sha256=None)
     save(task, value)
-    assert read_study_card(task)[1] == []
+    result = StudyCards(task.parent).read()
+    assert result["cards"][0]["verdict"] == "not_evaluated"
+    assert [warning["code"] for warning in result["warnings"]] == ["source_unavailable"]
 
 
 def test_digest_mismatch_warns_without_hiding_card_or_changing_report(tmp_path: Path) -> None:

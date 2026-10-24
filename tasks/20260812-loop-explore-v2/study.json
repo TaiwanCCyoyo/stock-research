@@ -1,0 +1,43 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20260812-loop-explore-v2",
+    "kind": "study",
+    "question": "調整停損和買進條件，平均每筆能多賺嗎？",
+    "answer": "8 次迭代中，4 次通過訓練與驗證，另 4 次未通過；結果留下候選，但還需其他股票與期間確認。",
+    "verdict": "mixed",
+    "data_period": {
+        "from": "2022-01-01",
+        "to": "2024-06-30"
+    },
+    "key_numbers": [
+        {
+            "label": "雙視窗通過",
+            "value": 4,
+            "unit": "count",
+            "highlight": false,
+            "source_excerpt": "- Accepted (passed both windows): 4"
+        },
+        {
+            "label": "未通過",
+            "value": 4,
+            "unit": "count",
+            "highlight": false,
+            "source_excerpt": "- Candidate, failed holdout: 2\n- Train failed: 2"
+        }
+    ],
+    "limitation": "只測 2330、2454，反覆調整共用同一組期間，不能當成獨立驗證或已採用策略。",
+    "report": {
+        "web_report": null,
+        "markdown": "nightly_report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "## Summary\n\n- Iterations run: 8\n- Accepted (passed both windows): 4\n- Candidate, failed holdout: 2\n- Train failed: 2\n- Rejected moves (out of declared bounds): 0\n- Holdout evaluations: 6\n- Stopped: max_iterations reached (8)",
+        "report_sha256": "0243454ee61fa2ea47a6d23f2bd2f5864c2834aabc1b75cef35682b98c0875b9",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

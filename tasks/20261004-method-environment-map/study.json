@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261004-method-environment-map",
+    "kind": "study",
+    "question": "方法與市場環境的研究假設有何結論？",
+    "answer": "這份紀錄整理文獻與研究設計，本輪沒有市場實驗結果或已通過策略。",
+    "verdict": "not_evaluated",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "引用研究的結果也不是本專案回測結果。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "更新：2026-10-04。**文獻／設計紀錄，不是市場實驗結果。** 本輪市場評估 0 次；未產生候選報酬、產業優勝者或已通過策略。引用研究的結果也不是本專案回測結果。",
+        "report_sha256": "38b5d351505287d8e62fdf08f04280910afe41628d4ee1a59e81688f12d8c549",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": "20261004-method-environment-map"
+    }
+}

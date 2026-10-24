@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261004-opportunity-classification-fix",
+    "kind": "tooling",
+    "question": "歷史產業分類顯示問題修正了什麼？",
+    "answer": "畫面現在會顯示已保存的官方分類與說明連結。",
+    "verdict": "not_evaluated",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "這是展示投影缺陷，不表示公司沒有已知產業。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "Yang Ming (2609) on 2021-07-23 now displays `航運／貨櫃航運（年報回溯）` with a disclosure linking its 2021 annual report. The existing catalog already retained `航運業` as an official classification snapshot; the old presentation adapter discarded that reference when the historical effective interval was unknown. This was a presentation/projection defect, not evidence that the company had no known industry.",
+        "report_sha256": "4094ccea34a4ef0e6806651aad0a0a675a058745fc6fdbcc19f579c250c14c39",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": "20261004-opportunity-classification-fix"
+    }
+}

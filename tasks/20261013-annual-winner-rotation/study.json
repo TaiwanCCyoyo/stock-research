@@ -1,0 +1,43 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261013-annual-winner-rotation",
+    "kind": "study",
+    "question": "前一年領先股輪動的持有期補全勝過 0050 嗎？",
+    "answer": "沿用既有選股序列後，兩種認股權情境的扣成本報酬都低於連續持有 0050。",
+    "verdict": "failed",
+    "data_period": {
+        "from": "2011-01-03",
+        "to": "2026-01-02"
+    },
+    "key_numbers": [
+        {
+            "label": "策略總報酬",
+            "value": -68.89,
+            "unit": "percent",
+            "highlight": true,
+            "source_excerpt": "| 扣成本後總報酬   |    -68.89% |                -68.23% |      +569.91% |"
+        },
+        {
+            "label": "0050總報酬",
+            "value": 569.91,
+            "unit": "percent",
+            "highlight": false,
+            "source_excerpt": "| 扣成本後總報酬   |    -68.89% |                -68.23% |      +569.91% |"
+        }
+    ],
+    "limitation": "這是原選股序列的探索性補全，沒有重排全市場。",
+    "report": {
+        "web_report": "web-report/index.html",
+        "markdown": "publications/completion-v2/report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "2011–2025 的 15 個完整持有年度已全部可計。固定沿用 v1 選出的股票與買賣日，扣成本後總報酬在兩種認股權情境都低於連續持有 0050。這是原選股序列的探索性補全，不是重排全市場。",
+        "report_sha256": "1274660ed63005c29489f35ed1343cd9b22f0cd341bd9575fed4e5c8a8a9db05",
+        "publication": "completion-v2",
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

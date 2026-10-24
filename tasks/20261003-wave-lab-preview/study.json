@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261003-wave-lab-preview",
+    "kind": "tooling",
+    "question": "波段比較台這輪驗證了什麼？",
+    "answer": "本輪以少量案例驗證波段比較台的實作，並非正式全量目錄或策略回測。",
+    "verdict": "not_evaluated",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "這些案例不能代表全市場目錄，也不能證明方法已獲接受。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "2026-10-03，供方法討論使用。這是少量案例的實作驗證，不是正式\n全量目錄、策略回測或方法已被接受的結論。",
+        "report_sha256": "b47b50bca898f151b1376ccbf8907f9328b7287bb0c7ac75a3126fa393c24c18",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": "20261003-wave-lab-preview"
+    }
+}

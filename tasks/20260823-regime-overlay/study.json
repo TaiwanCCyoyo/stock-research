@@ -1,0 +1,33 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20260823-regime-overlay",
+    "kind": "study",
+    "question": "大盤轉弱先退場能減少虧損嗎？",
+    "answer": "29 種做法都沒有通過；看似有效的做法其實等於持有 0050。",
+    "verdict": "no_edge",
+    "data_period": null,
+    "key_numbers": [
+        {
+            "label": "通過門檻的做法",
+            "value": 0,
+            "unit": "count",
+            "highlight": true,
+            "source_excerpt": "29 種做法沒有一種通過"
+        }
+    ],
+    "limitation": "結果只涵蓋這次測試的條件，不代表其他避險方法。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "這次研究的摘要：29 種做法沒有一種通過；看似有效的，其實等於一直抱 0050。",
+        "report_sha256": "75bd86ce419389f9faa4f6fade5631bbf25a742a60e8a098b3959124428cf19c",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": "20260823-regime-overlay"
+    }
+}

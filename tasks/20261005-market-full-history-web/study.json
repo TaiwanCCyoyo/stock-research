@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261005-market-full-history-web",
+    "kind": "tooling",
+    "question": "歷史市場閱讀頁適合用來做什麼？",
+    "answer": "它用來瀏覽回溯市場機會並檢視已保存的方法證據。",
+    "verdict": "not_evaluated",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "它不是策略核准、事前訊號資料集或完整市場資料備份。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "Stable asset: `opportunity-history-web.v1`. Its purpose is to browse retrospective market opportunities and inspect saved method evidence. It is not a strategy approval, a point-in-time signal dataset or a complete market-data backup.",
+        "report_sha256": "580eca8483dbc688dd4eb3f5b926551d9332c1367ef8a233e95499e2d6c016fa",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": "20261005-market-full-history-web"
+    }
+}

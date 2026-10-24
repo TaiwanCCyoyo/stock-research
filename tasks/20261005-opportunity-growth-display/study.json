@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261005-opportunity-growth-display",
+    "kind": "tooling",
+    "question": "機會地圖的進度顯示做了什麼調整？",
+    "answer": "已把進度顯示規則改為以可用資料為基礎呈現完成比例。",
+    "verdict": "not_evaluated",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "這是介面規則調整，沒有新的研究結果。",
+    "report": {
+        "web_report": null,
+        "markdown": null
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "Owner 在 2026-10-05 要求以波段為基礎，將長期累積漲幅轉成年化報酬；未滿一年使用實際漲幅，避免單日漲幅被年化放大。Owner 同意初始入選門檻 100%。這份記錄固定於新規則案例評估前；不是新的價格、波段偵測或策略驗收版本。",
+        "report_sha256": null,
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": "20261005-opportunity-growth-display"
+    }
+}

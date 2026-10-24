@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261002-sector-role-evidence",
+    "kind": "tooling",
+    "question": "本次族群分類補證完成了哪些內容？",
+    "answer": "第一批為 18 家公司建立了來源支持的細分業務角色資料，但整體補證仍未完成。",
+    "verdict": "not_evaluated",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "仍有 200 家公司的細分角色待逐家核對，歷史生效期間均未確認。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "這次把細分業務角色和產品做成獨立版本資料包，保留原飆股事件、族群與比較結果。第一批完成 18 檔公司、21 筆來源、23 筆角色註記；整體補證仍有未完成項目。",
+        "report_sha256": "17016ab6732bd24592c3f85099c1f7fca0e864012d6f9d3ef1ce738bfcfd4f74",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": "20261002-sector-role-evidence"
+    }
+}

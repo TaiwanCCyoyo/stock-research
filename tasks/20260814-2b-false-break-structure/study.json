@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20260814-2b-false-break-structure",
+    "kind": "study",
+    "question": "2B 的效果來自假突破形狀嗎？",
+    "answer": "目前只有研究規劃，尚無結果報告。",
+    "verdict": "not_evaluated",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "目前沒有結果可供判斷。",
+    "report": {
+        "web_report": null,
+        "markdown": "mission.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "目前只有保存的研究規劃，尚無結果報告。",
+        "report_sha256": "a4be13000d7cad51ec1b630ee9aebd11aaee6694028e2c6367ca735270ca9d30",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": "20260814-2b-false-break-structure"
+    }
+}

@@ -1,0 +1,28 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20260821-2b-entry-decomposition",
+    "kind": "study",
+    "question": "2B 買進真正靠的是什麼？",
+    "answer": "原策略幾乎所有買進都來自動能，不是 2B；拿掉均線減碼後，每次進場表現更好。",
+    "verdict": "mixed",
+    "data_period": {
+        "from": "2019-01-02",
+        "to": "2026-08-14"
+    },
+    "key_numbers": [],
+    "limitation": "單獨 2B 的樣本雖通過原門檻，仍未證明勝過動能；結論只適用本次設定。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "這次研究的摘要：幾乎所有買進其實來自動能條件，不是 2B；拿掉「跌破均線先賣一半」反而每筆都更好。",
+        "report_sha256": "1e356f970421aa3b9c93297066fdf3b0ca0bd1d37fedff2155d10ceabe6da5aa",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": "20260821-2b-entry-decomposition"
+    }
+}
