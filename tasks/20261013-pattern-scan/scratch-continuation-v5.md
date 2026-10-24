@@ -1,6 +1,8 @@
 # Q2–Q6 continuation on shared scratch
 
-**Status: continuation registered on shared scratch; the research remains incomplete.**
+**Status: continuation paused at the owner's request pending bounded parallelism; research remains incomplete.**
+The current runtime amendment is [bounded parallel execution](parallel-execution-v5.md).
+The single-worker process started below was stopped, with its checkpoints retained.
 This implements package D's runner changes from
 [the current handoff](../20261024-data-homes-and-scratch/codex-handoff.md#d-pr17-續跑程式修改與重跑).
 The numerical definition stays `pattern-scan-local-remaining.v5`. The scratch run
@@ -86,10 +88,10 @@ in `continuation.stdout.log`, `continuation.stderr.log` and `launch.json` inside
 the run. `run.json` and the OS writer lock are the authority for current liveness;
 this registration alone does not establish that a worker is still running.
 
-Resume command from the retained worktree:
+Example resume command after the ten-worker configuration is measured and accepted:
 
 ```powershell
-uv run python -m scripts.run_pattern_scan_remaining --stock-result D:/Project/stock-research/.tmp/pattern-scan-execution/full-2010-20261016-retention-v3/phase-stock-result.json --output D:/StockData/stock-research/scratch/20261013-pattern-scan/q2-q6-v6
+uv run python -m scripts.run_pattern_scan_remaining --stock-result D:/Project/stock-research/.tmp/pattern-scan-execution/full-2010-20261016-retention-v3/phase-stock-result.json --output D:/StockData/stock-research/scratch/20261013-pattern-scan/q2-q6-v6 --workers 10
 ```
 
 Remaining delivery follows

@@ -18,6 +18,7 @@ def main() -> None:
         os.environ[name] = "1"
     from research_core import scratch_runs
     from research_core.pattern_scan_conditions_v1 import PATTERNS
+    from research_core.pattern_scan_local_parallel_v5 import MAX_WORKERS
     from research_core.pattern_scan_local_remaining_v5 import PHASES, launch_remaining, output_run, run_remaining
 
     parser = argparse.ArgumentParser(description=__doc__)
@@ -25,6 +26,9 @@ def main() -> None:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--target", choices=PATTERNS, action="append")
     parser.add_argument("--phase", choices=PHASES, action="append")
+    parser.add_argument(
+        "--workers", type=int, choices=range(2, MAX_WORKERS + 1), required=True, help="owner-required bounded parallelism; set from the measured runtime"
+    )
     parser.add_argument("--timeout-seconds", type=int, default=864000, help="owned worker limit (default: ten days, allowing the six-day continuation)")
     parser.add_argument("--worker", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
@@ -35,7 +39,14 @@ def main() -> None:
     if args.worker:
         # The launcher owns the scratch writer lock for this worker's lifetime.
         # The worker emits progress.json; only that owner writes run.json.
-        run_remaining(args.stock_result, args.output, repo_root=root, targets=tuple(args.target or DEFAULT_TARGET_ORDER), phases=tuple(args.phase or PHASES))
+        run_remaining(
+            args.stock_result,
+            args.output,
+            repo_root=root,
+            targets=tuple(args.target or DEFAULT_TARGET_ORDER),
+            phases=tuple(args.phase or PHASES),
+            workers=args.workers,
+        )
     else:
         record = output_run(args.output, root)
         context = scratch_runs.open_run(record["task"], record["run"], repo_root=root) if record is not None else nullcontext(None)

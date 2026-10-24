@@ -199,6 +199,7 @@ def run_remaining(
     targets: tuple[str, ...],
     phases: tuple[str, ...] = PHASES,
     on_progress: Callable[[dict[str, Any]], None] | None = None,
+    workers: int = 1,
 ) -> dict[str, Any]:
     """Continue selected original families without restarting stock/global/Q1.
 
@@ -209,6 +210,9 @@ def run_remaining(
     Release is deliberately left to the owner after merged result delivery.
     """
     repo_root, output = checked_path(repo_root), checked_path(output)
+    from research_core.pattern_scan_local_parallel_v5 import validate_workers
+
+    validate_workers(workers)
     output_run(output, repo_root)
     if not targets or len(set(targets)) != len(targets) or not set(targets).issubset(PATTERNS):
         raise ValueError("unique original target families required")
@@ -219,6 +223,7 @@ def run_remaining(
         raise ValueError("research requires a clean committed executor")
     output.mkdir(parents=True, exist_ok=True)
     inputs = LocalInputs(stock_result, output / "_temporary")
+    inputs.workers = workers
     progress_path = output / "progress.json"
     scope = {"schema": DEFINITION, "stock_result": str(inputs.stock_result), "source_id": inputs.source_id, "input_id": inputs.input_id}
     progress = read_json(progress_path) if progress_path.exists() else {**scope, "completed": {}, "complete": False}
@@ -318,6 +323,7 @@ def run_remaining(
                         "horizons": [126, 252],
                         "measurement": measurement,
                         "reused_completed_tables": reused_completed_tables,
+                        "runtime": {"workers": workers, "in_flight_limit": workers, "nested_threads": 1},
                         "Q1": "reuse existing pr17-q1-local-20261016; no Q1 computation",
                     },
                     inputs=fingerprint,

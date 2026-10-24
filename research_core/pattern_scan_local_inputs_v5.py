@@ -197,6 +197,8 @@ class LocalInputs:
         self._industries: dict[str, str] | None = None
         self._target_roots: dict[str, Path] = {}
         self._cached_codes: dict[str, set[str]] = {}
+        self.workers = 1
+        self.projection_build_allowed = True
         handoff = read_scan_receipt(self.run / "shared-price-handoff.json")
         reference = handoff["reference"]
         self.shared_record = {
@@ -268,6 +270,8 @@ class LocalInputs:
             directory = self._target_roots[target] / code
             if all((directory / f"{name}.parquet").is_file() for name in EVENT_FILES):
                 return self._read_bound(directory)
+        if getattr(self, "projection_build_allowed", True) is False:
+            raise ValueError("read-only projection cache is missing a stock")
         return build_event_tables(
             target,
             self.stock(code),
@@ -280,6 +284,52 @@ class LocalInputs:
             classification_cache=ConditionClassificationCache(),
         )
 
+    def attach_target(self, target: str, output: Path, *, require_complete: bool = False) -> None:
+        """Attach to an existing projection cache without changing it."""
+        output = checked_path(output)
+        if not output.is_relative_to(self.temporary):
+            raise ValueError("projection cache must be below this continuation's temporary root")
+        progress_path = output / "progress.json"
+        if not progress_path.is_file():
+            raise ValueError("temporary projection progress is missing")
+        expected = {"target": target, "source_id": self.source_id, "input_id": self.input_id}
+        progress = read_json(progress_path)
+        if not isinstance(progress, dict):
+            raise ValueError("temporary projection progress is invalid")
+        if any(progress.get(key) != value for key, value in expected.items()):
+            raise ValueError("temporary projection scope differs")
+        completed_value = progress.get("completed")
+        if not isinstance(completed_value, list) or any(not isinstance(code, str) for code in completed_value):
+            raise ValueError("temporary projection completion list is invalid")
+        completed = set(completed_value)
+        if not completed.issubset(self.codes):
+            raise ValueError("temporary projection completion list contains unknown stocks")
+        self._target_roots[target] = output
+        self._cached_codes[target] = completed
+        if require_complete:
+            missing = [
+                code
+                for code in self.codes
+                if (target, code) not in self.existing
+                and (code not in completed or not all((output / code / f"{name}.parquet").is_file() for name in EVENT_FILES))
+            ]
+            if missing:
+                raise ValueError(f"temporary projection cache is incomplete: {len(missing)} stocks")
+
+    def write_projection(self, target: str, code: str, directory: Path) -> None:
+        """Write one stock projection into its unique temporary staging directory."""
+        directory = checked_path(directory)
+        if not directory.is_relative_to(self.temporary):
+            raise ValueError("projection cache must be below this continuation's temporary root")
+        bound = self.bound(target, code)
+        directory.mkdir(exist_ok=True)
+        for name in EVENT_FILES:
+            frame = getattr(bound, name)
+            if not isinstance(frame, pd.DataFrame):
+                frame = pd.DataFrame(frame)
+                frame.insert(0, "t0", self.calendar.strftime("%Y-%m-%d"))
+            write_frame(frame, directory / f"{name}.parquet", index=False)
+
     def cache_target(self, target: str, output: Path) -> Path:
         output = checked_path(output)
         if not output.is_relative_to(self.temporary):
@@ -287,30 +337,35 @@ class LocalInputs:
         output.mkdir(parents=True, exist_ok=True)
         progress_path = output / "progress.json"
         expected = {"target": target, "source_id": self.source_id, "input_id": self.input_id}
-        progress = read_json(progress_path) if progress_path.exists() else {**expected, "completed": []}
-        if any(progress.get(key) != value for key, value in expected.items()):
-            raise ValueError("temporary projection scope differs")
-        self._target_roots[target] = output
+        if progress_path.exists():
+            self.attach_target(target, output)
+            progress = read_json(progress_path)
+        else:
+            progress = {**expected, "completed": []}
+            write_progress(progress_path, progress)
+            self.attach_target(target, output)
         completed = set(progress["completed"])
         self._cached_codes[target] = completed
-        for number, code in enumerate(self.codes, 1):
-            if (target, code) in self.existing:
-                continue
-            directory = output / code
-            if code in completed and all((directory / f"{name}.parquet").is_file() for name in EVENT_FILES):
-                continue
-            bound = self.bound(target, code)
-            directory.mkdir(exist_ok=True)
-            for name in EVENT_FILES:
-                frame = getattr(bound, name)
-                if not isinstance(frame, pd.DataFrame):
-                    frame = pd.DataFrame(frame)
-                    frame.insert(0, "t0", self.calendar.strftime("%Y-%m-%d"))
-                write_frame(frame, directory / f"{name}.parquet", index=False)
+        pending = [
+            code
+            for code in self.codes
+            if (target, code) not in self.existing and not (code in completed and all((output / code / f"{name}.parquet").is_file() for name in EVENT_FILES))
+        ]
+
+        def mark_completed(code: str) -> None:
             completed.add(code)
             write_progress(progress_path, {**expected, "completed": sorted(completed)})
-            if number == 1 or number % 50 == 0:
-                LOGGER.info("Target projection target=%s stock=%s position=%d/%d", target, code, number, len(self.codes))
+
+        if self.workers > 1:
+            from research_core.pattern_scan_local_parallel_v5 import project_in_parallel
+
+            project_in_parallel(self, target, output, pending, workers=self.workers, on_completed=mark_completed)
+        else:
+            for number, code in enumerate(pending, 1):
+                self.write_projection(target, code, output / code)
+                mark_completed(code)
+                if number == 1 or number % 50 == 0:
+                    LOGGER.info("Target projection target=%s stock=%s position=%d/%d", target, code, number, len(pending))
         return output
 
     def holding(self, code: str, anchors: list[int]) -> pd.DataFrame:
