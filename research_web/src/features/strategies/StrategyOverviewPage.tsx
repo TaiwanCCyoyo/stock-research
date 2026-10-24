@@ -8,6 +8,7 @@ import { StatusBadge, StudioState } from "./shared";
 import { strategyIdea, strategyTitle } from "./presentation";
 import { capturedTradeLabel, capturedTradeNote } from "./captureModel";
 import { SharedDataStatus } from "./SharedDataStatus";
+import { SourceInfo } from "../../components/ui/primitives";
 import "./strategies.css";
 
 export function StrategyOverviewPage() {
@@ -15,14 +16,9 @@ export function StrategyOverviewPage() {
         [filter, setFilter] = useState<StrategyStatus | "all">("all");
     const runs = filterStrategies(resource.data?.runs ?? [], filter);
     return (
-        <div className="ss-page">
+        <div className="ss-page u-page u-wide">
             {resource.data && <SourceNotice source={resource.data.source} />}
             <SharedDataStatus />
-            {resource.data?.synthetic && (
-                <p className="ss-muted">
-                    合成示範：帳戶、價格與交易均為虛構，不代表真實研究結果。
-                </p>
-            )}
             <div className="ss-head-row">
                 <div>
                     <h1>策略總覽</h1>
@@ -30,7 +26,7 @@ export function StrategyOverviewPage() {
                         研究過的做法、成果與代價。點進一張卡，逐筆確認它怎麼買賣。
                     </p>
                 </div>
-                <a className="ss-button" href="#compare">
+                <a className="ss-button u-btn" href="#compare">
                     比較策略 →
                 </a>
             </div>
@@ -44,7 +40,7 @@ export function StrategyOverviewPage() {
                     ] as const
                 ).map(([id, label]) => (
                     <button
-                        className="ss-chip"
+                        className="ss-chip u-chip"
                         key={id}
                         aria-pressed={filter === id}
                         onClick={() => setFilter(id)}
@@ -61,16 +57,13 @@ export function StrategyOverviewPage() {
                 <div className="ss-card-grid">
                     {runs.map((run) => (
                         <a
-                            className="ss-card ss-card-link"
+                            className="ss-card u-card ss-card-link"
                             href={`#strategy/${encodeURIComponent(run.id)}`}
                             key={run.id}
                         >
                             <div className="ss-head-row">
                                 <div>
                                     <h2>{strategyTitle(run)}</h2>
-                                    <small className="ss-muted">
-                                        {run.name}
-                                    </small>
                                 </div>
                                 <StatusBadge run={run} />
                             </div>
@@ -130,6 +123,16 @@ export function StrategyOverviewPage() {
                         </a>
                     ))}
                 </div>
+            )}
+            {runs.length > 0 && (
+                <SourceInfo>
+                    {runs.map((run) => (
+                        <p key={run.id}>
+                            {strategyTitle(run)}：研究代號 {run.id}；原始名稱{" "}
+                            {run.name}
+                        </p>
+                    ))}
+                </SourceInfo>
             )}
             <p className="ss-muted ss-small">
                 開發篩選通過與「已採用」分開記錄；只有使用者確認採用，才會列在已採用。

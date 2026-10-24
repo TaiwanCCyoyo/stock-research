@@ -87,7 +87,10 @@ export function HistoryTimeline({
     }, [frame?.date, query, limit, rows, shown]);
 
     return (
-        <section className="fh-card fh-timeline" aria-label="各股上漲期間">
+        <section
+            className="fh-card u-card fh-timeline"
+            aria-label="各股上漲期間"
+        >
             <div className="fh-section-heading">
                 <div>
                     <h2>各股上漲期間</h2>
@@ -130,7 +133,7 @@ export function HistoryTimeline({
                             }}
                         >
                             <button
-                                className="fh-band-name"
+                                className="fh-band-name u-btn"
                                 onClick={() => onSelect(row.securityId)}
                             >
                                 <b>{row.name}</b>
@@ -283,7 +286,10 @@ export function HistoryTimeline({
                 </div>
             </div>
             {limit < rows.length && (
-                <button onClick={() => setLimit((value) => value + 25)}>
+                <button
+                    className="u-btn"
+                    onClick={() => setLimit((value) => value + 25)}
+                >
                     再顯示 25 檔
                 </button>
             )}

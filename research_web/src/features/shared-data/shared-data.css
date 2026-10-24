@@ -2,11 +2,6 @@
     min-width: 0;
     overflow-wrap: anywhere;
 }
-.shared-data h1 {
-    font-family: "Noto Serif TC", serif;
-    margin: 0;
-    font-size: 30px;
-}
 .shared-data h2 {
     margin: 0;
     font-size: 20px;
@@ -41,23 +36,21 @@
     color: var(--ink);
     background: var(--surface);
     border: 1px solid var(--line);
-    border-radius: 7px;
-    padding: 5px 9px;
+    border-radius: var(--radius-pill);
+    padding: 9px 12px;
     max-width: 100%;
     min-width: 0;
 }
 .shared-data button[aria-pressed="true"],
 .shared-data button[aria-selected="true"] {
-    background: var(--accent-soft);
-    border-color: var(--accent);
+    background: var(--ink);
+    color: var(--paper);
 }
 .shared-data a {
     color: var(--accent);
 }
 .shared-generation {
-    background: var(--accent-soft);
-    border-radius: 10px;
-    padding: 10px 14px;
+    padding: 12px 0;
     margin-bottom: 16px;
     font-size: 13px;
 }
@@ -70,10 +63,6 @@
     gap: 16px;
 }
 .shared-card {
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 16px;
-    background: var(--surface);
     min-width: 0;
 }
 .shared-chart {
@@ -113,7 +102,7 @@
     text-align: right;
 }
 .shared-note {
-    font-size: 12px;
+    font-size: 14px;
 }
 .shared-data fieldset {
     border: 0;
@@ -122,7 +111,7 @@
     min-width: 0;
 }
 .shared-data legend {
-    font-size: 12px;
+    font-size: 14px;
     color: var(--muted);
 }
 .shared-data form {
@@ -154,11 +143,11 @@
     margin-top: auto;
     padding-top: 12px;
     border-top: 1px dashed var(--line);
-    font-size: 12px;
+    font-size: 14px;
 }
 .shared-badge {
     color: var(--accent);
-    font-size: 12px;
+    font-size: 14px;
 }
 .shared-data pre {
     white-space: pre-wrap;
@@ -174,37 +163,33 @@
     }
 }
 @media (max-width: 600px) {
-    .shared-card {
-        padding: 10px;
-    }
     .shared-data form {
         margin-left: 0;
     }
     .shared-controls {
         gap: 6px;
     }
+    .shared-layout aside {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .shared-heading {
+        align-items: flex-start;
+    }
+    .shared-chart {
+        height: 460px;
+    }
 }
 
 /* Technical overlays use the same theme boundary as the studio palette. */
 .shared-data {
-    --shared-ma5: #a95a0c;
-    --shared-ma10: #88700b;
-    --shared-ma20: #7651af;
-    --shared-ma60: #236e9c;
-    --shared-ma120: #567721;
-    --shared-ma240: #866344;
-    --shared-bb: #397d70;
-    --shared-osc: #7651af;
-}
-.studio[data-appearance="dark"] .shared-data {
-    --shared-ma5: #f0a35a;
-    --shared-ma10: #e4cc63;
-    --shared-ma20: #b49be6;
-    --shared-ma60: #74b6e2;
-    --shared-ma120: #a6c879;
-    --shared-ma240: #c7a98f;
-    --shared-bb: #8fc1b6;
-    --shared-osc: #b49be6;
+    --shared-ma5: var(--accent);
+    --shared-ma10: var(--positive);
+    --shared-ma20: var(--negative);
+    --shared-ma60: var(--ink);
+    --shared-ma120: var(--gain);
+    --shared-ma240: var(--loss);
+    --shared-bb: var(--muted);
+    --shared-osc: var(--accent);
 }
 .shared-change-gain {
     color: var(--gain);

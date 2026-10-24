@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { useStudioRun } from "../../api/strategyStudio";
+import { artifactMode } from "../../api/artifactMode";
 import type { StudioRun } from "../../domain/strategies/types";
 import { AccountAuditDrawer, TradeAuditDrawer } from "./StrategyAuditDrawer";
 import { LineChart, MonthlyHeatmap } from "./StrategyCharts";
@@ -11,6 +12,7 @@ import { Metric, StatusBadge, StudioState } from "./shared";
 import { strategyIdea, strategyTitle } from "./presentation";
 import { savedReturnDistribution } from "./distributionModel";
 import { realizedTradeExtremes } from "./model";
+import { SourceInfo } from "../../components/ui/primitives";
 import "./strategies.css";
 
 function ProfitDistribution({ run }: { run: StudioRun }) {
@@ -39,7 +41,7 @@ function ProfitDistribution({ run }: { run: StudioRun }) {
                         <b>
                             {bucket.label} · {bucket.count} 筆
                         </b>
-                        <div className="ss-bar">
+                        <div className="ss-bar u-track">
                             <span
                                 style={{
                                     width: `${(bucket.count / max) * 100}%`,
@@ -71,7 +73,7 @@ export function StrategyDetailPage({ runId }: { runId: string }) {
     );
     const benchmarkFinal = run?.nav.at(-1)?.benchmarkEquity;
     return (
-        <div className="ss-page">
+        <div className="ss-page u-page u-wide">
             <a href="#strategies" className="ss-muted">
                 ← 策略總覽
             </a>
@@ -79,15 +81,22 @@ export function StrategyDetailPage({ runId }: { runId: string }) {
                 <StudioState {...resource} />
             ) : (
                 <>
+                    {artifactMode(import.meta.env.VITE_ARTIFACT_MODE) ===
+                        "public-synthetic" && (
+                        <p className="u-notice">示範資料，不是真實結果。</p>
+                    )}
                     <div className="ss-head-row">
                         <div>
                             <h1>{strategyTitle(run)}</h1>
-                            <small className="ss-muted">{run.name}</small>
+                            <SourceInfo>
+                                <p>研究代號：{run.id}</p>
+                                <p>原始名稱：{run.name}</p>
+                            </SourceInfo>
                         </div>
                         <StatusBadge run={run} />
                     </div>
                     <p className="ss-muted">{strategyIdea(run)}</p>
-                    <div className="ss-warning">
+                    <div className="ss-warning u-notice">
                         <strong>先看清楚</strong>
                         <ul>
                             <li>
@@ -122,13 +131,13 @@ export function StrategyDetailPage({ runId }: { runId: string }) {
                         run={run}
                         onAudit={setTradeId}
                     />
-                    <section className="ss-card">
+                    <section className="ss-card u-card">
                         <h2>成績</h2>
                         <p className="ss-muted">
                             {run.from}—{run.through}，起始{" "}
                             {money(run.initialCapital)}。
                         </p>
-                        <div className="ss-check">
+                        <div className="ss-check u-notice">
                             {run.reconciliation.verified ? "✓" : "待核對"}{" "}
                             已結束交易損益{" "}
                             {money(run.reconciliation.closedPnl, true)} ＋
@@ -223,7 +232,7 @@ export function StrategyDetailPage({ runId }: { runId: string }) {
                         onAudit={setTradeId}
                         onAccount={setAccountDate}
                     />
-                    <section className="ss-card">
+                    <section className="ss-card u-card">
                         <h2>抱著它會是什麼感覺</h2>
                         <p className="ss-muted">
                             報酬是結果，這些才是持有途中要面對的過程。
@@ -251,7 +260,7 @@ export function StrategyDetailPage({ runId }: { runId: string }) {
                             紅賺綠賠，顏色越深幅度越大；空白月份沒有保存資料。
                         </p>
                     </section>
-                    <section className="ss-card">
+                    <section className="ss-card u-card">
                         <h2>錢是怎麼賺來的</h2>
                         <div className="ss-kpis">
                             <Metric
@@ -317,7 +326,7 @@ export function StrategyDetailPage({ runId }: { runId: string }) {
                     </section>
                     <HoldingTimeline run={run} onAudit={setTradeId} />
                     <TradeTable trades={run.positions} onAudit={setTradeId} />
-                    <section className="ss-card">
+                    <section className="ss-card u-card">
                         <h2>研究結論</h2>
                         <p>{run.method.conclusion}</p>
                         <p className="ss-muted">

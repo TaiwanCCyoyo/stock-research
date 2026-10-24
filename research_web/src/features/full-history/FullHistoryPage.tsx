@@ -19,6 +19,7 @@ import { frameStatusMessage, historyFrameDisplay } from "./frameDisplay.ts";
 import { HistoryTimeline } from "./HistoryTimeline";
 import { HistoryMethodOptions } from "./HistoryMethodOptions";
 import { HistoryComparisons } from "./HistoryComparisons";
+import { SourceInfo } from "../../components/ui/primitives.tsx";
 import {
     growthBasisLabel,
     growthDurationLabel,
@@ -143,7 +144,7 @@ export function FullHistoryPage({ active }: { active: boolean }) {
     };
     return (
         <div className="fh-page">
-            <header className="fh-hero">
+            <header className="fh-hero u-card">
                 <div className="fh-hero-title">
                     <h1>飆股地圖</h1>
                     <p>
@@ -166,29 +167,36 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                 </span>
             </header>
             {metadata && (
-                <p className="ss-muted" title={metadata.catalogId}>
-                    固定歷史目錄 · {metadata.coverage.from} 至{" "}
-                    {metadata.coverage.to} · 版本{" "}
-                    {metadata.catalogId.slice(0, 12)}
-                    。此範圍為已保存的歷史快照，不代表最新共用資料世代。
-                </p>
+                <div className="fh-metadata-note">
+                    <p className="u-notice">
+                        資料期間 {metadata.coverage.from} –{" "}
+                        {metadata.coverage.to}。歷史統計，不是買賣訊號。
+                    </p>
+                    <SourceInfo>
+                        <p>
+                            本頁讀取已保存的歷史目錄；資料目錄識別碼：
+                            {metadata.catalogId}。
+                        </p>
+                        <p>
+                            涵蓋 {metadata.coverage.stocks.toLocaleString()}{" "}
+                            檔股票；價格基礎：{metadata.basisLabel}。
+                        </p>
+                    </SourceInfo>
+                </div>
             )}
             {history.metadataError && (
-                <div className="fh-error" role="alert">
+                <div className="fh-error u-notice" role="alert">
                     <strong>暫時無法讀取歷史資料</strong>
-                    <p>
-                        請確認網站與資料服務都已啟動，再重新讀取。若歷史快照驗證失敗，請檢查本機快照並重新啟動資料服務，再重新讀取。
-                    </p>
+                    <p>請確認網站與資料服務都已啟動，再重新讀取。</p>
                     <button onClick={history.retry}>重新讀取</button>
                     <a href="#market-preview">開啟八案例預覽</a>
-                    <details>
-                        <summary>錯誤資訊</summary>
+                    <SourceInfo label="錯誤詳情">
                         {history.metadataError}
-                    </details>
+                    </SourceInfo>
                 </div>
             )}
             {!metadata && !history.metadataError && (
-                <section className="fh-card fh-loading" role="status">
+                <section className="fh-card u-card fh-loading" role="status">
                     <span className="fh-loading-dot" />
                     <div>
                         <h2>正在準備歷史行情</h2>
@@ -209,7 +217,7 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                 <>
                     <div className="fh-market">
                         <div className="fh-map-column">
-                            <section className="fh-card fh-map">
+                            <section className="fh-card u-card fh-map">
                                 <div className="fh-section-heading">
                                     <div>
                                         <h2>
@@ -333,6 +341,7 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                                     "2024-06-28",
                                                 ].map((date) => (
                                                     <button
+                                                        className="u-chip"
                                                         key={date}
                                                         onClick={() =>
                                                             history.goToDate(
@@ -349,11 +358,11 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                 </div>
                             </section>
                             <section
-                                className="fh-card fh-datebar"
+                                className="fh-card u-card fh-datebar"
                                 aria-label="歷史交易日"
                             >
                                 <button
-                                    className="fh-play"
+                                    className="fh-play u-btn u-btn-primary"
                                     onClick={() =>
                                         history.setPlaying(!history.playing)
                                     }
@@ -401,7 +410,12 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                                 setDateDraft(e.target.value)
                                             }
                                         />
-                                        <button type="submit">前往</button>
+                                        <button
+                                            className="u-btn u-btn-primary"
+                                            type="submit"
+                                        >
+                                            前往
+                                        </button>
                                     </form>
                                     <label className="fh-speed">
                                         播放速度
@@ -421,7 +435,7 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                 </div>
                             </section>
                         </div>
-                        <aside className="fh-card fh-aside">
+                        <aside className="fh-card u-card fh-aside">
                             <h2>
                                 {mode === "launched"
                                     ? "正在大漲的股票"
@@ -582,18 +596,26 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                         </aside>
                     </div>
                     {history.error && (
-                        <div className="fh-error" role="alert">
+                        <div className="fh-error u-notice" role="alert">
                             讀取 {desiredDate} 暫時失敗。
                             {frame && `地圖仍顯示 ${frame.date}。`}
-                            <button onClick={history.retry}>重新讀取</button>
-                            <p>
-                                若歷史快照驗證失敗，請檢查本機快照並重新啟動資料服務。
-                            </p>
+                            <button
+                                className="u-btn u-btn-primary"
+                                onClick={history.retry}
+                            >
+                                重新讀取
+                            </button>
+                            {history.error && (
+                                <SourceInfo label="錯誤詳情">
+                                    {history.error}
+                                </SourceInfo>
+                            )}
                         </div>
                     )}
-                    <section className="fh-card fh-options">
+                    <section className="fh-card u-card fh-options">
                         <div className="fh-compare-toggle">
                             <button
+                                className="u-btn"
                                 aria-expanded={showComparisons}
                                 onClick={() => setShowComparisons((v) => !v)}
                             >
@@ -611,7 +633,7 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                     滿一年看年化報酬；未滿一年看實際漲幅。圓形大小也用同一指標。
                                 </p>
                             </div>
-                            <details>
+                            <details className="u-source">
                                 <summary>怎麼算、哪些資料保留</summary>
                                 {frame && (
                                     <p>
@@ -660,7 +682,7 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                             thresholdPct={thresholdPct}
                         />
                     ) : (
-                        <section className="fh-card">
+                        <section className="fh-card u-card">
                             <h2>各股上漲期間</h2>
                             <p role="status">
                                 {history.directoryError
@@ -668,7 +690,10 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                     : "正在讀取完整行情目錄…"}
                             </p>
                             {history.directoryError && (
-                                <button onClick={history.retry}>
+                                <button
+                                    className="u-btn u-btn-primary"
+                                    onClick={history.retry}
+                                >
                                     重新讀取時間帶
                                 </button>
                             )}
@@ -676,16 +701,24 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                     )}
                     <div ref={detailElement} className="fh-detail-anchor">
                         {history.detailLoading && (
-                            <div className="fh-card" role="status">
+                            <div className="fh-card u-card" role="status">
                                 正在讀取個股走勢與候選標記…
                             </div>
                         )}
                         {history.detailError && (
-                            <div className="fh-error" role="alert">
+                            <div className="fh-error u-notice" role="alert">
                                 個股走勢暫時無法讀取。
-                                <button onClick={history.retry}>
+                                <button
+                                    className="u-btn u-btn-primary"
+                                    onClick={history.retry}
+                                >
                                     重新讀取
                                 </button>
+                                {history.detailError && (
+                                    <SourceInfo label="錯誤詳情">
+                                        {history.detailError}
+                                    </SourceInfo>
+                                )}
                             </div>
                         )}
                         {history.detail && (
@@ -695,7 +728,7 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                             />
                         )}
                     </div>
-                    <section className="fh-card fh-settings">
+                    <section className="fh-card u-card fh-settings">
                         <h2>顯示方式與完整目錄</h2>
                         <p>
                             下方保留完整波段，包含尚未符合 {thresholdPct}%
@@ -769,7 +802,7 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                                     row.securityId
                                                 }
                                             >
-                                                <td>
+                                                <td data-label="股票">
                                                     <button
                                                         className="fh-stock-link"
                                                         onClick={() =>
@@ -781,17 +814,23 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                                         {row.code} {row.name}
                                                     </button>
                                                 </td>
-                                                <td>{row.industry.label}</td>
-                                                <td>{row.start}</td>
-                                                <td>{percent(row.gain)}</td>
-                                                <td>
+                                                <td data-label="產業">
+                                                    {row.industry.label}
+                                                </td>
+                                                <td data-label="這波開始">
+                                                    {row.start}
+                                                </td>
+                                                <td data-label="至這天已漲">
+                                                    {percent(row.gain)}
+                                                </td>
+                                                <td data-label="時間調整指標">
                                                     {percent(
                                                         row.growth
                                                             ?.sizingGainPct ??
                                                             null,
                                                     )}
                                                 </td>
-                                                <td>
+                                                <td data-label="採用方式／歷時">
                                                     {growthBasisLabel(
                                                         row.growth,
                                                     )}{" "}
@@ -800,9 +839,13 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                                         row.growth,
                                                     )}
                                                 </td>
-                                                <td>{percent(row.peakGain)}</td>
-                                                <td>{row.peakDate}</td>
-                                                <td>
+                                                <td data-label="後來最高">
+                                                    {percent(row.peakGain)}
+                                                </td>
+                                                <td data-label="最高日期">
+                                                    {row.peakDate}
+                                                </td>
+                                                <td data-label="開始大漲（候選）">
                                                     {row.launchCandidate
                                                         ?.date ?? "待辨識"}
                                                 </td>
@@ -820,7 +863,7 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                             />
                         )}
                     </section>
-                    <section className="fh-card fh-limitations">
+                    <section className="fh-card u-card fh-limitations">
                         <h2>
                             本版涵蓋 {metadata.coverage.stocks.toLocaleString()}{" "}
                             檔股票 · {metadata.coverage.from} —{" "}
@@ -849,8 +892,7 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                             </ul>
                             <p>{metadata.ruleLabel}</p>
                         </details>
-                        <details>
-                            <summary>研究證據與資料版本</summary>
+                        <SourceInfo>
                             <pre>
                                 {JSON.stringify(
                                     {
@@ -865,7 +907,7 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                     2,
                                 )}
                             </pre>
-                        </details>
+                        </SourceInfo>
                     </section>
                 </>
             )}

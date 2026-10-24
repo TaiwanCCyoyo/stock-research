@@ -124,7 +124,7 @@ export function TradeAuditDrawer({
                         <small>{percentage(trade.return)}</small>
                     </div>
                     {!trade.closeDate && (
-                        <p className="ss-warning">
+                        <p className="ss-warning u-notice">
                             這筆仍未結束，包含 {money(trade.unrealizedPnl)}{" "}
                             的未實現損益；不能視為已落袋。
                         </p>
@@ -158,7 +158,7 @@ export function TradeAuditDrawer({
                             <tbody>
                                 {trade.fills.map((fill) => (
                                     <tr key={fill.id}>
-                                        <td>
+                                        <td data-label="日期／動作">
                                             {fill.date}
                                             <br />
                                             {fillLabel(fill)}
@@ -169,34 +169,37 @@ export function TradeAuditDrawer({
                                                 </small>
                                             )}
                                         </td>
-                                        <td>
+                                        <td data-label="股數">
                                             {fill.quantity?.toLocaleString() ??
                                                 "—"}
                                         </td>
-                                        <td>{fill.price ?? "—"}</td>
-                                        <td>
+                                        <td data-label="成交價">
+                                            {fill.price ?? "—"}
+                                        </td>
+                                        <td data-label="開盤／收盤">
                                             {fill.dayOpen ?? "—"}／
                                             {fill.dayClose ?? "—"}
                                         </td>
-                                        <td>
+                                        <td data-label="交易手續費">
                                             {transactionCost(
                                                 fill.fee,
                                                 fill.action,
                                             )}
                                         </td>
-                                        <td>
+                                        <td data-label="交易稅">
                                             {transactionCost(
                                                 fill.tax,
                                                 fill.action,
                                             )}
                                         </td>
-                                        <td>
+                                        <td data-label="其他成交成本">
                                             {transactionCost(
                                                 fill.penalty,
                                                 fill.action,
                                             )}
                                         </td>
                                         <td
+                                            data-label="現金進出"
                                             className={gainClass(fill.cashFlow)}
                                         >
                                             {money(fill.cashFlow, true)}
@@ -290,7 +293,7 @@ export function TradeAuditDrawer({
                             </p>
                         ))
                     ) : (
-                        <p className="ss-warning">
+                        <p className="ss-warning u-notice">
                             依規則應退出，但沒有保存當日排名，無法逐筆確認。
                         </p>
                     )}
@@ -301,7 +304,7 @@ export function TradeAuditDrawer({
                             : `已核對 ${trade.capture.knownDays} 個持有交易日，其中 ${trade.capture.days} 天在飆股地圖上。`}
                     </p>
                     <a
-                        className="ss-button"
+                        className="ss-button u-btn"
                         href={marketCaptureLink(trade.openDate, trade.code)}
                     >
                         回地圖看買進時的市場
@@ -364,7 +367,7 @@ export function AccountAuditDrawer({
                             <tbody>
                                 {account.holdings.map((holding) => (
                                     <tr key={holding.code}>
-                                        <td>
+                                        <td data-label="股票">
                                             {holding.code} {holding.name}
                                             {holding.modeled && (
                                                 <small className="ss-muted">
@@ -373,14 +376,16 @@ export function AccountAuditDrawer({
                                                 </small>
                                             )}
                                         </td>
-                                        <td>
+                                        <td data-label="股數">
                                             {holding.quantity.toLocaleString()}
                                         </td>
-                                        <td>{holding.price ?? "未知"}</td>
-                                        <td>
+                                        <td data-label="估值價格">
+                                            {holding.price ?? "未知"}
+                                        </td>
+                                        <td data-label="持股市值">
                                             {money(holding.marketValue, true)}
                                         </td>
-                                        <td>
+                                        <td data-label="飆股">
                                             {holding.onMap === null
                                                 ? "待核對"
                                                 : holding.onMap
@@ -413,7 +418,7 @@ export function AccountAuditDrawer({
                             : `差額 ${money(account.difference, true)}`}
                     </div>
                     {account.reasons.length > 0 && (
-                        <div className="ss-warning">
+                        <div className="ss-warning u-notice">
                             <strong>核對說明</strong>
                             <ul>
                                 {account.reasons.map((reason, index) => (

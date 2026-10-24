@@ -18,6 +18,7 @@ import {
 } from "./model";
 import { SharedChart } from "./SharedChart";
 import { SharedCatalog } from "./SharedCatalog";
+import { SourceInfo } from "../../components/ui/primitives";
 import "./shared-data.css";
 
 export function SharedDataPage({
@@ -106,9 +107,7 @@ export function SharedDataPage({
                         "名稱自動重試已達 60 次上限；可手動重新啟動。",
                     );
                 if (result === "generation-changed")
-                    setNamesNotice(
-                        "名稱資料世代已變更，已停止套用；請重新載入頁面以取得新世代。",
-                    );
+                    setNamesNotice("股票名稱資料已更新，請重新載入頁面。");
             })
             .catch((reason: Error) => {
                 if (!controller.signal.aborted)
@@ -168,18 +167,19 @@ export function SharedDataPage({
         }
     };
     return (
-        <section className="shared-data">
+        <section className="u-page u-wide shared-data">
             <header className="shared-heading">
                 <div>
-                    <h1>共用資料</h1>
-                    <p>研究共用的日價、指標與已確認高低點。</p>
+                    <h1 className="u-title">個股</h1>
+                    <p className="u-lede">查股價、技術指標與已確認高低點。</p>
                 </div>
                 <div
-                    className="shared-controls"
+                    className="shared-controls u-chips"
                     role="tablist"
                     aria-label="共用資料頁面"
                 >
                     <button
+                        className="u-chip"
                         role="tab"
                         aria-selected={tab === "viewer"}
                         onClick={() => setTab("viewer")}
@@ -187,6 +187,7 @@ export function SharedDataPage({
                         個股檢視
                     </button>
                     <button
+                        className="u-chip"
                         role="tab"
                         aria-selected={tab === "catalog"}
                         onClick={() => setTab("catalog")}
@@ -195,23 +196,35 @@ export function SharedDataPage({
                     </button>
                 </div>
             </header>
+            <p className="u-notice">
+                歷史行情，不是買賣訊號。高低點需在後續交易日才確認。
+            </p>
             {!privateMode ? (
-                <div className="shared-card">
-                    <h2>需要本機私有資料</h2>
-                    <p>
-                        目前是合成示範模式；共用資料檢視不提供示範行情。請依
-                        research_web/README.md 設定本機私有模式並啟動 API。
-                    </p>
+                <div className="u-card shared-card">
+                    <h2>目前無法顯示個股行情</h2>
+                    <p>示範模式不提供真實行情，請切換至本機資料。</p>
+                    <SourceInfo>
+                        <p>
+                            請依 research_web/README.md 設定本機私有模式並啟動
+                            API。
+                        </p>
+                    </SourceInfo>
                 </div>
             ) : (
                 <>
                     {metadataError && (
-                        <p role="alert">
-                            {metadataError}{" "}
-                            <button onClick={() => setRetry((n) => n + 1)}>
+                        <div role="alert" className="u-notice">
+                            <p>資料目錄暫時無法讀取。</p>
+                            <SourceInfo>
+                                <p>{metadataError}</p>
+                            </SourceInfo>
+                            <button
+                                className="u-btn"
+                                onClick={() => setRetry((n) => n + 1)}
+                            >
                                 重新讀取
                             </button>
-                        </p>
+                        </div>
                     )}
                     {tab === "catalog" ? (
                         families ? (
@@ -225,25 +238,31 @@ export function SharedDataPage({
                     ) : (
                         <>
                             <div className="shared-generation">
-                                <strong>adjusted-daily-v1</strong>
                                 {current ? (
                                     <>
                                         <span>截至 {current.asof}</span>
-                                        <span>
-                                            世代{" "}
-                                            <code>{current.generation}</code>
-                                        </span>
-                                        <details>
-                                            <summary>驗證識別</summary>
-                                            <code>{current.status_sha256}</code>
-                                        </details>
+                                        <SourceInfo>
+                                            <p>資料家族：adjusted-daily-v1</p>
+                                            <p>
+                                                共用資料世代：
+                                                <code>
+                                                    {current.generation}
+                                                </code>
+                                            </p>
+                                            <p>
+                                                SHA-256：
+                                                <code>
+                                                    {current.status_sha256}
+                                                </code>
+                                            </p>
+                                        </SourceInfo>
                                     </>
                                 ) : (
-                                    <span>唯讀本機共用資料</span>
+                                    <span>本機歷史行情</span>
                                 )}
                             </div>
                             <div className="shared-layout">
-                                <div className="shared-card shared-chart-card">
+                                <div className="u-card shared-card shared-chart-card">
                                     <div className="shared-controls">
                                         <h2>
                                             {symbol?.name || selected}{" "}
@@ -276,7 +295,10 @@ export function SharedDataPage({
                                                     }
                                                     placeholder="2330"
                                                 />
-                                                <button type="submit">
+                                                <button
+                                                    className="u-btn u-btn-primary"
+                                                    type="submit"
+                                                >
                                                     查看
                                                 </button>
                                             </div>
@@ -311,6 +333,7 @@ export function SharedDataPage({
                                         <p className="shared-note">
                                             {namesNotice}
                                             <button
+                                                className="u-chip"
                                                 onClick={() =>
                                                     setNamesRetry((n) => n + 1)
                                                 }
@@ -331,6 +354,7 @@ export function SharedDataPage({
                                             [0, "全部"],
                                         ].map(([value, label]) => (
                                             <button
+                                                className="u-chip"
                                                 key={value}
                                                 aria-pressed={range === value}
                                                 onClick={() =>
@@ -347,20 +371,25 @@ export function SharedDataPage({
                                         </p>
                                     )}
                                     {error ? (
-                                        <p role="alert">
-                                            {error}{" "}
+                                        <div role="alert" className="u-notice">
+                                            <p>
+                                                行情暫時無法讀取，請稍後重試。
+                                            </p>
+                                            <SourceInfo>
+                                                <p>{error}</p>
+                                            </SourceInfo>
                                             <button
+                                                className="u-chip"
                                                 onClick={() =>
                                                     setRetry((n) => n + 1)
                                                 }
                                             >
                                                 重試
                                             </button>
-                                        </p>
+                                        </div>
                                     ) : !current ? (
                                         <p role="status">
-                                            正在讀取／核對共用資料…
-                                            暖機時會自動重試。
+                                            正在讀取行情… 準備完成後會自動顯示。
                                         </p>
                                     ) : current.dates.length === 0 ? (
                                         <p>此股票沒有可顯示的日期。</p>
@@ -410,7 +439,7 @@ export function SharedDataPage({
                                                 </span>
                                                 {!validPrice(current, day) && (
                                                     <strong>
-                                                        無效列：
+                                                        當日資料無效：
                                                         {current.quality_reason[
                                                             day
                                                         ] || "缺少 OHLC"}
@@ -469,13 +498,14 @@ export function SharedDataPage({
                                     )}
                                 </div>
                                 <aside>
-                                    <div className="shared-card">
+                                    <div className="u-card shared-card">
                                         <h3>圖層</h3>
                                         <fieldset disabled={!reference}>
-                                            <legend>共用技術指標</legend>
+                                            <legend>技術指標</legend>
                                             <div className="shared-controls">
                                                 {MA_PERIODS.map((n) => (
                                                     <button
+                                                        className="u-chip"
                                                         key={n}
                                                         aria-pressed={ma.includes(
                                                             n,
@@ -490,6 +520,7 @@ export function SharedDataPage({
                                             </div>
                                             <div className="shared-controls">
                                                 <button
+                                                    className="u-chip"
                                                     aria-pressed={bb}
                                                     onClick={() => setBb(!bb)}
                                                 >
@@ -497,6 +528,7 @@ export function SharedDataPage({
                                                 </button>
                                                 {[1.5, 4].map((k) => (
                                                     <button
+                                                        className="u-chip"
                                                         key={k}
                                                         aria-pressed={pivots.includes(
                                                             k,
@@ -543,7 +575,7 @@ export function SharedDataPage({
                                         </fieldset>
                                     </div>
                                     {current && day >= 0 && (
-                                        <div className="shared-card">
+                                        <div className="u-card shared-card">
                                             <h3>
                                                 游標當日 · {current.dates[day]}
                                             </h3>
@@ -623,8 +655,8 @@ export function SharedDataPage({
                                         </div>
                                     )}
                                     {current && (
-                                        <div className="shared-card">
-                                            <h3>資料品質 · 全部回傳期間</h3>
+                                        <div className="u-card shared-card">
+                                            <h3>資料品質</h3>
                                             <p>
                                                 {current.dates[0]} –{" "}
                                                 {current.dates.at(-1)}
@@ -633,7 +665,7 @@ export function SharedDataPage({
                                                 {current.dates.length.toLocaleString()}{" "}
                                                 交易日 ·{" "}
                                                 {invalid.toLocaleString()}{" "}
-                                                無效列
+                                                天資料無效
                                             </p>
                                             <dl>
                                                 {reasons.map(
@@ -646,8 +678,13 @@ export function SharedDataPage({
                                                 )}
                                             </dl>
                                             <p className="shared-note">
-                                                缺值保留空白，不插補。均線、布林與轉折全部來自共用資料，瀏覽器不重新計算。
+                                                缺少的數值保留空白，不推估。
                                             </p>
+                                            <SourceInfo>
+                                                <p>
+                                                    均線、布林與轉折全部來自共用資料，瀏覽器不重新計算。
+                                                </p>
+                                            </SourceInfo>
                                         </div>
                                     )}
                                 </aside>

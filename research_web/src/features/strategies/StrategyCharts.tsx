@@ -20,6 +20,7 @@ function useChartWidth(enabled: boolean) {
 export interface ChartLine {
     name: string;
     color: string;
+    dash?: string;
     values: (number | null)[];
 }
 export function LineChart({
@@ -127,6 +128,7 @@ export function LineChart({
                             key={line.name}
                             d={path}
                             stroke={line.color}
+                            strokeDasharray={line.dash}
                             fill="none"
                             strokeWidth={compact ? 2.5 : 2.8}
                         />
@@ -171,7 +173,16 @@ export function LineChart({
                 >
                     {lines.map((line) => (
                         <span key={line.name}>
-                            <i style={{ background: line.color }} />
+                            <i
+                                style={{
+                                    background: line.dash
+                                        ? undefined
+                                        : line.color,
+                                    borderTop: line.dash
+                                        ? `2px ${line.dash === "2 4" ? "dotted" : "dashed"} ${line.color}`
+                                        : undefined,
+                                }}
+                            />
                             {line.name}
                             {!compact &&
                             cursor !== null &&
@@ -198,7 +209,7 @@ export function LineChart({
                         />
                     </label>
                     <button
-                        className="ss-button"
+                        className="ss-button u-btn"
                         onClick={() =>
                             onPick(dates[cursor ?? dates.length - 1])
                         }

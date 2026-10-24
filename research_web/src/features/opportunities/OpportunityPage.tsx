@@ -31,6 +31,7 @@ import {
 } from "./classificationDisplay.ts";
 import { ClassificationEvidence } from "./ClassificationEvidence.tsx";
 import { OpportunityTools } from "./OpportunityTools.tsx";
+import { SourceInfo } from "../../components/ui/primitives.tsx";
 import { researchName, researchText } from "../research/researchDisplay.ts";
 import {
     opportunitySelection,
@@ -371,14 +372,27 @@ export function OpportunityPage({ active }: { active: boolean }) {
                     ) : (
                         <>
                             <p>
-                                無法讀取本機歷史資料：{loadError || "未知錯誤"}
+                                目前無法讀取歷史資料，請重新讀取或切換示範資料。
                             </p>
-                            <button type="button" onClick={retryHistorical}>
+                            {loadError && (
+                                <SourceInfo label="錯誤詳情">
+                                    {loadError}
+                                </SourceInfo>
+                            )}
+                            <button
+                                className="u-btn u-btn-primary"
+                                type="button"
+                                onClick={retryHistorical}
+                            >
                                 重新讀取
                             </button>
                         </>
                     )}
-                    <button type="button" onClick={() => changeSource("demo")}>
+                    <button
+                        className="u-btn"
+                        type="button"
+                        onClick={() => changeSource("demo")}
+                    >
                         使用示範資料
                     </button>
                 </section>
@@ -401,7 +415,11 @@ export function OpportunityPage({ active }: { active: boolean }) {
             {privateMode && mode === "demo" && (
                 <p className="op-scope-note synthetic">
                     目前顯示合成示範。
-                    <button type="button" onClick={retryHistorical}>
+                    <button
+                        className="u-btn"
+                        type="button"
+                        onClick={retryHistorical}
+                    >
                         重新讀取本機資料
                     </button>
                 </p>
@@ -456,22 +474,22 @@ export function OpportunityPage({ active }: { active: boolean }) {
                 </div>
             </section>
             {loading && (
-                <p className="op-notice" role="status">
+                <p className="op-notice u-notice" role="status">
                     正在讀取真實範例；下方暫時顯示虛構股票。
                 </p>
             )}
             {loadError && mode === "historical" && (
-                <p className="op-notice">
+                <p className="op-notice u-notice">
                     真實資料目前無法開啟。下方為虛構股票與持股的示範資料。
                 </p>
             )}
             <section
-                className="op-card op-controls"
+                className="op-card u-card op-controls"
                 aria-label="選擇日期與對照持股"
             >
                 <div className="op-time-control">
                     <button
-                        className="op-play"
+                        className="op-play u-btn u-btn-primary"
                         aria-label={playing ? "暫停時間播放" : "播放時間變化"}
                         onClick={() => {
                             if (index >= bundle.dates.length - 1) setIndex(0);
@@ -521,16 +539,17 @@ export function OpportunityPage({ active }: { active: boolean }) {
                         onBlur={(e) => chooseDateValue(e.currentTarget.value)}
                     />
                     <button
-                        className="op-settings-button"
+                        className="op-settings-button u-btn"
                         aria-expanded={settings}
                         onClick={() => setSettings((v) => !v)}
                     >
                         設定 ⚙
                     </button>
                 </div>
-                <div className="op-pins">
+                <div className="op-pins u-chips">
                     <span>比較策略或 ETF</span>
                     <button
+                        className="u-chip"
                         aria-pressed={!availableIds.length}
                         onClick={() => setSelectedIds([])}
                     >
@@ -542,6 +561,7 @@ export function OpportunityPage({ active }: { active: boolean }) {
                         )
                         .map((id) => (
                             <button
+                                className="u-chip"
                                 key={id}
                                 aria-pressed={availableIds.includes(id)}
                                 onClick={() => choosePortfolio(id)}
@@ -612,13 +632,13 @@ export function OpportunityPage({ active }: { active: boolean }) {
                 )}
             </section>
             {notice && (
-                <p className="op-notice" role="status">
+                <p className="op-notice u-notice" role="status">
                     {notice}
                 </p>
             )}
             <CapitalCards comparisons={compared} scopeLabel={scopeLabel} />
             <div className="op-main-grid">
-                <section className="op-card op-map-card">
+                <section className="op-card u-card op-map-card">
                     <div className="op-section-title">
                         <div>
                             <h2>當天的飆股</h2>
@@ -678,9 +698,9 @@ export function OpportunityPage({ active }: { active: boolean }) {
                         </p>
                     )}
                 </section>
-                <aside className="op-card op-side" ref={sideRef}>
+                <aside className="op-card u-card op-side" ref={sideRef}>
                     <div
-                        className="op-tabs"
+                        className="op-tabs u-segmented"
                         role="tablist"
                         aria-label="股票與策略比較"
                     >
@@ -912,10 +932,11 @@ export function OpportunityPage({ active }: { active: boolean }) {
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
                             />
-                            <div className="op-filter-chips">
+                            <div className="op-filter-chips u-chips">
                                 {["all", "strategy", "tw-etf", "us-etf"].map(
                                     (g) => (
                                         <button
+                                            className="u-chip"
                                             key={g}
                                             aria-pressed={group === g}
                                             onClick={() => setGroup(g)}
@@ -991,7 +1012,7 @@ export function OpportunityPage({ active }: { active: boolean }) {
                                                     <span>
                                                         <b>{share(value)}</b>
                                                         <i
-                                                            className={`op-small-meter ${value == null ? "op-hatch" : ""}`}
+                                                            className={`op-small-meter u-track ${value == null ? "op-hatch" : ""}`}
                                                         >
                                                             <i
                                                                 style={{
@@ -1029,7 +1050,7 @@ export function OpportunityPage({ active }: { active: boolean }) {
                 </aside>
             </div>
             {compared.some((c) => c.portfolio.method) && (
-                <section className="op-card op-methods">
+                <section className="op-card u-card op-methods">
                     <div className="op-section-title">
                         <h2>研究是怎麼做的？</h2>
                         <p>未達標的結果與方法也保留</p>
@@ -1067,7 +1088,7 @@ export function OpportunityPage({ active }: { active: boolean }) {
                 }}
             />
             <details
-                className="op-card op-directory"
+                className="op-card u-card op-directory"
                 open={showDirectory}
                 onToggle={(e) => setShowDirectory(e.currentTarget.open)}
             >
@@ -1089,7 +1110,7 @@ export function OpportunityPage({ active }: { active: boolean }) {
                         <tbody>
                             {view.rows.map((r) => (
                                 <tr key={r.wave.id}>
-                                    <td>
+                                    <td data-label="股票">
                                         <button
                                             className="op-text-button"
                                             aria-pressed={selectedRow === r}
@@ -1098,7 +1119,7 @@ export function OpportunityPage({ active }: { active: boolean }) {
                                             {r.security.code} {r.security.name}
                                         </button>
                                     </td>
-                                    <td>
+                                    <td data-label="狀態">
                                         {(r.reason
                                             ? reasonText(r.reason)
                                             : null) ??
@@ -1107,12 +1128,14 @@ export function OpportunityPage({ active }: { active: boolean }) {
                                                 : stateLabel(r, date) ||
                                                   "在這段上漲期間")}
                                     </td>
-                                    <td>{r.wave.start}</td>
-                                    <td>
+                                    <td data-label="起漲日期">
+                                        {r.wave.start}
+                                    </td>
+                                    <td data-label="開始大漲">
                                         {r.wave.launch?.date ??
                                             "未辨認到明確日期"}
                                     </td>
-                                    <td>
+                                    <td data-label="漲幅">
                                         {pct(
                                             r.state === "ended"
                                                 ? r.endGain
@@ -1124,50 +1147,58 @@ export function OpportunityPage({ active }: { active: boolean }) {
                                                 : `截至 ${date}`}
                                         </small>
                                     </td>
-                                    <td>{r.wave.observedThrough}</td>
+                                    <td data-label="資料截至">
+                                        {r.wave.observedThrough}
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
                 </div>
             </details>
-            <details className="op-card op-provenance-details">
-                <summary>資料說明</summary>
-                <ul>
-                    <li>{scopeDescription}</li>
-                    <li>
-                        資料期間：{bundle.dates[0]}～{bundle.dates.at(-1)}
-                        ；資料版本截至 {bundle.asOf}。
-                    </li>
-                    <li>{priceExplanation(bundle.priceBasis)}</li>
-                    <li>
-                        波段起點與最高點是事後回看；部分當年產業分類仍待確認，目前不使用歷史市值調整圓的大小。
-                    </li>
-                    <li>
-                        持股日上漲占比：看上漲的日子中，收盤持有這檔股票時遇到的漲幅占多少；沒有計入買賣價格、部位大小或成本，不是實際報酬。平均只納入可計算股票，每檔比重相同。
-                    </li>
-                </ul>
-                <p>
-                    圓越大，表示從起漲到選定日期的累積漲幅越多；漲幅兩倍，直徑兩倍。
+            <section className="op-card u-card op-provenance-details">
+                <p className="u-notice">
+                    資料期間 {bundle.dates[0]} – {bundle.dates.at(-1)}
+                    。歷史統計，不是買賣訊號。
                 </p>
-                {bundle.sources
-                    .filter((s) => classificationSourceHref(s))
-                    .map((s) => (
-                        <div key={s.id}>
-                            <strong>{classificationSourceLabel(s)}</strong>
-                            {s.url && /^https?:\/\//.test(s.url) && (
-                                <a
-                                    href={s.url}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                >
-                                    {" "}
-                                    查看來源 ↗
-                                </a>
-                            )}
-                        </div>
-                    ))}
-            </details>
+                <SourceInfo>
+                    <ul>
+                        <li>{scopeDescription}</li>
+                        <li>
+                            資料期間：{bundle.dates[0]}～{bundle.dates.at(-1)}
+                            ；資料版本截至 {bundle.asOf}；規則版本{" "}
+                            {bundle.ruleVersion}。
+                        </li>
+                        <li>{priceExplanation(bundle.priceBasis)}</li>
+                        <li>
+                            波段起點與最高點是事後回看；部分當年產業分類仍待確認，目前不使用歷史市值調整圓的大小。
+                        </li>
+                        <li>
+                            持股日上漲占比：看上漲的日子中，收盤持有這檔股票時遇到的漲幅占多少；沒有計入買賣價格、部位大小或成本，不是實際報酬。平均只納入可計算股票，每檔比重相同。
+                        </li>
+                    </ul>
+                    <p>
+                        圓越大，表示從起漲到選定日期的累積漲幅越多；漲幅兩倍，直徑兩倍。
+                    </p>
+                    {bundle.sources
+                        .filter((s) => classificationSourceHref(s))
+                        .map((s) => (
+                            <div key={s.id}>
+                                <strong>{classificationSourceLabel(s)}</strong>
+                                {s.url && /^https?:\/\//.test(s.url) && (
+                                    <a
+                                        href={s.url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                    >
+                                        {" "}
+                                        查看來源 ↗
+                                    </a>
+                                )}
+                            </div>
+                        ))}
+                </SourceInfo>
+            </section>
             <OpportunityTools
                 bundle={bundle}
                 date={date}
@@ -1214,7 +1245,7 @@ function StockCard({
             ? row.security.prices.find((p) => p.date === valueDate)?.close
             : row.price;
     return (
-        <section className="op-stock-card">
+        <section className="op-stock-card u-card">
             <div className="op-stock-card-head">
                 <div>
                     <span className="op-kicker">
@@ -1348,7 +1379,7 @@ function StockCard({
 function MethodCard({ portfolio }: { portfolio: OpportunityPortfolio }) {
     const m = portfolio.method!;
     return (
-        <details className="op-method-card">
+        <details className="op-method-card u-card">
             <summary>
                 {researchName(portfolio.name)}{" "}
                 <span>
@@ -1383,11 +1414,13 @@ function MethodCard({ portfolio }: { portfolio: OpportunityPortfolio }) {
                         <li key={i}>{researchText(l)}</li>
                     ))}
                 </ul>
-                <p>
-                    任務 {m.taskId} · 版本 {m.ruleVersion}
-                </p>
-                {m.missionPath && <code>{m.missionPath}</code>}
-                {m.reportPath && <code>{m.reportPath}</code>}
+                <SourceInfo label="研究識別與文件">
+                    <p>
+                        任務 {m.taskId} · 版本 {m.ruleVersion}
+                    </p>
+                    {m.missionPath && <p>{m.missionPath}</p>}
+                    {m.reportPath && <p>{m.reportPath}</p>}
+                </SourceInfo>
             </details>
         </details>
     );

@@ -18,7 +18,7 @@ export function StudioState({
             <div className="ss-error">
                 <strong>研究資料暫時無法讀取</strong>
                 <p>{error}</p>
-                <button className="ss-button" onClick={retry}>
+                <button className="ss-button u-btn" onClick={retry}>
                     重新讀取
                 </button>
             </div>
@@ -40,7 +40,7 @@ export function StatusBadge({
 }) {
     const status = strategyStatus(run);
     return (
-        <span className={`ss-status ss-status-${status}`}>
+        <span className={`ss-status u-chip ss-status-${status}`}>
             {status === "adopted"
                 ? "已採用"
                 : status === "failed"
@@ -61,7 +61,7 @@ export function Metric({
     className?: string;
 }) {
     return (
-        <div className="ss-kpi">
+        <div className="ss-kpi u-card">
             <span>{label}</span>
             <strong className={className}>{value}</strong>
             {note && <small>{note}</small>}

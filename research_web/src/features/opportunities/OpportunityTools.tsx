@@ -34,17 +34,24 @@ export function OpportunityTools({
     const fileRef = useRef<HTMLInputElement>(null);
     const [exportText, setExportText] = useState("");
     return (
-        <details className="op-card op-provenance-details op-research-tools">
+        <details className="op-card u-card op-provenance-details op-research-tools">
             <summary>研究者工具</summary>
             <p>匯入、匯出與完整技術紀錄；一般瀏覽不需要使用這些工具。</p>
             <div className="op-tool-actions">
-                <button onClick={() => fileRef.current?.click()}>
+                <button
+                    className="u-btn"
+                    onClick={() => fileRef.current?.click()}
+                >
                     匯入資料包
                 </button>
-                <button onClick={() => download(bundle, `${bundle.id}.json`)}>
+                <button
+                    className="u-btn"
+                    onClick={() => download(bundle, `${bundle.id}.json`)}
+                >
                     匯出完整資料包
                 </button>
                 <button
+                    className="u-btn"
                     onClick={() => {
                         const data = evidence();
                         setExportText(JSON.stringify(data, null, 2));
@@ -95,7 +102,7 @@ export function OpportunityTools({
                     <button onClick={() => setExportText("")}>關閉紀錄</button>
                 </div>
             )}
-            <details>
+            <details className="u-source">
                 <summary>原始資料限制與辨識設定</summary>
                 {loadError && <p>{loadError}</p>}
                 <pre>

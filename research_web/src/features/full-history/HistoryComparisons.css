@@ -46,9 +46,10 @@
     align-content: start;
     min-height: 112px;
     text-align: left;
-    background: var(--paper);
-    border: 1px solid var(--line);
-    border-radius: 10px;
+    background: var(--surface);
+    border: 0;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card);
     padding: 11px;
 }
 .fh-page .fh-comp-option[aria-pressed="true"] {
@@ -82,10 +83,11 @@
     margin-top: auto;
 }
 .fh-comp-selected {
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    background: var(--paper);
+    border: 0;
+    border-radius: var(--radius-md);
+    background: var(--surface);
     padding: 14px;
+    box-shadow: var(--shadow-card);
 }
 .fh-comp-selected h3,
 .fh-comp-holdings h3 {
@@ -150,9 +152,10 @@
 }
 .fh-comp-holdings > section {
     padding: 14px;
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    background: var(--paper);
+    border: 0;
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    box-shadow: var(--shadow-card);
 }
 .fh-comp-holding-summary,
 .fh-comp-no-holdings {

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { reportFrameSrc, statusLabel } from "./model";
 import { useReportIndex } from "./useReportIndex";
+import { SourceInfo } from "../../components/ui/primitives";
 import "./reports.css";
 
 /**
@@ -61,12 +62,12 @@ export function ReportViewer({
 
     return (
         <div className="rv-page">
-            <div className="rv-bar">
-                <a className="rv-back" href="#reports">
-                    ← 研究報告
+            <div className="rv-bar u-card">
+                <a className="rv-back u-btn" href="#studies">
+                    ← 研究
                 </a>
                 <div className="rv-title">
-                    <strong>{report?.title || reportId}</strong>
+                    <strong>{report?.title || "研究報告"}</strong>
                     <span>
                         {report?.date && <span>{report.date}</span>}
                         {report?.period && (
@@ -76,7 +77,7 @@ export function ReportViewer({
                     </span>
                 </div>
                 <a
-                    className="rv-open"
+                    className="rv-open u-btn"
                     href={src}
                     target="_blank"
                     rel="noreferrer"
@@ -84,12 +85,27 @@ export function ReportViewer({
                     在新分頁開啟 ↗
                 </a>
             </div>
-            {error && <p className="rp-notice">{error}</p>}
+            <p className="u-notice">
+                歷史研究，不是買賣訊號。請留意報告中的研究限制。
+            </p>
+            {error && (
+                <div role="alert" className="u-notice">
+                    <p>報告清單暫時無法讀取。</p>
+                    <SourceInfo>
+                        <p>{error}</p>
+                    </SourceInfo>
+                </div>
+            )}
             {reports && !report && (
-                <p className="rp-notice">
-                    找不到報告「{reportId}」。它可能還沒放進{" "}
-                    <code>tasks/{reportId}/web-report/</code>。
-                </p>
+                <div role="alert" className="u-notice">
+                    <p>找不到這份報告，請返回研究頁選擇其他報告。</p>
+                    <SourceInfo>
+                        <p>報告識別：{reportId}</p>
+                        <p>
+                            預期位置：<code>tasks/{reportId}/web-report/</code>
+                        </p>
+                    </SourceInfo>
+                </div>
             )}
             {(!reports || report) && (
                 <iframe
