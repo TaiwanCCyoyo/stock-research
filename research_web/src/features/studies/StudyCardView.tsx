@@ -42,6 +42,7 @@ export function StudyCardView({
                 </p>
             )}
             <StudyCaveats caveats={card.caveats} />
+            {card.progress && <RunProgress progress={card.progress} />}
             {card.keyNumbers.length > 0 && (
                 <CompareBars
                     rows={card.keyNumbers.map((number) => ({
@@ -87,7 +88,8 @@ function StudyDetailsView({ details }: { details: StudyDetails }) {
         details.webReportReason ||
         details.sharedData.length ||
         details.sharedDataReason ||
-        details.note;
+        details.note ||
+        details.numberSources.length;
     if (!hasAny) return null;
     return (
         <SourceInfo label="原文與資料來源">
@@ -110,7 +112,38 @@ function StudyDetailsView({ details }: { details: StudyDetails }) {
             )}
             {details.sharedDataReason && <p>{details.sharedDataReason}</p>}
             {details.note && <p>{details.note}</p>}
+            {details.numberSources.map((source) => (
+                <p key={source.label} className="st-original">
+                    {source.label}的出處：{source.excerpt}
+                </p>
+            ))}
             {details.reportPath && <p>報告檔：{details.reportPath}</p>}
         </SourceInfo>
+    );
+}
+
+function RunProgress({
+    progress,
+}: {
+    progress: NonNullable<StudyCard["progress"]>;
+}) {
+    const ratio =
+        progress.step !== null && progress.total
+            ? Math.min(1, Math.max(0, progress.step / progress.total))
+            : null;
+    return (
+        <div className="st-progress">
+            <span>
+                {ratio !== null
+                    ? `執行中：第 ${progress.step}／${progress.total} 步`
+                    : "執行中"}
+                {progress.label ? `・${progress.label}` : ""}
+            </span>
+            {ratio !== null && (
+                <span className="u-track">
+                    <span style={{ width: `${ratio * 100}%` }} />
+                </span>
+            )}
+        </div>
     );
 }
