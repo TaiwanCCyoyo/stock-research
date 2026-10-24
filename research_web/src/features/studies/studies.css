@@ -180,3 +180,8 @@
         grid-template-columns: 1fr 1fr;
     }
 }
+.st-retry {
+    margin-left: 10px;
+    min-height: 32px;
+    padding: 4px 14px;
+}

@@ -50,6 +50,18 @@ export function StudiesPage() {
                 )
             ) : (
                 <>
+                    {studies.stale && (
+                        <div className="u-notice st-partial" role="status">
+                            研究卡片暫時無法更新，下面是稍早讀到的內容。
+                            <button
+                                type="button"
+                                className="u-btn st-retry"
+                                onClick={studies.retry}
+                            >
+                                重新讀取
+                            </button>
+                        </div>
+                    )}
                     {studies.partial && (
                         <p className="u-notice st-partial">
                             完整研究紀錄暫時讀不到，下面先列出網頁報告。

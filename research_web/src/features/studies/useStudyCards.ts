@@ -11,6 +11,12 @@ import {
     type StudyCard,
 } from "./model";
 import {
+    markStale,
+    studiesFailed,
+    studiesLoaded,
+    type StudiesState,
+} from "./studiesState";
+import {
     cardsFromStudies,
     hiddenCount,
     readStudies,
@@ -22,28 +28,26 @@ import {
 let lastStudies: StudiesResponse | null = null;
 
 function useStudiesV2() {
-    const [state, setState] = useState<{
-        data: StudiesResponse | null;
-        error: string;
-    }>(() => ({ data: lastStudies, error: "" }));
+    const [state, setState] = useState<StudiesState>(() => ({
+        data: lastStudies,
+        error: "",
+        stale: false,
+    }));
     const [retry, setRetry] = useState(0);
     useEffect(() => {
         const control = new AbortController();
         readStudies(control.signal)
             .then((data) => {
                 lastStudies = data;
-                setState({ data, error: "" });
+                setState(studiesLoaded(data));
             })
             .catch((cause: Error) => {
                 if (cause.name === "AbortError") return;
-                // Keep showing the last good cards; report only a first failure.
                 setState((current) =>
-                    current.data
-                        ? current
-                        : {
-                              data: null,
-                              error: cause.message || "研究卡片暫時讀不到。",
-                          },
+                    studiesFailed(
+                        current,
+                        cause.message || "研究卡片暫時讀不到。",
+                    ),
                 );
             });
         return () => control.abort();
@@ -56,14 +60,19 @@ function useStudiesV2() {
  *  and the archived account runs so the page never loses its report links. */
 export function useStudyCards() {
     const studies = useStudiesV2();
-    const fallback = !!studies.error;
+    // Fall back only when there is nothing to show; a failed refresh of
+    // shown cards marks them stale instead.
+    const fallback = !studies.data && !!studies.error;
     const history = useStudioHistory(),
         index = useStudioIndex(),
         reportIndex = useReportIndex();
     const cards = useMemo<StudyCard[] | null>(() => {
         // A successful /studies response is authoritative: a card it omits
         // failed source checks and must not return through the report index.
-        if (studies.data) return cardsFromStudies(studies.data);
+        if (studies.data) {
+            const shown = cardsFromStudies(studies.data);
+            return studies.stale ? markStale(shown) : shown;
+        }
         if (!fallback) return null;
         const runs = (index.data?.runs ?? []).map((run) =>
             cardFromRun(
@@ -77,11 +86,19 @@ export function useStudyCards() {
             reportIndex.reports?.map(cardFromReport) ?? null,
         );
         return merged && [...merged, ...runs];
-    }, [studies.data, fallback, history.data, index.data, reportIndex.reports]);
+    }, [
+        studies.data,
+        studies.stale,
+        fallback,
+        history.data,
+        index.data,
+        reportIndex.reports,
+    ]);
     return {
         cards,
         hidden: studies.data ? hiddenCount(studies.data) : 0,
         partial: fallback && !history.data && !!history.error && !!cards,
+        stale: studies.stale,
         synthetic: history.data?.source?.mode === "public-synthetic",
         source: fallback ? history.data?.source : undefined,
         loading: !studies.data && (!fallback || history.loading),
