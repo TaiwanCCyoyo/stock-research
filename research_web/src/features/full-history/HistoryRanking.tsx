@@ -43,11 +43,14 @@ export function HistoryRanking({
     onSelect,
     comparisons,
     display,
+    concealed = false,
 }: {
     rows: HistoryRow[];
     date: string;
     selectedId: string | null;
     onSelect: (id: string) => void;
+    /** The panel's cards are hidden mid-swap: keep them out of reach. */
+    concealed?: boolean;
     comparisons: PortfolioComparison[];
     display: FrameDisplay;
 }) {
@@ -90,7 +93,11 @@ export function HistoryRanking({
                             }}
                         />
                     </label>
-                    <div className="fh-ranking-list">
+                    <div
+                        className="fh-ranking-list"
+                        inert={concealed}
+                        aria-hidden={concealed || undefined}
+                    >
                         {shown.map((row) => (
                             <button
                                 key={row.securityId}

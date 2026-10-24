@@ -12,6 +12,12 @@
  *  Pure: time comes in as `now`, so the whole policy is testable. */
 
 export type PanelPhase = "empty" | "entering" | "shown" | "leaving";
+
+/** Cards that are leaving or already gone are invisible, so they must not be
+ *  reachable by keyboard or assistive technology either. */
+export function panelConcealed(phase: PanelPhase): boolean {
+    return phase === "leaving" || phase === "empty";
+}
 /** What the panel shows. `key` names the whole set (date, mode, threshold):
  *  a different key is a different set, swapped as a whole. */
 export interface PanelSnap {

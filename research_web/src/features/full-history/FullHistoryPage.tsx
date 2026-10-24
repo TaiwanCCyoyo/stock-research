@@ -26,7 +26,11 @@ import { readMarketLink } from "./navigation.ts";
 import { HistoryChartDetail } from "./HistoryChartDetail";
 import { HistoryRanking } from "./HistoryRanking";
 import { playPanelPhase } from "./panelMotion.ts";
-import { PANEL_PLAYBACK_SWAP_MS, panelCue } from "./panelPolicy.ts";
+import {
+    PANEL_PLAYBACK_SWAP_MS,
+    panelConcealed,
+    panelCue,
+} from "./panelPolicy.ts";
 import { usePanelSwap } from "./usePanelSwap.ts";
 import { frameStatusMessage, historyFrameDisplay } from "./frameDisplay.ts";
 import { HistoryTimeline } from "./HistoryTimeline";
@@ -711,6 +715,7 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                 selectedId={selectedId}
                                 onSelect={setSelectedId}
                                 comparisons={sidePanel.comparisons}
+                                concealed={panelConcealed(panel.phase)}
                                 display={
                                     panel.shown
                                         ? frameDisplay
@@ -819,6 +824,7 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                 date={frame.date}
                                 rows={displayed}
                                 shown={panel.shown ?? undefined}
+                                concealed={panelConcealed(panel.phase)}
                                 catalogId={frame.catalogId}
                                 onComparisons={setComparisons}
                             />

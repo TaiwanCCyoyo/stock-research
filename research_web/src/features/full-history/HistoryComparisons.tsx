@@ -74,6 +74,7 @@ export function HistoryComparisons({
     catalogId,
     onComparisons,
     shown,
+    concealed = false,
 }: {
     date: string;
     rows: HistoryRow[];
@@ -83,6 +84,8 @@ export function HistoryComparisons({
      *  feed the map; the cards below show this snapshot, so they never
      *  disagree with the ranking beside the map. */
     shown?: { date: string; rows: HistoryRow[] };
+    /** The panel's cards are hidden mid-swap: keep them out of reach. */
+    concealed?: boolean;
 }) {
     const [bundle, setBundle] = useState<Awaited<
         ReturnType<typeof readComparisonBundle>
@@ -186,10 +189,10 @@ export function HistoryComparisons({
     const displayRows = shown?.rows ?? rows;
     const allComparisons = useMemo(
         () =>
-            bundle && shown && shown.date !== date
+            bundle && shown && (shown.date !== date || shown.rows !== rows)
                 ? buildPortfolioComparisons(bundle, shown.date, shown.rows)
                 : liveComparisons,
-        [bundle, shown, date, liveComparisons],
+        [bundle, shown, date, rows, liveComparisons],
     );
     const selectedComparisons = useMemo(
         () => pickSelected(allComparisons, selectedIds),
@@ -626,7 +629,11 @@ export function HistoryComparisons({
                         </div>
                     )}
 
-                    <div className="fh-comp-holdings">
+                    <div
+                        className="fh-comp-holdings"
+                        inert={concealed}
+                        aria-hidden={concealed || undefined}
+                    >
                         {comparisonGroups.map((group) => {
                             const { comparison } = group;
                             const shownStocks = group.stocks.slice(

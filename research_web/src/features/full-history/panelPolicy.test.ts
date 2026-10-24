@@ -4,6 +4,7 @@ import {
     PANEL_PLAYBACK_SWAP_MS,
     PANEL_SETTLE_MS,
     initialPanel,
+    panelConcealed,
     panelCue,
     panelWake,
     stepPanel,
@@ -274,4 +275,11 @@ test("a different set for the same date (threshold, mode) swaps as a whole", () 
         stepPanel(waiting, live, 2000 + PANEL_SETTLE_MS).phase,
         "leaving",
     );
+});
+
+test("leaving and gone cards are concealed from keyboard and screen readers", () => {
+    assert.equal(panelConcealed("leaving"), true);
+    assert.equal(panelConcealed("empty"), true);
+    assert.equal(panelConcealed("entering"), false);
+    assert.equal(panelConcealed("shown"), false);
 });
