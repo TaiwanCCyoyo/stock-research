@@ -108,3 +108,42 @@ the owner merges the producer PR. Production code deployment and the first statu
 publication remain explicit handoff steps; opening a PR does not create a live status
 file or change either scheduler. The dashboard owns rendering and can consume this
 contract independently of those deployment steps.
+
+## First formal publication: 2026-10-24
+
+The owner merged producer PR #11 as
+`ee4171b0de60e2385ec3bec9aa49b3c252711edd` and research PR #67 as
+`892b9f3af2966b4ff22ea030a972a7b691af4f30`. The follow-up gitlink selects that
+published producer release, from the preceding `837c211` pin.
+
+The primary producer remained on `main` and was fast-forwarded from `f3ef521` to
+`ee4171b`. Its configured data root is `D:/StockData/stock-data-downloader`.
+`data-status.json` was first published there at **2026-10-24 10:11:22 Asia/Taipei**;
+its `generated_at` is `2026-10-24T02:09:03+00:00` (collection start). The file is
+1,900 bytes, with first-publication SHA-256
+`143c1df9aac938aa06eb3615c67979a64a00f5a55ee80a9b0f5a3949af746903`.
+This hash records the first publication; daily runs atomically replace the file
+with a new summary.
+
+| Dataset                     | Stored rows | Distinct source codes | State |
+| --------------------------- | ----------: | --------------------: | ----- |
+| Official daily prices       |  28,029,043 |                51,414 | ok    |
+| Consolidated daily prices   |   6,671,767 |                 2,079 | ok    |
+| Institutional daily reports |   3,552,051 |                 2,598 | ok    |
+| Monthly revenue             |     288,479 |                 1,984 | ok    |
+| Corporate actions           |      32,961 |                 2,534 | ok    |
+| Symbol names and industries |       2,353 |                 2,353 | ok    |
+
+The six source files retained identical sizes and modification times. Their
+collection phases took 104.676, 8.024, 21.270, 1.571, 0.233, and 0.017 seconds in
+table order. Existing task definitions and enabled states were saved before
+maintenance; both producer triggers were paused while their processes were idle,
+then restored. Exported task XML matched byte-for-byte afterward, and both tasks
+were Ready with their original enabled states and next-run times.
+
+The private `/data-status` and `/api/data-status` routes returned HTTP 200 with all
+six producer datasets `ok`, while SQLite and Parquet opens were deliberately
+blocked in the verification process. Overall `partial` continues to describe
+the existing historical/partial catalog entries. The first status file is
+rebuildable metadata; the normal daily backup includes it after the next daily
+refresh. A separate backup run was not performed for this publication.
