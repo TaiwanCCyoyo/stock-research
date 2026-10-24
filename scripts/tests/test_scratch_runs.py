@@ -156,3 +156,11 @@ def test_clean_refuses_a_run_containing_a_junction_and_keeps_its_target(roots: t
         os.rmdir(junction)
     assert (precious / "keep.bin").read_bytes() == b"keep"
     assert (scratch / TASK / "q2-q6-v6" / "run.json").is_file()
+
+
+def test_dependencies_are_recorded_as_absolute_paths(roots: tuple[Path, Path], tmp_path: Path) -> None:
+    scratch, repo = roots
+    with pytest.raises(sr.ScratchRunError, match="absolute"):
+        sr.create_run(TASK, "rel", purpose="p", owner="o", depends_on=["relative/input"], root=scratch, repo_root=repo)
+    with sr.create_run(TASK, "dep", purpose="p", owner="o", depends_on=[str(tmp_path / "input")], root=scratch, repo_root=repo) as run:
+        assert run.record["depends_on"] == [str(tmp_path / "input")]

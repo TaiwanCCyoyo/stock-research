@@ -205,8 +205,22 @@ class ScratchRun:
         return name
 
 
-def create_run(task: str, run: str, *, purpose: str, owner: str, root: Path | None = None, repo_root: Path | None = None) -> ScratchRun:
-    """Create a new run directory and its label; refuses an existing run id."""
+def create_run(
+    task: str,
+    run: str,
+    *,
+    purpose: str,
+    owner: str,
+    depends_on: Iterable[str] = (),
+    root: Path | None = None,
+    repo_root: Path | None = None,
+) -> ScratchRun:
+    """Create a new run directory and its label; refuses an existing run id.
+
+    `depends_on` lists absolute paths outside the run that it reads and that must not be
+    cleaned while the run is not delivered or abandoned (for example an earlier phase's
+    output left in place). They are recorded, not copied.
+    """
     if not purpose.strip() or not owner.strip():
         raise ScratchRunError("a scratch run needs a purpose and an owner (session or agent name)")
     root = scratch_root() if root is None else checked_path(root)
@@ -217,6 +231,9 @@ def create_run(task: str, run: str, *, purpose: str, owner: str, root: Path | No
         directory.mkdir()
     except FileExistsError as error:
         raise ScratchRunError(f"scratch run already exists, resume it with open_run: {directory}") from error
+    dependencies = [str(Path(path)) for path in depends_on]
+    if any(not Path(path).is_absolute() for path in dependencies):
+        raise ScratchRunError(f"depends_on needs absolute paths, got {dependencies!r}")
     handle = _lock(directory)
     started = _now()
     record = {
@@ -231,6 +248,7 @@ def create_run(task: str, run: str, *, purpose: str, owner: str, root: Path | No
         "updated_at": started,
         "pid": os.getpid(),
         "host": socket.gethostname(),
+        "depends_on": dependencies,
     }
     _write_record(directory, record)
     LOGGER.info("created scratch run %s/%s at %s", task, run, directory)
