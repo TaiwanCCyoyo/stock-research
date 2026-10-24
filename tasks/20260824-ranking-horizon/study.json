@@ -32,7 +32,7 @@
     "scratch_run": null,
     "provenance": {
         "answer_source": "**假設的機制是對的，推論是錯的。** 拉長視窗與風險調整**確實**把持股推向更大、更老、更穩的\n名字——`skip_250_20` 的進場名單中位成交金額是基準線的 **2.67 倍**（每日 10.45 億對 3.92 億）。\n但**沒有任何一條臂通過驗收**：8 條臂裡 0 條達到樣本外 1.5 倍的門檻，0 條形成高原。",
-        "report_sha256": "334b0b89a1e8c77b2a26db1fddaf06a0bd791d96a884e35d542b012cf61cdb50",
+        "report_sha256": "3d5a627a9c3e7612b172426f81a5854df69e61df7499a06bd27c43f0967529fb",
         "publication": null,
         "shared_data": [],
         "legacy_history_id": "20260824-ranking-horizon"

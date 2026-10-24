@@ -41,6 +41,13 @@ GET /studies
 GET /studies?include_tooling=1
 ```
 
+For existing reports, backfill `report_sha256` from the primary checkout's
+current raw bytes. Some retained primary reports use CRLF while Git checkouts
+use LF; do not normalize those existing files to make the hash agree. Such a
+worktree legitimately returns a digest warning even when its source text is
+identical. Record both contexts in delivery verification. The digest check stays
+byte-exact; the new card does not repair or re-pin the retained v1 registration.
+
 The same routes are mounted at `/api/studies` for the web proxy and
 `/history-api/studies` alongside history. Responses are
 `{cards: [...], warnings: [{task_id, code, message}]}`. Engineering cards are

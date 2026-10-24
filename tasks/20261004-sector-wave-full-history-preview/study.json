@@ -20,7 +20,7 @@
     "scratch_run": null,
     "provenance": {
         "answer_source": "本次使用本機既有資料，完成 **2010-01-04 至 2026-10-02** 的連續歷史辨識。\n狀態維持「**初步辨識，規則未定**」。這是事後描述資料，供網站查詢、族群比較與後續\nK 線研究使用；尚未驗證任何事前選股或交易策略。",
-        "report_sha256": "d42254607108e568d44cf438ff759a4bf410eb9d48b140bdac648bee097bd205",
+        "report_sha256": "af2953a4b01719b44af9b1f320705c4ca52dfa4538cd4b427f5e88e53a24940b",
         "publication": null,
         "shared_data": [],
         "legacy_history_id": "20261004-sector-wave-full-history-preview"

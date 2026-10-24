@@ -20,7 +20,7 @@
     "scratch_run": null,
     "provenance": {
         "answer_source": "本批已完成資料整理與可重算證據，尚未評估投資策略。固定視窗為\n2019-01-02 至 2026-08-14，涵蓋目前中繼資料參考下的 1,941 檔普通股、\n1,849 個共用觀察日期及 3,588,909 筆「股票 × 日期」資料列。\n這些列不是獨立交易、獨立股票機會或獨立波段。38 項固定特徵產生\n7,144 筆比較，包含每日及事先固定的 grid126 面板，未依結果挑選特徵。",
-        "report_sha256": "bccb6838dc17c43b81ed2905aafc0778d3aeeef9537c3c7a476299e7dde670a9",
+        "report_sha256": "c782c3919daa94fa3b2a8c3d8c3635077809697322725772577fe8c16eaf9c65",
         "publication": null,
         "shared_data": [],
         "legacy_history_id": "20261004-feature-discrimination-atlas"

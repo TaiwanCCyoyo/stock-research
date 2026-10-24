@@ -17,7 +17,7 @@
     "scratch_run": null,
     "provenance": {
         "answer_source": "All four were required: **this exact configuration fails the fixed exploratory\nscreen and is closed**. This is a completed candidate failure with a limited\nglobal descriptive statistic, not execution incompletion or invalid measurement.",
-        "report_sha256": "77c869ffe4acd298812534dbab58376e7e64c1a5d29c72ed03727e77da2cba43",
+        "report_sha256": "00185e2361d32a14a82801bdfc3b1ab319b592d967fa4d6f754ad26e2e9883a1",
         "publication": null,
         "shared_data": [],
         "legacy_history_id": null

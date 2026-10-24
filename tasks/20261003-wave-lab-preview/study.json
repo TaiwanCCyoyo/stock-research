@@ -17,7 +17,7 @@
     "scratch_run": null,
     "provenance": {
         "answer_source": "2026-10-03，供方法討論使用。這是少量案例的實作驗證，不是正式\n全量目錄、策略回測或方法已被接受的結論。",
-        "report_sha256": "b47b50bca898f151b1376ccbf8907f9328b7287bb0c7ac75a3126fa393c24c18",
+        "report_sha256": "475ad330682ff6d79e21303725ec26676cc0dbf9e45024501e448285b019f0c3",
         "publication": null,
         "shared_data": [],
         "legacy_history_id": "20261003-wave-lab-preview"

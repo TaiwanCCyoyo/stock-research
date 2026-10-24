@@ -17,7 +17,7 @@
     "scratch_run": null,
     "provenance": {
         "answer_source": "這次把細分業務角色和產品做成獨立版本資料包，保留原飆股事件、族群與比較結果。第一批完成 18 檔公司、21 筆來源、23 筆角色註記；整體補證仍有未完成項目。",
-        "report_sha256": "17016ab6732bd24592c3f85099c1f7fca0e864012d6f9d3ef1ce738bfcfd4f74",
+        "report_sha256": "1eace176f5b24e7e5f6ef6e7d2fb0b9d09467cdd19a37df9896776fc4a15a227",
         "publication": null,
         "shared_data": [],
         "legacy_history_id": "20261002-sector-role-evidence"

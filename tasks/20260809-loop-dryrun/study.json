@@ -17,7 +17,7 @@
     "scratch_run": null,
     "provenance": {
         "answer_source": "Warnings:\n- No data warnings from runner preflight.",
-        "report_sha256": "d60e6a6b62babf69e49a501fa0adf45f8879d0edb2e37e114a71704172fa5558",
+        "report_sha256": "6eb33d62f9c3a484f15a8e725468a9fe68a69e6f889c05e86b2bf7231a04d1a3",
         "publication": null,
         "shared_data": [],
         "legacy_history_id": "20260809-loop-dryrun"

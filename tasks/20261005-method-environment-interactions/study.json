@@ -25,7 +25,7 @@
     "scratch_run": null,
     "provenance": {
         "answer_source": "2026-10-05。**完成 624 筆比較，六個方法／組合都未通過本批事前晉級條件。**\n不是資料阻塞、量測失效或未完成，也不是證明所有突破／回檔／2B 都無效。\n不新增條件救回本批，不啟動帳戶回測；下一個方向是另行封存 H03 產業角色比較。\n研究目標仍 active，既有 paused automation、確認與 holdout 均未啟動。",
-        "report_sha256": "e1c1fddd360f47b4ebaa554d1b0c844fb12d45803e0c6c632a79de661f97a6f4",
+        "report_sha256": "4491dec982d293b7f2e6a31c54e1a3fe8527d7060786fb9590b04d9b9a8fc53d",
         "publication": null,
         "shared_data": [],
         "legacy_history_id": "20261005-method-environment-interactions"

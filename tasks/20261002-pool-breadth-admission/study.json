@@ -17,7 +17,7 @@
     "scratch_run": null,
     "provenance": {
         "answer_source": "Overall: **valid candidate/mechanism failure under this card**, not invalid\nmeasurement, missing-data blockage or unfinished execution. Close this exact\nstrict-majority/20-session admission configuration without threshold, lookback,\nsizing or measurement rescue.",
-        "report_sha256": "148b17c975438257df8e97bb503bb225c59511f90f3167ffcabb9f9bcceac456",
+        "report_sha256": "952e3f38b98532199803ca76bef1c3ffb9dd4a697696a0aab59ad43854e0522f",
         "publication": null,
         "shared_data": [],
         "legacy_history_id": null

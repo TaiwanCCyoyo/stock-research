@@ -17,7 +17,7 @@
     "scratch_run": null,
     "provenance": {
         "answer_source": "時點說明（2026-10-05 補記）：以下保留本次交接完成時的狀態與建議。\n後續研究進度以 [研究總覽](../../docs/en/research-program.md) 為準；其中方法交互\n與 H03 比較已有完成紀錄，勿把本報告末段的當時建議當成待重做清單。",
-        "report_sha256": "7bcb26e13d0750d1745076515c8c1c604598a2bd4901605c353812477f0ad2d5",
+        "report_sha256": "cc06fa744ac52ec5643b8129c5ad7f0863db23c9f372b6ccefcc851ce6af3bb6",
         "publication": null,
         "shared_data": [],
         "legacy_history_id": "20261005-market-context-handoff"

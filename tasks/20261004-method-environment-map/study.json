@@ -17,7 +17,7 @@
     "scratch_run": null,
     "provenance": {
         "answer_source": "更新：2026-10-04。**文獻／設計紀錄，不是市場實驗結果。** 本輪市場評估 0 次；未產生候選報酬、產業優勝者或已通過策略。引用研究的結果也不是本專案回測結果。",
-        "report_sha256": "38b5d351505287d8e62fdf08f04280910afe41628d4ee1a59e81688f12d8c549",
+        "report_sha256": "f53bf8eb7087835d177af9e873b68601fcbd9a5be324a45cce462e34f55ad464",
         "publication": null,
         "shared_data": [],
         "legacy_history_id": "20261004-method-environment-map"

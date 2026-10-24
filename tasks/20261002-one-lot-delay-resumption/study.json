@@ -17,7 +17,7 @@
     "scratch_run": null,
     "provenance": {
         "answer_source": "Profit retention **52.8982217847%**, account profit lower by1,382,006.28TWD.\nPositive comparator profit/nonnegative delayed profit pass; fixed>=70percent\n**profit**, not NAV, fails. Actual perturbation and completion checks pass.\nThus `failed_frozen_diagnostic`, not strategy approval or invalid measurement.",
-        "report_sha256": "11ec11f9b8aa4d968b3648e294b5ad48e270db54fc3c659a1c74d4c994b7ba53",
+        "report_sha256": "5f8e5561227b8dbf59dcb400217bdd28bb57b5d065e8aeca336caaa8677e8fb9",
         "publication": null,
         "shared_data": [],
         "legacy_history_id": null

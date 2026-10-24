@@ -17,7 +17,7 @@
     "scratch_run": null,
     "provenance": {
         "answer_source": "The catalog is useful for separating entry and holding questions. It does not\nsupport rescuing the failed weekly exit rule: peak-close participation improves\nby only two episodes, while the preserved weekly account's non-hit attribution\nfails its original screen.",
-        "report_sha256": "e3ed2c7cc979f5a39943c474fe16e7a51cdaa300213f7899e6845c746a8545af",
+        "report_sha256": "6fe4bf774ce8fa3dc65015111482afc177b9ab56d943984917eb62e775bcb994",
         "publication": null,
         "shared_data": [],
         "legacy_history_id": null
