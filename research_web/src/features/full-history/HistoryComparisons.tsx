@@ -54,6 +54,20 @@ function readPinned(catalogId: string): string[] {
     }
 }
 
+/** The chosen comparisons, in the order they were selected. */
+function pickSelected(
+    all: PortfolioComparison[],
+    ids: string[],
+): PortfolioComparison[] {
+    const byId = new Map(
+        all.map((comparison) => [comparison.portfolio.id, comparison]),
+    );
+    return ids.flatMap((id) => {
+        const comparison = byId.get(id);
+        return comparison ? [comparison] : [];
+    });
+}
+
 export function HistoryComparisons({
     date,
     rows,
@@ -163,18 +177,8 @@ export function HistoryComparisons({
                 : [],
         [bundle, date, rowsKey],
     );
-    const pickSelected = (all: PortfolioComparison[], ids: string[]) => {
-        const byId = new Map(
-            all.map((comparison) => [comparison.portfolio.id, comparison]),
-        );
-        return ids.flatMap((id) => {
-            const comparison = byId.get(id);
-            return comparison ? [comparison] : [];
-        });
-    };
     const liveSelected = useMemo(
         () => pickSelected(liveComparisons, selectedIds),
-        // eslint-disable-next-line react-hooks/exhaustive-deps
         [liveComparisons, selectedIds],
     );
     // What the cards show: the panel's snapshot, built the same way.
@@ -189,7 +193,6 @@ export function HistoryComparisons({
     );
     const selectedComparisons = useMemo(
         () => pickSelected(allComparisons, selectedIds),
-        // eslint-disable-next-line react-hooks/exhaustive-deps
         [allComparisons, selectedIds],
     );
     const selectedKey = selectedComparisons
