@@ -74,3 +74,62 @@ versus the one-worker reference before claiming an improvement. Otherwise keep t
 full run paused and use measured phase costs to identify the bottleneck. Report
 projection speed separately and do not extrapolate a sample speedup into a promised
 six-day completion time. No market acceptance rule is adjusted from this probe.
+
+## Measured decision, 2026-10-24
+
+The revised probe completed at 15:49 Taipei from clean commit `d067671`. All
+parallel conditions outputs (72 tables and 24 top-row comparisons) and all parallel
+projection outputs (320 tables) exactly match their one-worker references. The
+one-worker rows are references, so their comparison counts are zero.
+
+| Workers | Conditions jobs | Conditions wall, seconds | Jobs/minute | Throughput vs 1 | Projection wall, seconds | Projection speed vs 1 |
+| ------- | --------------- | ------------------------ | ----------- | --------------- | ------------------------ | --------------------- |
+| 1       | 2               | 266.938                  | 0.450       | 1.000           | 123.450                  | 1.000                 |
+| 2       | 2               | 88.958                   | 1.349       | 3.001           | 42.911                   | 2.877                 |
+| 4       | 4               | 87.395                   | 2.746       | 6.109           | 35.878                   | 3.441                 |
+| 8       | 8               | 171.415                  | 2.800       | 6.229           | 52.919                   | 2.333                 |
+| 10      | 10              | 223.219                  | 2.688       | 5.979           | 61.872                   | 1.995                 |
+
+**Select four workers and at most four in-flight jobs.** Four is within five
+percent of the highest conditions throughput (eight workers), exceeds the 1.2x
+acceptance threshold, and is also fastest on this projection sample. Ten workers
+do not improve either sample. The ten-worker ceiling remains available; the
+continuation command uses the measured four-worker setting.
+
+The containing Job peaked at **6,873,600,000 committed bytes (6.40 GiB)** under its
+8 GiB cap. Whole-probe wall time was 1,462.078 seconds under the 1,800-second limit.
+The launcher confirmed that its Job was empty before marking this engineering run
+`complete`. This does not mark the full research complete; `q2-q6-v6` stays paused
+pending runner PR #81's owner merge.
+
+The small final metrics and `run-receipt.v1` are retained in
+[`results/parallel-probe-v5.zip`](results/parallel-probe-v5.zip). It contains
+`summary.json`, `measurements.json`, `decision.json`, `probe-job-memory.json`,
+`launch.json` and `run-receipt.json`. The receipt hashes the four final metric files
+only; their archived bytes were checked against those hashes once. For relocated
+verification, match the receipt's result keys to the same-named archive entries;
+its absolute result paths describe the original scratch location. No input,
+projection, source file or intermediate receives a new byte hash.
+
+The full diagnostic run remains at
+`D:/StockData/stock-research/scratch/20261013-pattern-scan/q2-q6-parallel-probe-v2/`.
+The receipt identifies the original metadata and fixed selection by post-run
+size/mtime observations, the samples, held generation and starting code commit.
+Start and end both observed clean `d067671`; source stats were not captured at
+startup, so the standard receipt records that observation as unavailable and
+`runtime_code_verified: false`. It does not attest the loaded source bytes or
+continuous input immutability.
+
+These are small, sequential, single-host runtime measurements, including pool
+startup in timed phases. They are not repeated randomized trials. In particular,
+the superlinear conditions ratio is an observed sample ratio, not a claim of
+sixfold full-market scaling. CPU placement, filesystem caching and other host
+activity can affect it. The original input calendar, definitions and full-stock
+barriers remain unchanged. Observe the full run before estimating its completion
+date; do not apply the sample factor to the former six-day estimate.
+
+Windows CI on this code passed **2,410 tests in 424.11 seconds**. Earlier local
+Windows spawn tests also verified exact group tables with one, two and four
+workers, failure draining, bounded admission and parent-only publication. The
+published-artifact compatibility checks remain 17/17 passing before/after the
+reader change. These checks do not establish completed Q2–Q6 market results.
