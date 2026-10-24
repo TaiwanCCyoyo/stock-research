@@ -4,6 +4,7 @@ import {
     VerdictBadge,
 } from "../../components/ui/primitives";
 import type { StudyCard, StudyDetails } from "./model";
+import { StudyCaveats } from "./StudyCaveats";
 
 const UNIT: Record<StudyCard["keyNumbers"][number]["unit"], string> = {
     percent: "%",
@@ -40,6 +41,7 @@ export function StudyCardView({
                     {card.answer}
                 </p>
             )}
+            <StudyCaveats caveats={card.caveats} />
             {card.keyNumbers.length > 0 && (
                 <CompareBars
                     rows={card.keyNumbers.map((number) => ({
@@ -89,9 +91,6 @@ function StudyDetailsView({ details }: { details: StudyDetails }) {
     if (!hasAny) return null;
     return (
         <SourceInfo label="原文與資料來源">
-            {details.summaryUnconfirmed && (
-                <p>上面的白話摘要還沒經過研究端核對，以原文為準。</p>
-            )}
             {details.originalSummary && (
                 <p className="st-original">{details.originalSummary}</p>
             )}

@@ -23,6 +23,8 @@ export interface StudyCard {
     limitation: string | null;
     reportHref: string | null;
     accountRun: { runId: string; note: string } | null;
+    /** Plain warnings shown beside the answer on every card, compact or not. */
+    caveats: string[];
     details: StudyDetails;
 }
 
@@ -84,6 +86,20 @@ export function plainSummary(text: string): string {
         .trim();
 }
 
+/** Registration and review states a reader must see next to the summary. */
+export function historyCaveats(item: StudioHistoryItem): string[] {
+    const caveats: string[] = [];
+    if (item.status === "登錄需更新")
+        caveats.push(
+            item.evidenceState === "registration_unavailable"
+                ? "內容待核對"
+                : "目前顯示舊版，內容待核對",
+        );
+    if (item.summarySource === "presentation-metadata" && !item.reviewConfirmed)
+        caveats.push("摘要尚未核對，以原文為準");
+    return caveats;
+}
+
 export function cardFromHistory(item: StudioHistoryItem): StudyCard {
     return {
         id: item.id,
@@ -96,6 +112,7 @@ export function cardFromHistory(item: StudioHistoryItem): StudyCard {
         limitation: null,
         reportHref: item.webReportHref ?? null,
         accountRun: null,
+        caveats: historyCaveats(item),
         details: {
             originalSummary: item.originalSummary || null,
             summaryUnconfirmed:
@@ -125,6 +142,7 @@ export function cardFromReport(report: ReportEntry): StudyCard {
         limitation: null,
         reportHref: `#report/${encodeURIComponent(report.id)}`,
         accountRun: null,
+        caveats: [],
         details: {
             ...NO_DETAILS,
             note: report.period ? `資料期間：${report.period}` : null,
@@ -164,6 +182,7 @@ export function cardFromRun(
             runId: run.id,
             note: `帳戶模擬 ${run.from.slice(0, 4)}–${run.through.slice(0, 4)}`,
         },
+        caveats: [],
         details: { ...NO_DETAILS, note: run.name },
     };
 }

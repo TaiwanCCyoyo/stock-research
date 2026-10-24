@@ -1,4 +1,7 @@
 import assert from "node:assert/strict";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { StudyCaveats } from "./StudyCaveats.ts";
 import test from "node:test";
 import type { StudioHistoryItem } from "../../domain/strategies/types.ts";
 import {
@@ -103,4 +106,69 @@ test("web reports stay listed without the history service and are not duplicated
     const history = cardFromHistory(item({ id: report.id }));
     assert.deepEqual(mergeStudyCards([history], [report]), [history]);
     assert.equal(mergeStudyCards(null, null), null);
+});
+
+test("retained old conclusions and unverified summaries warn beside the answer", () => {
+    const stale = cardFromHistory(
+        item({
+            status: "登錄需更新",
+            conclusion: "保留的舊結論。",
+            summarySource: "presentation-metadata",
+            reviewConfirmed: false,
+        }),
+    );
+    assert.equal(stale.answer, "保留的舊結論。");
+    assert.deepEqual(stale.caveats, [
+        "目前顯示舊版，內容待核對",
+        "摘要尚未核對，以原文為準",
+    ]);
+    const unavailable = cardFromHistory(
+        item({
+            status: "登錄需更新",
+            evidenceState: "registration_unavailable",
+        }),
+    );
+    assert.deepEqual(unavailable.caveats, ["內容待核對"]);
+    const html = renderToStaticMarkup(
+        createElement(StudyCaveats, { caveats: stale.caveats }),
+    );
+    assert.match(html, /role="note"/);
+    assert.ok(html.includes("目前顯示舊版，內容待核對"));
+});
+
+test("confirmed or formal summaries show no warning", () => {
+    const normal = cardFromHistory(
+        item({ summarySource: "formal-report", reviewConfirmed: false }),
+    );
+    assert.deepEqual(normal.caveats, []);
+    assert.deepEqual(
+        cardFromHistory(
+            item({
+                summarySource: "presentation-metadata",
+                reviewConfirmed: true,
+            }),
+        ).caveats,
+        [],
+    );
+    assert.equal(
+        renderToStaticMarkup(createElement(StudyCaveats, { caveats: [] })),
+        "",
+    );
+});
+
+test("compact and full cards both render the caveats", async () => {
+    const { readFile } = await import("node:fs/promises");
+    const source = await readFile(
+        new URL("./StudyCardView.tsx", import.meta.url),
+        "utf8",
+    );
+    const view = source.slice(source.indexOf("export function StudyCardView"));
+    const tag = "<StudyCaveats caveats={card.caveats} />";
+    const at = view.indexOf(tag);
+    assert.ok(at > 0, "StudyCardView renders StudyCaveats");
+    const lineStart = view.lastIndexOf("{", at);
+    assert.ok(
+        !view.slice(lineStart, at).includes("compact"),
+        "caveats are not gated by compact",
+    );
 });
