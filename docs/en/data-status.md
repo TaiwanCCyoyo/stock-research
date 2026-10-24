@@ -101,6 +101,18 @@ historical rows cannot be placed on an exact publication day. This second audit
 took 106.062 seconds for institutional data (including the official-calendar
 comparison) and 7.781 seconds for revenue.
 
+## Dashboard pages
+
+`/#overview` (資料總覽) renders `GET /data-status` grouped by source. A catalog
+entry's `stale` is shown as 部分保存, because frozen catalog entries do not age.
+`/#data/<code>` (個股) adds two opt-in layers that call the overlay endpoints only
+when switched on: an institutional net-share pane (三大法人, 外資, 投信 or
+自營商; shares, nulls left as gaps, dates outside the price calendar dropped) and
+a separate monthly revenue chart on its own monthly axis with year-over-year
+change. The revenue chart labels each bar as the revenue month, not a publication
+date. Code: `research_web/src/features/data-overview/` and
+`research_web/src/features/shared-data/{overlays.ts,RevenueChart.tsx}`.
+
 ## Delivery boundary
 
 Producer and research ship separately. The research gitlink is updated only after

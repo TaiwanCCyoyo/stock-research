@@ -9,6 +9,7 @@ import {
     type IChartApi,
     type UTCTimestamp,
 } from "lightweight-charts";
+import { sharesLabel } from "./overlays";
 import {
     candleRows,
     featureRows,
@@ -30,7 +31,10 @@ export function SharedChart({
     range,
     theme,
     onCursor,
+    institutional = null,
 }: {
+    /** Stored net shares per chart date; drawn in its own pane when present. */
+    institutional?: { date: string; value: number | null }[] | null;
     series: SharedSeries;
     ma: number[];
     bb: boolean;
@@ -206,6 +210,35 @@ export function SharedChart({
                     .setData(indicatorRows(oscillator));
             }
         }
+        if (institutional) {
+            const pane = chart.panes().length;
+            chart
+                .addSeries(
+                    HistogramSeries,
+                    {
+                        priceLineVisible: false,
+                        title: "法人買賣超",
+                        priceFormat: {
+                            type: "custom",
+                            minMove: 1,
+                            formatter: (value: number) => sharesLabel(value),
+                        },
+                    },
+                    pane,
+                )
+                .setData(
+                    institutional.map((point) => {
+                        const time = times[dateIndex.get(point.date)!];
+                        return point.value === null
+                            ? { time }
+                            : {
+                                  time,
+                                  value: point.value,
+                                  color: point.value >= 0 ? gain : loss,
+                              };
+                    }),
+                );
+        }
         chart
             .panes()
             .forEach((pane, i) => pane.setStretchFactor(i === 0 ? 5 : 1.4));
@@ -230,7 +263,7 @@ export function SharedChart({
             chartRef.current = null;
             chart.remove();
         };
-    }, [series, ma, bb, pivots, oscillator, theme, onCursor]);
+    }, [series, ma, bb, pivots, oscillator, theme, onCursor, institutional]);
     useEffect(() => {
         if (range === 0) chartRef.current?.timeScale().fitContent();
         else
@@ -268,11 +301,13 @@ export function SharedChart({
         oscillator,
         theme,
         onCursor,
+        // The chart is rebuilt when the overlay changes; reapply the range.
+        institutional,
     ]);
     return (
         <div
             ref={host}
-            className="shared-chart"
+            className={`shared-chart${institutional ? " has-overlay" : ""}`}
             role="img"
             aria-label={`${series.code} K 線、成交量與指標；游標數值顯示於圖表上方與側欄`}
         />

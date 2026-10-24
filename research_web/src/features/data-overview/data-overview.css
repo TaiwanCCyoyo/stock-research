@@ -1,0 +1,110 @@
+.do-banner {
+    margin-top: 20px;
+}
+.studio .do-group {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 4px 12px;
+}
+.do-note {
+    font-size: 13px;
+    font-weight: 400;
+}
+.do-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+}
+.do-card {
+    display: grid;
+    gap: 8px;
+}
+.do-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+}
+.studio .do-head h3 {
+    font-size: 17px;
+    font-weight: 900;
+    line-height: 1.4;
+}
+.do-status {
+    flex: none;
+    padding: 2px 10px;
+    border-radius: var(--radius-pill);
+    font-size: 12px;
+    font-weight: 700;
+    --s-ink: #1f8a5c;
+    color: var(--s-ink);
+    background: color-mix(in srgb, var(--s-ink) 14%, transparent);
+}
+.do-status[data-status="stale"] {
+    --s-ink: #b07d00;
+}
+.do-status[data-status="missing"] {
+    --s-ink: #c0392b;
+}
+.do-status[data-status="updating"] {
+    --s-ink: #2f62b8;
+}
+.studio[data-appearance="dark"] .do-status {
+    --s-ink: #6ee7b7;
+}
+.studio[data-appearance="dark"] .do-status[data-status="stale"] {
+    --s-ink: #fcd34d;
+}
+.studio[data-appearance="dark"] .do-status[data-status="missing"] {
+    --s-ink: #fca5a5;
+}
+.studio[data-appearance="dark"] .do-status[data-status="updating"] {
+    --s-ink: #93c5fd;
+}
+.do-period {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+}
+.do-facts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin: 0;
+}
+.do-facts div {
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+    background: var(--chip);
+}
+.do-facts dt {
+    font-size: 12px;
+    color: var(--muted);
+}
+.do-facts dd {
+    margin: 0;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+.do-updated {
+    font-size: 13px;
+}
+.do-warnings {
+    margin-top: 32px;
+}
+.do-warnings ul {
+    margin: 0;
+    padding-left: 18px;
+}
+.do-state {
+    display: grid;
+    gap: 12px;
+    justify-items: start;
+    margin-top: 20px;
+}
+@media (min-width: 1100px) {
+    .do-page {
+        max-width: 1080px;
+    }
+}
