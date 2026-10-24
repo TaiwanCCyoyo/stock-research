@@ -1,6 +1,7 @@
 .shared-data {
     min-width: 0;
     overflow-wrap: anywhere;
+    padding-top: 20px;
 }
 .shared-data h2 {
     margin: 0;
@@ -25,7 +26,7 @@
 }
 .shared-heading {
     justify-content: space-between;
-    margin-bottom: 18px;
+    margin-bottom: 8px;
 }
 .shared-controls {
     margin: 8px 0;
@@ -50,8 +51,8 @@
     color: var(--accent);
 }
 .shared-generation {
-    padding: 12px 0;
-    margin-bottom: 16px;
+    padding: 8px 0;
+    margin-bottom: 8px;
     font-size: 13px;
 }
 .shared-generation details {
@@ -59,15 +60,16 @@
 }
 .shared-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 280px;
-    gap: 16px;
+    grid-template-columns: minmax(0, 1fr) 248px;
+    gap: 28px;
+    align-items: start;
 }
 .shared-card {
     min-width: 0;
 }
 .shared-chart {
     width: 100%;
-    height: 560px;
+    height: 600px;
     min-width: 0;
 }
 .shared-chart.has-overlay {
@@ -78,6 +80,16 @@
     flex-direction: column;
     gap: 14px;
     min-width: 0;
+}
+.shared-layout aside > .shared-card {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    border-radius: 0;
+    padding: 16px 0;
+}
+.shared-layout aside > .shared-card + .shared-card {
+    border-top: 1px solid var(--line);
 }
 .shared-legend {
     border-block: 1px dashed var(--line);
@@ -124,6 +136,15 @@
 .shared-search {
     display: flex;
     gap: 6px;
+}
+.shared-search-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
 }
 .shared-search input {
     width: 160px;
@@ -183,16 +204,199 @@
     }
 }
 
-/* Technical overlays use the same theme boundary as the studio palette. */
-.shared-data {
-    --shared-ma5: var(--accent);
-    --shared-ma10: var(--positive);
-    --shared-ma20: var(--negative);
-    --shared-ma60: var(--ink);
-    --shared-ma120: var(--gain);
-    --shared-ma240: var(--loss);
-    --shared-bb: var(--muted);
-    --shared-osc: var(--accent);
+/* A neutral viewing stage keeps market semantics legible in every palette. */
+.shared-chart-card {
+    --paper: #0b1119;
+    --surface: #0b1119;
+    --ink: #edf3fa;
+    --muted: #96a7ba;
+    --line: #202b39;
+    --chip: #253448;
+    --accent: #c7d9f0;
+    --accent-soft: #26364b;
+    --gain: #ff5267;
+    --loss: #26d7a1;
+    --shared-ma5: #f8ce69;
+    --shared-ma10: #70d8ee;
+    --shared-ma20: #ac9dff;
+    --shared-ma60: #dce5f0;
+    --shared-ma120: #f196ce;
+    --shared-ma240: #8cacff;
+    --shared-bb: #52647b;
+    --shared-osc: #70d8ee;
+    --shared-revenue: #5589ad;
+    --shared-crosshair: #73869e;
+    color-scheme: dark;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid #2a3645;
+    border-radius: 24px;
+    padding: 24px;
+    box-shadow: 0 18px 48px rgb(0 0 0 / 15%);
+    overflow: hidden;
+}
+.shared-chart-toolbar {
+    align-items: end;
+    gap: 16px;
+    margin: 0 0 10px;
+}
+.shared-stock-title {
+    flex: 1 0 140px;
+}
+.shared-stock-title h2 {
+    font-size: 26px;
+    line-height: 1.3;
+    letter-spacing: -0.03em;
+    margin-bottom: 4px;
+}
+.shared-stock-title small {
+    font-size: 13px;
+    letter-spacing: 0.04em;
+}
+.shared-chart-toolbar > label {
+    display: grid;
+    gap: 4px;
+    font-size: 13px;
+    color: var(--muted);
+}
+.shared-chart-card .shared-note {
+    font-size: 12px;
+    line-height: 1.7;
+}
+.shared-chart-card .shared-search input {
+    width: 140px;
+}
+.shared-range {
+    margin-bottom: 0;
+}
+.shared-chart-card .shared-range button {
+    border-color: transparent;
+    background: transparent;
+    color: var(--muted);
+    padding: 7px 14px;
+}
+.shared-chart-card .shared-range button[aria-pressed="true"] {
+    background: var(--chip);
+    color: var(--ink);
+}
+.shared-quote {
+    border: 0;
+    padding: 10px 0 14px;
+    gap: 8px 18px;
+    font-size: 12px;
+    color: var(--muted);
+}
+.shared-quote-date {
+    order: 1;
+    margin-left: auto;
+    font-weight: 500;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+}
+.shared-quote-price {
+    order: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    font-size: clamp(30px, 3.2vw, 42px);
+    font-weight: 600;
+    letter-spacing: -0.04em;
+    line-height: 1.2;
+}
+.shared-quote > span:not(.shared-quote-price) {
+    order: 2;
+}
+.shared-quote::after {
+    content: "";
+    flex-basis: 100%;
+    order: 1;
+}
+.shared-quote-price small {
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0;
+}
+.shared-ma-value::before {
+    content: "";
+    display: inline-block;
+    width: 12px;
+    height: 2px;
+    vertical-align: middle;
+    margin-right: 5px;
+    background: var(--ma-color);
+}
+.shared-ma-5 {
+    --ma-color: var(--shared-ma5);
+}
+.shared-ma-10 {
+    --ma-color: var(--shared-ma10);
+}
+.shared-ma-20 {
+    --ma-color: var(--shared-ma20);
+}
+.shared-ma-60 {
+    --ma-color: var(--shared-ma60);
+}
+.shared-ma-120 {
+    --ma-color: var(--shared-ma120);
+}
+.shared-ma-240 {
+    --ma-color: var(--shared-ma240);
+}
+@media (max-width: 600px) {
+    .shared-heading {
+        align-items: center;
+        gap: 8px;
+    }
+    .shared-heading .u-title {
+        margin: 0;
+    }
+    .shared-heading .u-chips {
+        gap: 4px;
+    }
+    .shared-heading .u-chip {
+        padding: 8px 10px;
+        font-size: 13px;
+    }
+    .shared-chart-card {
+        padding: 18px 12px;
+        border-radius: 18px;
+    }
+    .shared-chart-toolbar {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 12px;
+    }
+    .shared-stock-title {
+        grid-column: 1;
+        grid-row: 1;
+    }
+    .shared-stock-title h2 {
+        font-size: 22px;
+    }
+    .shared-chart-toolbar > label {
+        grid-column: 2;
+        grid-row: 1;
+        max-width: 150px;
+    }
+    .shared-chart-toolbar form {
+        grid-column: 1 / -1;
+        margin: 0;
+    }
+    .shared-chart-card .shared-search input {
+        flex: 1;
+        width: 0;
+    }
+    .shared-quote {
+        gap: 8px 12px;
+        padding: 8px 0 10px;
+    }
+    .shared-range {
+        gap: 4px;
+    }
+    .shared-chart-card .shared-range button {
+        padding-inline: 11px;
+    }
 }
 .shared-change-gain {
     color: var(--gain);

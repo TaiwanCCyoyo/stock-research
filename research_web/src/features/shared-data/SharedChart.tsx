@@ -56,21 +56,35 @@ export function SharedChart({
             loss = color("--loss");
         const chart = createChart(host.current, {
             autoSize: true,
-            height: 560,
             layout: {
                 background: {
                     type: ColorType.Solid,
                     color: color("--surface"),
                 },
                 textColor: color("--muted"),
+                fontFamily: 'Inter, "Noto Sans TC", sans-serif',
                 attributionLogo: false,
+                panes: {
+                    separatorColor: color("--line"),
+                    separatorHoverColor: color("--shared-crosshair"),
+                },
             },
             grid: {
-                vertLines: { color: color("--line") },
+                vertLines: { visible: false },
                 horzLines: { color: color("--line") },
             },
-            rightPriceScale: { borderColor: color("--line") },
-            timeScale: { borderColor: color("--line") },
+            crosshair: {
+                vertLine: {
+                    color: color("--shared-crosshair"),
+                    labelBackgroundColor: color("--chip"),
+                },
+                horzLine: {
+                    color: color("--shared-crosshair"),
+                    labelBackgroundColor: color("--chip"),
+                },
+            },
+            rightPriceScale: { borderVisible: false },
+            timeScale: { borderVisible: false },
             localization: { locale: "zh-TW" },
         });
         chartRef.current = chart;

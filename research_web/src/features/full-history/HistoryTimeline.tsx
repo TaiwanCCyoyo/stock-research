@@ -51,7 +51,7 @@ export function HistoryTimeline({
         }
         return result;
     }, [directory]);
-    const shown = rows.slice(0, limit);
+    const shown = useMemo(() => rows.slice(0, limit), [rows, limit]);
     const denominator = Math.max(1, metadata.dates.length - 1);
     const lastDate = metadata.dates.at(-1)!;
     const afterLastDate = new Date(
@@ -68,10 +68,15 @@ export function HistoryTimeline({
             "(prefers-reduced-motion: reduce)",
         ).matches;
         const nextTops = new Map<string, number>();
-        for (const row of shown) {
+        // Read every position before starting animations. Alternating reads
+        // and animation writes forces style/layout once per visible row.
+        const measured = shown.flatMap((row) => {
             const element = elements.current.get(row.securityId);
-            if (!element) continue;
-            const top = element.getBoundingClientRect().top;
+            return element
+                ? [{ row, element, top: element.getBoundingClientRect().top }]
+                : [];
+        });
+        for (const { row, element, top } of measured) {
             const previous = previousTops.current.get(row.securityId);
             if (!reducedMotion && previous !== undefined && previous !== top)
                 element.animate(
@@ -84,7 +89,7 @@ export function HistoryTimeline({
             nextTops.set(row.securityId, top);
         }
         previousTops.current = nextTops;
-    }, [frame?.date, query, limit, rows, shown]);
+    }, [shown]);
 
     return (
         <section

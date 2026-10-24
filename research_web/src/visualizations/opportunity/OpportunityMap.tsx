@@ -253,7 +253,6 @@ export function OpportunityMap({
     fill = false,
 }: OpportunityMapProps) {
     const uid = `opportunity-${useId().replace(/:/g, "")}`;
-    const [result, setResult] = useState<Result | null>(null);
     const [frame, setFrame] = useState<Frame | null>(null);
     const [busy, setBusy] = useState(true);
     const [error, setError] = useState(false);
@@ -416,7 +415,17 @@ export function OpportunityMap({
             else {
                 const accepted = { snapshot, layout: event.data.layout };
                 completed.current = accepted;
-                setResult(accepted);
+                // Publish the geometry and its transition together, rather
+                // than committing the entire old SVG before a layout effect
+                // schedules another synchronous render with the new frame.
+                const nextFrame = makeFrame(
+                    accepted,
+                    frameRef.current,
+                    poses.current,
+                    groupPoses.current,
+                );
+                frameRef.current = nextFrame;
+                setFrame(nextFrame);
                 setError(false);
             }
             const next = requests.complete();
@@ -450,18 +459,6 @@ export function OpportunityMap({
         const ready = queue.current.offer(snapshot);
         if (ready && worker.current) dispatch.current(ready);
     }, [view, groupingMode, aspectKey]);
-
-    useLayoutEffect(() => {
-        if (!result) return;
-        const next = makeFrame(
-            result,
-            frameRef.current,
-            poses.current,
-            groupPoses.current,
-        );
-        frameRef.current = next;
-        setFrame(next);
-    }, [result]);
 
     useLayoutEffect(() => {
         followLevel.current = null;
@@ -562,7 +559,9 @@ export function OpportunityMap({
     useLayoutEffect(() => {
         if (!frame) return;
         let raf = 0;
-        const start = performance.now();
+        // Start on the first painted frame, as the camera does. A large React
+        // commit must not consume the entire morph before the browser paints.
+        let start = 0;
         const apply = (fraction: number) => {
             const eased = 1 - (1 - fraction) ** 3;
             for (const item of frame.stocks) {
@@ -681,6 +680,7 @@ export function OpportunityMap({
         setAnimating(true);
         apply(0);
         const tick = (now: number) => {
+            if (!start) start = now;
             const fraction = Math.min(1, (now - start) / DURATION);
             apply(fraction);
             if (fraction < 1) raf = requestAnimationFrame(tick);

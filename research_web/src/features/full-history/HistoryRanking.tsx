@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { percent, phaseLabel } from "./model.ts";
 import { growthBasisLabel } from "./growthDisplay.ts";
 import type { HistoryRow } from "./types.ts";
@@ -55,26 +55,33 @@ export function HistoryRanking({
     const [limit, setLimit] = useState(30);
     const elements = useRef(new Map<string, HTMLButtonElement>());
     const positions = useRef(new Map<string, number>());
-    const filtered = rows
-        .filter((row) =>
-            `${row.code} ${row.name} ${row.industry.label}`.includes(
-                query.trim(),
-            ),
-        )
-        .sort(
-            (a, b) =>
-                (b.growth?.sizingGainPct ?? -Infinity) -
-                    (a.growth?.sizingGainPct ?? -Infinity) ||
-                a.code.localeCompare(b.code),
-        );
-    const shown = filtered.slice(0, limit);
+    const filtered = useMemo(
+        () =>
+            rows
+                .filter((row) =>
+                    `${row.code} ${row.name} ${row.industry.label}`.includes(
+                        query.trim(),
+                    ),
+                )
+                .sort(
+                    (a, b) =>
+                        (b.growth?.sizingGainPct ?? -Infinity) -
+                            (a.growth?.sizingGainPct ?? -Infinity) ||
+                        a.code.localeCompare(b.code),
+                ),
+        [rows, query],
+    );
+    const shown = useMemo(() => filtered.slice(0, limit), [filtered, limit]);
     useLayoutEffect(() => {
         const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
         const next = new Map<string, number>();
-        for (const row of shown) {
+        // Batch geometry reads before animation writes to avoid a forced
+        // layout for each ranked stock on every playback frame.
+        const measured = shown.flatMap((row) => {
             const element = elements.current.get(row.securityId);
-            if (!element) continue;
-            const top = element.offsetTop;
+            return element ? [{ row, element, top: element.offsetTop }] : [];
+        });
+        for (const { row, element, top } of measured) {
             const before = positions.current.get(row.securityId);
             if (!reduce && before !== undefined && before !== top)
                 element.animate(
@@ -87,7 +94,7 @@ export function HistoryRanking({
             next.set(row.securityId, top);
         }
         positions.current = next;
-    }, [date, query, limit, rows]);
+    }, [shown]);
     return (
         <div className="fh-ranking">
             {display.status !== "ready" && (

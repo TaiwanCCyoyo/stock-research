@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { readHistory, readHistoryWhenReady } from "./api.ts";
+import { FrameBuffer, playbackLookahead } from "./frameBuffer.ts";
 import {
     dateIndex,
     initialHistoryIndex,
@@ -41,9 +42,16 @@ export function useHistory(active: boolean) {
         catalogId: "",
         date: "",
     });
-    const frameAbort = useRef<AbortController | null>(null);
     const detailEpoch = useRef(0);
-    const cached = useRef(new Map<string, HistoryFrame>());
+    const [buffer] = useState(
+        () =>
+            new FrameBuffer((date, signal) =>
+                readHistory<HistoryFrame>(
+                    `/frame?date=${encodeURIComponent(date)}`,
+                    signal,
+                ),
+            ),
+    );
     const [queryDate, setQueryDate] = useState("");
     const lastQueryAt = useRef(0);
     const desiredDate = metadata?.dates[index] ?? "";
@@ -58,15 +66,18 @@ export function useHistory(active: boolean) {
             detailEpoch.current += 1;
             setIndex(clamped);
             setError("");
-            const saved = cached.current.get(metadata.dates[clamped]);
-            if (saved?.catalogId === metadata.catalogId) {
-                frameAbort.current?.abort();
+            const saved = buffer.peek({
+                catalogId: metadata.catalogId,
+                date: metadata.dates[clamped],
+            });
+            if (saved) {
                 request.current.epoch += 1;
+                setQueryDate(saved.date);
                 setFrame(saved);
                 setLoading(false);
             }
         },
-        [metadata, index],
+        [metadata, index, buffer],
     );
     const goToDate = useCallback(
         (date: string) => {
@@ -156,6 +167,28 @@ export function useHistory(active: boolean) {
         return () => controller.abort();
     }, [active, metadata, directory, retry]);
     useEffect(() => {
+        if (!active || !metadata || !queryDate) {
+            buffer.retain([]);
+            return;
+        }
+        const future = playing
+            ? playbackLookahead(metadata.dates, index, step)
+            : [];
+        // Foreground ownership follows the throttled query, not every slider
+        // event. Otherwise continuous dragging cancels requests before they
+        // can provide an intermediate preview.
+        const identities = [queryDate, ...future].map((date) => ({
+            catalogId: metadata.catalogId,
+            date,
+        }));
+        buffer.retain(identities);
+        // Lookahead shares promises with the foreground request. A failed
+        // speculative read is retried normally if playback reaches that date.
+        for (const identity of identities.slice(1))
+            void buffer.read(identity).catch(() => {});
+    }, [active, metadata, queryDate, index, step, playing, buffer]);
+    useEffect(() => () => buffer.retain([]), [buffer]);
+    useEffect(() => {
         const identity = {
             epoch: request.current.epoch + 1,
             catalogId: metadata?.catalogId ?? "",
@@ -175,40 +208,30 @@ export function useHistory(active: boolean) {
         } catch {
             /* Optional. */
         }
-        const saved = cached.current.get(queryDate);
-        if (saved?.catalogId === metadata.catalogId) {
+        const saved = buffer.peek(identity);
+        if (saved) {
             setFrame(saved);
             setLoading(false);
             return;
         }
-        const controller = new AbortController();
-        frameAbort.current = controller;
         setLoading(true);
         const timer = window.setTimeout(() => {
-            readHistory<HistoryFrame>(
-                `/frame?date=${encodeURIComponent(queryDate)}`,
-                controller.signal,
-            )
+            buffer
+                .read(identity)
                 .then((data) => {
-                    if (
-                        controller.signal.aborted ||
-                        !isCurrentRequest(identity, request.current)
-                    )
-                        return;
+                    if (!isCurrentRequest(identity, request.current)) return;
                     if (!isCurrentRequest(identity, request.current, data))
                         throw new Error("資料日期或版本不一致");
-                    cached.current.set(data.date, data);
-                    if (cached.current.size > 24)
-                        cached.current.delete(
-                            cached.current.keys().next().value!,
-                        );
                     setFrame(data);
                     setError("");
                     setLoading(false);
                 })
                 .catch((cause) => {
                     if (
-                        !controller.signal.aborted &&
+                        !(
+                            cause instanceof DOMException &&
+                            cause.name === "AbortError"
+                        ) &&
                         isCurrentRequest(identity, request.current)
                     ) {
                         setError(String(cause));
@@ -219,10 +242,9 @@ export function useHistory(active: boolean) {
         }, 0);
         return () => {
             window.clearTimeout(timer);
-            controller.abort();
             request.current.epoch += 1;
         };
-    }, [active, metadata, queryDate, retry]);
+    }, [active, metadata, queryDate, retry, buffer]);
     useEffect(() => {
         if (
             !active ||
