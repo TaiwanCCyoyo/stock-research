@@ -60,7 +60,8 @@ conditions 每個家族有 9 個對照組 × 2 個期限，加上 union 與各�
     - `progress.json` 的身分比對包含 `stock_result` 的路徑字串，輸入一搬就對不上。
       改成只比對 `source_id`、`input_id`，這兩個是輸入內容的身分。
     - 收據裡的最終表路徑是 worktree 內的絕對路徑，`_published_files` 要求它在目前 phase 目錄下。
-      改成以檔名在目前 phase 目錄找檔，並用收據的 SHA-256 驗證。
+      改成以收據 `results` 的相對路徑鍵（例如 `pattern%3Aunion-h126/B1-pattern%3Aunion-h126-summary.parquet`，保留分組子目錄）
+      接到目前 phase 根目錄，檢查結果仍在 phase 根目錄內，再用收據的 SHA-256 驗證；不能只取檔名。
     - 未完成階段的原始執行紀錄 `<家族>/.phase-start-<階段>.json`（`pattern-scan-local-phase-start.v5`，記錄原執行 commit `40bf6fd`）。
       `_phase_start` 遇到已有內容的 working 目錄卻沒有這份紀錄會拒絕續跑，遇到 definition 不同也會拒絕；
       新版本要接受搬來的 v5 紀錄，保留原 `code`，把新執行 commit 追加到 `execution_codes`。
@@ -71,7 +72,8 @@ conditions 每個家族有 9 個對照組 × 2 個期限，加上 union 與各�
 ## 4. 重跑步驟（Codex）
 
 1. 確認前置 PR 都已合併、primary `main` 已更新，執行 `git worktree list` 與 `scripts/worktree_inventory.py`，不要另開一份 PR17 worktree。
-2. 用 scratch helper 建立 run（例如 `q2-q6-v6-<日期>`），`run.json` 的狀態從「程式合併」開始，執行中隨時更新。
+2. 用 scratch helper 建立 run（例如 `q2-q6-v6-<日期>`），`run.json` 從 `running` 開始，執行中定期 heartbeat；6.1 GB 原始輸入用 `create_run(..., depends_on=[...])` 登記成依賴。
+   run 只有 `running`／`complete`／`delivered`／`abandoned` 四種狀態；「程式合併」是 task 層級的狀態，不是 run 狀態。
 3. **原始輸入留在原處直接讀，不複製**：它的 `phase-stock-result.json` 把每檔股票的 part 記成 primary `.tmp/` 下的絕對路徑，
    搬走後 runner 仍會讀舊路徑；run.json 要把它列為依賴。**複製**（不是搬移）B1/H1 最終表與五個家族已完成的分組到 run 目錄，逐檔比對 SHA-256，
    不要複製舊的頂層 `progress.json`（裡面是舊 worktree 的絕對收據路徑），讓 runner 依已存在的 final 目錄重建。
@@ -84,7 +86,7 @@ conditions 每個家族有 9 個對照組 × 2 個期限，加上 union 與各�
     - 收據、selection 與進度檔仿照 `q2-q6-v5-receipts.zip` 進 Git。
     - 更新 `web-report/`（重新匯出）、`handoff-q2-q6-v5.md`、`handoff-status.md`、`presentation.json`（資料架構改版後為 `study.json`）與研究定位表，
       把所有 worktree 路徑改成新位置。
-6. 以上都進 `main` 後才 `release --holder pr17-pattern-scan`，並把 `run.json` 標為「成果交付」。
+6. 以上都進 `main` 後才 `release --holder pr17-pattern-scan`，並把 `run.json` 標為 `delivered`（對應 task 層級的「成果交付」），`results` 填交付位置。
 7. 最後請 owner 同意，才刪除 `pr17-retention-review` worktree、primary `.tmp/pattern-scan-execution/` 與 scratch run。
    刪前 `worktree_inventory.py` 不應再列出任何 `cited_by`。
 
