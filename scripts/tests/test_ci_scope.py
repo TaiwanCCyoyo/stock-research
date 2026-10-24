@@ -397,9 +397,28 @@ def test_unreferenced_new_record_selects_record_contracts_without_full_suite(pat
     assert MARKET_TEST not in plan["python_tests"]
 
 
-def test_task_web_report_adds_frontend_without_full_suite() -> None:
-    plan = ci_scope.make_plan([("A", "tasks/20991231-new-study/web-report/index.html")])
+@pytest.mark.parametrize(
+    ("status", "path"),
+    [
+        ("A", "tasks/20991231-new-study/web-report/index.html"),
+        ("M", "tasks/20261013-pattern-scan/web-report/report.js"),
+        ("D", "tasks/20261013-pattern-scan/web-report/report.js"),
+    ],
+)
+def test_task_web_report_adds_frontend_without_full_suite(status: str, path: str) -> None:
+    plan = ci_scope.make_plan([(status, path)])
     assert not plan["full"] and plan["frontend"]
+    assert any("web-report frontend validation" in reason for reason in plan["reasons"])
+
+
+def test_task_web_report_rename_checks_both_paths() -> None:
+    changes = [
+        ("R", "tasks/20261013-pattern-scan/web-report/report-old.js"),
+        ("R", "tasks/20261013-pattern-scan/web-report/report.js"),
+    ]
+    plan = ci_scope.make_plan(changes)
+    assert not plan["full"] and plan["frontend"]
+    assert sum("web-report frontend validation" in reason for reason in plan["reasons"]) == 2
 
 
 def test_new_file_in_owned_area_routes_like_a_modified_file() -> None:
@@ -778,6 +797,7 @@ def test_workflow_retains_stable_check_and_explicit_full_entry() -> None:
     assert "push" not in workflow["on"]
     assert "schedule" not in workflow["on"]
     assert "workflow_dispatch" in workflow["on"]
+    assert "edited" in workflow["on"]["pull_request"]["types"]
     assert "paths-ignore" not in workflow["on"]["pull_request"]
     job = workflow["jobs"]["repository-checks"]
     assert job["name"] == "repository-checks"
