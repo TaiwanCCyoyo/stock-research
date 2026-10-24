@@ -1,5 +1,7 @@
 # Handoff逐項盤點：2026-10-13
 
+2026-10-24 最新交接：Q2–Q6 只有 B1、H1 完成，其餘 10 個家族未完成；見 [Q2–Q6 交接](handoff-q2-q6-v5.md)。
+
 2026-10-19 接續政策：先讀 [shared-price continuation v4 的最新政策](execution-shared-v4.md#current-continuation-policy-owner-update-2026-10-19)。
 PR #34 合併前不執行 `update`；Q2–Q6 沿用原衍生表，完成後執行
 `release --holder pr17-pattern-scan`。新寫的階段依 owner 決定只雜湊最終成果，

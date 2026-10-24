@@ -16,7 +16,7 @@ COMMAND_TIMEOUT = 30
 PR_LIMIT = 1000
 
 
-def run_command(args: list[str], cwd: Path) -> bytes:
+def run_command(args: list[str], cwd: Path, ok_codes: tuple[int, ...] = (0,)) -> bytes:
     """Run bounded read-only queries without Git's optional index writes."""
     LOGGER.debug("Query %s in %s", args, cwd)
     env = dict(os.environ, GIT_OPTIONAL_LOCKS="0")
@@ -32,7 +32,7 @@ def run_command(args: list[str], cwd: Path) -> bytes:
     except (OSError, subprocess.TimeoutExpired) as exc:
         LOGGER.warning("Query failed: %s", exc)
         raise RuntimeError(str(exc)) from exc
-    if result.returncode:
+    if result.returncode not in ok_codes:
         error = result.stderr.decode("utf-8", errors="replace").strip()
         LOGGER.warning("%s failed (%s): %s", args[0], result.returncode, error)
         raise RuntimeError(f"{args[0]} exited {result.returncode}: {error}")
@@ -131,6 +131,33 @@ def ignored_size(repo: Path, output: bytes, excluded_worktrees: list[Path] | Non
     }
 
 
+def cited_by(repo: Path, worktree: Path) -> dict[str, Any]:
+    """Tracked files on the default branch that cite this worktree's path.
+
+    ``repo`` is the primary checkout: relative citations such as ``.worktrees/<name>`` are
+    spelled from there, whichever linked worktree runs the inventory.
+
+    A study whose tracked report or handoff points at results inside a worktree has not
+    delivered them, so a citation keeps the worktree out of the safe-to-clean set until each
+    one is either handed off or reads as historical provenance (docs/en/research-program.md
+    delivery states). Searched on ``origin/main`` when it exists, otherwise ``HEAD``.
+    """
+    ref = "origin/main" if run_command(["git", "rev-parse", "--verify", "-q", "origin/main"], repo, ok_codes=(0, 1)).strip() else "HEAD"
+    absolute = os.path.abspath(worktree)
+    needles = {absolute.replace("\\", "/"), absolute.replace("/", "\\")}
+    try:
+        relative = lexical_path(worktree).relative_to(lexical_path(repo)).as_posix()
+        needles |= {relative, relative.replace("/", "\\")}
+    except ValueError:
+        pass
+    arguments = ["git", "grep", "-l", "-i", "-F", *[part for needle in sorted(needles) for part in ("-e", needle)], ref, "--"]
+    output = run_command(arguments, repo, ok_codes=(0, 1))
+    files = sorted(line.removeprefix(f"{ref}:") for line in output.decode("utf-8", errors="replace").splitlines() if line)
+    if files:
+        LOGGER.info("Worktree %s is cited by %s tracked file(s) on %s", worktree, len(files), ref)
+    return {"ref": ref, "files": files}
+
+
 def classify_prs(prs: list[dict[str, Any]], head: str) -> dict[str, Any]:
     if not prs:
         return {"classification": "no_pr", "prs": []}
@@ -217,6 +244,8 @@ def query_pr(repo: Path, branch: str, head: str) -> dict[str, Any]:
 def inventory(repo: Path, no_pr: bool = False) -> dict[str, Any]:
     entries = parse_worktrees(git(repo, "worktree", "list", "--porcelain", "-z"))
     registered_paths = [Path(entry["path"]) for entry in entries]
+    # `git worktree list` always lists the main worktree first, whichever checkout runs it.
+    primary = registered_paths[0] if registered_paths else repo
     LOGGER.info("Inspecting %s worktrees", len(entries))
     for entry in entries:
         path = Path(entry["path"])
@@ -237,6 +266,11 @@ def inventory(repo: Path, no_pr: bool = False) -> dict[str, Any]:
                 entry[name] = action()
             except RuntimeError as exc:
                 entry["errors"].append(f"{name}: {exc}")
+        if lexical_path(path) != lexical_path(primary):
+            try:
+                entry["cited_by"] = cited_by(primary, path)
+            except RuntimeError as exc:
+                entry["errors"].append(f"cited_by: {exc}")
         if entry.get("detached"):
             entry["probe_candidate"] = True
             entry["pr"] = {"classification": "unknown", "reason": "Detached HEAD; probe candidate only, ownership unknown"}
@@ -280,6 +314,12 @@ def main() -> int:
                 if not entry["pr"]["matches_head"]:
                     emit_line("  WARNING: Current HEAD differs from PR final head; do not clean up based on this PR state.")
             emit_line(f"  status={entry['status']} ignored_bytes={entry['ignored']['bytes']}")
+            citations = entry.get("cited_by", {}).get("files", [])
+            if citations:
+                ref = entry["cited_by"]["ref"]
+                emit_line(f"  WARNING: {len(citations)} tracked file(s) on {ref} cite this worktree; hand off or confirm each is historical before cleanup:")
+                for citation in citations:
+                    emit_line(f"    {citation}")
             for excluded_path in entry["ignored"].get("excluded_paths", []):
                 emit_line(f"  measured separately: {excluded_path}")
             for message in entry["errors"] + entry["ignored"]["errors"]:
