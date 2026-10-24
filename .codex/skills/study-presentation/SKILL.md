@@ -6,7 +6,7 @@ description: Present and close out a stock-research study when asked to 做展�
 # Study presentation
 
 Read [the closeout contract](../../../docs/en/research-program.md#收尾條件)
-and [study-presentation.v1](../../../docs/en/study-presentation.md).
+and [study-card.v2 registration](../../../docs/en/study-presentation.md).
 Deliver a reading view of saved evidence, not new study conclusions.
 
 - Identify the current report/publication, formal outcome and data contract.
@@ -22,17 +22,16 @@ Deliver a reading view of saved evidence, not new study conclusions.
   Freeze the copied `kit/` with the report; keep each `data/*.js` under 500 KiB.
   Only saved summary results enter Git, never real daily OHLCV, technical series
   or pivots. Preserve report/source citations and limitations.
-- Add the small `presentation.json` described in the contract. Format its source
-  report before hashing; use a verbatim excerpt and the current publication.
-  Do not re-pin frozen evidence to make a card load.
-  When changing an already registered report, update its presentation title,
-  verbatim summary and SHA-256 in the same commit. The repository's strict
-  registration test checks every card; a dashboard `登錄需更新` placeholder is
-  a visible failure to repair, not successful validation.
-- Reference existing shared family/catalog IDs in `shared_data`; link the report
+- Add `study.json` (`study-card.v2`) described in the contract. Cite saved report
+  bytes and a verbatim excerpt; keep technical identity in `provenance`.
+  Keep `progress` out of cards: the API reads the referenced scratch run.
+  Preserve existing `presentation.json` and old packages when adding v2 cards;
+  never re-pin frozen evidence just to make a card load. Record unavailable
+  sources or missing conclusions honestly instead of inferring approval.
+- Reference existing shared family/catalog IDs in `provenance.shared_data`; link the report
   to `/#data` and relevant symbols to `/#data/<code>`. A saved strategy trade
   and a current-generation chart have different price/date semantics: label them.
-  If no registered shared data applies, record `shared_data_reason`.
+  Explain missing shared-data links in the report or data contract.
 - Preview locally at `/#studies` (research page; `/#reports` and `/#history` redirect there) and `/#report/<task-id>`.
   Include useful conclusions and limitations in the overview, detailed evidence
   on demand. Record missing report, registration or shared-data links with a reason.

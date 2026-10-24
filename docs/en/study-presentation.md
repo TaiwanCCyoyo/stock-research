@@ -1,5 +1,60 @@
 # Study presentation registration
 
+## Study cards (v2)
+
+New registrations use `tasks/<task-id>/study.json` with `schema: "study-card.v2"`.
+The [schema](../../tasks/20261024-data-homes-and-scratch/study-card-v2.schema.json)
+defines the saved contract. Each dated task has one card, including engineering
+tasks (`kind: "tooling"`); `tasks/sample` is a template, not a study.
+`question`, `answer` and `limitation` are plain-language reading text. Keep
+technical identity in `provenance`. Never infer approval or research completion
+from a merged code change. The seven verdicts are `promising`, `no_edge`,
+`mixed`, `failed`, `running`, `not_evaluated` and `archived`.
+
+`research_core.study_cards.StudyCards` validates the schema, enclosing task ID,
+existing task-contained report paths and verbatim contiguous source excerpts.
+`provenance.answer_source` and each `key_numbers[].source_excerpt` must occur in
+the Markdown report, or within one original text field of the same-ID legacy
+`researchHistory` item when `legacy_history_id` is set. Read that item from
+the configured saved studio package, before display overlays or current history
+projection; never reconstruct evidence by joining fields. When a task has no
+report yet, an existing mission or handoff may be the task-relative
+`report.markdown` source. Such a card describes documented scope, never an
+undocumented result. Leave `data_period` unknown and `key_numbers` empty when
+the source does not substantiate them.
+
+`provenance.report_sha256`, when present, describes the cited report bytes.
+A mismatch produces a warning associated with that card; it never requires
+rewriting reports or v1 registrations. Invalid cards are isolated, so other
+cards remain readable. The reading endpoints are:
+
+```text
+GET /studies
+GET /studies?include_tooling=1
+```
+
+The same routes are mounted at `/api/studies` for the web proxy and
+`/history-api/studies` alongside history. Responses are
+`{cards: [...], warnings: [{task_id, code, message}]}`. Engineering cards are
+hidden unless requested. All cards are validated; warnings may concern hidden
+engineering cards too. Missing cards, unavailable legacy sources and invalid
+citations are warnings, never conclusions. A mismatched
+`X-Research-Data-Mode` is rejected, as in the saved studio routes.
+`public-synthetic` serves only clearly fictional examples: a completed study,
+a running study, engineering work and an old account simulation. It never
+opens local tasks, packages or scratch runs.
+
+With `scratch_run: {"run": "..."}`, the reader obtains
+`<shared root>/scratch/<task-id>/<run>/run.json` through `scratch_runs.read_run`.
+The response adds `progress` and `run_state` from that record on each request;
+neither belongs in the saved card. An unavailable run produces
+`scratch_unavailable` while retaining the card. Run state does not change the
+recorded verdict or delivery state. Old account links use `account_run` and
+explicitly label the saved 2019–2023 period. A new card never creates or
+refreshes an account simulation.
+
+## Retained v1 registrations
+
 `study-presentation.v1` adds current, source-backed report cards to the private
 dashboard's research history without rewriting the saved account package.
 Account returns and trades remain that package's fixed snapshot: a new history
@@ -80,8 +135,13 @@ package or claim newer strategy results are represented there.
 
 ## Closeout deliverables
 
-A completed study provides a `web-report/` reading view, its `presentation.json`
+A completed study provides a `web-report/` reading view, its `study.json`
 registration, and discoverable references to shared data, or explicitly records
 why an item cannot be provided. `report.md`, data contracts, catalog metadata and
 the research-program asset index remain authoritative. The presentation is a
 reading interface over that evidence, never a replacement for it.
+
+Existing `presentation.json` registrations remain readable through the v1
+reader and history projection above. Keep them and old packages unchanged
+during v2 registration. A known stale v1 registration can continue to show its
+warning while the independently verified v2 card cites the current report.
