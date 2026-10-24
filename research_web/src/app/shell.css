@@ -1,5 +1,6 @@
 /* Page frame: header, theme panel, footer and the phone tab bar. */
 .studio {
+    --shell-header-h: 64px;
     position: relative;
     isolation: isolate;
 }
@@ -10,7 +11,7 @@
     display: flex;
     align-items: center;
     gap: 28px;
-    height: 64px;
+    height: var(--shell-header-h);
     padding: 0 max(20px, calc((100% - 1180px) / 2));
     background: color-mix(in srgb, var(--paper) 82%, transparent);
     backdrop-filter: blur(14px);
@@ -171,10 +172,17 @@
     display: none;
 }
 
+/* Page bars that stick to the top must stay below the sticky header. */
+.studio .rv-bar,
+.studio .ss-sticky-summary {
+    top: var(--shell-header-h);
+}
 @media (max-width: 860px) {
+    .studio {
+        --shell-header-h: 56px;
+    }
     .shell-header {
         gap: 12px;
-        height: 56px;
         padding: 0 16px;
         justify-content: space-between;
     }

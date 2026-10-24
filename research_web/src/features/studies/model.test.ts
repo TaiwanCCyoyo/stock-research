@@ -67,3 +67,17 @@ test("timeline groups newest month first", () => {
         ["2026 年 10 月", "2026 年 9 月"],
     );
 });
+
+test("unconfirmed plain summaries keep their caveat and original text", () => {
+    const card = cardFromHistory(
+        item({
+            summarySource: "presentation-metadata",
+            reviewConfirmed: false,
+            originalSummary: "原文摘要",
+            sharedData: ["adjusted-daily-v1"],
+        }),
+    );
+    assert.equal(card.details.summaryUnconfirmed, true);
+    assert.equal(card.details.originalSummary, "原文摘要");
+    assert.deepEqual(card.details.sharedData, ["adjusted-daily-v1"]);
+});

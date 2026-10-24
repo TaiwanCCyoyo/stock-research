@@ -4,10 +4,19 @@
 
 ## 開工條件
 
-**P1 基礎合併進 `main` 後才開始。** P1 會提供設計 token（`--bg`、`--surface`、`--ink`、
-`--muted`、`--accent` 等，8 主題 × 日光／夜色）和柔和卡片元件（card、chip、button、
-verdict、bar、「ⓘ 資料來源」展開元件）。開工前先讀 P1 PR 的說明與 `research_web/src/app/`
-裡的 token 定義，以實際名稱為準。
+**P1（`claude/dashboard-redesign` 的 PR）合併進 `main` 後才開始。** P1 提供的實際名稱：
+
+| 類別                              | 名稱                                                                                                                                                                                                      | 位置                                            |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| 顏色 token（8 主題 × 日光／夜色） | `--paper` `--surface` `--ink` `--muted` `--line` `--chip` `--accent` `--accent-soft` `--positive` `--negative` `--gain`（上漲紅）`--loss`（下跌綠）`--cell-light/mid/deep/warm` `--membrane`              | `research_web/src/app/themes.css`               |
+| 形狀 token                        | `--radius-lg` `--radius-md` `--radius-pill` `--shadow-card` `--shadow-lift`                                                                                                                               | 同上                                            |
+| CSS 元件                          | `u-page` `u-card` `u-btn` `u-btn-primary` `u-chip`（`aria-pressed`）`u-chips` `u-verdict` `u-bars` `u-list` `u-segmented` `u-notice` `u-source` `u-title` `u-eyebrow` `u-section-title` `u-big` `u-muted` | `research_web/src/app/ui.css`                   |
+| React 元件                        | `VerdictBadge`、`CompareBars`、`SourceInfo`（收合的「資料來源」）                                                                                                                                         | `research_web/src/components/ui/primitives.tsx` |
+| 已改好的示範                      | 首頁、研究頁（時間軸）、`SourceNotice`（已改成收合）                                                                                                                                                      | `features/home/`、`features/studies/`           |
+
+`features/research-history/ResearchHistoryPage.tsx` 與 `features/report-library/ReportsPage.tsx`
+已不再顯示（`#history`、`#reports` 導向 `#studies`），**不要換裝**；它們的移除留給研究資料改讀
+`study.json` 的工作。
 
 ## 目標（只有一個）
 
@@ -16,13 +25,13 @@ verdict、bar、「ⓘ 資料來源」展開元件）。開工前先讀 P1 PR �
 
 ## 範圍
 
-| 可以改                                                                                                                           | 不可以改                                                                               |
-| -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `research_web/src/features/{strategies,shared-data,funds,report-library,full-history,market,opportunities}/` 的 `.tsx` 與 `.css` | `research_web/src/visualizations/`（地圖繪製，P2 負責）                                |
-| 這些頁面用到的 `research_web/src/components/` 呈現元件                                                                           | 資料讀取與轉接層：`src/api/`、各 feature 的 `model.ts`、`api.ts`、`useHistory.ts` 這類 |
-| 對應的前端測試（文字斷言跟著文案更新）                                                                                           | `research-history/`、`home/` 與 P1 的外殼和 token（P1 負責）                           |
-|                                                                                                                                  | `tasks/*/web-report/`、`report-kit/`、任何報告與釘選證據                               |
-|                                                                                                                                  | `research_api/`、`research_core/`、Python 端                                           |
+| 可以改                                                                                                                           | 不可以改                                                                                      |
+| -------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `research_web/src/features/{strategies,shared-data,funds,report-library,full-history,market,opportunities}/` 的 `.tsx` 與 `.css` | `research_web/src/visualizations/`（地圖繪製，P2 負責）                                       |
+| 這些頁面用到的 `research_web/src/components/` 呈現元件                                                                           | 資料讀取與轉接層：`src/api/`、各 feature 的 `model.ts`、`api.ts`、`useHistory.ts` 這類        |
+| 對應的前端測試（文字斷言跟著文案更新）                                                                                           | `research-history/`、`report-library/ReportsPage`、`home/`、`studies/`、`src/app/`（P1 負責） |
+|                                                                                                                                  | `tasks/*/web-report/`、`report-kit/`、任何報告與釘選證據                                      |
+|                                                                                                                                  | `research_api/`、`research_core/`、Python 端                                                  |
 
 頁面清單：策略總覽、策略詳情（含交易、稽核抽屜）、策略比較、共用資料、ETF 圖鑑、
 報告檢視外框、飆股地圖頁的控制項與側欄（地圖畫布本身除外）、`#market-preview`。
@@ -53,13 +62,27 @@ verdict、bar、「ⓘ 資料來源」展開元件）。開工前先讀 P1 PR �
 ## 驗證
 
 ```powershell
-cd research_web; npm test; npm run lint; npm run build:stage
+cd research_web
+npm test
+npm run lint
+$env:RESEARCH_WEB_BUILD_OUT_DIR = "../.tmp/build-check"; npm run build:stage
 ```
 
-再用 `uv run python scripts/start_research_web.py --api-port 18517 --web-port 15177 --no-browser`
-啟動預覽，對清單上每頁截圖：375px 與 1440px、日光與夜色，至少用霧林綠、櫻花粉、墨色極簡
-三個主題。確認沒有左右捲動，並在頁面內搜尋「版本」「快照」「世代」「登錄」「SHA」「task」
-不出現在一般畫面（「ⓘ 資料來源」展開內容除外）。
+`npm run build:stage` 一定要設定 `RESEARCH_WEB_BUILD_OUT_DIR`（寫到暫存資料夾）；不要跑會發佈
+`dist/` 的 `npm run build`。
+
+預覽（新 worktree 第一次要先裝 API 相依，否則 history-api 會缺 fastapi）：
+
+```powershell
+uv sync --group viewer
+$env:UV_NO_SYNC = "1"; uv run python scripts/start_research_web.py --api-port 18517 --web-port 15177 --no-browser
+```
+
+飆股地圖與首頁市場區塊在 API 第一次啟動時要先核對約 2,000 個檔案，等幾分鐘才會出現。
+對清單上每頁截圖：375px 與 1440px、日光與夜色，至少用霧林綠、櫻花粉、墨色極簡三個主題。
+主題在右上角「主題」切換。確認沒有左右捲動、手機底部分頁列沒有蓋住頁面最下方的控制項，
+並在頁面內搜尋「版本」「快照」「世代」「登錄」「SHA」「task」不出現在一般畫面（「資料來源」
+展開內容除外）。
 
 ## 交付
 

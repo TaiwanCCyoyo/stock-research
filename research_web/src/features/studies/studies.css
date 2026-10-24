@@ -126,3 +126,9 @@
         align-items: center;
     }
 }
+.st-original {
+    white-space: pre-line;
+}
+.u-source p + p {
+    margin-top: 6px;
+}

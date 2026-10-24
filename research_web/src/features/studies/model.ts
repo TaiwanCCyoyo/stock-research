@@ -22,8 +22,29 @@ export interface StudyCard {
     limitation: string | null;
     reportHref: string | null;
     accountRun: { runId: string; note: string } | null;
-    provenance: string | null;
+    details: StudyDetails;
 }
+
+/** Evidence kept behind the card's collapsed 資料來源 disclosure. */
+export interface StudyDetails {
+    originalSummary: string | null;
+    summaryUnconfirmed: boolean;
+    reportPath: string | null;
+    webReportReason: string | null;
+    sharedData: string[];
+    sharedDataReason: string | null;
+    note: string | null;
+}
+
+const NO_DETAILS: StudyDetails = {
+    originalSummary: null,
+    summaryUnconfirmed: false,
+    reportPath: null,
+    webReportReason: null,
+    sharedData: [],
+    sharedDataReason: null,
+    note: null,
+};
 
 const OUTCOME_VERDICT: Record<string, Verdict> = {
     candidate_failed: "failed",
@@ -74,7 +95,19 @@ export function cardFromHistory(item: StudioHistoryItem): StudyCard {
         limitation: null,
         reportHref: item.webReportHref ?? null,
         accountRun: null,
-        provenance: item.reportPath,
+        details: {
+            originalSummary: item.originalSummary || null,
+            summaryUnconfirmed:
+                item.summarySource === "presentation-metadata" &&
+                !item.reviewConfirmed,
+            reportPath: item.reportPath,
+            webReportReason: item.webReportHref
+                ? null
+                : (item.webReportReason ?? null),
+            sharedData: item.sharedData ?? [],
+            sharedDataReason: item.sharedDataReason ?? null,
+            note: item.sourceNote ?? null,
+        },
     };
 }
 
@@ -97,7 +130,7 @@ export function cardFromRun(
             runId: run.id,
             note: `帳戶模擬 ${run.from.slice(0, 4)}–${run.through.slice(0, 4)}`,
         },
-        provenance: run.name,
+        details: { ...NO_DETAILS, note: run.name },
     };
 }
 

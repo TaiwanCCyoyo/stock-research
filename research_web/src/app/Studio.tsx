@@ -266,7 +266,7 @@ export default function Studio() {
                 {page === "data" && (
                     <SharedDataPage
                         code={route.code}
-                        theme={`${reportPalette(palette)}:${resolvedAppearance}`}
+                        theme={`${palette}:${resolvedAppearance}`}
                     />
                 )}
                 {page === "report" && reportId && (
