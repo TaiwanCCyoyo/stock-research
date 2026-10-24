@@ -702,6 +702,7 @@
         "scripts/tests/test_run_task_backtest.py",
         "scripts/tests/test_saved_research_studio.py",
         "scripts/tests/test_score_wave_growth.py",
+        "scripts/tests/test_scratch_runs.py",
         "scripts/tests/test_secret_checksum_baseline.py",
         "scripts/tests/test_sector_groups.py",
         "scripts/tests/test_sector_role_evidence.py",
