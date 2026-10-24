@@ -10,6 +10,7 @@ import argparse
 import io
 import json
 import logging
+import math
 import os
 import shutil
 import signal
@@ -21,6 +22,8 @@ import urllib.error
 import urllib.request
 import uuid
 import webbrowser
+from collections.abc import Iterator
+from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -28,6 +31,7 @@ from typing import Any
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from research_core.artifact_store import release_os_lock, try_os_lock
 from research_core.dashboard_identity import dashboard_identity
 from research_core.producer_data import primary_checkout, read_env_file_value
 from research_core.saved_research_studio import StudioError, read_studio_package
@@ -46,6 +50,43 @@ PATH_KEYS = ("STOCK_PRIVATE_ARTIFACT_ROOT", "STOCK_SAVED_STUDIO_PACKAGE")
 # Which website build the launcher expects; the website reports its own.
 BUILD_KEY = "RESEARCH_WEB_BUILD"
 BUILD_TIMEOUT_SECONDS = 600.0
+DESKTOP_GRACE_SECONDS = 180.0
+FIRST_HEARTBEAT_SECONDS = 300.0
+
+
+@contextmanager
+def _startup_lock(root: Path, api_port: int, web_port: int) -> Iterator[None]:
+    """Serialize inspection/build/startup, including launches from the console."""
+    directory = root / ".tmp" / "research-web-launcher"
+    directory.mkdir(parents=True, exist_ok=True)
+    with (directory / f"startup-{api_port}-{web_port}.lock").open("a+b") as handle:
+        if handle.tell() == 0:
+            handle.write(b"0")
+            handle.flush()
+        deadline = time.monotonic() + BUILD_TIMEOUT_SECONDS + 2 * STARTUP_TIMEOUT_SECONDS + 30
+        while not try_os_lock(handle):
+            if time.monotonic() >= deadline:
+                raise RuntimeError("另一個啟動器仍在啟動，請稍後再試。")
+            time.sleep(POLL_INTERVAL_SECONDS)
+        try:
+            yield
+        finally:
+            release_os_lock(handle)
+
+
+def _desktop_idle(api_port: int, started: float) -> bool:
+    """Only observe activity; never ask a reused API to shut itself down."""
+    with urllib.request.urlopen(f"http://127.0.0.1:{api_port}/heartbeat", timeout=3) as response:
+        payload = json.loads(response.read().decode("utf-8"))
+    if not isinstance(payload, dict) or "ageSeconds" not in payload:
+        raise RuntimeError("API 心跳格式不符，無法監控桌面分頁。")
+    age = payload["ageSeconds"]
+    elapsed = time.monotonic() - started
+    if age is None:
+        return elapsed > FIRST_HEARTBEAT_SECONDS
+    if not isinstance(age, (int, float)) or isinstance(age, bool) or not math.isfinite(age) or age < 0:
+        raise RuntimeError("API 心跳格式不符，無法監控桌面分頁。")
+    return min(age, elapsed) > DESKTOP_GRACE_SECONDS
 
 
 def launch_environment(root: Path, environ: dict[str, str]) -> dict[str, str]:
@@ -318,7 +359,11 @@ def _start_child(name: str, root: Path, log_dir: Path, environment: dict[str, st
     creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
     try:
         process = subprocess.Popen(
-            _command(name, root, port, dev),
+            (
+                [environment["RESEARCH_DESKTOP_PYTHON"], "-B", "-m", "uvicorn", "research_api.main:app", "--host", "127.0.0.1", "--port", str(port or 8517)]
+                if name == "history-api" and environment and "RESEARCH_DESKTOP_PYTHON" in environment
+                else _command(name, root, port, dev)
+            ),
             cwd=root,
             env=environment,
             stdin=subprocess.DEVNULL,
@@ -326,7 +371,7 @@ def _start_child(name: str, root: Path, log_dir: Path, environment: dict[str, st
             stderr=subprocess.STDOUT,
             creationflags=creationflags,
         )
-    except OSError:
+    except Exception:
         log_file.close()
         raise
     LOGGER.info("已啟動 %s，pid=%s，記錄檔=%s", name, process.pid, log_path)
@@ -389,7 +434,7 @@ def _configure_logging(root: Path) -> Path:
     return log_dir
 
 
-def run(*, no_browser: bool = False, check: bool = False, api_port: int = 8517, web_port: int = 5177, dev: bool = False) -> int:
+def run(*, no_browser: bool = False, check: bool = False, api_port: int = 8517, web_port: int = 5177, dev: bool = False, desktop: bool = False) -> int:
     root = project_root()
     if api_port == web_port or not all(1 <= port <= 65535 for port in (api_port, web_port)):
         raise RuntimeError("API 與網站 port 必須不同，且介於 1–65535。")
@@ -398,11 +443,24 @@ def run(*, no_browser: bool = False, check: bool = False, api_port: int = 8517, 
     # The API points visitors of its own port to the real website.
     environment["RESEARCH_WEB_URL"] = f"http://127.0.0.1:{web_port}"
     environment[BUILD_KEY] = "development" if dev else "production"
+    environment.pop("RESEARCH_DESKTOP_PYTHON", None)
+    if desktop:
+        # Use the interpreter selected by the shortcut, without uv cache/sync.
+        environment["RESEARCH_DESKTOP_PYTHON"] = sys.executable
     mode = environment[MODE_KEYS[0]]
     _announce(f"資料模式：{mode}")
     _announce(
         "私有 studio 包：可讀，已通過 reader 完整性驗證" if mode == "local-private" else "目前是合成示範，設定方式見 research_web/README.md；私有包未讀取。"
     )
+    with ExitStack() as startup:
+        if not check:
+            startup.enter_context(_startup_lock(root, api_port, web_port))
+        return _run_services(root, environment, startup, no_browser=no_browser, check=check, api_port=api_port, web_port=web_port, dev=dev, desktop=desktop)
+
+
+def _run_services(
+    root: Path, environment: dict[str, str], startup: ExitStack, *, no_browser: bool, check: bool, api_port: int, web_port: int, dev: bool, desktop: bool
+) -> int:
     services = (("history-api", api_port), ("research-web", web_port))
     try:
         states = {name: _inspect_service(name, port, root) for name, port in services}
@@ -440,8 +498,18 @@ def run(*, no_browser: bool = False, check: bool = False, api_port: int = 8517, 
             _announce(f"{name} 已就緒")
         _announce(f"研究網站已就緒：http://127.0.0.1:{web_port}")
         _announce("服務記錄位於 .tmp/research-web-launcher/")
+        # Validate heartbeat support before opening the browser, including on reuse.
+        started = time.monotonic()
+        if desktop:
+            _desktop_idle(api_port, started)
+            request = urllib.request.Request(f"http://127.0.0.1:{api_port}/heartbeat", data=b"", headers={"X-Requested-With": "desktop-launcher"})
+            with urllib.request.urlopen(request, timeout=3) as response:
+                response.read()
+        startup.close()
         if not no_browser:
-            webbrowser.open(f"http://127.0.0.1:{web_port}")
+            if not webbrowser.open(f"http://127.0.0.1:{web_port}"):
+                raise RuntimeError("無法開啟預設瀏覽器。")
+        heartbeat_failure_since: float | None = None
         while children:
             failed_child = next(
                 (child for child in children if child.process.poll() is not None),
@@ -451,7 +519,29 @@ def run(*, no_browser: bool = False, check: bool = False, api_port: int = 8517, 
                 raise RuntimeError(
                     f"{failed_child.name} 意外結束（結束碼 {failed_child.process.returncode}）；詳見 .tmp/research-web-launcher/{failed_child.name}.log。"
                 )
-            time.sleep(0.5)
+            if desktop:
+                try:
+                    if _desktop_idle(api_port, started):
+                        # Recheck under the startup lock: a concurrent click may
+                        # have refreshed activity before we acquired it.
+                        with _startup_lock(root, api_port, web_port):
+                            if _desktop_idle(api_port, started):
+                                LOGGER.info("桌面分頁心跳已停止，僅清理本次啟動的服務")
+                                for child in reversed(children):
+                                    _stop_child(child)
+                                children.clear()
+                                return 0
+                    if heartbeat_failure_since is not None:
+                        LOGGER.info("桌面心跳查詢已恢復")
+                    heartbeat_failure_since = None
+                except OSError as exc:
+                    now = time.monotonic()
+                    if heartbeat_failure_since is None:
+                        heartbeat_failure_since = now
+                        LOGGER.warning("心跳查詢暫時失敗，保留服務並重試：%s", exc)
+                    elif now - heartbeat_failure_since > DESKTOP_GRACE_SECONDS:
+                        raise RuntimeError("心跳查詢持續失敗超過 180 秒，停止本次服務。") from exc
+            time.sleep(5 if desktop else 0.5)
         return 0
     except KeyboardInterrupt:
         _announce("收到 Ctrl+C，正在停止本次啟動的服務…")
@@ -472,14 +562,19 @@ def main() -> int:
         if isinstance(stream, io.TextIOWrapper):
             stream.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(description="啟動研究網站與歷史 API")
+    parser.add_argument("--desktop", action="store_true", help="隱藏桌面啟動；所有分頁停止心跳 180 秒後清理本次服務")
     parser.add_argument("--no-browser", action="store_true", help="啟動後不開啟瀏覽器")
     parser.add_argument("--check", action="store_true", help="只檢查兩個服務身份與可用狀態")
     parser.add_argument("--api-port", type=int, default=8517, help="API port")
     parser.add_argument("--web-port", type=int, default=5177, help="網站 port")
     parser.add_argument("--dev", action="store_true", help="改用開發模式（即時重新載入，但動畫較慢）")
     args = parser.parse_args()
+    if args.desktop:
+        log_dir = _configure_logging(project_root())
+        output = (log_dir / "desktop-launcher.log").open("a", encoding="utf-8", buffering=1)
+        sys.stdout = sys.stderr = output
     try:
-        return run(no_browser=args.no_browser, check=args.check, api_port=args.api_port, web_port=args.web_port, dev=args.dev)
+        return run(desktop=args.desktop, no_browser=args.no_browser, check=args.check, api_port=args.api_port, web_port=args.web_port, dev=args.dev)
     except (RuntimeError, ValueError, OSError) as exc:
         sys.stderr.write(f"啟動失敗：{exc}\n")
         return 1

@@ -60,6 +60,190 @@ def test_unconfigured_defaults_synthetic_without_mutating_environment(tmp_path: 
     assert all(resolved[key] == "public-synthetic" for key in launcher.MODE_KEYS)
 
 
+@pytest.mark.parametrize(
+    ("age", "elapsed", "expected"),
+    [(None, 300, False), (None, 301, True), (180, 300, False), (181, 300, True), (1000, 10, False), (5, 500, False)],
+)
+def test_desktop_idle_respects_first_heartbeat_and_aggregate_grace(age: float | None, elapsed: float, expected: bool) -> None:
+    response = MagicMock()
+    response.__enter__.return_value.read.return_value = json.dumps({"ageSeconds": age}).encode()
+    with (
+        patch.object(launcher.urllib.request, "urlopen", return_value=response) as request,
+        patch.object(launcher.time, "monotonic", return_value=1000 + elapsed),
+    ):
+        assert launcher._desktop_idle(18517, 1000) is expected
+    assert request.call_args.args == ("http://127.0.0.1:18517/heartbeat",)
+
+
+@pytest.mark.parametrize(
+    "payload", [{"ageSeconds": -1}, {"ageSeconds": True}, {"ageSeconds": "181"}, {"ageSeconds": float("nan")}, {"ageSeconds": float("inf")}, {}, []]
+)
+def test_desktop_idle_rejects_unverifiable_heartbeat(payload: object) -> None:
+    response = MagicMock()
+    response.__enter__.return_value.read.return_value = json.dumps(payload).encode()
+    with patch.object(launcher.urllib.request, "urlopen", return_value=response), pytest.raises(RuntimeError, match="心跳格式"):
+        launcher._desktop_idle(18517, 0)
+
+
+def test_desktop_child_uses_selected_python_without_uv_and_hides_console(tmp_path: Path) -> None:
+    environment = {"RESEARCH_DESKTOP_PYTHON": "C:/existing venv/pythonw.exe"}
+    with patch.object(launcher.subprocess, "Popen") as popen, patch.object(launcher, "_command") as command:
+        child = launcher._start_child("history-api", tmp_path, tmp_path, environment, 18517)
+    command.assert_not_called()
+    assert popen.call_args.args[0] == [
+        environment["RESEARCH_DESKTOP_PYTHON"],
+        "-B",
+        "-m",
+        "uvicorn",
+        "research_api.main:app",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "18517",
+    ]
+    assert popen.call_args.kwargs["creationflags"] == getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    child.log_file.close()
+
+
+def test_startup_lock_contends_and_releases_real_os_handle(tmp_path: Path) -> None:
+    path = tmp_path / ".tmp" / "research-web-launcher" / "startup-18517-15177.lock"
+    with launcher._startup_lock(tmp_path, 18517, 15177), path.open("r+b") as contender:
+        assert not launcher.try_os_lock(contender)
+    with path.open("r+b") as contender:
+        assert launcher.try_os_lock(contender)
+        launcher.release_os_lock(contender)
+
+
+def test_startup_lock_releases_after_failed_startup(tmp_path: Path) -> None:
+    with pytest.raises(RuntimeError, match="failed"):
+        with launcher._startup_lock(tmp_path, 18517, 15177):
+            raise RuntimeError("failed startup")
+    with launcher._startup_lock(tmp_path, 18517, 15177):
+        pass
+
+
+@pytest.mark.parametrize("states", [("reusable", "reusable"), ("reusable", "stopped"), ("stopped", "reusable"), ("stopped", "stopped")])
+def test_desktop_reuses_services_and_idle_cleanup_only_stops_owned_children(tmp_path: Path, states: tuple[str, str]) -> None:
+    owned: list[launcher.ManagedChild] = []
+    for name, state in zip(("history-api", "research-web"), states, strict=True):
+        if state == "stopped":
+            process = MagicMock()
+            process.poll.return_value = None
+            owned.append(launcher.ManagedChild(name, process, io.BytesIO()))
+    with (
+        patch.object(launcher, "project_root", return_value=tmp_path),
+        patch.object(launcher, "_inspect_service", side_effect=states),
+        patch.object(launcher, "_configure_logging", return_value=tmp_path),
+        patch.object(launcher, "_build_website", return_value="current") as build,
+        patch.object(launcher, "_release_is_current", return_value=True),
+        patch.object(launcher, "_start_child", side_effect=owned) as start,
+        patch.object(launcher, "_wait_until_ready"),
+        patch.object(launcher, "_verify_live_mode") as verify,
+        patch.object(launcher, "_desktop_idle", side_effect=[False, True, True]),
+        patch.object(launcher.urllib.request, "urlopen") as request,
+        patch.object(launcher.webbrowser, "open", return_value=True) as browser,
+        patch.object(launcher, "_stop_child") as stop,
+    ):
+        assert launcher.run(desktop=True, api_port=18517, web_port=15177) == 0
+    assert start.call_count == len(owned)
+    assert verify.call_count == 2
+    assert stop.call_args_list == [call(child) for child in reversed(owned)]
+    assert build.call_count == int(states[1] == "stopped")
+    browser.assert_called_once_with("http://127.0.0.1:15177")
+    heartbeat = request.call_args.args[0]
+    assert heartbeat.full_url == "http://127.0.0.1:18517/heartbeat"
+    assert heartbeat.get_method() == "POST"
+    assert heartbeat.get_header("X-requested-with") == "desktop-launcher"
+    for invocation in start.call_args_list:
+        environment = invocation.args[3]
+        assert environment["RESEARCH_DESKTOP_PYTHON"] == launcher.sys.executable
+        assert environment[launcher.BUILD_KEY] == "production"
+        assert environment["RESEARCH_WEB_API_TARGET"] == "http://127.0.0.1:18517"
+
+
+def test_desktop_idle_recheck_preserves_children_when_concurrent_click_refreshes_heartbeat(tmp_path: Path) -> None:
+    process = MagicMock()
+    process.poll.return_value = None
+    child = launcher.ManagedChild("research-web", process, io.BytesIO())
+    # Startup is active; an apparent idle condition receives a fresh heartbeat
+    # before the lock is acquired. Only the next confirmed idle may stop it.
+    activity = iter([False, True, False, True, True])
+    with (
+        patch.object(launcher, "project_root", return_value=tmp_path),
+        patch.object(launcher, "_inspect_service", side_effect=("reusable", "stopped")),
+        patch.object(launcher, "_configure_logging", return_value=tmp_path),
+        patch.object(launcher, "_build_website", return_value="current"),
+        patch.object(launcher, "_start_child", return_value=child),
+        patch.object(launcher, "_wait_until_ready"),
+        patch.object(launcher, "_verify_live_mode"),
+        patch.object(launcher.urllib.request, "urlopen"),
+        patch.object(launcher, "_stop_child") as stop,
+        patch.object(launcher.time, "sleep") as sleep,
+    ):
+
+        def idle(*args: object) -> bool:
+            stop.assert_not_called()
+            return next(activity)
+
+        with patch.object(launcher, "_desktop_idle", side_effect=idle) as observe:
+            assert launcher.run(desktop=True, no_browser=True, api_port=18517, web_port=15177) == 0
+    assert observe.call_count == 5
+    sleep.assert_called_once_with(5)
+    stop.assert_called_once_with(child)
+
+
+@pytest.mark.parametrize(
+    ("observations", "times", "expected", "sleeps"),
+    [
+        ([False, TimeoutError("busy API"), False, True, True], [0, 10, 20, 30, 30], 0, 2),
+        ([False, True, TimeoutError("busy recheck"), False, True, True], [0, 10, 10, 20, 30, 30], 0, 2),
+        ([False, TimeoutError("busy API"), TimeoutError("still busy"), TimeoutError("unavailable")], [0, 10, 190, 191], 1, 2),
+        (
+            [False, TimeoutError("busy API"), False, TimeoutError("busy again"), TimeoutError("still busy"), TimeoutError("unavailable")],
+            [0, 10, 100, 200, 380, 381],
+            1,
+            4,
+        ),
+    ],
+    ids=["monitor-recovers", "locked-recheck-recovers", "failure-grace-boundary", "recovery-resets-failure-deadline"],
+)
+def test_desktop_monitor_tolerates_temporary_failures_and_bounds_continuous_failures(
+    tmp_path: Path, observations: list[bool | OSError], times: list[float], expected: int, sleeps: int
+) -> None:
+    process = MagicMock()
+    process.poll.return_value = None
+    child = launcher.ManagedChild("research-web", process, io.BytesIO())
+    sequence = iter(zip(observations, times, strict=True))
+    clock = [0.0]
+    with (
+        patch.object(launcher, "project_root", return_value=tmp_path),
+        patch.object(launcher, "_inspect_service", side_effect=("reusable", "stopped")),
+        patch.object(launcher, "_configure_logging", return_value=tmp_path),
+        patch.object(launcher, "_build_website", return_value="current"),
+        patch.object(launcher, "_start_child", return_value=child),
+        patch.object(launcher, "_wait_until_ready"),
+        patch.object(launcher, "_verify_live_mode"),
+        patch.object(launcher.urllib.request, "urlopen"),
+        patch.object(launcher, "_stop_child") as stop,
+        patch.object(launcher.time, "monotonic", side_effect=lambda: clock[0]),
+        patch.object(launcher.time, "sleep") as sleep,
+    ):
+
+        def idle(*args: object) -> bool:
+            stop.assert_not_called()
+            value, now = next(sequence)
+            clock[0] = now
+            if isinstance(value, OSError):
+                raise value
+            return value
+
+        with patch.object(launcher, "_desktop_idle", side_effect=idle) as observe:
+            assert launcher.run(desktop=True, no_browser=True, api_port=18517, web_port=15177) == expected
+    assert observe.call_count == len(observations)
+    assert sleep.call_args_list == [call(5)] * sleeps
+    stop.assert_called_once_with(child)
+
+
 def test_linked_checkout_reads_primary_settings(tmp_path: Path) -> None:
     settings = private_settings(tmp_path)
     (tmp_path / ".env.local").write_text("\n".join(f'{key}="{value}"' for key, value in settings.items()), encoding="utf-8")
