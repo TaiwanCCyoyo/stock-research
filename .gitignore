@@ -309,6 +309,11 @@ verify-*.png
 # Public checksum metadata travels losslessly in a bounded annual publication.
 # Source-backed dashboard registrations contain report excerpts, never quote series.
 !tasks/*/presentation.json
+# Study card v2 (owner decision 2026-10-24) and its contract.
+!tasks/*/study.json
+!tasks/20261024-data-homes-and-scratch/study-card-v2.schema.json
+!tasks/20261024-data-homes-and-scratch/study-card-v2-examples/
+!tasks/20261024-data-homes-and-scratch/study-card-v2-examples/*.json
 
 # Applies to every named publication version (completion-v2, completion-v3, ...).
 /tasks/20261013-annual-winner-rotation/publications/*/admission-audit.json
