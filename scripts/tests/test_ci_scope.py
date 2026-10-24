@@ -13,6 +13,59 @@ import yaml
 
 from scripts import ci_scope
 
+STRENGTH_TESTS = {"scripts/tests/test_strength_flags_v1.py", "scripts/tests/test_strength_flag_counts_v1.py"}
+
+
+@pytest.mark.parametrize("status", ["A", "M"])
+@pytest.mark.parametrize(
+    "source",
+    [
+        "research_core/momentum_only_v1.py",
+        "research_core/count_cube_v1.py",
+        "research_core/pattern_scan_flags_v1.py",
+        "research_core/hhhl_variants_observations.py",
+        "research_core/maintained_adjusted_daily.py",
+        "research_core/research_measurement_v1.py",
+    ],
+)
+def test_strength_upstreams_select_both_downstream_tests(status: str, source: str) -> None:
+    plan = ci_scope.make_plan([(status, source)])
+    assert not plan["full"]
+    assert "strength_flags" in plan["domains"]
+    assert STRENGTH_TESTS <= set(plan["python_tests"])
+    assert "scripts/tests/test_research_ledger.py" not in plan["python_tests"]
+
+
+@pytest.mark.parametrize("status", ["A", "M"])
+@pytest.mark.parametrize(
+    "source",
+    [
+        "research_core/multiple_observations_v1.py",
+        "research_core/strength_flags_v1.py",
+        "research_core/strength_flag_counts_v1.py",
+        "research_core/strength_flags_run_v1.py",
+        "scripts/run_strength_flags.py",
+        *sorted(STRENGTH_TESTS),
+    ],
+)
+def test_strength_owned_sources_and_tests_select_the_complete_domain(status: str, source: str) -> None:
+    plan = ci_scope.make_plan([(status, source)])
+    assert not plan["full"] and not plan["frontend"]
+    assert set(plan["domains"]) == {"strength_flags"}
+    expected_tests = STRENGTH_TESTS.copy()
+    if source in STRENGTH_TESTS:
+        # This selector contract names the changed test, so the existing reference closure retains it too.
+        expected_tests.add("scripts/tests/test_ci_scope.py")
+    assert set(plan["python_tests"]) == expected_tests
+
+
+@pytest.mark.parametrize("source", ["research_core/strength_flags_unreviewed_v2.py", "scripts/run_strength_unreviewed.py"])
+def test_unknown_strength_sources_keep_full_safety_fallback(source: str) -> None:
+    manifest = ci_scope.load_manifest()
+    plan = ci_scope.make_plan([("A", source)])
+    assert plan["full"] and plan["frontend"]
+    assert plan["python_tests"] == ci_scope.test_inventory(ci_scope.ROOT, manifest)
+
 
 @pytest.mark.parametrize(
     ("path", "domain", "consumer"),
@@ -98,6 +151,7 @@ def test_tenbagger_domain_registers_its_sources_and_tests(status: str, path: str
     ],
 )
 def test_tenbagger_dependencies_propagate_to_exact_consumer_tests(source: str, expected_domains: set[str]) -> None:
+    expected_domains = expected_domains | {"strength_flags"}
     manifest = ci_scope.load_manifest()
     inventory = ci_scope.test_inventory(ci_scope.ROOT, manifest)
     plan = ci_scope.make_plan([("M", source)])
@@ -137,7 +191,7 @@ def test_research_data_upstreams_keep_all_downstream_tests(path: str, expected_d
     manifest = ci_scope.load_manifest()
     plan = ci_scope.make_plan([("M", path)])
     assert not plan["full"]
-    assert set(plan["domains"]) == expected_domains
+    assert set(plan["domains"]) == expected_domains | {"strength_flags"}
     assert set(manifest["domains"]["research_data"]["tests"]) <= set(plan["python_tests"])
     assert set(manifest["domains"]["annual"]["tests"]) <= set(plan["python_tests"])
     assert TENBAGGER_TESTS <= set(plan["python_tests"])
@@ -211,10 +265,11 @@ def test_feature_block_upstreams_select_research_data_consumers(path: str) -> No
     manifest = ci_scope.load_manifest()
     plan = ci_scope.make_plan([("M", path)])
     assert not plan["full"]
-    assert set(plan["domains"]) == {"feature_blocks", "research_data", "annual", "pattern_scan", "tenbagger_drivers"}
+    assert set(plan["domains"]) == {"feature_blocks", "research_data", "annual", "pattern_scan", "tenbagger_drivers", "strength_flags"}
     expected_tests = set(manifest["domains"]["feature_blocks"]["tests"]) | set(manifest["domains"]["research_data"]["tests"])
     expected_tests |= set(manifest["domains"]["annual"]["tests"])
     expected_tests |= set(manifest["domains"]["tenbagger_drivers"]["tests"])
+    expected_tests |= set(manifest["domains"]["strength_flags"]["tests"])
     expected_tests |= {
         test for test in ci_scope.test_inventory(ci_scope.ROOT, manifest) if ci_scope.matches(test, manifest["domains"]["pattern_scan"]["tests"])
     }
@@ -332,7 +387,7 @@ def test_annual_upstream_dependency_closure_selects_annual_consumers(source: str
     plan = ci_scope.make_plan([("M", source)])
 
     assert not plan["full"]
-    assert set(plan["domains"]) == expected_domains
+    assert set(plan["domains"]) == expected_domains | {"strength_flags"}
     assert ANNUAL_TESTS <= set(plan["python_tests"])
     assert "scripts/tests/test_pattern_scan_shared_v1.py" in plan["python_tests"]
     assert TENBAGGER_TESTS <= set(plan["python_tests"])
@@ -378,7 +433,7 @@ def test_known_pattern_scan_entry_and_shared_bundle_route_consumers(status: str,
 
     assert not plan["full"]
     assert not plan["frontend"]
-    assert set(plan["domains"]) == expected_domains
+    assert set(plan["domains"]) == expected_domains | {"strength_flags"}
     assert required_tests | TENBAGGER_TESTS <= set(plan["python_tests"])
     assert "scripts/tests/test_research_ledger.py" not in plan["python_tests"]
 
