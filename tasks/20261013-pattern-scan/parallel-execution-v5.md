@@ -133,3 +133,33 @@ Windows spawn tests also verified exact group tables with one, two and four
 workers, failure draining, bounded admission and parent-only publication. The
 published-artifact compatibility checks remain 17/17 passing before/after the
 reader change. These checks do not establish completed Q2–Q6 market results.
+
+## Full-market capacity gate before a long continuation
+
+Four workers are the small-sample throughput choice, not a measured full-market
+memory guarantee. `DenseCounts` retains nonzero per-stock cell/year event counts
+across stocks and builds an additional index during finalization; four full-market
+groups can therefore require more memory than the eight-stock probe. The retained
+H1 conditions receipt reports a 4,798,099,456-byte process-lifetime peak, which
+cannot identify a particular group's requirement or be multiplied as an isolated
+group measurement.
+
+The retained H1 phase walls are 49,308.918 seconds conditions, 2,518.915 seconds Q4
+and 7,435.371 seconds followup, all from `40bf6fd`. Conditions account for 83.2%
+of that measured total; prioritizing it is supported, while followup remains a
+material serial portion. These are whole-phase observations, not a prediction of
+the remaining families' duration.
+
+After PR #81 merges, start the existing run with four workers and an explicit
+six-hour timeout (`--timeout-seconds 21600`), scoped to B2 conditions. This is useful
+continuation work: completed projections/groups remain checkpoints in the same
+run. Preserve that invocation's logs and `job-memory.json`, including on timeout
+or worker failure. If it completes no full-market groups, capacity remains
+unmeasured; do not describe the cache-preparation peak as a group peak.
+
+Before using the ten-day long-run timeout, inspect complete-group timings,
+per-worker measurements and the aggregate Job peak. A memory-limit failure keeps
+the Job cap at 8 GiB and requires a smaller parallel configuration or a measured
+memory improvement, followed by another bounded capacity check. There is no
+single-worker full-run fallback. A timed-out invocation also leaves the run paused
+with all published checkpoints retained. The hold remains in place throughout.

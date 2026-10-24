@@ -457,6 +457,8 @@ def launch_remaining(
         started = time.monotonic()
         last_progress: dict[str, Any] | None = None
         last_heartbeat = started
+        exit_code: int | None = None
+        timed_out = False
 
         def heartbeat() -> None:
             nonlocal last_progress, last_heartbeat
@@ -476,10 +478,11 @@ def launch_remaining(
             while process.poll() is None:
                 heartbeat()
                 if time.monotonic() - started > timeout_seconds:
+                    timed_out = True
                     raise TimeoutError("owned continuation exceeded its explicit timeout")
                 time.sleep(0.5)
+            exit_code = process.returncode
             heartbeat()
-            write_progress(output / "job-memory.json", {**job.memory_receipt(), "wall_seconds": time.monotonic() - started, "exit_code": process.returncode})
             if process.returncode:
                 raise subprocess.CalledProcessError(process.returncode, process.args)
             progress_path = output / "progress.json"
@@ -490,6 +493,12 @@ def launch_remaining(
         finally:
             if job is not None:
                 try:
-                    job.terminate_and_confirm()
+                    write_progress(
+                        output / "job-memory.json",
+                        {**job.memory_receipt(), "wall_seconds": time.monotonic() - started, "exit_code": exit_code, "timed_out": timed_out},
+                    )
                 finally:
-                    job.close()
+                    try:
+                        job.terminate_and_confirm()
+                    finally:
+                        job.close()

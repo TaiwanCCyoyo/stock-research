@@ -95,10 +95,11 @@ the run. `run.json` and the OS writer lock are the authority for current livenes
 this registration alone does not establish that a worker is still running.
 
 The accepted engineering probe selects four workers. After runner PR #81 merges,
-resume the same run from clean merged code with:
+resume the same run from clean merged code with the bounded full-market capacity
+invocation first (see the runtime amendment's capacity gate):
 
 ```powershell
-uv run python -m scripts.run_pattern_scan_remaining --stock-result D:/Project/stock-research/.tmp/pattern-scan-execution/full-2010-20261016-retention-v3/phase-stock-result.json --output D:/StockData/stock-research/scratch/20261013-pattern-scan/q2-q6-v6 --workers 4
+uv run python -m scripts.run_pattern_scan_remaining --stock-result D:/Project/stock-research/.tmp/pattern-scan-execution/full-2010-20261016-retention-v3/phase-stock-result.json --output D:/StockData/stock-research/scratch/20261013-pattern-scan/q2-q6-v6 --workers 4 --target B2 --phase conditions --timeout-seconds 21600
 ```
 
 Remaining delivery follows
