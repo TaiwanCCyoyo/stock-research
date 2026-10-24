@@ -178,7 +178,7 @@ export function ResearchHistoryPage() {
                                     )}
                                 {!!item.sharedData?.length && (
                                     <p>
-                                        <a href="#data">共用資料目錄</a>
+                                        <a href="#overview">共用資料目錄</a>
                                         {" · "}
                                         {item.sharedData.join("、")}
                                     </p>
