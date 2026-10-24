@@ -1,6 +1,7 @@
 # C1 + C2：逐頁換裝與文案交付
 
-2026-10-24（Asia/Taipei）。以已合併 P1 的 `origin/main`（`aea54fe0`）為基礎。
+2026-10-24（Asia/Taipei）。以已合併 P1 的 `origin/main`（`aea54fe0`）為基礎，
+交付時再整合 P4 與當前 `main`（`6f50b32e`），保留法人與月營收疊圖功能。
 
 ## 完成範圍
 
@@ -32,7 +33,7 @@
 
 ## 驗證
 
-- `npm test`：428 通過，0 失敗。
+- `npm test`：整合 P4 後 437 通過，0 失敗。
 - `npm run lint`：0 錯誤；保留既有 React hooks 警告。
 - 設定 `RESEARCH_WEB_BUILD_OUT_DIR=../.tmp/build-check` 後的 `npm run build:stage` 通過；未發佈 `dist/`。
 - 375px／1440px、日光／夜色：10 個頁面或狀態 × 霧林綠、櫻花粉、墨色極簡，共 120 個畫面。

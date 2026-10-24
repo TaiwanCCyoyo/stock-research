@@ -70,6 +70,9 @@
     height: 560px;
     min-width: 0;
 }
+.shared-chart.has-overlay {
+    height: 680px;
+}
 .shared-layout aside {
     display: flex;
     flex-direction: column;
@@ -198,5 +201,17 @@
     color: var(--loss);
 }
 .shared-change-flat {
+    color: var(--muted);
+}
+.revenue-block {
+    margin-top: 24px;
+}
+.revenue-chart {
+    width: 100%;
+    height: 320px;
+    min-width: 0;
+}
+.overlay-status {
+    font-size: 13px;
     color: var(--muted);
 }

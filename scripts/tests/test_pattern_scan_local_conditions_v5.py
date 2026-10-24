@@ -197,7 +197,13 @@ def test_target_resume_reuses_selection_and_complete_groups_without_payload_hash
     assert list(first_progress["completed"]) == ["pattern%3Aunion-h126"]
     abandoned = list(output.glob(".staging-pattern%3Aunion-h252-*"))
     assert len(abandoned) == 1 and (abandoned[0] / "unfinished.txt").is_file()
-    selected, top, paths = local.run_conditions(inputs, "R1", output)
+    group_progress: list[tuple[int, int]] = []
+    selected, top, paths = local.run_conditions(
+        inputs,
+        "R1",
+        output,
+        on_progress=lambda done, total: group_progress.append((done, total)),
+    )
     assert selected == asdict(selection)
     assert top == {identifier: (atom,)}
     assert len(paths) == 13 and all(path.is_file() for path in paths)
@@ -205,6 +211,7 @@ def test_target_resume_reuses_selection_and_complete_groups_without_payload_hash
     assert calls.count(("pattern:union", 126)) == 1
     assert calls.count(("pattern:union", 252)) == 2
     assert len(read_json(progress_path)["completed"]) == 4
+    assert group_progress == [(1, 4), (2, 4), (3, 4), (4, 4)]
     assert abandoned[0].is_dir()
     # A fully complete call does not re-read/reproject any original stock.
     before = len(cache_calls), len(calls)

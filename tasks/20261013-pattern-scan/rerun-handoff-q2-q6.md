@@ -1,5 +1,10 @@
 # PR17 Q2–Q6 重跑交接（給 Codex）
 
+2026-10-24 補充：程式修改改由 Codex 處理；以
+[工作包 D](../20261024-data-homes-and-scratch/codex-handoff.md#d-pr17-續跑程式修改與重跑)
+為最新規格，計算定義維持 v5，不另立定義。程式行為、資料盤點與尚未開跑的前置條件見
+[scratch continuation](scratch-continuation-v5.md)。下文保留原始交接。
+
 > **狀態：未完成。** PR17 的程式已合併，但研究沒有跑完。12 個家族只有 B1、H1 完成 Q2–Q6；
 > 其餘 10 個家族的 Q2–Q6 還要算，預計連續約 6 天。不要把任何 PR、報告頁或 Q1 結果當成整份研究已完成。
 > 四種狀態的定義見 [交付狀態](../../docs/en/research-program.md#delivery-states)：目前是「程式合併」，

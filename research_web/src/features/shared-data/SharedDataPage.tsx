@@ -19,6 +19,16 @@ import {
 import { SharedChart } from "./SharedChart";
 import { SharedCatalog } from "./SharedCatalog";
 import { SourceInfo } from "../../components/ui/primitives";
+import { RevenueChart } from "./RevenueChart";
+import { OverlayStatus } from "./OverlayStatus";
+import { useOverlay } from "./useOverlay";
+import {
+    INSTITUTIONAL_FIELDS,
+    institutionalPoints,
+    type InstitutionalField,
+    type InstitutionalRow,
+    type RevenueRow,
+} from "./overlays";
 import "./shared-data.css";
 
 export function SharedDataPage({
@@ -65,6 +75,10 @@ export function SharedDataPage({
     const [oscillator, setOscillator] = useState("RSI14");
     const [range, setRange] = useState(240);
     const [cursor, setCursor] = useState(-1);
+    const [institutionalField, setInstitutionalField] = useState<
+        InstitutionalField | "off"
+    >("off");
+    const [showRevenue, setShowRevenue] = useState(false);
     const updateCursor = useCallback((i: number) => setCursor(i), []);
     useEffect(() => {
         if (!privateMode) return;
@@ -144,6 +158,30 @@ export function SharedDataPage({
     const current =
         series?.code === selected && series.basis === basis ? series : null;
     const symbol = symbols.find((item) => item.code === selected);
+    const institutional = useOverlay<InstitutionalRow>(
+        "institutional",
+        current?.code ?? null,
+        current?.dates[0] ?? null,
+        privateMode && institutionalField !== "off",
+    );
+    const revenue = useOverlay<RevenueRow>(
+        "monthly-revenue",
+        current?.code ?? null,
+        current?.dates[0]?.slice(0, 7) ?? null,
+        privateMode && showRevenue,
+    );
+    const chartDates = useMemo(() => new Set(current?.dates ?? []), [current]);
+    const institutionalSeries = useMemo(
+        () =>
+            institutional.data && institutionalField !== "off"
+                ? institutionalPoints(
+                      institutional.data.rows,
+                      institutionalField,
+                      chartDates,
+                  )
+                : null,
+        [institutional.data, institutionalField, chartDates],
+    );
     const reference = basis === "reference_factor_adjusted";
     const day =
         current && cursor >= 0
@@ -470,10 +508,37 @@ export function SharedDataPage({
                                                 range={range}
                                                 theme={theme}
                                                 onCursor={updateCursor}
+                                                institutional={
+                                                    institutionalSeries
+                                                }
                                             />
                                             <p className="shared-note">
                                                 中層：成交量（張）。滑鼠滾輪縮放、拖曳平移；高低點畫在極值日，當日尚不一定可知。
                                             </p>
+                                            {institutionalField !== "off" && (
+                                                <OverlayStatus
+                                                    label="法人買賣超（股）"
+                                                    overlay={institutional}
+                                                />
+                                            )}
+                                            {showRevenue && (
+                                                <>
+                                                    <OverlayStatus
+                                                        label="月營收"
+                                                        overlay={revenue}
+                                                    />
+                                                    {revenue.data?.status ===
+                                                        "ok" && (
+                                                        <RevenueChart
+                                                            rows={
+                                                                revenue.data
+                                                                    .rows
+                                                            }
+                                                            theme={theme}
+                                                        />
+                                                    )}
+                                                </>
+                                            )}
                                             <label>
                                                 日期數值{" "}
                                                 <input
@@ -572,6 +637,50 @@ export function SharedDataPage({
                                                     ))}
                                                 </select>
                                             </label>
+                                        </fieldset>
+                                        <fieldset disabled={!privateMode}>
+                                            <legend>籌碼與營收</legend>
+                                            <label>
+                                                法人買賣超{" "}
+                                                <select
+                                                    value={institutionalField}
+                                                    onChange={(event) =>
+                                                        setInstitutionalField(
+                                                            event.target
+                                                                .value as
+                                                                | InstitutionalField
+                                                                | "off",
+                                                        )
+                                                    }
+                                                >
+                                                    <option value="off">
+                                                        隱藏
+                                                    </option>
+                                                    {INSTITUTIONAL_FIELDS.map(
+                                                        (field) => (
+                                                            <option
+                                                                key={field.id}
+                                                                value={field.id}
+                                                            >
+                                                                {field.label}
+                                                            </option>
+                                                        ),
+                                                    )}
+                                                </select>
+                                            </label>
+                                            <div className="shared-controls">
+                                                <button
+                                                    className="u-chip"
+                                                    aria-pressed={showRevenue}
+                                                    onClick={() =>
+                                                        setShowRevenue(
+                                                            !showRevenue,
+                                                        )
+                                                    }
+                                                >
+                                                    月營收
+                                                </button>
+                                            </div>
                                         </fieldset>
                                     </div>
                                     {current && day >= 0 && (

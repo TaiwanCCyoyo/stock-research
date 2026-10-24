@@ -322,7 +322,9 @@ def _confirmation_rows(path: Path) -> list[dict[str, Any]]:
     return cast(list[dict[str, Any]], frame.to_dict("records"))
 
 
-def run_conditions(inputs: LocalInputs, target: str, output: Path) -> tuple[dict[str, Any], dict[str, tuple[Atom, ...]], list[Path]]:
+def run_conditions(
+    inputs: LocalInputs, target: str, output: Path, *, on_progress: Callable[[int, int], None] | None = None
+) -> tuple[dict[str, Any], dict[str, tuple[Atom, ...]], list[Path]]:
     """Write one target's Q2/Q3 final tables, reusing original event parts.
 
     Missing event projections are materialized once in un-hashed target scratch.
@@ -411,6 +413,8 @@ def run_conditions(inputs: LocalInputs, target: str, output: Path) -> tuple[dict
                 progress["completed"][name] = name
                 _progress(progress_path, progress)
             paths.extend(group_paths)
+            if on_progress is not None:
+                on_progress(len(progress["completed"]), len(expected_groups))
             if group == "pattern:union" and horizon == 252:
                 confirmation.extend(top_rows if top_rows is not None else _confirmation_rows(group_paths[0]))
     if confirmation:
