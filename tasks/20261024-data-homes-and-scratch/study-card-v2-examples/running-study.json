@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261013-pattern-scan",
+    "kind": "study",
+    "question": "2010 年起全市場的各種型態，之後多常大漲？",
+    "answer": "還在計算：12 個型態家族已完成 2 個。",
+    "verdict": "running",
+    "data_period": { "from": "2010-01-04", "to": "2026-10-12" },
+    "key_numbers": [],
+    "limitation": "結果未完成前，任何數字都不能當成整份研究的結論。",
+    "report": {
+        "web_report": "web-report/index.html",
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": "code_merged",
+    "scratch_run": { "run": "q2-q6-v6" },
+    "provenance": {
+        "answer_source": null,
+        "report_sha256": null,
+        "publication": null,
+        "shared_data": ["adjusted-daily-v1"],
+        "legacy_history_id": null
+    }
+}

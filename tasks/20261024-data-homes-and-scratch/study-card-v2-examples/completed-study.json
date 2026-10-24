@@ -1,0 +1,40 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261012-hhhl-v4-variants",
+    "kind": "study",
+    "question": "高過高型態之後，翻倍機率比較高嗎？",
+    "answer": "有一點關聯，但沒有比「創新高又爆量」更強。",
+    "verdict": "no_edge",
+    "data_period": null,
+    "key_numbers": [
+        {
+            "label": "高過高事件，252 日內翻倍",
+            "value": 15.97,
+            "unit": "percent",
+            "highlight": true,
+            "source_excerpt": "全部原合格事件的翻倍率，在 126／252 個交易日內分別為 **7.81%／15.97%**"
+        },
+        {
+            "label": "新高量能對照，252 日內翻倍",
+            "value": 16.9,
+            "unit": "percent",
+            "highlight": false,
+            "source_excerpt": "新高量能控制為 8.25%／16.90%"
+        }
+    ],
+    "limitation": "這些是事件比例，不代表多少股票一定會成為飆股。",
+    "report": {
+        "web_report": "web-report/index.html",
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": "delivered",
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "高過高事件與後續翻倍有可描述的關聯，但本版沒有顯示它比新高量能事件更強。",
+        "report_sha256": null,
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

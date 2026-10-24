@@ -68,15 +68,19 @@ Run states map to the task-level
 by the OS when the process ends. `uv run python -m scripts.scratch_runs list` classifies
 every run:
 
-| Classification    | Rule                                                        | Who may delete                                |
-| ----------------- | ----------------------------------------------------------- | --------------------------------------------- |
-| in use            | a process holds the lock                                    | nobody                                        |
-| paused            | running, lock free, touched within 7 days                   | nobody                                        |
-| awaiting delivery | complete, touched within 7 days                             | nobody                                        |
-| deletable         | delivered with its recorded results present, or abandoned   | any session, without asking (`clean --apply`) |
-| ask owner         | stale over 7 days, unlabelled, or delivered results missing | owner                                         |
+| Classification    | Rule                                                                                  | Who may delete                                |
+| ----------------- | ------------------------------------------------------------------------------------- | --------------------------------------------- |
+| in use            | a process holds the lock, or an unfinished run lists a path inside it in `depends_on` | nobody                                        |
+| paused            | running, lock free, touched within 7 days                                             | nobody                                        |
+| awaiting delivery | complete, touched within 7 days                                                       | nobody                                        |
+| deletable         | abandoned, or delivered with every result still verifiable (see below)                | any session, without asking (`clean --apply`) |
+| ask owner         | stale over 7 days, unlabelled, or delivered results missing                           | owner                                         |
 
-Deletion holds the run's lock and refuses any link or junction inside the run.
+Delivery records an identity for each result: a repository path must have exactly the
+content of `origin/main` (nothing changed, untracked or ignored under it) and is kept as
+that commit plus the Git object id; a shared-root path is kept as a manifest of file sizes
+and SHA-256. Deletion holds the run's writer and dependency locks, re-checks dependents
+and result digests under them, and refuses any link or junction inside the run.
 
 ### 4. Legacy account runs: the package is the archive
 

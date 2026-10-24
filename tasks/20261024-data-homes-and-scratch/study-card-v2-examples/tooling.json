@@ -1,0 +1,22 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261004-opportunity-reader-ux",
+    "kind": "tooling",
+    "question": "飆股地圖的閱讀體驗修正",
+    "answer": "地圖改為標示涵蓋範圍與觀察日期，空白圖例不再出現。",
+    "verdict": "not_evaluated",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "這是介面整理，不是研究結論。",
+    "report": { "web_report": null, "markdown": "report.md" },
+    "account_run": null,
+    "delivery_state": "code_merged",
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "The historical map states its eight-case coverage beside the observation date,",
+        "report_sha256": null,
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": "20261004-opportunity-reader-ux"
+    }
+}

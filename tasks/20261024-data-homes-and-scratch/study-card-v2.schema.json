@@ -1,0 +1,199 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "study-card.v2",
+    "title": "Study card v2 (tasks/<task-id>/study.json)",
+    "description": "One card per task directory; the only research source the dashboard reads. Plain-language fields are for readers; technical identity lives in provenance. Owner decision 2026-10-24.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "schema",
+        "task_id",
+        "kind",
+        "question",
+        "answer",
+        "verdict",
+        "data_period",
+        "key_numbers",
+        "limitation",
+        "report",
+        "account_run",
+        "delivery_state",
+        "scratch_run",
+        "provenance"
+    ],
+    "properties": {
+        "schema": { "const": "study-card.v2" },
+        "task_id": {
+            "type": "string",
+            "pattern": "^[0-9]{8}-[a-z0-9][a-z0-9-]*$",
+            "description": "Exact enclosing task directory name; its first 8 digits are the task date shown as such, not a completion date."
+        },
+        "kind": {
+            "enum": ["study", "tooling"],
+            "description": "tooling = engineering/infrastructure work; hidden from the research page."
+        },
+        "question": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "description": "Plain question used as the card title, e.g. 「只看強勢條件，翻倍機率有多高？」."
+        },
+        "answer": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160,
+            "description": "One plain sentence. May paraphrase; provenance.answer_source holds the verbatim report excerpt it rests on."
+        },
+        "verdict": {
+            "enum": [
+                "promising",
+                "no_edge",
+                "mixed",
+                "failed",
+                "running",
+                "not_evaluated",
+                "archived"
+            ],
+            "description": "有線索 / 沒有優勢 / 結果不一 / 行不通 / 進行中 / 尚未評估 / 舊資料. A descriptive study never implies approval; owner approval is not encoded here."
+        },
+        "data_period": {
+            "oneOf": [
+                { "type": "null" },
+                {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["from", "to"],
+                    "properties": {
+                        "from": { "type": "string", "format": "date" },
+                        "to": { "type": "string", "format": "date" }
+                    }
+                }
+            ]
+        },
+        "key_numbers": {
+            "type": "array",
+            "maxItems": 4,
+            "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "label",
+                    "value",
+                    "unit",
+                    "highlight",
+                    "source_excerpt"
+                ],
+                "properties": {
+                    "label": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 24
+                    },
+                    "value": { "type": "number" },
+                    "unit": {
+                        "enum": ["percent", "ratio", "count", "days", "twd"]
+                    },
+                    "highlight": { "type": "boolean" },
+                    "source_excerpt": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Verbatim contiguous excerpt of the report that states this number."
+                    }
+                }
+            },
+            "description": "Empty when the report has no verbatim number to cite; the card then shows only the answer."
+        },
+        "limitation": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "description": "One plain sentence the dashboard always shows (research-output-safety)."
+        },
+        "report": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["web_report", "markdown"],
+            "properties": {
+                "web_report": {
+                    "type": ["string", "null"],
+                    "description": "Task-relative path, normally web-report/index.html; null when absent."
+                },
+                "markdown": {
+                    "type": ["string", "null"],
+                    "description": "Task-relative report path, e.g. report.md."
+                }
+            }
+        },
+        "account_run": {
+            "oneOf": [
+                { "type": "null" },
+                {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["run_id", "period_note"],
+                    "properties": {
+                        "run_id": {
+                            "type": "string",
+                            "description": "Run id in the archived studio package, e.g. stock:20261002-add-retry:normal-v1 (#strategy/<run_id>)."
+                        },
+                        "period_note": {
+                            "type": "string",
+                            "description": "Plain note shown on the button, e.g. 「帳戶模擬 2019–2023（舊資料）」."
+                        }
+                    }
+                }
+            ]
+        },
+        "delivery_state": {
+            "enum": ["code_merged", "research_complete", "delivered", null],
+            "description": "research-program.md#delivery-states: 程式合併 / 研究完成 / 成果交付. null = not recorded (legacy)."
+        },
+        "scratch_run": {
+            "oneOf": [
+                { "type": "null" },
+                {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["run"],
+                    "properties": {
+                        "run": {
+                            "type": "string",
+                            "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+                        }
+                    }
+                }
+            ],
+            "description": "While running: the scratch run under <shared root>/scratch/<task_id>/<run>/ whose run.json progress the API merges into the card."
+        },
+        "provenance": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "answer_source",
+                "report_sha256",
+                "publication",
+                "shared_data",
+                "legacy_history_id"
+            ],
+            "properties": {
+                "answer_source": {
+                    "type": ["string", "null"],
+                    "description": "Verbatim contiguous excerpt of the report (or of the legacy history item) supporting answer and verdict."
+                },
+                "report_sha256": {
+                    "type": ["string", "null"],
+                    "pattern": "^[0-9a-f]{64}$"
+                },
+                "publication": { "type": ["string", "null"] },
+                "shared_data": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                },
+                "legacy_history_id": {
+                    "type": ["string", "null"],
+                    "description": "Id of the converted item in the archived studio package's researchHistory, for legacy cards."
+                }
+            }
+        }
+    }
+}

@@ -12,15 +12,24 @@ later session decides from the label instead of guessing how far the run got:
 - ``abandoned``  the owner or the task gave it up, with a reason.
 
 "Safe to clean" (可安全清理) is derived by `survey`, never stored: delivered runs whose
-recorded results still exist, and abandoned runs. A run in use holds ``.writer.lock`` with
-an OS lock for its whole lifetime; the OS drops the lock when the process ends, so a live
-run is never classified by a pid or a clock. ``updated_at`` only flags runs nobody touched
-for `STALE_AFTER` so the owner can decide.
+recorded results still verify, and abandoned runs, provided no unfinished run depends on
+them. A run in use holds ``.writer.lock`` with an OS lock for its whole lifetime; the OS
+drops the lock when the process ends, so a live run is never classified by a pid or a
+clock. ``updated_at`` only flags runs nobody touched for `STALE_AFTER` so the owner can decide.
 
-Final results never stay here. Delivery records where they went: a repository-relative
-path that exists on the default branch (`DEFAULT_BRANCH`, i.e. merged, not merely present
-in some worktree), or an absolute path elsewhere on the shared root. `survey` re-checks
-both before a delivered run counts as deletable.
+Final results never stay here. Delivery records where they went together with an identity
+that is re-checked before the run's checkpoints may be deleted:
+
+- a repository path whose working-tree content equals `DEFAULT_BRANCH` (merged; nothing
+  changed, untracked or ignored under it), recorded as that branch commit and the Git
+  object id; later that commit must still be reachable from the branch with the same object;
+- an absolute path elsewhere on the shared root, recorded as a manifest of every file's size
+  and SHA-256; `survey` re-checks sizes, deletion re-checks digests.
+
+``depends_on`` protects inputs: while a run is running or complete, every path it names,
+including a path inside another scratch run, keeps the run containing it out of `clean`.
+Registering a dependency and deleting a run both hold the target's ``.deps.lock``, so no
+consumer can appear between the final check and the deletion.
 """
 
 from __future__ import annotations
@@ -39,7 +48,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import IO, Any
 
-from research_core.artifact_store import canonical, relative_name, release_os_lock, try_os_lock
+from research_core.artifact_store import canonical, file_digest, relative_name, release_os_lock, try_os_lock
 from research_core.producer_data import REPO_ROOT
 from research_core.research_data_paths import check_tree, checked_path
 from research_core.shared_data import shared_data_root
@@ -49,6 +58,7 @@ LOGGER = logging.getLogger(__name__)
 SCHEMA = "scratch-run.v1"
 RUN_FILE = "run.json"
 LOCK_FILE = ".writer.lock"
+DEPS_LOCK_FILE = ".deps.lock"
 LOCK_MARKER = b"scratch-run-lock-v1\n"
 STATES = ("running", "complete", "delivered", "abandoned")
 TRANSITIONS = {
@@ -89,8 +99,8 @@ def _run_dir(root: Path, task: str, run: str) -> Path:
     return checked_path(root / task / run)
 
 
-def _lock(directory: Path) -> IO[bytes]:
-    lock = directory / LOCK_FILE
+def _lock(directory: Path, name: str = LOCK_FILE) -> IO[bytes]:
+    lock = directory / name
     try:
         descriptor = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY | getattr(os, "O_BINARY", 0))
     except FileExistsError:
@@ -101,7 +111,8 @@ def _lock(directory: Path) -> IO[bytes]:
     handle = lock.open("a+b")
     if not try_os_lock(handle):
         handle.close()
-        raise ScratchRunError(f"scratch run is in use by another process: {directory}")
+        what = "in use by another process" if name == LOCK_FILE else "being cleaned or registered by another process; retry"
+        raise ScratchRunError(f"scratch run is {what}: {directory}")
     return handle
 
 
@@ -110,22 +121,84 @@ def _unlock(handle: IO[bytes]) -> None:
     handle.close()
 
 
-def _on_default_branch(repo_root: Path, name: str) -> bool:
-    """True when `name` (file or directory) exists in DEFAULT_BRANCH's tree; False when it
-    does not or Git cannot tell. Uncommitted, ignored or branch-only files never count."""
+def _git(repo_root: Path, *args: str) -> subprocess.CompletedProcess[str] | None:
+    """Run Git in `repo_root`; None when Git cannot run at all."""
     environment = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
     try:
-        result = subprocess.run(
-            ["git", "-C", str(repo_root), "cat-file", "-e", f"{DEFAULT_BRANCH}:{name}"],
-            capture_output=True,
-            check=False,
-            env=environment,
-            timeout=30,
-        )
+        return subprocess.run(["git", "-C", str(repo_root), *args], capture_output=True, text=True, check=False, env=environment, timeout=120)
     except (OSError, subprocess.SubprocessError) as error:
-        LOGGER.warning("cannot ask Git about %s in %s: %s", name, repo_root, error)
+        LOGGER.warning("cannot run git %s in %s: %s", args[0], repo_root, error)
+        return None
+
+
+def _git_out(repo_root: Path, *args: str) -> str | None:
+    result = _git(repo_root, *args)
+    return result.stdout.strip() if result is not None and result.returncode == 0 else None
+
+
+def _repository_identity(repo_root: Path, name: str) -> dict[str, str]:
+    """Identity of a repository result whose working-tree content is exactly DEFAULT_BRANCH's."""
+    commit = _git_out(repo_root, "rev-parse", "--verify", f"{DEFAULT_BRANCH}^{{commit}}")
+    obj = _git_out(repo_root, "rev-parse", "--verify", f"{DEFAULT_BRANCH}:{name}")
+    if commit is None or obj is None:
+        raise ScratchRunError(f"repository result {name} is not on {DEFAULT_BRANCH}; merge it (and fetch) before marking delivered")
+    path = repo_root / name
+    if path.is_file():
+        if _git_out(repo_root, "hash-object", "--", name) != obj:
+            raise ScratchRunError(f"{name} in {repo_root} differs from {DEFAULT_BRANCH}; merge the new content before marking delivered")
+    elif path.is_dir():
+        changed = _git(repo_root, "diff", "--quiet", DEFAULT_BRANCH, "--", name)
+        untracked = _git_out(repo_root, "ls-files", "--others", "--", name)
+        if changed is None or changed.returncode != 0 or untracked is None or untracked:
+            raise ScratchRunError(f"{name} in {repo_root} has content not on {DEFAULT_BRANCH} (changed, untracked or ignored files); merge it first")
+    else:
+        raise ScratchRunError(f"repository result {name} is missing from {repo_root}")
+    return {"kind": "repository", "path": name, "commit": commit, "object": obj}
+
+
+def _repository_result_kept(repo_root: Path, result: Mapping[str, Any]) -> bool:
+    commit, path = str(result.get("commit")), str(result.get("path"))
+    ancestor = _git(repo_root, "merge-base", "--is-ancestor", commit, DEFAULT_BRANCH)
+    if ancestor is None or ancestor.returncode != 0:
         return False
-    return result.returncode == 0
+    return _git_out(repo_root, "rev-parse", "--verify", f"{commit}:{path}") == result.get("object")
+
+
+def _manifest(target: Path) -> dict[str, dict[str, Any]]:
+    if target.is_dir():
+        check_tree(target)
+    files = [target] if target.is_file() else sorted(path for path in target.rglob("*") if path.is_file())
+    if not files:
+        raise ScratchRunError(f"delivered result {target} contains no files")
+    return {(path.relative_to(target).as_posix() if path != target else "."): {"bytes": path.stat().st_size, "sha256": file_digest(path)} for path in files}
+
+
+def _shared_result_kept(result: Mapping[str, Any], *, digests: bool) -> bool:
+    base, files = Path(str(result.get("path"))), result.get("files") or {}
+    for relative, expected in files.items():
+        path = base if relative == "." else base / relative
+        try:
+            if path.stat().st_size != expected["bytes"]:
+                return False
+        except OSError:
+            return False
+        if digests and file_digest(path) != expected["sha256"]:
+            return False
+    return bool(files)
+
+
+def _unverified_results(results: list[Any], repo_root: Path, *, digests: bool) -> list[str]:
+    """Results that can no longer be verified; empty when every one still is."""
+    lost = []
+    for result in results:
+        if not isinstance(result, Mapping):
+            lost.append(repr(result))
+        elif result.get("kind") == "repository":
+            if not _repository_result_kept(repo_root, result):
+                lost.append(str(result.get("path")))
+        elif result.get("kind") != "shared" or not _shared_result_kept(result, digests=digests):
+            lost.append(str(result.get("path")))
+    return lost
 
 
 def _write_record(directory: Path, record: dict[str, Any]) -> None:
@@ -208,7 +281,7 @@ class ScratchRun:
         LOGGER.info("scratch run %s/%s: %s -> %s", self.record["task"], self.record["run"], current, state)
         self._save(state=state, **changes)
 
-    def _checked_result(self, result: str) -> str:
+    def _checked_result(self, result: str) -> dict[str, Any]:
         scratch = self.path.parent.parent
         if Path(result).is_absolute():
             target = checked_path(Path(result)).resolve()
@@ -218,13 +291,41 @@ class ScratchRun:
                 raise ScratchRunError(f"an absolute result must be on the shared root {scratch.parent}: {result}")
             if not target.exists():
                 raise ScratchRunError(f"delivered result does not exist: {result}")
-            return str(target)
+            return {"kind": "shared", "path": str(target), "files": _manifest(target)}
         name = relative_name(result.replace("\\", "/")).rstrip("/")
         if name.split("/")[0] in {".tmp", ".worktrees"}:
             raise ScratchRunError(f"{name} is scratch space, not a durable result")
-        if not _on_default_branch(self._repo_root, name):
-            raise ScratchRunError(f"repository result {name} is not on {DEFAULT_BRANCH}; merge it (and fetch) before marking delivered")
-        return name
+        return _repository_identity(self._repo_root, name)
+
+
+def _owning_run(root: Path, path: Path) -> Path | None:
+    """The scratch run directory that contains `path`, if any."""
+    resolved_root = root.resolve()
+    if not path.is_relative_to(resolved_root):
+        return None
+    parts = path.relative_to(resolved_root).parts
+    return resolved_root / parts[0] / parts[1] if len(parts) >= 2 else None
+
+
+def _overlaps(left: Path, right: Path) -> bool:
+    return left.is_relative_to(right) or right.is_relative_to(left)
+
+
+def _dependents(root: Path, target: Path) -> list[str]:
+    """Runs still running or complete whose declared dependencies overlap `target`."""
+    target = target.resolve()
+    found = []
+    for task_dir in sorted(path for path in root.iterdir() if path.is_dir()):
+        for run_dir in sorted(path for path in task_dir.iterdir() if path.is_dir()):
+            if run_dir.resolve() == target:
+                continue
+            try:
+                record = read_run(run_dir)
+            except ScratchRunError:
+                continue
+            if record["state"] in {"running", "complete"} and any(_overlaps(Path(path), target) for path in record.get("depends_on", [])):
+                found.append(f"{record['task']}/{record['run']}")
+    return found
 
 
 def create_run(
@@ -239,41 +340,62 @@ def create_run(
 ) -> ScratchRun:
     """Create a new run directory and its label; refuses an existing run id.
 
-    `depends_on` lists absolute paths outside the run that it reads and that must not be
-    cleaned while the run is not delivered or abandoned (for example an earlier phase's
-    output left in place). They are recorded, not copied.
+    `depends_on` lists absolute paths outside the run that it reads (for example an earlier
+    phase's output left in place, or a file inside another scratch run). While this run is
+    running or complete, `clean` keeps every scratch run they fall in. They are recorded,
+    not copied.
     """
     if not purpose.strip() or not owner.strip():
         raise ScratchRunError("a scratch run needs a purpose and an owner (session or agent name)")
+    raw = [Path(path) for path in depends_on]
+    if any(not path.is_absolute() for path in raw):
+        raise ScratchRunError(f"depends_on needs absolute paths, got {[str(path) for path in raw]!r}")
     root = scratch_root() if root is None else checked_path(root)
     repo_root = REPO_ROOT if repo_root is None else repo_root
+    dependencies = [str(checked_path(path).resolve()) for path in raw]
     directory = _run_dir(root, task, run)
     directory.parent.mkdir(exist_ok=True)
     try:
         directory.mkdir()
     except FileExistsError as error:
         raise ScratchRunError(f"scratch run already exists, resume it with open_run: {directory}") from error
-    dependencies = [str(Path(path)) for path in depends_on]
-    if any(not Path(path).is_absolute() for path in dependencies):
-        raise ScratchRunError(f"depends_on needs absolute paths, got {dependencies!r}")
     handle = _lock(directory)
-    started = _now()
-    record = {
-        "schema": SCHEMA,
-        "task": task,
-        "run": run,
-        "purpose": purpose.strip(),
-        "owner": owner.strip(),
-        "worktree": str(repo_root.resolve()),
-        "state": "running",
-        "started_at": started,
-        "updated_at": started,
-        "pid": os.getpid(),
-        "host": socket.gethostname(),
-        "depends_on": dependencies,
-    }
-    _write_record(directory, record)
-    LOGGER.info("created scratch run %s/%s at %s", task, run, directory)
+    # Hold each depended-on run's deps lock until the label is written, so a concurrent
+    # `_delete` either sees this dependency or has finished before it is registered.
+    dep_locks: list[IO[bytes]] = []
+    try:
+        for target in sorted({holder for path in dependencies if (holder := _owning_run(root, Path(path))) is not None}):
+            if target == directory.resolve():
+                continue
+            if not (target / RUN_FILE).is_file():
+                raise ScratchRunError(f"depended-on scratch run {target} does not exist")
+            dep_locks.append(_lock(target, DEPS_LOCK_FILE))
+            if not (target / RUN_FILE).is_file():
+                raise ScratchRunError(f"depended-on scratch run {target} was just deleted")
+        started = _now()
+        record = {
+            "schema": SCHEMA,
+            "task": task,
+            "run": run,
+            "purpose": purpose.strip(),
+            "owner": owner.strip(),
+            "worktree": str(repo_root.resolve()),
+            "state": "running",
+            "started_at": started,
+            "updated_at": started,
+            "pid": os.getpid(),
+            "host": socket.gethostname(),
+            "depends_on": dependencies,
+        }
+        _write_record(directory, record)
+    except BaseException:
+        _unlock(handle)
+        shutil.rmtree(directory, ignore_errors=True)
+        raise
+    finally:
+        for lock in dep_locks:
+            _unlock(lock)
+    LOGGER.info("created scratch run %s/%s at %s (%d dependencies)", task, run, directory, len(dependencies))
     return ScratchRun(directory, record, handle, repo_root)
 
 
@@ -304,10 +426,6 @@ class RunStatus:
     progress: dict[str, Any] | None = None
 
 
-def _missing_results(results: list[str], repo_root: Path) -> list[str]:
-    return [result for result in results if not (Path(result).exists() if Path(result).is_absolute() else _on_default_branch(repo_root, result))]
-
-
 def _status(directory: Path, now: datetime, repo_root: Path) -> RunStatus:
     task, run = directory.parent.name, directory.name
     try:
@@ -321,14 +439,18 @@ def _status(directory: Path, now: datetime, repo_root: Path) -> RunStatus:
     except ScratchRunError:
         return RunStatus(task, run, directory, state, IN_USE, "a process holds the run open", updated, progress)
     _unlock(handle)
+    if state in {"abandoned", "delivered"}:
+        dependents = _dependents(directory.parent.parent, directory)
+        if dependents:
+            return RunStatus(task, run, directory, state, IN_USE, "still needed by " + ", ".join(dependents), updated)
     if state == "abandoned":
         return RunStatus(task, run, directory, state, DELETABLE, record.get("reason", ""), updated)
     if state == "delivered":
         results = record.get("results", [])
-        missing = _missing_results(results, repo_root) if results else ["(none recorded)"]
-        if missing:
-            return RunStatus(task, run, directory, state, ASK_OWNER, f"delivered results are missing: {missing}", updated)
-        return RunStatus(task, run, directory, state, DELETABLE, "results delivered to " + ", ".join(record.get("results", [])), updated)
+        lost = _unverified_results(results, repo_root, digests=False) if results else ["(none recorded)"]
+        if lost:
+            return RunStatus(task, run, directory, state, ASK_OWNER, f"delivered results cannot be verified: {lost}", updated)
+        return RunStatus(task, run, directory, state, DELETABLE, "results delivered to " + ", ".join(str(result["path"]) for result in results), updated)
     try:
         age = now - datetime.fromisoformat(str(updated))
     except (TypeError, ValueError):
@@ -362,23 +484,40 @@ def survey(root: Path | None = None, *, now: datetime | None = None, repo_root: 
     return statuses
 
 
-def _delete(directory: Path) -> None:
-    """Remove one run while holding its lock; refuses any link or junction inside it."""
+def _delete(directory: Path, repo_root: Path) -> None:
+    """Remove one run while holding its writer and deps locks, after re-checking under them
+    that it is finished, no unfinished run depends on it and, if delivered, that every
+    result still verifies with digests. Refuses any link or junction inside it."""
     handle = _lock(directory)
     try:
-        if read_run(directory)["state"] not in {"delivered", "abandoned"}:
+        deps = _lock(directory, DEPS_LOCK_FILE)
+    except ScratchRunError:
+        _unlock(handle)
+        raise
+    try:
+        record = read_run(directory)
+        if record["state"] not in {"delivered", "abandoned"}:
             raise ScratchRunError(f"{directory} changed state; not deleting")
+        dependents = _dependents(directory.parent.parent, directory)
+        if dependents:
+            raise ScratchRunError(f"{directory} is still needed by {dependents}; not deleting")
+        if record["state"] == "delivered":
+            lost = _unverified_results(record.get("results", []), repo_root, digests=True)
+            if lost or not record.get("results"):
+                raise ScratchRunError(f"{directory}: delivered results cannot be verified {lost}; not deleting")
         check_tree(checked_path(directory))
         for child in directory.iterdir():
-            if child.name == LOCK_FILE:
+            if child.name in {LOCK_FILE, DEPS_LOCK_FILE}:
                 continue
             if child.is_dir():
                 shutil.rmtree(child)
             else:
                 child.unlink()
     finally:
+        _unlock(deps)
         _unlock(handle)
     (directory / LOCK_FILE).unlink(missing_ok=True)
+    (directory / DEPS_LOCK_FILE).unlink(missing_ok=True)
     directory.rmdir()
     try:
         directory.parent.rmdir()
@@ -388,9 +527,10 @@ def _delete(directory: Path) -> None:
 
 def clean(root: Path | None = None, *, apply: bool = False, now: datetime | None = None, repo_root: Path | None = None) -> list[RunStatus]:
     """Return the deletable runs; delete them only with ``apply=True``."""
+    repo_root = REPO_ROOT if repo_root is None else repo_root
     deletable = [status for status in survey(root, now=now, repo_root=repo_root) if status.verdict == DELETABLE]
     for status in deletable:
         if apply:
-            _delete(status.path)
+            _delete(status.path, repo_root)
             LOGGER.info("deleted scratch run %s/%s (%s)", status.task, status.run, status.state)
     return deletable

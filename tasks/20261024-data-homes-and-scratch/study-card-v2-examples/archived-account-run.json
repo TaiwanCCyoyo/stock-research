@@ -1,0 +1,31 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261002-entry-extension-cap",
+    "kind": "study",
+    "question": "小量試單時避免追高，帳戶會更好嗎？",
+    "answer": "這個做法在舊研究中被判定淘汰。",
+    "verdict": "archived",
+    "data_period": {
+        "from": "2019-01-02",
+        "to": "2023-12-29"
+    },
+    "key_numbers": [],
+    "limitation": "只有 2019–2023 的舊結果；要從 2010 年評估需重新研究。",
+    "report": {
+        "web_report": null,
+        "markdown": null
+    },
+    "account_run": {
+        "run_id": "stock:20261002-entry-extension-cap:cap-v1",
+        "period_note": "帳戶模擬 2019–2023（舊資料）"
+    },
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": null,
+        "report_sha256": null,
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}
