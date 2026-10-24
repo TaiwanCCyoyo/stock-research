@@ -154,7 +154,7 @@ export function HomePage() {
             )}
             <h2 className="u-section-title">其他工具</h2>
             <div className="hm-doors">
-                <a className="u-card" href="#data">
+                <a className="u-card" href="#overview">
                     <b>個股</b>
                     <span className="u-muted">任一檔股票的價格與指標</span>
                 </a>

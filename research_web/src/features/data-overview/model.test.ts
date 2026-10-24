@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
     countLabel,
+    datasetHref,
     groupDatasets,
     periodLabel,
     statusLabel,
@@ -20,6 +21,14 @@ const dataset = (over: Partial<DatasetStatus> = {}): DatasetStatus => ({
     rows: 288479,
     status: "ok",
     ...over,
+});
+
+test("dataset discovery links only use supported coverage filters", () => {
+    assert.match(datasetHref(dataset())!, /dataset=monthly_revenue/);
+    assert.equal(
+        datasetHref(dataset({ id: "synthetic-prices" })),
+        "#overview/stocks?kind=&status=all",
+    );
 });
 
 test("unknown counts stay unknown while zero stays a measured zero", () => {

@@ -13,6 +13,7 @@ export interface DatasetStatus {
     name: string;
     data_period: { from: string | null; to: string | null } | null;
     last_updated: string | null;
+    update_kind?: "version_created_at" | "manifest_modified_at" | null;
     symbols: number | null;
     rows: number | null;
     status: "ok" | "stale" | "missing" | "updating";
@@ -55,7 +56,7 @@ export const SOURCE_GROUPS: {
 ];
 
 export const STATUS_LABELS: Record<DatasetStatus["status"], string> = {
-    ok: "正常",
+    ok: "有資料",
     stale: "需要更新",
     missing: "沒有資料",
     updating: "更新中",
@@ -65,6 +66,12 @@ export const STATUS_LABELS: Record<DatasetStatus["status"], string> = {
  *  (research_core.data_status), not out of date. */
 export function statusLabel(item: DatasetStatus): string {
     if (item.source === "catalog" && item.status === "stale") return "部分保存";
+    if (
+        item.id === "institutional" &&
+        item.data_period?.from &&
+        item.data_period.from >= "2019-01-01"
+    )
+        return "歷史缺漏";
     return STATUS_LABELS[item.status] ?? item.status;
 }
 
@@ -98,4 +105,43 @@ export function groupDatasets(datasets: readonly DatasetStatus[]) {
         ...group,
         datasets: datasets.filter((item) => item.source === group.source),
     })).filter((group) => group.datasets.length > 0);
+}
+
+export function datasetPeriodLabel(item: DatasetStatus): string {
+    if (item.id === "derived:security-coverage-v1")
+        return "最近檢查 " + (item.data_period?.to ?? "未確認");
+    if (item.id === "symbol_meta")
+        return "最近觀察 " + (item.data_period?.to?.slice(0, 10) ?? "未確認");
+    return periodLabel(item.data_period);
+}
+export function datasetUpdatedLabel(item: DatasetStatus): string {
+    if (item.source === "catalog") {
+        if (!item.last_updated) return "固定版本";
+        const label =
+            item.update_kind === "version_created_at"
+                ? "版本建立"
+                : "說明檔最後變動";
+        return "固定版本 · " + label + " " + item.last_updated.slice(0, 10);
+    }
+    return updatedLabel(item.last_updated);
+}
+export function datasetHref(item: DatasetStatus): string | null {
+    if (item.source === "producer") {
+        const query = new URLSearchParams({ kind: "", status: "all" });
+        if (
+            [
+                "official_daily",
+                "price_daily",
+                "institutional",
+                "monthly_revenue",
+                "corporate_actions",
+                "symbol_meta",
+            ].includes(item.id)
+        )
+            query.set("dataset", item.id);
+        return "#overview/stocks?" + query;
+    }
+    if (item.id === "derived:adjusted-daily-v1")
+        return "#overview/stocks?dataset=adjusted_daily&kind=&status=all";
+    return null;
 }

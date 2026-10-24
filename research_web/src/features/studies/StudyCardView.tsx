@@ -106,7 +106,7 @@ function StudyDetailsView({ details }: { details: StudyDetails }) {
                     {details.sharedData.map((id, index) => (
                         <span key={id}>
                             {index ? "、" : ""}
-                            <a href="#data">{id}</a>
+                            <a href="#overview">{id}</a>
                         </span>
                     ))}
                 </p>

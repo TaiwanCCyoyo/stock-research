@@ -6,6 +6,7 @@ export type StudioPage =
     | "compare"
     | "studies"
     | "overview"
+    | "stock"
     | "history"
     | "research"
     | "funds"
@@ -20,8 +21,28 @@ export function studioRoute(hash: string): {
     runId: string | null;
     reportId?: string;
     code?: string;
+    securityKey?: string;
+    overviewTab?: "stocks";
 } {
     const value = hash.replace(/^#/, "").split("?")[0];
+    if (value === "overview/stocks" || value === "data") {
+        return { page: "overview", runId: null, overviewTab: "stocks" };
+    }
+    if (value.startsWith("stock/")) {
+        const segment = value.slice("stock/".length);
+        try {
+            // Security keys are opaque API values. Decode the one URL segment,
+            // but do not couple routing to today's key prefix or encoding.
+            const securityKey = decodeURIComponent(segment);
+            return securityKey &&
+                !segment.includes("/") &&
+                !/[\u0000-\u001f\u007f]/.test(securityKey)
+                ? { page: "stock", runId: null, securityKey }
+                : { page: "overview", runId: null, overviewTab: "stocks" };
+        } catch {
+            return { page: "overview", runId: null, overviewTab: "stocks" };
+        }
+    }
     if (value.startsWith("data/")) {
         try {
             const code = decodeURIComponent(value.slice("data/".length));

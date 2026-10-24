@@ -12,7 +12,11 @@ import { StrategyDetailPage } from "../features/strategies/StrategyDetailPage";
 import { StrategyComparePage } from "../features/strategies/StrategyComparePage";
 import { StudiesPage } from "../features/studies/StudiesPage";
 import { ReportViewer } from "../features/report-library/ReportViewer";
-import { SharedDataPage } from "../features/shared-data/SharedDataPage";
+import {
+    LegacyStockResolver,
+    StockCoverageDetail,
+    StockSearch,
+} from "../features/data-overview/CoveragePages";
 import { DataOverviewPage } from "../features/data-overview/DataOverviewPage";
 import { studioRoute, type StudioPage } from "./routes";
 import { reportPalette, themeId, THEMES, type ThemeId } from "./themes";
@@ -42,10 +46,10 @@ const NAV: {
         label: "飆股地圖",
         icon: "M8 15a3 3 0 1 0 0-.01M15 9a4 4 0 1 0 0-.01M17 18a2 2 0 1 0 0-.01",
     },
-    { id: "data", label: "個股", icon: "M4 19h16M7 16V9M12 16V5M17 16v-5" },
     {
         id: "overview",
         label: "資料總覽",
+        also: ["data", "stock"],
         icon: "M5 6c0-1.1 3.1-2 7-2s7 .9 7 2-3.1 2-7 2-7-.9-7-2zM5 6v12c0 1.1 3.1 2 7 2s7-.9 7-2V6M5 12c0 1.1 3.1 2 7 2s7-.9 7-2",
     },
     {
@@ -165,6 +169,7 @@ export default function Studio() {
                 跳到主要內容
             </a>
             <header className="shell-header">
+                <StockSearch />
                 <a
                     className="shell-brand"
                     href="#home"
@@ -268,15 +273,24 @@ export default function Studio() {
             <main id="main-content" className="studio-main shell-main">
                 {page === "home" && <HomePage />}
                 {page === "studies" && <StudiesPage />}
-                {page === "overview" && <DataOverviewPage />}
+                {page === "overview" && (
+                    <DataOverviewPage stocks={route.overviewTab === "stocks"} />
+                )}
                 {page === "strategies" && <StrategyOverviewPage />}
                 {page === "strategy" && runId && (
                     <StrategyDetailPage key={runId} runId={runId} />
                 )}
                 {page === "compare" && <StrategyComparePage />}
-                {page === "data" && (
-                    <SharedDataPage
-                        code={route.code}
+                {page === "data" &&
+                    (route.code ? (
+                        <LegacyStockResolver code={route.code} />
+                    ) : (
+                        <DataOverviewPage stocks />
+                    ))}
+                {page === "stock" && route.securityKey && (
+                    <StockCoverageDetail
+                        key={route.securityKey}
+                        securityKey={route.securityKey}
                         theme={`${palette}:${resolvedAppearance}`}
                     />
                 )}
