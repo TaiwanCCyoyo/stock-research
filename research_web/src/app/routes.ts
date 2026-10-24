@@ -36,7 +36,11 @@ export function studioRoute(hash: string): {
             const securityKey = decodeURIComponent(segment);
             return securityKey &&
                 !segment.includes("/") &&
-                !/[\u0000-\u001f\u007f]/.test(securityKey)
+                !Array.from(securityKey).some(
+                    (character) =>
+                        character.charCodeAt(0) < 32 ||
+                        character.charCodeAt(0) === 127,
+                )
                 ? { page: "stock", runId: null, securityKey }
                 : { page: "overview", runId: null, overviewTab: "stocks" };
         } catch {

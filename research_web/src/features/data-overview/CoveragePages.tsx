@@ -642,16 +642,17 @@ export function StockCoverageDetail({
         return () => control.abort();
     }, [securityKey, retry]);
     const stock = detail?.security;
+    const stockKey = stock?.key;
     const selected = query.get("dataset");
     useEffect(() => {
-        if (!stock || !selected) return;
+        if (!stockKey || !selected) return;
         const frame = requestAnimationFrame(() => {
             document
                 .getElementById(`coverage-${selected}`)
                 ?.scrollIntoView({ behavior: "smooth", block: "start" });
         });
         return () => cancelAnimationFrame(frame);
-    }, [stock?.key, selected]);
+    }, [stockKey, selected]);
     const activeDataset =
         selected ?? (stock?.can_view_prices ? "adjusted_daily" : null);
     return (
@@ -753,7 +754,9 @@ export function StockCoverageDetail({
                                         <div className="coverage-selected-viewer">
                                             {cell.dataset === "symbol_meta" && (
                                                 <p>
-                                                    最近觀察{" "}
+                                                    {stock.industry ??
+                                                        "產業待確認"}{" "}
+                                                    · 最近觀察{" "}
                                                     {stock.observed_at?.slice(
                                                         0,
                                                         10,

@@ -17,6 +17,7 @@ export interface CoveredSecurity {
     market: string;
     code: string;
     name: string | null;
+    industry?: string | null;
     kind: string;
     identity_status: string;
     listing_status: string;
