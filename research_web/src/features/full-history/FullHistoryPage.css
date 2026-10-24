@@ -153,7 +153,7 @@
     background: var(--cell-warm);
 }
 .fh-phase-retreat {
-    background: var(--muted);
+    background: var(--map-retreat);
 }
 .fh-phase-unknown {
     background: var(--line);

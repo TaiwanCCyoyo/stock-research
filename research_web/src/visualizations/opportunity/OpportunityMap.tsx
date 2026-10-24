@@ -1034,7 +1034,7 @@ export function OpportunityMap({
                                     stopColor={
                                         band === "unknown"
                                             ? "var(--surface)"
-                                            : "var(--cell-light)"
+                                            : "var(--map-gloss)"
                                     }
                                 />
                                 <stop offset=".7" stopColor={color} />
@@ -1047,7 +1047,7 @@ export function OpportunityMap({
                             cy=".25"
                             r=".9"
                         >
-                            <stop offset="0" stopColor="var(--cell-light)" />
+                            <stop offset="0" stopColor="var(--map-gloss)" />
                             <stop offset=".7" stopColor="var(--cell-mid)" />
                             <stop offset="1" stopColor="var(--cell-deep)" />
                         </radialGradient>
@@ -1061,12 +1061,12 @@ export function OpportunityMap({
                             <stop offset="1" stopColor="var(--cell-light)" />
                         </radialGradient>
                         <radialGradient id={`${uid}-resting`} cx=".3" cy=".2">
-                            <stop stopColor="var(--cell-light)" />
+                            <stop stopColor="var(--map-gloss)" />
                             <stop offset="1" stopColor="var(--cell-warm)" />
                         </radialGradient>
                         <radialGradient id={`${uid}-retreat`} cx=".3" cy=".2">
-                            <stop stopColor="var(--cell-light)" />
-                            <stop offset="1" stopColor="var(--muted)" />
+                            <stop stopColor="var(--map-gloss)" />
+                            <stop offset="1" stopColor="var(--map-retreat)" />
                         </radialGradient>
                         <radialGradient id={`${uid}-unmarked`} cx=".3" cy=".2">
                             <stop stopColor="var(--surface)" />
@@ -1242,7 +1242,7 @@ export function OpportunityMap({
                                         stroke={
                                             selected
                                                 ? "var(--ink)"
-                                                : "var(--membrane)"
+                                                : "var(--map-rim)"
                                         }
                                         strokeWidth={selected ? 2.2 : 1.1}
                                         strokeDasharray={

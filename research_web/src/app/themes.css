@@ -186,10 +186,10 @@
     --accent: #f9a8c9;
     --accent-soft: #40202f;
     --positive: #f7bcd3;
-    --cell-light: #6b3a4e;
-    --cell-mid: #57303f;
-    --cell-deep: #452533;
-    --cell-warm: #5c4744;
+    --cell-light: #e597b7;
+    --cell-mid: #c56a92;
+    --cell-deep: #a84d74;
+    --cell-warm: #d9a58f;
     --membrane: #2b1820;
 }
 
@@ -363,4 +363,22 @@
 }
 .studio[data-appearance="dark"][data-palette="ink"] {
     --highlight: #f0f0f0;
+}
+
+/* Map surface (opportunity map). Defaults keep each theme's original look;
+   櫻花粉 turns bubbles into glossy pearls and "pulling back" into lavender. */
+.studio {
+    --map-gloss: var(--cell-light);
+    --map-retreat: var(--muted);
+    --map-rim: var(--membrane);
+}
+.studio[data-palette="sakura"] {
+    --map-gloss: #ffffff;
+    --map-retreat: #c7a5de;
+    --map-rim: #ffffff;
+}
+.studio[data-appearance="dark"][data-palette="sakura"] {
+    --map-gloss: #ffe6f0;
+    --map-retreat: #9c79bd;
+    --map-rim: rgb(255 228 238 / 70%);
 }

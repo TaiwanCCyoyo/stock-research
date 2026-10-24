@@ -286,3 +286,26 @@
 .studio[data-appearance="dark"] .opportunity-fx.fx-firefly circle {
     fill: #e4ff9c;
 }
+
+/* 櫻花粉: a soft blush halo and a string-of-pearls edge instead of a membrane. */
+.studio[data-palette="sakura"] .opportunity-industry-ground {
+    fill-opacity: 0.22;
+    stroke-opacity: 0.1;
+    stroke-width: 22px;
+}
+.studio[data-palette="sakura"] .opportunity-industry-boundary {
+    stroke: #ffffff;
+    stroke-opacity: 0.95;
+    stroke-width: 3.4px;
+    stroke-linecap: round;
+    stroke-dasharray: 0.1 7;
+    filter: none;
+}
+.studio[data-appearance="dark"][data-palette="sakura"]
+    .opportunity-industry-boundary {
+    stroke: #ffd3e3;
+    stroke-opacity: 0.75;
+}
+.studio[data-palette="sakura"] .opportunity-stock path {
+    stroke-width: 1.4px;
+}
