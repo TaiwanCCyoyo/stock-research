@@ -18,7 +18,9 @@ run is never classified by a pid or a clock. ``updated_at`` only flags runs nobo
 for `STALE_AFTER` so the owner can decide.
 
 Final results never stay here. Delivery records where they went: a repository-relative
-path committed to Git, or an absolute path elsewhere on the shared root.
+path that exists on the default branch (`DEFAULT_BRANCH`, i.e. merged, not merely present
+in some worktree), or an absolute path elsewhere on the shared root. `survey` re-checks
+both before a delivered run counts as deletable.
 """
 
 from __future__ import annotations
@@ -29,6 +31,7 @@ import os
 import re
 import shutil
 import socket
+import subprocess
 import uuid
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
@@ -55,6 +58,7 @@ TRANSITIONS = {
     "abandoned": set(),
 }
 STALE_AFTER = timedelta(days=7)
+DEFAULT_BRANCH = "origin/main"
 TASK_PATTERN = re.compile(r"^[0-9]{8}-[a-z0-9][a-z0-9-]*$")
 RUN_PATTERN = re.compile(r"^[a-z0-9][a-z0-9._-]{0,63}$")
 
@@ -104,6 +108,24 @@ def _lock(directory: Path) -> IO[bytes]:
 def _unlock(handle: IO[bytes]) -> None:
     release_os_lock(handle)
     handle.close()
+
+
+def _on_default_branch(repo_root: Path, name: str) -> bool:
+    """True when `name` (file or directory) exists in DEFAULT_BRANCH's tree; False when it
+    does not or Git cannot tell. Uncommitted, ignored or branch-only files never count."""
+    environment = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(repo_root), "cat-file", "-e", f"{DEFAULT_BRANCH}:{name}"],
+            capture_output=True,
+            check=False,
+            env=environment,
+            timeout=30,
+        )
+    except (OSError, subprocess.SubprocessError) as error:
+        LOGGER.warning("cannot ask Git about %s in %s: %s", name, repo_root, error)
+        return False
+    return result.returncode == 0
 
 
 def _write_record(directory: Path, record: dict[str, Any]) -> None:
@@ -197,11 +219,11 @@ class ScratchRun:
             if not target.exists():
                 raise ScratchRunError(f"delivered result does not exist: {result}")
             return str(target)
-        name = relative_name(result.replace("\\", "/"))
-        if not (self._repo_root / name).exists():
-            raise ScratchRunError(f"repository result {name} does not exist in {self._repo_root}")
+        name = relative_name(result.replace("\\", "/")).rstrip("/")
         if name.split("/")[0] in {".tmp", ".worktrees"}:
             raise ScratchRunError(f"{name} is scratch space, not a durable result")
+        if not _on_default_branch(self._repo_root, name):
+            raise ScratchRunError(f"repository result {name} is not on {DEFAULT_BRANCH}; merge it (and fetch) before marking delivered")
         return name
 
 
@@ -282,7 +304,11 @@ class RunStatus:
     progress: dict[str, Any] | None = None
 
 
-def _status(directory: Path, now: datetime) -> RunStatus:
+def _missing_results(results: list[str], repo_root: Path) -> list[str]:
+    return [result for result in results if not (Path(result).exists() if Path(result).is_absolute() else _on_default_branch(repo_root, result))]
+
+
+def _status(directory: Path, now: datetime, repo_root: Path) -> RunStatus:
     task, run = directory.parent.name, directory.name
     try:
         record = read_run(directory)
@@ -298,7 +324,8 @@ def _status(directory: Path, now: datetime) -> RunStatus:
     if state == "abandoned":
         return RunStatus(task, run, directory, state, DELETABLE, record.get("reason", ""), updated)
     if state == "delivered":
-        missing = [result for result in record.get("results", []) if Path(result).is_absolute() and not Path(result).exists()]
+        results = record.get("results", [])
+        missing = _missing_results(results, repo_root) if results else ["(none recorded)"]
         if missing:
             return RunStatus(task, run, directory, state, ASK_OWNER, f"delivered results are missing: {missing}", updated)
         return RunStatus(task, run, directory, state, DELETABLE, "results delivered to " + ", ".join(record.get("results", [])), updated)
@@ -313,9 +340,14 @@ def _status(directory: Path, now: datetime) -> RunStatus:
     return RunStatus(task, run, directory, state, PAUSED, "no process holds it; resume with open_run", updated, progress)
 
 
-def survey(root: Path | None = None, *, now: datetime | None = None) -> list[RunStatus]:
-    """Classify every directory under the scratch root; anything unexpected is for the owner."""
+def survey(root: Path | None = None, *, now: datetime | None = None, repo_root: Path | None = None) -> list[RunStatus]:
+    """Classify every directory under the scratch root; anything unexpected is for the owner.
+
+    `repo_root` is any checkout of this repository; delivered repository results are looked
+    up on its DEFAULT_BRANCH, so the worktree that delivered them may already be gone.
+    """
     root = scratch_root() if root is None else checked_path(root)
+    repo_root = REPO_ROOT if repo_root is None else repo_root
     now = datetime.now(timezone.utc) if now is None else now
     statuses = []
     for task_dir in sorted(root.iterdir()):
@@ -326,7 +358,7 @@ def survey(root: Path | None = None, *, now: datetime | None = None) -> list[Run
             if not run_dir.is_dir() or not RUN_PATTERN.match(run_dir.name):
                 statuses.append(RunStatus(task_dir.name, run_dir.name, run_dir, None, ASK_OWNER, "not a run directory", None))
                 continue
-            statuses.append(_status(run_dir, now))
+            statuses.append(_status(run_dir, now, repo_root))
     return statuses
 
 
@@ -354,9 +386,9 @@ def _delete(directory: Path) -> None:
         pass  # other runs of the same task remain
 
 
-def clean(root: Path | None = None, *, apply: bool = False, now: datetime | None = None) -> list[RunStatus]:
+def clean(root: Path | None = None, *, apply: bool = False, now: datetime | None = None, repo_root: Path | None = None) -> list[RunStatus]:
     """Return the deletable runs; delete them only with ``apply=True``."""
-    deletable = [status for status in survey(root, now=now) if status.verdict == DELETABLE]
+    deletable = [status for status in survey(root, now=now, repo_root=repo_root) if status.verdict == DELETABLE]
     for status in deletable:
         if apply:
             _delete(status.path)

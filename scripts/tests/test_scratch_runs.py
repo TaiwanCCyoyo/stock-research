@@ -20,8 +20,18 @@ TASK = "20261013-pattern-scan"
 def roots(tmp_path: Path) -> tuple[Path, Path]:
     shared, repo = tmp_path / "shared", tmp_path / "repo"
     (shared / "scratch").mkdir(parents=True)
-    repo.mkdir()
+    (repo / "tasks" / TASK).mkdir(parents=True)
+    (repo / "tasks" / TASK / "summary.json").write_text("{}")
+    _git(repo, "init", "-q")
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-q", "-m", "results")
+    _git(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
     return shared / "scratch", repo
+
+
+def _git(repo: Path, *args: str) -> None:
+    environment = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+    subprocess.run(["git", "-c", "user.name=test", "-c", "user.email=test@example.invalid", *args], cwd=repo, env=environment, check=True, capture_output=True)
 
 
 def _create(roots: tuple[Path, Path], run: str = "q2-q6-v6") -> sr.ScratchRun:
@@ -29,8 +39,8 @@ def _create(roots: tuple[Path, Path], run: str = "q2-q6-v6") -> sr.ScratchRun:
     return sr.create_run(TASK, run, purpose="resume Q2-Q6", owner="codex", root=scratch, repo_root=repo)
 
 
-def _verdicts(scratch: Path, now: datetime | None = None) -> dict[str, str]:
-    return {f"{status.task}/{status.run}": status.verdict for status in sr.survey(scratch, now=now)}
+def _verdicts(scratch: Path, now: datetime | None = None, repo: Path | None = None) -> dict[str, str]:
+    return {f"{status.task}/{status.run}": status.verdict for status in sr.survey(scratch, now=now, repo_root=repo)}
 
 
 def test_create_writes_a_running_label_and_refuses_a_duplicate(roots: tuple[Path, Path]) -> None:
@@ -62,8 +72,7 @@ def test_open_run_is_refused_while_another_holder_has_the_lock(roots: tuple[Path
 def test_transitions_and_delivery_rules(roots: tuple[Path, Path]) -> None:
     scratch, repo = roots
     shared = scratch.parent
-    (repo / "tasks" / TASK).mkdir(parents=True)
-    (repo / "tasks" / TASK / "summary.json").write_text("{}")
+    (repo / "tasks" / TASK / "uncommitted.json").write_text("{}")
     final = shared / "tasks" / TASK / "q2-q6"
     final.mkdir(parents=True)
     with _create(roots) as run:
@@ -79,10 +88,18 @@ def test_transitions_and_delivery_rules(roots: tuple[Path, Path]) -> None:
         with pytest.raises(sr.ScratchRunError, match="scratch space"):
             (repo / ".tmp").mkdir()
             run.mark("delivered", results=[".tmp"])
+        with pytest.raises(sr.ScratchRunError, match="not on origin/main"):
+            run.mark("delivered", results=[f"tasks/{TASK}/uncommitted.json"])
         run.mark("delivered", results=[str(final), f"tasks/{TASK}/summary.json"])
         with pytest.raises(sr.ScratchRunError, match="cannot move"):
             run.mark("abandoned", reason="late")
-    assert _verdicts(scratch) == {f"{TASK}/q2-q6-v6": sr.DELETABLE}
+    assert _verdicts(scratch, repo=repo) == {f"{TASK}/q2-q6-v6": sr.DELETABLE}
+    (repo / "tasks" / TASK / "summary.json").unlink()
+    _git(repo, "commit", "-q", "-am", "drop results")
+    _git(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
+    assert _verdicts(scratch, repo=repo) == {f"{TASK}/q2-q6-v6": sr.ASK_OWNER}
+    assert sr.clean(scratch, apply=True, repo_root=repo) == []
+    assert (scratch / TASK / "q2-q6-v6" / "run.json").is_file()
 
 
 def test_abandon_needs_a_reason(roots: tuple[Path, Path]) -> None:

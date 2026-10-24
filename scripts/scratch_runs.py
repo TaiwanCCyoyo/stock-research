@@ -48,7 +48,9 @@ def main(argv: list[str] | None = None) -> int:
     mark.add_argument("task")
     mark.add_argument("run")
     mark.add_argument("--state", required=True, choices=["complete", "delivered", "abandoned"])
-    mark.add_argument("--result", action="append", default=[], help="repository-relative path or absolute shared-root path; repeat per result")
+    mark.add_argument(
+        "--result", action="append", default=[], help="repository-relative path already on origin/main, or absolute shared-root path; repeat per result"
+    )
     mark.add_argument("--reason")
     clean = commands.add_parser("clean")
     clean.add_argument("--apply", action="store_true", help="actually delete; without it only lists")
