@@ -11,7 +11,7 @@ import {
     type StudyCard,
 } from "./model";
 import {
-    cardFromV2,
+    cardsFromStudies,
     hiddenCount,
     readStudies,
     type StudiesResponse,
@@ -50,15 +50,9 @@ export function useStudyCards() {
         index = useStudioIndex(),
         reportIndex = useReportIndex();
     const cards = useMemo<StudyCard[] | null>(() => {
-        if (studies.data) {
-            const v2 = studies.data.cards.map((card) =>
-                cardFromV2(card, studies.data!.warnings),
-            );
-            return mergeStudyCards(
-                v2,
-                reportIndex.reports?.map(cardFromReport) ?? null,
-            );
-        }
+        // A successful /studies response is authoritative: a card it omits
+        // failed source checks and must not return through the report index.
+        if (studies.data) return cardsFromStudies(studies.data);
         if (!fallback) return null;
         const runs = (index.data?.runs ?? []).map((run) =>
             cardFromRun(

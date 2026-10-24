@@ -88,6 +88,9 @@ export function taskDate(taskId: string): string {
 export function runProgress(
     card: Pick<StudyCardV2, "progress" | "run_state">,
 ): StudyCard["progress"] {
+    // A finished, delivered or abandoned run keeps its last heartbeat; only a
+    // running one is shown as in progress (research_core/scratch_runs.py).
+    if (card.run_state !== "running") return null;
     const progress = card.progress;
     if (!progress || typeof progress !== "object") return null;
     const step = Number(progress.step),
@@ -149,6 +152,12 @@ export function cardFromV2(
             })),
         },
     };
+}
+
+/** The page's cards when /studies answered: exactly the cards it served.
+ *  A task it omitted (invalid card, unverifiable source) stays omitted. */
+export function cardsFromStudies(response: StudiesResponse): StudyCard[] {
+    return response.cards.map((card) => cardFromV2(card, response.warnings));
 }
 
 /** Cards hidden by the reader (legacy source unavailable, invalid card). */

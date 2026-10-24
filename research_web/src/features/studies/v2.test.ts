@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
     cardFromV2,
+    cardsFromStudies,
     hiddenCount,
     readStudies,
     runProgress,
@@ -89,15 +90,33 @@ test("only this card's source and run warnings become visible caveats", () => {
 
 test("run progress reads numeric steps and tolerates other shapes", () => {
     assert.deepEqual(
-        runProgress({ progress: { step: 2, total: 5, label: "Q3" } }),
+        runProgress({
+            progress: { step: 2, total: 5, label: "Q3" },
+            run_state: "running",
+        }),
         { step: 2, total: 5, label: "Q3" },
     );
-    assert.deepEqual(runProgress({ progress: { label: "整理中" } }), {
-        step: null,
-        total: null,
-        label: "整理中",
-    });
-    assert.equal(runProgress({ progress: { done: true } }), null);
+    assert.deepEqual(
+        runProgress({ progress: { label: "整理中" }, run_state: "running" }),
+        {
+            step: null,
+            total: null,
+            label: "整理中",
+        },
+    );
+    assert.equal(
+        runProgress({ progress: { done: true }, run_state: "running" }),
+        null,
+    );
+    for (const state of ["complete", "delivered", "abandoned", undefined])
+        assert.equal(
+            runProgress({
+                progress: { step: 5, total: 5, label: "Q6" },
+                run_state: state,
+            }),
+            null,
+            `no progress for ${state}`,
+        );
     assert.equal(runProgress({}), null);
     assert.equal(taskDate("bad"), "");
 });
@@ -142,4 +161,19 @@ test("studies are read with the data-mode header and other shapes are rejected",
     const bad = (async () =>
         new Response(JSON.stringify({ cards: [] }))) as unknown as typeof fetch;
     await assert.rejects(readStudies(new AbortController().signal, bad));
+});
+
+test("a task /studies omitted is not restored from another source", () => {
+    const response = {
+        cards: [],
+        warnings: [
+            {
+                task_id: "20261021-momentum-only-doubling",
+                code: "invalid_card",
+                message: "",
+            },
+        ],
+    };
+    assert.deepEqual(cardsFromStudies(response), []);
+    assert.equal(hiddenCount(response), 1);
 });
