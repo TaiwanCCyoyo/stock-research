@@ -52,6 +52,16 @@ launcher to start both services or reuse verified services from that checkout:
 uv run python scripts/start_research_web.py
 ```
 
+By default the launcher first runs `npm run build`, which rebuilds `dist/` only
+when the frontend sources or the data mode changed (about half a minute;
+otherwise under a second), and then serves that production build with
+`vite preview` on port 5177. The production build animates the map noticeably
+more smoothly than the development server (measured 51 vs 39 fps during
+playback). Use `--dev` for the development server with hot reload. A running
+website of the other kind is refused rather than reused; the launcher never
+stops it. Build output is logged to `.tmp/research-web-launcher/build.log`; a
+failed build keeps the previous `dist/`.
+
 Port 8517 is the data API. It serves the built `dist/` frontend only when
 `dist/release.json` records the same data mode as the API (`artifactMode`,
 written by `scripts/build-dashboard.mjs`); otherwise its root page points to the
