@@ -41,7 +41,7 @@ Owner 於 2026-10-24（Asia/Taipei）提出並逐項選定。這是呈現層工�
 
 ## 相容性限制
 
-- **舊網址照常可用**：`#reports`、`#history` 導向 `#research`；`#report/<id>`、
+- **舊網址照常可用**：`#reports`、`#history` 導向新的研究頁 `#studies`（`#research` 已是研究者工具，維持不變）；`#report/<id>`、
   `#strategy/<id>`、`#compare`、`#market`、`#data/<code>` 不變。`docs/en/study-presentation.md`
   與兩份 `study-presentation` SKILL.md 若引用網址，同步更新。
 - **主題 ID**：保留 `forest`、`ocean`、`plum`、`sand` 四個既有 ID，讓已存的

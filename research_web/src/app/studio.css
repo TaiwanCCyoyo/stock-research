@@ -39,98 +39,17 @@ button::-moz-focus-inner {
     border: 0;
 }
 .studio {
-    --gain: #c84c50;
-    --loss: #238568;
-    --paper: #f5f7f4;
-    --surface: #fff;
-    --ink: #16352f;
-    --muted: #65736c;
-    --line: #e5eae4;
-    --accent: #2c6753;
-    --accent-soft: #e8eee8;
-    --positive: #29654b;
-    --negative: #a45b4b;
-    --cell-light: #e3ebd8;
-    --cell-mid: #a9c9af;
-    --cell-deep: #6eaa91;
-    --cell-warm: #e4e4b4;
-    --membrane: #f8fbf5;
     background: var(--paper);
     color: var(--ink);
     min-height: 100vh;
     font:
-        14px/1.65 "Noto Sans TC",
+        15px/1.65 "Noto Sans TC",
         "Microsoft JhengHei",
         sans-serif;
+    -webkit-font-smoothing: antialiased;
     transition:
-        background 0.2s,
-        color 0.2s;
-}
-.studio[data-palette="ocean"] {
-    --accent: #396879;
-    --accent-soft: #e5edf0;
-    --positive: #315f73;
-    --cell-light: #dcecef;
-    --cell-mid: #a8ccd2;
-    --cell-deep: #74a7b8;
-    --cell-warm: #d3dfc5;
-}
-.studio[data-palette="plum"] {
-    --accent: #71596f;
-    --accent-soft: #eee8ed;
-    --positive: #70556e;
-    --cell-light: #e9e0ea;
-    --cell-mid: #c8b3d2;
-    --cell-deep: #a484b0;
-    --cell-warm: #ddd2be;
-}
-.studio[data-palette="sand"] {
-    --accent: #85693e;
-    --accent-soft: #f1eadf;
-    --positive: #876239;
-    --cell-light: #f0e7cf;
-    --cell-mid: #d7c29e;
-    --cell-deep: #b59a6f;
-    --cell-warm: #d6dfc2;
-}
-.studio[data-appearance="dark"] {
-    --gain: #f39293;
-    --loss: #8ad2b3;
-    --paper: #111e1b;
-    --surface: #1b2b26;
-    --ink: #e3ece3;
-    --muted: #a9b8ad;
-    --line: #35483d;
-    --accent: #a6cbae;
-    --accent-soft: #2b4135;
-    --positive: #b6dabb;
-    --negative: #edb6a1;
-    --cell-light: #425e4d;
-    --cell-mid: #355345;
-    --cell-deep: #234537;
-    --cell-warm: #515839;
-    --membrane: #1b3027;
-}
-.studio[data-appearance="dark"][data-palette="ocean"] {
-    --accent: #add2df;
-    --cell-light: #46646e;
-    --cell-mid: #354f5d;
-    --cell-deep: #253d4b;
-    --cell-warm: #41574f;
-}
-.studio[data-appearance="dark"][data-palette="plum"] {
-    --accent: #d0b9d5;
-    --cell-light: #63546c;
-    --cell-mid: #4c3f59;
-    --cell-deep: #3a3045;
-    --cell-warm: #5c514d;
-}
-.studio[data-appearance="dark"][data-palette="sand"] {
-    --accent: #dac4a2;
-    --cell-light: #695c42;
-    --cell-mid: #554934;
-    --cell-deep: #443923;
-    --cell-warm: #505c41;
+        background 0.3s,
+        color 0.3s;
 }
 .studio h1,
 .studio h2,

@@ -1,0 +1,296 @@
+/* Theme tokens: eight palettes, each with a light and a dark appearance.
+   Token names are the ones every feature stylesheet already reads, so a new
+   palette restyles existing pages without touching them. Gain/loss keep the
+   Taiwanese red-up/green-down meaning in every palette. */
+.studio {
+    --gain: #c84c50;
+    --loss: #238568;
+    --negative: #a45b4b;
+    --radius-lg: 22px;
+    --radius-md: 14px;
+    --radius-pill: 999px;
+    --shadow-card: 0 1px 2px rgb(30 40 35 / 4%), 0 10px 30px rgb(30 40 35 / 7%);
+    --shadow-lift:
+        0 2px 4px rgb(30 40 35 / 5%), 0 16px 40px rgb(30 40 35 / 11%);
+}
+.studio[data-appearance="dark"] {
+    --gain: #f39293;
+    --loss: #8ad2b3;
+    --negative: #edb6a1;
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 30%), 0 10px 30px rgb(0 0 0 / 25%);
+    --shadow-lift: 0 2px 4px rgb(0 0 0 / 35%), 0 16px 40px rgb(0 0 0 / 35%);
+}
+
+/* 霧林綠 (default) */
+.studio,
+.studio[data-palette="forest"] {
+    --paper: #f2f5f1;
+    --surface: #ffffff;
+    --ink: #16352f;
+    --muted: #65736c;
+    --line: #e1e8e1;
+    --chip: #e8eee8;
+    --accent: #2c6753;
+    --accent-soft: #e1efe7;
+    --positive: #29654b;
+    --cell-light: #e3ebd8;
+    --cell-mid: #a9c9af;
+    --cell-deep: #6eaa91;
+    --cell-warm: #e4e4b4;
+    --membrane: #f8fbf5;
+}
+.studio[data-appearance="dark"],
+.studio[data-appearance="dark"][data-palette="forest"] {
+    --paper: #0f1814;
+    --surface: #17231d;
+    --ink: #e3ece3;
+    --muted: #9fb3a6;
+    --line: #2a3b32;
+    --chip: #213229;
+    --accent: #8fd3b0;
+    --accent-soft: #24382d;
+    --positive: #b6dabb;
+    --cell-light: #425e4d;
+    --cell-mid: #355345;
+    --cell-deep: #234537;
+    --cell-warm: #515839;
+    --membrane: #1b3027;
+}
+
+/* 海霧藍 */
+.studio[data-palette="ocean"] {
+    --paper: #eff4f8;
+    --surface: #ffffff;
+    --ink: #142838;
+    --muted: #5f7385;
+    --line: #dce6ee;
+    --chip: #e3ecf3;
+    --accent: #2a6385;
+    --accent-soft: #e1edf5;
+    --positive: #315f73;
+    --cell-light: #dcecef;
+    --cell-mid: #a8ccd2;
+    --cell-deep: #74a7b8;
+    --cell-warm: #d3dfc5;
+    --membrane: #f6fafc;
+}
+.studio[data-appearance="dark"][data-palette="ocean"] {
+    --paper: #0b1520;
+    --surface: #122030;
+    --ink: #e1ecf6;
+    --muted: #93a8bd;
+    --line: #22354a;
+    --chip: #1a2b3e;
+    --accent: #8cc8ea;
+    --accent-soft: #1c3247;
+    --positive: #a9d4e8;
+    --cell-light: #46646e;
+    --cell-mid: #354f5d;
+    --cell-deep: #253d4b;
+    --cell-warm: #41574f;
+    --membrane: #13263a;
+}
+
+/* 星夜紫 (id kept as "plum" so saved choices still apply) */
+.studio[data-palette="plum"] {
+    --paper: #f5f3fa;
+    --surface: #ffffff;
+    --ink: #2a2140;
+    --muted: #75708e;
+    --line: #e6e1f2;
+    --chip: #ede9f6;
+    --accent: #6b4fb8;
+    --accent-soft: #ece6fa;
+    --positive: #5d4a9c;
+    --cell-light: #e6e0f3;
+    --cell-mid: #c6b6e6;
+    --cell-deep: #9a86cf;
+    --cell-warm: #ead7c4;
+    --membrane: #faf8fd;
+}
+.studio[data-appearance="dark"][data-palette="plum"] {
+    --paper: #0f0c1c;
+    --surface: #18142b;
+    --ink: #ece8fa;
+    --muted: #a39cc4;
+    --line: #2c2650;
+    --chip: #221d3d;
+    --accent: #c4b5fd;
+    --accent-soft: #2a2350;
+    --positive: #d0c4fb;
+    --cell-light: #4a4170;
+    --cell-mid: #3b3360;
+    --cell-deep: #2d264d;
+    --cell-warm: #574a5a;
+    --membrane: #1c1834;
+}
+
+/* 暖沙金 */
+.studio[data-palette="sand"] {
+    --paper: #f8f4ec;
+    --surface: #fffdf8;
+    --ink: #33281a;
+    --muted: #857661;
+    --line: #ebe2d1;
+    --chip: #f2eadb;
+    --accent: #8a6424;
+    --accent-soft: #f4ead6;
+    --positive: #876239;
+    --cell-light: #f0e7cf;
+    --cell-mid: #d7c29e;
+    --cell-deep: #b59a6f;
+    --cell-warm: #d6dfc2;
+    --membrane: #fcf9f2;
+}
+.studio[data-appearance="dark"][data-palette="sand"] {
+    --paper: #16120b;
+    --surface: #211b11;
+    --ink: #f6ecda;
+    --muted: #b4a383;
+    --line: #3a2f1c;
+    --chip: #2c2416;
+    --accent: #f0c66b;
+    --accent-soft: #3a2d16;
+    --positive: #e8cf98;
+    --cell-light: #695c42;
+    --cell-mid: #554934;
+    --cell-deep: #443923;
+    --cell-warm: #505c41;
+    --membrane: #2a2214;
+}
+
+/* 櫻花粉 */
+.studio[data-palette="sakura"] {
+    --paper: #fdf2f5;
+    --surface: #ffffff;
+    --ink: #3a1f2b;
+    --muted: #9a7180;
+    --line: #f5dce5;
+    --chip: #fae5ed;
+    --accent: #d2507f;
+    --accent-soft: #fbe1eb;
+    --positive: #b8456f;
+    --cell-light: #fde0ea;
+    --cell-mid: #f7b6cc;
+    --cell-deep: #ec85a8;
+    --cell-warm: #f3dccb;
+    --membrane: #fff8fa;
+}
+.studio[data-appearance="dark"][data-palette="sakura"] {
+    --paper: #1b0f15;
+    --surface: #26161e;
+    --ink: #fbe8ef;
+    --muted: #c79aab;
+    --line: #42273a;
+    --chip: #331d29;
+    --accent: #f9a8c9;
+    --accent-soft: #40202f;
+    --positive: #f7bcd3;
+    --cell-light: #6b3a4e;
+    --cell-mid: #57303f;
+    --cell-deep: #452533;
+    --cell-warm: #5c4744;
+    --membrane: #2b1820;
+}
+
+/* 檸檬汽水 */
+.studio[data-palette="soda"] {
+    --paper: #f6faea;
+    --surface: #ffffff;
+    --ink: #222b12;
+    --muted: #75805c;
+    --line: #e3ebcc;
+    --chip: #edf4d6;
+    --accent: #4d8a0e;
+    --accent-soft: #e9f3d3;
+    --positive: #4d7a18;
+    --cell-light: #eef7c8;
+    --cell-mid: #d2ec8e;
+    --cell-deep: #a6d64f;
+    --cell-warm: #f8eaa0;
+    --membrane: #fbfdf3;
+}
+.studio[data-appearance="dark"][data-palette="soda"] {
+    --paper: #10140a;
+    --surface: #181e0f;
+    --ink: #eff6dc;
+    --muted: #a6b088;
+    --line: #2e381c;
+    --chip: #232b15;
+    --accent: #c6f27a;
+    --accent-soft: #2b3617;
+    --positive: #d3ef9f;
+    --cell-light: #4f5f2c;
+    --cell-mid: #3f4d22;
+    --cell-deep: #2f3b18;
+    --cell-warm: #5f5a2c;
+    --membrane: #1d2512;
+}
+
+/* 夕陽橘 */
+.studio[data-palette="sunset"] {
+    --paper: #fff4ec;
+    --surface: #ffffff;
+    --ink: #3a2014;
+    --muted: #977360;
+    --line: #f6e0d0;
+    --chip: #fbe8da;
+    --accent: #c4500c;
+    --accent-soft: #fde6d5;
+    --positive: #a85020;
+    --cell-light: #fde5d2;
+    --cell-mid: #f8bd94;
+    --cell-deep: #ee8c56;
+    --cell-warm: #f6dcae;
+    --membrane: #fff9f4;
+}
+.studio[data-appearance="dark"][data-palette="sunset"] {
+    --paper: #1a0f09;
+    --surface: #24160f;
+    --ink: #fdece1;
+    --muted: #c69c84;
+    --line: #43291c;
+    --chip: #321f15;
+    --accent: #fdba74;
+    --accent-soft: #42260f;
+    --positive: #fbc89a;
+    --cell-light: #6e4330;
+    --cell-mid: #5a3626;
+    --cell-deep: #472a1c;
+    --cell-warm: #5f5134;
+    --membrane: #2d1b12;
+}
+
+/* 墨色極簡 */
+.studio[data-palette="ink"] {
+    --paper: #f6f6f4;
+    --surface: #ffffff;
+    --ink: #151515;
+    --muted: #6b6b6b;
+    --line: #e4e4e1;
+    --chip: #ececea;
+    --accent: #262626;
+    --accent-soft: #ebebe8;
+    --positive: #333333;
+    --cell-light: #e8e8e5;
+    --cell-mid: #c8c8c4;
+    --cell-deep: #9a9a96;
+    --cell-warm: #dcdcd2;
+    --membrane: #fafaf8;
+}
+.studio[data-appearance="dark"][data-palette="ink"] {
+    --paper: #0e0e0e;
+    --surface: #181818;
+    --ink: #f0f0f0;
+    --muted: #9a9a9a;
+    --line: #2c2c2c;
+    --chip: #222222;
+    --accent: #f0f0f0;
+    --accent-soft: #2a2a2a;
+    --positive: #dddddd;
+    --cell-light: #4a4a4a;
+    --cell-mid: #3c3c3c;
+    --cell-deep: #2e2e2e;
+    --cell-warm: #4e4b40;
+    --membrane: #1c1c1c;
+}

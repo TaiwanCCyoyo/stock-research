@@ -4,6 +4,7 @@ export type StudioPage =
     | "strategies"
     | "strategy"
     | "compare"
+    | "studies"
     | "history"
     | "research"
     | "funds"
@@ -35,9 +36,9 @@ export function studioRoute(hash: string): {
             const reportId = decodeURIComponent(value.slice("report/".length));
             return /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(reportId)
                 ? { page: "report", runId: null, reportId }
-                : { page: "reports", runId: null };
+                : { page: "studies", runId: null };
         } catch {
-            return { page: "reports", runId: null };
+            return { page: "studies", runId: null };
         }
     }
     if (value.startsWith("strategy/")) {
@@ -55,15 +56,17 @@ export function studioRoute(hash: string): {
         "market",
         "strategies",
         "compare",
-        "history",
+        "studies",
         "research",
         "funds",
         "wave-lab",
         "market-legacy",
         "market-preview",
-        "reports",
         "data",
     ]);
+    // The research reports and history pages merged into one research page.
+    if (value === "reports" || value === "history")
+        return { page: "studies", runId: null };
     return {
         page: pages.has(value as StudioPage) ? (value as StudioPage) : "home",
         runId: null,

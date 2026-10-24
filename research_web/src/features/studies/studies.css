@@ -1,0 +1,128 @@
+.st-card {
+    display: grid;
+    gap: 12px;
+}
+.st-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--muted);
+}
+.studio .st-question {
+    font-size: 19px;
+    line-height: 1.45;
+    font-weight: 900;
+}
+.st-answer {
+    color: var(--ink);
+    opacity: 0.86;
+}
+.st-answer {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.st-answer.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.st-limit {
+    font-size: 13px;
+    color: var(--muted);
+}
+.st-toolbar {
+    display: grid;
+    gap: 12px;
+    margin: 24px 0 8px;
+}
+.studio .st-search {
+    width: 100%;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    box-shadow: var(--shadow-card);
+    padding: 10px 18px;
+}
+.studio .st-month-label {
+    margin: 28px 0 12px;
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+}
+.st-timeline {
+    position: relative;
+    display: grid;
+    gap: 16px;
+    padding-left: 26px;
+}
+.st-timeline::before {
+    content: "";
+    position: absolute;
+    left: 6px;
+    top: 8px;
+    bottom: 8px;
+    width: 2px;
+    border-radius: 2px;
+    background: var(--line);
+}
+.st-node {
+    position: relative;
+}
+.st-node::before {
+    content: "";
+    position: absolute;
+    left: -26px;
+    top: 26px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 3px solid var(--paper);
+    background: var(--muted);
+}
+.st-node[data-verdict="promising"]::before {
+    background: #1f8a5c;
+}
+.st-node[data-verdict="no_edge"]::before {
+    background: #c99400;
+}
+.st-node[data-verdict="mixed"]::before {
+    background: #8a5cc4;
+}
+.st-node[data-verdict="failed"]::before {
+    background: #c0392b;
+}
+.st-node[data-verdict="running"]::before {
+    background: #2f62b8;
+}
+.st-node[data-verdict="none"]::before {
+    background: var(--accent);
+}
+.st-footnote {
+    margin-top: 32px;
+}
+@media (min-width: 1100px) {
+    .st-page {
+        max-width: 1080px;
+    }
+    .st-timeline {
+        grid-template-columns: 1fr 1fr;
+        align-items: start;
+    }
+    .st-timeline::before,
+    .st-node::before {
+        display: none;
+    }
+    .st-timeline {
+        padding-left: 0;
+    }
+    .st-toolbar {
+        grid-template-columns: 1fr 280px;
+        align-items: center;
+    }
+}
