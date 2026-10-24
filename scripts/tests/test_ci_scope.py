@@ -244,6 +244,15 @@ def test_feature_block_domain_routes_new_execution_contracts() -> None:
     assert ci_scope.make_plan([("A", "research_core/derived_features_selective_v1.py")])["full"]
 
 
+def test_live_producer_changes_select_security_coverage_sqlite_consumer() -> None:
+    plan = ci_scope.make_plan([("M", "research_core/live_producer.py")])
+
+    assert not plan["full"]
+    assert "research_data" in plan["domains"]
+    assert "tests/test_security_coverage.py" in plan["python_tests"]
+    assert "opportunity" not in plan["domains"]
+
+
 ANNUAL_TESTS = {
     "scripts/tests/test_annual_completion.py",
     "scripts/tests/test_annual_completion_evidence.py",

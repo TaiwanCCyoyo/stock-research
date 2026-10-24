@@ -81,6 +81,7 @@
                 "tests/test_data_routes.py",
                 "tests/test_data_series.py",
                 "tests/test_data_status.py",
+                "tests/test_security_coverage.py",
                 "tests/test_security_coverage_maintenance.py",
                 "scripts/tests/test_technical_daily_v1.py",
                 "scripts/tests/test_daily_conditions_v1.py",
