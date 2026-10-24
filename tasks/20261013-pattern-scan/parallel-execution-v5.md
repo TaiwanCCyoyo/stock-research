@@ -1,5 +1,9 @@
 # Bounded parallel continuation of PR17 v5
 
+Current status, 16:15 Taipei: PR #81 merged as `24fff65`; PR #82 adds timeout
+memory receipts and the full-market capacity gate below. The full run remains
+paused until that follow-up merges, then begins with the bounded invocation.
+
 ## Prospective runtime amendment, 2026-10-24
 
 The owner stopped the single-worker continuation and requires parallel execution,
@@ -99,8 +103,8 @@ continuation command uses the measured four-worker setting.
 The containing Job peaked at **6,873,600,000 committed bytes (6.40 GiB)** under its
 8 GiB cap. Whole-probe wall time was 1,462.078 seconds under the 1,800-second limit.
 The launcher confirmed that its Job was empty before marking this engineering run
-`complete`. This does not mark the full research complete; `q2-q6-v6` stays paused
-pending runner PR #81's owner merge.
+`complete`. At probe completion, `q2-q6-v6` remained paused pending runner PR #81's
+owner merge; that PR subsequently merged at 16:05 Taipei.
 
 The small final metrics and `run-receipt.v1` are retained in
 [`results/parallel-probe-v5.zip`](results/parallel-probe-v5.zip). It contains
@@ -150,7 +154,7 @@ of that measured total; prioritizing it is supported, while followup remains a
 material serial portion. These are whole-phase observations, not a prediction of
 the remaining families' duration.
 
-After PR #81 merges, start the existing run with four workers and an explicit
+After the timeout-receipt follow-up PR #82 merges, start the existing run with four workers and an explicit
 six-hour timeout (`--timeout-seconds 21600`), scoped to B2 conditions. This is useful
 continuation work: completed projections/groups remain checkpoints in the same
 run. Preserve that invocation's logs and `job-memory.json`, including on timeout
@@ -163,3 +167,7 @@ the Job cap at 8 GiB and requires a smaller parallel configuration or a measured
 memory improvement, followed by another bounded capacity check. There is no
 single-worker full-run fallback. A timed-out invocation also leaves the run paused
 with all published checkpoints retained. The hold remains in place throughout.
+
+The timeout/receipt cleanup change passed all 68 launcher/continuation tests in
+47.07 seconds, including a timeout that records the Job peak and a receipt-write
+failure that still terminates and closes the owned Job.
