@@ -106,7 +106,7 @@ def _git_read(root: Path, *arguments: str) -> str:
 
 @dataclass(frozen=True)
 class DataRoots:
-    """Primary checkout and its explicitly configured shared research_data root."""
+    """Primary evidence checkout and an independently configured catalog root."""
 
     primary: Path
     data: Path
@@ -116,15 +116,26 @@ class DataRoots:
             raise ValueError("primary and data roots must be explicit absolute paths")
         primary = _checked_path(self.primary)
         data = _checked_path(self.data)
-        if data.name != "research_data":
-            raise ValueError("data root must be named research_data")
         if any(part.casefold() in {".worktrees", ".tmp"} for part in data.parts):
             raise ValueError("data root cannot be under .worktrees or .tmp")
-        if data.parent != primary:
-            raise ValueError("data root must be directly under its primary checkout")
+        if data.name == "research_data" and data.parent != primary:
+            raise ValueError("legacy data root must be directly under its primary checkout")
+        if data.name not in {"research_data", "catalog"}:
+            raise ValueError("data root must be named research_data (legacy) or catalog")
         git_directory = _checked_path(primary / ".git")
         if not git_directory.is_dir():
             raise ValueError("data root must belong to a primary checkout with a .git directory")
+        if data.name == "catalog":
+            checkouts = [
+                primary,
+                *(
+                    Path(field.removeprefix("worktree "))
+                    for field in _git_read(primary, "worktree", "list", "--porcelain", "-z").split("\0")
+                    if field.startswith("worktree ")
+                ),
+            ]
+            if any(_overlaps(data, checkout) for checkout in checkouts):
+                raise ValueError("catalog root must be outside every checkout and worktree")
         if data.exists() and not data.is_dir():
             raise ValueError("data root must be a directory")
         object.__setattr__(self, "primary", primary)
@@ -132,13 +143,22 @@ class DataRoots:
         LOGGER.debug("Validated research data roots: primary=%s data=%s", primary, data)
 
     @classmethod
-    def from_env(cls, env: Mapping[str, str] | None = None, *, worktree: Path | None = None) -> DataRoots:
+    def from_env(cls, env: Mapping[str, str] | None = None, *, worktree: Path | None = None, repo_root: Path | None = None) -> DataRoots:
+        from research_core.producer_data import REPO_ROOT, primary_checkout, read_env_file_value
+
         environment = os.environ if env is None else env
         value = environment.get(DATA_ROOT_ENV)
+        primary = primary_checkout(worktree or repo_root or REPO_ROOT)
+        if value is None and env is None and primary is not None:
+            value = read_env_file_value(primary / ".env.local", DATA_ROOT_ENV)
         if not value or not Path(value).is_absolute():
             raise ValueError(f"{DATA_ROOT_ENV} must be an explicit absolute path")
         data = Path(value)
-        roots = cls(primary=data.parent, data=data)
+        if data.name == "research_data":
+            primary = data.parent
+        if primary is None:
+            raise ValueError("cannot discover primary checkout for catalog root")
+        roots = cls(primary=primary, data=data)
         if worktree is not None:
             checked_worktree = _checked_path(worktree)
             if _overlaps(data, checked_worktree):
@@ -170,9 +190,9 @@ class DataRoots:
                 raise ValueError(f"worktree overlaps protected primary root: {root}")
         if not worktree.is_dir():
             raise ValueError("worktree must be an existing directory")
-        copied_root = worktree / "research_data"
-        if os.path.lexists(copied_root):
-            raise ValueError("worktree must not contain research_data, including empty or linked roots")
+        for name in ("research_data", "catalog", "archive"):
+            if os.path.lexists(worktree / name):
+                raise ValueError(f"worktree must not contain {name}, including empty or linked roots")
 
         entries = _check_tree(worktree)
         git_file = _checked_path(worktree / ".git")

@@ -24,6 +24,37 @@ def test_default_scope_includes_shared_data_and_restores_it(tmp_path: Path) -> N
     assert (tmp_path / "restored/research_data/fixture.json").read_bytes() == b'{"invented":1}'
 
 
+def test_external_catalog_and_archive_backup_preserve_restore_namespace(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import subprocess
+
+    project = tmp_path / "primary"
+    project.mkdir()
+    subprocess.run(["git", "init", str(project)], check=True, capture_output=True)
+    shared = tmp_path / "research home/catalog"
+    archive = shared.parent / "archive"
+    shared.mkdir(parents=True)
+    archive.mkdir()
+    (shared / "catalog.json").write_bytes(b'{"external":true}')
+    (archive / "studio.json").write_bytes(b'{"frozen":true}')
+    legacy = project / "research_data"
+    legacy.mkdir()
+    (legacy / "stale.json").write_bytes(b"retained, not selected")
+    (shared.parent / "derived").mkdir()
+    (shared.parent / "derived/rebuildable").write_bytes(b"exclude")
+    (project / ".env.local").write_text(f"STOCK_RESEARCH_DATA_ROOT={shared.as_posix()}\n", encoding="utf-8")
+    monkeypatch.delenv("STOCK_RESEARCH_DATA_ROOT", raising=False)
+    sources = default_sources(project)
+    assert sources == {"research_data": shared, "archive": archive}
+    receipt = backup_sources(sources, tmp_path / "backup")
+    restore_backup(Path(receipt["manifest_path"]), tmp_path / "restored")
+    assert (tmp_path / "restored/research_data/catalog.json").read_bytes() == b'{"external":true}'
+    assert (tmp_path / "restored/archive/studio.json").read_bytes() == b'{"frozen":true}'
+    assert not (tmp_path / "restored/research_data/stale.json").exists()
+    monkeypatch.setenv("STOCK_RESEARCH_DATA_ROOT", str(shared.parent / "missing/catalog"))
+    with pytest.raises(ValueError, match="no legacy fallback"):
+        default_sources(project)
+
+
 def test_sealed_closed_database_requires_matching_hash_and_no_sidecars(tmp_path: Path) -> None:
     source = source_tree(tmp_path)
     database = source / "historical.sqlite"

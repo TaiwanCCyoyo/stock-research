@@ -20,7 +20,7 @@ another checkout are reported without terminating them. Logs belong to
 this is not an operating-system startup registration.
 
 The configured physical snapshot is registered in the shared catalog as
-`patterns/opportunity-history-web/<manifest-sha256>/` under `research_data`
+`patterns/opportunity-history-web/<manifest-sha256>/` under the external `catalog/`
 and located through `research_core.opportunity_history_bundle.resolve_history_bundle()`
 (root from `STOCK_RESEARCH_DATA_ROOT`, in the process environment or the primary checkout's
 `.env.local`). It spans 2010-01-04 through 2026-10-02, with 1,970 eligible saved

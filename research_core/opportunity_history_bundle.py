@@ -71,7 +71,7 @@ def history_data_roots(*, environ: dict[str, str] | None = None, repo_root: Path
         if configured is None:
             raise BundleUnavailable(f"{DATA_ROOT_ENV} is not configured in the process environment or {source}; no automatic fallback")
     try:
-        return DataRoots.from_env({DATA_ROOT_ENV: configured.strip()})
+        return DataRoots.from_env({DATA_ROOT_ENV: configured.strip()}, repo_root=repo)
     except ValueError as error:
         raise BundleUnavailable(f"{DATA_ROOT_ENV} from {source} is unusable: {error}") from error
 
