@@ -47,10 +47,6 @@
 .fh-preview-badge {
     display: inline-block;
     font-size: 12px;
-    padding: 5px 10px;
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: 20px;
     color: var(--muted);
 }
 .fh-hero-date {
@@ -883,12 +879,9 @@
 .fh-metadata-note {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    flex-wrap: wrap;
-}
-.fh-metadata-note .u-notice {
-    margin: 0;
+    gap: 2px;
+    margin: 4px 0 10px;
+    font-size: 13px;
 }
 .fh-page .fh-market {
     height: clamp(540px, calc(100svh - 64px - 92px), 1180px);
@@ -1005,7 +998,6 @@
         padding: 8px 12px;
     }
     .fh-page .fh-hero-title p,
-    .fh-page .fh-hero .fh-preview-badge,
     .fh-page .fh-map .fh-section-heading p {
         display: none;
     }

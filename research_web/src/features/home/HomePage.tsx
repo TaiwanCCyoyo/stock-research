@@ -7,7 +7,9 @@ import {
 } from "../full-history/types";
 import { latestMarketSummary } from "./model";
 import { MarketOverview } from "./HomeView";
+import { ProgressLine, SkeletonCards } from "../../components/ui/primitives";
 import { StudyCardView } from "../studies/StudyCardView";
+import { StudiesRefreshNotice } from "../studies/StudiesRefreshNotice";
 import { useStudyCards } from "../studies/useStudyCards";
 import "../studies/studies.css";
 import "./home.css";
@@ -103,26 +105,52 @@ export function HomePage() {
                     </button>
                 </div>
             ) : (
-                <p className="u-skeleton">
+                <div className="hm-loading">
                     {market.startup?.state === "loading" &&
-                    market.startup.total > 0
-                        ? `市場資料準備中（${market.startup.completed}／${market.startup.total}）…`
-                        : "正在讀取市場資料…"}
-                </p>
+                        market.startup.total > 0 && (
+                            <ProgressLine
+                                label="市場資料準備中"
+                                done={market.startup.completed}
+                                total={market.startup.total}
+                            />
+                        )}
+                    <SkeletonCards
+                        count={2}
+                        className="u-grid-2"
+                        label="正在讀取市場資料"
+                    />
+                </div>
             )}
             <h2 className="u-section-title">
                 最近的研究 <a href="#studies">全部研究 →</a>
             </h2>
             {studies.cards ? (
-                <div className="hm-studies">
-                    {recent.map((card) => (
-                        <StudyCardView key={card.id} card={card} compact />
-                    ))}
+                <>
+                    {studies.stale && (
+                        <StudiesRefreshNotice onRetry={studies.retry} />
+                    )}
+                    <div className="hm-studies">
+                        {recent.map((card) => (
+                            <StudyCardView key={card.id} card={card} compact />
+                        ))}
+                    </div>
+                </>
+            ) : studies.error ? (
+                <div className="u-card hm-state">
+                    <p>研究資料暫時讀不到。</p>
+                    <button
+                        className="u-btn u-btn-primary"
+                        onClick={studies.retry}
+                    >
+                        重新讀取
+                    </button>
                 </div>
             ) : (
-                <p className="u-skeleton">
-                    {studies.error ? "研究資料暫時讀不到。" : "正在讀取研究…"}
-                </p>
+                <SkeletonCards
+                    count={3}
+                    className="hm-studies"
+                    label="正在讀取研究"
+                />
             )}
             <h2 className="u-section-title">其他工具</h2>
             <div className="hm-doors">

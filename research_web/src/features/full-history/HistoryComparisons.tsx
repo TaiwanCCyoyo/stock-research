@@ -1,3 +1,4 @@
+import { CaveatChip, InfoTip } from "../../components/ui/InfoTip";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { PortfolioComparison } from "../../domain/opportunities/types.ts";
 import { CapitalCards } from "../opportunities/evidence.tsx";
@@ -311,9 +312,14 @@ export function HistoryComparisons({
                         className="fh-capital-ranking"
                         aria-label="誰跟得最好"
                     >
-                        <h3>誰跟得最好</h3>
+                        <h3>
+                            誰跟得最好
+                            <InfoTip label="怎麼排">
+                                依這一天帳戶資金放在飆股上的比例排序。資料不齊的帳戶無法判定完整名次。
+                            </InfoTip>
+                        </h3>
                         <p>
-                            依這天已核對的帳戶資金放在飆股的比例排序；不是策略報酬。資料未齊時不能判定完整名次。
+                            <CaveatChip>不是策略報酬</CaveatChip>
                         </p>
                         <ol>
                             {rankCapitalComparisons(allComparisons).map(

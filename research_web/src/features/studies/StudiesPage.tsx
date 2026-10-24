@@ -2,7 +2,9 @@ import { useMemo, useState } from "react";
 import { SourceNotice } from "../../components/SourceNotice";
 import { VERDICT_LABELS } from "../../components/ui/verdicts";
 import { StudioState } from "../strategies/shared";
+import { SkeletonCards } from "../../components/ui/primitives";
 import { filterStudies, groupByMonth, type StudyFilter } from "./model";
+import { StudiesRefreshNotice } from "./StudiesRefreshNotice";
 import { StudyCardView } from "./StudyCardView";
 import { useStudyCards } from "./useStudyCards";
 import "./studies.css";
@@ -34,13 +36,24 @@ export function StudiesPage() {
             <h1 className="u-title">問過的問題，和得到的答案。</h1>
             <p className="u-lede">包含行不通的。最新的在最上面。</p>
             {!studies.cards ? (
-                <StudioState
-                    loading={studies.loading}
-                    error={studies.error}
-                    retry={studies.retry}
-                />
+                studies.error ? (
+                    <StudioState
+                        loading={false}
+                        error={studies.error}
+                        retry={studies.retry}
+                    />
+                ) : (
+                    <SkeletonCards
+                        count={4}
+                        className="st-skeleton"
+                        label="正在讀取研究"
+                    />
+                )
             ) : (
                 <>
+                    {studies.stale && (
+                        <StudiesRefreshNotice onRetry={studies.retry} />
+                    )}
                     {studies.partial && (
                         <p className="u-notice st-partial">
                             完整研究紀錄暫時讀不到，下面先列出網頁報告。

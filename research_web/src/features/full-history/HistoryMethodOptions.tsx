@@ -1,3 +1,4 @@
+import { InfoTip } from "../../components/ui/InfoTip";
 import { useEffect, useState } from "react";
 import { readHistory } from "./api.ts";
 import { HISTORY_SCHEMA, type HistoryOptions } from "./types.ts";
@@ -45,9 +46,7 @@ export function HistoryMethodOptions({
             onToggle={(e) => setOpened(e.currentTarget.open)}
         >
             <summary>查看原有波段方法的收錄範圍</summary>
-            <p>
-                這裡是保存方法的原始檔數，尚未套用本頁的年化／短波實際漲幅遮罩。完整行情、候選開始日與事後最高漲幅是不同條件。
-            </p>
+
             <div className="fh-controls">
                 {["2014-06-30", "2021-04-29", "2024-06-28"].map((day) => (
                     <button
@@ -77,7 +76,10 @@ export function HistoryMethodOptions({
                 </div>
             )}
             <p className="fh-caption">
-                多年十倍行情仍保留在目錄；是否畫入版圖，由目前時間調整指標與門檻另行判斷。
+                這些檔數怎麼來
+                <InfoTip label="這些檔數怎麼來">
+                    這是各方法原本收錄的檔數，還沒套用本頁的年化／實際漲幅門檻。多年十倍的行情也留在目錄裡，是否畫進版圖另外判斷。
+                </InfoTip>
             </p>
         </details>
     );

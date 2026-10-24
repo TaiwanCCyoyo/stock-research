@@ -1,3 +1,4 @@
+import { InfoTip } from "../../components/ui/InfoTip";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
     dateIndex,
@@ -299,7 +300,10 @@ export function HistoryTimeline({
                 </button>
             )}
             <p className="fh-caption">
-                時間帶保留波段日期與代表區間；持股色帶只在正數持股證據與來源覆蓋重疊時顯示。階段與最高點都是事後標記，尚未定案。
+                怎麼看時間帶
+                <InfoTip label="怎麼看時間帶">
+                    每條是一檔股票的波段期間。持股色帶只在有持股證據的日子出現；階段與最高點都是事後標記，尚未定案。
+                </InfoTip>
             </p>
         </section>
     );

@@ -20,7 +20,12 @@ export function MarketOverview({
         <div className="hm-grid">
             <div className="u-stack">
                 <div className="u-grid-2 hm-kpis">
-                    <Kpi value={summary.count} unit="檔" label="正在大漲" />
+                    <Kpi
+                        value={summary.count}
+                        unit="檔"
+                        label="正在大漲"
+                        feature
+                    />
                     <Kpi
                         value={summary.industries.length}
                         unit="個"
@@ -77,13 +82,15 @@ function Kpi({
     value,
     unit,
     label,
+    feature = false,
 }: {
     value: number;
     unit: string;
     label: ReactNode;
+    feature?: boolean;
 }) {
     return (
-        <div className="u-card">
+        <div className={`u-card${feature ? " u-feature" : ""}`}>
             <div className="u-big">
                 {value}
                 <small>{unit}</small>

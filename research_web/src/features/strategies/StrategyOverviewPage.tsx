@@ -6,7 +6,8 @@ import { duration, gainClass, money, percentage } from "./format";
 import { filterStrategies, type StrategyStatus } from "./model";
 import { StatusBadge, StudioState } from "./shared";
 import { strategyIdea, strategyTitle } from "./presentation";
-import { capturedTradeLabel, capturedTradeNote } from "./captureModel";
+import { capturedTradeLabel } from "./captureModel";
+import { InfoTip } from "../../components/ui/InfoTip";
 import { SharedDataStatus } from "./SharedDataStatus";
 import { SourceInfo } from "../../components/ui/primitives";
 import "./strategies.css";
@@ -21,7 +22,12 @@ export function StrategyOverviewPage() {
             <SharedDataStatus />
             <div className="ss-head-row">
                 <div>
-                    <h1>策略總覽</h1>
+                    <h1>
+                        策略總覽
+                        <InfoTip label="已採用怎麼判定">
+                            通過研究篩選和「已採用」分開記錄；只有使用者確認採用，才會列在已採用。
+                        </InfoTip>
+                    </h1>
                     <p className="ss-muted">
                         研究過的做法、成果與代價。點進一張卡，逐筆確認它怎麼買賣。
                     </p>
@@ -117,7 +123,6 @@ export function StrategyOverviewPage() {
                                 <div>
                                     <small>持有時是飆股</small>
                                     <strong>{capturedTradeLabel(run)}</strong>
-                                    <small>{capturedTradeNote(run)}</small>
                                 </div>
                             </div>
                         </a>
@@ -134,9 +139,6 @@ export function StrategyOverviewPage() {
                     ))}
                 </SourceInfo>
             )}
-            <p className="ss-muted ss-small">
-                開發篩選通過與「已採用」分開記錄；只有使用者確認採用，才會列在已採用。
-            </p>
         </div>
     );
 }
