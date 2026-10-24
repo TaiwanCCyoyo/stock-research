@@ -509,6 +509,7 @@ def _run_services(
         if not no_browser:
             if not webbrowser.open(f"http://127.0.0.1:{web_port}"):
                 raise RuntimeError("無法開啟預設瀏覽器。")
+        heartbeat_failure_since: float | None = None
         while children:
             failed_child = next(
                 (child for child in children if child.process.poll() is not None),
@@ -518,16 +519,28 @@ def _run_services(
                 raise RuntimeError(
                     f"{failed_child.name} 意外結束（結束碼 {failed_child.process.returncode}）；詳見 .tmp/research-web-launcher/{failed_child.name}.log。"
                 )
-            if desktop and _desktop_idle(api_port, started):
-                # A concurrent click either refreshes activity before this lock,
-                # or waits until our own children have stopped before inspecting.
-                with _startup_lock(root, api_port, web_port):
+            if desktop:
+                try:
                     if _desktop_idle(api_port, started):
-                        LOGGER.info("桌面分頁心跳已停止，僅清理本次啟動的服務")
-                        for child in reversed(children):
-                            _stop_child(child)
-                        children.clear()
-                        return 0
+                        # Recheck under the startup lock: a concurrent click may
+                        # have refreshed activity before we acquired it.
+                        with _startup_lock(root, api_port, web_port):
+                            if _desktop_idle(api_port, started):
+                                LOGGER.info("桌面分頁心跳已停止，僅清理本次啟動的服務")
+                                for child in reversed(children):
+                                    _stop_child(child)
+                                children.clear()
+                                return 0
+                    if heartbeat_failure_since is not None:
+                        LOGGER.info("桌面心跳查詢已恢復")
+                    heartbeat_failure_since = None
+                except OSError as exc:
+                    now = time.monotonic()
+                    if heartbeat_failure_since is None:
+                        heartbeat_failure_since = now
+                        LOGGER.warning("心跳查詢暫時失敗，保留服務並重試：%s", exc)
+                    elif now - heartbeat_failure_since > DESKTOP_GRACE_SECONDS:
+                        raise RuntimeError("心跳查詢持續失敗超過 180 秒，停止本次服務。") from exc
             time.sleep(5 if desktop else 0.5)
         return 0
     except KeyboardInterrupt:

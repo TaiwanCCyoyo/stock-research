@@ -93,6 +93,8 @@ Reused services keep their original ownership; unknown, mismatched or older
 APIs lacking the read-only heartbeat status endpoint are refused, never stopped.
 Browser background throttling or sleep longer than the grace period can also
 expire activity; click the shortcut again to restart your services.
+Temporary heartbeat-status request failures are retried without stopping services;
+only continuous failures exceeding the same 180-second grace end the owned run.
 
 The default `#market` reads the frozen 2010-onward catalog through a dedicated,
 read-only history API. Both the API and Vite must run during development.

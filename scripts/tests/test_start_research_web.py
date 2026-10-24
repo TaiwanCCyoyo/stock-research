@@ -192,6 +192,58 @@ def test_desktop_idle_recheck_preserves_children_when_concurrent_click_refreshes
     stop.assert_called_once_with(child)
 
 
+@pytest.mark.parametrize(
+    ("observations", "times", "expected", "sleeps"),
+    [
+        ([False, TimeoutError("busy API"), False, True, True], [0, 10, 20, 30, 30], 0, 2),
+        ([False, True, TimeoutError("busy recheck"), False, True, True], [0, 10, 10, 20, 30, 30], 0, 2),
+        ([False, TimeoutError("busy API"), TimeoutError("still busy"), TimeoutError("unavailable")], [0, 10, 190, 191], 1, 2),
+        (
+            [False, TimeoutError("busy API"), False, TimeoutError("busy again"), TimeoutError("still busy"), TimeoutError("unavailable")],
+            [0, 10, 100, 200, 380, 381],
+            1,
+            4,
+        ),
+    ],
+    ids=["monitor-recovers", "locked-recheck-recovers", "failure-grace-boundary", "recovery-resets-failure-deadline"],
+)
+def test_desktop_monitor_tolerates_temporary_failures_and_bounds_continuous_failures(
+    tmp_path: Path, observations: list[bool | OSError], times: list[float], expected: int, sleeps: int
+) -> None:
+    process = MagicMock()
+    process.poll.return_value = None
+    child = launcher.ManagedChild("research-web", process, io.BytesIO())
+    sequence = iter(zip(observations, times, strict=True))
+    clock = [0.0]
+    with (
+        patch.object(launcher, "project_root", return_value=tmp_path),
+        patch.object(launcher, "_inspect_service", side_effect=("reusable", "stopped")),
+        patch.object(launcher, "_configure_logging", return_value=tmp_path),
+        patch.object(launcher, "_build_website", return_value="current"),
+        patch.object(launcher, "_start_child", return_value=child),
+        patch.object(launcher, "_wait_until_ready"),
+        patch.object(launcher, "_verify_live_mode"),
+        patch.object(launcher.urllib.request, "urlopen"),
+        patch.object(launcher, "_stop_child") as stop,
+        patch.object(launcher.time, "monotonic", side_effect=lambda: clock[0]),
+        patch.object(launcher.time, "sleep") as sleep,
+    ):
+
+        def idle(*args: object) -> bool:
+            stop.assert_not_called()
+            value, now = next(sequence)
+            clock[0] = now
+            if isinstance(value, OSError):
+                raise value
+            return value
+
+        with patch.object(launcher, "_desktop_idle", side_effect=idle) as observe:
+            assert launcher.run(desktop=True, no_browser=True, api_port=18517, web_port=15177) == expected
+    assert observe.call_count == len(observations)
+    assert sleep.call_args_list == [call(5)] * sleeps
+    stop.assert_called_once_with(child)
+
+
 def test_linked_checkout_reads_primary_settings(tmp_path: Path) -> None:
     settings = private_settings(tmp_path)
     (tmp_path / ".env.local").write_text("\n".join(f'{key}="{value}"' for key, value in settings.items()), encoding="utf-8")
