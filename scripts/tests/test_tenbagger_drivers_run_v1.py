@@ -6,7 +6,9 @@ import argparse
 import hashlib
 import json
 import subprocess
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from threading import Event
 
 import numpy as np
 import pandas as pd
@@ -223,3 +225,81 @@ def test_one_a4_mismatch_stops_before_later_alignment_and_formal_counts(monkeypa
     diagnostic = json.loads((tmp_path / "alignment.json").read_text(encoding="utf-8"))
     assert diagnostic["verdict"] == "stop"
     assert diagnostic["differences"]["A4"][0]["different_cells"] == 1
+
+
+def test_two_run_ids_cannot_share_or_release_each_others_hold(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    entered, finish = Event(), Event()
+    lifecycle: list[str] = []
+    monkeypatch.setattr(runner, "execution_gate", lambda *args, **kwargs: {})
+    monkeypatch.setattr(runner, "scratch_root", lambda: tmp_path)
+
+    def active_run(arguments: argparse.Namespace, gates: dict) -> None:
+        lifecycle.append("hold acquired")
+        entered.set()
+        assert finish.wait(10), "test did not allow the first execution to finish"
+        lifecycle.append("hold released")
+
+    monkeypatch.setattr(runner, "_run_exclusive", active_run)
+    arguments = argparse.Namespace(mission_pr=1, code_pr=2, step="retro", formal_decision=None, run_id="first")
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        first = executor.submit(runner.run, arguments)
+        try:
+            assert entered.wait(10)
+            second = argparse.Namespace(**{**vars(arguments), "run_id": "second"})
+            with pytest.raises(ValueError, match="execution is running"):
+                runner.run(second)
+            assert lifecycle == ["hold acquired"]
+        finally:
+            finish.set()
+        first.result(timeout=10)
+    assert lifecycle == ["hold acquired", "hold released"]
+    # The same persistent file is reusable after the OS lock is released.
+    with runner.execution_lock(tmp_path / drivers.TASK_ID / ".execution.lock"):
+        pass
+
+
+def test_final_publication_verifies_copy_and_renames_destination_sibling(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    source = tmp_path / "scratch-volume/final"
+    source.mkdir(parents=True)
+    (source / "summary.parquet").write_bytes(b"synthetic final result")
+    destination = tmp_path / "checkout-volume/results/run"
+    copied: list[str] = []
+    native_copy, native_publish = runner.copy_verified, runner.publish_noreplace
+
+    def checked_copy(incoming: Path, outgoing: Path, digest: str) -> None:
+        assert incoming.parent == source
+        assert outgoing.parent.parent == destination.parent
+        native_copy(incoming, outgoing, digest)
+        copied.append(incoming.name)
+
+    def local_publish(staged: Path, final: Path) -> None:
+        assert staged.parent == final.parent == destination.parent
+        assert staged != source
+        native_publish(staged, final)
+
+    monkeypatch.setattr(runner, "copy_verified", checked_copy)
+    monkeypatch.setattr(runner, "publish_noreplace", local_publish)
+    runner.publish_results(source, destination)
+    assert copied == ["summary.parquet"]
+    assert (source / "summary.parquet").read_bytes() == (destination / "summary.parquet").read_bytes()
+    with pytest.raises(FileExistsError):
+        runner.publish_results(source, destination)
+    assert (destination / "summary.parquet").read_bytes() == b"synthetic final result"
+
+
+def test_failed_copy_keeps_scratch_and_never_exposes_partial_result(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    source = tmp_path / "scratch/final"
+    source.mkdir(parents=True)
+    (source / "summary.parquet").write_bytes(b"synthetic result")
+    destination = tmp_path / "checkout/results/run"
+
+    def interrupted_copy(incoming: Path, outgoing: Path, digest: str) -> None:
+        outgoing.write_bytes(b"partial")
+        raise OSError("injected copy failure")
+
+    monkeypatch.setattr(runner, "copy_verified", interrupted_copy)
+    with pytest.raises(OSError, match="injected copy failure"):
+        runner.publish_results(source, destination)
+    assert not destination.exists()
+    assert (source / "summary.parquet").read_bytes() == b"synthetic result"
+    assert len(list(destination.parent.glob(".staging-run-*"))) == 1

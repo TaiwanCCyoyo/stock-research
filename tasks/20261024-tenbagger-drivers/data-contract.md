@@ -133,11 +133,15 @@ thread 不跨程序序列化，明確註記。全量保留完整跨股 barrier�
 
 scratch 一律由 `research_core.scratch_runs.create_run` 建立，在設定的 shared
 research root 的 `scratch/<task>/<run>/`，不放 worktree `.tmp/`。
-只有本研究自己的 `tenbagger-drivers` hold 可建立與 release，既有同名 hold
+所有 run-id 與 checkout 先取得同一個 `scratch/<task>/.execution.lock` 的原生 OS 鎖，
+持有至本次 hold release 完成；第二個執行在碰到 hold 前即拒絕。程序結束由 OS 釋放鎖，
+不依檔案存在或時間判斷，也不刪鎖檔。只有本研究自己的 `tenbagger-drivers` hold 可建立與 release，既有同名 hold
 會拒絕新 run；絕不接觸 PR17 或 PR61 的 hold、程序、前瞻紀錄或排程。
 
 最終小表放 `tasks/20261024-tenbagger-drivers/results/<step>/<run>/`，
-no-replace 原子移交、拒絕覆寫。retro：`retro_distributions.parquet`、
+先以 `copy_verified` 複製最終小表到目的地同層 staging，核對前後 SHA-256，
+再以 `publish_noreplace` 原子發布、拒絕覆寫；支援 scratch 與 checkout 在不同檔案系統，
+不搬動或刪除 scratch，失敗保留 staging 供復原。retro：`retro_distributions.parquet`、
 `retro_intervals.parquet`、`tenbagger_episodes.parquet`、`retro_quotas.parquet`、
 `r6-recommendation.json`；formal：`formal_summary.parquet`、
 `formal_intervals.parquet`、`formal_verdicts.parquet`。兩者都有 `execution.json`

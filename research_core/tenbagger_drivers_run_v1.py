@@ -12,9 +12,10 @@ import json
 import logging
 import subprocess
 import time
-from collections.abc import Callable, Sequence
+import uuid
+from collections.abc import Callable, Iterator, Sequence
 from concurrent.futures import ThreadPoolExecutor
-from contextlib import closing
+from contextlib import closing, contextmanager
 from pathlib import Path
 from typing import Any
 
@@ -23,7 +24,7 @@ import pandas as pd
 
 from research_core import momentum_only_v1 as momentum
 from research_core import tenbagger_drivers_v1 as study
-from research_core.artifact_store import relocate_noreplace, write_json
+from research_core.artifact_store import copy_verified, file_digest, publish_noreplace, release_os_lock, safe_path, try_os_lock, write_json
 from research_core.industry_breadth_v1 import industry_daily, prior_turnover
 from research_core.institutional_flow_v1 import InstitutionalRead, assert_institutional_idle, institutional_daily, read_institutional
 from research_core.live_producer import ProducerChangedError, readonly_sqlite, stat_identity
@@ -31,7 +32,7 @@ from research_core.maintained_adjusted_daily import current_generation, held_gen
 from research_core.producer_data import producer_data_root
 from research_core.research_measurement_v1 import host_resources, phase_receipt, resource_sample
 from research_core.run_receipt import InputSpec, changed_results, code_identity, fingerprint_inputs, write_run_receipt
-from research_core.scratch_runs import create_run
+from research_core.scratch_runs import create_run, scratch_root
 
 LOGGER = logging.getLogger(__name__)
 REPO = Path(__file__).resolve().parents[1]
@@ -349,9 +350,52 @@ def _exclusions(repo_root: Path) -> set[tuple[str, str]]:
     return {(str(row["code"]), str(row["anchor_date"])) for row in decisions if row.get("audit_price_error") is True}
 
 
+@contextmanager
+def execution_lock(path: Path) -> Iterator[None]:
+    """Serialize the study across run ids and checkouts before touching its hold.
+
+    The persistent lock file is not a liveness claim; the OS owns the lock and
+    releases it on process exit. Never unlink it while another run may open it.
+    """
+    path = safe_path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a+b") as handle:
+        if not try_os_lock(handle):
+            raise ValueError("another tenbagger study execution is running; preserve its hold")
+        try:
+            yield
+        finally:
+            release_os_lock(handle)
+
+
+def publish_results(source: Path, destination: Path) -> None:
+    """Verify copies of final small tables, then publish on the destination FS.
+
+    Scratch may be on another volume. Only the destination's sibling staging
+    directory is renamed; failure retains scratch and any staging for recovery.
+    """
+    source, destination = safe_path(source), safe_path(destination)
+    if destination.exists():
+        raise FileExistsError(f"result destination already exists: {destination}")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    staging = safe_path(destination.parent / f".staging-{destination.name}-{uuid.uuid4().hex}")
+    staging.mkdir()
+    for path in sorted(source.iterdir()):
+        if not path.is_file():
+            raise ValueError(f"only final result files may be published: {path}")
+        copy_verified(path, staging / path.name, file_digest(path))
+    publish_noreplace(staging, destination)
+
+
 def run(arguments: argparse.Namespace) -> None:
     """Execute one owner-gated probe or fixed step; never proceed to step two."""
     gates = execution_gate(REPO, mission_pr=arguments.mission_pr, code_pr=arguments.code_pr, step=arguments.step, formal_decision=arguments.formal_decision)
+    with execution_lock(scratch_root() / study.TASK_ID / ".execution.lock"):
+        _run_exclusive(arguments, gates)
+
+
+def _run_exclusive(arguments: argparse.Namespace, gates: dict[str, Any]) -> None:
+    """Keep the study lock through hold acquisition, all reads and hold release."""
     assert_institutional_idle()
     calendar, codes = momentum.pr17_calendar(), momentum.pr17_codes()
     if len(codes) != 1942:
@@ -486,7 +530,7 @@ def run(arguments: argparse.Namespace) -> None:
                 write_json(final / "r6-recommendation.json", recommendation)
             destination = REPO / TASK / "results" / arguments.step / arguments.run_id
             destination.parent.mkdir(parents=True, exist_ok=True)
-            relocate_noreplace(final, destination)
+            publish_results(final, destination)
             results = {path.name: path for path in destination.iterdir() if path.is_file()}
             _, shared_read = read_adjusted_daily(
                 "reference_factor_adjusted", codes=[codes[0]], columns=["Code", "Date"], as_of=momentum.CUTOFF, calendar=calendar, generation=generation
