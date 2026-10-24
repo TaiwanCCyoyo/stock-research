@@ -15,6 +15,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from jsonschema import Draft202012Validator, FormatChecker
 
+from research_api.saved_research_studio import create_studio_router
 from research_api.studies import create_studies_router
 from research_core import scratch_runs
 from research_core.saved_research_studio import synthetic_studio_package
@@ -447,3 +448,16 @@ def test_synthetic_cards_match_the_saved_card_schema_after_response_fields_are_r
     for card in cards:
         saved_form = {key: value for key, value in card.items() if key not in {"progress", "run_state"}}
         validator.validate(saved_form)
+
+
+def test_synthetic_account_card_opens_an_existing_fictional_account(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("STOCK_RESEARCH_DATA_MODE", "public-synthetic")
+    app = FastAPI()
+    app.include_router(create_studies_router(tasks_root=tmp_path / "unavailable-private-tasks"))
+    app.include_router(create_studio_router())
+    http = TestClient(app)
+    cards = http.get("/studies").json()["cards"]
+    account = next(card["account_run"] for card in cards if card["account_run"] is not None)
+    response = http.get("/saved-research-studio/v1/run", params={"run_id": account["run_id"]})
+    assert response.status_code == 200
+    assert response.json()["synthetic"] is True

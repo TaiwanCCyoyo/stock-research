@@ -17,7 +17,7 @@ from jsonschema import Draft202012Validator, FormatChecker
 from research_core.artifact_store import file_digest, relative_name, safe_path
 from research_core.evidence import finite_json
 from research_core.json_integrity import strict_json_object
-from research_core.saved_research_studio import StudioError, read_studio_package
+from research_core.saved_research_studio import StudioError, read_studio_package, synthetic_studio_package
 from research_core.scratch_runs import ScratchRunError, read_run
 from research_core.shared_data import shared_data_root
 
@@ -217,7 +217,7 @@ def synthetic_study_cards(*, include_tooling: bool = False) -> dict[str, Any]:
         if verdict == "running":
             card.update(progress={"step": 2, "total": 5, "label": "虛構示範步驟"}, run_state="running")
         if verdict == "archived":
-            card["account_run"] = {"run_id": "fictional:paper-account", "period_note": "虛構帳戶示範（舊資料）"}
+            card["account_run"] = {"run_id": synthetic_studio_package()["runs"][0]["id"], "period_note": "虛構帳戶示範（舊資料）"}
         if include_tooling or kind != "tooling":
             cards.append(card)
     return {"cards": cards, "warnings": []}
