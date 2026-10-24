@@ -131,7 +131,7 @@
       `heartbeat(progress={"step": 已完成組數, "total": 總組數, "label": "<家族> conditions"})`，
       讓 dashboard 看得到進度。
     - `progress.json` 的身分比對只看 `source_id`、`input_id`。
-    - 收據改用「phase 目錄 + 收據 key」重新定位最終表，再用 SHA-256 驗證。
+    - 收據改用 `results` 的相對路徑鍵接到目前 phase 根目錄來重新定位最終表，保留分組子目錄（例如 `pattern%3Aunion-h126/...summary.parquet`），不能只取檔名；再用 SHA-256 驗證。
     - 接受複製過來的 `.phase-start-*.json`（v5），保留原本的 `code`，把新的 commit 追加到 `execution_codes`。
     - 不要在全部家族完成時自動 `release` hold。
     - DEFINITION 維持 v5，因為計算內容沒變；舊收據不改寫。
