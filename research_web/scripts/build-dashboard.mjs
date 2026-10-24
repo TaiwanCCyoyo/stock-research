@@ -123,8 +123,26 @@ function stagedArtifactMode(stage) {
     return releaseArtifactMode(recorded.artifactMode);
 }
 
+/** Optional owner tag (RESEARCH_WEB_STAGE_TAG) in stage names, so a caller
+ *  can clean up exactly the stages its own interrupted build left behind. */
+export function stageTag(value = process.env.RESEARCH_WEB_STAGE_TAG) {
+    return value && /^[A-Za-z0-9]{1,64}$/.test(value) ? `${value}-` : "";
+}
+
 export function isCurrentRelease(directory = dist, version = sourceVersion()) {
     return readReleaseVersion(directory) === version;
+}
+
+/** The data mode a published release was built for, or null. */
+export function releaseMode(directory = dist) {
+    try {
+        return (
+            JSON.parse(readFileSync(join(directory, "release.json"), "utf8"))
+                .artifactMode ?? null
+        );
+    } catch {
+        return null;
+    }
 }
 
 export function publishDirectory(stage, destination, rename = renameSync) {
@@ -140,17 +158,26 @@ export function publishDirectory(stage, destination, rename = renameSync) {
     if (hadDestination) rmSync(backup, { recursive: true, force: true });
 }
 
-export function ensureRelease({ root = repoRoot, build = buildStage } = {}) {
+/** `mode`, when given, must also match: a demo build is never reused for
+ *  private data or the reverse (the launcher always passes it). */
+export function ensureRelease({
+    root = repoRoot,
+    build = buildStage,
+    mode = undefined,
+} = {}) {
     const version = sourceVersion(root);
     const destination = join(root, "research_web", "dist");
-    if (isCurrentRelease(destination, version)) {
+    if (
+        isCurrentRelease(destination, version) &&
+        (!mode || releaseMode(destination) === mode)
+    ) {
         console.log(`[dashboard] dist is current (${version.slice(0, 12)})`);
         return "current";
     }
     const stage = join(
         root,
         "research_web",
-        `.dist-stage-${process.pid}-${randomUUID()}`,
+        `.dist-stage-${process.pid}-${stageTag()}${randomUUID()}`,
     );
     mkdirSync(stage, { recursive: true });
     try {
@@ -233,7 +260,16 @@ if (
     resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 ) {
     try {
-        ensureRelease();
+        const requested = process.env.VITE_ARTIFACT_MODE;
+        const mode = requested ? releaseArtifactMode(requested) : undefined;
+        if (process.argv.includes("--check")) {
+            // Exit 0 when dist is current for the requested mode, 3 otherwise.
+            const current =
+                isCurrentRelease() && (!mode || releaseMode() === mode);
+            console.log(`[dashboard] dist is ${current ? "current" : "stale"}`);
+            process.exit(current ? 0 : 3);
+        }
+        ensureRelease({ mode });
     } catch (error) {
         console.error(
             `[dashboard] build failed; existing dist was preserved: ${error.message}`,

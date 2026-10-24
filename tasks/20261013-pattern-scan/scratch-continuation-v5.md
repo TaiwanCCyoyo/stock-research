@@ -1,6 +1,10 @@
 # Q2–Q6 continuation on shared scratch
 
-**Status: runner implementation only; the remaining research has not started.**
+**Status: parallel runner PR #81 merged; continuation paused pending PR #82's capacity-observation fix. Research remains incomplete.**
+The current runtime amendment and completed engineering probe are
+[bounded parallel execution](parallel-execution-v5.md). Four workers were selected;
+the bounded full-market capacity invocation follows PR #82's owner merge.
+The single-worker process started below was stopped, with its checkpoints retained.
 This implements package D's runner changes from
 [the current handoff](../20261024-data-homes-and-scratch/codex-handoff.md#d-pr17-續跑程式修改與重跑).
 The numerical definition stays `pattern-scan-local-remaining.v5`. The scratch run
@@ -12,8 +16,9 @@ Historical receipts, pinned reports and the original input files remain unchange
 The public CLI accepts an exact scratch run directory registered through
 `scratch_runs.create_run()`, as well as the legacy calling checkout's `.tmp/`.
 For shared scratch, the launcher holds `scratch_runs.open_run()` for its whole
-lifetime, including worker startup and teardown. One numerical worker stays inside
-the existing 8 GiB Windows Job; the host must have another 4 GiB available. The
+lifetime, including worker startup and teardown. The numerical coordinator and all
+pool descendants stay inside the existing 8 GiB Windows Job; the host must have
+another 4 GiB available. The
 default timeout is ten days, rather than two, to accommodate the previously
 measured six-day continuation. `--timeout-seconds` can still bound a shorter retry.
 
@@ -64,23 +69,45 @@ conditions phase-start record. The original generation hold is present.
 
 ## Pending execution and delivery
 
-PR #64 and #66 are merged. This runner change must merge, and package A's study
-cards must be available, before the remaining ten families start. No actual scratch
-run has been created, no old output copied and no live producer read by this change.
+PR #64, #66, #71 (runner), #73 (study cards), #78 (run registration) and #81
+(parallel pools) are merged. Primary `main` is updated through #81 (`24fff65`). The session-owned
+`pr17-scratch-continuation` worktree is now reused on
+`codex/pr17-capacity-receipt` for PR #82. It remains available for review and the
+paused continuation. The old `pr17-retention-review` worktree also stays.
 
-After those gates, use the run creation, verified copy and execution steps in
+The registered run is
+`D:/StockData/stock-research/scratch/20261013-pattern-scan/q2-q6-v6/`, owned by
+`codex`. Its sole input dependency is the original primary-checkout input directory;
+no input copy was made. `retained-output-copy.json` in the run records all 346
+verified output copies (410,826,077 bytes), their original paths and SHA-256s.
+The copy took 9.825 wall seconds / 3.922 CPU seconds. It includes six terminal
+receipts, all their final files, the five families' selections and 49 completed
+groups, and the ten existing phase-start records. No old top-level progress,
+incomplete group staging or `_temporary/` was copied. The study card now links
+to this run; its verdict and delivery state still describe an unfinished study.
+
+The original numerical launcher started from clean registration commit `760081b`,
+using one worker and the default ten-day timeout. The owner stopped it before
+parallel preparation; all its descendants exited, and 576 completed event
+projections remain available. Its stdout/stderr and PID are retained
+in `continuation.stdout.log`, `continuation.stderr.log` and `launch.json` inside
+the run. `run.json` and the OS writer lock are the authority for current liveness;
+this registration alone does not establish that a worker is still running.
+
+The accepted engineering probe selects four workers. After follow-up PR #82 merges,
+resume the same run from clean merged code with the bounded full-market capacity
+invocation first (see the runtime amendment's capacity gate):
+
+```powershell
+uv run python -m scripts.run_pattern_scan_remaining --stock-result D:/Project/stock-research/.tmp/pattern-scan-execution/full-2010-20261016-retention-v3/phase-stock-result.json --output D:/StockData/stock-research/scratch/20261013-pattern-scan/q2-q6-v6 --workers 4 --target B2 --phase conditions --timeout-seconds 21600
+```
+
+Remaining delivery follows
 [package D](../20261024-data-homes-and-scratch/codex-handoff.md#d-pr17-續跑程式修改與重跑):
 
-- Create `20261013-pattern-scan/q2-q6-v6`, with the original primary-checkout input
-  directory in `depends_on`; read it in place.
-- Copy B1/H1 final outputs, the five unfinished families' completed groups and all
-  existing phase-start records, retaining nested directories and comparing every
-  copied file's SHA-256. Do not copy `_temporary/`, incomplete group staging or the
-  old top-level `progress.json`.
-- Run one process in `DEFAULT_TARGET_ORDER`, using `--output` set to that run's
-  path and `--stock-result` set to the original `phase-stock-result.json`. Reuse
-  that same command and run after an interruption. Register `scratch_run` in the
-  study card when execution starts.
+- Continue one coordinator in `DEFAULT_TARGET_ORDER`, using its bounded pool for
+  stock projections and conditions groups. Reuse the same command and run
+  after an interruption; completed groups and phases are adopted without recomputing.
 - Deliver the final tables, receipts, report and study card as specified in the
   handoff. Release the hold and mark `delivered` only after that delivery merges.
   Removal of the old worktree or original inputs still needs the owner's approval.

@@ -44,6 +44,11 @@ def matches(path: str, patterns: list[str]) -> bool:
     return any(fnmatch.fnmatchcase(path, pattern) for pattern in patterns)
 
 
+def is_web_report_path(path: str) -> bool:
+    parts = path.split("/")
+    return len(parts) >= 3 and parts[0] == "tasks" and "web-report" in parts[2:]
+
+
 def inventory_domains(root: Path, manifest: dict[str, Any]) -> dict[str, list[str]]:
     return {path: [name for name, domain in manifest["domains"].items() if matches(path, domain["tests"])] for path in test_inventory(root, manifest)}
 
@@ -142,6 +147,9 @@ def make_plan(changes: list[tuple[str, str]], *, root: Path = ROOT, force_full: 
     references = ReferenceIndex(root)
     for status, raw_path in changes:
         path = raw_path.replace("\\", "/")
+        if is_web_report_path(path):
+            frontend = True
+            reasons.append(f"{status} {path}: web-report frontend validation")
         if path in inventory:
             changed_tests.add(path)
         if matches(path, manifest["full_paths"]) and not matches(path, manifest.get("full_path_exceptions", [])):

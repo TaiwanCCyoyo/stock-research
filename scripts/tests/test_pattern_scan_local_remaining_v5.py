@@ -64,7 +64,9 @@ def test_cli_holds_registered_run_lock_through_launch_and_heartbeats(tmp_path: P
         output = created.path
     stock = tmp_path / "stock.json"
     stock.write_text("{}", encoding="utf-8")
-    monkeypatch.setattr(sys, "argv", ["run_pattern_scan_remaining.py", "--stock-result", str(stock), "--output", str(output), "--target", "H1"])
+    monkeypatch.setattr(
+        sys, "argv", ["run_pattern_scan_remaining.py", "--stock-result", str(stock), "--output", str(output), "--target", "H1", "--workers", "2"]
+    )
 
     reported = {"step": 2, "total": 4, "label": "H1 condition groups"}
 
@@ -1024,3 +1026,51 @@ def test_launcher_relays_child_progress_and_never_releases_hold(tmp_path: Path, 
     assert final["progress"] == child_progress
     assert final["release_pending"] is True
     assert release_calls == []
+
+
+@pytest.mark.parametrize("receipt_write_fails", (False, True))
+def test_timeout_records_job_peak_and_always_closes_owned_job(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, receipt_write_fails: bool) -> None:
+    from research_core import pattern_scan_execution_v1, research_measurement_v1
+
+    repo = tmp_path / "repo"
+    output = repo / ".tmp/run"
+    output.mkdir(parents=True)
+    calls: list[str] = []
+    ticks = iter((0.0, 2.0, 3.0))
+
+    class Job:
+        def __init__(self, limit: int) -> None:
+            assert limit == 8 * 1024**3
+
+        def start(self, command: list[str], root: Path) -> SimpleNamespace:
+            calls.append("start")
+            return SimpleNamespace(poll=lambda: None, returncode=None, args=command)
+
+        def memory_receipt(self) -> dict[str, int]:
+            calls.append("memory")
+            return {"peak_committed_bytes": 12345}
+
+        def terminate_and_confirm(self) -> None:
+            calls.append("terminate")
+
+        def close(self) -> None:
+            calls.append("close")
+
+    original_write = module.write_progress
+
+    def write(path: Path, value: dict[str, Any]) -> None:
+        if path.name == "job-memory.json" and receipt_write_fails:
+            raise OSError("synthetic receipt write failure")
+        original_write(path, value)
+
+    monkeypatch.setattr(pattern_scan_execution_v1, "_MemoryBoundJob", Job)
+    monkeypatch.setattr(research_measurement_v1, "host_resources", lambda: {"physical_available_bytes": 16 * 1024**3})
+    monkeypatch.setattr(module.time, "monotonic", lambda: next(ticks))
+    monkeypatch.setattr(module, "write_progress", write)
+    error = OSError if receipt_write_fails else TimeoutError
+    with pytest.raises(error, match="synthetic receipt" if receipt_write_fails else "explicit timeout"):
+        module.launch_remaining([], repo, output, timeout_seconds=1)
+    assert calls == ["start", "memory", "terminate", "close"]
+    assert not (output / ".active").exists()
+    if not receipt_write_fails:
+        assert read_json(output / "job-memory.json") == {"peak_committed_bytes": 12345, "wall_seconds": 3.0, "exit_code": None, "timed_out": True}

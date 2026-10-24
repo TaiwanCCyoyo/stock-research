@@ -5,6 +5,8 @@ import { join, resolve } from "node:path";
 import test from "node:test";
 import {
     ensureRelease,
+    releaseMode,
+    stageTag,
     hasBuildDependencies,
     isCurrentRelease,
     publishDirectory,
@@ -276,4 +278,40 @@ test("release records the frontend data mode and rebuilds when it is missing", a
         else process.env.VITE_ARTIFACT_MODE = previous;
         await rm(root, { recursive: true, force: true });
     }
+});
+
+test("a release built for another data mode is rebuilt when a mode is requested", async () => {
+    const { root, web } = await fixture();
+    const previous = process.env.VITE_ARTIFACT_MODE;
+    try {
+        const build = (atRoot, stage, version) =>
+            fakeBuild(atRoot, stage, version);
+        process.env.VITE_ARTIFACT_MODE = "public-synthetic";
+        assert.equal(await ensureRelease({ root, build }), "built");
+        const dist = join(web, "dist");
+        assert.equal(releaseMode(dist), "public-synthetic");
+        // Without a requested mode the existing release stays current.
+        assert.equal(await ensureRelease({ root, build }), "current");
+        process.env.VITE_ARTIFACT_MODE = "local-private";
+        assert.equal(
+            await ensureRelease({ root, build, mode: "local-private" }),
+            "built",
+        );
+        assert.equal(releaseMode(dist), "local-private");
+        assert.equal(
+            await ensureRelease({ root, build, mode: "local-private" }),
+            "current",
+        );
+    } finally {
+        if (previous === undefined) delete process.env.VITE_ARTIFACT_MODE;
+        else process.env.VITE_ARTIFACT_MODE = previous;
+        await rm(root, { recursive: true, force: true });
+    }
+});
+
+test("stage names carry only a safe owner tag", () => {
+    assert.equal(stageTag("abc123"), "abc123-");
+    assert.equal(stageTag(undefined), "");
+    assert.equal(stageTag("../x"), "");
+    assert.equal(stageTag("a".repeat(65)), "");
 });
