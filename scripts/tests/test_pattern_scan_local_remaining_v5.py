@@ -10,6 +10,7 @@ import pandas as pd
 import pytest
 
 from research_core import pattern_scan_local_remaining_v5 as module
+from research_core import scratch_runs
 from research_core.artifact_store import read_json, write_json
 from research_core.hhhl_variants_selection import Atom
 
@@ -20,6 +21,76 @@ def test_new_invocation_default_preserves_every_family_in_owner_order() -> None:
     assert len(DEFAULT_TARGET_ORDER) == len(set(DEFAULT_TARGET_ORDER)) == len(module.PATTERNS)
     assert set(DEFAULT_TARGET_ORDER) == set(module.PATTERNS)
     assert DEFAULT_TARGET_ORDER[2:7] == ("B2", "B4", "B3", "L1", "P1")
+
+
+def test_output_root_accepts_legacy_tmp_and_exact_registered_scratch_run(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    repo = tmp_path / "repo"
+    legacy = repo / ".tmp" / "remaining"
+    assert module.output_run(legacy, repo) is None
+
+    scratch = tmp_path / "shared" / "scratch"
+    registered = scratch / "20261024-data-homes-and-scratch" / "continuation-v1"
+    registered.mkdir(parents=True)
+    record = {
+        "schema": scratch_runs.SCHEMA,
+        "state": "running",
+        "task": "20261024-data-homes-and-scratch",
+        "run": "continuation-v1",
+    }
+    write_json(registered / "run.json", record)
+    monkeypatch.setattr(scratch_runs, "scratch_root", lambda **kwargs: scratch)
+    assert module.output_run(registered, repo) == record
+    with pytest.raises(ValueError, match="registered|scratch run|output"):
+        module.output_run(registered / "nested", repo)
+    with pytest.raises(scratch_runs.ScratchRunError, match="no run.json"):
+        module.output_run(scratch / "20261024-data-homes-and-scratch" / "unregistered", repo)
+
+
+@pytest.mark.parametrize("outcome", ("complete", "incomplete", "error"))
+def test_cli_holds_registered_run_lock_through_launch_and_heartbeats(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, outcome: str) -> None:
+    import os
+    import sys
+
+    from scripts import run_pattern_scan_remaining as cli
+
+    for name in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "BLIS_NUM_THREADS", "NUMEXPR_NUM_THREADS"):
+        monkeypatch.setenv(name, os.environ.get(name, "test"))
+    repo = Path(__file__).resolve().parents[2]
+    scratch = tmp_path / "shared" / "scratch"
+    scratch.mkdir(parents=True)
+    monkeypatch.setattr(scratch_runs, "scratch_root", lambda **kwargs: scratch)
+    task, run_id = "20261024-data-homes-and-scratch", f"cli-{outcome}"
+    with scratch_runs.create_run(task, run_id, purpose="CLI lock lifecycle", owner="test", root=scratch, repo_root=repo) as created:
+        output = created.path
+    stock = tmp_path / "stock.json"
+    stock.write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(sys, "argv", ["run_pattern_scan_remaining.py", "--stock-result", str(stock), "--output", str(output), "--target", "H1"])
+
+    reported = {"step": 2, "total": 4, "label": "H1 condition groups"}
+
+    def launch(arguments: list[str], root: Path, target: Path, *, timeout_seconds: int, on_progress: Any) -> dict[str, Any]:
+        assert target == output and timeout_seconds == 864000
+        with pytest.raises(scratch_runs.ScratchRunError, match="in use"):
+            scratch_runs.open_run(task, run_id, root=scratch, repo_root=root)
+        assert on_progress is not None
+        on_progress(reported)
+        if outcome == "error":
+            raise RuntimeError("synthetic worker failure")
+        return {"complete": outcome == "complete", "release_pending": True}
+
+    monkeypatch.setattr(module, "launch_remaining", launch)
+    if outcome == "error":
+        with pytest.raises(RuntimeError, match="synthetic worker failure"):
+            cli.main()
+    else:
+        cli.main()
+
+    record = scratch_runs.read_run(output)
+    assert record["state"] == ("complete" if outcome == "complete" else "running")
+    assert record["progress"] == reported
+    # main's context releases the writer lock on normal return and exceptions.
+    with scratch_runs.open_run(task, run_id, root=scratch, repo_root=repo) as resumed:
+        assert resumed.record["state"] == record["state"]
 
 
 @pytest.mark.parametrize(
@@ -37,11 +108,12 @@ def test_only_final_results_are_receipted_and_completed_phases_are_not_rerun(
     stock.write_text("{}", encoding="utf-8")
     calls: list[str] = []
     receipt_results: list[list[str]] = []
+    identity = {"source_id": "original-source", "input_id": "original-input"}
 
     class Inputs:
         def __init__(self, stock_result: Path, temporary: Path) -> None:
             self.stock_result, self.temporary, self.run = stock_result, temporary, original
-            self.source_id, self.input_id, self.original_code = "original-source", "original-input", {"commit": "old"}
+            self.source_id, self.input_id, self.original_code = identity["source_id"], identity["input_id"], {"commit": "old"}
             self.codes, self.shared_record = ("1101",), {"generation": "held-original"}
             temporary.mkdir(parents=True, exist_ok=True)
 
@@ -56,7 +128,9 @@ def test_only_final_results_are_receipted_and_completed_phases_are_not_rerun(
         pd.DataFrame({"count": [1]}).to_parquet(path, index=False)
         return [path]
 
-    def conditions(inputs: Inputs, target: str, destination: Path) -> tuple[dict, dict, list[Path]]:
+    def conditions(inputs: Inputs, target: str, destination: Path, *, on_progress: Any = None) -> tuple[dict, dict, list[Path]]:
+        if on_progress is not None:
+            on_progress(1, 4)
         return {}, {}, final("conditions", destination)
 
     def receipt(path: Path, **kwargs: object) -> None:
@@ -84,8 +158,11 @@ def test_only_final_results_are_receipted_and_completed_phases_are_not_rerun(
     monkeypatch.setattr(module, "run_followup", lambda inputs, target, candidates, destination: final("followup", destination))
     monkeypatch.setattr(module, "write_run_receipt", receipt)
     monkeypatch.setattr(module, "PATTERNS", ("H1",))
-    result = module.run_remaining(stock, output, repo_root=repo, targets=("H1",))
+    progress_events: list[dict[str, Any]] = []
+    result = module.run_remaining(stock, output, repo_root=repo, targets=("H1",), on_progress=progress_events.append)
     assert result["complete"] and result["release_pending"]
+    assert progress_events and all({"step", "total", "label"} <= set(item) for item in progress_events)
+    assert read_json(output / "progress.json")["progress"] == progress_events[-1]
     assert calls == ["conditions", "q4", "followup"]
     assert receipt_results == [["final.parquet", "top-candidates.json"], ["final.parquet"], ["final.parquet"]]
     assert not (output / "_temporary/events/H1").exists()
@@ -93,10 +170,19 @@ def test_only_final_results_are_receipted_and_completed_phases_are_not_rerun(
     for phase in module.PHASES:
         saved = read_json(output / "H1" / phase / "run-receipt.json")
         assert all(Path(item["path"]).is_file() for item in saved["results"].values())
-    module.run_remaining(stock, output, repo_root=repo, targets=("H1",))
+    relocated_stock = original / "relocated-stock.json"
+    relocated_stock.write_text("{}", encoding="utf-8")
+    module.run_remaining(relocated_stock, output, repo_root=repo, targets=("H1",))
     assert calls == ["conditions", "q4", "followup"]
+    saved = read_json(output / "progress.json")
+    assert saved["stock_result"] == str(relocated_stock.resolve())
+    assert saved["source_id"] == identity["source_id"] and saved["input_id"] == identity["input_id"]
+    identity["input_id"] = "different-input"
+    with pytest.raises(ValueError, match="different original inputs"):
+        module.run_remaining(relocated_stock, output, repo_root=repo, targets=("H1",))
     if corruption is None:
         return
+    identity["input_id"] = "original-input"
     payload = output / "H1/conditions/final.parquet"
     if corruption == "same-size":
         data = payload.read_bytes()
@@ -183,7 +269,7 @@ def test_unreceipted_top_candidates_repair_reuses_completed_conditions(tmp_path:
         def cache_target(self, target: str, directory: Path) -> None:
             directory.mkdir(parents=True, exist_ok=True)
 
-    def conditions(inputs: Inputs, target: str, directory: Path) -> tuple[dict, dict, list[Path]]:
+    def conditions(inputs: Inputs, target: str, directory: Path, *, on_progress: Any = None) -> tuple[dict, dict, list[Path]]:
         directory.mkdir(parents=True, exist_ok=True)
         completed = directory / "completed-group.parquet"
         if not completed.exists():
@@ -345,7 +431,7 @@ def test_publication_retry_reuses_finished_phase_and_original_executor(tmp_path:
                     raise OSError("synthetic partial final write")
         return paths
 
-    def conditions(inputs: Inputs, target: str, destination: Path) -> tuple[dict, dict, list[Path]]:
+    def conditions(inputs: Inputs, target: str, destination: Path, *, on_progress: Any = None) -> tuple[dict, dict, list[Path]]:
         return {}, {}, final("conditions", destination)
 
     def receipt(path: Path, **kwargs: Any) -> None:
@@ -427,7 +513,7 @@ def test_publication_retry_reuses_finished_phase_and_original_executor(tmp_path:
             assert "finalized_by_code" not in saved_after
         else:
             assert saved_after["finalized_by_code"] == executor
-            assert "execution_codes" not in saved_after
+            assert saved_after["execution_codes"] == [{"commit": "first-executor", "dirty": False}, executor]
     # A partial scoped phase also consumes the one retained fixed-selection
     # result. It does not rehash the other conditions tables.
     upstream_selection = int(phase != "conditions" and crash_point == "partial")
@@ -470,7 +556,7 @@ def test_scoped_phase_checks_only_its_fixed_selection_before_computing(tmp_path:
     elif damage == "missing-entry":
         del receipt["results"][selected.name]
     elif damage == "path":
-        receipt["results"][selected.name]["path"] = str(other)
+        receipt["results"]["../top-candidates.json"] = receipt["results"].pop(selected.name)
     if damage != "missing-receipt":
         write_json(conditions / "run-receipt.json", receipt)
     write_json(
@@ -522,7 +608,7 @@ def test_scoped_phase_checks_only_its_fixed_selection_before_computing(tmp_path:
         assert not calls
 
 
-def test_phase_start_keeps_original_executor_and_rejects_unknown_legacy_work(tmp_path: Path) -> None:
+def test_phase_start_keeps_original_executor_and_appends_retry_executors_idempotently(tmp_path: Path) -> None:
     target = tmp_path / "H1"
     target.mkdir()
     working = target / ".staging-q4"
@@ -530,8 +616,14 @@ def test_phase_start_keeps_original_executor_and_rejects_unknown_legacy_work(tmp
     parameters = {"target": "H1", "phase": "q4", "original_source_id": "source", "original_input_id": "input"}
     original = {"commit": "original-executor", "dirty": False}
     first = module._phase_start(path, working, parameters, original)
-    assert module._phase_start(path, working, parameters, {"commit": "retry-executor", "dirty": False}) == first
     assert read_json(path)["code"] == original
+    retry = {"commit": "retry-executor", "dirty": False}
+    module._phase_start(path, working, parameters, retry)
+    module._phase_start(path, working, parameters, retry)
+    saved_start = read_json(path)
+    assert saved_start["code"] == original
+    assert saved_start["execution_codes"] == [original, retry]
+    assert first["code"] == original
     with pytest.raises(ValueError, match="phase-start scope"):
         module._phase_start(path, working, {**parameters, "original_input_id": "other-input"}, original)
     legacy = target / ".staging-followup"
@@ -548,9 +640,11 @@ def test_finished_receipt_path_mapping_is_idempotent(tmp_path: Path, root: str, 
     repo = tmp_path / "repo"
     working, final = repo / ".tmp/.staging-q4", repo / ".tmp/q4"
     working.mkdir(parents=True)
-    payload = working / "result.json"
+    relative_key = Path("pattern%3Aunion-h126") / "result.json"
+    payload = working / relative_key
+    payload.parent.mkdir(parents=True)
     payload.write_text("{}", encoding="utf-8")
-    recorded = payload if root == "working" else final / payload.name
+    recorded = payload if root == "working" else final / relative_key
     if relative_path:
         recorded = recorded.relative_to(repo)
     parameters = {"target": "H1", "phase": "q4", "original_source_id": "source", "original_input_id": "input"}
@@ -562,11 +656,11 @@ def test_finished_receipt_path_mapping_is_idempotent(tmp_path: Path, root: str, 
             "definition": module.DEFINITION,
             "parameters": parameters,
             "code": {"commit": "original-executor", "dirty": False},
-            "results": {"result": {"path": str(recorded), "bytes": payload.stat().st_size, "sha256": "retained-result-hash"}},
+            "results": {relative_key.as_posix(): {"path": str(recorded), "bytes": payload.stat().st_size, "sha256": "retained-result-hash"}},
         },
     )
     mapped, files = module._staged_receipt(receipt_path, working, final, repo, parameters)
-    assert mapped["results"]["result"]["path"] == str(final / payload.name)
+    assert mapped["results"][relative_key.as_posix()]["path"] == str(final / relative_key)
     assert files == [payload]
     module.write_progress(receipt_path, mapped)
     assert module._staged_receipt(receipt_path, working, final, repo, parameters) == (mapped, files)
@@ -587,7 +681,7 @@ def test_staged_receipt_rejects_scope_and_staging_mismatches(tmp_path: Path, def
         "definition": module.DEFINITION,
         "parameters": dict(parameters),
         "code": {"commit": "original-executor", "dirty": False},
-        "results": {"result": {"path": str(payload), "bytes": payload.stat().st_size, "sha256": "retained-result-hash"}},
+        "results": {"result.json": {"path": str(payload), "bytes": payload.stat().st_size, "sha256": "retained-result-hash"}},
     }
     if defect == "definition":
         receipt["definition"] = "other-definition"
@@ -596,20 +690,58 @@ def test_staged_receipt_rejects_scope_and_staging_mismatches(tmp_path: Path, def
     elif defect == "outside":
         outside = repo / "outside.json"
         outside.write_text("{}", encoding="utf-8")
-        receipt["results"]["result"]["path"] = str(outside)
+        receipt["results"] = {str(outside): receipt["results"]["result.json"]}
     elif defect == "lexical-escape":
         outside = working.parent / "outside.json"
         outside.write_text("{}", encoding="utf-8")
-        receipt["results"]["result"]["path"] = str(working / ".." / outside.name)
+        receipt["results"] = {"../outside.json": receipt["results"]["result.json"]}
     elif defect == "bytes":
-        receipt["results"]["result"]["bytes"] += 1
+        receipt["results"]["result.json"]["bytes"] += 1
     elif defect == "missing":
-        receipt["results"]["result"]["path"] = str(final / "missing.json")
+        receipt["results"] = {"missing.json": receipt["results"]["result.json"]}
     receipt_path = working / "run-receipt.json"
     write_json(receipt_path, receipt)
     with pytest.raises(ValueError, match="scope|outside|missing|size|path traversal"):
         module._staged_receipt(receipt_path, working, final, repo, parameters)
     assert read_json(receipt_path) == receipt
+
+
+def test_relocated_nested_receipt_verifies_content_and_detects_tampering(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    working, final = repo / ".tmp/.staging-q4", repo / ".tmp/q4"
+    nested = Path("pattern%3Aunion-h126") / "summary.parquet"
+    payload = working / nested
+    payload.parent.mkdir(parents=True)
+    payload.write_bytes(b"verified-final-table")
+    parameters = {"target": "H1", "phase": "q4", "original_source_id": "source", "original_input_id": "input"}
+    receipt_path = working / "run-receipt.json"
+    write_json(
+        receipt_path,
+        {
+            "schema": "run-receipt.v1",
+            "definition": module.DEFINITION,
+            "parameters": parameters,
+            "code": {"commit": "original-executor", "dirty": False},
+            # Historical absolute path is ignored; the relative results key is authoritative.
+            "results": {
+                nested.as_posix(): {"path": str(tmp_path / "historical-location"), "bytes": payload.stat().st_size, "sha256": module.file_digest(payload)}
+            },
+        },
+    )
+    mapped, staged_files = module._staged_receipt(receipt_path, working, final, repo, parameters)
+    assert mapped["results"][nested.as_posix()]["path"] == str(final / nested)
+    assert staged_files == [payload]
+    relocated = final / nested
+    relocated.parent.mkdir(parents=True)
+    relocated.write_bytes(payload.read_bytes())
+    published = module._published_files(mapped, final, repo, parameters)
+    assert published == [relocated]
+    module._VERIFIED_FINALS.clear()
+    module._verify_final_results(mapped, published)
+    relocated.write_bytes(b"tampered-final-table")
+    module._VERIFIED_FINALS.clear()
+    with pytest.raises(ValueError, match="SHA-256"):
+        module._verify_final_results(mapped, published)
 
 
 def test_scratch_cleanup_refuses_original_or_result_paths(tmp_path: Path) -> None:
@@ -836,8 +968,7 @@ finally:
         child.communicate(timeout=5)
 
 
-@pytest.mark.parametrize("finished", (False, True))
-def test_launcher_releases_only_after_all_original_components(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, finished: bool) -> None:
+def test_launcher_relays_child_progress_and_never_releases_hold(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     import subprocess
 
     from research_core import pattern_scan_execution_v1, research_measurement_v1
@@ -845,17 +976,30 @@ def test_launcher_releases_only_after_all_original_components(tmp_path: Path, mo
     repo = tmp_path / "repo"
     output = repo / ".tmp" / "run"
     output.mkdir(parents=True)
-    completed: dict[str, dict[str, dict[str, str]]] = {"H1": dict.fromkeys(module.PHASES if finished else ("conditions",), {})}
-    # Even an accidentally true completion flag cannot release a partial run.
-    write_json(output / "progress.json", {"complete": True, "release_pending": True, "completed": completed})
-    calls: list[list[str]] = []
+    completed: dict[str, dict[str, dict[str, str]]] = {"H1": dict.fromkeys(module.PHASES, {})}
+    child_progress = {"step": 1, "total": 3, "label": "conditions group 1/3"}
+    write_json(
+        output / "progress.json", {"complete": False, "release_pending": True, "completed": completed, "progress": {"step": 0, "total": 3, "label": "starting"}}
+    )
+    release_calls: list[list[str]] = []
+    polls = 0
 
     class Job:
         def __init__(self, limit: int) -> None:
             assert limit == 8 * 1024**3
 
         def start(self, command: list[str], root: Path) -> SimpleNamespace:
-            return SimpleNamespace(poll=lambda: 0, returncode=0, args=command)
+            def poll() -> int | None:
+                nonlocal polls
+                polls += 1
+                if polls == 1:
+                    module.write_progress(
+                        output / "progress.json", {"complete": False, "release_pending": True, "completed": completed, "progress": child_progress}
+                    )
+                    return None
+                return 0
+
+            return SimpleNamespace(poll=poll, returncode=0, args=command)
 
         def memory_receipt(self) -> dict[str, int]:
             return {"peak_committed_bytes": 10}
@@ -867,14 +1011,16 @@ def test_launcher_releases_only_after_all_original_components(tmp_path: Path, mo
             pass
 
     def release(command: list[str], **kwargs: Any) -> SimpleNamespace:
-        assert command[-3:] == ["release", "--holder", "pr17-pattern-scan"]
-        calls.append(command)
-        return SimpleNamespace(stdout="released")
+        release_calls.append(command)
+        raise AssertionError("launcher must leave the external hold for its owner")
 
     monkeypatch.setattr(pattern_scan_execution_v1, "_MemoryBoundJob", Job)
     monkeypatch.setattr(research_measurement_v1, "host_resources", lambda: {"physical_available_bytes": 16 * 1024**3})
     monkeypatch.setattr(subprocess, "run", release)
     monkeypatch.setattr(module, "PATTERNS", ("H1",))
-    module.launch_remaining([], repo, output, timeout_seconds=10)
-    assert len(calls) == int(finished)
-    assert read_json(output / "progress.json")["release_pending"] is (not finished)
+    observed: list[dict[str, Any]] = []
+    final = module.launch_remaining([], repo, output, timeout_seconds=10, on_progress=observed.append)
+    assert observed == [child_progress]
+    assert final["progress"] == child_progress
+    assert final["release_pending"] is True
+    assert release_calls == []
