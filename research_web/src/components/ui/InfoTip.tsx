@@ -2,11 +2,13 @@ import {
     useEffect,
     useId,
     useLayoutEffect,
+    useReducer,
     useRef,
     useState,
     type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
+import { CLOSED, TIP_NAVIGATION_EVENTS, tipReducer } from "./tipState.ts";
 
 const MARGIN = 12;
 
@@ -23,17 +25,12 @@ export function InfoTip({
     label?: string;
 }) {
     const id = useId();
-    const [open, setOpen] = useState(false);
-    const [pinned, setPinned] = useState(false);
+    const [{ open }, dispatch] = useReducer(tipReducer, CLOSED);
     const [place, setPlace] = useState<{ left: number; top: number } | null>(
         null,
     );
     const button = useRef<HTMLButtonElement>(null);
     const bubble = useRef<HTMLSpanElement>(null);
-    const close = () => {
-        setOpen(false);
-        setPinned(false);
-    };
     useEffect(() => {
         if (!open) return;
         const outside = (event: PointerEvent) => {
@@ -42,20 +39,25 @@ export function InfoTip({
                 !button.current?.contains(target) &&
                 !bubble.current?.contains(target)
             )
-                close();
+                dispatch("outside");
         };
         const escape = (event: KeyboardEvent) => {
-            if (event.key === "Escape") close();
+            if (event.key === "Escape") dispatch("escape");
         };
-        // The bubble is fixed; scrolling the page would detach it.
-        const scroll = () => close();
+        // The bubble is fixed; scrolling would detach it. Leaving the page
+        // closes it too, even if the page stays mounted while hidden.
+        const away = () => dispatch("navigate");
         document.addEventListener("pointerdown", outside);
         document.addEventListener("keydown", escape);
-        window.addEventListener("scroll", scroll, { passive: true });
+        window.addEventListener("scroll", away, { passive: true });
+        for (const name of TIP_NAVIGATION_EVENTS)
+            window.addEventListener(name, away);
         return () => {
             document.removeEventListener("pointerdown", outside);
             document.removeEventListener("keydown", escape);
-            window.removeEventListener("scroll", scroll);
+            window.removeEventListener("scroll", away);
+            for (const name of TIP_NAVIGATION_EVENTS)
+                window.removeEventListener(name, away);
         };
     }, [open]);
     useLayoutEffect(() => {
@@ -80,8 +82,8 @@ export function InfoTip({
     return (
         <span
             className="u-tip"
-            onMouseEnter={() => setOpen(true)}
-            onMouseLeave={() => !pinned && setOpen(false)}
+            onMouseEnter={() => dispatch("enter")}
+            onMouseLeave={() => dispatch("leave")}
         >
             <button
                 ref={button}
@@ -90,13 +92,12 @@ export function InfoTip({
                 aria-label={label}
                 aria-expanded={open}
                 aria-describedby={open ? id : undefined}
-                onFocus={() => setOpen(true)}
-                onBlur={() => !pinned && setOpen(false)}
+                onFocus={() => dispatch("focus")}
+                onBlur={() => dispatch("blur")}
                 onClick={(event) => {
                     // Tips may sit inside clickable rows; keep the tap here.
                     event.stopPropagation();
-                    setOpen(!pinned);
-                    setPinned(!pinned);
+                    dispatch("toggle");
                 }}
             >
                 i
@@ -113,8 +114,8 @@ export function InfoTip({
                                 ? { left: place.left, top: place.top }
                                 : { left: -9999, top: 0, visibility: "hidden" }
                         }
-                        onMouseEnter={() => setOpen(true)}
-                        onMouseLeave={() => !pinned && setOpen(false)}
+                        onMouseEnter={() => dispatch("enter")}
+                        onMouseLeave={() => dispatch("leave")}
                     >
                         {children}
                     </span>,
