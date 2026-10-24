@@ -161,8 +161,9 @@ def test_a_result_later_removed_or_rewritten_sends_the_run_to_the_owner(roots: t
     (final / "table.parquet").write_bytes(b"12345")
     # A main that never contained the recorded commit loses the identity.
     _git(repo, "checkout", "-q", "--orphan", "rewritten")
-    _git(repo, "rm", "-rq", "--cached", ".")
-    _publish(repo)
+    _git(repo, "rm", "-rqf", ".")
+    _git(repo, "commit", "-q", "--allow-empty", "-m", "history rewritten")
+    _git(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
     assert _verdicts(roots) == {f"{TASK}/q2-q6-v6": sr.ASK_OWNER}
     assert sr.clean(scratch, apply=True, repo_root=repo) == []
     assert (scratch / TASK / "q2-q6-v6" / "run.json").is_file()
@@ -251,6 +252,37 @@ def test_deletion_rechecks_dependents_under_the_deps_lock(roots: tuple[Path, Pat
     with pytest.raises(sr.ScratchRunError, match="still needed"):
         sr.clean(scratch, apply=True, repo_root=repo)
     assert (producer / "part.parquet").is_file()
+
+
+@pytest.mark.parametrize("level", ["task", "scratch", "shared"])
+def test_dependencies_above_a_single_run_are_refused(roots: tuple[Path, Path], level: str) -> None:
+    scratch, _ = roots
+    _abandoned(roots, "a", {"part.parquet": b"x"})
+    parent = {"task": scratch / TASK, "scratch": scratch, "shared": scratch.parent}[level]
+    with pytest.raises(sr.ScratchRunError, match="one scratch run"):
+        _create(roots, "b", task=OTHER, depends_on=[str(parent)])
+    assert not (scratch / OTHER / "b").exists()
+
+
+def test_a_parent_dependency_registered_after_the_final_check_is_refused(roots: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:
+    """The race the refusal closes: nothing can claim a whole task directory mid-clean."""
+    scratch, repo = roots
+    producer = _abandoned(roots, "a", {"part.parquet": b"x"})
+    original = sr._dependents
+    refused: list[str] = []
+
+    def check_then_register(root: Path, target: Path) -> list[str]:
+        found = original(root, target)
+        try:
+            _create(roots, "late", task=OTHER, depends_on=[str(producer.parent)]).close()
+        except sr.ScratchRunError as error:
+            refused.append(str(error))
+        return found
+
+    monkeypatch.setattr(sr, "_dependents", check_then_register)
+    sr.clean(scratch, apply=True, repo_root=repo)
+    assert refused and all("one scratch run" in message for message in refused)
+    assert not (scratch / OTHER / "late").exists()
 
 
 def test_registering_a_dependency_waits_for_a_deletion_in_progress(roots: tuple[Path, Path]) -> None:

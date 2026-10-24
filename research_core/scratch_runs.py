@@ -353,6 +353,13 @@ def create_run(
     root = scratch_root() if root is None else checked_path(root)
     repo_root = REPO_ROOT if repo_root is None else repo_root
     dependencies = [str(checked_path(path).resolve()) for path in raw]
+    resolved_root = root.resolve()
+    for dependency in map(Path, dependencies):
+        # A dependency covering the scratch root or a whole task directory has no single
+        # run whose deps lock could guard it against a concurrent clean; name a run or a
+        # path inside one instead.
+        if resolved_root.is_relative_to(dependency) or (dependency.is_relative_to(resolved_root) and _owning_run(root, dependency) is None):
+            raise ScratchRunError(f"depends_on must name one scratch run or a path inside it, not a directory above runs: {dependency}")
     directory = _run_dir(root, task, run)
     directory.parent.mkdir(exist_ok=True)
     try:
