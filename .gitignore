@@ -309,6 +309,14 @@ verify-*.png
 !tasks/20261021-momentum-only-doubling/forward-log/days/
 !tasks/20261021-momentum-only-doubling/forward-log/days/*.parquet
 
+# Tenbagger study: final aggregate tables and receipts only; intermediates live in shared scratch.
+!tasks/20261024-tenbagger-drivers/results/
+!tasks/20261024-tenbagger-drivers/results/retro/
+!tasks/20261024-tenbagger-drivers/results/formal/
+!tasks/20261024-tenbagger-drivers/results/*/*/
+!tasks/20261024-tenbagger-drivers/results/*/*/*.parquet
+!tasks/20261024-tenbagger-drivers/results/*/*/*.json
+
 # Public checksum metadata travels losslessly in a bounded annual publication.
 # Source-backed dashboard registrations contain report excerpts, never quote series.
 !tasks/*/presentation.json
