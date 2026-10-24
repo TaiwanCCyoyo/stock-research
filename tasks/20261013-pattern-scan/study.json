@@ -14,7 +14,9 @@
     },
     "account_run": null,
     "delivery_state": "code_merged",
-    "scratch_run": null,
+    "scratch_run": {
+        "run": "q2-q6-v6"
+    },
     "provenance": {
         "answer_source": "**2026-10-21：研究已執行，尚未全部完成。** 主要成果入口是\n[HTML 報告](web-report/index.html)，不是以下歷史準備紀錄。\n\n- Q1：12 家族全部完成；首頁以同一個全體、無額外條件口徑，比較 C-base-daily 倍數、C-base-all 差距／K 與虧損率。\n- Q2–Q6：B1、H1 已完成；B2 原程序計算中，其餘家族接續。不重跑已完成工作。",
         "report_sha256": "2d8b03c490e0b4672bd81846afd588415b12b6a687aaa1e466795f2a055d764c",

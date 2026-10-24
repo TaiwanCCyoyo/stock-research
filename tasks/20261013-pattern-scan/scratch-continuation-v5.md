@@ -1,6 +1,6 @@
 # Q2–Q6 continuation on shared scratch
 
-**Status: runner implementation only; the remaining research has not started.**
+**Status: continuation registered on shared scratch; the research remains incomplete.**
 This implements package D's runner changes from
 [the current handoff](../20261024-data-homes-and-scratch/codex-handoff.md#d-pr17-續跑程式修改與重跑).
 The numerical definition stays `pattern-scan-local-remaining.v5`. The scratch run
@@ -64,23 +64,39 @@ conditions phase-start record. The original generation hold is present.
 
 ## Pending execution and delivery
 
-PR #64 and #66 are merged. This runner change must merge, and package A's study
-cards must be available, before the remaining ten families start. No actual scratch
-run has been created, no old output copied and no live producer read by this change.
+PR #64, #66, #71 (runner) and #73 (study cards) are merged. The primary checkout
+is updated, and the session-owned worktree is reused on
+`codex/pr17-q2-q6-execution`, based on `0cd1409`. It must remain available while
+the numerical worker runs. The old `pr17-retention-review` worktree also stays.
 
-After those gates, use the run creation, verified copy and execution steps in
+The registered run is
+`D:/StockData/stock-research/scratch/20261013-pattern-scan/q2-q6-v6/`, owned by
+`codex`. Its sole input dependency is the original primary-checkout input directory;
+no input copy was made. `retained-output-copy.json` in the run records all 346
+verified output copies (410,826,077 bytes), their original paths and SHA-256s.
+The copy took 9.825 wall seconds / 3.922 CPU seconds. It includes six terminal
+receipts, all their final files, the five families' selections and 49 completed
+groups, and the ten existing phase-start records. No old top-level progress,
+incomplete group staging or `_temporary/` was copied. The study card now links
+to this run; its verdict and delivery state still describe an unfinished study.
+
+The numerical launcher is started from the clean committed registration, using
+one worker and the default ten-day timeout. Its stdout/stderr and PID are retained
+in `continuation.stdout.log`, `continuation.stderr.log` and `launch.json` inside
+the run. `run.json` and the OS writer lock are the authority for current liveness;
+this registration alone does not establish that a worker is still running.
+
+Resume command from the retained worktree:
+
+```powershell
+uv run python -m scripts.run_pattern_scan_remaining --stock-result D:/Project/stock-research/.tmp/pattern-scan-execution/full-2010-20261016-retention-v3/phase-stock-result.json --output D:/StockData/stock-research/scratch/20261013-pattern-scan/q2-q6-v6
+```
+
+Remaining delivery follows
 [package D](../20261024-data-homes-and-scratch/codex-handoff.md#d-pr17-續跑程式修改與重跑):
 
-- Create `20261013-pattern-scan/q2-q6-v6`, with the original primary-checkout input
-  directory in `depends_on`; read it in place.
-- Copy B1/H1 final outputs, the five unfinished families' completed groups and all
-  existing phase-start records, retaining nested directories and comparing every
-  copied file's SHA-256. Do not copy `_temporary/`, incomplete group staging or the
-  old top-level `progress.json`.
-- Run one process in `DEFAULT_TARGET_ORDER`, using `--output` set to that run's
-  path and `--stock-result` set to the original `phase-stock-result.json`. Reuse
-  that same command and run after an interruption. Register `scratch_run` in the
-  study card when execution starts.
+- Continue one process in `DEFAULT_TARGET_ORDER`. Reuse the same command and run
+  after an interruption; completed groups and phases are adopted without recomputing.
 - Deliver the final tables, receipts, report and study card as specified in the
   handoff. Release the hold and mark `delivered` only after that delivery merges.
   Removal of the old worktree or original inputs still needs the owner's approval.
