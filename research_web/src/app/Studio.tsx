@@ -10,30 +10,71 @@ import { HomePage } from "../features/home/HomePage";
 import { StrategyOverviewPage } from "../features/strategies/StrategyOverviewPage";
 import { StrategyDetailPage } from "../features/strategies/StrategyDetailPage";
 import { StrategyComparePage } from "../features/strategies/StrategyComparePage";
-import { ResearchHistoryPage } from "../features/research-history/ResearchHistoryPage";
-import { ReportsPage } from "../features/report-library/ReportsPage";
+import { StudiesPage } from "../features/studies/StudiesPage";
 import { ReportViewer } from "../features/report-library/ReportViewer";
 import { SharedDataPage } from "../features/shared-data/SharedDataPage";
 import { studioRoute, type StudioPage } from "./routes";
+import { reportPalette, themeId, THEMES, type ThemeId } from "./themes";
+import { PetalLayer } from "./PetalLayer";
 import "./studio.css";
+import "./themes.css";
+import "./shell.css";
+import "./ui.css";
+
+const NAV: {
+    id: StudioPage;
+    label: string;
+    icon: string;
+    also?: StudioPage[];
+}[] = [
+    { id: "home", label: "首頁", icon: "M4 11.5 12 5l8 6.5V20h-5v-5H9v5H4z" },
+    {
+        id: "studies",
+        label: "研究",
+        icon: "M6 4h9l3 3v13H6zM9 10h6M9 14h6M9 18h4",
+        also: ["strategies", "strategy", "compare", "report"],
+    },
+    {
+        id: "market",
+        label: "飆股地圖",
+        icon: "M8 15a3 3 0 1 0 0-.01M15 9a4 4 0 1 0 0-.01M17 18a2 2 0 1 0 0-.01",
+    },
+    { id: "data", label: "個股", icon: "M4 19h16M7 16V9M12 16V5M17 16v-5" },
+    {
+        id: "funds",
+        label: "ETF 圖鑑",
+        icon: "M5 8h14l-1.5 11h-11zM9 8a3 3 0 0 1 6 0",
+    },
+];
+
+function readSetting(key: string, fallback: string) {
+    try {
+        return localStorage.getItem(key) ?? fallback;
+    } catch {
+        return fallback;
+    }
+}
+
+function Icon({ d }: { d: string }) {
+    return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d={d} />
+        </svg>
+    );
+}
 
 export default function Studio() {
     const [route, setRoute] = useState(() => studioRoute(location.hash));
     const { page, runId, reportId } = route;
-    const [palette, setPalette] = useState(() => {
-        try {
-            return localStorage.getItem("atlas.palette") ?? "forest";
-        } catch {
-            return "forest";
-        }
-    });
-    const [appearance, setAppearance] = useState(() => {
-        try {
-            return localStorage.getItem("atlas.appearance") ?? "system";
-        } catch {
-            return "system";
-        }
-    });
+    const [palette, setPalette] = useState<ThemeId>(() =>
+        themeId(readSetting("atlas.palette", "forest")),
+    );
+    const [appearance, setAppearance] = useState(() =>
+        readSetting("atlas.appearance", "system"),
+    );
+    const [ambient, setAmbient] = useState(
+        () => readSetting("atlas.ambient", "on") === "on",
+    );
     const [settings, setSettings] = useState(false);
     const [systemDark, setSystemDark] = useState(
         () => matchMedia("(prefers-color-scheme: dark)").matches,
@@ -55,158 +96,184 @@ export default function Studio() {
         try {
             localStorage.setItem("atlas.palette", palette);
             localStorage.setItem("atlas.appearance", appearance);
+            localStorage.setItem("atlas.ambient", ambient ? "on" : "off");
         } catch {
             /* Storage may be unavailable in a private window. */
         }
         document.documentElement.style.colorScheme =
             resolvedAppearance === "dark" ? "dark" : "light";
-    }, [palette, appearance, resolvedAppearance]);
+    }, [palette, appearance, ambient, resolvedAppearance]);
     useEffect(() => {
         sendHeartbeat();
         const t = setInterval(sendHeartbeat, 5000);
         return () => clearInterval(t);
     }, []);
+    useEffect(() => {
+        if (!settings) return;
+        const close = (event: KeyboardEvent) => {
+            if (event.key === "Escape") setSettings(false);
+        };
+        window.addEventListener("keydown", close);
+        return () => window.removeEventListener("keydown", close);
+    }, [settings]);
     const navigate = (p: StudioPage) => {
         location.hash = p;
         setRoute(studioRoute(p));
         window.scrollTo({ top: 0, behavior: "instant" });
     };
+    const current = (item: (typeof NAV)[number]) =>
+        page === item.id || item.also?.includes(page) ? "page" : undefined;
+    const navItems = (className: string) =>
+        NAV.map((item) => (
+            <a
+                key={item.id}
+                className={className}
+                href={`#${item.id}`}
+                aria-current={current(item)}
+                onClick={(event) => {
+                    event.preventDefault();
+                    navigate(item.id);
+                }}
+            >
+                <Icon d={item.icon} />
+                <span>{item.label}</span>
+            </a>
+        ));
     return (
         <div
             className="studio"
             data-palette={palette}
             data-appearance={resolvedAppearance}
         >
+            {palette === "sakura" && ambient && (
+                <PetalLayer dark={resolvedAppearance === "dark"} />
+            )}
             <a className="skip-link" href="#main-content">
                 跳到主要內容
             </a>
-            <header className="studio-header">
-                <button
-                    className="brand"
-                    onClick={() => navigate("home")}
-                    aria-label="研究與發現首頁"
+            <header className="shell-header">
+                <a
+                    className="shell-brand"
+                    href="#home"
+                    onClick={(event) => {
+                        event.preventDefault();
+                        navigate("home");
+                    }}
+                    aria-label="STOCK 研究室首頁"
                 >
-                    <span className="brand-mark">S</span>
-                    <span>
-                        STOCK <i>/</i> <small>研究與發現</small>
-                    </span>
-                </button>
-                <nav aria-label="主選單">
-                    {(
-                        [
-                            { id: "home", label: "首頁" },
-                            { id: "market", label: "飆股地圖" },
-                            { id: "strategies", label: "策略" },
-                            { id: "compare", label: "比較" },
-                            { id: "reports", label: "研究報告" },
-                            { id: "history", label: "研究歷程" },
-                            { id: "data", label: "共用資料" },
-                            { id: "funds", label: "ETF 圖鑑" },
-                        ] as const
-                    ).map((n) => (
-                        <button
-                            key={n.id}
-                            aria-current={
-                                page === n.id ||
-                                (n.id === "strategies" &&
-                                    page === "strategy") ||
-                                (n.id === "reports" && page === "report")
-                                    ? "page"
-                                    : undefined
-                            }
-                            onClick={() => navigate(n.id)}
-                        >
-                            {n.label}
-                        </button>
-                    ))}
+                    <span className="shell-mark">S</span>
+                    <span>STOCK 研究室</span>
+                </a>
+                <nav className="shell-nav" aria-label="主選單">
+                    {navItems("shell-nav-link")}
                 </nav>
-                <div className="header-actions">
-                    <button
-                        className="theme-button"
-                        aria-expanded={settings}
-                        onClick={() => setSettings((v) => !v)}
-                    >
-                        <span className="palette-dot" />
-                        視覺風格
-                    </button>
-                    <span className="profile-mark" aria-hidden="true">
-                        S
-                    </span>
-                </div>
+                <button
+                    className="shell-theme-button"
+                    aria-expanded={settings}
+                    aria-controls="theme-panel"
+                    onClick={() => setSettings((v) => !v)}
+                >
+                    <span className="shell-theme-dot" />
+                    主題
+                </button>
             </header>
             {settings && (
-                <section className="theme-panel" aria-label="視覺風格設定">
-                    <div>
-                        <strong>讓這張地圖，成為你的風景。</strong>
-                        <p>主色與明暗不改變資料或大小規則。</p>
-                    </div>
-                    <div className="palette-choices">
-                        {[
-                            { id: "forest", label: "霧林綠" },
-                            { id: "ocean", label: "海霧藍" },
-                            { id: "plum", label: "暮山紫" },
-                            { id: "sand", label: "暖沙金" },
-                        ].map((p) => (
-                            <button
-                                key={p.id}
-                                data-choice={p.id}
-                                aria-pressed={palette === p.id}
-                                onClick={() => setPalette(p.id)}
-                            >
-                                <span />
-                                {p.label}
-                            </button>
-                        ))}
-                    </div>
-                    <div className="segmented">
-                        <button
-                            aria-pressed={appearance === "system"}
-                            onClick={() => setAppearance("system")}
-                        >
-                            隨系統
-                        </button>
-                        <button
-                            aria-pressed={appearance === "light"}
-                            onClick={() => setAppearance("light")}
-                        >
-                            日光
-                        </button>
-                        <button
-                            aria-pressed={appearance === "dark"}
-                            onClick={() => setAppearance("dark")}
-                        >
-                            夜色
-                        </button>
-                    </div>
-                    <button
-                        className="icon-button"
+                <>
+                    <div
+                        className="shell-scrim"
                         onClick={() => setSettings(false)}
-                        aria-label="關閉視覺設定"
+                    />
+                    <section
+                        id="theme-panel"
+                        className="shell-theme-panel"
+                        aria-label="主題設定"
                     >
-                        ×
-                    </button>
-                </section>
+                        <div className="shell-theme-head">
+                            <strong>挑一個你喜歡的樣子</strong>
+                            <button
+                                className="u-icon-button"
+                                onClick={() => setSettings(false)}
+                                aria-label="關閉主題設定"
+                            >
+                                ×
+                            </button>
+                        </div>
+                        <div className="shell-theme-grid">
+                            {THEMES.map((theme) => (
+                                <button
+                                    key={theme.id}
+                                    className="shell-theme-choice"
+                                    aria-pressed={palette === theme.id}
+                                    onClick={() => setPalette(theme.id)}
+                                >
+                                    <span className="shell-swatch">
+                                        {theme.swatch.map((color) => (
+                                            <span
+                                                key={color}
+                                                style={{ background: color }}
+                                            />
+                                        ))}
+                                    </span>
+                                    {theme.label}
+                                </button>
+                            ))}
+                        </div>
+                        <p className="shell-theme-label">明暗</p>
+                        <div className="u-segmented">
+                            {[
+                                ["system", "隨系統"],
+                                ["light", "日光"],
+                                ["dark", "夜色"],
+                            ].map(([id, label]) => (
+                                <button
+                                    key={id}
+                                    aria-pressed={appearance === id}
+                                    onClick={() => setAppearance(id)}
+                                >
+                                    {label}
+                                </button>
+                            ))}
+                        </div>
+                        <p className="shell-theme-label">背景動畫</p>
+                        <div className="u-segmented">
+                            <button
+                                aria-pressed={ambient}
+                                onClick={() => setAmbient(true)}
+                            >
+                                開
+                            </button>
+                            <button
+                                aria-pressed={!ambient}
+                                onClick={() => setAmbient(false)}
+                            >
+                                關
+                            </button>
+                        </div>
+                        <p className="u-muted shell-theme-note">
+                            櫻花粉會有花瓣飄落。顏色只是好玩，不會改變任何數字。
+                        </p>
+                    </section>
+                </>
             )}
-            <main id="main-content" className="studio-main">
+            <main id="main-content" className="studio-main shell-main">
                 {page === "home" && <HomePage />}
+                {page === "studies" && <StudiesPage />}
                 {page === "strategies" && <StrategyOverviewPage />}
                 {page === "strategy" && runId && (
                     <StrategyDetailPage key={runId} runId={runId} />
                 )}
                 {page === "compare" && <StrategyComparePage />}
-                {page === "history" && <ResearchHistoryPage />}
                 {page === "data" && (
                     <SharedDataPage
                         code={route.code}
                         theme={`${palette}:${resolvedAppearance}`}
                     />
                 )}
-                {page === "reports" && <ReportsPage />}
                 {page === "report" && reportId && (
                     <ReportViewer
                         key={reportId}
                         reportId={reportId}
-                        palette={palette}
+                        palette={reportPalette(palette)}
                         appearance={resolvedAppearance}
                     />
                 )}
@@ -229,16 +296,18 @@ export default function Studio() {
                 {page === "funds" && <FundsPage />}
                 {page === "wave-lab" && <WaveLabPage />}
             </main>
-            <footer className="studio-footer">
-                <span className="footer-brand">
-                    STOCK <i> / </i> 看見機會，也看見證據。
+            <footer className="shell-footer">
+                <span>歷史統計，不是買賣訊號。</span>
+                <span className="shell-footer-links">
+                    <a href="#research">研究者工具</a>
+                    <a href="?legacy=1" target="_blank" rel="noreferrer">
+                        舊版 K 線工作台 ↗
+                    </a>
                 </span>
-                <a href="?legacy=1" target="_blank" rel="noreferrer">
-                    原有 K 線工作台 ↗
-                </a>
-                <span>歷史觀察不等於當時可知的買賣訊號</span>
-                <a href="#research">研究者工具</a>
             </footer>
+            <nav className="shell-tabbar" aria-label="主選單（手機）">
+                {navItems("shell-tab")}
+            </nav>
         </div>
     );
 }

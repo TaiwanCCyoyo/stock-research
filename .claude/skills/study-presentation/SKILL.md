@@ -33,7 +33,7 @@ Deliver a reading view of saved evidence, not new study conclusions.
   to `/#data` and relevant symbols to `/#data/<code>`. A saved strategy trade
   and a current-generation chart have different price/date semantics: label them.
   If no registered shared data applies, record `shared_data_reason`.
-- Preview locally at `/#reports`, `/#report/<task-id>` and `/#history`.
+- Preview locally at `/#studies` (research page; `/#reports` and `/#history` redirect there) and `/#report/<task-id>`.
   Include useful conclusions and limitations in the overview, detailed evidence
   on demand. Record missing report, registration or shared-data links with a reason.
 

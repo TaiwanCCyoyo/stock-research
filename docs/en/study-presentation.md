@@ -37,8 +37,8 @@ saved packages may omit it for compatibility. Registering an older completed
 study does not require rewriting its pinned report: record the missing reading
 page and its follow-up here, preserving the report bytes and digest.
 
-Local preview: launch the private dashboard, open `/#history`, then `/#reports`
-or `/#report/<task-id>`. Shared-data links lead to `/#data` and individual symbols
+Local preview: launch the private dashboard, open `/#studies` (the merged research
+page; the old `/#history` and `/#reports` addresses lead there), then `/#report/<task-id>`. Shared-data links lead to `/#data` and individual symbols
 to `/#data/<code>` when that feature is installed (PR-B). The history registration
 is still useful without a chart viewer. Never insert real daily price or indicator
 series into these JSON files.

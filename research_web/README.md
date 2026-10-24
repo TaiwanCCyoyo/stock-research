@@ -308,7 +308,7 @@ explicit demonstration mode uses invented names, prices and market caps.
 
 ## Research report library
 
-Open `/#reports`. Each study can publish one report as free-form HTML/JS that an
+Open `/#studies` (filter 有網頁報告). Each study can publish one report as free-form HTML/JS that an
 agent writes to fit its findings; the studio only provides the library, the
 frame and a shared look. Nothing is registered by hand.
 
