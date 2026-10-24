@@ -1081,28 +1081,28 @@
     .op-provenance-details dd {
         margin-bottom: 8px;
     }
-    .op-table-scroll {
+    .op-table-scroll.op-mobile-cards {
         overflow: visible;
     }
-    .op-table-scroll table {
+    .op-table-scroll.op-mobile-cards table {
         display: block;
         width: 100%;
     }
-    .op-table-scroll thead {
+    .op-table-scroll.op-mobile-cards thead {
         display: none;
     }
-    .op-table-scroll tbody {
+    .op-table-scroll.op-mobile-cards tbody {
         display: grid;
         gap: 10px;
     }
-    .op-table-scroll tr {
+    .op-table-scroll.op-mobile-cards tr {
         display: grid;
         gap: 7px;
         padding: 12px;
         border-radius: var(--radius-md);
         background: var(--chip);
     }
-    .op-table-scroll td {
+    .op-table-scroll.op-mobile-cards td {
         display: flex;
         justify-content: space-between;
         align-items: baseline;
@@ -1110,18 +1110,18 @@
         padding: 0;
         text-align: right;
     }
-    .op-table-scroll td::before {
+    .op-table-scroll.op-mobile-cards td::before {
         content: attr(data-label);
         color: var(--muted);
         font-size: 12px;
         text-align: left;
     }
-    .op-table-scroll td[data-label="股票"] {
+    .op-table-scroll.op-mobile-cards td[data-label="股票"] {
         display: block;
         text-align: left;
         font-weight: 700;
     }
-    .op-table-scroll td[data-label="股票"]::before {
+    .op-table-scroll.op-mobile-cards td[data-label="股票"]::before {
         display: none;
     }
     .op-page code {

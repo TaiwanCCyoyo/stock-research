@@ -208,6 +208,9 @@
     max-height: 440px;
     min-width: 0;
 }
+.ss-mobile-sort {
+    display: none;
+}
 .ss-table {
     width: 100%;
     border-collapse: collapse;
@@ -661,11 +664,14 @@
         display: block;
     }
     .ss-table thead {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        overflow: hidden;
-        clip: rect(0, 0, 0, 0);
+        display: none;
+    }
+    .ss-mobile-sort {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 12px;
     }
     .ss-table tbody {
         display: grid;

@@ -98,6 +98,32 @@ export function TradeTable({
             <p className="ss-muted ss-small">
                 篩選後 {rows.length}／{trades.length} 筆
             </p>
+            <div className="ss-mobile-sort">
+                <label>
+                    排序{" "}
+                    <select
+                        aria-label="交易排序方式"
+                        value={sort}
+                        onChange={(event) => {
+                            setSort(event.target.value as TradeSort);
+                            setDirection(-1);
+                        }}
+                    >
+                        {columns.map(([id, label]) => (
+                            <option key={id} value={id}>
+                                {label}
+                            </option>
+                        ))}
+                    </select>
+                </label>
+                <button
+                    className="u-btn"
+                    aria-label="切換排序方向"
+                    onClick={() => setDirection(direction === 1 ? -1 : 1)}
+                >
+                    {direction === 1 ? "由小到大 ↑" : "由大到小 ↓"}
+                </button>
+            </div>
             <div className="ss-table-wrap">
                 <table className="ss-table">
                     <thead>

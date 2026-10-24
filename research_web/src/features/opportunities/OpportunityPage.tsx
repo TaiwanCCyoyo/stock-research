@@ -1095,7 +1095,7 @@ export function OpportunityPage({ active }: { active: boolean }) {
                 <summary>
                     收錄名單與未畫入的股票（{bundle.securities.length} 檔）
                 </summary>
-                <div className="op-table-scroll">
+                <div className="op-table-scroll op-mobile-cards">
                     <table>
                         <thead>
                             <tr>
