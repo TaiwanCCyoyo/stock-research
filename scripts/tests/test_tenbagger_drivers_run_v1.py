@@ -204,14 +204,10 @@ def test_probe_stops_if_parallel_output_changes() -> None:
 
 
 def test_one_a4_mismatch_stops_before_later_alignment_and_formal_counts(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    checkpoints = tmp_path / "synthetic-checkpoints"
-    checkpoints.mkdir()
-    (checkpoints / "stocks.json").write_text(json.dumps({"codes": 1, "cutoff": momentum.CUTOFF, "generation": "synthetic"}), encoding="utf-8")
     published = tmp_path / runner.PR61_TASK / "results"
     published.mkdir(parents=True)
     (published / "research_result.json").write_text(json.dumps({"generation": "synthetic"}), encoding="utf-8")
     stock = _example_stock()
-    monkeypatch.setattr(runner, "load_stock", lambda *args: stock.daily)
     monkeypatch.setattr(momentum, "h_states", lambda *args: [np.zeros(6, dtype=np.int8)])
 
     def no_later_work(*args: object, **kwargs: object) -> None:
@@ -221,10 +217,13 @@ def test_one_a4_mismatch_stops_before_later_alignment_and_formal_counts(monkeypa
     monkeypatch.setattr(drivers, "formal_counts", no_later_work)
     actual = np.array([1, 0, 0, 0, 0, 0], dtype=np.int8)
     with pytest.raises(drivers.AlignmentError, match="alignment failed"):
-        runner.alignment_gate([stock], [actual], checkpoints, tmp_path, tmp_path, formal=True)
+        runner.alignment_gate([stock], [actual], tmp_path, tmp_path, generation="synthetic", formal=True)
     diagnostic = json.loads((tmp_path / "alignment.json").read_text(encoding="utf-8"))
     assert diagnostic["verdict"] == "stop"
     assert diagnostic["differences"]["A4"][0]["different_cells"] == 1
+    assert diagnostic["reference_generation"] == "synthetic"
+    assert diagnostic["reference_method"] == "momentum_only_v1.h_states"
+    assert diagnostic["shared_implementation"] is True
 
 
 def test_two_run_ids_cannot_share_or_release_each_others_hold(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:

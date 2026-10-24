@@ -210,23 +210,6 @@ def probe_stocks(codes: Sequence[str], prepare: Callable[[str], study.DriverStoc
     }
 
 
-def load_stock(path: Path, code: str) -> momentum.StockDaily:
-    """Read PR61's documented checkpoint schema without importing its CLI."""
-    with np.load(path, allow_pickle=False) as data:
-        return momentum.StockDaily(
-            code=code,
-            split=momentum.split_for_code(code),
-            eligible=data["eligible"],
-            jump=data["jump"],
-            c52w=data["c52w"],
-            ret120=data["ret120"],
-            atoms={name: data[f"atom_{name}"] for name in momentum.LOCAL_ATOMS},
-            labels={(h, t): data[f"label_{h}_{t:g}"] for h in momentum.HORIZONS for t in momentum.TARGETS},
-            main_eligible={(h, t): data[f"main_{h}_{t:g}"] for h in momentum.HORIZONS for t in momentum.TARGETS},
-            calendar_full={h: data[f"full_{h}"] for h in momentum.HORIZONS},
-        )
-
-
 def _sqlite_read(path: Path, query: str, cutoff: str) -> pd.DataFrame:
     wal = path.with_name(path.name + "-wal")
     before = (stat_identity(path), stat_identity(wal) if wal.exists() else None)
@@ -296,25 +279,26 @@ def _episode_counts(stocks: Sequence[study.DriverStock]) -> pd.DataFrame:
     ])
 
 
-def alignment_gate(
-    stocks: Sequence[study.DriverStock], a4: Sequence[np.ndarray], pr61_work: Path, repo_root: Path, directory: Path, *, formal: bool
-) -> tuple[np.ndarray, np.ndarray] | None:
-    """Exact reference artifacts, including the complete original PR61 A4 grid."""
+def alignment_gate(stocks: Sequence[study.DriverStock], a4: Sequence[np.ndarray], repo_root: Path, directory: Path, *, generation: str, formal: bool) -> None:
+    """Compare the consumed A4 grid with PR61 recomputed on this fixed input.
+
+    Both paths deliberately reuse PR61's unchanged implementation. This is a
+    full-grid alignment check, not independent statistical replication and not
+    a comparison against retired historical intermediates.
+    """
     codes = [stock.daily.code for stock in stocks]
-    if not (pr61_work / "stocks.json").is_file():
-        raise study.AlignmentError("PR61 original checkpoint identity is unavailable; no substitute A4 grid is permitted")
-    reference_identity = json.loads((pr61_work / "stocks.json").read_text(encoding="utf-8"))
-    if reference_identity.get("codes") != len(codes) or reference_identity.get("cutoff") != momentum.CUTOFF:
-        raise study.AlignmentError("PR61 checkpoint universe/cutoff differs")
     published = json.loads((repo_root / PR61_TASK / "results" / "research_result.json").read_text(encoding="utf-8"))
-    if reference_identity.get("generation") != published.get("generation"):
-        raise study.AlignmentError("PR61 checkpoint generation differs from its published historical result")
-    reference_stocks = [load_stock(pr61_work / "stocks" / f"{code}.npz", code) for code in codes]
-    original_a4 = momentum.h_states(reference_stocks)
+    original_a4 = momentum.h_states([stock.daily for stock in stocks])
     differences: dict[str, Any] = {"A4": "not_evaluated", "episodes": "not_evaluated", "counts": "not_evaluated"}
+    reference_identity = {
+        "reference_generation": generation,
+        "published_generation": published.get("generation"),
+        "reference_method": "momentum_only_v1.h_states",
+        "shared_implementation": True,
+    }
 
     def stop(reason: str) -> None:
-        write_json(directory / "alignment.json", {"verdict": "stop", "reference_generation": reference_identity.get("generation"), "differences": differences})
+        write_json(directory / "alignment.json", {"verdict": "stop", **reference_identity, "differences": differences})
         raise study.AlignmentError(f"{reason}; see {directory / 'alignment.json'}; do not adjust definitions")
 
     differences["A4"] = study.exact_a4(a4, original_a4, codes)
@@ -341,7 +325,7 @@ def alignment_gate(
         differences["counts"] = study.exact_formal_counts(baseline_counts, pd.read_parquet(reference / "set_summary-all-full.parquet"))
         if differences["counts"]:
             stop("exact PR61 formal baseline-count alignment failed")
-    write_json(directory / "alignment.json", {"verdict": "exact", "reference_generation": reference_identity.get("generation"), "differences": differences})
+    write_json(directory / "alignment.json", {"verdict": "exact", **reference_identity, "differences": differences})
     return None
 
 
@@ -418,8 +402,6 @@ def _run_exclusive(arguments: argparse.Namespace, gates: dict[str, Any]) -> None
         ]
         if not arguments.probe:
             specs.extend([
-                InputSpec("pr61_stock_checkpoints", arguments.pr61_work / "stocks", pattern="*.npz", live_producer=False),
-                InputSpec("pr61_checkpoint_identity", arguments.pr61_work / "stocks.json", live_producer=False),
                 InputSpec("pr61_published_tables", REPO / PR61_TASK / "results", pattern="*.parquet", live_producer=False),
                 InputSpec("pr61_published_identity", REPO / PR61_TASK / "results" / "research_result.json", live_producer=False),
                 InputSpec("pr61_price_audit_decisions", REPO / PR61_TASK / "audit-decisions.json", live_producer=False),
@@ -489,7 +471,7 @@ def _run_exclusive(arguments: argparse.Namespace, gates: dict[str, Any]) -> None
                     scratch.heartbeat(progress={"step": len(stocks), "total": len(codes), "label": "整理股票條件"})
             a4 = momentum.h_states([stock.daily for stock in stocks])
             attach_industries(stocks, calendar, a4)
-            alignment_gate(stocks, a4, arguments.pr61_work, REPO, scratch.path, formal=arguments.step == "formal")
+            alignment_gate(stocks, a4, REPO, scratch.path, generation=generation, formal=arguments.step == "formal")
             started = resource_sample()
             tables: dict[str, pd.DataFrame] = {}
             recommendation: dict[str, Any] = {}
@@ -570,12 +552,6 @@ def parser() -> argparse.ArgumentParser:
     result.add_argument("--probe", action="store_true", help="Measure stock-local work on 20 fixed stocks only; does not perform global A4 alignment")
     result.add_argument("--mission-pr", type=int, required=True, help="Owner-merged A mission PR number")
     result.add_argument("--code-pr", type=int, required=True, help="Owner-merged B implementation PR number")
-    result.add_argument(
-        "--pr61-work",
-        type=Path,
-        required=True,
-        help="Read-only original PR61 checkpoint root with stocks.json and stocks/<code>.npz; missing inputs stop execution",
-    )
     result.add_argument(
         "--formal-decision",
         type=Path,

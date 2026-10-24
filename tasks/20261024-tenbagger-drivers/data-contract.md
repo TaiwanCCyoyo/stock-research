@@ -12,7 +12,7 @@
 | `industry-breadth.v1`   | `prior_turnover` / `IndustryDaily.size_percentile`                               | `official_daily_price.value` 的前 20 個 sessions 均額，排除 t；在當日合格、同產業、金額已知的股票中平均百分位排名，包含自己、平手取平均。SMALL 為百分位 <50。這是交易規模，不是市值。       |
 | `institutional-flow.v1` | `research_core.institutional_flow_v1.read_institutional` / `institutional_daily` | producer 唯讀法人股數；t−60..t−1 完整 60 sessions，淨買超日比 ≥0.6 且累計淨買超／同期成交股數 ≥5% 為 INST。t 日資料不進條件。缺列、缺淨額或成交量不足皆 unknown，負淨額保留。               |
 | `tenbagger-drivers.v1`  | `research_core.tenbagger_drivers_v1`                                             | PR61 逐股 inputs、A4、S6、2／3／5／10 倍標籤、effective-label、event main eligibility、episode merge、20 session cooldown 與整數計數；stock／two_way 各 2,000 次，seed 20261026／20261027。 |
-| 執行接線                | `research_core.tenbagger_drivers_run_v1` / `scripts.run_tenbagger_drivers`       | owner 合併檢查、producer idle、固定世代、原始 PR61 checkpoint 對齊、scratch、最終表及 receipt。                                                                                             |
+| 執行接線                | `research_core.tenbagger_drivers_run_v1` / `scripts.run_tenbagger_drivers`       | owner 合併檢查、producer idle、固定世代、同世代 PR61 完整 A4 重算對齊、scratch、最終表及 receipt。                                                                                          |
 
 PR17 `pattern_scan_local_inputs_v5.industry_holding` 與 MKT／J 實作已檢查；
 它們分別是未來 holding 報酬、其他條件與先前 11 日事件數，並非本次
@@ -53,11 +53,12 @@ PR17 `pattern_scan_local_inputs_v5.industry_holding` 與 MKT／J 實作已檢查
 merge commit 在已 fetch 的 `origin/main`。工作目錄 mission 與本次 executor
 必須和 `origin/main` 相同。不得用 CLI allow 旗標替代合併。
 
-`--pr61-work` 必須明確指定 PR61 原始工作目錄，含 `stocks.json` 與全部
-`stocks/<code>.npz`；只讀，缺任何檔案就停。checkpoint 的 cutoff、股票數與
-generation 必須符合 PR61 已發布歷史結果。從這些原始 checkpoint 重算 PR61 A4，
-和本次世代的完整全市場 A4 每格比較；不以本次算出的同一陣列作自己的對照。
-PR61 原始 checkpoint 的位置不由本研究猜測，也不重建代用品。
+使用本次固定世代與完整 1,942 檔逐日資料，呼叫未修改的 PR61
+`momentum_only_v1.h_states` 重算完整 A4 基準，和實際傳入產業計算的 A4 每格比較。
+逐股 S6 與 120 日報酬同樣重用 PR61 `stock_daily`；這是共用相同實作的完整網格
+對齊檢查，不是獨立重寫演算法的複核，也不要求保存已退休的 PR61 中間 checkpoint。
+`alignment.json` 明列 `reference_method`、`shared_implementation`、本次固定世代與
+PR61 已發布結果的世代；原有 PR61 程式與最終表均不改寫。
 
 再以 PR61 episode 程式算 H504 的 10／5 倍段落，必須同時等於
 已發布 `results/big_runner_coverage.parquet` 與固定 139／900。
@@ -116,11 +117,11 @@ receipt 必須是本研究完成的 retro，最終結果 SHA-256 驗證無變動
 
 ## 成本量測、儲存與命令
 
-入口（從 repository 根目錄執行；PR 數與原始位置由執行 session 提供）：
+入口（從 repository 根目錄執行；PR 數由執行 session 提供）：
 
 ```text
-uv run python -m scripts.run_tenbagger_drivers --step retro --probe --mission-pr <A> --code-pr <B> --pr61-work <original-pr61-work> --run-id <new-probe> --owner <session>
-uv run python -m scripts.run_tenbagger_drivers --step retro --probe-record <probe.json> --mission-pr <A> --code-pr <B> --pr61-work <original-pr61-work> --run-id <new-retro> --owner <session>
+uv run python -m scripts.run_tenbagger_drivers --step retro --probe --mission-pr <A> --code-pr <B> --run-id <new-probe> --owner <session>
+uv run python -m scripts.run_tenbagger_drivers --step retro --probe-record <probe.json> --mission-pr <A> --code-pr <B> --run-id <new-retro> --owner <session>
 ```
 
 probe 只量固定 20 檔的 stock-local 階段，串行與 2／4 個 thread workers
