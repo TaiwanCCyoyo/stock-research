@@ -1103,3 +1103,89 @@
         display: none;
     }
 }
+
+/* The side panel swaps whole snapshots (panelPolicy.ts): cards slide out and
+   in through the Web Animations API (panelMotion.ts). While it is empty the
+   cards keep their height but are invisible, so the page does not jump. */
+.fh-page[data-panel-phase="leaving"] .fh-rank-row,
+.fh-page[data-panel-phase="leaving"] .fh-comp-holdings li {
+    pointer-events: none;
+}
+.fh-page[data-panel-phase="empty"] .fh-rank-row,
+.fh-page[data-panel-phase="empty"] .fh-comp-holdings li {
+    opacity: 0;
+    pointer-events: none;
+}
+.fh-page .fh-rank-row {
+    animation: none;
+}
+/* Cards that belong to an earlier date than the map fade: the card bodies,
+   sparklines and chips dim, the text stays at full strength. */
+.fh-page .fh-rank-row,
+.fh-page .fh-comp-holdings li {
+    transition:
+        box-shadow 200ms ease,
+        background-color 200ms ease,
+        filter 200ms ease;
+}
+.fh-page .fh-spark,
+.fh-page .fh-holding-state {
+    transition: opacity 200ms ease;
+}
+.fh-aside[data-stale="true"] .fh-rank-row {
+    box-shadow: none;
+    background-color: color-mix(in srgb, var(--surface) 40%, transparent);
+    filter: saturate(0.5);
+}
+.fh-aside[data-stale="true"] .fh-spark,
+.fh-page:has(.fh-aside[data-stale="true"]) .fh-comp-holdings .fh-holding-state {
+    opacity: 0.55;
+}
+.fh-page:has(.fh-aside[data-stale="true"]) .fh-comp-holdings li {
+    filter: saturate(0.5);
+}
+/* Playback only: a ring that fills until the cards next refresh. */
+.fh-aside {
+    position: relative;
+}
+.fh-panel-ring {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 15px;
+    height: 15px;
+    transform: rotate(-90deg);
+    pointer-events: none;
+}
+.fh-panel-ring circle {
+    fill: none;
+    stroke-width: 2;
+}
+.fh-ring-track {
+    stroke: var(--accent);
+    opacity: 0.18;
+}
+.fh-ring-fill {
+    stroke: var(--accent);
+    stroke-linecap: round;
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    animation: fh-ring-fill linear forwards;
+}
+@keyframes fh-ring-fill {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .fh-ring-fill {
+        animation: none;
+        stroke-dashoffset: 100;
+    }
+    .fh-page .fh-rank-row,
+    .fh-page .fh-comp-holdings li,
+    .fh-page .fh-spark,
+    .fh-page .fh-holding-state {
+        transition: none;
+    }
+}

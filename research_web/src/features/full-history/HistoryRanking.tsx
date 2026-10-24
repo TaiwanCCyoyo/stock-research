@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { percent, phaseLabel } from "./model.ts";
 import { growthBasisLabel } from "./growthDisplay.ts";
 import type { HistoryRow } from "./types.ts";
@@ -53,8 +53,6 @@ export function HistoryRanking({
 }) {
     const [query, setQuery] = useState("");
     const [limit, setLimit] = useState(30);
-    const elements = useRef(new Map<string, HTMLButtonElement>());
-    const positions = useRef(new Map<string, number>());
     const filtered = useMemo(
         () =>
             rows
@@ -72,29 +70,6 @@ export function HistoryRanking({
         [rows, query],
     );
     const shown = useMemo(() => filtered.slice(0, limit), [filtered, limit]);
-    useLayoutEffect(() => {
-        const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-        const next = new Map<string, number>();
-        // Batch geometry reads before animation writes to avoid a forced
-        // layout for each ranked stock on every playback frame.
-        const measured = shown.flatMap((row) => {
-            const element = elements.current.get(row.securityId);
-            return element ? [{ row, element, top: element.offsetTop }] : [];
-        });
-        for (const { row, element, top } of measured) {
-            const before = positions.current.get(row.securityId);
-            if (!reduce && before !== undefined && before !== top)
-                element.animate(
-                    [
-                        { transform: `translateY(${before - top}px)` },
-                        { transform: "translateY(0)" },
-                    ],
-                    { duration: 300, easing: "ease-out" },
-                );
-            next.set(row.securityId, top);
-        }
-        positions.current = next;
-    }, [shown]);
     return (
         <div className="fh-ranking">
             {display.status !== "ready" && (
@@ -119,15 +94,6 @@ export function HistoryRanking({
                         {shown.map((row) => (
                             <button
                                 key={row.securityId}
-                                ref={(element) => {
-                                    if (element)
-                                        elements.current.set(
-                                            row.securityId,
-                                            element,
-                                        );
-                                    else
-                                        elements.current.delete(row.securityId);
-                                }}
                                 className={`fh-rank-row u-card ${selectedId === row.securityId ? "is-selected" : ""}`}
                                 onClick={() => onSelect(row.securityId)}
                             >
