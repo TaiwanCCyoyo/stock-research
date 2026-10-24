@@ -342,3 +342,98 @@ def test_resume_rejects_changed_commit_before_touching_holds(tmp_path: Path, mon
     monkeypatch.setattr(run, "held_generations", lambda: pytest.fail("changed code must fail before any hold operation"))
     with pytest.raises(RuntimeError, match="same committed code"):
         run.run_study(mission_pr=91, code_pr=93, run_id="fictional", owner="test", resume=True)
+
+
+@pytest.fixture
+def execution_resources(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[list[str], dict[str, int]]:
+    """Only orchestrate mocks; no producer, shared root, pool or market reader runs."""
+    from research_core import strength_flags_run_v1 as run
+
+    stages: list[str] = []
+    cost = {"memory_limit_bytes": 1024, "summary_cube_estimated_bytes": 8, "estimated_intermediate_bytes": 100, "selected_workers": 1}
+    context = MagicMock()
+    context.__enter__.return_value = SimpleNamespace(path=tmp_path, heartbeat=MagicMock())
+    context.__exit__.return_value = False
+    monkeypatch.setattr(run, "verify_owner_merges", lambda *args: [])
+    monkeypatch.setattr(run, "verify_execution_checkout", lambda *args, **kwargs: {"commit": "a" * 40, "dirty": False})
+    monkeypatch.setattr(run, "assert_producer_idle", lambda: None)
+    monkeypatch.setattr(run.momentum, "pr17_calendar", lambda: pd.bdate_range("2010-01-04", periods=10))
+    monkeypatch.setattr(run.momentum, "pr17_codes", lambda: ["2330"])
+    monkeypatch.setattr(run, "current_generation", lambda: {"generation": "fictional-generation"})
+    monkeypatch.setattr(run, "create_run", lambda *args, **kwargs: context)
+    monkeypatch.setattr(run, "held_generations", lambda: {})
+    monkeypatch.setattr(run, "hold_generation", lambda *args, **kwargs: None)
+    monkeypatch.setattr(run, "resource_sample", lambda: {})
+    monkeypatch.setattr(run, "fingerprint_inputs", lambda *args: [])
+    monkeypatch.setattr(run, "read_adjusted_daily", lambda *args, **kwargs: (pd.DataFrame(), {}))
+    monkeypatch.setattr(run, "indicator_probe", lambda *args: {"selected": []})
+    monkeypatch.setattr(run.shutil, "disk_usage", lambda path: SimpleNamespace(free=1000))
+
+    def probe(*args: object, **kwargs: object) -> dict[str, int]:
+        stages.append("probe")
+        return cost
+
+    def alignment(*args: object) -> dict[str, bool]:
+        stages.append("alignment")
+        return {"exact_totals": True}
+
+    def counts(*args: object, **kwargs: object) -> None:
+        stages.append("counts")
+        raise RuntimeError("synthetic counts boundary")
+
+    admission = run.require_resource_admission
+
+    def admit(record: dict, directory: Path, *, memory_limit_bytes: int) -> None:
+        admission(record, directory, memory_limit_bytes=memory_limit_bytes)
+        stages.append("admission")
+
+    monkeypatch.setattr(run, "probe_cost", probe)
+    monkeypatch.setattr(run, "_alignment_gate", alignment)
+    monkeypatch.setattr(run, "_bounded_jobs", counts)
+    monkeypatch.setattr(run, "require_resource_admission", admit)
+    return stages, cost
+
+
+def test_fresh_resource_failure_never_starts_market_alignment_or_counts(
+    execution_resources: tuple[list[str], dict[str, int]], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from research_core import strength_flags_run_v1 as run
+
+    stages, _ = execution_resources
+
+    def rejected(*args: object, **kwargs: object) -> None:
+        stages.append("probe")
+        raise RuntimeError("synthetic admission refused")
+
+    monkeypatch.setattr(run, "probe_cost", rejected)
+    with pytest.raises(RuntimeError, match="admission refused"):
+        run.run_study(mission_pr=91, code_pr=93, run_id="fictional", owner="test", memory_limit_bytes=1024)
+    assert stages == ["probe"]
+
+
+@pytest.mark.parametrize("failure", ["limit", "summary_memory", "disk"])
+def test_cached_resource_failure_never_starts_market_alignment_or_counts(
+    execution_resources: tuple[list[str], dict[str, int]], tmp_path: Path, monkeypatch: pytest.MonkeyPatch, failure: str
+) -> None:
+    from research_core import strength_flags_run_v1 as run
+
+    stages, cost = execution_resources
+    if failure == "limit":
+        cost["memory_limit_bytes"] = 2048
+    elif failure == "summary_memory":
+        cost["summary_cube_estimated_bytes"] = 2048
+    else:
+        monkeypatch.setattr(run.shutil, "disk_usage", lambda path: SimpleNamespace(free=50))
+    (tmp_path / "cost.json").write_text(json.dumps(cost), encoding="utf-8")
+    with pytest.raises(RuntimeError, match="admission|memory|disk"):
+        run.run_study(mission_pr=91, code_pr=93, run_id="fictional", owner="test", memory_limit_bytes=1024)
+    assert stages == []
+
+
+def test_formal_execution_orders_admission_alignment_then_counts(execution_resources: tuple[list[str], dict[str, int]]) -> None:
+    from research_core import strength_flags_run_v1 as run
+
+    stages, _ = execution_resources
+    with pytest.raises(RuntimeError, match="synthetic counts boundary"):
+        run.run_study(mission_pr=91, code_pr=93, run_id="fictional", owner="test", memory_limit_bytes=1024)
+    assert stages == ["probe", "admission", "alignment", "counts"]

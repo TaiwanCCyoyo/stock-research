@@ -399,6 +399,16 @@ def probe_cost(directory: Path, codes: Sequence[str], generation: str, *, memory
     }
 
 
+def require_resource_admission(cost: dict[str, Any], directory: Path, *, memory_limit_bytes: int) -> None:
+    """Recheck saved estimates against this invocation's limit and current disk space."""
+    if cost["memory_limit_bytes"] > memory_limit_bytes:
+        raise RuntimeError("recorded worker admission exceeds the requested memory limit; use a new resource probe")
+    if cost["summary_cube_estimated_bytes"] * 4 > memory_limit_bytes:
+        raise RuntimeError("estimated summary memory exceeds admission; stop without shrinking the study")
+    if cost["estimated_intermediate_bytes"] * 1.25 > shutil.disk_usage(directory).free:
+        raise RuntimeError("estimated scratch disk exceeds admission; stop without shrinking the study")
+
+
 def _prepare_alignment(run: ScratchRun, codes: Sequence[str], generation: str, selected: Sequence[str]) -> tuple[pd.DataFrame, list[tuple[str, int]]]:
     directory = run.path / "stocks"
     directory.mkdir(exist_ok=True)
@@ -593,19 +603,18 @@ def run_study(
             if not (run.path / "indicator-probe.json").exists():
                 write_json(run.path / "indicator-probe.json", indicator_probe(representative, generation))
             selected_columns = tuple(json.loads((run.path / "indicator-probe.json").read_text(encoding="utf-8"))["selected"])
-            if not probe and not (run.path / "alignment.json").exists():
-                alignment = _alignment_gate(run, codes, generation, selected_columns)
-                write_json(run.path / "alignment.json", alignment)
             if not (run.path / "cost.json").exists():
                 cost = probe_cost(run.path / "probe", representative, generation, memory_limit_bytes=memory_limit_bytes, selected=selected_columns)
                 write_json(run.path / "cost.json", cost)
             else:
                 cost = json.loads((run.path / "cost.json").read_text(encoding="utf-8"))
-            if cost["memory_limit_bytes"] > memory_limit_bytes:
-                raise RuntimeError("recorded worker admission exceeds the requested memory limit; use a new resource probe")
+            require_resource_admission(cost, run.path, memory_limit_bytes=memory_limit_bytes)
             if probe:
                 finish_resource_probe(run, generation=generation, reason=reason)
                 return run.path
+            if not (run.path / "alignment.json").exists():
+                alignment = _alignment_gate(run, codes, generation, selected_columns)
+                write_json(run.path / "alignment.json", alignment)
             directory = run.path / "counts"
             directory.mkdir(exist_ok=True)
             jobs = [(code, generation, str(directory), selected_columns) for code in codes if not (directory / f"{code}.parquet").exists()]
