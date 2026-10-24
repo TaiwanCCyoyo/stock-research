@@ -6,8 +6,9 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from fastapi import HTTPException
+from fastapi import FastAPI, HTTPException
 from fastapi.routing import APIRoute
+from fastapi.testclient import TestClient
 
 from research_api.data_coverage import create_data_coverage_router
 from research_core.security_coverage import project_security_coverage, security_key
@@ -75,6 +76,32 @@ def test_revenue_only_security_uses_monthly_recency(last: str, recent: bool, tmp
 def test_daily_recency_does_not_borrow_the_monthly_allowance(last: str, recent: bool):
     document = build({"official_daily": source(first="2025-01-01", last=last)}, [meta()])
     assert (document["securities"][0]["activity"] == "recent") is recent
+
+
+@pytest.mark.parametrize(
+    "last,as_of,recent",
+    [
+        ("2025-12", "2026-01-14", True),
+        ("2025-11", "2026-01-14", True),
+        ("2025-11", "2026-01-15", False),
+        ("2024-02", "2024-04-14", True),
+        ("2024-02", "2024-04-15", False),
+    ],
+)
+def test_month_end_allowance_crosses_year_and_leap_month(last: str, as_of: str, recent: bool):
+    document = project_security_coverage({"monthly_revenue": source(first="2024-01", last=last)}, [meta()], built_at=as_of + "T00:00:00+00:00", as_of=as_of)
+    assert (document["securities"][0]["activity"] == "recent") is recent
+
+
+def test_mixed_old_daily_and_current_monthly_source_survives_http_recent_filter(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    document = build({"official_daily": source(first="2025-01-01", last="2026-10-09"), "monthly_revenue": source(first="2025-01", last="2026-09")}, [meta()])
+    publish_coverage(document, root=tmp_path)
+    monkeypatch.setenv("STOCK_RESEARCH_DATA_MODE", "local-private")
+    application = FastAPI()
+    application.include_router(create_data_coverage_router(CoverageStore(tmp_path)))
+    result = TestClient(application).get("/data-coverage/securities?status=recent&dataset=monthly_revenue&mark=present&size=1")
+    assert result.status_code == 200
+    assert result.json()["total"] == 1 and result.json()["rows"][0]["code"] == "2330"
 
 
 def test_synthetic_revenue_only_viewer_has_observations_without_real_code_attribution():

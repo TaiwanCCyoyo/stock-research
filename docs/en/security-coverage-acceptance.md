@@ -81,13 +81,14 @@ Synthetic tests cover new listings versus known history gaps, per-market floors,
 code reuse and long-gap segments, no-price revenue observations, explicit
 delisting evidence, failed/missing summaries, all-source failure retention,
 immutable publication, corruption, warm-cache mutation, full-set filtering and
-counts, and public-synthetic isolation. The latest focused new suite passed 42
-cases; including the existing metadata reader compatibility cases, 119 passed.
+counts, and public-synthetic isolation. The latest focused new suite passed 48
+cases; including the existing metadata reader compatibility cases, 125 passed.
 Normal commit hooks passed without disabling checks.
 
 Hosted review identified a month/day string-comparison bug. The correction
 assesses each source on its own calendar before taking the union, including
-current/previous/stale/future revenue months and daily boundary cases. The final
+current/previous/stale/future revenue months, cross-year/leap-month boundaries,
+mixed daily/monthly sources and an HTTP recent-filter case. The final
 real recent-ordinary population includes two securities the earlier comparison
 had incorrectly hidden; the generation and HTTP figures above reflect the fix.
 
