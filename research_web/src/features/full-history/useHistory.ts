@@ -167,14 +167,17 @@ export function useHistory(active: boolean) {
         return () => controller.abort();
     }, [active, metadata, directory, retry]);
     useEffect(() => {
-        if (!active || !metadata || !desiredDate) {
+        if (!active || !metadata || !queryDate) {
             buffer.retain([]);
             return;
         }
         const future = playing
             ? playbackLookahead(metadata.dates, index, step)
             : [];
-        const identities = [desiredDate, ...future].map((date) => ({
+        // Foreground ownership follows the throttled query, not every slider
+        // event. Otherwise continuous dragging cancels requests before they
+        // can provide an intermediate preview.
+        const identities = [queryDate, ...future].map((date) => ({
             catalogId: metadata.catalogId,
             date,
         }));
@@ -183,7 +186,7 @@ export function useHistory(active: boolean) {
         // speculative read is retried normally if playback reaches that date.
         for (const identity of identities.slice(1))
             void buffer.read(identity).catch(() => {});
-    }, [active, metadata, desiredDate, index, step, playing, buffer]);
+    }, [active, metadata, queryDate, index, step, playing, buffer]);
     useEffect(() => () => buffer.retain([]), [buffer]);
     useEffect(() => {
         const identity = {
@@ -197,7 +200,6 @@ export function useHistory(active: boolean) {
             setPlaying(false);
             return;
         }
-        if (queryDate !== desiredDate) return;
         try {
             localStorage.setItem(
                 `history.date.${metadata.catalogId}`,
@@ -242,7 +244,7 @@ export function useHistory(active: boolean) {
             window.clearTimeout(timer);
             request.current.epoch += 1;
         };
-    }, [active, metadata, queryDate, desiredDate, retry, buffer]);
+    }, [active, metadata, queryDate, retry, buffer]);
     useEffect(() => {
         if (
             !active ||

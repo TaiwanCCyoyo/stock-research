@@ -53,6 +53,10 @@ and existing preview. The old PR branch is not extended. No new worktree.
 - Browser interaction checks: complete-table mount/search/unmount, pause stability,
   editing a date during playback, two delayed frame responses followed by a seek,
   and stopping at the final date. No browser exceptions.
+- Review follow-up: foreground cancellation follows the 180 ms throttled query,
+  not each raw slider event. A synthetic browser check with 100 ms frame latency
+  and 35 continuous date steps displayed 12 intermediate dates and settled on
+  the exact final date, preserving previews during a continuous drag.
 - Local 12-second developer-build samples (1440 x 1000, from 2021-01-04): initial
   20,238 DOM nodes / 1,319 hidden table rows; after 4,004 nodes / zero table rows.
   rAF p95 was 366.7 ms before and 283.3 ms after with atmosphere off. These are
