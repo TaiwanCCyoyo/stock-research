@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20260905-wide-giveback",
+    "kind": "study",
+    "question": "寬書架上用回吐停利能否改善持倉？",
+    "answer": "回吐停利未形成預先要求的平台；唯一過關格的優勢由少數股票支撐。",
+    "verdict": "failed",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "驗證期未開啟，且唯一通過格集中在少數股票。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "**第一，這張卡要測的東西是負的，而且兩輪都負。** give20/25/30/35/40 五格裡只有 `give30` 過了\n五道關卡，`mission.md` 第 4.2 節的平台關卡失敗。第 6 節的修訂加測了 give25 與 give35 來檢定\n「是不是網格太粗」這個具名的替代解釋，**兩格都沒過，所以第一輪的負面結論成立且最終。**",
+        "report_sha256": "4ecd0cc0c1dc05cd106858cd111ae9982b875b4aa652d69e57cc2f1c17eac061",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

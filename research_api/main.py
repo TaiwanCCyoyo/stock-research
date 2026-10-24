@@ -27,6 +27,7 @@ from research_api.history import history_router
 from research_api.private_artifacts import create_private_artifact_router
 from research_api.saved_research_studio import create_studio_router
 from research_api.shared_data import create_shared_data_router
+from research_api.studies import create_studies_router
 from research_core.dashboard_identity import dashboard_identity
 from research_core.opportunity_history_store import LazyHistoryStore
 from research_core.strategy_map_capture import HistoryCapture
@@ -254,6 +255,10 @@ def create_app() -> FastAPI:
     historical = LazyHistoryStore()
     application.include_router(history_router(historical), prefix="/history-api")
     application.include_router(create_studio_router(capture_provider=HistoryCapture(historical)), prefix="/history-api")
+    studies_router = create_studies_router()
+    application.include_router(studies_router)
+    application.include_router(studies_router, prefix="/api")
+    application.include_router(studies_router, prefix="/history-api")
 
     # API routes take precedence over the optional built frontend.
     mount_frontend(application, REPO_ROOT / "research_web" / "dist", dict(os.environ))

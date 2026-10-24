@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261024-data-homes-and-scratch",
+    "kind": "tooling",
+    "question": "資料架構交接列出哪些工作包？",
+    "answer": "交接列出研究卡片、研究資料搬遷、資料狀態檔與型態掃描續跑四個工作包。",
+    "verdict": "not_evaluated",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "交接標示這些工作包尚未完成，不能視為已全部交付。",
+    "report": {
+        "web_report": null,
+        "markdown": "codex-handoff.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "| 工作包                 | 前置條件                | 可以平行嗎                   |\n| ---------------------- | ----------------------- | ---------------------------- |\n| A. 研究卡片            | PR #66 已合併           | 可以和 B、C 平行             |\n| B. 研究資料搬出 repo   | PR #66 已合併           | 可以；但動手刪除前要等 owner |\n| C. 資料狀態檔          | 無                      | 可以                         |\n| D. PR17 續跑程式與重跑 | PR #64 和 PR #66 已合併 | 程式修改可以；重跑要等 A     |",
+        "report_sha256": "475684bbc340b4ef8adcb946f2c3601001880338244a21e67f8671f47e703889",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

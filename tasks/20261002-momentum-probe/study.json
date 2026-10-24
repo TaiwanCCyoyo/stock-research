@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261002-momentum-probe",
+    "kind": "study",
+    "question": "這項研究得到什麼結論？",
+    "answer": "原始研究報告未找到，暫時無法核對研究結論。",
+    "verdict": "not_evaluated",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "缺少原始報告，不能重建或宣稱研究結果。",
+    "report": {
+        "web_report": null,
+        "markdown": null
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": null,
+        "report_sha256": null,
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

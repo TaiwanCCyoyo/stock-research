@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20260906-three-slot-equal-risk",
+    "kind": "study",
+    "question": "三檔持倉採等風險，能否兼顧穩定與報酬？",
+    "answer": "五個風險預算沒有一格通過全部門檻，三檔等風險組合判負。",
+    "verdict": "failed",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "驗證期未開啟，五格均未達預先設定的門檻。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "**第一，組合沒有成立。** 五個風險預算裡**一格都沒有**通過 A~D，平台需要三格連續。**不開驗證期。**",
+        "report_sha256": "09ee95e4bbc2467a94e76268a17ef165251e38047aa2cbbef12b0614c1f7835b",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

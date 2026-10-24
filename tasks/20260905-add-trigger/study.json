@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20260905-add-trigger",
+    "kind": "study",
+    "question": "哪些加碼訊號能挑出更好的持倉？",
+    "answer": "六個候選量在兩個決策點都沒有通過四道門檻，這個加碼做法停止推進。",
+    "verdict": "failed",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "訓練期是單一視窗，驗證期沒有讀取。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "**第一，六個候選量、兩個決策點，沒有一個通過第 5 節的四道門檻。** 依 `mission.md` 第 6 節與\n第 9 節的預先宣告，這是**負面且最終**。",
+        "report_sha256": "25f04747ecabc0d6a1364596d492b38cdcf2d5aa42ab1e8ba3b4bc1ee74f377d",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

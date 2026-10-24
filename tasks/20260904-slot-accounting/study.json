@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20260904-slot-accounting",
+    "kind": "tooling",
+    "question": "修正後，研究判定與獨立引擎數字是否一致？",
+    "answer": "修正後原研究判定仍成立，且兩條引擎數字逐位相符。",
+    "verdict": "not_evaluated",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "修正仍沿用同日收盤成交慣例，也沒有納入壓力成本。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "**Bug 修掉了，`20260904-book-size` 的判定仍然成立，而且修正後我的引擎數字和 codex 那條線\n逐位相符——這是這次修正最強的驗證，我原本沒預期會得到。**",
+        "report_sha256": "88aea94667f249a3826215263bfda3ebefb57a30ee874416dfbd6525e2139fa1",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

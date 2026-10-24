@@ -1,0 +1,40 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261012-research-feature-reuse",
+    "kind": "tooling",
+    "question": "共用特徵重用任務交付了什麼？",
+    "answer": "已完成選擇性特徵計算與部分重用的基礎建設，並保存合成效能比較。",
+    "verdict": "not_evaluated",
+    "data_period": null,
+    "key_numbers": [
+        {
+            "label": "選擇性計算加速",
+            "value": 2.41,
+            "unit": "ratio",
+            "highlight": true,
+            "source_excerpt": "已完成共用特徵身分、不可變區塊查詢與部分重用、選擇性 SMA／EMA／ATR／BB／pivot 計算，以及有限 Windows 單股程序。固定小型合成實測中，選擇性直接計算約快 2.41 倍；兩個程序相對一個約快 1.20 倍，但完整驗證／發布協定的成本明顯高於直接計算，全重用也不是最快。因此保留可用 API 與成本證據，不自動改接或啟用所有研究的平行／區塊快取。這份基礎建設接續已完成並經 PR #9 合併的 HHHL 結果；沒有重跑市場研究、建立市場特徵快取或更動 producer／排程。"
+        },
+        {
+            "label": "雙程序加速",
+            "value": 1.2,
+            "unit": "ratio",
+            "highlight": false,
+            "source_excerpt": "已完成共用特徵身分、不可變區塊查詢與部分重用、選擇性 SMA／EMA／ATR／BB／pivot 計算，以及有限 Windows 單股程序。固定小型合成實測中，選擇性直接計算約快 2.41 倍；兩個程序相對一個約快 1.20 倍，但完整驗證／發布協定的成本明顯高於直接計算，全重用也不是最快。因此保留可用 API 與成本證據，不自動改接或啟用所有研究的平行／區塊快取。這份基礎建設接續已完成並經 PR #9 合併的 HHHL 結果；沒有重跑市場研究、建立市場特徵快取或更動 producer／排程。"
+        }
+    ],
+    "limitation": "這項工作沒有重跑市場研究，也沒有自動啟用所有研究的快取或平行計算。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "已完成共用特徵身分、不可變區塊查詢與部分重用、選擇性 SMA／EMA／ATR／BB／pivot 計算，以及有限 Windows 單股程序。固定小型合成實測中，選擇性直接計算約快 2.41 倍；兩個程序相對一個約快 1.20 倍，但完整驗證／發布協定的成本明顯高於直接計算，全重用也不是最快。因此保留可用 API 與成本證據，不自動改接或啟用所有研究的平行／區塊快取。這份基礎建設接續已完成並經 PR #9 合併的 HHHL 結果；沒有重跑市場研究、建立市場特徵快取或更動 producer／排程。",
+        "report_sha256": "19e37e94f6a85b18d1b2f876c013f3ce8b58b35d73d074959ecbf9f73d1d5f28",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

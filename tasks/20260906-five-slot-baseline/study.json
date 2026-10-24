@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20260906-five-slot-baseline",
+    "kind": "study",
+    "question": "五檔書架在修正引擎後還能維持優勢嗎？",
+    "answer": "修正引擎後，五檔候選在驗證期仍有正報酬且回落較淺，但尚缺預先宣告的確認關卡。",
+    "verdict": "promising",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "本次是重測而非新假設檢定，且沒有預先宣告的及格標準。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "這次研究的摘要：在驗證期間，5 檔版本報酬較高（+154% 對 +119%）、跌幅也小很多，值得再確認。",
+        "report_sha256": "5c1a4444d518d5b9941cd2f07d7d6e7d0cc22e644f1050f4f5bf550ed2f1de90",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": "20260906-five-slot-baseline"
+    }
+}

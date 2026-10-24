@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261012-research-data-entry",
+    "kind": "tooling",
+    "question": "研究資料根目錄工作要先建立什麼？",
+    "answer": "交接要求使用單一共用區，並檢查設定讀取、路徑保護與隔離刪除。",
+    "verdict": "not_evaluated",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "這是後續研究任務的基礎階段，不代表後續研究已執行。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "Owner request: use one physical primary shared area, read it through settings,\ncreate no filesystem links, and verify path protection and isolated Windows\ndeletion. The supplied pattern-scan handoff requires this infrastructure stage\nbefore a separately merged research mission.",
+        "report_sha256": "ef1e8ca9fa4cd3116ec49d17844d246a0c569a3c8cd3bc7807696744e78d73ef",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

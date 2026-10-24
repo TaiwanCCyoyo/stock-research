@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261005-opportunity-growth-display",
+    "kind": "tooling",
+    "question": "飆股地圖如何比較長短不同波段的漲幅？",
+    "answer": "未滿一年顯示實際漲幅，滿一年後換算成年報酬，避免短期漲幅被放大。",
+    "verdict": "not_evaluated",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "這是顯示方式調整，沒有重新偵測波段或驗證買賣策略。",
+    "report": {
+        "web_report": null,
+        "markdown": null
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "Owner 在 2026-10-05 要求以波段為基礎，將長期累積漲幅轉成年化報酬；未滿一年使用實際漲幅，避免單日漲幅被年化放大。Owner 同意初始入選門檻 100%。這份記錄固定於新規則案例評估前；不是新的價格、波段偵測或策略驗收版本。",
+        "report_sha256": null,
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": "20261005-opportunity-growth-display"
+    }
+}

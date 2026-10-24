@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20260906-loss-anatomy",
+    "kind": "study",
+    "question": "最壞連虧能靠冷卻期避免嗎？",
+    "answer": "最壞連續虧損來自不同股票，冷卻期無法避免這些虧損。",
+    "verdict": "failed",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "訓練與驗證兩個視窗的最壞連續虧損都沒有重複股票。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "這次研究的摘要：不能。連續虧損來自很多不同股票的快速小賠，這是這類策略本身的代價。",
+        "report_sha256": "b281ef3172fe6d2af955ff4379837de4cfa859758a2ad98be0a5c7d27b688fb0",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": "20260906-loss-anatomy"
+    }
+}

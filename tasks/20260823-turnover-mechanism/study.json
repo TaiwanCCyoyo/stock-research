@@ -1,0 +1,50 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20260823-turnover-mechanism",
+    "kind": "study",
+    "question": "周轉降到多低才會影響選股？",
+    "answer": "有一種最短持有設定在驗證期周轉少 42%、報酬升至 97.50%；放寬選股區間的假設則未重現。",
+    "verdict": "mixed",
+    "data_period": {
+        "from": "2019-01-02",
+        "to": "2026-08-14"
+    },
+    "key_numbers": [
+        {
+            "label": "驗證期報酬",
+            "value": 97.5,
+            "unit": "percent",
+            "highlight": false,
+            "source_excerpt": "| **`momentum_k10` + 最短持有 20 根 K 棒** | **+97.50%** | **9.28** | **4.6%** |  **94%** |"
+        },
+        {
+            "label": "年周轉次數",
+            "value": 9.28,
+            "unit": "ratio",
+            "highlight": false,
+            "source_excerpt": "| **`momentum_k10` + 最短持有 20 根 K 棒** | **+97.50%** | **9.28** | **4.6%** |  **94%** |"
+        },
+        {
+            "label": "保留基準超額",
+            "value": 94,
+            "unit": "percent",
+            "highlight": false,
+            "source_excerpt": "| **`momentum_k10` + 最短持有 20 根 K 棒** | **+97.50%** | **9.28** | **4.6%** |  **94%** |"
+        }
+    ],
+    "limitation": "只有一種設定通過全部門檻；結果只涵蓋本次股票池和歷史區間。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "## 0. 結論\n\n**一格通過全部四道閘門，而且它同時比自己的基準報酬更高、周轉更低。**\n\n|                                          |  驗證期報酬 | 周轉／年 | 成本／年 | 保留超額 |\n| ---------------------------------------- | ----------: | -------: | -------: | -------: |\n| `momentum_k10` 基準（6 日棒，3× 區間）   |     +92.35% |    16.08 |     8.0% |        — |\n| **`momentum_k10` + 最短持有 20 根 K 棒** | **+97.50%** | **9.28** | **4.6%** |  **94%** |\n\n交易次數少 42%，報酬還高一點。這是本研究要找的東西。\n\n**但主假設被樣本外推翻了。** 診斷說「名次掉到 30、60 量不出損失」，據此預期放寬區間應該繼續\n變好 —— 訓練期確實如此（`cohort` 6×→12× 是 +153.8% → +304.2%），**驗證期完全相反**\n（+147.3% → +77.4%），`momentum` 20× 甚至是 **−6.03%**。橫斷面的期望值不是路徑，\n`20260823-rank-profile/report.md` §5 事前就寫了這條限制，而它咬人了。\n\n**falsifier 沒有觸發。** `wideinf`（只在失去資格時賣）在三個基準全部崩潰，超額只剩\n+4.2 ～ +15.0pp，`momentum` 甚至是 −43.9pp。排序在進場之後**確實**有貢獻，不是裝飾。\n\n**而空頭是這整個策略族群還沒解決的問題（§6）。** 2022 年每一臂都虧 −31% 到 −40%，\n對照 0050 的 −22% —— **策略放大空頭，而不是抵禦它。**\n\n---",
+        "report_sha256": "8c4a49e5a8ed8fdb1ed898576203b10fbef68c78a8a758570b5426c4a45aef1a",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

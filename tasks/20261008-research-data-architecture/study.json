@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261008-research-data-architecture",
+    "kind": "tooling",
+    "question": "研究資料架構任務驗算了什麼？",
+    "answer": "這是架構與相容性驗算，不是策略研究。",
+    "verdict": "not_evaluated",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "這份紀錄沒有市場研究結果或策略評估。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "執行日 2026-10-08，先從最新 `origin/main` f0cb177 建立獨立分支。這是架構／相容性驗算，不是策略研究；沒有在 main 提交、下载、機率重跑或開啟密封期間。",
+        "report_sha256": "5c756c630142e57f616499f930fc9a958c4fe65afe26d372c9ce448b4d0b37e0",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

@@ -1,0 +1,40 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20260510-two-b-template-smoke",
+    "kind": "study",
+    "question": "2B 樣板的回測有沒有跑贏買進持有？",
+    "answer": "這次策略報酬為 −8.6%，買進持有基準為 +88.3%，沒有呈現優勢。",
+    "verdict": "no_edge",
+    "data_period": null,
+    "key_numbers": [
+        {
+            "label": "策略報酬",
+            "value": -8.6247,
+            "unit": "percent",
+            "highlight": false,
+            "source_excerpt": "| Return rate                      |    -8.624700% |"
+        },
+        {
+            "label": "買進持有基準",
+            "value": 88.334074,
+            "unit": "percent",
+            "highlight": false,
+            "source_excerpt": "| Buy-and-hold return rate         |    88.334074% |"
+        }
+    ],
+    "limitation": "只涵蓋當時本機可用的 22 檔股票與這次回測期間，不能代表全市場或其他設定。",
+    "report": {
+        "web_report": null,
+        "markdown": "nightly_report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "## Key Metrics\n\n| Metric                           |         Value |\n| -------------------------------- | ------------: |\n| Final value                      |   913,753.000 |\n| Total PnL                        |   -86,247.000 |\n| Return rate                      |    -8.624700% |\n| Maximum drawdown                 |   -11.974188% |\n| Win rate                         |    31.382979% |\n| Trade count                      |           302 |\n| Buy-and-hold return rate         |    88.334074% |\n| Excess return rate               | -96.958774 pp |\n| Odd-lot buy-and-hold return rate |    87.850087% |\n| Odd-lot excess return rate       | -96.474787 pp |",
+        "report_sha256": "652f583f02c2bd1bcad9eeaddd27e33b03068dcb73a460a088ccb80d2b435ee2",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

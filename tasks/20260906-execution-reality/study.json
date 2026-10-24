@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20260906-execution-reality",
+    "kind": "study",
+    "question": "漏掉交易日或減少持股檔數，影響有多大？",
+    "answer": "隨機漏掉一成交易日影響有限，但減少持股檔數會讓多項結果變差，且小額帳戶多數買單不足一張。",
+    "verdict": "mixed",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "隨機漏日的結果依漏掉哪些日期而變，且收盤成交、無滑價模型。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "**第一，擁有者最大的那個擔心，數字上不成立。** 隨機漏掉 10% 的交易日（一年約 25 天），\n驗證期報酬落在 **112.0% ~ 141.0%**，中位數 126.8%，而完全不漏是 **120.4%**。\n**「漏在哪幾天」造成的差異，大過「漏了幾天」。**",
+        "report_sha256": "b3e98231267afd0e0a7ff255e23f2b53aeaa961e6dd37456660733f1123f30cc",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

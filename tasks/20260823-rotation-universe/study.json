@@ -1,0 +1,36 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20260823-rotation-universe",
+    "kind": "tooling",
+    "question": "排名研究需要什麼樣的股票範圍？",
+    "answer": "建立了按日期判斷資格的研究池，涵蓋 2019 年至 2026 年。",
+    "verdict": "not_evaluated",
+    "data_period": {
+        "from": "2019-01-02",
+        "to": "2026-08-14"
+    },
+    "key_numbers": [
+        {
+            "label": "研究池股票數",
+            "value": 1345,
+            "unit": "count",
+            "highlight": true,
+            "source_excerpt": "\"pool_size\": 1345,"
+        }
+    ],
+    "limitation": "這是供排名研究使用的股票範圍，不是策略測試結果。",
+    "report": {
+        "web_report": null,
+        "markdown": "universe_build_report.json"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "\"rule\": {\n        \"min_history_bars\": 120,\n        \"liquidity_window_bars\": 60,\n        \"liquidity_floor_twd_thousands\": 100000,\n        \"window_start\": \"2019-01-02\",\n        \"window_end\": \"2026-08-14\"\n    },\n    \"pool_size\": 1345,\n    ",
+        "report_sha256": "011d4f4f7b43bbd56ae08b07591e4f609516edbb617febcbe0fc332204de4b92",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

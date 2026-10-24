@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261010-owner-hhhl-labels",
+    "kind": "tooling",
+    "question": "HHHL 標記任務留下了什麼？",
+    "answer": "這項工作依核准批次保存資料，並非新的研究。",
+    "verdict": "not_evaluated",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "報告明確說明沒有新增市場曝險。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "Task `20261010-owner-hhhl-labels`, executed by Claude on 2026-10-08. This is item 1 of the\nowner-approved first batch in the research-data architecture review\n(`.tmp/claude-kline/20261010-claude-architecture-review.md`, section 3). It preserves data; it is\nnot a new study and adds no market exposure.",
+        "report_sha256": "63dd763b201b6defa819fbd5ed14f9600d6f9117312318b29e72eb6472d6bde5",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

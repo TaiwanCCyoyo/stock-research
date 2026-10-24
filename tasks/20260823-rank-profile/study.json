@@ -1,0 +1,33 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20260823-rank-profile",
+    "kind": "study",
+    "question": "股票排名靠前，報酬真的比較好嗎？",
+    "answer": "驗證期名次 1–10 與 30、60 名範圍量不出明顯差異；只有訓練期動能的 11–30 名較弱。",
+    "verdict": "mixed",
+    "data_period": null,
+    "key_numbers": [
+        {
+            "label": "驗證期顯著差異組",
+            "value": 0,
+            "unit": "count",
+            "highlight": false,
+            "source_excerpt": "**沒有一格達到 |t| ≥ 2。**"
+        }
+    ],
+    "limitation": "這是診斷性比較，沒有預先登記驗收門檻，不能證明策略優勢。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "## 0. 兩句話結論\n\n**在驗證期，把持股放到名次 30、甚至 60，量不出任何報酬損失。** 五個分數、四個名次帶，\n沒有一個與「名次 1-10」的差距達到 |t| ≥ 2。\n\n**而前一個研究說的「top5 輸給 top10」站不住。** 那是百分位層次的觀察，一放到名次帶上，\n標準誤是 ±1.9 ～ ±2.5pp，差距完全落在雜訊裡。前一份報告把它寫成「集中度本身是風險」，\n那句話**超出了證據**，本報告更正它（§3）。\n\n第一句才是有用的那句：它正是「放寬遲滯區間」在統計上站得住的理由。\n\n---",
+        "report_sha256": "2764516c1a07926413f5c500d1026f3f3903a878fc20067021bac2cc646bf4aa",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

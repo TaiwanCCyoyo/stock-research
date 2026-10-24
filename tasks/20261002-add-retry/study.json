@@ -1,0 +1,28 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261002-add-retry",
+    "kind": "study",
+    "question": "正常路徑加一次 retry，能否修復延遲交易問題？",
+    "answer": "正常路徑通過四項篩選，但只支持進入獨立的延遲測試，不代表策略獲准。",
+    "verdict": "archived",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "延遲交易是否修復、最終風險預算與獨立驗證仍未完成。",
+    "report": {
+        "web_report": null,
+        "markdown": "execution-normal-v1.md"
+    },
+    "account_run": {
+        "run_id": "stock:20261002-add-retry:normal-v1",
+        "period_note": "帳戶模擬 2019–2023（舊資料）"
+    },
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "All four prospective normal-path screens pass: complete valid account; positive\nnet profit retaining101.189741% of the original daily control; nonnegative closed\nnon-hit net cash; six distinct captured-hit issuers. Proceed only to the separately\nreleased same-policy delay1 path. This is exposed2019–2023 development evidence,\nnot independent confirmation or a final owner loss-budget decision.",
+        "report_sha256": "e9e5c7b6ca1cf5cdae4b2488aed766029111664ceaba8adf258a9247c89ae2d7",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

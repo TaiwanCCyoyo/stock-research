@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261002-failed-confirmation-exit",
+    "kind": "study",
+    "question": "確認失敗後出場能否降低非命中損失而不惡化帳戶？",
+    "answer": "機制確實啟動，但固定候選未通過整體篩選，因此不再推進。",
+    "verdict": "failed",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "此判定限於這個零錨點出場規則；其他設定與風險壓力尚未檢定。",
+    "report": {
+        "web_report": null,
+        "markdown": "execution-v1.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "Overall **valid mechanism failure / not worth deeper work under this card**,\nnot a data blocker, measurement failure or unfinished execution. Close this\nexact zero-anchor rule.",
+        "report_sha256": "1e9f6869f553ec740f3967350c5bd41efc4d96e8e96675900c9ca6e71fc652a6",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

@@ -1,0 +1,28 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261002-entry-extension-cap",
+    "kind": "study",
+    "question": "限制首次進場延伸幅度能否降低試單損失？",
+    "answer": "這個上限降低了曝險與損耗，但保留的獲利與命中股票數太少，候選判負。",
+    "verdict": "archived",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "此判定僅適用於這一個延伸上限設定，不能推論所有反延伸方法都無效.",
+    "report": {
+        "web_report": null,
+        "markdown": "execution-v1.md"
+    },
+    "account_run": {
+        "run_id": "stock:20261002-entry-extension-cap:cap-v1",
+        "period_note": "帳戶模擬 2019–2023（舊資料）"
+    },
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "Close this exact first-entry ret60<=50% configuration. It materially reduces\ntrial losses and requests, but retains only13.694087917% of the recorded daily\naccount's profit and has only one captured-hit issuer. Frozen rules2 and5 fail;\nrules1,3,4 and the known-window condition6 pass.",
+        "report_sha256": "e79fa0aae4573a897c4aef562fb5f152141630e92386bbf4ffc37037fda515cc",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

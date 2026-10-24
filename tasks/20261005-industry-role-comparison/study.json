@@ -1,0 +1,40 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261005-industry-role-comparison",
+    "kind": "study",
+    "question": "同業強時，哪類股票較容易後續大漲？",
+    "answer": "三個固定候選都未通過本批事前篩選。",
+    "verdict": "failed",
+    "data_period": null,
+    "key_numbers": [
+        {
+            "label": "比較筆數",
+            "value": 1316,
+            "unit": "count",
+            "highlight": false,
+            "source_excerpt": "2026-10-05。這次回答「同業強時，找領先者、落後轉強者或仍弱勢者，哪一組\n比較容易出現後續大漲？」一次執行完成 **1,316 比較、3,948 路徑摘要、2,256\n配對比較**。三個固定候選均未通過事前篩選，沒有帳戶模擬、策略批准或獨立驗證。\n不是下載阻塞，也不是把沒有跑完當成失敗。"
+        },
+        {
+            "label": "路徑摘要",
+            "value": 3948,
+            "unit": "count",
+            "highlight": false,
+            "source_excerpt": "2026-10-05。這次回答「同業強時，找領先者、落後轉強者或仍弱勢者，哪一組\n比較容易出現後續大漲？」一次執行完成 **1,316 比較、3,948 路徑摘要、2,256\n配對比較**。三個固定候選均未通過事前篩選，沒有帳戶模擬、策略批准或獨立驗證。\n不是下載阻塞，也不是把沒有跑完當成失敗。"
+        }
+    ],
+    "limitation": "本次沒有帳戶模擬、策略批准或獨立驗證。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "2026-10-05。這次回答「同業強時，找領先者、落後轉強者或仍弱勢者，哪一組\n比較容易出現後續大漲？」一次執行完成 **1,316 比較、3,948 路徑摘要、2,256\n配對比較**。三個固定候選均未通過事前篩選，沒有帳戶模擬、策略批准或獨立驗證。\n不是下載阻塞，也不是把沒有跑完當成失敗。",
+        "report_sha256": "eb7730951161ab0d8d043cf30042885ae190c29955bec0608d55161de7f0adc7",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": "20261005-industry-role-comparison"
+    }
+}

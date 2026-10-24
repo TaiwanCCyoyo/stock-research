@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20260908-executable-fills",
+    "kind": "study",
+    "question": "把成交價格改成可執行價格，候選策略還能保留獲利嗎？",
+    "answer": "預先指定的快速持有格只保留少量報酬而判失敗；較慢持有的機制觀察仍需另行檢定。",
+    "verdict": "mixed",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "判定只適用於不設最低持有期的組態，未成交的間接影響尚未量化。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "這次研究的摘要：快速換股的版本報酬幾乎全沒了；抱至少 20 天的版本保住約八成，但仍輸給同期放著 0050。",
+        "report_sha256": "af878f093516a32a616390d39fb0ccef5de6030b7cd6aec9a9a2e4b67a0b4511",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": "20260908-executable-fills"
+    }
+}

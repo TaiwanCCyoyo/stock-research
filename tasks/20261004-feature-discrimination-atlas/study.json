@@ -1,0 +1,28 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261004-feature-discrimination-atlas",
+    "kind": "study",
+    "question": "這份特徵圖譜回答了什麼？",
+    "answer": "本批完成資料整理，但尚未評估投資策略。",
+    "verdict": "not_evaluated",
+    "data_period": {
+        "from": "2019-01-02",
+        "to": "2026-08-14"
+    },
+    "key_numbers": [],
+    "limitation": "這些資料列不是獨立交易、獨立股票機會或獨立波段。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "本批已完成資料整理與可重算證據，尚未評估投資策略。固定視窗為\n2019-01-02 至 2026-08-14，涵蓋目前中繼資料參考下的 1,941 檔普通股、\n1,849 個共用觀察日期及 3,588,909 筆「股票 × 日期」資料列。\n這些列不是獨立交易、獨立股票機會或獨立波段。38 項固定特徵產生\n7,144 筆比較，包含每日及事先固定的 grid126 面板，未依結果挑選特徵。",
+        "report_sha256": "c782c3919daa94fa3b2a8c3d8c3635077809697322725772577fe8c16eaf9c65",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": "20261004-feature-discrimination-atlas"
+    }
+}

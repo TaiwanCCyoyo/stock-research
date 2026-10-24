@@ -1,0 +1,40 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261010-hhhl-v4-probability",
+    "kind": "study",
+    "question": "高過高／底底高突破比主控制更容易翻倍嗎？",
+    "answer": "型態全部突破的翻倍比例略低於主控制，沒有顯示明顯整體增益。",
+    "verdict": "no_edge",
+    "data_period": null,
+    "key_numbers": [
+        {
+            "label": "型態翻倍率",
+            "value": 8.49,
+            "unit": "percent",
+            "highlight": true,
+            "source_excerpt": "**核心結果：型態全部突破翻倍率 8.49%，主控制 8.86%，沒有顯示明顯整體增益。**\n上方無線 9.68%、有線 6.22% 是可保留的分組線索；不是已通過策略。"
+        },
+        {
+            "label": "主控制翻倍率",
+            "value": 8.86,
+            "unit": "percent",
+            "highlight": false,
+            "source_excerpt": "**核心結果：型態全部突破翻倍率 8.49%，主控制 8.86%，沒有顯示明顯整體增益。**\n上方無線 9.68%、有線 6.22% 是可保留的分組線索；不是已通過策略。"
+        }
+    ],
+    "limitation": "分組比例只是可保留線索，不代表策略通過。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "**核心結果：型態全部突破翻倍率 8.49%，主控制 8.86%，沒有顯示明顯整體增益。**\n上方無線 9.68%、有線 6.22% 是可保留的分組線索；不是已通過策略。",
+        "report_sha256": "3f09fb16dd57ae769d23c05303e0af770c51f1fec93949181bc8c556809c41f6",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261002-small-probe",
+    "kind": "study",
+    "question": "這份歷史紀錄保留了什麼？",
+    "answer": "原始研究資料缺失，只保留被其他任務引用的現金增資處理程式與歷史紀錄。",
+    "verdict": "not_evaluated",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "只作歷史追溯，不列為有效研究成果，也不是必須重建的待辦。",
+    "report": {
+        "web_report": null,
+        "markdown": null
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": null,
+        "report_sha256": null,
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

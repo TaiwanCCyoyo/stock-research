@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20260906-five-slot-confirmation",
+    "kind": "study",
+    "question": "五檔候選通過自己的穩健性確認了嗎？",
+    "answer": "七道確認門檻中五道失敗，五檔候選未通過預先設定的確認。",
+    "verdict": "failed",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "連續虧損與延後成交兩項限制都未過門檻。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "這次研究的摘要：7 道事先定好的穩健檢查只過 2 道；例如晚一天買，效果就只剩六成。",
+        "report_sha256": "1d4e0b5b90ce45bb763a89cf1873915819571a6d20a5c4eec39dc14ff511a5f1",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": "20260906-five-slot-confirmation"
+    }
+}

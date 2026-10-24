@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20260904-execution-delay",
+    "kind": "study",
+    "question": "延後進場會保留多少飆股報酬？",
+    "answer": "三天延後的帳本結果未達事先設定的門檻，因此這個做法未通過。",
+    "verdict": "failed",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "驗證期未開啟，這是單一訓練視窗的結果。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "這次研究的摘要：會少掉約兩成的飆股報酬，超過事先定好可接受的範圍。",
+        "report_sha256": "41d4593347c2a48f692fcae61991de957d38dd036d07383aed0186e1cb3db9cb",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": "20260904-execution-delay"
+    }
+}

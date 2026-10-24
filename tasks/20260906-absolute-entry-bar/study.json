@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20260906-absolute-entry-bar",
+    "kind": "study",
+    "question": "只在絕對條件夠好時買進，能否避開連續虧損？",
+    "answer": "收緊絕對門檻沒有降低連虧，報酬反而下滑，因此這版空手濾網判負。",
+    "verdict": "failed",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "這次沒有任何一格通過四道門檻，且門檻越緊報酬越低。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "**判決不變：平台長度 0，仍然是 NEGATIVE。** 沒有任何一格四道門檻全過。",
+        "report_sha256": "0898ff629010cd8c33ce4687ee3ed1ad5e43da4dcad44081cbcd86ffe2f0238b",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261002-catalog-participation",
+    "kind": "study",
+    "question": "目錄資料能否支持挽救已失敗的週線出場規則？",
+    "answer": "目錄可幫助拆分進場與持有問題，但沒有找到可取代失敗規則的獲利方法。",
+    "verdict": "mixed",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "分組標籤是事後資料，不能證明當時已可取得，也未建立新策略。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "The catalog is useful for separating entry and holding questions. It does not\nsupport rescuing the failed weekly exit rule: peak-close participation improves\nby only two episodes, while the preserved weekly account's non-hit attribution\nfails its original screen.",
+        "report_sha256": "6fe4bf774ce8fa3dc65015111482afc177b9ab56d943984917eb62e775bcb994",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

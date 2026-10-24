@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261024-dashboard-redesign",
+    "kind": "tooling",
+    "question": "儀表板改版的工作範圍是什麼？",
+    "answer": "這項任務整理呈現層方向，不改研究判定或已保存的回測與報告。",
+    "verdict": "not_evaluated",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "這是呈現層工作，不是新的研究結果。",
+    "report": {
+        "web_report": null,
+        "markdown": "mission.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "Owner 於 2026-10-24（Asia/Taipei）提出並逐項選定。這是呈現層工作，不是新研究；\n不改價格、研究判定、已存回測、報告位元組或任何釘選證據。",
+        "report_sha256": "d1579361b778a556b1174f6fe03944de9b5365c420f703bf3a8497c962c590b5",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

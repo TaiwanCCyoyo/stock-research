@@ -1,0 +1,40 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261012-hhhl-v4-variants",
+    "kind": "study",
+    "question": "HHHL 高過高事件比新高量能更強嗎？",
+    "answer": "高過高事件與後續翻倍有關聯，但未顯示比新高量能事件更強。",
+    "verdict": "no_edge",
+    "data_period": null,
+    "key_numbers": [
+        {
+            "label": "126日事件翻倍率",
+            "value": 7.81,
+            "unit": "percent",
+            "highlight": true,
+            "source_excerpt": "高過高事件與後續翻倍有可描述的關聯，但本版沒有顯示它比新高量能事件更強。全部原合格事件的翻倍率，在 126／252 個交易日內分別為 **7.81%／15.97%**；一般合格股票日為 5.66%／14.06%，新高量能控制為 8.25%／16.90%。這些都是事件比例，不能解讀成「多少股票必然成為飆股」。"
+        },
+        {
+            "label": "126日新高量能對照",
+            "value": 8.25,
+            "unit": "percent",
+            "highlight": false,
+            "source_excerpt": "高過高事件與後續翻倍有可描述的關聯，但本版沒有顯示它比新高量能事件更強。全部原合格事件的翻倍率，在 126／252 個交易日內分別為 **7.81%／15.97%**；一般合格股票日為 5.66%／14.06%，新高量能控制為 8.25%／16.90%。這些都是事件比例，不能解讀成「多少股票必然成為飆股」。"
+        }
+    ],
+    "limitation": "翻倍比例是事件比例，不能解讀為個股必然成為飆股。",
+    "report": {
+        "web_report": "web-report/index.html",
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "高過高事件與後續翻倍有可描述的關聯，但本版沒有顯示它比新高量能事件更強。全部原合格事件的翻倍率，在 126／252 個交易日內分別為 **7.81%／15.97%**；一般合格股票日為 5.66%／14.06%，新高量能控制為 8.25%／16.90%。這些都是事件比例，不能解讀成「多少股票必然成為飆股」。",
+        "report_sha256": "ab2d2aeeaae08a50b3e5e655723bbc8526bc42aa8492d5bf555bd42fc8c8bec7",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

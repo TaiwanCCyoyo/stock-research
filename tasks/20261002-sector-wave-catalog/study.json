@@ -1,0 +1,28 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261002-sector-wave-catalog",
+    "kind": "study",
+    "question": "歷史族群波段清單能否提前找出領頭股票？",
+    "answer": "已建立歷史波段與同期股票比較清單，但尚未驗證提前選出贏家的能力。",
+    "verdict": "not_evaluated",
+    "data_period": {
+        "from": "2019-01-02",
+        "to": "2026-08-14"
+    },
+    "key_numbers": [],
+    "limitation": "這是事後分類清單，不是買賣策略，也未驗證提前選出贏家的能力。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "已建立 2019-01-02 至 2026-08-14 的事後清單：1,942 檔上市櫃普通股中，\n1,291 檔至少有一段符合門檻的上漲，共 2,561 段。33 個研究族群與 47 條\n官方產業鏈提供 884 個波段視角、64,180 筆同期股票比較。這份資料可以接\n時間軸與後續 K 線研究；目前沒有驗證提前選出贏家的能力。",
+        "report_sha256": "2d5b7ccf47481ac40e36563a34f6543a357d4fd796094d310a9c6d272d8e5436",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": "20261002-sector-wave-catalog"
+    }
+}

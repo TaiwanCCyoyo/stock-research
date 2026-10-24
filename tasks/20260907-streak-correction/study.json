@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20260907-streak-correction",
+    "kind": "tooling",
+    "question": "連續虧損的算法更正後，既有判決有改變嗎？",
+    "answer": "重算修正了連虧數字與敘述，但四張卡的判決都沒有改變。",
+    "verdict": "not_evaluated",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "這是對既有結果的重算，沒有執行回測或開啟驗證期。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "這次研究的摘要：原本的算法有兩處錯誤，更正後數字改變了，但各研究的結論都沒有翻轉。",
+        "report_sha256": "ca67b9624c9174811779839164a9399f1673dd1fd09155693db19c058fa6afdb",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": "20260907-streak-correction"
+    }
+}

@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20260906-exchange-rate",
+    "kind": "study",
+    "question": "時間型或價格型出場，哪種更省代價？",
+    "answer": "時間型週轉較低，但達到週轉限制時兩種都犧牲了約三分之一以上的飆股份額。",
+    "verdict": "mixed",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "三組配對且只有一個驗證視窗，差距接近門檻。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "**第四，也是要交給擁有者的那一句：兩個機制都很貴，而且貴得差不多。**\n把帳戶年化週轉壓到 3.0 以內，驗證期的 pool share 從基準的 **0.1895** 掉到\n**0.1247（時間型）或 0.1142（價格型）**——**付掉 34% 或 40%**。",
+        "report_sha256": "29f458ee4b547766e69ca690982a751c8a0fdb96dc7429ea43fb45842525e22a",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

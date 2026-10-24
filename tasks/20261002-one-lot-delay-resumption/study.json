@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261002-one-lot-delay-resumption",
+    "kind": "study",
+    "question": "延遲一個交易時段再執行，能否保留足夠獲利？",
+    "answer": "延遲帳戶完成且量測有效，但保留獲利未達固定的七成要求。",
+    "verdict": "failed",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "結果只適用於已測延遲路徑；更大的獲利者未能抵銷非命中損失。",
+    "report": {
+        "web_report": null,
+        "markdown": "execution-v4.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "Profit retention **52.8982217847%**, account profit lower by1,382,006.28TWD.\nPositive comparator profit/nonnegative delayed profit pass; fixed>=70percent\n**profit**, not NAV, fails. Actual perturbation and completion checks pass.\nThus `failed_frozen_diagnostic`, not strategy approval or invalid measurement.",
+        "report_sha256": "5f8e5561227b8dbf59dcb400217bdd28bb57b5d065e8aeca336caaa8677e8fb9",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}

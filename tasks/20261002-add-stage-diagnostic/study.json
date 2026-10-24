@@ -1,0 +1,25 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261002-add-stage-diagnostic",
+    "kind": "study",
+    "question": "實際加碼成交組的結果能否解釋延遲路徑退化？",
+    "answer": "實際加碼成交組的非命中淨現金為正，但這是事後分組，不能證明加碼造成改善。",
+    "verdict": "mixed",
+    "data_period": null,
+    "key_numbers": [],
+    "limitation": "分組不是隨機對照；沒有反事實重跑就無法估計加碼的邊際貢獻。",
+    "report": {
+        "web_report": null,
+        "markdown": "report.md"
+    },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "Do not proceed directly to another post-add stop. In both saved paths, completed\nnon-hits with actual add fills have positive net cash, while non-hits without an\nadd fill have negative net cash. This is not the pattern of aggregate net erosion\nbeing confined to expanded attempts.",
+        "report_sha256": "d72b6d485464026e9b81816c7a7cc1bc1cf6738c6aa8c1f643d2fad40de216f8",
+        "publication": null,
+        "shared_data": [],
+        "legacy_history_id": null
+    }
+}
