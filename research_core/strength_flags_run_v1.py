@@ -92,13 +92,16 @@ def verify_owner_merges(mission_pr: int, code_pr: int, *, lookup: Callable[[int]
     return records
 
 
-def verify_execution_checkout(merges: Sequence[dict[str, Any]]) -> dict[str, Any]:
-    """Fetch before execution; require clean code based on the latest remote main."""
+def verify_execution_checkout(merges: Sequence[dict[str, Any]], *, resume: bool = False) -> dict[str, Any]:
+    """New runs start on current main; resume keeps its original committed code."""
     subprocess.run(["git", "fetch", "origin"], cwd=REPO_ROOT, check=True, timeout=120)
     expected = code_identity(REPO_ROOT)
     if expected.get("dirty"):
         raise RuntimeError("start market execution with clean committed code")
-    for ref in ("origin/main", *[str(record["mergeCommit"]["oid"]) for record in merges]):
+    required_refs = [str(record["mergeCommit"]["oid"]) for record in merges]
+    if not resume:
+        required_refs.insert(0, "origin/main")
+    for ref in required_refs:
         subprocess.run(["git", "merge-base", "--is-ancestor", ref, "HEAD"], cwd=REPO_ROOT, check=True, timeout=30)
     return expected
 
@@ -301,14 +304,22 @@ def _count_job(job: tuple[str, str, str, tuple[str, ...]]) -> dict[str, Any]:
     }
 
 
-def _bounded_jobs(jobs: Sequence[tuple[str, str, str, tuple[str, ...]]], workers: int) -> list[dict[str, Any]]:
-    if workers == 1:
-        return [_count_job(job) for job in jobs]
+def _bounded_jobs(
+    jobs: Sequence[tuple[str, str, str, tuple[str, ...]]], workers: int, *, progress: Callable[[int, int], None] | None = None
+) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
+    if workers == 1:
+        for position, job in enumerate(jobs, 1):
+            records.append(_count_job(job))
+            if progress is not None:
+                progress(position, len(jobs))
+        return records
     with ProcessPoolExecutor(max_workers=workers) as pool:
         # At most workers futures exist; fixed input order controls aggregation.
         for start in range(0, len(jobs), workers):
             records.extend(pool.map(_count_job, jobs[start : start + workers]))
+            if progress is not None:
+                progress(min(start + workers, len(jobs)), len(jobs))
     return records
 
 
@@ -546,7 +557,7 @@ def run_study(
 ) -> Path:
     """C entrypoint; alignment failures leave labelled scratch evidence and stop."""
     merges = verify_owner_merges(mission_pr, code_pr)
-    expected_code = verify_execution_checkout(merges)
+    expected_code = verify_execution_checkout(merges, resume=resume)
     assert_producer_idle()
     calendar, codes = momentum.pr17_calendar(), momentum.pr17_codes()
     representative = representative_codes(codes)
@@ -598,9 +609,11 @@ def run_study(
             directory = run.path / "counts"
             directory.mkdir(exist_ok=True)
             jobs = [(code, generation, str(directory), selected_columns) for code in codes if not (directory / f"{code}.parquet").exists()]
-            for start in range(0, len(jobs), int(cost["selected_workers"])):
-                _bounded_jobs(jobs[start : start + int(cost["selected_workers"])], int(cost["selected_workers"]))
-                run.heartbeat(progress={"step": min(start + int(cost["selected_workers"]), len(jobs)), "total": len(jobs), "label": "計算轉弱訊號"})
+            _bounded_jobs(
+                jobs,
+                int(cost["selected_workers"]),
+                progress=lambda done, total: run.heartbeat(progress={"step": done, "total": total, "label": "計算轉弱訊號"}),
+            )
             computed = resource_sample()
             outputs = _write_tables(run, codes)
             summarized = resource_sample()

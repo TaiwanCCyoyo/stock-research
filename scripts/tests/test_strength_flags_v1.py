@@ -4,10 +4,13 @@ from __future__ import annotations
 
 import hashlib
 import json
+import subprocess
+from collections.abc import Callable, Sequence
 from dataclasses import asdict
 from pathlib import Path
 from types import SimpleNamespace
 from typing import cast
+from unittest.mock import MagicMock
 
 import numpy as np
 import pandas as pd
@@ -263,3 +266,79 @@ def test_probe_releases_only_its_matching_hold_and_does_not_claim_study_complete
     with pytest.raises(RuntimeError, match="another reader"):
         run.finish_resource_probe(fake, generation="fictional-generation", reason="this-probe")
     assert released == []
+
+
+def test_one_pool_serves_every_batch_with_bounded_in_flight_and_progress(monkeypatch: pytest.MonkeyPatch) -> None:
+    from research_core import strength_flags_run_v1 as run
+
+    jobs = [(f"{number:04}", "fictional-generation", "fictional-directory", ()) for number in range(20)]
+    pool = MagicMock()
+    batches = []
+
+    def mapped(
+        function: Callable[[tuple[str, str, str, tuple[str, ...]]], dict[str, str]], batch: Sequence[tuple[str, str, str, tuple[str, ...]]]
+    ) -> list[dict[str, str]]:
+        batches.append(list(batch))
+        return [function(job) for job in batch]
+
+    pool.map.side_effect = mapped
+    factory = MagicMock()
+    factory.return_value.__enter__.return_value = pool
+    monkeypatch.setattr(run, "ProcessPoolExecutor", factory)
+    monkeypatch.setattr(run, "_count_job", lambda job: {"code": job[0]})
+    progress = []
+    result = run._bounded_jobs(jobs, 4, progress=lambda done, total: progress.append((done, total)))
+    factory.assert_called_once_with(max_workers=4)
+    assert all(len(batch) <= 4 for batch in batches)
+    assert [row["code"] for row in result] == [job[0] for job in jobs]
+    assert progress == [(4, 20), (8, 20), (12, 20), (16, 20), (20, 20)]
+    factory.reset_mock()
+    progress.clear()
+    assert run._bounded_jobs(jobs[:3], 1, progress=lambda done, total: progress.append((done, total))) == result[:3]
+    factory.assert_not_called()
+    assert progress == [(1, 3), (2, 3), (3, 3)]
+
+
+def test_resume_keeps_original_clean_checkout_after_main_advances(monkeypatch: pytest.MonkeyPatch) -> None:
+    from research_core import strength_flags_run_v1 as run
+
+    calls = []
+
+    def git_command(args: list[str], **kwargs: object) -> SimpleNamespace:
+        calls.append(args)
+        if args[:4] == ["git", "merge-base", "--is-ancestor", "origin/main"]:
+            raise subprocess.CalledProcessError(1, args)
+        return SimpleNamespace(returncode=0)
+
+    original_code = {"commit": "a" * 40, "dirty": False}
+    merges = [{"mergeCommit": {"oid": "b" * 40}}, {"mergeCommit": {"oid": "c" * 40}}]
+    monkeypatch.setattr(run.subprocess, "run", git_command)
+    monkeypatch.setattr(run, "code_identity", lambda root: original_code)
+    with pytest.raises(subprocess.CalledProcessError):
+        run.verify_execution_checkout(merges)
+    calls.clear()
+    assert run.verify_execution_checkout(merges, resume=True) == original_code
+    assert ["git", "fetch", "origin"] in calls
+    assert ["git", "merge-base", "--is-ancestor", "origin/main", "HEAD"] not in calls
+    assert all(["git", "merge-base", "--is-ancestor", record["mergeCommit"]["oid"], "HEAD"] in calls for record in merges)
+    original_code["dirty"] = True
+    with pytest.raises(RuntimeError, match="clean committed code"):
+        run.verify_execution_checkout(merges, resume=True)
+
+
+def test_resume_rejects_changed_commit_before_touching_holds(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from research_core import strength_flags_run_v1 as run
+
+    (tmp_path / "execution.json").write_text(json.dumps({"code": {"commit": "a" * 40}, "probe": False, "generation": "held"}), encoding="utf-8")
+    context = MagicMock()
+    context.__enter__.return_value = SimpleNamespace(path=tmp_path)
+    monkeypatch.setattr(run, "verify_owner_merges", lambda *args: [])
+    monkeypatch.setattr(run, "verify_execution_checkout", lambda merges, **kwargs: {"commit": "b" * 40, "dirty": False})
+    monkeypatch.setattr(run, "assert_producer_idle", lambda: None)
+    monkeypatch.setattr(run.momentum, "pr17_calendar", lambda: pd.bdate_range("2010-01-04", periods=10))
+    monkeypatch.setattr(run.momentum, "pr17_codes", lambda: ["2330"])
+    monkeypatch.setattr(run, "current_generation", lambda: {"generation": "current"})
+    monkeypatch.setattr(run, "open_run", lambda *args, **kwargs: context)
+    monkeypatch.setattr(run, "held_generations", lambda: pytest.fail("changed code must fail before any hold operation"))
+    with pytest.raises(RuntimeError, match="same committed code"):
+        run.run_study(mission_pr=91, code_pr=93, run_id="fictional", owner="test", resume=True)

@@ -104,7 +104,8 @@ uv run python -m scripts.run_strength_flags --mission-pr 91 --code-pr <B PR> --r
 
 所有市場入口都以 GitHub 即時檢查：兩個不同 PR 已合併入指定 repository 的 `main`，
 A 必須包含此任務 mission、B 必須包含此 runner；缺失即拒絕，不提供 skip override。
-執行 checkout 先 fetch，乾淨且包含最新 origin/main 與兩個 merge commit。
+新 run 的 checkout 先 fetch，乾淨且包含最新 origin/main 與兩個 merge commit。
+續跑仍要求乾淨、包含原本的合併授權，並與保存的 code commit 完全相同；主線後來前進不會迫使原研究換程式。
 每次讀資料前檢查 producer idle；固定並 hold 本研究自己的世代，遇同 holder 的其他 run 就停止。
 不下載、不改排程、不觸碰 PR17 的 hold／執行程序或 PR61 前瞻紀錄。
 
@@ -119,6 +120,7 @@ scratch 保存逐股對齊 totals；若只有 PR61 公開的彙總可用，不�
 明列 wall、CPU、RSS、I/O、序列化及啟動觀測限制，量不到記 unavailable。
 另量 counts 存檔與一格 bootstrap，以股票數／格數外推，說明稀疏程度、壓縮及不同格的差異限制。
 採用量測最快且符合明確記憶體上限的 worker 數，in-flight 不超過 workers；
+正式計算整段重用同一個 worker pool，與探測相同；每批完成更新進度，不重新啟動 pool 或清除程序內驗證快取。
 磁碟或 summary 記憶體外推超出上限就停止，不縮小股票、訊號或規則。
 
 正式小表與收據寫完才將正式 scratch run 標 complete；報告、卡片、網站與 owner 交付仍屬工作包 D。
