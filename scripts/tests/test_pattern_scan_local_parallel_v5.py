@@ -17,6 +17,7 @@ import pyarrow as pa
 import pytest
 
 from research_core import pattern_scan_local_conditions_v5 as conditions
+from research_core import pattern_scan_local_parallel_probe_v5 as probe
 from research_core import pattern_scan_local_parallel_v5 as parallel
 from research_core.hhhl_variants_selection import Atom, split_for_code
 from research_core.pattern_scan_conditions_v1 import FEATURES
@@ -30,6 +31,26 @@ def _membership_subset(base_metadata: Mapping[str, Any], candidates: Mapping[str
 
 
 _ORIGINAL_MEMBERSHIP_INVENTORY = conditions.membership_inventory
+
+
+def test_probe_repetitions_compare_each_case_against_its_reference(tmp_path: Path) -> None:
+    def result(name: str, value: int = 1) -> dict[str, Any]:
+        directory = tmp_path / name
+        directory.mkdir()
+        paths = []
+        for number in range(3):
+            path = directory / f"table-{number}.parquet"
+            pd.DataFrame({"known_n": [value], "unknown_n": [0]}).to_parquet(path, index=False)
+            paths.append(str(path))
+        return {"paths": paths, "top_rows": [{"known_n": value}]}
+
+    baseline = {"union|h252|r0": result("baseline-union"), "all|h126|r0": result("baseline-all")}
+    current = {f"{case}|r{repeat}": result(f"{case.split('|')[0]}-{repeat}") for repeat in range(2) for case in ("union|h252", "all|h126")}
+    assert probe._compare_group_outputs(baseline, current) == 12
+    assert probe._compare_group_outputs(baseline, baseline) == 0
+    current["union|h252|r1"]["top_rows"] = [{"known_n": 2}]
+    with pytest.raises(AssertionError):
+        probe._compare_group_outputs(baseline, current)
 
 
 class _SyntheticInputs:

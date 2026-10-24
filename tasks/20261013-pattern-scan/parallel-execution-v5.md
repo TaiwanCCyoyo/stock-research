@@ -49,9 +49,16 @@ an explicit 1,800-second limit.
 
 - Conditions: first four sorted currently cached B2 stocks in each CRC split
   (development and cross-check), eight stocks total. Keep the original B2 selection.
-  Reduce `pattern:union`, `C-base-all`, `C-base-no-pattern`, `C-52w`, `C-nh`, and
-  `C-dip`, each at 126 and 252 sessions. Missing groups refuse the probe; none are
-  substituted. Exact equality is required for all 36 final tables and top rows.
+  The pilot found about 98/109 seconds for its first two groups, so the original
+  twelve-group matrix was stopped after 428 seconds instead of exhausting the
+  1,800-second limit before higher worker counts. It retains its outputs and Job
+  memory receipt (peak 867,196,928 bytes); it does not establish a speedup.
+  Before the revised probe, fix two cases: `pattern:union` at 252 sessions and
+  `C-base-all` at 126 sessions. Repeat both cases equally, once per pair of workers
+  (one pair for worker counts one and two). This gives 2/2/4/8/10 jobs and keeps
+  all requested workers occupied. Compare **jobs per second**, not unequal batch
+  wall times. Every repeated job's three tables and top rows must exactly match
+  its one-worker reference case. Missing groups refuse the probe.
 - Projections: the first 16 sorted original stocks outside both the paused cache's
   completed list and original reusable B2 event parts, using a separate run-owned cache for each arm. Compare all five
   projection tables per stock exactly, preserving schema, dtypes, nulls and order.
@@ -61,7 +68,7 @@ an explicit 1,800-second limit.
   and serialization timings; unavailable observations remain explicit.
 
 Acceptance: all equality checks must pass and the Job must stay within its cap.
-Choose the fastest conditions configuration above one worker; within five percent
+Choose the highest conditions job throughput above one worker; within five percent
 of the fastest, prefer fewer workers. Require at least **1.2x** conditions throughput
 versus the one-worker reference before claiming an improvement. Otherwise keep the
 full run paused and use measured phase costs to identify the bottleneck. Report

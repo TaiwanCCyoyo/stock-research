@@ -31,7 +31,8 @@ from research_core.research_measurement_v1 import host_resources, phase_receipt,
 LOGGER = logging.getLogger(__name__)
 
 TARGET = "B2"
-GROUPS = ("pattern:union", "C-base-all", "C-base-no-pattern", "C-52w", "C-nh", "C-dip")
+CASES = (("pattern:union", 252), ("C-base-all", 126))
+GROUPS = tuple(group for group, _ in CASES)
 HORIZONS = (126, 252)
 DEFAULT_WORKERS = (1, 2, 4, 8, 10)
 
@@ -94,10 +95,10 @@ def _compare_group_outputs(
     compared = 0
     if baseline is current:
         return 0
-    if baseline.keys() != current.keys():
+    if {key.rsplit("|r", 1)[0] for key in baseline} != {key.rsplit("|r", 1)[0] for key in current}:
         raise AssertionError("parallel group job inventory differs from serial baseline")
-    for key in baseline:
-        left, right = baseline[key], current[key]
+    for key, right in current.items():
+        left = baseline[key.rsplit("|r", 1)[0] + "|r0"]
         if len(left["paths"]) != 3 or len(right["paths"]) != 3:
             raise AssertionError(f"group job {key} did not produce three final tables")
         if "comparison_frames" not in left:
@@ -185,8 +186,10 @@ def run_probe(
     initializer_pickle_bytes = len(pickle.dumps(spec))
     initializer_pickle_seconds = time.perf_counter() - pickle_started
     for worker_count in worker_counts:
-        LOGGER.info("Start conditions probe workers=%d jobs=12 stocks=%d", worker_count, len(group_codes))
-        write_progress(output / "probe-progress.json", {"step": 0, "total": 12, "label": f"Conditions probe: {worker_count} workers"})
+        repeats = max(1, (worker_count + 1) // 2)
+        job_count = len(CASES) * repeats
+        LOGGER.info("Start conditions probe workers=%d jobs=%d stocks=%d", worker_count, job_count, len(group_codes))
+        write_progress(output / "probe-progress.json", {"step": 0, "total": job_count, "label": f"Conditions probe: {worker_count} workers"})
         run_dir = probe_root / f"groups-w{worker_count}"
         run_dir.mkdir()
         jobs = [
@@ -194,11 +197,11 @@ def run_probe(
                 group,
                 horizon,
                 candidates if group in main_groups else {},
-                run_dir / f"{quote(group, safe='')}-h{horizon}",
+                run_dir / f"{quote(group, safe='')}-h{horizon}-r{repeat}",
                 group_codes,
             )
-            for group in GROUPS
-            for horizon in HORIZONS
+            for repeat in range(repeats)
+            for group, horizon in CASES
         ]
         metrics: dict[str, Any] = {}
         measured: list[dict[str, Any]] = []
@@ -206,11 +209,14 @@ def run_probe(
         before = resource_sample()
         with process_pool(spec, worker_count) as pool:
             for job, result in bounded_results(pool, summarize_group, jobs, workers=worker_count, metrics=metrics):
-                key = f"{job.group}|h{job.horizon}"
+                repeat = job.staging.name.rsplit("-r", 1)[1]
+                key = f"{job.group}|h{job.horizon}|r{repeat}"
                 results[key] = result
                 measured.append(result["measurement"])
-                write_progress(output / "probe-progress.json", {"step": len(results), "total": 12, "label": f"Conditions probe: {worker_count} workers"})
+                write_progress(output / "probe-progress.json", {"step": len(results), "total": job_count, "label": f"Conditions probe: {worker_count} workers"})
         whole_pool = phase_receipt("group-pool", before, resource_sample())
+        if len(results) != job_count:
+            raise ValueError("probe result inventory differs from its admitted job count")
         group_runs[worker_count] = results
         group_measures[str(worker_count)] = {
             "pool": whole_pool,
@@ -227,8 +233,7 @@ def run_probe(
     baseline_groups = group_runs[1]
     group_comparisons: dict[str, Any] = {}
     for worker_count in worker_counts:
-        LOGGER.info("Start projection probe workers=%d stocks=%d", worker_count, len(projection_codes))
-        write_progress(output / "probe-progress.json", {"step": 0, "total": len(projection_codes), "label": f"Projection probe: {worker_count} workers"})
+        LOGGER.info("Verify conditions probe workers=%d", worker_count)
         before_compare = time.perf_counter()
         count = _compare_group_outputs(baseline_groups, group_runs[worker_count])
         group_comparisons[str(worker_count)] = {"exact_tables": count, "comparison_seconds": time.perf_counter() - before_compare}
@@ -238,6 +243,8 @@ def run_probe(
     projection_runs: dict[int, Path] = {}
     projection_measures: dict[str, Any] = {}
     for worker_count in worker_counts:
+        LOGGER.info("Start projection probe workers=%d stocks=%d", worker_count, len(projection_codes))
+        write_progress(output / "probe-progress.json", {"step": 0, "total": len(projection_codes), "label": f"Projection probe: {worker_count} workers"})
         trial = probe_root / f"projections-w{worker_count}"
         temporary = trial / "_temporary"
         destination = temporary / "events" / TARGET
@@ -277,7 +284,7 @@ def run_probe(
         count = _compare_projection_outputs(projection_runs[1], projection_runs[worker_count], projection_codes, reference_frames)
         projection_comparisons[str(worker_count)] = {"exact_parquet_tables": count, "comparison_seconds": time.perf_counter() - before_compare}
 
-    group_base_wall = group_measures["1"]["pool"]["wall_seconds"]
+    group_base_rate = group_measures["1"]["jobs"] / group_measures["1"]["pool"]["wall_seconds"]
     projection_base_wall = projection_measures["1"]["pool"]["wall_seconds"]
     summary = {
         "group": {
@@ -286,7 +293,9 @@ def run_probe(
                 "wall_seconds": group_measures[str(count)]["pool"]["wall_seconds"],
                 "cpu_seconds": group_measures[str(count)]["pool"]["cpu_seconds"],
                 "aggregate_worker_cpu_seconds": group_measures[str(count)]["aggregate_worker_cpu_seconds"],
-                "speedup_vs_1": group_base_wall / group_measures[str(count)]["pool"]["wall_seconds"],
+                "jobs": group_measures[str(count)]["jobs"],
+                "jobs_per_second": group_measures[str(count)]["jobs"] / group_measures[str(count)]["pool"]["wall_seconds"],
+                "speedup_vs_1": (group_measures[str(count)]["jobs"] / group_measures[str(count)]["pool"]["wall_seconds"]) / group_base_rate,
                 "exact_tables": group_comparisons[str(count)]["exact_tables"],
                 "comparison_seconds": group_comparisons[str(count)]["comparison_seconds"],
                 "max_in_flight": group_measures[str(count)]["max_in_flight"],
@@ -312,6 +321,7 @@ def run_probe(
     details = {
         "target": TARGET,
         "groups": list(GROUPS),
+        "cases": [list(case) for case in CASES],
         "horizons": list(HORIZONS),
         "worker_counts": list(worker_counts),
         "cached_code_count": len(cached_codes),
