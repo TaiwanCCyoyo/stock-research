@@ -301,6 +301,8 @@ export function SharedChart({
         oscillator,
         theme,
         onCursor,
+        // The chart is rebuilt when the overlay changes; reapply the range.
+        institutional,
     ]);
     return (
         <div
