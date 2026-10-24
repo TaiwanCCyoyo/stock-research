@@ -22,6 +22,9 @@ included in screenshots or public build assets.
 | Counts and instrument kinds       | Filters use server totals before pagination; ETF is an explicit independent kind and is excluded by the ordinary-share default. Confirmed-delisted and unresolved counts remain visible. |
 
 The ordinary default is labelled recent observations, not confirmed listed.
+After PR-A's source-frequency review fix, the revenue-only fixture also appears
+in that default view. The four matrix/list screenshots were refreshed against
+the corrected API; month-only observations are not compared to daily strings.
 There is no reliable live delisting evidence in the present source contract;
 retention of explicitly confirmed delisted records was checked with synthetic
 data. Unknown, zero rows and confirmed absence remain different meanings.
