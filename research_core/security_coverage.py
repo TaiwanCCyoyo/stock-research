@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from calendar import monthrange
 from datetime import date, timedelta
 from typing import Any
 
@@ -20,6 +21,25 @@ DATASETS = (
     ("adjusted_daily", "還原股價與指標", "daily"),
 )
 DATASET_IDS = frozenset(item[0] for item in DATASETS)
+FREQUENCIES = {item[0]: item[2] for item in DATASETS}
+
+
+def _recent_observation(dataset: str, last: str | None, as_of: date) -> bool:
+    """Compare each source on its own calendar, never month/day strings."""
+    if not last or FREQUENCIES[dataset] == "observation":
+        return False
+    try:
+        if FREQUENCIES[dataset] == "monthly":
+            month = date.fromisoformat(last + "-01")
+            if month > as_of:
+                return False
+            end = month.replace(day=monthrange(month.year, month.month)[1])
+            # Match the overview's monthly allowance: 45 days after month end.
+            return end >= as_of - timedelta(days=45)
+        observed = date.fromisoformat(last)
+        return as_of - timedelta(days=14) <= observed <= as_of
+    except ValueError:
+        return False
 
 
 def normalized_market(value: object) -> str:
@@ -136,7 +156,7 @@ def project_security_coverage(sources: dict[str, dict[str, Any]], metadata: list
         dataset: {(normalized_market(row.get("market")), str(row["code"])): row for row in source.get("members", [])} for dataset, source in sources.items()
     }
     securities = []
-    recent_floor = (date.fromisoformat(as_of) - timedelta(days=14)).isoformat()
+    assessment_date = date.fromisoformat(as_of)
     for market, code in sorted(universe):
         meta = meta_by_key.get((market, code), {})
         listed = meta.get("listed_date")
@@ -144,6 +164,7 @@ def project_security_coverage(sources: dict[str, dict[str, Any]], metadata: list
         chronological = [item for dataset, item in rows_by_source.items() if item and dataset != "symbol_meta"]
         actual_first = min((item["first"] for item in chronological if item.get("first")), default=None)
         actual_last = max((item["last"] for item in chronological if item.get("last")), default=None)
+        recent_observations = any(_recent_observation(dataset, item.get("last"), assessment_date) for dataset, item in rows_by_source.items() if item)
         boundary_set = {gap[1] for item in chronological for gap in item.get("gaps", [])}
         identity_first = min(
             (
@@ -184,7 +205,7 @@ def project_security_coverage(sources: dict[str, dict[str, Any]], metadata: list
                 "identity_status": "unresolved" if ambiguous else "provisional",
                 "listing_status": listing_status,
                 "listing_evidence": meta.get("listing_evidence"),
-                "activity": "recent" if not old_segment and actual_last and actual_last >= recent_floor else "historical",
+                "activity": "recent" if not old_segment and listing_status != "delisted" and recent_observations else "historical",
                 "listed_date": listed if not old_segment else None,
                 "observed_at": meta.get("fetched_at") if not old_segment else None,
                 "segment": {"from": start, "to": end},

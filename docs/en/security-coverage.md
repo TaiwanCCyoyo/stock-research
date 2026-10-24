@@ -84,6 +84,14 @@ filter is **recent observations among ordinary shares**, explicitly labelled
 delisted states require separate explicit evidence. This replaces the initial
 handoff's unsupported default claim that current metadata proves listed status.
 
+Recency is assessed per source before taking the union: daily/event dates must
+be within the preceding 14 days and no later than the assessment day. Revenue
+months use a 45-day allowance after calendar month end, matching the overview's
+monthly policy; the current month qualifies, while future months do not. A fresh
+metadata observation alone does not establish activity. Confirmed delisted and
+closed identity segments remain historical regardless of recent observations;
+their retained data is not required to update through today.
+
 The v1 parent/candidate key may change when new identity evidence creates segments.
 Unknown old keys return not found; legacy code links resolve 0/1/many candidates.
 No key redirects silently to an unrelated latest issuer. Full historical

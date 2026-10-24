@@ -63,6 +63,20 @@ def test_union_includes_security_without_price():
     assert cell(doc, "monthly_revenue")["mark"] == "present"
 
 
+@pytest.mark.parametrize("last,recent", [("2026-10", True), ("2026-09", True), ("2026-08", False), ("2026-11", False)])
+def test_revenue_only_security_uses_monthly_recency(last: str, recent: bool, tmp_path: Path):
+    document = build({"monthly_revenue": source(first="2025-01", last=last)}, [meta()])
+    assert (document["securities"][0]["activity"] == "recent") is recent
+    publish_coverage(document, root=tmp_path)
+    assert CoverageStore(tmp_path).list(status="recent")["total"] == int(recent)
+
+
+@pytest.mark.parametrize("last,recent", [("2026-10-10", True), ("2026-10-09", False), ("2026-10-25", False)])
+def test_daily_recency_does_not_borrow_the_monthly_allowance(last: str, recent: bool):
+    document = build({"official_daily": source(first="2025-01-01", last=last)}, [meta()])
+    assert (document["securities"][0]["activity"] == "recent") is recent
+
+
 def test_synthetic_revenue_only_viewer_has_observations_without_real_code_attribution():
     from research_core.data_series import synthetic_series
 
@@ -103,6 +117,7 @@ def test_cells_separate_observation_from_assessment_and_input():
 def test_market_separation_and_explicit_delisting():
     doc = build({"institutional": source()}, [meta(listing_status="delisted", listing_evidence="official-record")])
     assert doc["securities"][0]["listing_status"] == "delisted"
+    assert doc["securities"][0]["activity"] == "historical"
     assert security_key("TWSE", "2330") != security_key("TPEx", "2330")
 
 
