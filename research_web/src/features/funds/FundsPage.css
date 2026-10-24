@@ -295,3 +295,10 @@
         grid-template-columns: minmax(70px, auto) minmax(0, 1fr);
     }
 }
+.fund-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+}

@@ -29,24 +29,48 @@
 }
 .studio .u-section-title {
     display: flex;
-    justify-content: space-between;
-    align-items: baseline;
+    align-items: center;
     gap: 12px;
-    margin: 40px 0 14px;
-    font-size: 20px;
+    margin: 44px 0 16px;
+    font-size: 21px;
     font-weight: 900;
     letter-spacing: 0;
 }
+.studio .u-section-title::before {
+    content: "";
+    flex: none;
+    width: 6px;
+    height: 22px;
+    margin-right: -2px;
+    border-radius: var(--radius-pill);
+    background: linear-gradient(var(--accent), var(--highlight));
+}
+
 .u-section-title a {
+    margin-left: auto;
     font-size: 14px;
     font-weight: 500;
     white-space: nowrap;
 }
+/* Cards are opaque and framed: they must read clearly over the scenic
+   background. Glass is only used for small controls. */
 .u-card {
     background: var(--surface);
+    border: 1px solid var(--card-border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-card);
     padding: 22px;
+}
+/* The one card a page wants you to look at first. */
+.u-card.u-feature {
+    background:
+        radial-gradient(
+            120% 140% at 0% 0%,
+            color-mix(in srgb, var(--highlight) 16%, transparent),
+            transparent 60%
+        ),
+        linear-gradient(160deg, var(--surface), var(--surface-2));
+    border-color: color-mix(in srgb, var(--highlight) 32%, var(--card-border));
 }
 a.u-card {
     display: block;
@@ -76,7 +100,7 @@ a.u-card:hover {
     font-weight: 800;
     line-height: 1;
     letter-spacing: -0.02em;
-    color: var(--accent);
+    color: var(--highlight);
 }
 .u-big small {
     font-size: 18px;
@@ -90,25 +114,57 @@ a.u-card:hover {
     color: var(--gain);
     font-weight: 800;
 }
+/* Liquid-glass buttons: translucent body, bright top edge, soft depth. */
 .studio .u-btn {
+    position: relative;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
+    min-height: 40px;
     padding: 9px 18px;
     border-radius: var(--radius-pill);
-    background: var(--chip);
+    border: 1px solid var(--glass-edge);
+    background: var(--glass);
+    backdrop-filter: blur(10px) saturate(160%);
+    box-shadow:
+        inset 0 1px 0 var(--glass-shine),
+        0 1px 2px rgb(0 0 0 / 6%),
+        0 6px 18px rgb(0 0 0 / 8%);
     color: var(--ink);
     font-size: 14px;
     font-weight: 700;
     text-decoration: none;
     white-space: nowrap;
+    transition:
+        transform 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.2),
+        box-shadow 0.2s,
+        filter 0.2s;
 }
 .studio .u-btn-primary {
-    background: var(--accent);
-    color: var(--paper);
+    border-color: color-mix(in srgb, var(--accent) 60%, white);
+    background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--accent) 78%, white),
+        var(--accent) 55%,
+        color-mix(in srgb, var(--accent) 88%, black)
+    );
+    box-shadow:
+        inset 0 1px 0 rgb(255 255 255 / 45%),
+        inset 0 -1px 0 rgb(0 0 0 / 10%),
+        0 8px 20px color-mix(in srgb, var(--accent) 32%, transparent);
+    color: var(--on-accent);
+}
+.studio .u-btn:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.04);
+}
+.studio .u-btn:active {
+    transform: scale(0.97);
 }
 .u-actions {
     display: flex;
+    align-items: center;
     gap: 8px;
     flex-wrap: wrap;
 }
@@ -120,15 +176,25 @@ a.u-card:hover {
 .studio .u-chip {
     padding: 7px 16px;
     border-radius: var(--radius-pill);
-    background: var(--chip);
+    border: 1px solid var(--card-border);
+    background: var(--surface);
     color: var(--ink);
     font-size: 14px;
     font-weight: 500;
     white-space: nowrap;
+    transition:
+        background 0.2s,
+        color 0.2s,
+        transform 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+.studio .u-chip:active {
+    transform: scale(0.96);
 }
 .studio .u-chip[aria-pressed="true"] {
+    border-color: transparent;
     background: var(--ink);
     color: var(--paper);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--ink) 22%, transparent);
 }
 .u-chip .u-count {
     opacity: 0.6;
@@ -196,6 +262,24 @@ a.u-card:hover {
 .u-bar.is-dim {
     color: var(--muted);
 }
+/* In narrow cards: label on its own line, then the bar and its value. */
+.u-bars.is-stacked .u-bar {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+        "label label"
+        "track value";
+    row-gap: 4px;
+}
+.u-bars.is-stacked .u-bar > :nth-child(1) {
+    grid-area: label;
+    font-size: 13px;
+}
+.u-bars.is-stacked .u-bar > :nth-child(2) {
+    grid-area: track;
+}
+.u-bars.is-stacked .u-bar > :nth-child(3) {
+    grid-area: value;
+}
 .u-track {
     height: 10px;
     border-radius: var(--radius-pill);
@@ -206,7 +290,11 @@ a.u-card:hover {
     display: block;
     height: 100%;
     border-radius: var(--radius-pill);
-    background: var(--accent);
+    background: linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--highlight) 70%, var(--surface)),
+        var(--highlight)
+    );
 }
 .u-bar.is-dim .u-track span {
     background: color-mix(in srgb, var(--muted) 45%, transparent);
@@ -280,6 +368,7 @@ a.u-card:hover {
     display: inline-flex;
     padding: 3px;
     border-radius: var(--radius-pill);
+    border: 1px solid var(--card-border);
     background: var(--chip);
 }
 .studio .u-segmented button {
@@ -320,4 +409,139 @@ a.u-card:hover {
     .u-card {
         padding: 18px;
     }
+}
+
+/* ⓘ tips: explanation on hover, focus or tap. */
+.u-tip {
+    position: relative;
+    display: inline-flex;
+    vertical-align: middle;
+    margin-left: 6px;
+}
+.studio .u-tip-button {
+    display: grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border-radius: 50%;
+    border: 1.5px solid currentColor;
+    background: transparent;
+    color: var(--muted);
+    font:
+        italic 800 11px/1 Georgia,
+        serif;
+    cursor: help;
+    transition:
+        color 0.15s,
+        background 0.15s;
+}
+.studio .u-tip-button:hover,
+.studio .u-tip-button[aria-expanded="true"] {
+    color: var(--accent);
+    background: var(--accent-soft);
+}
+.u-tip-bubble {
+    position: fixed;
+    z-index: 60;
+    display: block;
+    width: max-content;
+    max-width: min(300px, calc(100vw - 24px));
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--card-border);
+    background: var(--surface);
+    box-shadow: var(--shadow-lift);
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 400;
+    font-style: normal;
+    line-height: 1.6;
+    text-align: left;
+    letter-spacing: 0;
+    white-space: normal;
+    animation: u-tip-in 0.18s cubic-bezier(0.2, 0.9, 0.3, 1.15);
+}
+.u-tip-bubble p {
+    margin: 0;
+}
+.u-tip-bubble p + p {
+    margin-top: 6px;
+}
+@keyframes u-tip-in {
+    from {
+        opacity: 0;
+        transform: translateY(-4px) scale(0.97);
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .u-tip-bubble {
+        animation: none;
+    }
+}
+/* A reading caveat that must stay visible, kept short. */
+.u-caveat {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 4px 2px 10px;
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--highlight) 12%, transparent);
+    color: var(--ink);
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+.u-caveat:not(:has(.u-tip)) {
+    padding-right: 10px;
+}
+.u-caveat .u-tip {
+    margin-left: 4px;
+}
+
+/* Loading placeholders */
+.u-skel-card {
+    display: grid;
+    gap: 10px;
+    align-content: start;
+    min-height: 150px;
+}
+.u-skel {
+    display: block;
+    height: 12px;
+    width: 100%;
+    border-radius: var(--radius-pill);
+    background: linear-gradient(
+        90deg,
+        var(--chip) 0%,
+        color-mix(in srgb, var(--chip) 40%, var(--surface)) 50%,
+        var(--chip) 100%
+    );
+    background-size: 200% 100%;
+    animation: u-shimmer 1.4s ease-in-out infinite;
+}
+.u-skel-title {
+    height: 20px;
+    width: 80%;
+    margin: 4px 0;
+}
+@keyframes u-shimmer {
+    from {
+        background-position: 100% 0;
+    }
+    to {
+        background-position: -100% 0;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .u-skel {
+        animation: none;
+    }
+}
+.u-progress {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--muted);
 }

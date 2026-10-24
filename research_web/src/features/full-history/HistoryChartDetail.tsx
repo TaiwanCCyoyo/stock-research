@@ -1,3 +1,4 @@
+import { CaveatChip } from "../../components/ui/InfoTip";
 import { useState } from "react";
 import { WaveChart } from "../wave-lab/WaveChart";
 import type { HistoryDetail } from "./types.ts";
@@ -201,9 +202,12 @@ export function HistoryChartDetail({ detail }: { detail: HistoryDetail }) {
                 </div>
                 <strong>{detail.date}</strong>
             </div>
-            <p>
-                {priceExplanation(sample.source.priceBasis)}
-                開始點與階段是候選標記，最高點是事後回看；切換下方方法，看日期是否符合你的理解。
+            <p className="fh-detail-chips">
+                <CaveatChip
+                    detail={`${priceExplanation(sample.source.priceBasis)}開始點與階段是候選標記，最高點是事後回看。`}
+                >
+                    事後回看
+                </CaveatChip>
             </p>
             {detail.row && (
                 <p className="fh-detail-compare-note">
@@ -411,7 +415,9 @@ export function HistoryChartDetail({ detail }: { detail: HistoryDetail }) {
                 </ul>
             )}
             <p className="fh-detail-compare-note">
-                比較目前只示範已保存帳本中有證據與覆蓋的持股期間，不代表全市場持股結果。
+                <CaveatChip detail="只比較已保存帳本中有持股證據的期間，不代表全市場的持股結果。">
+                    只含已保存帳本
+                </CaveatChip>
             </p>
             <SourceInfo>
                 <pre>

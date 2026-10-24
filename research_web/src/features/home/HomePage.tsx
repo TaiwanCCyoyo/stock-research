@@ -7,6 +7,7 @@ import {
 } from "../full-history/types";
 import { latestMarketSummary } from "./model";
 import { MarketOverview } from "./HomeView";
+import { ProgressLine, SkeletonCards } from "../../components/ui/primitives";
 import { StudyCardView } from "../studies/StudyCardView";
 import { useStudyCards } from "../studies/useStudyCards";
 import "../studies/studies.css";
@@ -103,12 +104,21 @@ export function HomePage() {
                     </button>
                 </div>
             ) : (
-                <p className="u-skeleton">
+                <div className="hm-loading">
                     {market.startup?.state === "loading" &&
-                    market.startup.total > 0
-                        ? `市場資料準備中（${market.startup.completed}／${market.startup.total}）…`
-                        : "正在讀取市場資料…"}
-                </p>
+                        market.startup.total > 0 && (
+                            <ProgressLine
+                                label="市場資料準備中"
+                                done={market.startup.completed}
+                                total={market.startup.total}
+                            />
+                        )}
+                    <SkeletonCards
+                        count={2}
+                        className="u-grid-2"
+                        label="正在讀取市場資料"
+                    />
+                </div>
             )}
             <h2 className="u-section-title">
                 最近的研究 <a href="#studies">全部研究 →</a>
@@ -119,10 +129,14 @@ export function HomePage() {
                         <StudyCardView key={card.id} card={card} compact />
                     ))}
                 </div>
+            ) : studies.error ? (
+                <p className="u-skeleton">研究資料暫時讀不到。</p>
             ) : (
-                <p className="u-skeleton">
-                    {studies.error ? "研究資料暫時讀不到。" : "正在讀取研究…"}
-                </p>
+                <SkeletonCards
+                    count={3}
+                    className="hm-studies"
+                    label="正在讀取研究"
+                />
             )}
             <h2 className="u-section-title">其他工具</h2>
             <div className="hm-doors">

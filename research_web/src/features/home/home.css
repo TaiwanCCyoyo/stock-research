@@ -57,3 +57,12 @@
         grid-template-columns: 1fr;
     }
 }
+.hm-loading {
+    display: grid;
+    gap: 16px;
+    margin-top: 24px;
+}
+/* The two headline numbers stay side by side, even on a phone. */
+.u-grid-2.hm-kpis {
+    grid-template-columns: 1fr 1fr;
+}

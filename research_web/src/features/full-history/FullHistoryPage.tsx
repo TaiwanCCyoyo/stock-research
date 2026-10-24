@@ -26,7 +26,8 @@ import { frameStatusMessage, historyFrameDisplay } from "./frameDisplay.ts";
 import { HistoryTimeline } from "./HistoryTimeline";
 import { HistoryMethodOptions } from "./HistoryMethodOptions";
 import { HistoryComparisons } from "./HistoryComparisons";
-import { SourceInfo } from "../../components/ui/primitives.tsx";
+import { ProgressLine, SourceInfo } from "../../components/ui/primitives.tsx";
+import { CaveatChip, InfoTip } from "../../components/ui/InfoTip";
 import {
     growthBasisLabel,
     growthDurationLabel,
@@ -184,26 +185,21 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                     </span>
                 </div>
                 <span className="fh-preview-badge">
-                    初步辨識，規則未定 · 事後回看
+                    <CaveatChip detail="開始點、階段與最高漲幅是事後整理出來的，當時並不能提前知道；辨識規則也還是初步版本。">
+                        事後回看
+                    </CaveatChip>
                 </span>
             </header>
             {metadata && (
-                <div className="fh-metadata-note">
-                    <p className="u-notice">
-                        資料期間 {metadata.coverage.from} –{" "}
-                        {metadata.coverage.to}。歷史統計，不是買賣訊號。
-                    </p>
-                    <SourceInfo>
-                        <p>
-                            本頁讀取已保存的歷史目錄；資料目錄識別碼：
-                            {metadata.catalogId}。
-                        </p>
-                        <p>
-                            涵蓋 {metadata.coverage.stocks.toLocaleString()}{" "}
-                            檔股票；價格基礎：{metadata.basisLabel}。
-                        </p>
-                    </SourceInfo>
-                </div>
+                <p className="fh-metadata-note u-muted">
+                    資料期間{" "}
+                    {metadata.coverage.from.slice(0, 7).replace("-", "/")} –{" "}
+                    {metadata.coverage.to.slice(0, 7).replace("-", "/")}
+                    <InfoTip label="資料來源">
+                        涵蓋 {metadata.coverage.stocks.toLocaleString()}{" "}
+                        檔股票；價格基礎：{metadata.basisLabel}。
+                    </InfoTip>
+                </p>
             )}
             {history.metadataError && (
                 <div className="fh-error u-notice" role="alert">
@@ -221,15 +217,13 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                     <span className="fh-loading-dot" />
                     <div>
                         <h2>正在準備歷史行情</h2>
-                        <p>
-                            首次啟動會核對保存資料，可能需要數分鐘；完成後即可拖曳日期。
-                        </p>
-                        {history.startup && (
-                            <p>
-                                {history.startup.stage}
-                                {history.startup.total > 0 &&
-                                    ` · ${history.startup.completed.toLocaleString()} / ${history.startup.total.toLocaleString()} 檔`}
-                            </p>
+                        <p>第一次開啟要先準備資料，約需幾分鐘。</p>
+                        {history.startup && history.startup.total > 0 && (
+                            <ProgressLine
+                                label={`${history.startup.completed.toLocaleString()} / ${history.startup.total.toLocaleString()} 檔`}
+                                done={history.startup.completed}
+                                total={history.startup.total}
+                            />
                         )}
                     </div>
                 </section>
@@ -289,10 +283,12 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                             <i className="fh-phase-unknown" />
                                             未持有
                                         </span>
-                                        <span>斜線＝持股未知</span>
-                                        <small>
-                                            顏色只比較這天的持股，尚未比較整波收益。
-                                        </small>
+                                        <span>
+                                            斜線＝持股未知
+                                            <InfoTip label="顏色怎麼看">
+                                                顏色只比較這一天的持股，還沒有比較整段漲幅的收益。
+                                            </InfoTip>
+                                        </span>
                                     </div>
                                 ) : (
                                     <div className="fh-phase-legend">
@@ -352,7 +348,7 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                             </strong>
                                             <p>
                                                 {frame
-                                                    ? "完整行情保留在時間帶與目錄；也可以先看一個案例日期。"
+                                                    ? "可以換一天，或從下面的案例日期開始看。"
                                                     : "取得行情後才會判斷哪些股票符合顯示條件。"}
                                             </p>
                                             <div className="fh-controls">
@@ -657,35 +653,38 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                         </div>
                         <div className="fh-growth-rule">
                             <div>
-                                <b>把漲幅放回時間裡</b>
-                                <p>
-                                    滿一年看年化報酬；未滿一年看實際漲幅。圓形大小也用同一指標。
-                                </p>
+                                <b>
+                                    圓越大，漲越多
+                                    <InfoTip label="怎麼算">
+                                        {frame && (
+                                            <p>
+                                                未達 {thresholdPct}%：
+                                                {belowThreshold}{" "}
+                                                檔；漲幅或時間待核對：
+                                                {unknownGrowth} 檔。
+                                                {mode === "launched" &&
+                                                    `另有 ${noCandidate} 檔開始點尚未判斷、${notYet} 檔尚未開始，未畫入。`}
+                                                資料未知不代表未達門檻。
+                                            </p>
+                                        )}
+                                        <p>
+                                            從這波起點算到當天。滿一年看年化報酬
+                                            =（1 + 實際報酬）^(1 ÷ 年數) −
+                                            1，一年以 365.25
+                                            天計；未滿一年看實際漲幅，不放大短期漲幅。
+                                        </p>
+                                        <p>
+                                            指標兩倍，圓的直徑兩倍。缺價或起點可能被截斷時不推估。年化是歷史走勢的換算，不是未來報酬預測。
+                                        </p>
+                                    </InfoTip>
+                                </b>
+                                <p>滿一年看年化，未滿一年看實際漲幅。</p>
                             </div>
-                            <details className="u-source">
-                                <summary>怎麼算、哪些資料保留</summary>
-                                {frame && (
-                                    <p>
-                                        未達 {thresholdPct}%：{belowThreshold}{" "}
-                                        檔；漲幅或時間待核對：{unknownGrowth}{" "}
-                                        檔。
-                                        {mode === "launched" &&
-                                            `另有 ${noCandidate} 檔開始點尚未判斷、${notYet} 檔尚未開始，未畫入。`}
-                                        資料未知不代表未達門檻。
-                                    </p>
-                                )}
-                                <p>
-                                    從本波起點算到觀察日。年化報酬 =（1 +
-                                    實際報酬）^(1 ÷ 年數) − 1；一年採 365.25
-                                    天，整日資料從第 366
-                                    天改用年化。未滿一年不放大短期漲幅。
-                                </p>
-                                <p>
-                                    原始總漲幅與完整波段仍可查；缺價或起點可能截斷時不猜數字。指標兩倍，等效直徑兩倍。年化是這段歷史走勢的換算，不是未來報酬預測。
-                                </p>
-                            </details>
                             <p className="fh-caption">
-                                產業旁數字，是族群內最高指標的那檔股票，不是全產業報酬。階段也是候選標記；產業分類沿用現有資料，當年歸屬仍待補證。
+                                產業旁的數字
+                                <InfoTip label="產業旁數字是什麼">
+                                    是這個產業裡漲最多那一檔的數字，不是整個產業的報酬。產業分類用目前的資料，當年的歸屬可能不同。
+                                </InfoTip>
                             </p>
                         </div>
                     </section>
@@ -758,11 +757,13 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                         )}
                     </div>
                     <section className="fh-card u-card fh-settings">
-                        <h2>顯示方式與完整目錄</h2>
-                        <p>
-                            下方保留完整波段，包含尚未符合 {thresholdPct}%
-                            時間指標的股票。
-                        </p>
+                        <h2>
+                            顯示方式與完整目錄
+                            <InfoTip label="完整目錄包含什麼">
+                                下方列出全部波段，也包含還沒達到 {thresholdPct}%
+                                門檻的股票。
+                            </InfoTip>
+                        </h2>
                         <label>
                             版圖顯示
                             <select
@@ -781,9 +782,7 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                 </option>
                             </select>
                         </label>
-                        <p>
-                            預設遵照「開始大漲後才出現」。候選開始點與階段仍待案例確認；切換顯示不會改動原目錄或大小公式。
-                        </p>
+
                         <details
                             onToggle={(event) =>
                                 setAllRowsOpen(event.currentTarget.open)
@@ -906,10 +905,12 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                             {metadata.coverage.to}
                         </h2>
                         <p>
-                            這是事後整理的市場機會，開始點、階段與最高漲幅不代表當時能提前知道。
+                            <CaveatChip detail="開始點、階段與最高漲幅是事後整理出來的，當時並不能提前知道。">
+                                事後回看
+                            </CaveatChip>
                         </p>
-                        <details>
-                            <summary>資料範圍、價格與尚待補齊的部分</summary>
+                        <details className="u-source">
+                            <summary>資料範圍與限制</summary>
                             <p>
                                 產業用目前的分類，當年可能不同；沒有分類證據的股票仍保留。
                             </p>

@@ -45,6 +45,7 @@ export function StudyCardView({
             {card.progress && <RunProgress progress={card.progress} />}
             {card.keyNumbers.length > 0 && (
                 <CompareBars
+                    stacked
                     rows={card.keyNumbers.map((number) => ({
                         label: number.label,
                         value: number.value,

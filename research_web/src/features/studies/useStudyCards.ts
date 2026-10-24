@@ -17,23 +17,34 @@ import {
     type StudiesResponse,
 } from "./v2";
 
+// The last good response, kept for this browser session so moving between
+// home and the research page shows cards at once while a refresh runs.
+let lastStudies: StudiesResponse | null = null;
+
 function useStudiesV2() {
     const [state, setState] = useState<{
         data: StudiesResponse | null;
         error: string;
-    }>({ data: null, error: "" });
+    }>(() => ({ data: lastStudies, error: "" }));
     const [retry, setRetry] = useState(0);
     useEffect(() => {
         const control = new AbortController();
-        setState({ data: null, error: "" });
         readStudies(control.signal)
-            .then((data) => setState({ data, error: "" }))
+            .then((data) => {
+                lastStudies = data;
+                setState({ data, error: "" });
+            })
             .catch((cause: Error) => {
-                if (cause.name !== "AbortError")
-                    setState({
-                        data: null,
-                        error: cause.message || "研究卡片暫時讀不到。",
-                    });
+                if (cause.name === "AbortError") return;
+                // Keep showing the last good cards; report only a first failure.
+                setState((current) =>
+                    current.data
+                        ? current
+                        : {
+                              data: null,
+                              error: cause.message || "研究卡片暫時讀不到。",
+                          },
+                );
             });
         return () => control.abort();
     }, [retry]);

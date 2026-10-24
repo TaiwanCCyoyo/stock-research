@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { SourceNotice } from "../../components/SourceNotice";
 import { VERDICT_LABELS } from "../../components/ui/verdicts";
 import { StudioState } from "../strategies/shared";
+import { SkeletonCards } from "../../components/ui/primitives";
 import { filterStudies, groupByMonth, type StudyFilter } from "./model";
 import { StudyCardView } from "./StudyCardView";
 import { useStudyCards } from "./useStudyCards";
@@ -34,11 +35,19 @@ export function StudiesPage() {
             <h1 className="u-title">問過的問題，和得到的答案。</h1>
             <p className="u-lede">包含行不通的。最新的在最上面。</p>
             {!studies.cards ? (
-                <StudioState
-                    loading={studies.loading}
-                    error={studies.error}
-                    retry={studies.retry}
-                />
+                studies.error ? (
+                    <StudioState
+                        loading={false}
+                        error={studies.error}
+                        retry={studies.retry}
+                    />
+                ) : (
+                    <SkeletonCards
+                        count={4}
+                        className="st-skeleton"
+                        label="正在讀取研究"
+                    />
+                )
             ) : (
                 <>
                     {studies.partial && (

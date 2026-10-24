@@ -1,3 +1,4 @@
+import { CaveatChip, InfoTip } from "../../components/ui/InfoTip";
 import { useMemo, useState } from "react";
 import { SourceInfo } from "../../components/ui/primitives.tsx";
 import "./FundsPage.css";
@@ -206,9 +207,11 @@ export function FundsPage() {
                 <p className="u-lede">
                     查看六檔 ETF 的選股方式、持股樣本與官方績效摘錄。
                 </p>
-                <p className="u-notice">
-                    資料摘錄至
-                    2026/10；各檔日期與算法不同，不能直接排名，也不是買賣建議。
+                <p className="fund-chips">
+                    <span className="u-muted">資料摘錄至 2026/10</span>
+                    <CaveatChip detail="各檔的截止日、幣別與報酬算法都不同，數字不能直接拿來比高低。">
+                        不能直接排名
+                    </CaveatChip>
                 </p>
             </header>
             <section className="fund-toolbar u-card" aria-label="搜尋 ETF">
@@ -222,7 +225,10 @@ export function FundsPage() {
                     placeholder="代號、名稱、市場或角色"
                 />
                 <span className="u-muted">
-                    最多選 3 檔並列。歷史資料與報酬算法尚未核對完整。
+                    最多選 3 檔並列
+                    <InfoTip label="比較的限制">
+                        歷史資料與報酬算法還沒核對完整，目前只並列原始摘錄。
+                    </InfoTip>
                 </span>
             </section>
             <div className="fund-layout">
@@ -303,7 +309,10 @@ export function FundsPage() {
                             （截至 {performance.asOf}）
                         </p>
                         <p className="fund-note">
-                            還需要確認：{performance.gap}
+                            待確認
+                            <InfoTip label="還需要確認什麼">
+                                {performance.gap}
+                            </InfoTip>
                         </p>
                         <SourceInfo>
                             <p>報酬計算方式：{performance.basis}</p>
@@ -346,13 +355,13 @@ export function FundsPage() {
                             </a>
                         </SourceInfo>
                     </section>
-                    <aside className="u-notice">
-                        <strong>資料限制</strong>
-                        <p>{fund.gap}</p>
-                        <span>
-                            畫比較曲線前，還需核對完整歷史資料，並統一幣別、配息與費用的計算方式。
-                        </span>
-                    </aside>
+                    <p className="fund-note">
+                        資料限制
+                        <InfoTip label="資料限制">
+                            {fund.gap}
+                            畫比較曲線前，還要核對完整歷史資料，並統一幣別、配息與費用的算法。
+                        </InfoTip>
+                    </p>
                 </section>
             </div>
             <section className="fund-compare-panel u-card">
@@ -364,7 +373,9 @@ export function FundsPage() {
                     比較曲線（資料不足）
                 </button>
                 <p>
-                    各檔截止日、幣別與報酬定義不同，以下只並列原始摘錄，不能排名。
+                    <CaveatChip detail="各檔截止日、幣別與報酬定義不同，以下只並列原始摘錄。">
+                        不能直接排名
+                    </CaveatChip>
                 </p>
                 {compared.length > 0 && (
                     <div className="fund-compare-list">

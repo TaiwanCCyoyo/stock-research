@@ -62,7 +62,7 @@
     --paper: #eff4f8;
     --surface: #ffffff;
     --ink: #142838;
-    --muted: #5f7385;
+    --muted: #52667a;
     --line: #dce6ee;
     --chip: #e3ecf3;
     --accent: #2a6385;
@@ -96,7 +96,7 @@
     --paper: #f5f3fa;
     --surface: #ffffff;
     --ink: #2a2140;
-    --muted: #75708e;
+    --muted: #625d7c;
     --line: #e6e1f2;
     --chip: #ede9f6;
     --accent: #6b4fb8;
@@ -130,7 +130,7 @@
     --paper: #f8f4ec;
     --surface: #fffdf8;
     --ink: #33281a;
-    --muted: #857661;
+    --muted: #6e604b;
     --line: #ebe2d1;
     --chip: #f2eadb;
     --accent: #8a6424;
@@ -164,7 +164,7 @@
     --paper: #fdf2f5;
     --surface: #ffffff;
     --ink: #3a1f2b;
-    --muted: #9a7180;
+    --muted: #7f5867;
     --line: #f5dce5;
     --chip: #fae5ed;
     --accent: #d2507f;
@@ -198,7 +198,7 @@
     --paper: #f6faea;
     --surface: #ffffff;
     --ink: #222b12;
-    --muted: #75805c;
+    --muted: #5f6948;
     --line: #e3ebcc;
     --chip: #edf4d6;
     --accent: #4d8a0e;
@@ -232,7 +232,7 @@
     --paper: #fff4ec;
     --surface: #ffffff;
     --ink: #3a2014;
-    --muted: #977360;
+    --muted: #7c5a47;
     --line: #f6e0d0;
     --chip: #fbe8da;
     --accent: #c4500c;
@@ -293,4 +293,74 @@
     --cell-deep: #2e2e2e;
     --cell-warm: #4e4b40;
     --membrane: #1c1c1c;
+}
+
+/* Surfaces and emphasis (dashboard visual v2). Cards stay opaque with a
+   hairline edge so they stand apart from the scenic background; glass is
+   reserved for a few small controls. --highlight carries emphasis and is
+   never red or green, so it cannot be mistaken for a gain or a loss. */
+.studio {
+    --card-border: color-mix(in srgb, var(--ink) 9%, transparent);
+    --surface-2: color-mix(in srgb, var(--surface) 82%, var(--accent-soft));
+    --glass: color-mix(in srgb, var(--surface) 62%, transparent);
+    --glass-edge: rgb(255 255 255 / 70%);
+    --glass-shine: rgb(255 255 255 / 55%);
+    --on-accent: #ffffff;
+}
+.studio[data-appearance="dark"] {
+    --card-border: color-mix(in srgb, var(--ink) 12%, transparent);
+    --glass: color-mix(in srgb, var(--surface) 55%, transparent);
+    --glass-edge: rgb(255 255 255 / 14%);
+    --glass-shine: rgb(255 255 255 / 12%);
+    --on-accent: var(--paper);
+}
+.studio,
+.studio[data-palette="forest"] {
+    --highlight: #a3640f;
+}
+.studio[data-appearance="dark"],
+.studio[data-appearance="dark"][data-palette="forest"] {
+    --highlight: #f2c35b;
+}
+.studio[data-palette="ocean"] {
+    --highlight: #2f5fa8;
+}
+.studio[data-appearance="dark"][data-palette="ocean"] {
+    --highlight: #8cc8ea;
+}
+.studio[data-palette="sakura"] {
+    --highlight: #7a45c2;
+}
+.studio[data-appearance="dark"][data-palette="sakura"] {
+    --highlight: #cdb0ff;
+}
+.studio[data-palette="plum"] {
+    --highlight: #6b4fb8;
+}
+.studio[data-appearance="dark"][data-palette="plum"] {
+    --highlight: #c4b5fd;
+}
+.studio[data-palette="sand"] {
+    --highlight: #94640f;
+}
+.studio[data-appearance="dark"][data-palette="sand"] {
+    --highlight: #f0c66b;
+}
+.studio[data-palette="soda"] {
+    --highlight: #0a7d94;
+}
+.studio[data-appearance="dark"][data-palette="soda"] {
+    --highlight: #67e8f9;
+}
+.studio[data-palette="sunset"] {
+    --highlight: #0c7480;
+}
+.studio[data-appearance="dark"][data-palette="sunset"] {
+    --highlight: #5eead4;
+}
+.studio[data-palette="ink"] {
+    --highlight: #262626;
+}
+.studio[data-appearance="dark"][data-palette="ink"] {
+    --highlight: #f0f0f0;
 }
