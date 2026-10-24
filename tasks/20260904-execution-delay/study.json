@@ -3,7 +3,7 @@
     "task_id": "20260904-execution-delay",
     "kind": "study",
     "question": "延後進場會保留多少飆股報酬？",
-    "answer": "三天延後的帳本結果未達事先設定的門檻，因此這個版本判負。",
+    "answer": "三天延後的帳本結果未達事先設定的門檻，因此這個做法未通過。",
     "verdict": "failed",
     "data_period": null,
     "key_numbers": [],

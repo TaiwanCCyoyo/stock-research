@@ -3,7 +3,7 @@
     "task_id": "20261002-entry-persistence",
     "kind": "study",
     "question": "延長進場確認時間能否通過固定的探索篩選？",
-    "answer": "四項條件必須全部通過，但這個設定未通過，因此候選版本關閉。",
+    "answer": "四項條件必須全部通過，但這個設定未通過，因此停止推進此做法。",
     "verdict": "failed",
     "data_period": null,
     "key_numbers": [],
