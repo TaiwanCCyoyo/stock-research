@@ -19,6 +19,7 @@ import sys
 import time
 import urllib.error
 import urllib.request
+import uuid
 import webbrowser
 from dataclasses import dataclass
 from pathlib import Path
@@ -224,15 +225,42 @@ def _kill_tree(process: subprocess.Popen[bytes]) -> None:
     process.wait(timeout=10)
 
 
-def _remove_abandoned_stages(web_root: Path, *, since: float) -> None:
-    """Delete staging folders a killed build created; finished builds remove their own."""
-    for stage in web_root.glob(".dist-stage-*"):
+def _remove_abandoned_stages(web_root: Path, *, tag: str) -> None:
+    """Delete only the staging folders this run's build created.
+
+    The build script puts RESEARCH_WEB_STAGE_TAG in its stage name, so another
+    build in the same checkout (another launcher, a manual build) is never
+    touched; finished builds remove their own stages."""
+    for stage in web_root.glob(f".dist-stage-*-{tag}-*"):
         try:
-            if stage.is_dir() and not stage.is_symlink() and stage.stat().st_mtime >= since - 1:
+            if stage.is_dir() and not stage.is_symlink():
                 shutil.rmtree(stage)
                 LOGGER.info("已移除中斷建置留下的暫存目錄 %s", stage.name)
         except OSError:
             LOGGER.exception("無法移除中斷建置的暫存目錄 %s", stage)
+
+
+def _release_is_current(root: Path, environment: dict[str, str]) -> bool:
+    """Ask the build script, without building, whether dist is current."""
+    node = shutil.which("node")
+    if node is None:
+        return True
+    try:
+        result = subprocess.run(
+            [node, str(root / "research_web" / "scripts" / "build-dashboard.mjs"), "--check"],
+            cwd=root,
+            env=environment,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+            timeout=60,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        LOGGER.exception("無法確認網站版本")
+        return True
+    return result.returncode == 0
 
 
 def _build_website(root: Path, log_dir: Path, environment: dict[str, str]) -> str:
@@ -245,7 +273,8 @@ def _build_website(root: Path, log_dir: Path, environment: dict[str, str]) -> st
         raise RuntimeError("找不到 npm；請先安裝 Node.js 與研究網站相依套件。")
     log_path = log_dir / "build.log"
     started = time.monotonic()
-    wall_started = time.time()
+    tag = uuid.uuid4().hex
+    environment = {**environment, "RESEARCH_WEB_STAGE_TAG": tag}
     # Own process group / tree, so a timeout can stop the build script's
     # children too; otherwise a "failed" build could still publish dist later.
     process = subprocess.Popen(
@@ -260,14 +289,19 @@ def _build_website(root: Path, log_dir: Path, environment: dict[str, str]) -> st
     )
     try:
         stdout, _ = process.communicate(timeout=BUILD_TIMEOUT_SECONDS)
-    except subprocess.TimeoutExpired as exc:
+    except BaseException as exc:
+        # Timeout, Ctrl+C or any other interruption: stop and wait for the
+        # whole build tree and drop its stage before returning, so nothing can
+        # publish dist after the launcher has reported the build as stopped.
         _kill_tree(process)
         stdout, _ = process.communicate()
-        _remove_abandoned_stages(root / "research_web", since=wall_started)
+        _remove_abandoned_stages(root / "research_web", tag=tag)
         with log_path.open("ab") as log_file:
             log_file.write(stdout or b"")
-        LOGGER.error("網站建置逾時，已停止整個建置程序樹，pid=%s", process.pid)
-        raise RuntimeError("建置網站逾時，已停止建置；先前的版本保留不動，詳見 .tmp/research-web-launcher/build.log。") from exc
+        LOGGER.error("網站建置中斷（%s），已停止整個建置程序樹，pid=%s", type(exc).__name__, process.pid)
+        if isinstance(exc, subprocess.TimeoutExpired):
+            raise RuntimeError("建置網站逾時，已停止建置；先前的版本保留不動，詳見 .tmp/research-web-launcher/build.log。") from exc
+        raise
     with log_path.open("ab") as log_file:
         log_file.write(stdout)
     result = subprocess.CompletedProcess(process.args, process.returncode, stdout)
@@ -386,12 +420,14 @@ def run(*, no_browser: bool = False, check: bool = False, api_port: int = 8517, 
     log_dir = _configure_logging(root)
     children: list[ManagedChild] = []
     try:
-        if not dev:
+        if not dev and states["research-web"] == "reusable":
+            # Never replace the release a running preview is serving.
+            if not _release_is_current(root, environment):
+                _announce("提醒：執行中的網站不是最新版本；啟動器不會在它執行時更新，請自行關閉後再執行一次。")
+        elif not dev:
             _announce("正在確認網站是否需要重新建置（程式有變動時約需半分鐘）…")
             built = _build_website(root, log_dir, environment)
             _announce("網站已重新建置" if built == "built" else "網站已是最新版本")
-            if built == "built" and states["research-web"] == "reusable":
-                _announce("提醒：已在執行的網站仍是舊版本；啟動器不會停止它，請自行關閉後再執行一次。")
         for name, port in services:
             if states[name] == "reusable":
                 _announce(f"沿用現有 {name}（{port}）")

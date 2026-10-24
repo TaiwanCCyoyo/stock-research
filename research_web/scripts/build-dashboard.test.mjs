@@ -6,6 +6,7 @@ import test from "node:test";
 import {
     ensureRelease,
     releaseMode,
+    stageTag,
     hasBuildDependencies,
     isCurrentRelease,
     publishDirectory,
@@ -306,4 +307,11 @@ test("a release built for another data mode is rebuilt when a mode is requested"
         else process.env.VITE_ARTIFACT_MODE = previous;
         await rm(root, { recursive: true, force: true });
     }
+});
+
+test("stage names carry only a safe owner tag", () => {
+    assert.equal(stageTag("abc123"), "abc123-");
+    assert.equal(stageTag(undefined), "");
+    assert.equal(stageTag("../x"), "");
+    assert.equal(stageTag("a".repeat(65)), "");
 });

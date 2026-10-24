@@ -123,6 +123,12 @@ function stagedArtifactMode(stage) {
     return releaseArtifactMode(recorded.artifactMode);
 }
 
+/** Optional owner tag (RESEARCH_WEB_STAGE_TAG) in stage names, so a caller
+ *  can clean up exactly the stages its own interrupted build left behind. */
+export function stageTag(value = process.env.RESEARCH_WEB_STAGE_TAG) {
+    return value && /^[A-Za-z0-9]{1,64}$/.test(value) ? `${value}-` : "";
+}
+
 export function isCurrentRelease(directory = dist, version = sourceVersion()) {
     return readReleaseVersion(directory) === version;
 }
@@ -171,7 +177,7 @@ export function ensureRelease({
     const stage = join(
         root,
         "research_web",
-        `.dist-stage-${process.pid}-${randomUUID()}`,
+        `.dist-stage-${process.pid}-${stageTag()}${randomUUID()}`,
     );
     mkdirSync(stage, { recursive: true });
     try {
@@ -255,9 +261,15 @@ if (
 ) {
     try {
         const requested = process.env.VITE_ARTIFACT_MODE;
-        ensureRelease({
-            mode: requested ? releaseArtifactMode(requested) : undefined,
-        });
+        const mode = requested ? releaseArtifactMode(requested) : undefined;
+        if (process.argv.includes("--check")) {
+            // Exit 0 when dist is current for the requested mode, 3 otherwise.
+            const current =
+                isCurrentRelease() && (!mode || releaseMode() === mode);
+            console.log(`[dashboard] dist is ${current ? "current" : "stale"}`);
+            process.exit(current ? 0 : 3);
+        }
+        ensureRelease({ mode });
     } catch (error) {
         console.error(
             `[dashboard] build failed; existing dist was preserved: ${error.message}`,

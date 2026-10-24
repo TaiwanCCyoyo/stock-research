@@ -479,13 +479,56 @@ def test_kill_tree_uses_taskkill_tree_on_windows() -> None:
     process.wait.assert_called_once()
 
 
-def test_abandoned_stage_cleanup_keeps_older_folders(tmp_path: Path) -> None:
-    old = tmp_path / ".dist-stage-1-old"
-    new = tmp_path / ".dist-stage-2-new"
-    old.mkdir()
-    new.mkdir()
-    import os as _os
+def test_cleanup_removes_only_this_runs_tagged_stages(tmp_path: Path) -> None:
+    own = tmp_path / ".dist-stage-11-abc123-uuid"
+    foreign_recent = tmp_path / ".dist-stage-22-other99-uuid"
+    untagged = tmp_path / ".dist-stage-33-uuid"
+    for folder in (own, foreign_recent, untagged):
+        folder.mkdir()
+    launcher._remove_abandoned_stages(tmp_path, tag="abc123")
+    assert not own.exists()
+    assert foreign_recent.exists() and untagged.exists()
 
-    _os.utime(old, (1000, 1000))
-    launcher._remove_abandoned_stages(tmp_path, since=new.stat().st_mtime)
-    assert old.exists() and not new.exists()
+
+def test_cancelled_build_stops_the_tree_and_reraises(tmp_path: Path) -> None:
+    process = MagicMock(pid=4321, args=["npm"])
+    process.communicate.side_effect = [KeyboardInterrupt(), (b"partial", None)]
+    seen: dict[str, str] = {}
+
+    def popen(*args: object, **kwargs: object) -> MagicMock:
+        env = kwargs["env"]
+        assert isinstance(env, dict)
+        seen.update(env)
+        return process
+
+    with (
+        patch.object(launcher.shutil, "which", return_value="npm"),
+        patch.object(launcher.subprocess, "Popen", side_effect=popen),
+        patch.object(launcher, "_kill_tree") as kill,
+        patch.object(launcher, "_remove_abandoned_stages") as cleanup,
+    ):
+        with pytest.raises(KeyboardInterrupt):
+            launcher._build_website(tmp_path, tmp_path, {})
+    kill.assert_called_once_with(process)
+    assert cleanup.call_args.kwargs["tag"] == seen["RESEARCH_WEB_STAGE_TAG"]
+    assert process.communicate.call_count == 2
+
+
+@pytest.mark.parametrize("current", [True, False])
+def test_running_production_site_is_never_rebuilt_underneath(tmp_path: Path, current: bool, capsys: pytest.CaptureFixture[str]) -> None:
+    root = tmp_path / "checkout"
+    root.mkdir()
+    with (
+        patch.object(launcher, "project_root", return_value=root),
+        patch.object(launcher, "_inspect_service", side_effect=["stopped", "reusable"]),
+        patch.object(launcher, "_verify_live_mode"),
+        patch.object(launcher, "_configure_logging", return_value=tmp_path),
+        patch.object(launcher, "_build_website") as build,
+        patch.object(launcher, "_release_is_current", return_value=current),
+        patch.object(launcher, "_start_child", return_value=launcher.ManagedChild("history-api", MagicMock(), io.BytesIO())),
+        patch.object(launcher, "_wait_until_ready", side_effect=RuntimeError("stop here")),
+        patch.object(launcher, "_stop_child"),
+    ):
+        launcher.run(no_browser=True)
+    build.assert_not_called()
+    assert ("不是最新版本" in capsys.readouterr().out) is (not current)
