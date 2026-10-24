@@ -1,6 +1,7 @@
 import {
     memo,
     useEffect,
+    useDeferredValue,
     useMemo,
     useRef,
     useState,
@@ -18,7 +19,7 @@ import {
     toMapView,
     type HistoryDisplayMode,
 } from "./model.ts";
-import { useHistory } from "./useHistory.ts";
+import { PLAYBACK_GLIDE, PLAYBACK_SPEEDS, useHistory } from "./useHistory.ts";
 import { readMarketLink } from "./navigation.ts";
 import { HistoryChartDetail } from "./HistoryChartDetail";
 import { HistoryRanking } from "./HistoryRanking";
@@ -38,8 +39,33 @@ import "./FullHistoryPage.css";
 const HistoryOpportunityMap = memo(OpportunityMap);
 const MemoHistoryTimeline = memo(HistoryTimeline);
 
+const PANEL_REFRESH = 2000;
+
+/** The frame side panels show: the live frame when paused, and during
+ *  playback the live frame at most once every PANEL_REFRESH ms. */
+function usePanelFrame<T>(frame: T, playing: boolean): T {
+    const [shown, setShown] = useState(frame);
+    const shownAt = useRef(0);
+    useEffect(() => {
+        const now = performance.now();
+        if (!playing || now - shownAt.current >= PANEL_REFRESH) {
+            shownAt.current = now;
+            setShown(frame);
+        }
+    }, [frame, playing]);
+    return playing ? shown : frame;
+}
+
 export function FullHistoryPage({ active }: { active: boolean }) {
     const history = useHistory(active);
+    // Stable identity: the map is memoised and re-renders only when it changes.
+    const glide = useMemo(
+        () =>
+            history.playing
+                ? { duration: PLAYBACK_GLIDE, linear: true }
+                : undefined,
+        [history.playing],
+    );
     const {
         metadata,
         frame,
@@ -92,6 +118,18 @@ export function FullHistoryPage({ active }: { active: boolean }) {
     const view = useMemo(
         () => (frame ? toMapView(frame, mode, ended, thresholdPct) : null),
         [frame, mode, ended, thresholdPct],
+    );
+    // While playing, the map animates every step but the side panels
+    // (timeline, list, comparisons) refresh at most every PANEL_REFRESH ms and
+    // as low-priority work, so they never take frames from the map.
+    const panelSource = usePanelFrame(frame, history.playing);
+    const panelFrame = useDeferredValue(panelSource);
+    const panelDisplayed = useMemo(
+        () =>
+            panelFrame?.rows.filter((row) =>
+                appears(row, panelFrame.date, mode, thresholdPct),
+            ) ?? [],
+        [panelFrame, mode, thresholdPct],
     );
     const displayed = useMemo(
         () =>
@@ -334,6 +372,7 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                             showComparisonDots={
                                                 datedComparisons.length > 1
                                             }
+                                            glide={glide}
                                         />
                                     ) : (
                                         <div className="fh-empty">
@@ -452,9 +491,14 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                                 )
                                             }
                                         >
-                                            <option value={20}>慢</option>
-                                            <option value={40}>中</option>
-                                            <option value={60}>快</option>
+                                            {PLAYBACK_SPEEDS.map((speed) => (
+                                                <option
+                                                    key={speed.step}
+                                                    value={speed.step}
+                                                >
+                                                    {speed.label}
+                                                </option>
+                                            ))}
                                         </select>
                                     </label>
                                 </div>
@@ -587,8 +631,8 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                 </div>
                             )}
                             <HistoryRanking
-                                rows={displayed}
-                                date={frame?.date ?? ""}
+                                rows={panelDisplayed}
+                                date={panelFrame?.date ?? ""}
                                 selectedId={selectedId}
                                 onSelect={setSelectedId}
                                 comparisons={datedComparisons}
@@ -691,8 +735,8 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                     {frame && (
                         <div hidden={!showComparisons}>
                             <HistoryComparisons
-                                date={frame.date}
-                                rows={displayed}
+                                date={panelFrame?.date ?? frame.date}
+                                rows={panelDisplayed}
                                 catalogId={frame.catalogId}
                                 onComparisons={setComparisons}
                             />
@@ -702,7 +746,7 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                         <MemoHistoryTimeline
                             directory={directory}
                             metadata={metadata}
-                            frame={frame}
+                            frame={panelFrame}
                             selectedId={selectedId}
                             onSelect={setSelectedId}
                             onDate={history.goToDate}

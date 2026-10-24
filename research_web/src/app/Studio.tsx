@@ -153,6 +153,7 @@ export default function Studio() {
             className="studio"
             data-palette={palette}
             data-appearance={resolvedAppearance}
+            data-ambient={ambient ? "on" : "off"}
         >
             {ambient && (
                 <ThemeAtmosphere

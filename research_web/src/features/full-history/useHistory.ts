@@ -16,6 +16,20 @@ import {
 } from "./types.ts";
 
 /** One snapshot and one rendered date; interrupted requests never replace newer data. */
+/** Time between playback steps. Each glide on the map lasts a little longer
+ *  (PLAYBACK_GLIDE) so the bubbles never come to rest between steps. */
+export const PLAYBACK_INTERVAL = 500;
+export const PLAYBACK_GLIDE = 560;
+/** Steps prefetched ahead while playing (about 0.3 s per frame locally). */
+const PLAYBACK_LOOKAHEAD = 4;
+/** Trading days advanced per step. */
+export const PLAYBACK_SPEEDS = [
+    { step: 5, label: "慢" },
+    { step: 10, label: "中" },
+    { step: 20, label: "快" },
+    { step: 40, label: "很快" },
+] as const;
+
 export function useHistory(active: boolean) {
     const [metadata, setMetadata] = useState<HistoryMetadata | null>(null);
     const [metadataError, setMetadataError] = useState("");
@@ -32,7 +46,10 @@ export function useHistory(active: boolean) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [playing, setPlaying] = useState(false);
-    const [step, setStep] = useState(20);
+    const [step, setStep] = useState<number>(PLAYBACK_SPEEDS[1].step);
+    // When playback last advanced; the next step is timed from here, not from
+    // when the frame finished drawing, so the rhythm stays even.
+    const lastStepAt = useRef(0);
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [detail, setDetail] = useState<HistoryDetail | null>(null);
     const [detailError, setDetailError] = useState("");
@@ -172,7 +189,7 @@ export function useHistory(active: boolean) {
             return;
         }
         const future = playing
-            ? playbackLookahead(metadata.dates, index, step)
+            ? playbackLookahead(metadata.dates, index, step, PLAYBACK_LOOKAHEAD)
             : [];
         // Foreground ownership follows the throttled query, not every slider
         // event. Otherwise continuous dragging cancels requests before they
@@ -259,10 +276,14 @@ export function useHistory(active: boolean) {
             setPlaying(false);
             return;
         }
-        const timer = window.setTimeout(
-            () => navigate(Math.min(index + step, metadata.dates.length - 1)),
-            650,
+        const wait = Math.max(
+            0,
+            PLAYBACK_INTERVAL - (performance.now() - lastStepAt.current),
         );
+        const timer = window.setTimeout(() => {
+            lastStepAt.current = performance.now();
+            navigate(Math.min(index + step, metadata.dates.length - 1));
+        }, wait);
         return () => window.clearTimeout(timer);
     }, [
         active,

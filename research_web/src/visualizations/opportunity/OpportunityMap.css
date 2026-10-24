@@ -246,3 +246,43 @@
 .opportunity-map-svg.is-rescaling .opportunity-stock-label {
     opacity: 0;
 }
+
+/* Theme effects on the map: decoration only (themeEffects.ts). */
+.opportunity-fx {
+    pointer-events: none;
+    fill: var(--muted);
+}
+.opportunity-fx.fx-dot circle {
+    fill: var(--muted);
+}
+.opportunity-fx.fx-petal path {
+    fill: #f6a5c4;
+}
+.opportunity-fx.fx-heart path {
+    fill: #ff5c93;
+}
+.opportunity-fx.fx-ring circle,
+.opportunity-fx.fx-bubble circle {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 0.6;
+    vector-effect: non-scaling-stroke;
+}
+.opportunity-fx.fx-bubble circle {
+    stroke: var(--highlight);
+}
+.opportunity-fx.fx-star path {
+    fill: #f8d66d;
+}
+.opportunity-fx.fx-glitter path {
+    fill: var(--highlight);
+}
+.opportunity-fx.fx-ember circle {
+    fill: #fb923c;
+}
+.opportunity-fx.fx-firefly circle {
+    fill: #c8f07a;
+}
+.studio[data-appearance="dark"] .opportunity-fx.fx-firefly circle {
+    fill: #e4ff9c;
+}

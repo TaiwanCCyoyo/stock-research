@@ -42,6 +42,16 @@ import {
 } from "./camera.ts";
 import type { PackedGroup, PackedNode, PackingLayout } from "./packing.ts";
 import type { PackingRequest, PackingResponse } from "./packing.worker.ts";
+import {
+    MAX_BURSTS,
+    MAX_JOINS,
+    SHAPE_PATH,
+    particleCount,
+    particlePose,
+    pickLargest,
+    themeEffect,
+    type EffectShape,
+} from "./themeEffects.ts";
 import "./OpportunityMap.css";
 
 /** One fixed world scale, calibrated against the full synthetic calendar; never fitted per date. */
@@ -91,6 +101,10 @@ export interface OpportunityMapProps {
     colorBasis?: ColorBasis;
     /** Fill the parent's height instead of keeping the 1000:620 shape. */
     fill?: boolean;
+    /** Glide between frames. During playback a linear glide that outlasts the
+     *  step keeps the bubbles moving at an even pace; a new frame picks up from
+     *  where each bubble is on screen. */
+    glide?: { duration: number; linear: boolean };
 }
 
 type Snapshot = {
@@ -251,7 +265,10 @@ export function OpportunityMap({
     groupingMode = "historical",
     colorBasis = "phase",
     fill = false,
+    glide,
 }: OpportunityMapProps) {
+    const glideRef = useRef(glide);
+    glideRef.current = glide;
     const uid = `opportunity-${useId().replace(/:/g, "")}`;
     const [frame, setFrame] = useState<Frame | null>(null);
     const [busy, setBusy] = useState(true);
@@ -300,7 +317,7 @@ export function OpportunityMap({
     const stockElements = useRef(new Map<string, StockRefs>());
     const groupElements = useRef(new Map<string, SVGGElement>());
     const groupLabelElements = useRef(new Map<string, SVGTextElement>());
-    const particleElements = useRef(new Map<string, SVGCircleElement>());
+    const particleElements = useRef(new Map<string, SVGGElement>());
     const pointers = useRef(new Map<number, ScreenPoint>());
     const suppressClick = useRef(false);
     const dispatch = useRef<(snapshot: Snapshot) => void>(() => {});
@@ -562,8 +579,10 @@ export function OpportunityMap({
         // Start on the first painted frame, as the camera does. A large React
         // commit must not consume the entire morph before the browser paints.
         let start = 0;
+        const duration = glideRef.current?.duration ?? DURATION;
+        const linear = glideRef.current?.linear ?? false;
         const apply = (fraction: number) => {
-            const eased = 1 - (1 - fraction) ** 3;
+            const eased = linear ? fraction : 1 - (1 - fraction) ** 3;
             for (const item of frame.stocks) {
                 const { node, from, to, body } = item;
                 const pose = {
@@ -597,38 +616,50 @@ export function OpportunityMap({
                         refs.body.removeAttribute("transform");
                     }
                 }
-                refs?.label?.setAttribute(
-                    "opacity",
-                    labelFits(
+                // Labels that do not fit leave layout entirely (display:none);
+                // transparent text would still be laid out on every frame.
+                // Write only when the fit changes.
+                if (refs?.label) {
+                    const shown = labelFits(
                         item.row,
                         pose.r,
                         stockFont(node.r, labelFontRef.current),
-                    )
-                        ? "1"
-                        : "0",
-                );
-                if (item.burst) {
-                    for (let i = 0; i < 5; i++) {
-                        const particle = particleElements.current.get(
-                            `${node.id}-${i}`,
-                        );
-                        if (!particle) continue;
-                        const angle = angleFor(node.id) + (i * Math.PI * 2) / 5;
-                        const travel =
-                            (8 + Math.min(30, from.r) + i * 2) * eased;
-                        particle.setAttribute(
-                            "cx",
-                            String(from.x + Math.cos(angle) * travel),
-                        );
-                        particle.setAttribute(
-                            "cy",
-                            String(from.y + Math.sin(angle) * travel),
-                        );
-                        particle.setAttribute(
-                            "opacity",
-                            String(Math.sin(Math.PI * fraction) * 0.55),
+                    );
+                    if ((refs.label.dataset.shown === "1") !== shown) {
+                        refs.label.dataset.shown = shown ? "1" : "0";
+                        refs.label.setAttribute(
+                            "display",
+                            shown ? "inline" : "none",
                         );
                     }
+                }
+            }
+            for (const effect of effectsRef.current) {
+                for (let i = 0; i < effect.count; i++) {
+                    const element = particleElements.current.get(
+                        `${effect.key}-${i}`,
+                    );
+                    if (!element) continue;
+                    const p = particlePose(
+                        effect.shape,
+                        effect.kind,
+                        effect.origin,
+                        i,
+                        effect.angle,
+                        fraction,
+                    );
+                    // Shapes are sized for the screen (one label-font unit),
+                    // so they stay visible at any zoom.
+                    // Rings follow the bubble's own size instead.
+                    const unit =
+                        effect.shape === "ring"
+                            ? 1
+                            : (labelFontRef.current / 12) * 1.6;
+                    element.setAttribute(
+                        "transform",
+                        `translate(${p.x} ${p.y}) rotate(${p.rotate}) scale(${p.scale * unit})`,
+                    );
+                    element.setAttribute("opacity", String(p.opacity));
                 }
             }
             for (const item of frame.groups) {
@@ -645,12 +676,19 @@ export function OpportunityMap({
                 const transform = `translate(${pose.x} ${pose.y}) scale(${scale}) translate(${-group.x} ${-group.y})`;
                 element?.setAttribute("transform", transform);
                 element?.setAttribute("opacity", String(pose.opacity));
-                groupLabelElements.current
-                    .get(group.id)
-                    ?.setAttribute("transform", transform);
-                groupLabelElements.current
-                    .get(group.id)
-                    ?.setAttribute("opacity", String(pose.opacity));
+                // Industry labels follow the group's motion but keep their
+                // size: scaling text re-rasterises it on every frame.
+                const label = groupLabelElements.current.get(group.id);
+                if (label) {
+                    const spotX = label.x.baseVal[0]?.value ?? group.x;
+                    const spotY = label.y.baseVal[0]?.value ?? group.y;
+                    const dx = pose.x + scale * (spotX - group.x) - spotX;
+                    const dy = pose.y + scale * (spotY - group.y) - spotY;
+                    label.setAttribute("transform", `translate(${dx} ${dy})`);
+                    const opacity = String(pose.opacity);
+                    if (label.getAttribute("opacity") !== opacity)
+                        label.setAttribute("opacity", opacity);
+                }
             }
         };
         const finish = () => {
@@ -681,7 +719,7 @@ export function OpportunityMap({
         apply(0);
         const tick = (now: number) => {
             if (!start) start = now;
-            const fraction = Math.min(1, (now - start) / DURATION);
+            const fraction = Math.min(1, (now - start) / duration);
             apply(fraction);
             if (fraction < 1) raf = requestAnimationFrame(tick);
             else finish();
@@ -690,6 +728,61 @@ export function OpportunityMap({
         return () => cancelAnimationFrame(raf);
     }, [frame, motionOff]);
 
+    const studio = mapElement.current?.closest<HTMLElement>(".studio");
+    const fx = themeEffect(
+        studio?.dataset.palette,
+        studio?.dataset.ambient !== "off",
+    );
+    const effects = useMemo(() => {
+        if (!frame || motionOff) return [];
+        const list: {
+            key: string;
+            shape: EffectShape;
+            kind: "burst" | "join";
+            origin: { x: number; y: number; r: number };
+            angle: number;
+            count: number;
+        }[] = [];
+        if (fx.burst) {
+            const shape = fx.burst;
+            for (const item of pickLargest(
+                frame.stocks.filter((item) => item.burst),
+                (item) => item.from.r,
+                MAX_BURSTS,
+            ))
+                list.push({
+                    key: `${item.node.id}-burst`,
+                    shape,
+                    kind: "burst",
+                    origin: item.from,
+                    angle: angleFor(item.node.id),
+                    count: particleCount(shape),
+                });
+        }
+        const joining = frame.stocks.filter(
+            (item) => !item.exiting && item.from.r === 0,
+        );
+        // On a first or re-sourced frame everything "joins"; mark nothing.
+        if (fx.join && joining.length < frame.stocks.length / 2) {
+            const shape = fx.join;
+            for (const item of pickLargest(
+                joining,
+                (item) => item.to.r,
+                MAX_JOINS,
+            ))
+                list.push({
+                    key: `${item.node.id}-join`,
+                    shape,
+                    kind: "join",
+                    origin: item.to,
+                    angle: angleFor(item.node.id),
+                    count: particleCount(shape),
+                });
+        }
+        return list;
+    }, [frame, motionOff, fx.burst, fx.join]);
+    const effectsRef = useRef(effects);
+    effectsRef.current = effects;
     const renderedView = frame?.snapshot.view;
     const stale =
         !renderedView ||
@@ -892,10 +985,11 @@ export function OpportunityMap({
             data-reduced-motion={motionOff || undefined}
         >
             <div className="opportunity-map-surface" ref={surface}>
-                {!error && (locked || animating) && (
+                {/* Silent while playing: the date control already shows progress. */}
+                {!error && !glide?.linear && (locked || animating) && (
                     <p className="opportunity-map-updating" role="status">
                         {frame && frame.snapshot.view.date !== view.date
-                            ? `版圖仍為 ${frame.snapshot.view.date}，正在畫出 ${view.date}`
+                            ? `正在畫出 ${view.date}`
                             : "更新中"}
                     </p>
                 )}
@@ -1192,10 +1286,15 @@ export function OpportunityMap({
                                             stockRef(node.id).label = element;
                                         }}
                                         className="opportunity-stock-label"
-                                        opacity={
+                                        display={
                                             labelFits(row, node.r, fontSize)
-                                                ? 1
-                                                : 0
+                                                ? "inline"
+                                                : "none"
+                                        }
+                                        data-shown={
+                                            labelFits(row, node.r, fontSize)
+                                                ? "1"
+                                                : "0"
                                         }
                                         fontSize={fontSize}
                                     >
@@ -1407,32 +1506,44 @@ export function OpportunityMap({
                         className="opportunity-exit-particles"
                         aria-hidden="true"
                     >
-                        {!motionOff &&
-                            frame?.stocks
-                                .filter((item) => item.burst)
-                                .flatMap((item) =>
-                                    Array.from({ length: 5 }, (_, index) => (
-                                        <circle
-                                            key={`${item.node.id}-${index}`}
-                                            ref={(element) => {
-                                                const id = `${item.node.id}-${index}`;
-                                                if (element)
-                                                    particleElements.current.set(
-                                                        id,
-                                                        element,
-                                                    );
-                                                else
-                                                    particleElements.current.delete(
-                                                        id,
-                                                    );
-                                            }}
-                                            cx={item.from.x}
-                                            cy={item.from.y}
-                                            r={1.8 + index * 0.3}
-                                            opacity="0"
-                                        />
-                                    )),
-                                )}
+                        {effects.flatMap((effect) =>
+                            Array.from({ length: effect.count }, (_, index) => {
+                                const id = `${effect.key}-${index}`;
+                                const path = SHAPE_PATH[effect.shape];
+                                return (
+                                    <g
+                                        key={id}
+                                        className={`opportunity-fx fx-${effect.shape}`}
+                                        ref={(element) => {
+                                            if (element)
+                                                particleElements.current.set(
+                                                    id,
+                                                    element,
+                                                );
+                                            else
+                                                particleElements.current.delete(
+                                                    id,
+                                                );
+                                        }}
+                                        transform={`translate(${effect.origin.x} ${effect.origin.y})`}
+                                        opacity="0"
+                                    >
+                                        {path ? (
+                                            <path d={path} />
+                                        ) : (
+                                            <circle
+                                                r={
+                                                    effect.shape === "ring" ||
+                                                    effect.shape === "bubble"
+                                                        ? 4
+                                                        : 1.8 + index * 0.3
+                                                }
+                                            />
+                                        )}
+                                    </g>
+                                );
+                            }),
+                        )}
                     </g>
                 </svg>
                 {!frame && !error && (
