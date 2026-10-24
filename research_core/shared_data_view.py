@@ -12,6 +12,7 @@ import sqlite3
 import threading
 import time
 from concurrent.futures import Future, ThreadPoolExecutor, wait
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, cast
 
@@ -152,6 +153,8 @@ def manifest_metadata(path: Path, expected_digest: str) -> dict[str, Any]:
     artifacts = manifest.get("artifacts")
     return {
         "schema": schema if isinstance(schema, str) else None,
+        "version_created_at": manifest.get("built_at_utc") or manifest.get("generated_at"),
+        "manifest_modified_at": datetime.fromtimestamp(path.stat().st_mtime, timezone.utc).isoformat(),
         "columns": columns,
         "security_count": security_count if type(security_count) is int and security_count >= 0 else None,
         "analyzed_security_count": analyzed_count if type(analyzed_count) is int and analyzed_count >= 0 else None,
