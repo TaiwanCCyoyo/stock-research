@@ -7,19 +7,19 @@ ordinary tests used synthetic inputs. The frontend delivery has its own
 ## Published generation
 
 - Integrated base: `cf3b4ac` (includes the catalog migration in PR #88).
-- Build code: `155f94aa1df050d6d3efc9a28d725905911b00ab`, clean working tree.
-- Generation: `20261024T145327-4d9efa304de7`, under the configured shared root's
+- Build code: `be41d1b4f50b34df6708fa9785405a7b161f722e`, clean working tree.
+- Generation: `20261024T151416-5be6ee45a60d`, under the configured shared root's
   `derived/security-coverage-v1/`; no private source copy or new schedule.
 - 157,592 source-observed security identity keys and 1,103,144 cells. These are
   not 157,592 companies or a complete historical listing universe.
-- 1,988 ordinary-share identities; 1,979 satisfy the recent-observation filter.
+- 1,988 ordinary-share identities; 1,981 satisfy the recent-observation filter.
   ETF and unknown kinds remain separate. 1,572 ordinary-share identities have
   the supported institutional history limitation.
 - All seven source scans succeeded. TWSE and TPEx institutional floors were
   independently observed at 2019-01-02. The concurrent pre-2019 staging backfill
   was not read or imported. A later canonical import requires this maintenance
   command to be run again.
-- The indexed summary is 235,966,464 bytes. Small metadata, SQLite payload and
+- The indexed summary is 235,974,656 bytes. Small metadata, SQLite payload and
   status are published together with digest pins and an atomic pointer switch.
 
 The first integration attempt exceeded the whole-JSON candidate's 128 MB limit
@@ -43,10 +43,10 @@ download wrote only its own staging location.
 
 | Measurement                                                                  | Final observation                   |
 | ---------------------------------------------------------------------------- | ----------------------------------- |
-| Whole command, including startup, serialization and publication              | 104.48 s wall                       |
-| Source reads, projection and code identity, before serialization/publication | 86.25 s wall; 59.00 s CPU           |
-| Process lifetime peak observed at that phase end                             | 1,558,667,264 bytes                 |
-| Process read/write transfer counters for that phase                          | 8,727,220,391 / 3,148,840,754 bytes |
+| Whole command, including startup, serialization and publication              | 97.76 s wall                        |
+| Source reads, projection and code identity, before serialization/publication | 80.16 s wall; 58.25 s CPU           |
+| Process lifetime peak observed at that phase end                             | 1,570,508,800 bytes                 |
+| Process read/write transfer counters for that phase                          | 8,727,219,546 / 3,148,840,754 bytes |
 
 The OS file cache was not flushed and earlier integration scans had run. Native
 I/O counts include cached and library temporary I/O; they are not physical disk
@@ -61,14 +61,15 @@ Each endpoint had one first request and 20 warm samples. The first endpoint
 missed the new-generation application cache; later endpoints shared that cache.
 OS cache was not flushed. Numbers include HTTP, filtering, row decompression and
 JSON serialization, and are distinct from the candidate's synthetic benchmark.
+Host CPU/I/O exclusivity was not requested; these are observed workstation timings.
 
 | Request                                       | Filtered identities | First request ms | Warm median ms | Warm p95 ms |
 | --------------------------------------------- | ------------------: | ---------------: | -------------: | ----------: |
-| Recent ordinary shares                        |               1,979 |           504.77 |         308.96 |      355.30 |
-| Substring name/code search `q=2330`           |                  50 |           500.49 |         460.17 |      560.67 |
-| Ordinary shares with institutional known gaps |               1,572 |           336.84 |         320.61 |      350.23 |
-| Unresolved identities                         |             150,390 |           217.71 |         226.81 |      244.11 |
-| Complete source-observed universe             |             157,592 |           216.00 |         224.34 |      240.28 |
+| Recent ordinary shares                        |               1,981 |           622.21 |         332.32 |      404.81 |
+| Substring name/code search `q=2330`           |                  50 |           482.64 |         450.21 |      491.89 |
+| Ordinary shares with institutional known gaps |               1,572 |           312.82 |         309.47 |      342.22 |
+| Unresolved identities                         |             150,390 |           209.57 |         213.40 |      236.63 |
+| Complete source-observed universe             |             157,592 |           202.36 |         211.24 |      234.05 |
 
 The 2330 resolver returned one candidate and its opaque-key detail returned the
 same code. An absent control returned zero candidates. The 50-row pagination
@@ -80,9 +81,15 @@ Synthetic tests cover new listings versus known history gaps, per-market floors,
 code reuse and long-gap segments, no-price revenue observations, explicit
 delisting evidence, failed/missing summaries, all-source failure retention,
 immutable publication, corruption, warm-cache mutation, full-set filtering and
-counts, and public-synthetic isolation. The latest focused new suite passed 35
-cases; the existing metadata reader tests were also exercised during integration.
+counts, and public-synthetic isolation. The latest focused new suite passed 42
+cases; including the existing metadata reader compatibility cases, 119 passed.
 Normal commit hooks passed without disabling checks.
+
+Hosted review identified a month/day string-comparison bug. The correction
+assesses each source on its own calendar before taking the union, including
+current/previous/stale/future revenue months and daily boundary cases. The final
+real recent-ordinary population includes two securities the earlier comparison
+had incorrectly hidden; the generation and HTTP figures above reflect the fix.
 
 `scripts.verify_published_artifacts` passed all 17 checks before the change,
 after the reader changes, and after rebasing onto the catalog migration. All 17
