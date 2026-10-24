@@ -326,10 +326,16 @@ export function FundsPage() {
                         </p>
                         <ul>
                             {fund.holdings.map((holding) => (
-                                <li key={holding}>{holding}</li>
+                                <li key={holding}>
+                                    {holding.replace(
+                                        "舊搜尋快照",
+                                        "舊搜尋資料",
+                                    )}
+                                </li>
                             ))}
                         </ul>
                         <SourceInfo>
+                            <p>持股摘錄：{fund.holdings.join("；")}</p>
                             <p>{fund.holdingNote}</p>
                             <a
                                 href={fund.holdingUrl}

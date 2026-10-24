@@ -956,8 +956,8 @@ export function MarketPage({
                                     <div className="participation-box">
                                         <h3>誰把握住這段漲勢？</h3>
                                         <p>
-                                            尚無與這個區間配對的完整策略持倉或
-                                            名單依保存資料回看；未知不能當成錯過。
+                                            尚無這段期間的完整策略與 ETF
+                                            持股資料；未知不能當成錯過。
                                         </p>
                                         <button
                                             className="text-button u-btn"
