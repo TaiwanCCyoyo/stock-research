@@ -81,6 +81,8 @@
                 "tests/test_data_routes.py",
                 "tests/test_data_series.py",
                 "tests/test_data_status.py",
+                "tests/test_security_coverage.py",
+                "tests/test_security_coverage_maintenance.py",
                 "scripts/tests/test_technical_daily_v1.py",
                 "scripts/tests/test_daily_conditions_v1.py",
                 "scripts/tests/test_momentum_only_v1.py"
@@ -142,10 +144,15 @@
                 "research_api/shared_data.py",
                 "research_api/data_series.py",
                 "research_api/data_status.py",
+                "research_api/data_coverage.py",
                 "research_core/opportunity_*",
                 "research_core/shared_data_view.py",
                 "research_core/data_series.py",
                 "research_core/data_status.py",
+                "research_core/security_coverage.py",
+                "research_core/security_coverage_store.py",
+                "research_core/security_coverage_sources.py",
+                "research_core/security_coverage_maintenance.py",
                 "research_core/saved_research_studio.py",
                 "research_core/study_presentation.py",
                 "research_core/study_cards.py",
@@ -155,6 +162,7 @@
                 "research_core/strategy_map_capture.py",
                 "scripts/*opportunity*",
                 "scripts/*saved_research*",
+                "scripts/maintain_security_coverage.py",
                 "scripts/export_history_title_origins.py",
                 "scripts/start_research_web.py",
                 "research_web/src/api/*",
@@ -186,6 +194,9 @@
                 "tests/test_data_routes.py",
                 "tests/test_data_series.py",
                 "tests/test_data_status.py",
+                "tests/test_security_coverage.py",
+                "tests/test_security_coverage_maintenance.py",
+                "tests/test_security_coverage_store.py",
                 "tests/test_dashboard*.py",
                 "tests/test_static_report_export.py",
                 "scripts/tests/test_optional_research_dependencies.py"
@@ -422,7 +433,8 @@
                 "scripts/tests/test_prepared_stock_input_v1.py",
                 "scripts/tests/test_stock_feature_pool_v1.py",
                 "scripts/tests/test_feature_blocks_cli.py",
-                "scripts/tests/test_stock_feature_pool_v2.py"
+                "scripts/tests/test_stock_feature_pool_v2.py",
+                "tests/test_security_coverage_maintenance.py"
             ],
             "consumers": ["research_data"]
         },
@@ -450,7 +462,7 @@
                 "scripts/tests/test_pattern_scan*.py",
                 "scripts/tests/test_momentum_only_v1.py"
             ],
-            "consumers": ["tenbagger_drivers"]
+            "consumers": ["strength_flags", "tenbagger_drivers"]
         },
         "momentum_only": {
             "paths": [
@@ -465,7 +477,7 @@
                 "scripts/tests/test_momentum_only_v1.py",
                 "scripts/tests/test_momentum_forward_v1.py"
             ],
-            "consumers": ["tenbagger_drivers"]
+            "consumers": ["strength_flags", "tenbagger_drivers"]
         },
         "tenbagger_drivers": {
             "paths": [
@@ -481,6 +493,19 @@
                 "scripts/tests/test_institutional_flow_v1.py",
                 "scripts/tests/test_tenbagger_drivers_v1.py",
                 "scripts/tests/test_tenbagger_drivers_run_v1.py"
+            ]
+        },
+        "strength_flags": {
+            "paths": [
+                "research_core/multiple_observations_v1.py",
+                "research_core/strength_flags_v1.py",
+                "research_core/strength_flag_counts_v1.py",
+                "research_core/strength_flags_run_v1.py",
+                "scripts/run_strength_flags.py"
+            ],
+            "tests": [
+                "scripts/tests/test_strength_flags_v1.py",
+                "scripts/tests/test_strength_flag_counts_v1.py"
             ]
         }
     },
@@ -752,6 +777,8 @@
         "scripts/tests/test_stock_feature_pool_v1.py",
         "scripts/tests/test_stock_feature_pool_v2.py",
         "scripts/tests/test_strategy_map_capture.py",
+        "scripts/tests/test_strength_flag_counts_v1.py",
+        "scripts/tests/test_strength_flags_v1.py",
         "scripts/tests/test_studio_review_coverage.py",
         "scripts/tests/test_study_cards.py",
         "scripts/tests/test_study_presentation.py",
@@ -790,6 +817,9 @@
         "tests/test_producer_data_root.py",
         "tests/test_research_api.py",
         "tests/test_research_api_security.py",
+        "tests/test_security_coverage.py",
+        "tests/test_security_coverage_maintenance.py",
+        "tests/test_security_coverage_store.py",
         "tests/test_static_report_export.py",
         "tests/test_stock_research_query.py",
         "tests/test_symbol_classification.py",

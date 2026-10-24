@@ -227,7 +227,7 @@ class DataSeriesView:
 
 
 def synthetic_series(dataset: Dataset, code: str, first: str | None, last: str | None, market: Market | None) -> dict[str, Any]:
-    """Explicitly fictional rows; only DEMO is populated to avoid real-code attribution."""
+    """Explicitly fictional rows; only named demo identities are populated."""
     validate_selection(dataset, code, first, last, market)
     spec = SPECS[dataset]
     row: dict[str, Any] = {column: None for column in spec.columns}
@@ -236,8 +236,11 @@ def synthetic_series(dataset: Dataset, code: str, first: str | None, last: str |
         row.update({"date": "2020-01-02", "foreign_total_net": 123, "trust_net": 0, "dealer_total_net": None})
     else:
         row.update({"revenue_month": "2020-01", "current_revenue_k_twd": 123, "yoy_pct": None, "availability_kind": "HISTORICAL_NO_EXACT_TIME"})
+        names = {"REVENUE": "月營收示範", "NEW23": "新芽示範", "PAST": "歷史示範"}
+        if code in names:
+            row.update(code=code, name=names[code], revenue_month="2026-09")
     period = row[spec.period]
-    selected = code == "DEMO" and (first is None or period >= first) and (last is None or period <= last)
+    selected = row["code"] == code and (first is None or period >= first) and (last is None or period <= last)
     result = _response(dataset, code, "ok" if selected else "missing", [row] if selected else [], ["這是虛構示範資料，不是真實行情或營收。"])
     result["synthetic"] = True
     return result

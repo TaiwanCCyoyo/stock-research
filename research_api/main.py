@@ -21,6 +21,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.types import Receive, Scope, Send
 
+from research_api.data_coverage import create_data_coverage_router
 from research_api.data_series import create_data_series_router
 from research_api.data_status import create_data_status_router
 from research_api.history import history_router
@@ -256,7 +257,7 @@ def create_app() -> FastAPI:
     shared_router = create_shared_data_router()
     application.include_router(shared_router)
     application.include_router(shared_router, prefix="/api")
-    for data_router in (create_data_status_router(), create_data_series_router()):
+    for data_router in (create_data_status_router(), create_data_series_router(), create_data_coverage_router()):
         application.include_router(data_router)
         application.include_router(data_router, prefix="/api")
     historical = LazyHistoryStore()
