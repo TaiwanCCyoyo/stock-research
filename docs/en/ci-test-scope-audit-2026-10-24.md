@@ -53,9 +53,9 @@
 ### 明確的過量案例
 
 - **#55：** 只更新 Vite 的 `package.json`／`package-lock.json`，卻跑了 5,736 個 Python cases 加 404 個前端測試。後續 [#59 的回溯](https://github.com/TaiwanCCyoyo/stock-research/pull/59) 把 Vite 相依更新從全套 Python 測試改為 5 個 Python 測試檔 加前端驗證；這項選測效率問題後來已改善。
-- **跨語言的額外執行候選：** #75 只改 `uv.lock`，#65 只改 Python 版本與 producer gitlink；Python 全套與這些 runtime／相依變更相稱，但兩者同時執行 445／416 個前端測試。是否能略過前端仍需依跨語言 API 與建置契約驗證，不能僅因 Python 走 full fallback 就直接設定 `frontend=false`。
-
 ### 仍偏寬的選測候選
+
+- **跨語言的額外執行候選：** #75 只改 `uv.lock`，#65 只改 Python 版本與 producer gitlink；Python 全套與這些 runtime／相依變更相稱，但兩者同時執行 445／416 個前端測試。是否能略過前端仍需依跨語言 API 與建置契約驗證，不能僅因 Python 走 full fallback 就直接設定 `frontend=false`。
 
 - **純前端 PR：** #52 只有一個 `ResearchHistoryPage.tsx` 變更，跑 1,212 個 Python cases；#72、#74、#79 只改前端頁面及視覺／播放邏輯，分別跑 1,362、1,416、1,347 個 Python cases。現行 [`opportunity` domain](https://github.com/TaiwanCCyoyo/stock-research/blob/2dd6ef4aa3c97f920962483db96543134181c185/scripts/ci_test_domains.json#L136-L193) 同時涵蓋 `full-history`、`research-history`、`strategies` UI 路徑與多組 Python API tests。對只改視覺、文案、導覽的 PR，這些 Python 測試很可能多於必要；若改動前端資料模型或請求行為，相關少量 API contract tests 仍有價值。
 - **文件／交接 PR：** #57 只改 4 份文件，跑 2,237 個 Python cases、耗時 838 秒；#64 改 inventory 程式和測試並更新多份 handoff，跑 2,533 個 cases、耗時 379 秒。#78 只改 2 份 task record／handoff 檔，跑 3,527 個 Python cases及 445 個前端 tests。#78 的 `study.json` 被 studies API 讀取，較廣驗證有其理由；前三者值得從 scope summary 核對是否不必要地帶入 pattern-scan 測試閉包。
