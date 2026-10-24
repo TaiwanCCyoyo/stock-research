@@ -233,9 +233,6 @@ export function SharedDataPage({
                     </button>
                 </div>
             </header>
-            <p className="u-notice">
-                歷史行情，不是買賣訊號。高低點需在後續交易日才確認。
-            </p>
             {!privateMode ? (
                 <div className="u-card shared-card">
                     <h2>目前無法顯示個股行情</h2>
@@ -517,9 +514,6 @@ export function SharedDataPage({
                                                     institutionalSeries
                                                 }
                                             />
-                                            <p className="shared-note">
-                                                中層：成交量（張）。滑鼠滾輪縮放、拖曳平移；高低點畫在極值日，當日尚不一定可知。
-                                            </p>
                                             {institutionalField !== "off" && (
                                                 <OverlayStatus
                                                     label="法人買賣超（股）"
@@ -791,9 +785,6 @@ export function SharedDataPage({
                                                     ),
                                                 )}
                                             </dl>
-                                            <p className="shared-note">
-                                                缺少的數值保留空白，不推估。
-                                            </p>
                                             <SourceInfo>
                                                 <p>
                                                     均線、布林與轉折全部來自共用資料，瀏覽器不重新計算。

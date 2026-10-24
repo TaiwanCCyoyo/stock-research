@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { ThemeId } from "./themes";
+import { ThemeLandscape } from "./ThemeLandscape";
 import "./atmosphere.css";
 
 type Context = CanvasRenderingContext2D;
@@ -42,31 +43,35 @@ function sprites(theme: ThemeId, dark: boolean) {
         context.translate(48, 48);
         if (theme === "sakura") {
             petal(context, variant);
-        } else if (theme === "soda" || theme === "ocean" || theme === "ink") {
+        } else if (theme === "soda" || theme === "ink") {
             const color =
                 theme === "ink"
                     ? dark
                         ? "#e8e4db"
                         : "#4c5055"
-                    : theme === "ocean"
-                      ? "#79cce5"
-                      : "#b2d871";
+                    : dark
+                      ? "#e0ffb0"
+                      : "#6d9d32";
             context.strokeStyle = `${color}70`;
             context.lineWidth = 1;
             context.beginPath();
             context.arc(0, 0, 17, 0, Math.PI * 2);
+            if (theme === "soda") {
+                const glass = context.createRadialGradient(-6, -7, 1, 0, 0, 18);
+                glass.addColorStop(0, "#ffffff45");
+                glass.addColorStop(0.3, "#f5ffcf08");
+                glass.addColorStop(0.8, "#b2d87108");
+                glass.addColorStop(1, "#e8ffc04a");
+                context.fillStyle = glass;
+                context.fill();
+            }
             context.stroke();
             context.strokeStyle = `${color}c0`;
             context.beginPath();
             context.arc(0, 0, 14, Math.PI, Math.PI * 1.45);
             context.stroke();
         } else {
-            const color =
-                theme === "forest"
-                    ? "#d5efa0"
-                    : theme === "plum"
-                      ? "#d4b9ff"
-                      : "#efc78e";
+            const color = theme === "forest" ? "#d5efa0" : "#efc78e";
             const glow = context.createRadialGradient(0, 0, 0, 0, 0, 30);
             glow.addColorStop(0, `${color}e0`);
             glow.addColorStop(0.12, `${color}b0`);
@@ -142,12 +147,7 @@ function scenery(
             }
             context.restore();
         }
-    } else if (
-        theme === "ocean" ||
-        theme === "sand" ||
-        theme === "ink" ||
-        theme === "sunset"
-    ) {
+    } else if (theme === "ink") {
         for (let i = 0; i < 7; i++) {
             context.beginPath();
             const y = height * 0.65 + i * 24;
@@ -160,31 +160,9 @@ function scenery(
                 width,
                 y - 70,
             );
-            context.strokeStyle =
-                theme === "ocean"
-                    ? "#6aa8bc18"
-                    : theme === "sand"
-                      ? "#be955424"
-                      : theme === "ink"
-                        ? dark
-                            ? "#f0ebe312"
-                            : "#454d5510"
-                        : "#ec9a621b";
-            context.lineWidth = theme === "ink" ? 12 : 2;
+            context.strokeStyle = dark ? "#f0ebe312" : "#454d5510";
+            context.lineWidth = 12;
             context.stroke();
-        }
-    } else if (theme === "plum") {
-        for (let i = 0; i < 70; i++) {
-            context.fillStyle = dark ? "#e3d6ff90" : "#765ca450";
-            context.beginPath();
-            context.arc(
-                random() * width,
-                random() * height,
-                0.4 + random(),
-                0,
-                Math.PI * 2,
-            );
-            context.fill();
         }
     }
 }
@@ -199,6 +177,8 @@ export function ThemeAtmosphere({
     const scene = useRef<HTMLCanvasElement>(null);
     const motion = useRef<HTMLCanvasElement>(null);
     useEffect(() => {
+        // These scenes use static SVG art and compositor-only motion.
+        if (theme === "ocean" || theme === "plum") return;
         const background = scene.current;
         const element = motion.current;
         const context = element?.getContext("2d");
@@ -223,7 +203,11 @@ export function ThemeAtmosphere({
             }
             scenery(still, width, height, theme, dark);
             const count =
-                theme === "ink" ? 5 : Math.min(32, Math.round(width / 45) + 8);
+                theme === "ink"
+                    ? 5
+                    : theme === "soda"
+                      ? Math.min(48, Math.round(width / 30) + 14)
+                      : Math.min(32, Math.round(width / 45) + 8);
             motes = Array.from({ length: count }, (_, i) => ({
                 x: Math.random() * width,
                 y: Math.random() * height,
@@ -242,7 +226,10 @@ export function ThemeAtmosphere({
             context.clearRect(0, 0, width, height);
             for (const mote of motes) {
                 const falling = theme === "sakura" || theme === "sand";
-                mote.y += (falling ? 14 : -5) * mote.depth * dt;
+                mote.y +=
+                    (falling ? 14 : theme === "soda" ? -24 : -5) *
+                    mote.depth *
+                    dt;
                 mote.x +=
                     (Math.sin(elapsed * 0.35 + mote.phase) * 9 +
                         (falling ? 7 : 2)) *
@@ -261,15 +248,17 @@ export function ThemeAtmosphere({
                 const size =
                     theme === "sakura"
                         ? 25 + mote.depth * 40
-                        : theme === "ink"
-                          ? 70 + mote.depth * 80
-                          : 12 + mote.depth * 42;
+                        : theme === "soda"
+                          ? 40 + mote.depth * 95
+                          : theme === "ink"
+                            ? 70 + mote.depth * 80
+                            : 12 + mote.depth * 42;
                 // Keep the central reading column calm; near and far particles differ in scale and opacity.
                 const edge = Math.abs(mote.x / width - 0.5) > 0.36;
                 context.globalAlpha =
                     (edge ? 0.65 : 0.28) *
                     mote.depth *
-                    (theme === "forest" || theme === "plum"
+                    (theme === "forest"
                         ? 0.5 + 0.5 * Math.sin(elapsed + mote.phase) ** 2
                         : 1);
                 context.drawImage(
@@ -308,8 +297,13 @@ export function ThemeAtmosphere({
     return (
         <div className="theme-atmosphere" data-scene={theme} aria-hidden="true">
             <div className="atmosphere-light" />
-            <canvas ref={scene} className="atmosphere-scenery" />
-            <canvas ref={motion} className="atmosphere-motion" />
+            <ThemeLandscape theme={theme} />
+            {theme !== "ocean" && theme !== "plum" && (
+                <>
+                    <canvas ref={scene} className="atmosphere-scenery" />
+                    <canvas ref={motion} className="atmosphere-motion" />
+                </>
+            )}
         </div>
     );
 }

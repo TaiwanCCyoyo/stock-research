@@ -1,0 +1,312 @@
+.theme-landscape {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+}
+.theme-landscape svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+.theme-landscape[data-paused] * {
+    animation-play-state: paused !important;
+}
+
+/* Woodblock sea: indigo carved bands and warm paper foam. */
+.landscape-ocean {
+    --wave-far: #95b5c4;
+    --wave-mid: #547e99;
+    --wave-deep: #204d72;
+    --wave-paper: #f6edda;
+    --wave-line: #b9d1db;
+}
+.wave-print {
+    position: absolute;
+    width: clamp(340px, 43vw, 650px);
+    aspect-ratio: 600 / 420;
+    opacity: 0.58;
+    mask-image: linear-gradient(#000 0 65%, transparent 100%);
+}
+.wave-print-near {
+    left: -150px;
+    bottom: -80px;
+    transform-origin: 0 100%;
+    animation: woodblock-swell 14s ease-in-out infinite alternate;
+}
+.wave-print-far {
+    right: -75px;
+    top: -15px;
+    width: clamp(320px, 36vw, 540px);
+    transform: scaleX(-1);
+    opacity: 0.32;
+}
+.wave-far {
+    fill: var(--wave-far);
+}
+.wave-mid {
+    fill: var(--wave-mid);
+}
+.wave-deep {
+    fill: var(--wave-deep);
+}
+.wave-foam,
+.wave-fingers,
+.wave-spray {
+    fill: var(--wave-paper);
+}
+.wave-foam,
+.wave-fingers {
+    stroke: var(--wave-mid);
+    stroke-width: 0.7;
+    stroke-linejoin: round;
+}
+.wave-engraving {
+    stroke: var(--wave-line);
+    stroke-width: 1.7;
+}
+.ocean-horizon {
+    position: absolute;
+    inset: 50% 0 0;
+    background: repeating-radial-gradient(
+        ellipse at 100% 120%,
+        transparent 0 36px,
+        #54829b12 37px 38px,
+        transparent 39px 57px
+    );
+    opacity: 0.65;
+}
+.studio[data-appearance="dark"] .landscape-ocean {
+    --wave-far: #34566a;
+    --wave-mid: #33617e;
+    --wave-deep: #153951;
+    --wave-paper: #c9d3ca;
+    --wave-line: #6698ad;
+}
+.studio[data-appearance="dark"] .wave-print {
+    opacity: 0.48;
+}
+.studio[data-appearance="dark"] .wave-print-far {
+    opacity: 0.28;
+}
+@keyframes woodblock-swell {
+    from {
+        transform: translate3d(-6px, 8px, 0) rotate(-1deg);
+    }
+    to {
+        transform: translate3d(5px, -5px, 0) rotate(1deg);
+    }
+}
+
+/* A luminous galactic plane and dark dust lanes, rather than a uniform star pattern. */
+.landscape-plum {
+    background:
+        radial-gradient(ellipse at 92% 13%, #b79ed944, transparent 58%),
+        radial-gradient(ellipse at 0 86%, #7f8fc533, transparent 48%);
+}
+.galaxy-scene {
+    opacity: 0.55;
+}
+.galaxy-dust {
+    fill: #403060;
+    opacity: 0.17;
+}
+.galaxy-dust.secondary {
+    opacity: 0.1;
+}
+.galaxy-stars {
+    fill: #73528f;
+}
+.galaxy-beacons {
+    stroke: #977098;
+}
+.galaxy-shimmer {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 88% 15%, #e6c7ef45, transparent 8%),
+        radial-gradient(circle at 4% 80%, #a6b0eb35, transparent 4%);
+    animation: star-breath 7s ease-in-out infinite alternate;
+}
+.studio[data-appearance="dark"] .landscape-plum {
+    background:
+        radial-gradient(ellipse at 92% 13%, #7a51953b, transparent 58%),
+        radial-gradient(ellipse at 0 86%, #384b8b30, transparent 48%);
+}
+.studio[data-appearance="dark"] .galaxy-scene {
+    opacity: 0.8;
+}
+.studio[data-appearance="dark"] .galaxy-stars {
+    fill: #f9ede0;
+}
+.studio[data-appearance="dark"] .galaxy-dust {
+    fill: #080a1b;
+    opacity: 0.55;
+}
+.studio[data-appearance="dark"] .galaxy-dust.secondary {
+    opacity: 0.3;
+}
+.studio[data-appearance="dark"] .galaxy-beacons {
+    stroke: #f9e6d8;
+}
+@keyframes star-breath {
+    from {
+        opacity: 0.3;
+    }
+    to {
+        opacity: 0.9;
+    }
+}
+
+/* Light entering from the upper right, with a softly illuminated lower atmosphere. */
+.sunset-disc {
+    position: absolute;
+    width: min(54vw, 670px);
+    aspect-ratio: 1;
+    right: -12%;
+    top: -30%;
+    background: radial-gradient(
+        circle,
+        #fff5ceba 0 10%,
+        #ffc77e60 25%,
+        #f1935d22 48%,
+        transparent 70%
+    );
+}
+.sunset-rays {
+    position: absolute;
+    inset: -30%;
+    transform-origin: 88% 0;
+    background: conic-gradient(
+        from 170deg at 88% 0%,
+        transparent 0deg 12deg,
+        #ffd69235 14deg 17deg,
+        transparent 20deg 29deg,
+        #f9c27830 32deg 37deg,
+        transparent 41deg 48deg,
+        #ffdba52e 51deg 54deg,
+        transparent 58deg
+    );
+    animation: sunset-light 24s ease-in-out infinite alternate;
+}
+.sunset-haze {
+    position: absolute;
+    inset: 35% 0 0;
+    background: linear-gradient(transparent, #e8a17916 45%, #df80912e);
+}
+.studio[data-appearance="dark"] .sunset-disc {
+    opacity: 0.6;
+}
+.studio[data-appearance="dark"] .sunset-rays {
+    opacity: 0.6;
+}
+@keyframes sunset-light {
+    from {
+        transform: rotate(-3deg);
+        opacity: 0.5;
+    }
+    to {
+        transform: rotate(3deg);
+        opacity: 0.85;
+    }
+}
+
+.forest-canopy {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at -5% -6%, #3163472e, transparent 35%),
+        radial-gradient(ellipse at 105% 12%, #46784c35, transparent 34%);
+}
+.forest-mist {
+    position: absolute;
+    inset: 0 -10%;
+    background:
+        radial-gradient(ellipse at 0 70%, #b7d4bb3d, transparent 48%),
+        radial-gradient(ellipse at 100% 35%, #c2d8bc30, transparent 40%);
+    animation: forest-drift 30s ease-in-out infinite alternate;
+}
+.forest-light {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        122deg,
+        transparent 12%,
+        #e6eabd1c 14%,
+        transparent 18% 23%,
+        #dfe9b51c 25%,
+        transparent 30%
+    );
+}
+@keyframes forest-drift {
+    to {
+        transform: translate3d(3%, -2%, 0);
+    }
+}
+
+.sand-dunes {
+    opacity: 0.28;
+}
+.sand-dunes > path:nth-child(1) {
+    fill: #d5b77e;
+}
+.sand-dunes > path:nth-child(2) {
+    fill: #cda163;
+}
+.sand-dunes > path:nth-child(3) {
+    fill: #b98a54;
+}
+.sand-dunes g {
+    stroke: #f3ddab;
+    stroke-width: 1;
+}
+.studio[data-appearance="dark"] .sand-dunes {
+    opacity: 0.13;
+}
+.soda-glass {
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(100deg, #d7f4aa26, transparent 18% 82%, #c9f1bd26),
+        radial-gradient(ellipse at 50% 105%, #afda6745, transparent 65%);
+}
+.soda-glint {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 4%;
+    width: 2px;
+    background: linear-gradient(transparent, #f5ffe780 45%, transparent);
+    box-shadow: 14px 0 28px #e1f8a440;
+    opacity: 0.4;
+}
+
+@media (max-width: 600px) {
+    .wave-print-near {
+        left: -140px;
+        bottom: -40px;
+        width: 390px;
+        opacity: 0.35;
+    }
+    .wave-print-far {
+        right: -80px;
+        top: 10px;
+        width: 400px;
+        opacity: 0.32;
+    }
+    .galaxy-scene {
+        opacity: 0.4;
+    }
+    .studio[data-appearance="dark"] .galaxy-scene {
+        opacity: 0.6;
+    }
+    .sunset-disc {
+        width: 470px;
+        top: -150px;
+        right: -290px;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .theme-landscape * {
+        animation: none !important;
+    }
+}
