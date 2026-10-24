@@ -86,7 +86,7 @@
                 "scripts/tests/test_daily_conditions_v1.py",
                 "scripts/tests/test_momentum_only_v1.py"
             ],
-            "consumers": ["annual", "pattern_scan"]
+            "consumers": ["annual", "pattern_scan", "tenbagger_drivers"]
         },
         "owner_hhhl_labels": {
             "paths": [
@@ -460,7 +460,8 @@
             "tests": [
                 "scripts/tests/test_pattern_scan*.py",
                 "scripts/tests/test_momentum_only_v1.py"
-            ]
+            ],
+            "consumers": ["tenbagger_drivers"]
         },
         "momentum_only": {
             "paths": [
@@ -474,6 +475,23 @@
             "tests": [
                 "scripts/tests/test_momentum_only_v1.py",
                 "scripts/tests/test_momentum_forward_v1.py"
+            ],
+            "consumers": ["tenbagger_drivers"]
+        },
+        "tenbagger_drivers": {
+            "paths": [
+                "research_core/industry_breadth_v1.py",
+                "research_core/institutional_flow_v1.py",
+                "research_core/tenbagger_drivers_v1.py",
+                "research_core/tenbagger_drivers_run_v1.py",
+                "scripts/run_tenbagger_drivers.py",
+                "tasks/20261024-tenbagger-drivers/*"
+            ],
+            "tests": [
+                "scripts/tests/test_industry_breadth_v1.py",
+                "scripts/tests/test_institutional_flow_v1.py",
+                "scripts/tests/test_tenbagger_drivers_v1.py",
+                "scripts/tests/test_tenbagger_drivers_run_v1.py"
             ]
         }
     },
@@ -563,8 +581,10 @@
         "scripts/tests/test_hhhl_variants_summary_evidence.py",
         "scripts/tests/test_hhhl_variants_summary_fast_v1.py",
         "scripts/tests/test_history_title_origins_export.py",
+        "scripts/tests/test_industry_breadth_v1.py",
         "scripts/tests/test_industry_role_comparison.py",
         "scripts/tests/test_industry_role_runner.py",
+        "scripts/tests/test_institutional_flow_v1.py",
         "scripts/tests/test_json_integrity.py",
         "scripts/tests/test_maintained_adjusted_daily.py",
         "scripts/tests/test_market_context.py",
@@ -749,6 +769,8 @@
         "scripts/tests/test_supplement_hhhl_v4_audit.py",
         "scripts/tests/test_supplement_hhhl_v4_diagnostics.py",
         "scripts/tests/test_technical_daily_v1.py",
+        "scripts/tests/test_tenbagger_drivers_run_v1.py",
+        "scripts/tests/test_tenbagger_drivers_v1.py",
         "scripts/tests/test_validate_hhhl_v4_source.py",
         "scripts/tests/test_verify_opportunity_history.py",
         "scripts/tests/test_verify_published_artifacts.py",
