@@ -2,12 +2,12 @@
     "schema": "study-card.v2",
     "task_id": "20261005-opportunity-growth-display",
     "kind": "tooling",
-    "question": "機會地圖的進度顯示做了什麼調整？",
-    "answer": "已把進度顯示規則改為以可用資料為基礎呈現完成比例。",
+    "question": "飆股地圖如何比較長短不同波段的漲幅？",
+    "answer": "未滿一年顯示實際漲幅，滿一年後換算成年報酬，避免短期漲幅被放大。",
     "verdict": "not_evaluated",
     "data_period": null,
     "key_numbers": [],
-    "limitation": "這是介面規則調整，沒有新的研究結果。",
+    "limitation": "這是顯示方式調整，沒有重新偵測波段或驗證買賣策略。",
     "report": {
         "web_report": null,
         "markdown": null
