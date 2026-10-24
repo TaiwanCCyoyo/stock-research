@@ -165,6 +165,7 @@ def test_check_uses_identity_only_never_studio_runs(tmp_path: Path) -> None:
     response.__enter__.return_value.read.return_value = json.dumps({
         **launcher.dashboard_identity({**environment, "RESEARCH_WEB_URL": "http://127.0.0.1:15177"}),
         "apiTarget": "http://127.0.0.1:18517",
+        "build": "production",
     }).encode()
     with (
         patch.object(launcher, "project_root", return_value=tmp_path),
@@ -285,6 +286,7 @@ def test_run_cleans_up_only_started_children_when_later_service_fails(tmp_path: 
         patch.object(launcher, "project_root", return_value=root),
         patch.object(launcher, "_inspect_service", return_value="stopped"),
         patch.object(launcher, "_configure_logging", return_value=tmp_path),
+        patch.object(launcher, "_build_website", return_value="current"),
         patch.object(launcher, "_start_child", side_effect=lambda *args: next(created)) as start,
         patch.object(launcher, "_wait_until_ready", side_effect=[None, RuntimeError("web failed")]),
         patch.object(launcher, "_verify_live_mode"),
@@ -310,6 +312,7 @@ def test_run_reports_exit_of_single_managed_child_when_other_service_is_reused(t
         patch.object(launcher, "project_root", return_value=root),
         patch.object(launcher, "_inspect_service", side_effect=("reusable", "stopped")),
         patch.object(launcher, "_configure_logging", return_value=tmp_path),
+        patch.object(launcher, "_build_website", return_value="current"),
         patch.object(launcher, "_start_child", return_value=child),
         patch.object(launcher, "_wait_until_ready"),
         patch.object(launcher, "_verify_live_mode"),
@@ -337,6 +340,7 @@ def test_run_reports_children_that_exit_simultaneously(tmp_path: Path, capsys: p
         patch.object(launcher, "project_root", return_value=root),
         patch.object(launcher, "_inspect_service", return_value="stopped"),
         patch.object(launcher, "_configure_logging", return_value=tmp_path),
+        patch.object(launcher, "_build_website", return_value="current"),
         patch.object(launcher, "_start_child", side_effect=lambda *args: next(created)),
         patch.object(launcher, "_wait_until_ready"),
         patch.object(launcher, "_verify_live_mode"),
@@ -358,6 +362,7 @@ def test_run_tells_the_api_which_website_url_to_point_to(tmp_path: Path) -> None
         patch.object(launcher, "project_root", return_value=root),
         patch.object(launcher, "_inspect_service", return_value="stopped"),
         patch.object(launcher, "_configure_logging", return_value=tmp_path),
+        patch.object(launcher, "_build_website", return_value="current"),
         patch.object(launcher, "_start_child", return_value=child) as start,
         patch.object(launcher, "_wait_until_ready", side_effect=RuntimeError("stop after first start")),
         patch.object(launcher, "_verify_live_mode"),
@@ -380,3 +385,67 @@ def test_reused_api_must_point_to_the_same_website_url() -> None:
         running["webUrl"] = "http://127.0.0.1:15177"
         response.__enter__.return_value.read.return_value = json.dumps(running).encode()
         launcher._verify_live_mode("history-api", 18517, environment)
+
+
+def test_website_command_serves_production_by_default_and_dev_on_request(tmp_path: Path) -> None:
+    with patch.object(launcher.shutil, "which", return_value="npm"):
+        assert "preview" in launcher._command("research-web", tmp_path, 15177)
+        assert "dev" in launcher._command("research-web", tmp_path, 15177, dev=True)
+        assert "preview" not in launcher._command("research-web", tmp_path, 15177, dev=True)
+
+
+@pytest.mark.parametrize(("reported", "expected"), [(None, "production"), ("development", "production"), ("production", "development")])
+def test_reuse_refuses_a_website_of_the_other_build(reported: str | None, expected: str) -> None:
+    environment = {
+        "VITE_ARTIFACT_MODE": "public-synthetic",
+        "RESEARCH_WEB_API_TARGET": "http://127.0.0.1:18517",
+        launcher.BUILD_KEY: expected,
+    }
+    payload = {"dataMode": "public-synthetic", "apiTarget": "http://127.0.0.1:18517"}
+    if reported:
+        payload["build"] = reported
+    response = MagicMock()
+    response.__enter__.return_value.read.return_value = json.dumps(payload).encode()
+    with patch.object(launcher.urllib.request, "urlopen", return_value=response):
+        with pytest.raises(RuntimeError, match="開發模式|正式版"):
+            launcher._verify_live_mode("research-web", 15177, environment)
+
+
+@pytest.mark.parametrize("dev", [False, True])
+def test_run_builds_the_website_only_for_production(tmp_path: Path, dev: bool) -> None:
+    root = tmp_path / "checkout"
+    root.mkdir()
+    children = iter((launcher.ManagedChild("history-api", MagicMock(), io.BytesIO()), launcher.ManagedChild("research-web", MagicMock(), io.BytesIO())))
+    with (
+        patch.object(launcher, "project_root", return_value=root),
+        patch.object(launcher, "_inspect_service", return_value="stopped"),
+        patch.object(launcher, "_configure_logging", return_value=tmp_path),
+        patch.object(launcher, "_build_website", return_value="built") as build,
+        patch.object(launcher, "_start_child", side_effect=lambda *args: next(children)) as start,
+        patch.object(launcher, "_wait_until_ready", side_effect=[None, RuntimeError("stop here")]),
+        patch.object(launcher, "_verify_live_mode"),
+        patch.object(launcher, "_stop_child"),
+    ):
+        launcher.run(no_browser=True, dev=dev)
+    assert build.called is (not dev)
+    assert start.call_args_list[1].args[-1] is dev
+    assert start.call_args_list[1].args[3][launcher.BUILD_KEY] == ("development" if dev else "production")
+
+
+def test_failed_build_stops_before_starting_services(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    root = tmp_path / "checkout"
+    root.mkdir()
+    result = MagicMock(returncode=1, stdout=b"[dashboard] build failed")
+    with (
+        patch.object(launcher, "project_root", return_value=root),
+        patch.object(launcher, "_inspect_service", return_value="stopped"),
+        patch.object(launcher, "_configure_logging", return_value=tmp_path),
+        patch.object(launcher.shutil, "which", return_value="npm"),
+        patch.object(launcher.subprocess, "run", return_value=result),
+        patch.object(launcher, "_start_child") as start,
+    ):
+        assert launcher.run(no_browser=True) == 1
+    start.assert_not_called()
+    err = capsys.readouterr().err
+    assert "建置網站失敗" in err and "--dev" in err
+    assert (tmp_path / "build.log").read_bytes() == b"[dashboard] build failed"

@@ -127,6 +127,18 @@ export function isCurrentRelease(directory = dist, version = sourceVersion()) {
     return readReleaseVersion(directory) === version;
 }
 
+/** The data mode a published release was built for, or null. */
+export function releaseMode(directory = dist) {
+    try {
+        return (
+            JSON.parse(readFileSync(join(directory, "release.json"), "utf8"))
+                .artifactMode ?? null
+        );
+    } catch {
+        return null;
+    }
+}
+
 export function publishDirectory(stage, destination, rename = renameSync) {
     const backup = `${destination}.previous-${randomUUID()}`;
     const hadDestination = existsSync(destination);
@@ -140,10 +152,19 @@ export function publishDirectory(stage, destination, rename = renameSync) {
     if (hadDestination) rmSync(backup, { recursive: true, force: true });
 }
 
-export function ensureRelease({ root = repoRoot, build = buildStage } = {}) {
+/** `mode`, when given, must also match: a demo build is never reused for
+ *  private data or the reverse (the launcher always passes it). */
+export function ensureRelease({
+    root = repoRoot,
+    build = buildStage,
+    mode = undefined,
+} = {}) {
     const version = sourceVersion(root);
     const destination = join(root, "research_web", "dist");
-    if (isCurrentRelease(destination, version)) {
+    if (
+        isCurrentRelease(destination, version) &&
+        (!mode || releaseMode(destination) === mode)
+    ) {
         console.log(`[dashboard] dist is current (${version.slice(0, 12)})`);
         return "current";
     }
@@ -233,7 +254,10 @@ if (
     resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 ) {
     try {
-        ensureRelease();
+        const requested = process.env.VITE_ARTIFACT_MODE;
+        ensureRelease({
+            mode: requested ? releaseArtifactMode(requested) : undefined,
+        });
     } catch (error) {
         console.error(
             `[dashboard] build failed; existing dist was preserved: ${error.message}`,

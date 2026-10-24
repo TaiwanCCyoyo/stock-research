@@ -1,4 +1,5 @@
 import { defineConfig, loadEnv } from "vite";
+import type { ServerResponse } from "node:http";
 import react from "@vitejs/plugin-react";
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
@@ -13,6 +14,24 @@ let buildOutDir = "";
 const releaseVersion = process.env.RESEARCH_WEB_VERSION ?? "development";
 
 // https://vite.dev/config/
+function identityHandler(build: "development" | "production") {
+    return (_request: unknown, response: ServerResponse) => {
+        response.setHeader("Content-Type", "application/json");
+        response.end(
+            JSON.stringify({
+                schema: "stock-research-service.v1",
+                service: "research-web",
+                build,
+                dataMode: process.env.VITE_ARTIFACT_MODE ?? "public-synthetic",
+                apiTarget:
+                    process.env.RESEARCH_WEB_API_TARGET ??
+                    "http://127.0.0.1:8517",
+                projectRoot: fileURLToPath(new URL("..", import.meta.url)),
+            }),
+        );
+    };
+}
+
 export default defineConfig(({ command, mode }) => {
     if (command === "build" && !process.env.RESEARCH_WEB_BUILD_OUT_DIR)
         throw new Error(
@@ -80,31 +99,19 @@ export default defineConfig(({ command, mode }) => {
                 },
             },
             {
+                // The launcher reads this to reuse only a matching service. It
+                // answers from the development server and from `vite preview`.
                 name: "research-checkout-identity",
                 configureServer(server) {
                     server.middlewares.use(
                         "/__research_service__",
-                        (_request, response) => {
-                            response.setHeader(
-                                "Content-Type",
-                                "application/json",
-                            );
-                            response.end(
-                                JSON.stringify({
-                                    schema: "stock-research-service.v1",
-                                    service: "research-web",
-                                    dataMode:
-                                        process.env.VITE_ARTIFACT_MODE ??
-                                        "public-synthetic",
-                                    apiTarget:
-                                        process.env.RESEARCH_WEB_API_TARGET ??
-                                        "http://127.0.0.1:8517",
-                                    projectRoot: fileURLToPath(
-                                        new URL("..", import.meta.url),
-                                    ),
-                                }),
-                            );
-                        },
+                        identityHandler("development"),
+                    );
+                },
+                configurePreviewServer(server) {
+                    server.middlewares.use(
+                        "/__research_service__",
+                        identityHandler("production"),
                     );
                 },
             },
