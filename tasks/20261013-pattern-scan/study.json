@@ -12,8 +12,6 @@
         "web_report": "web-report/index.html",
         "markdown": "report.md"
     },
-    "account_run": null,
-    "delivery_state": "code_merged",
     "scratch_run": {
         "run": "q2-q6-v6"
     },
@@ -23,5 +21,7 @@
         "publication": null,
         "shared_data": [],
         "legacy_history_id": null
-    }
+    },
+    "account_run": null,
+    "delivery_state": "code_merged"
 }
