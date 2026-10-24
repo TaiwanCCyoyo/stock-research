@@ -115,6 +115,8 @@ Owner 2026-10-13已定沿用handoff清單、不新增另一套「低過低」；
 | `market-context`           | 0050 市場背景              | 查閱 0050 雙層背景與僅使用過去資訊的市場環境；按固定規則與日曆判讀。                   |
 | `opportunity-history-web`  | 歷史大漲波段與方法結果     | 回溯已保存個股的大漲波段、同期間候選與六種方法結果；屬舊版預覽，並非完整歷史上市母體。 |
 
+| `security-coverage-v1` | 股票資料涵蓋摘要 | 查看來源已知證券的資料存在性、已知缺口與身分待確認資訊；不保證完整歷史或當時可得。 |
+
 <!-- shared-data-labels:end -->
 
 ## 怎麼記，才不會下一個 session 重做
@@ -309,9 +311,10 @@ primary 本機位置、查詢／重算與未知／相依／current-reference 限
 
 ## 已做研究的定位表：非完整清單
 
-| 資產                    | 契約                                      | 取得與邊界                                                                                                                                                                         |
-| ----------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `shared-data-viewer.v1` | [共用資料唯讀檢視](shared-data-viewer.md) | `research_core.shared_data_view`、`research_api.shared_data`，local-private `/#data` 與 `/#data/<code>`；現行世代的日價／技術指標及既有 catalog 原位讀取，不下載、重算或發布資料。 |
+| 資產                                            | 契約                                      | 取得與邊界                                                                                                                                                                                                                                                                                                              |
+| ----------------------------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `shared-data-viewer.v1`                         | [共用資料唯讀檢視](shared-data-viewer.md) | `research_core.shared_data_view`、`research_api.shared_data`，local-private `/#data` 與 `/#data/<code>`；現行世代的日價／技術指標及既有 catalog 原位讀取，不下載、重算或發布資料。                                                                                                                                      |
+| `security-coverage.v1` / `security-coverage-v1` | [Coverage contract](security-coverage.md) | `research_core.security_coverage_store.CoverageStore`; maintain through `scripts.maintain_security_coverage`; single metadata family under the shared root `derived/security-coverage-v1/`; source-observed universe, presence and known limits, identity ambiguity retained; no acquisition or PIT-completeness claim. |
 
 波段的時間調整展示：[`wave-growth-display.v1` 契約](opportunity-presentation.md#time-adjusted-wave-display)、[預先記錄的規則](../../tasks/20261005-opportunity-growth-display/mission.md)、[共享計算](../../research_core/wave_growth.py)、[CLI](../../scripts/score_wave_growth.py)。滿一年採 CAGR，未滿一年採實際漲幅，初始門檻 100%；完整事後波段不刪除。此為同一保存波段的查詢日投影，非新回測、PIT 訊號或完整市場認證；程式／契約可由 Git 取得，原價格快照仍沿用原取得限制。
 
