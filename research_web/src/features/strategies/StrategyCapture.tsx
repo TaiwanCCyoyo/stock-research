@@ -210,7 +210,7 @@ export function StrategyCapture({
     const projection = exposure ? projectExposure(exposure.rows) : null;
     const unknownDays = projection?.unknownDays ?? 0;
     return (
-        <section className="ss-card">
+        <section className="ss-card u-card">
             <h2>抓到哪些飆股</h2>
             <p className="ss-muted">
                 比較固定採 100%
@@ -221,12 +221,12 @@ export function StrategyCapture({
                 100%，不隨地圖選項改變。
             </p>
             {run.captureState === "loading" && (
-                <p className="ss-warning">
+                <p className="ss-warning u-notice">
                     飆股資料正在背景核對；交易與帳戶明細可以先看，核對完成後會自動更新。
                 </p>
             )}
             {run.captureState === "failed" && (
-                <p className="ss-warning">
+                <p className="ss-warning u-notice">
                     飆股資料核對失敗，重疊結果保留未知；交易與帳戶紀錄仍可查看。
                 </p>
             )}
@@ -257,7 +257,7 @@ export function StrategyCapture({
                         projection={projection!}
                     />
                     {unknownDays > 0 && (
-                        <p className="ss-warning">
+                        <p className="ss-warning u-notice">
                             {unknownDays}{" "}
                             天的配置資料未齊；整天以灰色缺口保留，不能視為零配置，也不接到前後已知日期。
                         </p>

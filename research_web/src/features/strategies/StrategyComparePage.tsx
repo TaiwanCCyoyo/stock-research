@@ -13,12 +13,13 @@ import { duration, gainClass, percentage, ratio } from "./format";
 import { sharedExposureCoverage } from "./captureModel";
 import { strategyTitle } from "./presentation";
 import { StudioState } from "./shared";
+import { SourceNotice } from "../../components/SourceNotice";
 import "./strategies.css";
 
 const colors = [
     "var(--accent)",
     "var(--ss-up)",
-    "var(--ss-gold)",
+    "var(--positive)",
     "var(--ss-down)",
 ];
 export function StrategyComparePage() {
@@ -116,7 +117,8 @@ export function StrategyComparePage() {
             ? periodMetrics(benchmarkPoints)
             : null;
     return (
-        <div className="ss-page">
+        <div className="ss-page u-page u-wide">
+            {resource.data && <SourceNotice source={resource.data.source} />}
             <h1>策略比較</h1>
             <p className="ss-muted">
                 選 2～4 個策略，在相同日期上看報酬、回落與飆股資金比例。
@@ -132,7 +134,7 @@ export function StrategyComparePage() {
                     >
                         {allRuns.map((run) => (
                             <button
-                                className="ss-chip"
+                                className="ss-chip u-chip"
                                 key={run.id}
                                 aria-pressed={ids.includes(run.id)}
                                 disabled={
@@ -147,25 +149,29 @@ export function StrategyComparePage() {
                                 }
                             >
                                 {strategyTitle(run)}
-                                <small className="ss-muted">
-                                    <br />
-                                    {run.plainTitle || run.name}
-                                </small>
+                                {run.plainTitle && (
+                                    <small className="ss-muted">
+                                        <br />
+                                        {run.plainTitle}
+                                    </small>
+                                )}
                             </button>
                         ))}
                     </div>
                     {ids.length < 2 ? (
-                        <p className="ss-warning">請至少選 2 個策略。</p>
+                        <p className="ss-warning u-notice">
+                            請至少選 2 個策略。
+                        </p>
                     ) : runs.length < 2 ? (
                         <div className="ss-loading">
                             {detailError || "正在讀取策略的原始帳戶與交易…"}
                         </div>
                     ) : !aligned.dates.length ? (
-                        <p className="ss-warning">
+                        <p className="ss-warning u-notice">
                             這些策略沒有共同保存日期，不能疊在一起比較。
                         </p>
                     ) : (
-                        <section className="ss-card">
+                        <section className="ss-card u-card">
                             <h2>
                                 共同期間：{from}—{through}
                             </h2>
@@ -176,7 +182,9 @@ export function StrategyComparePage() {
                                 只比較股價，不含配息。
                             </p>
                             {detailError && (
-                                <p className="ss-warning">{detailError}</p>
+                                <p className="ss-warning u-notice">
+                                    {detailError}
+                                </p>
                             )}
                             <LineChart
                                 dates={aligned.dates}
@@ -188,6 +196,12 @@ export function StrategyComparePage() {
                                             )!,
                                         ),
                                         color: colors[index],
+                                        dash:
+                                            index >= 2
+                                                ? index === 2
+                                                    ? "8 4"
+                                                    : "2 4"
+                                                : undefined,
                                         values: series.values,
                                     })),
                                     {
@@ -214,7 +228,7 @@ export function StrategyComparePage() {
                                     <tbody>
                                         {metrics.map((metric) => (
                                             <tr key={metric.run.id}>
-                                                <td>
+                                                <td data-label="策略">
                                                     <a
                                                         href={`#strategy/${encodeURIComponent(metric.run.id)}`}
                                                     >
@@ -224,12 +238,11 @@ export function StrategyComparePage() {
                                                     </a>
                                                     <small className="ss-muted">
                                                         <br />
-                                                        {metric.run
-                                                            .plainTitle ||
-                                                            metric.run.name}
+                                                        {metric.run.plainTitle}
                                                     </small>
                                                 </td>
                                                 <td
+                                                    data-label="區間總報酬"
                                                     className={gainClass(
                                                         metric.performance
                                                             ?.return,
@@ -240,19 +253,22 @@ export function StrategyComparePage() {
                                                             ?.return,
                                                     )}
                                                 </td>
-                                                <td className="ss-loss">
+                                                <td
+                                                    data-label="最大跌幅"
+                                                    className="ss-loss"
+                                                >
                                                     {percentage(
                                                         metric.performance
                                                             ?.maxDrawdown,
                                                     )}
                                                 </td>
-                                                <td>
+                                                <td data-label="最久沒創新高">
                                                     {duration(
                                                         metric.performance
                                                             ?.longestUnderwaterDays,
                                                     )}
                                                 </td>
-                                                <td>
+                                                <td data-label="賺錢交易比例">
                                                     {ratio(metric.winRate)}
                                                     <small className="ss-muted">
                                                         <br />
@@ -260,7 +276,7 @@ export function StrategyComparePage() {
                                                         筆結束交易
                                                     </small>
                                                 </td>
-                                                <td>
+                                                <td data-label="完整資料日期平均飆股資金">
                                                     {ratio(metric.avgWeight)}
                                                     <small className="ss-muted">
                                                         <br />
@@ -282,26 +298,36 @@ export function StrategyComparePage() {
                                             </tr>
                                         ))}
                                         <tr>
-                                            <td>0050（股價）</td>
+                                            <td data-label="策略">
+                                                0050（股價）
+                                            </td>
                                             <td
+                                                data-label="區間總報酬"
                                                 className={gainClass(
                                                     benchmark?.return,
                                                 )}
                                             >
                                                 {percentage(benchmark?.return)}
                                             </td>
-                                            <td className="ss-loss">
+                                            <td
+                                                data-label="最大跌幅"
+                                                className="ss-loss"
+                                            >
                                                 {percentage(
                                                     benchmark?.maxDrawdown,
                                                 )}
                                             </td>
-                                            <td>
+                                            <td data-label="最久沒創新高">
                                                 {duration(
                                                     benchmark?.longestUnderwaterDays,
                                                 )}
                                             </td>
-                                            <td>不適用</td>
-                                            <td>歷史持股未知</td>
+                                            <td data-label="賺錢交易比例">
+                                                不適用
+                                            </td>
+                                            <td data-label="完整資料日期平均飆股資金">
+                                                歷史持股未知
+                                            </td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -318,9 +344,14 @@ export function StrategyComparePage() {
                                 {runs.map((run) => (
                                     <p key={run.id}>
                                         {strategyTitle(run)}（
-                                        {run.plainTitle || run.name}）：
+                                        {run.plainTitle || strategyTitle(run)}
+                                        ）：
                                         {run.from}—{run.through}；共{" "}
                                         {run.closedTradeCount} 筆已結束交易。
+                                        <span className="ss-muted">
+                                            研究代號 {run.id}；原始名稱{" "}
+                                            {run.name}。
+                                        </span>
                                     </p>
                                 ))}
                             </details>

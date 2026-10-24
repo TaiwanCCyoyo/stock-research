@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { SourceInfo } from "../../components/ui/primitives";
 import {
     initialSharedDataStatus,
     parseSharedGenerationMetadata,
@@ -49,24 +50,25 @@ export function SharedDataStatus() {
         if (ARTIFACT_MODE === "local-private") void load();
     }, [load]);
 
+    if (state.status === "synthetic") return null;
+
     return (
-        <section className="ss-card" aria-label="目前維護資料">
-            <h2>目前維護資料（非本頁研究快照）</h2>
-            {state.status === "synthetic" && (
-                <p className="ss-muted">合成模式：未讀取私有共用來源。</p>
-            )}
+        <section className="ss-shared-status" aria-label="共用行情資料來源">
             {state.status === "loading" && (
                 <p className="ss-muted" role="status">
-                    正在讀取共用維護資料狀態…
+                    正在讀取行情來源…
                 </p>
             )}
             {state.status === "failure" && (
                 <div role="alert">
                     <p className="ss-muted">
-                        共用維護資料狀態讀取失敗：{state.message}
+                        行情來源暫時無法讀取，仍可查看已保存的研究。
                     </p>
+                    <SourceInfo>
+                        <p>{state.message}</p>
+                    </SourceInfo>
                     <button
-                        className="ss-button"
+                        className="ss-button u-btn"
                         type="button"
                         onClick={() => void load()}
                     >
@@ -75,20 +77,23 @@ export function SharedDataStatus() {
                 </div>
             )}
             {state.status === "available" && (
-                <dl className="ss-stat-list">
-                    <div>
-                        <dt>世代</dt>
-                        <dd>{state.metadata.generation}</dd>
-                    </div>
-                    <div>
-                        <dt>資料截至</dt>
-                        <dd>{state.metadata.asof}</dd>
-                    </div>
-                    <div>
-                        <dt>建立時間</dt>
-                        <dd>{state.metadata.built_at_utc}</dd>
-                    </div>
-                </dl>
+                <SourceInfo label="共用行情資料來源">
+                    <p>這是目前共用行情的狀態，與本頁已保存的研究期間不同。</p>
+                    <dl className="ss-stat-list">
+                        <div>
+                            <dt>世代</dt>
+                            <dd>{state.metadata.generation}</dd>
+                        </div>
+                        <div>
+                            <dt>資料截至</dt>
+                            <dd>{state.metadata.asof}</dd>
+                        </div>
+                        <div>
+                            <dt>建立時間</dt>
+                            <dd>{state.metadata.built_at_utc}</dd>
+                        </div>
+                    </dl>
+                </SourceInfo>
             )}
         </section>
     );

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SourceInfo } from "../../components/ui/primitives";
 import {
     groupCatalog,
     selectedCatalogVersion,
@@ -16,31 +17,28 @@ function CatalogCard({ entries }: { entries: CatalogEntry[] }) {
     const [version, setVersion] = useState<string>();
     const entry = selectedCatalogVersion(entries, version);
     return (
-        <article className="shared-card">
-            <span className="shared-badge">
-                {entry.kind} · {entry.status}
-            </span>
-            <h2>{entry.display_title || "資產索引未登記名稱"}</h2>
-            <p>{entry.purpose || "資產索引未登記用途；請查閱資料契約。"}</p>
-            <p className="shared-note">
-                {entry.data_id} · {entries.length} 個版本
-            </p>
-            <label>
-                檢視版本{" "}
-                <select
-                    value={entry.version_id}
-                    onChange={(event) => setVersion(event.target.value)}
-                >
-                    {entries.map((item, i) => (
-                        <option key={item.version_id} value={item.version_id}>
-                            {i + 1} · {item.definition_version || "定義未提供"}{" "}
-                            · {item.status}
-                            {item.recommended === true ? " · 推薦" : ""}
-                        </option>
-                    ))}
-                </select>
-            </label>
-            <strong>{versionLabel(entry)}</strong>
+        <article className="u-card shared-card">
+            <span className="shared-badge">研究資料包</span>
+            <h2>{entry.display_title || "研究資料"}</h2>
+            {entries.length > 1 && (
+                <label>
+                    檢視內容{" "}
+                    <select
+                        value={entry.version_id}
+                        onChange={(event) => setVersion(event.target.value)}
+                    >
+                        {entries.map((item, i) => (
+                            <option
+                                key={item.version_id}
+                                value={item.version_id}
+                            >
+                                資料 {i + 1}
+                                {item.recommended === true ? " · 建議選用" : ""}
+                            </option>
+                        ))}
+                    </select>
+                </label>
+            )}
             <p>
                 {entry.coverage?.raw_input_period?.start ?? "期間未提供"} –{" "}
                 {entry.coverage?.raw_input_period?.end ?? "未提供"}
@@ -49,18 +47,31 @@ function CatalogCard({ entries }: { entries: CatalogEntry[] }) {
                 涵蓋股票：
                 {entry.viewer_metadata?.security_count != null
                     ? `${entry.viewer_metadata.security_count.toLocaleString()} 檔`
-                    : "manifest 未提供"}
+                    : "未提供"}
                 {entry.viewer_metadata?.analyzed_security_count != null &&
                     `；已分析 ${entry.viewer_metadata.analyzed_security_count.toLocaleString()} 檔`}
             </p>
-            <p>
-                資料欄位：
-                {entry.viewer_metadata?.columns?.join("、") ||
-                    "manifest 未提供實體欄位清單"}
+            <p className="shared-note">
+                研究資料包，請先確認適用範圍與研究限制。
             </p>
-            {entry.metadata_error && <p role="alert">{entry.metadata_error}</p>}
-            <details>
-                <summary>版本識別、定義、限制與取得位置</summary>
+            {entry.metadata_error && (
+                <p role="alert">資料說明暫時無法讀取，請查看來源資訊。</p>
+            )}
+            <SourceInfo>
+                <p>用途：{entry.purpose || "未提供"}</p>
+                <p>
+                    資料欄位：
+                    {entry.viewer_metadata?.columns?.join("、") ||
+                        "未提供欄位清單"}
+                </p>
+                {entry.metadata_error && <p>{entry.metadata_error}</p>}
+                <p className="shared-note">
+                    {entry.data_id} · {entries.length} 個版本
+                </p>
+                <strong>{versionLabel(entry)}</strong>
+                <p>
+                    類型與狀態：{entry.kind} · {entry.status}
+                </p>
                 <p>
                     版本：<code>{entry.version_id}</code>
                 </p>
@@ -74,7 +85,7 @@ function CatalogCard({ entries }: { entries: CatalogEntry[] }) {
                         "未提供"}
                     ；此處只驗證 manifest 本身，未驗證或載入成員資料。
                 </p>
-            </details>
+            </SourceInfo>
             <footer>
                 <a href={catalogGuide} target="_blank" rel="noreferrer">
                     目錄取用契約 ↗
@@ -98,13 +109,14 @@ export function SharedCatalog({
     const groups = groupCatalog(data.catalog?.entries ?? []);
     return (
         <>
-            <div className="shared-controls" aria-label="目錄篩選">
+            <div className="shared-controls u-chips" aria-label="目錄篩選">
                 {[
                     ["all", "全部"],
                     ["maintained", "持續維護"],
                     ["bundle", "研究資料包"],
                 ].map(([value, label]) => (
                     <button
+                        className="u-chip"
                         key={value}
                         aria-pressed={filter === value}
                         onClick={() => setFilter(value)}
@@ -114,26 +126,22 @@ export function SharedCatalog({
                 ))}
             </div>
             {data.catalogError && (
-                <p role="alert">
-                    研究資料目錄無法讀取：{data.catalogError}
-                    ；下方仍可查看維護家族。
-                </p>
+                <div role="alert" className="u-notice">
+                    <p>研究資料包暫時無法讀取；仍可查看持續維護的資料。</p>
+                    <SourceInfo>
+                        <p>{data.catalogError}</p>
+                    </SourceInfo>
+                </div>
             )}
             <div className="shared-catalog">
                 {filter !== "bundle" &&
                     data.families.map((family) => (
-                        <article className="shared-card" key={family.family}>
-                            <span className="shared-badge">
-                                現行世代 · 持續維護
-                            </span>
-                            <h2>
-                                {family.display_title || "資產索引未登記名稱"}
-                            </h2>
-                            <p>
-                                {family.purpose ||
-                                    "資產索引未登記用途；請查閱資料契約。"}
-                            </p>
-                            <p className="shared-note">{family.family}</p>
+                        <article
+                            className="u-card shared-card"
+                            key={family.family}
+                        >
+                            <span className="shared-badge">持續維護</span>
+                            <h2>{family.display_title || "研究資料"}</h2>
                             <p>
                                 {family.calendar.first} – {family.calendar.last}{" "}
                                 · {family.codes.toLocaleString()} 檔 ·{" "}
@@ -141,8 +149,9 @@ export function SharedCatalog({
                                 交易日
                             </p>
                             <p>資料截至 {family.asof}</p>
-                            <details>
-                                <summary>世代識別、定義、欄位與基準</summary>
+                            <SourceInfo>
+                                <p>資料家族：{family.family}</p>
+                                <p>用途：{family.purpose || "未提供"}</p>
                                 <p>
                                     使用版本：<code>{family.generation}</code>
                                 </p>
@@ -155,7 +164,7 @@ export function SharedCatalog({
                                     Status SHA-256：
                                     <code>{family.status_sha256}</code>
                                 </p>
-                            </details>
+                            </SourceInfo>
                             <footer>
                                 <a
                                     href={contract}
@@ -165,7 +174,10 @@ export function SharedCatalog({
                                     資料定義與維護說明 ↗
                                 </a>
                                 {family.family === "adjusted-daily-v1" && (
-                                    <button onClick={onViewer}>
+                                    <button
+                                        className="u-btn"
+                                        onClick={onViewer}
+                                    >
                                         在 K 線檢視
                                     </button>
                                 )}
@@ -178,19 +190,18 @@ export function SharedCatalog({
                     ))}
             </div>
             <p className="shared-note">
-                未標示現行版的資料包，不會依日期或名稱自動推定推薦版本；選單僅切換檢視內容。
+                資料包若未標示推薦內容，請先查看來源說明；選單只切換顯示內容。
             </p>
-            <details>
-                <summary>目錄快照識別</summary>
+            <SourceInfo>
+                <p>目錄快照識別</p>
                 <code>{data.catalog?.version_id ?? "不可讀"}</code>
-            </details>
+            </SourceInfo>
             {data.catalog && data.catalog.retired.length > 0 && (
-                <details>
-                    <summary>
-                        已退役紀錄 ({data.catalog.retired.length})
-                    </summary>
+                <SourceInfo
+                    label={`已退役資料來源（${data.catalog.retired.length}）`}
+                >
                     <pre>{JSON.stringify(data.catalog.retired, null, 2)}</pre>
-                </details>
+                </SourceInfo>
             )}
         </>
     );

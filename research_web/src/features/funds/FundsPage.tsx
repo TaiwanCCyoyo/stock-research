@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { SourceInfo } from "../../components/ui/primitives.tsx";
 import "./FundsPage.css";
 
 type Fund = {
@@ -198,60 +199,71 @@ export function FundsPage() {
         );
     }
     return (
-        <section className="fund-page">
+        <section className="fund-page u-page u-wide">
             <header className="fund-hero">
-                <h1>ETF 圖鑑</h1>
-                <span>
-                    查看六檔 ETF 的選股方法、持股與官方績效。資料摘錄於
-                    2026-10-01，非即時更新；各檔資料日期不同，不能直接當作績效排名或買賣建議。
-                </span>
+                <p className="u-eyebrow">基金資料與比較</p>
+                <h1 className="u-title">ETF 圖鑑</h1>
+                <p className="u-lede">
+                    查看六檔 ETF 的選股方式、持股樣本與官方績效摘錄。
+                </p>
+                <p className="u-notice">
+                    資料摘錄至
+                    2026/10；各檔日期與算法不同，不能直接排名，也不是買賣建議。
+                </p>
             </header>
-            <section className="fund-toolbar">
-                <label htmlFor="fund-search">搜尋 ETF</label>
+            <section className="fund-toolbar u-card" aria-label="搜尋 ETF">
+                <label className="u-eyebrow" htmlFor="fund-search">
+                    搜尋 ETF
+                </label>
                 <input
                     id="fund-search"
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
                     placeholder="代號、名稱、市場或角色"
                 />
-                <span>
-                    最多選 3
-                    檔並列查看；歷史資料與報酬算法尚未核對完整，目前還不能畫比較曲線或排名。
+                <span className="u-muted">
+                    最多選 3 檔並列。歷史資料與報酬算法尚未核對完整。
                 </span>
             </section>
             <div className="fund-layout">
                 <section className="fund-list" aria-label="ETF 候選列表">
-                    {visible.map((item) => (
-                        <article
-                            key={item.symbol}
-                            className={`fund-card${item.symbol === fund.symbol ? " fund-active" : ""}`}
-                        >
-                            <button
-                                type="button"
-                                className="fund-select"
-                                onClick={() => setSelected(item.symbol)}
-                                aria-pressed={item.symbol === fund.symbol}
+                    {visible.length === 0 ? (
+                        <p className="u-card u-muted">
+                            沒有符合的 ETF，請試試代號或市場名稱。
+                        </p>
+                    ) : (
+                        visible.map((item) => (
+                            <article
+                                key={item.symbol}
+                                className={`fund-card u-card${item.symbol === fund.symbol ? " fund-active" : ""}`}
                             >
-                                <strong>{item.symbol}</strong>
-                                <span>{item.name}</span>
-                                <small>{item.role}</small>
-                            </button>
-                            <label className="fund-compare">
-                                <input
-                                    type="checkbox"
-                                    checked={compare.includes(item.symbol)}
-                                    onChange={() => toggle(item.symbol)}
-                                    disabled={
-                                        !compare.includes(item.symbol) &&
-                                        compare.length === 3
-                                    }
-                                />{" "}
-                                比較
-                            </label>
-                        </article>
-                    ))}
+                                <button
+                                    type="button"
+                                    className="fund-select"
+                                    onClick={() => setSelected(item.symbol)}
+                                    aria-pressed={item.symbol === fund.symbol}
+                                >
+                                    <strong>{item.symbol}</strong>
+                                    <span>{item.name}</span>
+                                    <small>{item.role}</small>
+                                </button>
+                                <label className="fund-compare u-chip">
+                                    <input
+                                        type="checkbox"
+                                        checked={compare.includes(item.symbol)}
+                                        onChange={() => toggle(item.symbol)}
+                                        disabled={
+                                            !compare.includes(item.symbol) &&
+                                            compare.length === 3
+                                        }
+                                    />{" "}
+                                    比較
+                                </label>
+                            </article>
+                        ))
+                    )}
                 </section>
-                <section className="fund-detail">
+                <section className="fund-detail u-card">
                     <div className="fund-title">
                         <div>
                             <p>{fund.market}</p>
@@ -268,66 +280,74 @@ export function FundsPage() {
                             原文方法 ↗
                         </a>
                     </div>
-                    <details open>
-                        <summary>方法與公開程度</summary>
+                    <section className="fund-section">
+                        <h3 className="u-section-title">選股方式</h3>
                         <p>{fund.method}</p>
-                        <dl>
-                            <dt>來源日期</dt>
-                            <dd>{fund.methodDate}</dd>
-                            <dt>原文 URL</dt>
-                            <dd>
-                                <a
-                                    href={fund.methodUrl}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                >
-                                    {fund.methodUrl}
-                                </a>
-                            </dd>
-                        </dl>
-                    </details>
-                    <details open>
-                        <summary>官方績效摘錄</summary>
-                        <p>
-                            <strong>{performance.oneYear}</strong>（截至{" "}
-                            {performance.asOf}）
-                        </p>
-                        <p className="fund-note">{performance.basis}</p>
-                        <p className="fund-note">
-                            還需要確認：{performance.gap}
-                        </p>
-                        {PERFORMANCE_SOURCES[fund.symbol] && (
+                        <SourceInfo>
+                            <p>方法資料日期：{fund.methodDate}</p>
                             <a
-                                href={PERFORMANCE_SOURCES[fund.symbol]}
+                                href={fund.methodUrl}
                                 target="_blank"
                                 rel="noreferrer"
                             >
-                                績效來源原文 ↗
+                                方法原文 ↗
                             </a>
-                        )}
-                    </details>
-                    <details open>
-                        <summary>持股樣本</summary>
+                        </SourceInfo>
+                    </section>
+                    <section className="fund-section">
+                        <h3 className="u-section-title">官方績效摘錄</h3>
+                        <p>
+                            <strong className="fund-performance">
+                                {performance.oneYear}
+                            </strong>
+                            （截至 {performance.asOf}）
+                        </p>
+                        <p className="fund-note">
+                            還需要確認：{performance.gap}
+                        </p>
+                        <SourceInfo>
+                            <p>報酬計算方式：{performance.basis}</p>
+                            {PERFORMANCE_SOURCES[fund.symbol] && (
+                                <a
+                                    href={PERFORMANCE_SOURCES[fund.symbol]}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                >
+                                    績效來源原文 ↗
+                                </a>
+                            )}
+                        </SourceInfo>
+                    </section>
+                    <section className="fund-section">
+                        <h3 className="u-section-title">持股樣本</h3>
                         <p>
                             最近可核對持股日期：
                             <strong>{fund.holdingDate}</strong>
                         </p>
                         <ul>
                             {fund.holdings.map((holding) => (
-                                <li key={holding}>{holding}</li>
+                                <li key={holding}>
+                                    {holding.replace(
+                                        "舊搜尋快照",
+                                        "舊搜尋資料",
+                                    )}
+                                </li>
                             ))}
                         </ul>
-                        <p className="fund-note">{fund.holdingNote}</p>
-                        <a
-                            href={fund.holdingUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                        >
-                            持股原文 URL ↗
-                        </a>
-                    </details>
-                    <aside>
-                        <strong>哪些資料還不完整？</strong>
+                        <SourceInfo>
+                            <p>持股摘錄：{fund.holdings.join("；")}</p>
+                            <p>{fund.holdingNote}</p>
+                            <a
+                                href={fund.holdingUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                            >
+                                持股來源原文 ↗
+                            </a>
+                        </SourceInfo>
+                    </section>
+                    <aside className="u-notice">
+                        <strong>資料限制</strong>
                         <p>{fund.gap}</p>
                         <span>
                             畫比較曲線前，還需核對完整歷史資料，並統一幣別、配息與費用的計算方式。
@@ -335,68 +355,56 @@ export function FundsPage() {
                     </aside>
                 </section>
             </div>
-            <section className="fund-compare-panel">
+            <section className="fund-compare-panel u-card">
                 <div>
                     <p>比較籃</p>
                     <h2>{compare.length ? compare.join(" · ") : "尚未選擇"}</h2>
                 </div>
-                <button type="button" disabled>
+                <button type="button" className="u-btn" disabled>
                     比較曲線（資料不足）
                 </button>
                 <p>
                     各檔截止日、幣別與報酬定義不同，以下只並列原始摘錄，不能排名。
                 </p>
                 {compared.length > 0 && (
-                    <div className="fund-compare-table">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>ETF</th>
-                                    <th>市場／角色</th>
-                                    <th>方法</th>
-                                    <th>持股日期</th>
-                                    <th>官方 1 年摘錄</th>
-                                    <th>已知缺口</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {compared.map((item) => {
-                                    const itemPerformance =
-                                        PERFORMANCE[item.symbol];
-                                    return (
-                                        <tr key={item.symbol}>
-                                            <th scope="row">
-                                                {item.symbol}
-                                                <br />
-                                                <small>{item.name}</small>
-                                            </th>
-                                            <td>
-                                                {item.market}
-                                                <br />
-                                                <small>{item.role}</small>
-                                            </td>
-                                            <td>{item.method}</td>
-                                            <td>{item.holdingDate}</td>
-                                            <td>
-                                                {itemPerformance.oneYear}
-                                                <br />
-                                                <small>
-                                                    {itemPerformance.asOf}；
-                                                    {itemPerformance.basis}
-                                                </small>
-                                            </td>
-                                            <td>
-                                                {item.gap}
-                                                <br />
-                                                <small>
-                                                    {itemPerformance.gap}
-                                                </small>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
+                    <div className="fund-compare-list">
+                        {compared.map((item) => {
+                            const itemPerformance = PERFORMANCE[item.symbol];
+                            return (
+                                <article
+                                    className="fund-compare-card u-card"
+                                    key={item.symbol}
+                                >
+                                    <h3>
+                                        {item.symbol}
+                                        <small>{item.name}</small>
+                                    </h3>
+                                    <dl>
+                                        <dt>市場與用途</dt>
+                                        <dd>
+                                            {item.market}・{item.role}
+                                        </dd>
+                                        <dt>選股方式</dt>
+                                        <dd>{item.method}</dd>
+                                        <dt>持股日期</dt>
+                                        <dd>{item.holdingDate}</dd>
+                                        <dt>官方一年摘錄</dt>
+                                        <dd>
+                                            {itemPerformance.oneYear}
+                                            <small>
+                                                {itemPerformance.asOf}；
+                                                {itemPerformance.basis}
+                                            </small>
+                                        </dd>
+                                        <dt>資料仍缺</dt>
+                                        <dd>
+                                            {item.gap}
+                                            <small>{itemPerformance.gap}</small>
+                                        </dd>
+                                    </dl>
+                                </article>
+                            );
+                        })}
                     </div>
                 )}
             </section>

@@ -78,7 +78,7 @@ export function ClassificationEvidence({
     ));
     return (
         <details
-            className="op-classification-evidence"
+            className="op-classification-evidence u-source"
             style={{ overflowWrap: "anywhere", minWidth: 0 }}
         >
             <summary>分類來源</summary>

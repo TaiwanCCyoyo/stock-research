@@ -11,6 +11,7 @@ import {
     exportObservation,
 } from "./model";
 import type { AtlasData, Encoding, Observation, Measure } from "./model";
+import "./MarketPage.css";
 
 function PriceLine({
     stock,
@@ -370,8 +371,8 @@ export function MarketPage({
         setTimeout(() => URL.revokeObjectURL(url), 1000);
     };
     return (
-        <>
-            <section className="atlas-hero">
+        <div className="market-page">
+            <section className="atlas-hero u-card">
                 <div className="mountains" aria-hidden="true">
                     <i />
                     <i />
@@ -395,7 +396,7 @@ export function MarketPage({
                 <div className="hero-bottom">
                     <span>從全貌看見輪動，從一檔股票找到證據。</span>
                     <button
-                        className="text-button"
+                        className="text-button u-btn"
                         onClick={() => setDemo((v) => !v)}
                     >
                         {demo ? "返回真實歷史" : "試玩含市值的示意版"} ↗
@@ -403,21 +404,25 @@ export function MarketPage({
                 </div>
             </section>
             {loading ? (
-                <div className="surface state-message" role="status">
+                <div className="surface u-card state-message" role="status">
                     正在整理歷史版圖…
                 </div>
             ) : error ? (
-                <div className="surface state-message" role="alert">
+                <div className="surface u-card state-message" role="alert">
                     <h2>歷史版圖尚未準備好</h2>
-                    <p>{error}</p>
+                    <p>目前無法載入歷史版圖，請稍後重新載入。</p>
+                    <details className="u-source">
+                        <summary>錯誤詳情</summary>
+                        <div>{error}</div>
+                    </details>
                     <button
-                        className="primary-button"
+                        className="primary-button u-btn u-btn-primary"
                         onClick={() => setRetry((v) => v + 1)}
                     >
                         重新載入
                     </button>
                     <button
-                        className="text-button"
+                        className="text-button u-btn"
                         onClick={() => setDemo(true)}
                     >
                         先體驗明確標示的示意版
@@ -431,9 +436,9 @@ export function MarketPage({
                                 展示模式：股票、價格、市值皆為假想資料，用來體驗細胞消長與大小規則。
                             </div>
                         )}
-                        <section className="surface timeline">
+                        <section className="surface u-card timeline">
                             <button
-                                className="play-button"
+                                className="play-button u-btn u-btn-primary"
                                 disabled={
                                     !bounds.available ||
                                     bounds.min === bounds.max
@@ -515,7 +520,7 @@ export function MarketPage({
                             </p>
                         )}
                         <div className="atlas-toolbar">
-                            <div className="segmented">
+                            <div className="segmented u-segmented">
                                 <button
                                     aria-pressed={view === "groups"}
                                     onClick={() => {
@@ -646,7 +651,7 @@ export function MarketPage({
                             <div className="caption">
                                 目錄收錄 {data.stocks.length.toLocaleString()}{" "}
                                 檔，並非完整歷史可投資名單。歷史市值尚未齊備，目前用漲幅直徑；分類來自{" "}
-                                {data.classificationAsOf} 快照，屬事後整理。
+                                分類依目前保存資料回看，並非當年分類。
                                 本頁顯示研究目錄的日期範圍，較早的官方行情尚未接入。
                             </div>
                         )}
@@ -669,7 +674,7 @@ export function MarketPage({
                             </div>
                         )}
                         <div className="atlas-grid">
-                            <section className="surface map-panel">
+                            <section className="surface u-card map-panel">
                                 <div className="panel-heading">
                                     <div>
                                         <div className="breadcrumb">
@@ -951,11 +956,11 @@ export function MarketPage({
                                     <div className="participation-box">
                                         <h3>誰把握住這段漲勢？</h3>
                                         <p>
-                                            尚無與這個區間配對的完整策略持倉或
-                                            ETF 歷史快照。未知不能當成錯過。
+                                            尚無這段期間的完整策略與 ETF
+                                            持股資料；未知不能當成錯過。
                                         </p>
                                         <button
-                                            className="text-button"
+                                            className="text-button u-btn"
                                             onClick={onResearch}
                                         >
                                             查看研究交易證據 ↗
@@ -964,7 +969,7 @@ export function MarketPage({
                                 </div>
                             </section>
                         )}
-                        <section className="surface stock-table">
+                        <section className="surface u-card stock-table">
                             <div className="table-heading">
                                 <div>
                                     <h2>每一個機會，都能查清楚。</h2>
@@ -986,7 +991,7 @@ export function MarketPage({
                                 </label>
                             </div>
                             <div className="table-controls">
-                                <div className="segmented">
+                                <div className="segmented u-segmented">
                                     <button
                                         aria-pressed={tab === "rising"}
                                         onClick={() => setTab("rising")}
@@ -1007,7 +1012,7 @@ export function MarketPage({
                                     </button>
                                 </div>
                                 <button
-                                    className="text-button"
+                                    className="text-button u-btn"
                                     onClick={download}
                                 >
                                     下載完整觀察資料 ↓
@@ -1043,7 +1048,7 @@ export function MarketPage({
                                                             : ""
                                                     }
                                                 >
-                                                    <td>
+                                                    <td data-label="股票">
                                                         <strong>
                                                             {r.stock.name}
                                                         </strong>
@@ -1051,12 +1056,17 @@ export function MarketPage({
                                                             {r.stock.code}
                                                         </small>
                                                     </td>
-                                                    <td>
+                                                    <td data-label="族群">
                                                         {groups.get(
                                                             r.stock.groupIds[0],
                                                         ) ?? "分類待補"}
                                                     </td>
                                                     <td
+                                                        data-label={
+                                                            measure === "peak"
+                                                                ? "期間最高漲幅"
+                                                                : "起訖日漲幅"
+                                                        }
                                                         className={
                                                             r.gain !== null &&
                                                             r.gain < 0
@@ -1066,7 +1076,10 @@ export function MarketPage({
                                                     >
                                                         {percent(r.gain)}
                                                     </td>
-                                                    <td className="period-cell">
+                                                    <td
+                                                        className="period-cell"
+                                                        data-label="起訖日期"
+                                                    >
                                                         {data.dates[start] ??
                                                             "—"}
                                                         <br />→{" "}
@@ -1081,7 +1094,7 @@ export function MarketPage({
                                                             </small>
                                                         )}
                                                     </td>
-                                                    <td>
+                                                    <td data-label="起訖日原始收盤">
                                                         {r.stock.raw[
                                                             start
                                                         ]?.toFixed(2) ??
@@ -1107,13 +1120,13 @@ export function MarketPage({
                                                             </small>
                                                         )}
                                                     </td>
-                                                    <td>
+                                                    <td data-label="資料狀態">
                                                         {r.reason ??
                                                             "價格可核對"}
                                                     </td>
-                                                    <td>
+                                                    <td data-label="操作">
                                                         <button
-                                                            className="text-button"
+                                                            className="text-button u-btn"
                                                             aria-label={`查看${r.stock.name}證據`}
                                                             onClick={() =>
                                                                 inspect(
@@ -1165,11 +1178,11 @@ export function MarketPage({
                         </section>
                         <section className="source-section">
                             <button
-                                className="text-button"
+                                className="text-button u-btn"
                                 aria-expanded={evidence}
                                 onClick={() => setEvidence((v) => !v)}
                             >
-                                {evidence ? "−" : "+"} 資料來源、呈現規則與限制
+                                {evidence ? "−" : "+"} ⓘ 資料來源與研究限制
                             </button>
                             {evidence && (
                                 <div className="source-details">
@@ -1185,6 +1198,10 @@ export function MarketPage({
                                             <li key={i}>{x}</li>
                                         ))}
                                     </ul>
+                                    <p>
+                                        分類資料日期：{data.classificationAsOf}
+                                        。
+                                    </p>
                                     <p>
                                         目錄身分：
                                         <code>{data.catalogHash}</code>
@@ -1205,6 +1222,6 @@ export function MarketPage({
                     </>
                 )
             )}
-        </>
+        </div>
     );
 }

@@ -1,0 +1,112 @@
+.market-page {
+    min-width: 0;
+    color: var(--ink);
+    overflow-wrap: anywhere;
+}
+.market-page .surface,
+.market-page .panel,
+.market-page .state-message,
+.market-page .source-details {
+    border: 0;
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    box-shadow: var(--shadow-card);
+}
+.market-page button,
+.market-page select,
+.market-page input:not([type="range"]):not([type="checkbox"]) {
+    border-radius: var(--radius-pill);
+    color: var(--ink);
+    background: var(--chip);
+}
+.market-page button.primary-button,
+.market-page button[aria-pressed="true"] {
+    color: var(--paper);
+    background: var(--accent);
+}
+.market-page .notice {
+    background: var(--accent-soft);
+    color: var(--ink);
+    border-radius: var(--radius-md);
+}
+.market-page .hero-date strong {
+    color: var(--ink);
+}
+.market-page .source-details {
+    padding: 16px;
+}
+.market-page .atlas-hero {
+    background: var(--surface);
+    color: var(--ink);
+}
+.market-page :focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
+}
+@media (max-width: 600px) {
+    .market-page {
+        padding-bottom: 100px;
+    }
+    .market-page .hero-line {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .market-page .hero-date {
+        text-align: left;
+    }
+    .market-page .atlas-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .market-page .table-scroll {
+        overflow: visible;
+    }
+    .market-page .table-scroll table {
+        display: block;
+        width: 100%;
+    }
+    .market-page .table-scroll thead {
+        display: none;
+    }
+    .market-page .table-scroll tbody {
+        display: grid;
+        gap: 10px;
+    }
+    .market-page .table-scroll tr {
+        display: grid;
+        gap: 7px;
+        padding: 12px;
+        border-radius: var(--radius-md);
+        background: var(--chip);
+    }
+    .market-page .table-scroll td {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 12px;
+        padding: 0;
+        text-align: right;
+    }
+    .market-page .table-scroll td::before {
+        content: attr(data-label);
+        color: var(--muted);
+        font-size: 12px;
+        text-align: left;
+    }
+    .market-page .table-scroll td[data-label="股票"] {
+        display: block;
+        text-align: left;
+    }
+    .market-page .table-scroll td[data-label="股票"]::before {
+        display: none;
+    }
+    .market-page .atlas-toolbar {
+        flex-wrap: wrap;
+    }
+    .market-page .observation-period {
+        overflow-wrap: anywhere;
+    }
+    .market-page .source-details {
+        padding: 14px;
+    }
+}

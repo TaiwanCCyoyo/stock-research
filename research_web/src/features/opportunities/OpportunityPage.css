@@ -1,19 +1,23 @@
 .op-page {
-    --compare-1: #538a80;
-    --compare-2: #bd8852;
-    --compare-3: #8980b8;
-    --compare-4: #b87087;
+    --compare-1: var(--accent);
+    --compare-2: var(--positive);
+    --compare-3: var(--cell-deep);
+    --compare-4: var(--negative);
     display: grid;
     gap: 20px;
-    padding-bottom: 30px;
+    padding-bottom: 100px;
+    min-width: 0;
+    color: var(--ink);
+    overflow-wrap: anywhere;
 }
+
 .op-page button {
     background: var(--accent-soft);
     padding: 7px 12px;
 }
 .op-page button[aria-pressed="true"] {
     background: var(--accent);
-    color: var(--surface);
+    color: var(--paper);
 }
 .op-page .op-text-button {
     background: transparent;
@@ -49,14 +53,16 @@
     display: block;
     color: var(--muted);
     font:
-        10px/1.5 Georgia,
-        serif;
+        10px/1.5 Inter,
+        "Noto Sans TC",
+        sans-serif;
     letter-spacing: 0.23em;
 }
 .studio .op-hero h1 {
     font:
-        600 clamp(28px, 3vw, 38px)/1.55 "Noto Serif TC",
-        serif;
+        600 clamp(28px, 3vw, 38px)/1.55 Inter,
+        "Noto Sans TC",
+        sans-serif;
     letter-spacing: 0.035em;
     margin: 6px 0 8px;
 }
@@ -110,8 +116,9 @@
 .op-date-heading time {
     display: block;
     font:
-        500 clamp(24px, 3vw, 39px)/1.6 Georgia,
-        serif;
+        500 clamp(24px, 3vw, 39px)/1.6 Inter,
+        "Noto Sans TC",
+        sans-serif;
     font-variant-numeric: tabular-nums;
 }
 .op-date-heading small {
@@ -122,10 +129,10 @@
     font-size: 11px;
 }
 .op-card {
-    border: 1px solid var(--line);
-    border-radius: 14px;
+    border: 0;
+    border-radius: var(--radius-lg);
     background: var(--surface);
-    box-shadow: 0 4px 24px #16352f04;
+    box-shadow: var(--shadow-card);
     min-width: 0;
 }
 .op-controls {
@@ -143,7 +150,7 @@
     border-radius: 50%;
     color: var(--surface);
     background: var(--accent);
-    box-shadow: 0 3px 10px #16352f20;
+    box-shadow: var(--shadow-lift);
 }
 .op-slider-box {
     flex: 1;
@@ -175,8 +182,9 @@
     display: flex;
     justify-content: space-between;
     font:
-        10px/1.3 Georgia,
-        serif;
+        10px/1.3 Inter,
+        "Noto Sans TC",
+        sans-serif;
     color: var(--muted);
 }
 .op-time-control input[type="date"] {
@@ -253,8 +261,9 @@
 }
 .studio .op-section-title h2 {
     font:
-        600 20px/1.7 "Noto Serif TC",
-        serif;
+        600 20px/1.7 Inter,
+        "Noto Sans TC",
+        sans-serif;
     letter-spacing: 0.015em;
 }
 .op-section-title > p {
@@ -291,10 +300,10 @@
     background: var(--cell-light);
 }
 .op-inline-legend .retreat {
-    background: #b9b7ac;
+    background: var(--chip);
 }
 .op-inline-legend .other {
-    background: #afbab6;
+    background: var(--cell-mid);
 }
 .op-inline-legend .cash {
     background: var(--accent-soft);
@@ -407,8 +416,9 @@
 }
 .op-stock-value b {
     font:
-        600 16px/1.5 Georgia,
-        serif;
+        600 16px/1.5 Inter,
+        "Noto Sans TC",
+        sans-serif;
 }
 .op-stock-value small {
     display: block;
@@ -451,8 +461,9 @@
 .op-side-summary > b {
     display: block;
     font:
-        34px/1.5 Georgia,
-        serif;
+        34px/1.5 Inter,
+        "Noto Sans TC",
+        sans-serif;
 }
 .op-side-summary small,
 .op-side-summary p {
@@ -482,8 +493,9 @@
 }
 .op-stock-big {
     font:
-        500 40px/1.5 Georgia,
-        serif;
+        500 40px/1.5 Inter,
+        "Noto Sans TC",
+        sans-serif;
     display: block;
 }
 .op-stock-card > small {
@@ -615,13 +627,15 @@
 }
 .op-portfolio-row b {
     font:
-        500 15px/1.5 Georgia,
-        serif;
+        500 15px/1.5 Inter,
+        "Noto Sans TC",
+        sans-serif;
 }
 .op-ranking-number {
     font:
-        12px Georgia,
-        serif;
+        12px Inter,
+        "Noto Sans TC",
+        sans-serif;
     color: var(--muted);
 }
 .op-page .op-pin-button {
@@ -657,8 +671,9 @@
 .op-capital-number b {
     display: block;
     font:
-        500 25px/1.3 Georgia,
-        serif;
+        500 25px/1.3 Inter,
+        "Noto Sans TC",
+        sans-serif;
 }
 .op-capital-number span,
 .op-capital-chart > small {
@@ -696,8 +711,8 @@
     background: var(--cell-warm);
 }
 .op-allocation-other {
-    background: #b5bfba;
-    color: #243a30;
+    background: var(--chip);
+    color: var(--ink);
 }
 .op-allocation-cash {
     background: var(--accent-soft);
@@ -721,8 +736,9 @@
     justify-content: space-between;
     margin-left: 158px;
     font:
-        10px/1.5 Georgia,
-        serif;
+        10px/1.5 Inter,
+        "Noto Sans TC",
+        sans-serif;
     color: var(--muted);
     padding-bottom: 12px;
 }
@@ -793,7 +809,7 @@
     background: var(--cell-warm);
 }
 .phase-retreat {
-    background: #b9b7ac;
+    background: var(--chip);
 }
 .op-launch-tick {
     position: absolute;
@@ -997,11 +1013,14 @@
 }
 @media (max-width: 600px) {
     .op-page {
-        gap: 12px;
+        gap: 14px;
+        padding-bottom: 100px;
+        min-width: 0;
     }
     .op-hero {
-        display: block;
-        padding: 8px 4px 18px;
+        display: grid;
+        gap: 8px;
+        padding: 18px;
     }
     .op-hero h1 {
         font-size: 28px !important;
@@ -1016,7 +1035,7 @@
     .op-date-heading {
         max-width: none;
         text-align: left;
-        margin-top: 22px;
+        margin-top: 0;
     }
     .op-date-heading time {
         float: right;
@@ -1062,17 +1081,84 @@
     .op-provenance-details dd {
         margin-bottom: 8px;
     }
+    .op-table-scroll.op-mobile-cards {
+        overflow: visible;
+    }
+    .op-table-scroll.op-mobile-cards table {
+        display: block;
+        width: 100%;
+    }
+    .op-table-scroll.op-mobile-cards thead {
+        display: none;
+    }
+    .op-table-scroll.op-mobile-cards tbody {
+        display: grid;
+        gap: 10px;
+    }
+    .op-table-scroll.op-mobile-cards tr {
+        display: grid;
+        gap: 7px;
+        padding: 12px;
+        border-radius: var(--radius-md);
+        background: var(--chip);
+    }
+    .op-table-scroll.op-mobile-cards td {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 12px;
+        padding: 0;
+        text-align: right;
+    }
+    .op-table-scroll.op-mobile-cards td::before {
+        content: attr(data-label);
+        color: var(--muted);
+        font-size: 12px;
+        text-align: left;
+    }
+    .op-table-scroll.op-mobile-cards td[data-label="股票"] {
+        display: block;
+        text-align: left;
+        font-weight: 700;
+    }
+    .op-table-scroll.op-mobile-cards td[data-label="股票"]::before {
+        display: none;
+    }
     .op-page code {
         font-size: 9px;
     }
+    .op-time-control {
+        align-items: stretch;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .op-slider-box {
+        flex-basis: calc(100% - 58px);
+        min-width: 0;
+    }
+    .op-time-control input[type="date"] {
+        width: auto;
+        flex: 1 1 140px;
+    }
+    .op-settings-button {
+        flex: 1 1 auto;
+    }
+    .op-provenance-details {
+        padding: 15px;
+    }
+    .op-page :focus-visible {
+        outline: 3px solid var(--accent);
+        outline-offset: 3px;
+    }
 }
+
 .op-inline-legend .assets,
 .op-allocation-assets {
-    background: #c9bcdb;
-    color: #40334f;
+    background: var(--cell-mid);
+    color: var(--ink);
 }
 .op-inline-legend .unknown {
-    background: #bfc8c3;
+    background: var(--chip);
     border: 1px dashed var(--muted);
 }
 .op-comparison-notes {

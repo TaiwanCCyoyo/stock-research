@@ -62,7 +62,7 @@ export function StrategyWalkthrough({
               ? (add?.date ?? entry.date)
               : null;
     return (
-        <section className="ss-card">
+        <section className="ss-card u-card">
             <h2>用一筆實際回測交易，看懂策略</h2>
             <p className="ss-muted">
                 每一步都有保存的成交或決策紀錄。按播放，或直接選一個步驟。
@@ -77,7 +77,7 @@ export function StrategyWalkthrough({
                         : "從四步紀錄完整的交易中，依整筆損益選出最賺、中間順位與最賠。"}
             </p>
             {!picks.length ? (
-                <p className="ss-warning">
+                <p className="ss-warning u-notice">
                     這份研究沒有保存同時含候選、試單、加碼與賣出的完整交易，不能編造四步示範。
                 </p>
             ) : (
@@ -89,7 +89,7 @@ export function StrategyWalkthrough({
                     >
                         {picks.map((pick, index) => (
                             <button
-                                className="ss-chip"
+                                className="ss-chip u-chip"
                                 key={pick.trade.id}
                                 aria-pressed={activeSelection === index}
                                 onClick={() => {
@@ -280,7 +280,7 @@ export function StrategyWalkthrough({
                             )}
                             <div className="ss-pills">
                                 <button
-                                    className="ss-button ss-button-primary"
+                                    className="ss-button u-btn u-btn-primary"
                                     disabled={!trade}
                                     onClick={() => {
                                         if (!playing && step === 3) setStep(0);
@@ -290,7 +290,7 @@ export function StrategyWalkthrough({
                                     {playing ? "暫停" : "▶ 播放"}
                                 </button>
                                 <button
-                                    className="ss-button"
+                                    className="ss-button u-btn"
                                     disabled={step === 0}
                                     onClick={() => {
                                         setPlaying(false);
@@ -302,7 +302,7 @@ export function StrategyWalkthrough({
                                     上一步
                                 </button>
                                 <button
-                                    className="ss-button"
+                                    className="ss-button u-btn"
                                     disabled={step === 3}
                                     onClick={() => {
                                         setPlaying(false);
@@ -314,7 +314,7 @@ export function StrategyWalkthrough({
                                     下一步
                                 </button>
                                 <button
-                                    className="ss-button"
+                                    className="ss-button u-btn"
                                     onClick={() => {
                                         setPlaying(false);
                                         if (picked) onAudit(picked.trade.id);

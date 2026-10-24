@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { readHistory } from "./api.ts";
 import { HISTORY_SCHEMA, type HistoryOptions } from "./types.ts";
+import { SourceInfo } from "../../components/ui/primitives.tsx";
 
 export function HistoryMethodOptions({
     catalogId,
@@ -40,7 +41,7 @@ export function HistoryMethodOptions({
     }, [opened, date, catalogId]);
     return (
         <details
-            className="fh-method-options"
+            className="fh-method-options u-source"
             onToggle={(e) => setOpened(e.currentTarget.open)}
         >
             <summary>查看原有波段方法的收錄範圍</summary>
@@ -49,19 +50,26 @@ export function HistoryMethodOptions({
             </p>
             <div className="fh-controls">
                 {["2014-06-30", "2021-04-29", "2024-06-28"].map((day) => (
-                    <button key={day} onClick={() => onDate(day)}>
+                    <button
+                        className="u-chip"
+                        key={day}
+                        onClick={() => onDate(day)}
+                    >
                         {day.slice(0, 4)} 案例日
                     </button>
                 ))}
             </div>
             {error ? (
-                <p role="alert">暫時無法比較方案：{error}</p>
+                <div className="u-notice" role="alert">
+                    <p>目前無法載入比較方案，請稍後重試。</p>
+                    <SourceInfo label="錯誤詳情">{error}</SourceInfo>
+                </div>
             ) : !value ? (
                 <p role="status">正在讀取 {date} 的保存結果…</p>
             ) : (
                 <div className="fh-option-grid">
                     {value.rows.map((row) => (
-                        <div className="fh-option" key={row.id}>
+                        <div className="fh-option u-card" key={row.id}>
                             <strong>{row.label}</strong>
                             <b>{row.count.toLocaleString()} 檔</b>
                         </div>

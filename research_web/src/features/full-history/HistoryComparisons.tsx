@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { PortfolioComparison } from "../../domain/opportunities/types.ts";
 import { CapitalCards } from "../opportunities/evidence.tsx";
+import { SourceInfo } from "../../components/ui/primitives.tsx";
 import { researchName, researchText } from "../research/researchDisplay.ts";
 import {
     buildPortfolioComparisons,
@@ -282,7 +283,7 @@ export function HistoryComparisons({
 
     return (
         <section
-            className="fh-card fh-comparisons"
+            className="fh-card u-card fh-comparisons"
             aria-labelledby="fh-comparisons-title"
         >
             <div className="fh-section-heading">
@@ -298,9 +299,10 @@ export function HistoryComparisons({
             </div>
 
             {loadError ? (
-                <p className="fh-comp-error" role="alert">
-                    讀取已保存研究帳本失敗：{loadError}
-                </p>
+                <div className="fh-comp-error u-notice" role="alert">
+                    <p>目前無法載入策略與 ETF 比較資料，請稍後重試。</p>
+                    <SourceInfo label="錯誤詳情">{loadError}</SourceInfo>
+                </div>
             ) : !bundle ? (
                 <p role="status">正在讀取已保存的研究策略與 ETF 帳本…</p>
             ) : (
@@ -390,7 +392,7 @@ export function HistoryComparisons({
                                 return (
                                     <button
                                         type="button"
-                                        className="fh-comp-option"
+                                        className="fh-comp-option u-card"
                                         key={portfolio.id}
                                         aria-pressed={selected}
                                         disabled={atLimit}
@@ -433,7 +435,7 @@ export function HistoryComparisons({
                         </div>
 
                         <aside
-                            className="fh-comp-selected"
+                            className="fh-comp-selected u-card"
                             aria-label="已選擇的比較項目"
                         >
                             <h3>本次比較</h3>
@@ -448,6 +450,7 @@ export function HistoryComparisons({
                                             </span>
                                             <button
                                                 type="button"
+                                                className="u-btn"
                                                 aria-label={`取消釘選 ${researchName(comparison.portfolio.name)}`}
                                                 onClick={() =>
                                                     togglePortfolio(
@@ -466,8 +469,7 @@ export function HistoryComparisons({
                         </aside>
                     </div>
 
-                    <details className="fh-comp-evidence">
-                        <summary>研究資料與方法版本</summary>
+                    <SourceInfo>
                         <p>帳本：{bundle.label}</p>
                         <p>帳本識別碼：{bundle.id}</p>
                         {selectedComparisons.map((comparison) => (
@@ -542,7 +544,7 @@ export function HistoryComparisons({
                                 )}
                             </section>
                         ))}
-                    </details>
+                    </SourceInfo>
 
                     {selectedComparisons.length > 0 && (
                         <div className="op-page fh-comp-capital">
@@ -651,7 +653,7 @@ export function HistoryComparisons({
                                                         key={`${comparison.portfolio.id}:${stock.securityId}:${stock.waveId}`}
                                                     >
                                                         <span
-                                                            className={`fh-holding-state state-${stock.held}`}
+                                                            className={`fh-holding-state u-chip state-${stock.held}`}
                                                         >
                                                             {
                                                                 holdingLabels[
@@ -713,8 +715,8 @@ export function HistoryComparisons({
                                             檔
                                         </button>
                                     )}
-                                    <details className="fh-comp-holding-evidence">
-                                        <summary>持股證據與來源</summary>
+                                    <details className="fh-comp-holding-evidence u-source">
+                                        <summary>資料來源</summary>
                                         <p>
                                             資料日期：{comparison.date}
                                             。只依這一天有涵蓋的來源確認持股；來源沒有涵蓋，或沒有個股證據時，會標為資料不足。
@@ -771,7 +773,7 @@ export function HistoryComparisons({
                                                                         .industry
                                                                         .basis ===
                                                                     "current-snapshot"
-                                                                        ? `現有分類快照${row.industry.snapshotAt ? `（${row.industry.snapshotAt}）` : ""}`
+                                                                        ? `後來保存的分類${row.industry.snapshotAt ? `（資料日期 ${row.industry.snapshotAt}）` : ""}`
                                                                         : "未知"}
                                                                 </small>
                                                             )}

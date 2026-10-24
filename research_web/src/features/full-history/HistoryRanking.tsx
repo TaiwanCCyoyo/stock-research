@@ -121,7 +121,7 @@ export function HistoryRanking({
                                     else
                                         elements.current.delete(row.securityId);
                                 }}
-                                className={`fh-rank-row ${selectedId === row.securityId ? "is-selected" : ""}`}
+                                className={`fh-rank-row u-card ${selectedId === row.securityId ? "is-selected" : ""}`}
                                 onClick={() => onSelect(row.securityId)}
                             >
                                 <span className="fh-rank-name">
@@ -131,7 +131,7 @@ export function HistoryRanking({
                                     </b>
                                     <span>{row.industry.label}</span>
                                     <em
-                                        className={`fh-state fh-phase-${row.phase ?? "unknown"}`}
+                                        className={`fh-state u-chip fh-phase-${row.phase ?? "unknown"}`}
                                     >
                                         {row.launchCandidate?.date === date
                                             ? "剛開始大漲"
@@ -189,7 +189,10 @@ export function HistoryRanking({
                         )}
                     </div>
                     {limit < filtered.length && (
-                        <button onClick={() => setLimit((v) => v + 30)}>
+                        <button
+                            className="u-btn"
+                            onClick={() => setLimit((v) => v + 30)}
+                        >
                             再顯示 30 檔
                         </button>
                     )}

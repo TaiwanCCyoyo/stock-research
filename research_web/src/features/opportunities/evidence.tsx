@@ -103,7 +103,10 @@ export function CapitalCards({
 }) {
     if (!comparisons.length) return null;
     return (
-        <section className="op-card op-capital" aria-label="資金放在哪裡">
+        <section
+            className="op-card u-card op-capital"
+            aria-label="資金放在哪裡"
+        >
             <div className="op-section-title">
                 <div>
                     <h2>資金放在哪裡？</h2>
@@ -305,7 +308,7 @@ export function OpportunityTimeline({
     };
     return (
         <section
-            className="op-card op-timeline-card"
+            className="op-card u-card op-timeline-card"
             aria-label="每檔股票的歷史時間帶"
         >
             <div className="op-section-title">

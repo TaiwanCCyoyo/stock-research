@@ -14,7 +14,7 @@ export function TradeCard({
 }) {
     return (
         <button
-            className={`ss-trade ${(trade.capture.days ?? 0) > 0 ? "ss-capture" : ""}`}
+            className={`ss-trade u-card ${(trade.capture.days ?? 0) > 0 ? "ss-capture" : ""}`}
             onClick={() => onAudit(trade.id)}
         >
             <b>
@@ -61,7 +61,7 @@ export function TradeTable({
         ["captured", "飆股天數"],
     ];
     return (
-        <section className="ss-card">
+        <section className="ss-card u-card">
             <h2>全部交易</h2>
             <p className="ss-muted">
                 點股票看日 K 線、成交成本與買賣理由。未結束的交易另外標明。
@@ -78,7 +78,7 @@ export function TradeTable({
                         ] as const
                     ).map(([id, label]) => (
                         <button
-                            className="ss-chip"
+                            className="ss-chip u-chip"
                             key={id}
                             aria-pressed={filter === id}
                             onClick={() => setFilter(id)}
@@ -98,6 +98,32 @@ export function TradeTable({
             <p className="ss-muted ss-small">
                 篩選後 {rows.length}／{trades.length} 筆
             </p>
+            <div className="ss-mobile-sort">
+                <label>
+                    排序{" "}
+                    <select
+                        aria-label="交易排序方式"
+                        value={sort}
+                        onChange={(event) => {
+                            setSort(event.target.value as TradeSort);
+                            setDirection(-1);
+                        }}
+                    >
+                        {columns.map(([id, label]) => (
+                            <option key={id} value={id}>
+                                {label}
+                            </option>
+                        ))}
+                    </select>
+                </label>
+                <button
+                    className="u-btn"
+                    aria-label="切換排序方向"
+                    onClick={() => setDirection(direction === 1 ? -1 : 1)}
+                >
+                    {direction === 1 ? "由小到大 ↑" : "由大到小 ↓"}
+                </button>
+            </div>
             <div className="ss-table-wrap">
                 <table className="ss-table">
                     <thead>
@@ -137,7 +163,7 @@ export function TradeTable({
                     <tbody>
                         {rows.map((trade) => (
                             <tr key={trade.id}>
-                                <td>
+                                <td data-label="股票">
                                     <button
                                         className="ss-text-button"
                                         onClick={() => onAudit(trade.id)}
@@ -145,11 +171,16 @@ export function TradeTable({
                                         {trade.code} {trade.name}
                                     </button>
                                 </td>
-                                <td>{trade.openDate}</td>
-                                <td>{trade.closeDate ?? "仍持有"}</td>
-                                <td>{trade.days} 天</td>
-                                <td>{money(trade.cost)}</td>
-                                <td className={gainClass(trade.pnl)}>
+                                <td data-label="買進">{trade.openDate}</td>
+                                <td data-label="賣出">
+                                    {trade.closeDate ?? "仍持有"}
+                                </td>
+                                <td data-label="持有">{trade.days} 天</td>
+                                <td data-label="成本">{money(trade.cost)}</td>
+                                <td
+                                    data-label="損益"
+                                    className={gainClass(trade.pnl)}
+                                >
                                     {money(trade.pnl)}
                                     {!trade.closeDate && (
                                         <small>
@@ -158,10 +189,13 @@ export function TradeTable({
                                         </small>
                                     )}
                                 </td>
-                                <td className={gainClass(trade.return)}>
+                                <td
+                                    data-label="報酬"
+                                    className={gainClass(trade.return)}
+                                >
                                     {percentage(trade.return)}
                                 </td>
-                                <td>
+                                <td data-label="飆股天數">
                                     {trade.capture.days === null ? (
                                         "待核對"
                                     ) : trade.capture.days > 0 ? (
@@ -195,10 +229,10 @@ export function HoldingTimeline({
     const start = Date.parse(run.from),
         span = Math.max(86400000, Date.parse(run.through) - start);
     return (
-        <section className="ss-card">
+        <section className="ss-card u-card">
             <h2>什麼時候持有什麼</h2>
             <p className="ss-muted">
-                每條是一筆持有：紅賺、綠賠；金色外框表示已確認持有時在飆股地圖上。點線條就能驗算。
+                每條是一筆持有：紅賺、綠賠；有外框表示已確認持有時在飆股地圖上。點線條就能驗算。
             </p>
             <div className="ss-head-row ss-small ss-muted">
                 <span>{run.from}</span>

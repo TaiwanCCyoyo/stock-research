@@ -4,6 +4,7 @@ import type { HistoryDetail } from "./types.ts";
 import { priceExplanation } from "../../components/priceExplanation.ts";
 import type { Launch, Wave } from "../wave-lab/types.ts";
 import { growthBasisLabel, growthDurationLabel } from "./growthDisplay.ts";
+import { SourceInfo } from "../../components/ui/primitives.tsx";
 
 const priceLabel = (value: number | null | undefined) =>
     value == null
@@ -182,7 +183,10 @@ export function HistoryChartDetail({ detail }: { detail: HistoryDetail }) {
         );
     }
     return (
-        <section className="fh-card fh-detail" aria-label="個股保存研究圖表">
+        <section
+            className="fh-card u-card fh-detail"
+            aria-label="個股保存研究圖表"
+        >
             <div className="fh-section-heading">
                 <div>
                     <span className="fh-eyebrow">這檔股票怎麼漲上來</span>
@@ -409,8 +413,7 @@ export function HistoryChartDetail({ detail }: { detail: HistoryDetail }) {
             <p className="fh-detail-compare-note">
                 比較目前只示範已保存帳本中有證據與覆蓋的持股期間，不代表全市場持股結果。
             </p>
-            <details>
-                <summary>研究證據與資料版本</summary>
+            <SourceInfo>
                 <pre>
                     {JSON.stringify(
                         {
@@ -430,7 +433,7 @@ export function HistoryChartDetail({ detail }: { detail: HistoryDetail }) {
                         2,
                     )}
                 </pre>
-            </details>
+            </SourceInfo>
         </section>
     );
 }
