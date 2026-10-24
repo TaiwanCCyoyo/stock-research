@@ -449,7 +449,8 @@
             "tests": [
                 "scripts/tests/test_pattern_scan*.py",
                 "scripts/tests/test_momentum_only_v1.py"
-            ]
+            ],
+            "consumers": ["strength_flags"]
         },
         "momentum_only": {
             "paths": [
@@ -463,6 +464,20 @@
             "tests": [
                 "scripts/tests/test_momentum_only_v1.py",
                 "scripts/tests/test_momentum_forward_v1.py"
+            ],
+            "consumers": ["strength_flags"]
+        },
+        "strength_flags": {
+            "paths": [
+                "research_core/multiple_observations_v1.py",
+                "research_core/strength_flags_v1.py",
+                "research_core/strength_flag_counts_v1.py",
+                "research_core/strength_flags_run_v1.py",
+                "scripts/run_strength_flags.py"
+            ],
+            "tests": [
+                "scripts/tests/test_strength_flags_v1.py",
+                "scripts/tests/test_strength_flag_counts_v1.py"
             ]
         }
     },
