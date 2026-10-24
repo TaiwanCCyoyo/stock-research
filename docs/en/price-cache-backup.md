@@ -267,6 +267,18 @@ Owner decision 2026-10-08 adds a separate stock-research scope: `research_cache/
 it. Producer source backups above remain unchanged. This is an explicit command,
 not a new schedule or an extension of `run_daily`.
 
+Owner update 2026-10-24: include the configured `STOCK_RESEARCH_DATA_ROOT`
+(`D:/StockData/stock-research/catalog/`) and its sibling `archive/` (saved studio
+packages). Resolve the catalog from the process environment, otherwise the primary
+`.env.local`; refuse a configured missing catalog rather than backing up an old
+checkout copy. The backup's `research_data/` namespace stays unchanged so old
+snapshots remain restorable; new snapshots additionally contain `archive/`.
+After restoring to a new directory, verify it and configure the restored
+`research_data/` payload as the canonical `catalog/` in a separate cutover.
+Retained checkout copies are excluded after configuration switches. Scope inclusion
+does not certify a completed backup; the migration keeps the original backup
+status and does not run or schedule a production backup.
+
 Maintained shared derived data under `STOCK_RESEARCH_SHARED_ROOT` (owner decision
 2026-10-15, for example `derived/adjusted-daily-v1/`) is not in this scope: it is
 rebuilt from producer data by its maintenance command and keeps the previous

@@ -74,6 +74,44 @@ def test_explicit_root_and_worktree_use_shared_paths(checkout: tuple[Path, Path,
     assert not (worktree / "research_data").exists()
 
 
+def test_external_catalog_keeps_primary_evidence_and_reads_local_config(checkout: tuple[Path, Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:
+    primary, _, worktree = checkout
+    data = primary.parent / "research home/catalog"
+    data.mkdir(parents=True)
+    (primary / ".env.local").write_text(f"{DATA_ROOT_ENV}={data.as_posix()}\n", encoding="utf-8")
+    monkeypatch.delenv(DATA_ROOT_ENV, raising=False)
+    roots = DataRoots.from_env(worktree=worktree)
+    assert roots.primary == primary
+    assert roots.data == data
+    assert roots.artifact_path("primary", "tasks/study/result.json") == primary / "tasks/study/result.json"
+    assert roots.artifact_path("data", "catalog.json") == data / "catalog.json"
+    assert DataRoots.from_env({DATA_ROOT_ENV: str(data)}, repo_root=worktree) == roots
+    roots.validate_worktree(worktree)
+
+
+@pytest.mark.parametrize("location", ["catalog", "tasks/catalog", ".claude/worktrees/external/catalog"])
+def test_catalog_cannot_be_inside_any_checkout(checkout: tuple[Path, Path, Path], location: str) -> None:
+    primary, _, _ = checkout
+    with pytest.raises(ValueError, match="outside every checkout"):
+        DataRoots(primary, primary / location)
+
+
+def test_catalog_cannot_be_inside_separately_registered_worktree(checkout: tuple[Path, Path, Path]) -> None:
+    primary, _, _ = checkout
+    worktree = primary.parent / "other worktree"
+    fixture_git(primary, "worktree", "add", "--detach", str(worktree), "HEAD")
+    with pytest.raises(ValueError, match="outside every checkout"):
+        DataRoots(primary, worktree / "catalog")
+
+
+@pytest.mark.parametrize("name", ["catalog", "archive"])
+def test_worktree_cannot_hold_migrated_data_homes(checkout: tuple[Path, Path, Path], name: str) -> None:
+    primary, data, worktree = checkout
+    (worktree / name).mkdir()
+    with pytest.raises(ValueError, match=f"must not contain {name}"):
+        DataRoots(primary, data).validate_worktree(worktree)
+
+
 @pytest.mark.parametrize("value", [None, "", "research_data", "C:research_data", r"\research_data"])
 def test_missing_or_relative_configuration_fails(value: str | None) -> None:
     env = {} if value is None else {DATA_ROOT_ENV: value}

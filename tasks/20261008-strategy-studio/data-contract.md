@@ -11,7 +11,7 @@ The consumer is `research_web/src/features/strategies/`, home and research histo
 The original manifest and at-most-450-KiB binary parts are private external
 evidence; their original hashes remain in `publication.json`. They are no longer
 carried in the current Git tree or Vite public directory. The local preservation
-receipt is `<primary-checkout>/StockProject/data/private-presentation/20261008-first-stage/restore-manifest.json`.
+receipt is `D:/StockData/stock-research/archive/20261008-first-stage/restore-manifest.json`.
 Git carries presentation metadata and this contract. Public mode independently
 generates fictional controls in memory and does not present the two original runs.
 The parts contain one unchanged gzip stream; the reader verifies every part and
@@ -122,10 +122,10 @@ as the strategy's original sealed benchmark or as a total-return comparison.
 ## Re-export and maintenance
 
 ```powershell
-uv run --no-sync python -m scripts.export_saved_research_studio --benchmark-manifest D:/Project/stock-research/research_data/patterns/opportunity-history-web/c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140/catalog-v2/manifest.json --benchmark-manifest-sha c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140 --split-output --output .tmp/saved-research-studio-next/saved-research-studio.manifest.json
+uv run --no-sync python -m scripts.export_saved_research_studio --benchmark-manifest D:/StockData/stock-research/catalog/patterns/opportunity-history-web/c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140/catalog-v2/manifest.json --benchmark-manifest-sha c7848ae7ad177770babfda774e07923f995ba2cb3fa4a83d77d02f77a0dfe140 --split-output --output .tmp/saved-research-studio-next/saved-research-studio.manifest.json
 ```
 
-Since 2026-10-16 the benchmark catalog is read from the shared `research_data` entry and pinned by the
+Since 2026-10-16 the benchmark catalog is read from the external `catalog/` entry and pinned by the
 predecessor's original manifest bytes (`c7848ae7…`). The `238e7e4a…` form above in the 0050 paragraph is the
 path-rewritten copy that stored exports cite; the two manifests reference identical calendar and series files, so a
 re-export reads the same prices but names its source `benchmark-catalog:c7848ae7…`. See the

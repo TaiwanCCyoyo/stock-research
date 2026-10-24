@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import re
 import uuid
 from pathlib import Path
@@ -19,6 +20,8 @@ from research_core.artifact_store import (
     verify_files,
     write_json,
 )
+from research_core.producer_data import read_env_file_value
+from research_core.research_data_paths import DATA_ROOT_ENV, DataRoots, checked_path
 
 LOGGER = logging.getLogger(__name__)
 SCHEMA = "stock-research-backup.v1"
@@ -32,9 +35,19 @@ def default_sources(project: Path) -> dict[str, Path]:
     cache = project / "research_cache"
     if cache.is_dir():
         sources["research_cache"] = cache
-    shared = project / "research_data"
+    configured = os.environ.get(DATA_ROOT_ENV)
+    if configured is None:
+        configured = read_env_file_value(project / ".env.local", DATA_ROOT_ENV)
+    roots = DataRoots(project, Path(configured)) if configured is not None else None
+    shared = roots.data if roots is not None else project / "research_data"
+    if configured is not None and not shared.is_dir():
+        raise ValueError(f"configured catalog is unavailable: {shared}; no legacy fallback")
     if shared.is_dir():
+        # Keep the v1 restore namespace so existing snapshots remain readable.
         sources["research_data"] = safe_path(shared)
+    archive = shared.parent / "archive" if shared.name == "catalog" else project / "StockProject/data/private-presentation"
+    if archive.is_dir():
+        sources["archive"] = checked_path(archive)
     tasks = project / "tasks"
     if tasks.is_dir():
         for task in sorted(tasks.iterdir()):
