@@ -209,7 +209,6 @@ export function SharedDataPage({
             <header className="shared-heading">
                 <div>
                     <h1 className="u-title">個股</h1>
-                    <p className="u-lede">查股價、技術指標與已確認高低點。</p>
                 </div>
                 <div
                     className="shared-controls u-chips"
@@ -300,15 +299,15 @@ export function SharedDataPage({
                                 )}
                             </div>
                             <div className="shared-layout">
-                                <div className="u-card shared-card shared-chart-card">
-                                    <div className="shared-controls">
-                                        <h2>
-                                            {symbol?.name || selected}{" "}
+                                <div className="shared-card shared-chart-card">
+                                    <div className="shared-controls shared-chart-toolbar">
+                                        <div className="shared-stock-title">
+                                            <h2>{symbol?.name || selected}</h2>
                                             <small>
                                                 {symbol?.name ? selected : ""}{" "}
                                                 {symbol?.market}
                                             </small>
-                                        </h2>
+                                        </div>
                                         <form
                                             onSubmit={(event) => {
                                                 event.preventDefault();
@@ -317,7 +316,7 @@ export function SharedDataPage({
                                         >
                                             <label
                                                 htmlFor="shared-symbol"
-                                                className="shared-note"
+                                                className="shared-search-label"
                                             >
                                                 股票代號／名稱
                                             </label>
@@ -331,7 +330,7 @@ export function SharedDataPage({
                                                             event.target.value,
                                                         )
                                                     }
-                                                    placeholder="2330"
+                                                    placeholder="代號或名稱"
                                                 />
                                                 <button
                                                     className="u-btn u-btn-primary"
@@ -381,7 +380,7 @@ export function SharedDataPage({
                                         </p>
                                     )}
                                     <div
-                                        className="shared-controls"
+                                        className="shared-controls shared-range"
                                         aria-label="顯示區間"
                                     >
                                         {[
@@ -434,12 +433,18 @@ export function SharedDataPage({
                                     ) : (
                                         <>
                                             <div
-                                                className="shared-legend"
+                                                className="shared-legend shared-quote"
                                                 aria-live="off"
                                             >
-                                                <strong>
+                                                <strong className="shared-quote-date">
                                                     {current.dates[day]}
                                                 </strong>
+                                                <span
+                                                    className={`shared-quote-price shared-change-${change?.direction ?? "flat"}`}
+                                                >
+                                                    <small>收盤</small>
+                                                    {fmt(current.close[day])}
+                                                </span>
                                                 <span>
                                                     開 {fmt(current.open[day])}
                                                 </span>
@@ -448,9 +453,6 @@ export function SharedDataPage({
                                                 </span>
                                                 <span>
                                                     低 {fmt(current.low[day])}
-                                                </span>
-                                                <span>
-                                                    收 {fmt(current.close[day])}
                                                 </span>
                                                 <span
                                                     className={`shared-change-${change?.direction ?? "flat"}`}
@@ -486,7 +488,10 @@ export function SharedDataPage({
                                                 )}
                                                 {reference &&
                                                     ma.map((n) => (
-                                                        <span key={n}>
+                                                        <span
+                                                            key={n}
+                                                            className={`shared-ma-value shared-ma-${n}`}
+                                                        >
                                                             MA{n}{" "}
                                                             {fmt(
                                                                 current.tech[

@@ -1,0 +1,70 @@
+/* Original edge scenery frames the reading column; never overlays the data. */
+.theme-atmosphere {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    overflow: hidden;
+    contain: strict;
+}
+.theme-atmosphere canvas,
+.atmosphere-light {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+.atmosphere-light {
+    background:
+        radial-gradient(
+            ellipse at 0% 15%,
+            var(--atmosphere-a),
+            transparent 48%
+        ),
+        radial-gradient(
+            ellipse at 100% 65%,
+            var(--atmosphere-b),
+            transparent 50%
+        );
+    opacity: 0.6;
+}
+.theme-atmosphere[data-scene="sakura"] {
+    --atmosphere-a: #ea8fb844;
+    --atmosphere-b: #b2a3dc2e;
+}
+.theme-atmosphere[data-scene="forest"] {
+    --atmosphere-a: #6aaf7744;
+    --atmosphere-b: #c7d68e30;
+}
+.theme-atmosphere[data-scene="ocean"] {
+    --atmosphere-a: #74c9df50;
+    --atmosphere-b: #4789c336;
+}
+.theme-atmosphere[data-scene="plum"] {
+    --atmosphere-a: #a47ed74a;
+    --atmosphere-b: #628fd540;
+}
+.theme-atmosphere[data-scene="sand"] {
+    --atmosphere-a: #e7bd7350;
+    --atmosphere-b: #b28d6130;
+}
+.theme-atmosphere[data-scene="soda"] {
+    --atmosphere-a: #c4e76b45;
+    --atmosphere-b: #7ad9ba40;
+}
+.theme-atmosphere[data-scene="sunset"] {
+    --atmosphere-a: #ec8e6154;
+    --atmosphere-b: #c68ba63c;
+}
+.theme-atmosphere[data-scene="ink"] {
+    --atmosphere-a: #8d939326;
+    --atmosphere-b: #aaa59c20;
+}
+.studio[data-appearance="dark"] .atmosphere-light {
+    opacity: 0.38;
+}
+@media (max-width: 600px) {
+    .atmosphere-scenery {
+        opacity: 0.6;
+    }
+}

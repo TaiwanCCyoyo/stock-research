@@ -1,4 +1,11 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import {
+    memo,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+    type FormEvent,
+} from "react";
 import { OpportunityMap } from "../../visualizations/opportunity/OpportunityMap";
 import { priceExplanation } from "../../components/priceExplanation.ts";
 import type { PortfolioComparison } from "../../domain/opportunities/types.ts";
@@ -27,6 +34,9 @@ import {
 } from "./growthDisplay.ts";
 import "./FullHistoryPage.css";
 
+const HistoryOpportunityMap = memo(OpportunityMap);
+const MemoHistoryTimeline = memo(HistoryTimeline);
+
 export function FullHistoryPage({ active }: { active: boolean }) {
     const history = useHistory(active);
     const {
@@ -38,9 +48,11 @@ export function FullHistoryPage({ active }: { active: boolean }) {
         setSelectedId,
     } = history;
     const [dateDraft, setDateDraft] = useState("");
+    const editingDate = useRef(false);
     const [mode, setMode] = useState<HistoryDisplayMode>("launched");
     const [thresholdPct, setThresholdPct] = useState(100);
     const [query, setQuery] = useState("");
+    const [allRowsOpen, setAllRowsOpen] = useState(false);
     const [showComparisons, setShowComparisons] = useState(false);
     const [comparisons, setComparisons] = useState<PortfolioComparison[]>([]);
     const detailElement = useRef<HTMLDivElement>(null);
@@ -66,7 +78,9 @@ export function FullHistoryPage({ active }: { active: boolean }) {
         window.addEventListener("hashchange", apply);
         return () => window.removeEventListener("hashchange", apply);
     }, [active, metadata, history.goToDate, setSelectedId]);
-    useEffect(() => setDateDraft(desiredDate), [desiredDate]);
+    useEffect(() => {
+        if (!editingDate.current) setDateDraft(desiredDate);
+    }, [desiredDate]);
     const ended = useMemo(
         () =>
             directory && frame
@@ -106,17 +120,21 @@ export function FullHistoryPage({ active }: { active: boolean }) {
             row.growth?.sizingGainPct != null &&
             row.growth.sizingGainPct < thresholdPct - 1e-9,
     ).length;
-    const allRows = (frame?.rows ?? [])
-        .filter((row) =>
-            `${row.code} ${row.name} ${row.industry.label}`.includes(
-                query.trim(),
-            ),
-        )
-        .sort(
-            (a, b) =>
-                (b.growth?.sizingGainPct ?? -Infinity) -
-                (a.growth?.sizingGainPct ?? -Infinity),
-        );
+    const allRows = useMemo(
+        () =>
+            (allRowsOpen ? (frame?.rows ?? []) : [])
+                .filter((row) =>
+                    `${row.code} ${row.name} ${row.industry.label}`.includes(
+                        query.trim(),
+                    ),
+                )
+                .sort(
+                    (a, b) =>
+                        (b.growth?.sizingGainPct ?? -Infinity) -
+                        (a.growth?.sizingGainPct ?? -Infinity),
+                ),
+        [frame, query, allRowsOpen],
+    );
     const reducedMotion = matchMedia(
         "(prefers-reduced-motion: reduce)",
     ).matches;
@@ -127,8 +145,10 @@ export function FullHistoryPage({ active }: { active: boolean }) {
         loading: history.loading,
         error: history.error,
     });
-    const datedComparisons = comparisons.filter(
-        (comparison) => comparison.date === frame?.date,
+    const datedComparisons = useMemo(
+        () =>
+            comparisons.filter((comparison) => comparison.date === frame?.date),
+        [comparisons, frame?.date],
     );
     const submitDate = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -136,6 +156,7 @@ export function FullHistoryPage({ active }: { active: boolean }) {
         const requested = typeof submitted === "string" ? submitted : dateDraft;
         if (!metadata || !/^\d{4}-\d{2}-\d{2}$/.test(requested)) return;
         const actualDate = metadata.dates[dateIndex(metadata.dates, requested)];
+        editingDate.current = false;
         history.goToDate(actualDate);
         setDateDraft(actualDate);
         // Normalize the form even when the selected trading-day index is unchanged.
@@ -304,7 +325,7 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                 )}
                                 <div className="fh-map-frame">
                                     {active && view && displayed.length ? (
-                                        <OpportunityMap
+                                        <HistoryOpportunityMap
                                             fill
                                             view={view}
                                             groupingMode="snapshot"
@@ -406,9 +427,17 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                             min={metadata.dates[0]}
                                             max={metadata.dates.at(-1)}
                                             value={dateDraft}
-                                            onChange={(e) =>
-                                                setDateDraft(e.target.value)
-                                            }
+                                            onFocus={() => {
+                                                editingDate.current = true;
+                                                history.setPlaying(false);
+                                            }}
+                                            onBlur={() => {
+                                                editingDate.current = false;
+                                            }}
+                                            onChange={(e) => {
+                                                history.setPlaying(false);
+                                                setDateDraft(e.target.value);
+                                            }}
                                         />
                                         <button
                                             className="u-btn u-btn-primary"
@@ -671,7 +700,7 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                         </div>
                     )}
                     {directory ? (
-                        <HistoryTimeline
+                        <MemoHistoryTimeline
                             directory={directory}
                             metadata={metadata}
                             frame={frame}
@@ -755,7 +784,11 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                         <p>
                             預設遵照「開始大漲後才出現」。候選開始點與階段仍待案例確認；切換顯示不會改動原目錄或大小公式。
                         </p>
-                        <details>
+                        <details
+                            onToggle={(event) =>
+                                setAllRowsOpen(event.currentTarget.open)
+                            }
+                        >
                             <summary>
                                 {frameDisplay.hasFrame
                                     ? `${frameDisplay.renderedDate} 完整行情清單 · ${frameDisplay.rowCount} 檔`
@@ -769,91 +802,94 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                     onChange={(e) => setQuery(e.target.value)}
                                 />
                             </div>
-                            <div className="fh-table-scroll">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>股票</th>
-                                            <th>產業</th>
-                                            <th>這波開始</th>
-                                            <th>至這天已漲</th>
-                                            <th>時間調整指標</th>
-                                            <th>採用方式／歷時</th>
-                                            <th>後來最高</th>
-                                            <th>最高日期</th>
-                                            <th>開始大漲（候選）</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {!frame && (
+                            {allRowsOpen && (
+                                <div className="fh-table-scroll">
+                                    <table>
+                                        <thead>
                                             <tr>
-                                                <td colSpan={9}>
-                                                    {frameStatusMessage(
-                                                        frameDisplay,
-                                                    )}
-                                                </td>
+                                                <th>股票</th>
+                                                <th>產業</th>
+                                                <th>這波開始</th>
+                                                <th>至這天已漲</th>
+                                                <th>時間調整指標</th>
+                                                <th>採用方式／歷時</th>
+                                                <th>後來最高</th>
+                                                <th>最高日期</th>
+                                                <th>開始大漲（候選）</th>
                                             </tr>
-                                        )}
-                                        {allRows.map((row) => (
-                                            <tr
-                                                key={row.securityId}
-                                                aria-selected={
-                                                    selectedId ===
-                                                    row.securityId
-                                                }
-                                            >
-                                                <td data-label="股票">
-                                                    <button
-                                                        className="fh-stock-link"
-                                                        onClick={() =>
-                                                            setSelectedId(
-                                                                row.securityId,
-                                                            )
-                                                        }
-                                                    >
-                                                        {row.code} {row.name}
-                                                    </button>
-                                                </td>
-                                                <td data-label="產業">
-                                                    {row.industry.label}
-                                                </td>
-                                                <td data-label="這波開始">
-                                                    {row.start}
-                                                </td>
-                                                <td data-label="至這天已漲">
-                                                    {percent(row.gain)}
-                                                </td>
-                                                <td data-label="時間調整指標">
-                                                    {percent(
-                                                        row.growth
-                                                            ?.sizingGainPct ??
-                                                            null,
-                                                    )}
-                                                </td>
-                                                <td data-label="採用方式／歷時">
-                                                    {growthBasisLabel(
-                                                        row.growth,
-                                                    )}{" "}
-                                                    ·{" "}
-                                                    {growthDurationLabel(
-                                                        row.growth,
-                                                    )}
-                                                </td>
-                                                <td data-label="後來最高">
-                                                    {percent(row.peakGain)}
-                                                </td>
-                                                <td data-label="最高日期">
-                                                    {row.peakDate}
-                                                </td>
-                                                <td data-label="開始大漲（候選）">
-                                                    {row.launchCandidate
-                                                        ?.date ?? "待辨識"}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
+                                        </thead>
+                                        <tbody>
+                                            {!frame && (
+                                                <tr>
+                                                    <td colSpan={9}>
+                                                        {frameStatusMessage(
+                                                            frameDisplay,
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            )}
+                                            {allRows.map((row) => (
+                                                <tr
+                                                    key={row.securityId}
+                                                    aria-selected={
+                                                        selectedId ===
+                                                        row.securityId
+                                                    }
+                                                >
+                                                    <td data-label="股票">
+                                                        <button
+                                                            className="fh-stock-link"
+                                                            onClick={() =>
+                                                                setSelectedId(
+                                                                    row.securityId,
+                                                                )
+                                                            }
+                                                        >
+                                                            {row.code}{" "}
+                                                            {row.name}
+                                                        </button>
+                                                    </td>
+                                                    <td data-label="產業">
+                                                        {row.industry.label}
+                                                    </td>
+                                                    <td data-label="這波開始">
+                                                        {row.start}
+                                                    </td>
+                                                    <td data-label="至這天已漲">
+                                                        {percent(row.gain)}
+                                                    </td>
+                                                    <td data-label="時間調整指標">
+                                                        {percent(
+                                                            row.growth
+                                                                ?.sizingGainPct ??
+                                                                null,
+                                                        )}
+                                                    </td>
+                                                    <td data-label="採用方式／歷時">
+                                                        {growthBasisLabel(
+                                                            row.growth,
+                                                        )}{" "}
+                                                        ·{" "}
+                                                        {growthDurationLabel(
+                                                            row.growth,
+                                                        )}
+                                                    </td>
+                                                    <td data-label="後來最高">
+                                                        {percent(row.peakGain)}
+                                                    </td>
+                                                    <td data-label="最高日期">
+                                                        {row.peakDate}
+                                                    </td>
+                                                    <td data-label="開始大漲（候選）">
+                                                        {row.launchCandidate
+                                                            ?.date ?? "待辨識"}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
                         </details>
                         {frame && (
                             <HistoryMethodOptions

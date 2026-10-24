@@ -54,7 +54,7 @@ export function RevenueChart({
         );
         chart
             .addSeries(HistogramSeries, {
-                color: color("--cell-deep"),
+                color: color("--shared-revenue"),
                 priceLineVisible: false,
                 title: "月營收",
                 priceFormat: {
@@ -73,7 +73,7 @@ export function RevenueChart({
             .addSeries(
                 LineSeries,
                 {
-                    color: color("--accent"),
+                    color: color("--shared-osc"),
                     lineWidth: 2,
                     priceLineVisible: false,
                     title: "年增率",

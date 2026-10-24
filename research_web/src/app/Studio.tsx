@@ -16,7 +16,7 @@ import { SharedDataPage } from "../features/shared-data/SharedDataPage";
 import { DataOverviewPage } from "../features/data-overview/DataOverviewPage";
 import { studioRoute, type StudioPage } from "./routes";
 import { reportPalette, themeId, THEMES, type ThemeId } from "./themes";
-import { PetalLayer } from "./PetalLayer";
+import { ThemeAtmosphere } from "./ThemeAtmosphere";
 import "./studio.css";
 import "./themes.css";
 import "./shell.css";
@@ -154,8 +154,11 @@ export default function Studio() {
             data-palette={palette}
             data-appearance={resolvedAppearance}
         >
-            {palette === "sakura" && ambient && (
-                <PetalLayer dark={resolvedAppearance === "dark"} />
+            {ambient && (
+                <ThemeAtmosphere
+                    theme={palette}
+                    dark={resolvedAppearance === "dark"}
+                />
             )}
             <a className="skip-link" href="#main-content">
                 跳到主要內容
@@ -258,9 +261,6 @@ export default function Studio() {
                                 關
                             </button>
                         </div>
-                        <p className="u-muted shell-theme-note">
-                            櫻花粉會有花瓣飄落。顏色只是好玩，不會改變任何數字。
-                        </p>
                     </section>
                 </>
             )}
