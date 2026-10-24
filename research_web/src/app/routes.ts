@@ -5,6 +5,7 @@ export type StudioPage =
     | "strategy"
     | "compare"
     | "studies"
+    | "overview"
     | "history"
     | "research"
     | "funds"
@@ -57,6 +58,7 @@ export function studioRoute(hash: string): {
         "strategies",
         "compare",
         "studies",
+        "overview",
         "research",
         "funds",
         "wave-lab",

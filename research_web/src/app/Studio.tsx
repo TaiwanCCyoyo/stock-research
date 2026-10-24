@@ -13,6 +13,7 @@ import { StrategyComparePage } from "../features/strategies/StrategyComparePage"
 import { StudiesPage } from "../features/studies/StudiesPage";
 import { ReportViewer } from "../features/report-library/ReportViewer";
 import { SharedDataPage } from "../features/shared-data/SharedDataPage";
+import { DataOverviewPage } from "../features/data-overview/DataOverviewPage";
 import { studioRoute, type StudioPage } from "./routes";
 import { reportPalette, themeId, THEMES, type ThemeId } from "./themes";
 import { PetalLayer } from "./PetalLayer";
@@ -26,6 +27,8 @@ const NAV: {
     label: string;
     icon: string;
     also?: StudioPage[];
+    /** Left out of the five-slot phone tab bar; reached from the home page. */
+    desktopOnly?: boolean;
 }[] = [
     { id: "home", label: "首頁", icon: "M4 11.5 12 5l8 6.5V20h-5v-5H9v5H4z" },
     {
@@ -41,9 +44,15 @@ const NAV: {
     },
     { id: "data", label: "個股", icon: "M4 19h16M7 16V9M12 16V5M17 16v-5" },
     {
+        id: "overview",
+        label: "資料總覽",
+        icon: "M5 6c0-1.1 3.1-2 7-2s7 .9 7 2-3.1 2-7 2-7-.9-7-2zM5 6v12c0 1.1 3.1 2 7 2s7-.9 7-2V6M5 12c0 1.1 3.1 2 7 2s7-.9 7-2",
+    },
+    {
         id: "funds",
         label: "ETF 圖鑑",
         icon: "M5 8h14l-1.5 11h-11zM9 8a3 3 0 0 1 6 0",
+        desktopOnly: true,
     },
 ];
 
@@ -123,8 +132,8 @@ export default function Studio() {
     };
     const current = (item: (typeof NAV)[number]) =>
         page === item.id || item.also?.includes(page) ? "page" : undefined;
-    const navItems = (className: string) =>
-        NAV.map((item) => (
+    const navItems = (className: string, phone = false) =>
+        NAV.filter((item) => !(phone && item.desktopOnly)).map((item) => (
             <a
                 key={item.id}
                 className={className}
@@ -258,6 +267,7 @@ export default function Studio() {
             <main id="main-content" className="studio-main shell-main">
                 {page === "home" && <HomePage />}
                 {page === "studies" && <StudiesPage />}
+                {page === "overview" && <DataOverviewPage />}
                 {page === "strategies" && <StrategyOverviewPage />}
                 {page === "strategy" && runId && (
                     <StrategyDetailPage key={runId} runId={runId} />
@@ -306,7 +316,7 @@ export default function Studio() {
                 </span>
             </footer>
             <nav className="shell-tabbar" aria-label="主選單（手機）">
-                {navItems("shell-tab")}
+                {navItems("shell-tab", true)}
             </nav>
         </div>
     );

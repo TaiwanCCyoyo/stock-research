@@ -34,6 +34,7 @@ test("report routes keep a safe report id and fall back to the library", () => {
     assert.equal(studioRoute("#history").page, "studies");
     assert.equal(studioRoute("#studies").page, "studies");
     assert.equal(studioRoute("#research").page, "research");
+    assert.equal(studioRoute("#overview").page, "overview");
     assert.deepEqual(studioRoute("#report/20261012-hhhl-v4-variants"), {
         page: "report",
         runId: null,
