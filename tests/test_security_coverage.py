@@ -63,6 +63,15 @@ def test_union_includes_security_without_price():
     assert cell(doc, "monthly_revenue")["mark"] == "present"
 
 
+def test_synthetic_revenue_only_viewer_has_observations_without_real_code_attribution():
+    from research_core.data_series import synthetic_series
+
+    revenue = synthetic_series("monthly-revenue", "REVENUE", None, None, "TPEx")
+    assert revenue["status"] == "ok" and revenue["rows"][0]["code"] == "REVENUE"
+    assert synthetic_series("institutional", "REVENUE", None, None, "TPEx")["rows"] == []
+    assert synthetic_series("monthly-revenue", "2330", None, None, "TWSE")["rows"] == []
+
+
 def test_code_reuse_has_distinct_opaque_segments_and_no_name_leak():
     doc = build({"institutional": source(code="X123")}, [meta(code="X123", listed="2023-01-02")])
     rows = doc["securities"]

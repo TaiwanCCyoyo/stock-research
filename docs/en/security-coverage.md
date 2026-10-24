@@ -17,12 +17,17 @@ The single maintained home is
 `<STOCK_RESEARCH_SHARED_ROOT>/derived/security-coverage-v1/`.
 
 - `current.json` selects an immutable generation and pins its coverage and status.
-- `generations/<id>/coverage.json` contains source summaries and security cells.
+- `generations/<id>/coverage.json` contains bounded source and build metadata.
+- `generations/<id>/coverage.sqlite` contains the full observed security index
+  and compressed per-security cells. SQL applies filters and counts before
+  pagination; only the requested row payloads are decompressed. This is derived
+  coverage metadata, not a second copy of source observations.
 - `generations/<id>/status.json` describes the summary's observation date, security
   count and number of coverage cells. These are summary counts, not market rows.
 - Maintenance serializes scans with an OS lock; publication uses the existing
   artifact-store primitives and an atomic pointer switch. Prior generations are
-  retained; no automatic pruning or additional schedule is introduced.
+  retained; no automatic pruning or additional schedule is introduced. Both the
+  metadata and indexed payload file are digest-pinned by the current pointer.
 
 Run `uv run python -m scripts.maintain_security_coverage status` to inspect the
 saved summary, or `... update --seconds-per-source 180` to maintain it explicitly.
@@ -135,6 +140,16 @@ No summary returns `unavailable`, never an on-demand scan. The reader verifies
 bounded immutable content and caches one generation. Unknown modes fail closed;
 public-synthetic mode returns fictional DEMO data without resolving private roots.
 API payloads never contain absolute producer paths.
+
+The initial whole-document candidate exceeded its 128 MB JSON bound on the real
+source-observed universe, so it was never published. The indexed representation
+preserves that universe rather than dropping unknown historical securities.
+The SQLite image is constructed in memory and published with the existing
+no-replace directory primitive; no worktree or producer intermediate is created.
+The metadata bound is 1 MB and the database bound is 512 MB. An oversized or
+failed build retains the preceding pointer. Readers open the published database
+with `mode=ro&immutable=1`; a process verifies digests when selecting a generation
+and rechecks file identity before reusing its verified cache.
 
 ## Frontend and compatibility
 
