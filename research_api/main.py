@@ -125,6 +125,13 @@ class HeartbeatState:
 heartbeat = HeartbeatState()
 
 
+@router.get("/heartbeat")
+def heartbeat_age() -> dict[str, float | None]:
+    """Expose aggregate tab activity without changing it or reading research data."""
+    last = heartbeat.last_seen
+    return {"ageSeconds": None if last is None else max(0.0, time.monotonic() - last)}
+
+
 @router.post("/heartbeat")
 def post_heartbeat(x_requested_with: str | None = Header(default=None)) -> dict[str, str]:
     """Frontend calls this periodically so a closed browser tab can be detected.

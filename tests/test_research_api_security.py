@@ -116,6 +116,29 @@ def test_post_heartbeat_with_csrf_header_records_last_seen() -> None:
     assert api_main.heartbeat.last_seen is not None
 
 
+def test_get_heartbeat_without_activity_is_read_only(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(api_main.heartbeat, "last_seen", None)
+    response = TestClient(api_main.app).get("/heartbeat")
+    assert response.status_code == 200
+    assert response.json() == {"ageSeconds": None}
+    assert api_main.heartbeat.last_seen is None
+
+
+def test_get_heartbeat_reports_latest_of_multiple_tabs_without_extending_lifetime(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(api_main.heartbeat, "last_seen", None)
+    clock = [100.0]
+    monkeypatch.setattr(api_main.time, "monotonic", lambda: clock[0])
+    first_tab, second_tab = TestClient(api_main.app), TestClient(api_main.app)
+    assert first_tab.post("/heartbeat", headers=CSRF_HEADER).status_code == 200
+    clock[0] = 150.0
+    assert second_tab.post("/heartbeat", headers=CSRF_HEADER).status_code == 200
+    clock[0] = 155.0
+    assert first_tab.get("/heartbeat").json() == {"ageSeconds": 5.0}
+    clock[0] = 160.0
+    assert second_tab.get("/heartbeat").json() == {"ageSeconds": 10.0}
+    assert api_main.heartbeat.last_seen == 150.0
+
+
 def test_post_shutdown_without_csrf_header_is_rejected() -> None:
     response = TestClient(api_main.app).post("/shutdown")
 

@@ -46,6 +46,7 @@ def primary_checkout(repo_root: Path) -> Path | None:
             check=False,
             env=environment,
             timeout=30,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
         )
     except (OSError, subprocess.TimeoutExpired):
         return None
