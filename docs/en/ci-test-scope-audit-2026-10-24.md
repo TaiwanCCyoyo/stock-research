@@ -11,7 +11,7 @@
 - 以 GitHub `created_at` 由新到舊取 30 個 PR；查核日期為 2026-10-24。
 - 對每個 PR head SHA 查 `PR validation` workflow、job steps 及 job logs。表格列同一 head 的最新成功 run；#81、#82 各有較早一輪被取消的 run。
 - `Python` 是 pytest log 的通過數及略過數；`前端` 是 `npm test` 報告的測試數。`—` 代表該 job step 被跳過。變更檔數取 PR file list。
-- CI logs 提供實際通過數，但 GitHub job-log endpoint 沒有回傳 workflow 發佈的完整 scope summary 與已選測試檔清單。因此「偏多」是依 PR 變更路徑、當時的 CI 結果及 selector 設定判斷；對特定 pytest 檔案是否完全無關，需以 run 的 scope summary 再核實。
+- CI logs 提供實際通過數；`Select test scope` step 也會輸出完整的 scope summary JSON，包括 `python_tests`、`domains`、`reasons`、`inventory_count`，可用來核對檔級選取證據。因此「偏多」是依 PR 變更路徑、當時的 CI 結果及 selector 設定判斷；對特定 pytest 檔案是否完全無關，仍需以該 run 的 scope summary 再核實。
 
 ## 最近 30 個 PR
 
@@ -53,7 +53,7 @@
 ### 明確的過量案例
 
 - **#55：** 只更新 Vite 的 `package.json`／`package-lock.json`，卻跑了 5,736 個 Python cases 加 404 個前端測試。後續 [#59 的回溯](https://github.com/TaiwanCCyoyo/stock-research/pull/59) 把 Vite 相依更新從全套 Python 測試改為 5 個 Python tests 加前端驗證；這項選測效率問題後來已改善。
-- **跨語言的額外執行：** #75 只改 `uv.lock`，#65 只改 Python 版本與 producer gitlink；Python 全套與這些 runtime／相依變更相稱，但兩者同時執行 445／416 個前端測試。workflow 目前在 `full` 時一併設 `frontend=true`，可考慮讓 Python-only full fallback 不自動啟動 npm 驗證。
+- **跨語言的額外執行候選：** #75 只改 `uv.lock`，#65 只改 Python 版本與 producer gitlink；Python 全套與這些 runtime／相依變更相稱，但兩者同時執行 445／416 個前端測試。是否能略過前端仍需依跨語言 API 與建置契約驗證，不能僅因 Python 走 full fallback 就直接設定 `frontend=false`。
 
 ### 仍偏寬的選測候選
 
@@ -68,7 +68,7 @@
 
 ### 尚未取得 CI 的 PR
 
-- **#80：** PR 仍以 `claude/dashboard-visual-v2` 為 base；目前 workflow 僅對 base 為 `main` 的 PR 觸發（[workflow 設定](https://github.com/TaiwanCCyoyo/stock-research/blob/2dd6ef4aa3c97f920962483db96543134181c185/.github/workflows/ci.yml#L4-L6)），其 head 沒有 check run。PR 說明提到的 457 個本地前端測試不等於 hosted CI。待 #79 合併並將 #80 retarget 至 `main` 後，仍需檢查它自己的 Actions 結果。
+- **#80：** PR 仍以 `claude/dashboard-visual-v2` 為 base；目前 workflow 僅對 base 為 `main` 的 PR 觸發（[workflow 設定](https://github.com/TaiwanCCyoyo/stock-research/blob/2dd6ef4aa3c97f920962483db96543134181c185/.github/workflows/ci.yml#L4-L6)），且未監聽 `edited` 事件，因此 retarget 到 `main` 不保證會產生 check run。PR 說明提到的 457 個本地前端測試不等於 hosted CI；待 #79 合併並將 #80 retarget 至 `main` 後，仍需確認受支援事件或明確 dispatch 確實產生最新 HEAD 的 Actions 結果。
 
 ### 合理的全套驗證
 
