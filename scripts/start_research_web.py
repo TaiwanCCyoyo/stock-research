@@ -12,6 +12,7 @@ import json
 import logging
 import os
 import shutil
+import signal
 import socket
 import subprocess
 import sys
@@ -197,6 +198,43 @@ def _command(name: str, root: Path, port: int | None = None, dev: bool = False) 
     ]
 
 
+def _kill_tree(process: subprocess.Popen[bytes]) -> None:
+    """Stop a process and everything it started, then wait for it."""
+    if process.poll() is not None:
+        return
+    if sys.platform == "win32":
+        try:
+            subprocess.run(
+                ["taskkill", "/PID", str(process.pid), "/T", "/F"],
+                check=False,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+                timeout=10,
+            )
+        except (OSError, subprocess.TimeoutExpired):
+            LOGGER.exception("無法停止建置程序樹，pid=%s", process.pid)
+    else:
+        try:
+            os.killpg(process.pid, signal.SIGKILL)
+        except OSError:
+            LOGGER.exception("無法停止建置程序群組，pid=%s", process.pid)
+    if process.poll() is None:
+        process.kill()
+    process.wait(timeout=10)
+
+
+def _remove_abandoned_stages(web_root: Path, *, since: float) -> None:
+    """Delete staging folders a killed build created; finished builds remove their own."""
+    for stage in web_root.glob(".dist-stage-*"):
+        try:
+            if stage.is_dir() and not stage.is_symlink() and stage.stat().st_mtime >= since - 1:
+                shutil.rmtree(stage)
+                LOGGER.info("已移除中斷建置留下的暫存目錄 %s", stage.name)
+        except OSError:
+            LOGGER.exception("無法移除中斷建置的暫存目錄 %s", stage)
+
+
 def _build_website(root: Path, log_dir: Path, environment: dict[str, str]) -> str:
     """Build the production website if its sources or data mode changed.
 
@@ -207,22 +245,32 @@ def _build_website(root: Path, log_dir: Path, environment: dict[str, str]) -> st
         raise RuntimeError("找不到 npm；請先安裝 Node.js 與研究網站相依套件。")
     log_path = log_dir / "build.log"
     started = time.monotonic()
+    wall_started = time.time()
+    # Own process group / tree, so a timeout can stop the build script's
+    # children too; otherwise a "failed" build could still publish dist later.
+    process = subprocess.Popen(
+        [npm, "--prefix", str(root / "research_web"), "run", "build"],
+        cwd=root,
+        env=environment,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        start_new_session=os.name != "nt",
+    )
+    try:
+        stdout, _ = process.communicate(timeout=BUILD_TIMEOUT_SECONDS)
+    except subprocess.TimeoutExpired as exc:
+        _kill_tree(process)
+        stdout, _ = process.communicate()
+        _remove_abandoned_stages(root / "research_web", since=wall_started)
+        with log_path.open("ab") as log_file:
+            log_file.write(stdout or b"")
+        LOGGER.error("網站建置逾時，已停止整個建置程序樹，pid=%s", process.pid)
+        raise RuntimeError("建置網站逾時，已停止建置；先前的版本保留不動，詳見 .tmp/research-web-launcher/build.log。") from exc
     with log_path.open("ab") as log_file:
-        try:
-            result = subprocess.run(
-                [npm, "--prefix", str(root / "research_web"), "run", "build"],
-                cwd=root,
-                env=environment,
-                stdin=subprocess.DEVNULL,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
-                timeout=BUILD_TIMEOUT_SECONDS,
-                check=False,
-            )
-        except subprocess.TimeoutExpired as exc:
-            raise RuntimeError("建置網站逾時；詳見 .tmp/research-web-launcher/build.log。") from exc
-        log_file.write(result.stdout)
+        log_file.write(stdout)
+    result = subprocess.CompletedProcess(process.args, process.returncode, stdout)
     output = result.stdout.decode("utf-8", errors="replace")
     LOGGER.info("網站建置結束，結束碼=%s，耗時 %.1f 秒", result.returncode, time.monotonic() - started)
     if result.returncode != 0:

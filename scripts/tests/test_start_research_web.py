@@ -435,13 +435,14 @@ def test_run_builds_the_website_only_for_production(tmp_path: Path, dev: bool) -
 def test_failed_build_stops_before_starting_services(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     root = tmp_path / "checkout"
     root.mkdir()
-    result = MagicMock(returncode=1, stdout=b"[dashboard] build failed")
+    process = MagicMock(returncode=1, args=["npm"])
+    process.communicate.return_value = (b"[dashboard] build failed", None)
     with (
         patch.object(launcher, "project_root", return_value=root),
         patch.object(launcher, "_inspect_service", return_value="stopped"),
         patch.object(launcher, "_configure_logging", return_value=tmp_path),
         patch.object(launcher.shutil, "which", return_value="npm"),
-        patch.object(launcher.subprocess, "run", return_value=result),
+        patch.object(launcher.subprocess, "Popen", return_value=process),
         patch.object(launcher, "_start_child") as start,
     ):
         assert launcher.run(no_browser=True) == 1
@@ -449,3 +450,42 @@ def test_failed_build_stops_before_starting_services(tmp_path: Path, capsys: pyt
     err = capsys.readouterr().err
     assert "建置網站失敗" in err and "--dev" in err
     assert (tmp_path / "build.log").read_bytes() == b"[dashboard] build failed"
+
+
+def test_build_timeout_stops_the_whole_build_tree_before_failing(tmp_path: Path) -> None:
+    process = MagicMock(pid=4321, args=["npm"])
+    process.communicate.side_effect = [launcher.subprocess.TimeoutExpired("npm", 600), (b"partial", None)]
+    with (
+        patch.object(launcher.shutil, "which", return_value="npm"),
+        patch.object(launcher.subprocess, "Popen", return_value=process),
+        patch.object(launcher, "_kill_tree") as kill,
+        patch.object(launcher, "_remove_abandoned_stages") as cleanup,
+    ):
+        with pytest.raises(RuntimeError, match="逾時"):
+            launcher._build_website(tmp_path, tmp_path, {})
+    cleanup.assert_called_once()
+    kill.assert_called_once_with(process)
+    # The tree is stopped and drained before the failure is reported.
+    assert process.communicate.call_count == 2
+    assert (tmp_path / "build.log").read_bytes() == b"partial"
+
+
+def test_kill_tree_uses_taskkill_tree_on_windows() -> None:
+    process = MagicMock(pid=4321)
+    process.poll.side_effect = [None, 0]
+    with patch.object(launcher.sys, "platform", "win32"), patch.object(launcher.subprocess, "run") as run:
+        launcher._kill_tree(process)
+    assert run.call_args.args[0] == ["taskkill", "/PID", "4321", "/T", "/F"]
+    process.wait.assert_called_once()
+
+
+def test_abandoned_stage_cleanup_keeps_older_folders(tmp_path: Path) -> None:
+    old = tmp_path / ".dist-stage-1-old"
+    new = tmp_path / ".dist-stage-2-new"
+    old.mkdir()
+    new.mkdir()
+    import os as _os
+
+    _os.utime(old, (1000, 1000))
+    launcher._remove_abandoned_stages(tmp_path, since=new.stat().st_mtime)
+    assert old.exists() and not new.exists()
