@@ -53,6 +53,7 @@
 ### 明確的過量案例
 
 - **#55：** 只更新 Vite 的 `package.json`／`package-lock.json`，卻跑了 5,736 個 Python cases 加 404 個前端測試。後續 [#59 的回溯](https://github.com/TaiwanCCyoyo/stock-research/pull/59) 把 Vite 相依更新從全套 Python 測試改為 5 個 Python 測試檔 加前端驗證；這項選測效率問題後來已改善。
+
 ### 仍偏寬的選測候選
 
 - **跨語言的額外執行候選：** #75 只改 `uv.lock`，#65 只改 Python 版本與 producer gitlink；Python 全套與這些 runtime／相依變更相稱，但兩者同時執行 445／416 個前端測試。是否能略過前端仍需依跨語言 API 與建置契約驗證，不能僅因 Python 走 full fallback 就直接設定 `frontend=false`。
