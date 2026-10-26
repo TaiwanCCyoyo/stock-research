@@ -2,6 +2,7 @@
 
 import sqlite3
 from pathlib import Path
+from typing import Literal
 
 import numpy as np
 import pandas as pd
@@ -133,10 +134,10 @@ def test_storage_numeric_bytes_and_declared_limits() -> None:
     baseline = 2 * 17 * len(COUNT_FIELDS) * np.dtype(np.int64).itemsize
     assert dense.memory_nbytes == baseline
     dense.add_stock(pd.concat([matrix("a", event_n=2), matrix("a", year=2011, event_n=3), matrix("b")], ignore_index=True))
-    assert dense.memory_nbytes == baseline + 2 * 3 * 8
+    assert dense.memory_nbytes == baseline + 2 * (4 + 1 + 8)
     assert dense.summarize("a")["per_stock_event_count_max"] == 5
     dense.add_stock(matrix("a", "2330", event_n=7).iloc[:0])
-    assert dense.memory_nbytes == baseline + 48 + 2 * 4 * 8 + 3 * 8
+    assert dense.memory_nbytes == baseline + 2 * (4 + 1 + 8) + 2 * (np.dtype(np.intp).itemsize + 1 + 8) + 3 * 8
     with pytest.raises(ValueError):
         DenseCounts(("a", "a"), 126)
     with pytest.raises(ValueError):
@@ -179,3 +180,34 @@ def test_indexed_stock_sums_preserve_integer_counts_above_float_precision() -> N
     assert dense.summarize("a")["per_stock_event_count_max"] == large + 2
     assert dense.summarize("a", exclude_year=2011)["per_stock_event_count_max"] == large
     assert dense.index_build_count == 1
+
+
+def test_cell_index_sort_is_stock_bounded_with_shuffled_years(monkeypatch: pytest.MonkeyPatch) -> None:
+    dense = DenseCounts(("a", "empty", "b"), 126)
+    dense.add_stock(pd.concat([matrix("b", year=2026, event_n=7), matrix("a", year=2011, event_n=3), matrix("b", event_n=5)], ignore_index=True))
+    dense.add_stock(pd.concat([matrix("a", "2330", event_n=11), matrix("b", "2330", year=2012, event_n=13)], ignore_index=True))
+    original = np.argsort
+    sort_sizes: list[int] = []
+
+    def stock_sort(values: np.ndarray, *, kind: Literal["stable"]) -> np.ndarray:
+        sort_sizes.append(len(values))
+        assert len(values) <= 3
+        return original(values, kind=kind)
+
+    monkeypatch.setattr(np, "argsort", stock_sort)
+    assert dense.summarize("a")["event_n"] == 14
+    assert dense.summarize("a")["per_stock_event_count_median"] == 7
+    assert dense.summarize("b")["event_n"] == 25
+    assert dense.summarize("b")["per_stock_event_count_median"] == 12.5
+    assert dense.summarize("b", exclude_year=2026)["per_stock_event_count_max"] == 13
+    assert dense.summarize("b", only_year=2026)["per_stock_event_count_max"] == 7
+    assert dense.summarize("empty")["distinct_stock_n"] == 0
+    assert sort_sizes == [3, 2]
+
+
+def test_compact_positions_cover_last_cell_and_year_without_narrowing_counts() -> None:
+    cells = tuple(str(index) for index in range(MAX_CELLS))
+    dense = DenseCounts(cells, 126)
+    dense.add_stock(matrix(cells[-1], year=YEARS[-1], event_n=INT64_MAX))
+    assert dense.summarize(cells[-1], only_year=YEARS[-1])["per_stock_event_count_max"] == INT64_MAX
+    assert dense.summarize(cells[0])["event_n"] == 0
