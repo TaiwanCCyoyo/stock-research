@@ -1,0 +1,22 @@
+{
+    "schema": "study-card.v2",
+    "task_id": "20261024-strength-weakening-flags",
+    "kind": "study",
+    "question": "強勢條件成立後，哪些轉弱訊號讓後續漲到 2／3／5／10 倍的機率下降？",
+    "answer": "規劃中；尚未執行市場計算，沒有研究結論。",
+    "verdict": "not_evaluated",
+    "data_period": { "from": "2010-01-04", "to": "2026-10-12" },
+    "key_numbers": [],
+    "limitation": "整段歷史資料已看過，只能描述關聯；不批准停損規則，也不代表實際帳戶報酬。",
+    "report": { "web_report": null, "markdown": "mission.md" },
+    "account_run": null,
+    "delivery_state": null,
+    "scratch_run": null,
+    "provenance": {
+        "answer_source": "規劃中；尚未執行市場計算，沒有研究結論。",
+        "report_sha256": null,
+        "publication": null,
+        "shared_data": ["adjusted-daily-v1"],
+        "legacy_history_id": null
+    }
+}
