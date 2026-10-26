@@ -17,6 +17,10 @@ from research_core.pattern_scan_summary_store_v1 import COUNT_FIELDS, YEARS
 LOGGER = logging.getLogger(__name__)
 MAX_CELLS = 100_000
 INT64_MAX = 2**63 - 1
+# Only bounded cell/year positions are narrowed. Event counts remain exact int64;
+# stock ordinals use the platform index width, without imposing a stock limit.
+_STOCK_EVENT_DTYPE = np.dtype([("cell", np.int32), ("year", np.int8), ("event_n", np.int64)])
+_EVENT_INDEX_DTYPE = np.dtype([("stock", np.intp), ("year", np.int8), ("event_n", np.int64)])
 
 
 def _integer(value: object, name: str, *, minimum: int = 0) -> int:
@@ -66,8 +70,8 @@ class DenseCounts:
         self._positions = {cell: index for index, cell in enumerate(cell_ids)}
         self._counts: NDArray[np.int64] = np.zeros((len(cell_ids), len(YEARS), len(COUNT_FIELDS)), dtype=np.int64)
         self._stocks: set[str] = set()
-        self._stock_events: dict[str, NDArray[np.int64]] = {}
-        self._event_index: NDArray[np.int64] | None = None
+        self._stock_events: dict[str, NDArray[np.void]] = {}
+        self._event_index: NDArray[np.void] | None = None
         self._cell_offsets: NDArray[np.int64] | None = None
         self._index_builds = 0
 
@@ -86,22 +90,28 @@ class DenseCounts:
         """Diagnostic count of lazy sparse-index builds, independent of timing."""
         return self._index_builds
 
-    def _indexed_events(self) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
+    def _indexed_events(self) -> tuple[NDArray[np.void], NDArray[np.int64]]:
         if self._event_index is None or self._cell_offsets is None:
-            size = sum(len(records) for records in self._stock_events.values())
-            index = np.empty((size, 4), dtype=np.int64)
-            start = 0
+            offsets = np.zeros(len(self.cell_ids) + 1, dtype=np.int64)
+            for records in self._stock_events.values():
+                offsets[1:] += np.bincount(records["cell"], minlength=len(self.cell_ids))
+            np.cumsum(offsets, out=offsets)
+            size = int(offsets[-1])
+            index = np.empty(size, dtype=_EVENT_INDEX_DTYPE)
+            heads = offsets[:-1].copy()
             for ordinal, stock in enumerate(sorted(self._stock_events)):
                 records = self._stock_events[stock]
-                end = start + len(records)
-                index[start:end, 0] = records[:, 0]
-                index[start:end, 1] = ordinal
-                index[start:end, 2:] = records[:, 1:]
-                start = end
-            if size:
-                index = index[np.argsort(index[:, 0], kind="stable")]
-            offsets = np.zeros(len(self.cell_ids) + 1, dtype=np.int64)
-            offsets[1:] = np.cumsum(np.bincount(index[:, 0], minlength=len(self.cell_ids)), dtype=np.int64)
+                if not len(records):
+                    continue
+                # Sort at most one stock, then scatter directly into each cell's
+                # final slice. Never allocate a whole-market permutation/copy.
+                order = np.argsort(records["cell"], kind="stable")
+                cells, starts, counts = np.unique(records["cell"][order], return_index=True, return_counts=True)
+                destinations = np.repeat(heads[cells] - starts, counts) + np.arange(len(records))
+                index["stock"][destinations] = ordinal
+                index["year"][destinations] = records["year"][order]
+                index["event_n"][destinations] = records["event_n"][order]
+                heads[cells] += counts
             index.setflags(write=False)
             offsets.setflags(write=False)
             self._event_index, self._cell_offsets = index, offsets
@@ -154,7 +164,7 @@ class DenseCounts:
         delta = np.asarray(increments, dtype=np.int64)
         cell_positions = np.asarray(cells, dtype=np.int64)
         year_positions = np.asarray(years, dtype=np.int64)
-        sparse = np.asarray(event_records, dtype=np.int64).reshape((-1, 3))
+        sparse = np.asarray(event_records, dtype=_STOCK_EVENT_DTYPE)
         sparse.setflags(write=False)
         self._counts[cell_positions, year_positions] += delta
         self._stocks.add(stock)
@@ -182,11 +192,11 @@ class DenseCounts:
         counts: dict[str, int] = dict(zip(COUNT_FIELDS, (int(value) for value in totals), strict=True))
         index, offsets = self._indexed_events()
         matching = index[int(offsets[position]) : int(offsets[position + 1])]
-        matching = matching[selected[matching[:, 2]]]
+        matching = matching[selected[matching["year"]]]
         per_stock = np.zeros(len(self._stocks), dtype=np.int64)
         # Float-weighted bincount loses exact counts above 2**53. Whole-cell
         # overflow validation already guarantees these per-stock sums fit int64.
-        np.add.at(per_stock, matching[:, 1], matching[:, 3])
+        np.add.at(per_stock, matching["stock"], matching["event_n"])
         stock_counts = [int(value) for value in per_stock[per_stock > 0]]
         return counts_to_summary(counts, stock_counts)
 
