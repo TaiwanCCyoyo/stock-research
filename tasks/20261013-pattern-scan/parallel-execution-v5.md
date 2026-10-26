@@ -171,3 +171,41 @@ with all published checkpoints retained. The hold remains in place throughout.
 The timeout/receipt cleanup change passed all 68 launcher/continuation tests in
 47.07 seconds, including a timeout that records the Job peak and a receipt-write
 failure that still terminates and closes the owned Job.
+
+## Memory recovery, 2026-10-27
+
+The B2 capacity attempt completed five new full-market groups, peaking at
+6,402,129,920 committed bytes. The following default-order continuation completed
+B2 Q4/followup, then failed at 02:24 Taipei on October 25 during B4 conditions.
+Its Job receipt reports exit 1, no timeout and 9,092,055,040 peak committed bytes.
+The traceback identifies a 1.31 GiB advanced-indexing allocation while sorting
+43,995,096 sparse cell/year records. B4 retained 19 of 20 published groups; B1,
+H1 and B2 retain all three terminal phase receipts. The stale `running` label is
+not liveness: the OS writer lock is free and the survey classifies this run paused.
+
+The recovery changes storage and indexing only. Sparse records use bounded int32
+cell positions, int8 year positions and unchanged int64 event counts (13 bytes per
+record). The cell index retains platform-width stock positions, int8 years and
+int64 counts (17 bytes per record on this host). Cell offsets are counted first;
+each stock is sorted separately and scattered directly into its final cell slice.
+There is no whole-market permutation or sorted copy. Input validation, integer
+overflow checks, stock ordering, lazy invalidation, annual/drop-year summaries,
+selection, final schemas and definition v5 remain unchanged.
+
+A synthetic stress held four indexes simultaneously, each with 43,995,096 records
+across 1,942 synthetic stocks. The complete Windows Job peaked at 5,804,277,760
+committed bytes (5.41 GiB), exited 0 in 9.11 seconds and was confirmed empty.
+Evidence is in shared scratch run `20261013-pattern-scan/q2-q6-memory-probe-v1`.
+This exercises the allocation failure's scale; it is not full-market capacity
+evidence. The focused dense/bounded/conditions/pool tests passed 45 tests in
+94.85 seconds; Q1/analysis/continuation tests passed 81 tests in 49.44 seconds.
+
+Resume the same `q2-q6-v6` run with four workers, four in-flight jobs, nested
+threads 1 and the unchanged 8 GiB Job limit. The first recovery invocation uses
+the default family/phase order and a six-hour timeout. It adopts all completed
+outputs, computes B4's remaining group and continues to subsequent work while
+the budget permits. Before a ten-day continuation, inspect this attempt's actual
+new full-market group publications, retained-output baseline, aggregate Job peak
+and errors. A timeout alone is not failure; an OOM or missing complete-group
+evidence keeps the run paused. Preserve the failed attempt's memory receipt and
+all checkpoints. The existing hold remains until merged result delivery.
