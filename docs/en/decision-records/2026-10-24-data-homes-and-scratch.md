@@ -46,6 +46,11 @@ record what they read. Only a study's **outputs** need a home.
 `.env.local`; the old location is deleted only with the owner's explicit agreement.
 Until that move lands, the existing locations and settings remain valid.
 
+Execution is recorded in [the migration handoff](../research-data-layout-migration.md).
+The owner confirmed that copying and verification precede the resolver PR merge;
+the primary `.env.local` and website switch only after that merge. Retained old
+locations are never deleted as part of this handoff.
+
 ### 3. Experiment scratch lives in one labelled place
 
 Intermediate files of an experiment go to

@@ -23,3 +23,4 @@ tasks/20261005-industry-role-comparison/publication-v2/**
 /tasks/*/web-report/data/
 # Momentum-only final results are hashed in results/run-receipt.json; formatting would break the digests.
 tasks/20261021-momentum-only-doubling/results/**
+tasks/20261024-strength-weakening-flags/results/**

@@ -6,12 +6,19 @@ validity. This entry does not approve a strategy or a market calculation.
 
 ## Location and isolation
 
-Set `STOCK_RESEARCH_DATA_ROOT` to an explicit absolute primary
-`research_data` directory. In this installation it is
-`D:/Project/stock-research/research_data`. No drive is hard-coded in the API.
-Its parent must have a real `.git` directory. A linked worktree's `.git` file
-cannot establish a primary root. Neither `.worktrees` nor `.tmp` can contain
-the configured root. A worktree must not contain even an empty `research_data`.
+Set `STOCK_RESEARCH_DATA_ROOT` to the explicit absolute external catalog directory,
+`D:/StockData/stock-research/catalog` in this installation (owner decision
+2026-10-24). Process configuration takes precedence; otherwise read the primary
+checkout's ignored `.env.local`, discovered through Git's common directory. The
+primary checkout is resolved independently and still owns pinned `tasks/` and
+`research_cache/` references. No drive is hard-coded in the API.
+
+The external catalog must be outside every registered checkout and worktree.
+Neither `.worktrees` nor `.tmp` can contain the root. A worktree must not contain
+even empty `research_data`, `catalog` or `archive` roots. The legacy
+`<primary>/research_data` layout remains explicitly readable for retained requests;
+it is never a fallback when the configured external path is unavailable. The
+primary must have a real `.git` directory, not a linked worktree's `.git` file.
 
 `DataRoots` validates both its constructor and environment adapter. Artifact
 paths use portable relative names, with additional Windows device-name and
@@ -36,7 +43,7 @@ See the [decision record](../../docs/en/decision-records/2026-10-15-drop-input-s
 
 ## Catalog and versions
 
-The sole machine discovery source is `research_data/catalog.json`. It points to
+The sole machine discovery source is `<configured catalog root>/catalog.json`. It points to
 an immutable `catalog-snapshots/<digest>/catalog.json`. That snapshot and its
 generated README are published with the existing no-replace primitive. The root
 README is a generated view, not a second hand-maintained list. Dataset reads
@@ -77,7 +84,7 @@ taken only after the new snapshot no longer advertises them.
 ## Interfaces
 
 ```powershell
-$env:STOCK_RESEARCH_DATA_ROOT = 'D:/Project/stock-research/research_data'
+$env:STOCK_RESEARCH_DATA_ROOT = 'D:/StockData/stock-research/catalog'
 uv run python -m scripts.research_data catalog
 uv run python -m scripts.research_data register-existing
 uv run python -m scripts.research_data verify DATA_ID VERSION_ID --manifest-sha256 EXPLICIT_SHA256
@@ -189,8 +196,12 @@ not disabling those limits.
 
 ## Preservation and backup
 
-`artifact_backup.default_sources` now includes `research_data` alongside existing
-cache and formal task scopes. The existing content-addressed backup and new-target
+`artifact_backup.default_sources` reads the configured external catalog and its
+sibling `archive/`, alongside existing cache and formal task scopes. The v1 backup
+namespace `research_data/` is retained for catalog restore compatibility; restore
+that directory to the configured `catalog/` in a separate verified cutover, never
+over an existing tree. `archive/` is a distinct backup namespace. A configured but
+missing catalog fails instead of backing up the retained old copy. The existing content-addressed backup and new-target
 restore verify bytes. Catalog entries accurately retain unknown backup state for
 their exact versions; backup scope inclusion is not a backup receipt. No new
 backup run or schedule is implied. Same-disk backups do not protect disk failure.

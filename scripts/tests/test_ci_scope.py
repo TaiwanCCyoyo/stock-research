@@ -13,6 +13,59 @@ import yaml
 
 from scripts import ci_scope
 
+STRENGTH_TESTS = {"scripts/tests/test_strength_flags_v1.py", "scripts/tests/test_strength_flag_counts_v1.py"}
+
+
+@pytest.mark.parametrize("status", ["A", "M"])
+@pytest.mark.parametrize(
+    "source",
+    [
+        "research_core/momentum_only_v1.py",
+        "research_core/count_cube_v1.py",
+        "research_core/pattern_scan_flags_v1.py",
+        "research_core/hhhl_variants_observations.py",
+        "research_core/maintained_adjusted_daily.py",
+        "research_core/research_measurement_v1.py",
+    ],
+)
+def test_strength_upstreams_select_both_downstream_tests(status: str, source: str) -> None:
+    plan = ci_scope.make_plan([(status, source)])
+    assert not plan["full"]
+    assert "strength_flags" in plan["domains"]
+    assert STRENGTH_TESTS <= set(plan["python_tests"])
+    assert "scripts/tests/test_research_ledger.py" not in plan["python_tests"]
+
+
+@pytest.mark.parametrize("status", ["A", "M"])
+@pytest.mark.parametrize(
+    "source",
+    [
+        "research_core/multiple_observations_v1.py",
+        "research_core/strength_flags_v1.py",
+        "research_core/strength_flag_counts_v1.py",
+        "research_core/strength_flags_run_v1.py",
+        "scripts/run_strength_flags.py",
+        *sorted(STRENGTH_TESTS),
+    ],
+)
+def test_strength_owned_sources_and_tests_select_the_complete_domain(status: str, source: str) -> None:
+    plan = ci_scope.make_plan([(status, source)])
+    assert not plan["full"] and not plan["frontend"]
+    assert set(plan["domains"]) == {"strength_flags"}
+    expected_tests = STRENGTH_TESTS.copy()
+    if source in STRENGTH_TESTS:
+        # This selector contract names the changed test, so the existing reference closure retains it too.
+        expected_tests.add("scripts/tests/test_ci_scope.py")
+    assert set(plan["python_tests"]) == expected_tests
+
+
+@pytest.mark.parametrize("source", ["research_core/strength_flags_unreviewed_v2.py", "scripts/run_strength_unreviewed.py"])
+def test_unknown_strength_sources_keep_full_safety_fallback(source: str) -> None:
+    manifest = ci_scope.load_manifest()
+    plan = ci_scope.make_plan([("A", source)])
+    assert plan["full"] and plan["frontend"]
+    assert plan["python_tests"] == ci_scope.test_inventory(ci_scope.ROOT, manifest)
+
 
 @pytest.mark.parametrize(
     ("path", "domain", "consumer"),
@@ -50,12 +103,73 @@ def test_daily_conditions_kernels_select_the_shared_table_tests(path: str) -> No
         assert "scripts/tests/test_pattern_scan_daily_values_v1.py" in plan["python_tests"]
 
 
+TENBAGGER_TESTS = {
+    "scripts/tests/test_industry_breadth_v1.py",
+    "scripts/tests/test_institutional_flow_v1.py",
+    "scripts/tests/test_tenbagger_drivers_v1.py",
+    "scripts/tests/test_tenbagger_drivers_run_v1.py",
+}
+TENBAGGER_OWN_PATHS = [
+    "research_core/industry_breadth_v1.py",
+    "research_core/institutional_flow_v1.py",
+    "research_core/tenbagger_drivers_v1.py",
+    "research_core/tenbagger_drivers_run_v1.py",
+    "scripts/run_tenbagger_drivers.py",
+    "tasks/20261024-tenbagger-drivers/mission.md",
+    *sorted(TENBAGGER_TESTS),
+]
+
+
+@pytest.mark.parametrize("status", ["A", "M"])
+@pytest.mark.parametrize("path", TENBAGGER_OWN_PATHS)
+def test_tenbagger_domain_registers_its_sources_and_tests(status: str, path: str) -> None:
+    plan = ci_scope.make_plan([(status, path)])
+    expected_tests = TENBAGGER_TESTS | ({"scripts/tests/test_ci_scope.py"} if path in TENBAGGER_TESTS else set())
+
+    assert not plan["full"]
+    assert plan["domains"] == ["tenbagger_drivers"]
+    assert set(plan["python_tests"]) == expected_tests
+
+
+@pytest.mark.parametrize(
+    ("source", "expected_domains"),
+    [
+        ("research_core/momentum_only_v1.py", {"momentum_only", "tenbagger_drivers"}),
+        ("research_core/count_cube_v1.py", {"momentum_only", "tenbagger_drivers"}),
+        ("research_core/live_producer.py", {"research_data", "annual", "pattern_scan", "tenbagger_drivers"}),
+        ("research_core/maintained_adjusted_daily.py", {"research_data", "annual", "pattern_scan", "tenbagger_drivers"}),
+        ("research_core/scratch_runs.py", {"research_data", "annual", "pattern_scan", "tenbagger_drivers"}),
+        ("research_core/pattern_scan_inputs_v1.py", {"pattern_scan", "tenbagger_drivers"}),
+        (
+            "research_core/hhhl_variants_run.py",
+            {"hhhl", "opportunity", "research_data", "annual", "pattern_scan", "tenbagger_drivers"},
+        ),
+        (
+            "research_core/research_measurement_v1.py",
+            {"feature_blocks", "research_data", "annual", "pattern_scan", "tenbagger_drivers"},
+        ),
+    ],
+)
+def test_tenbagger_dependencies_propagate_to_exact_consumer_tests(source: str, expected_domains: set[str]) -> None:
+    expected_domains = expected_domains | {"strength_flags"}
+    manifest = ci_scope.load_manifest()
+    inventory = ci_scope.test_inventory(ci_scope.ROOT, manifest)
+    plan = ci_scope.make_plan([("M", source)])
+    expected_tests = {test for domain_name in expected_domains for test in inventory if ci_scope.matches(test, manifest["domains"][domain_name]["tests"])}
+
+    assert not plan["full"]
+    assert set(plan["domains"]) == expected_domains
+    assert set(plan["python_tests"]) == expected_tests
+    assert TENBAGGER_TESTS <= expected_tests
+    assert plan["frontend"] == (source == "research_core/hhhl_variants_run.py")
+
+
 @pytest.mark.parametrize(
     ("path", "expected_domains", "existing_consumer_tests"),
     [
         (
             path,
-            {"market_context", "method_environment", "sector", "opportunity", "research_data", "annual", "pattern_scan"},
+            {"market_context", "method_environment", "sector", "opportunity", "research_data", "annual", "pattern_scan", "tenbagger_drivers"},
             {
                 "scripts/tests/test_method_environment_runner.py",
                 "scripts/tests/test_sector_wave_catalog_io.py",
@@ -67,7 +181,7 @@ def test_daily_conditions_kernels_select_the_shared_table_tests(path: str) -> No
     + [
         (
             path,
-            {"hhhl", "opportunity", "research_data", "annual", "pattern_scan"},
+            {"hhhl", "opportunity", "research_data", "annual", "pattern_scan", "tenbagger_drivers"},
             {"tests/test_opportunity_history_api.py", "scripts/tests/test_multiple_outcomes_v1.py"},
         )
         for path in ("research_core/hhhl_variants_paths.py", "research_core/hhhl_variants_observations.py")
@@ -77,9 +191,10 @@ def test_research_data_upstreams_keep_all_downstream_tests(path: str, expected_d
     manifest = ci_scope.load_manifest()
     plan = ci_scope.make_plan([("M", path)])
     assert not plan["full"]
-    assert set(plan["domains"]) == expected_domains
+    assert set(plan["domains"]) == expected_domains | {"strength_flags"}
     assert set(manifest["domains"]["research_data"]["tests"]) <= set(plan["python_tests"])
     assert set(manifest["domains"]["annual"]["tests"]) <= set(plan["python_tests"])
+    assert TENBAGGER_TESTS <= set(plan["python_tests"])
     assert "scripts/tests/test_pattern_scan_shared_v1.py" in plan["python_tests"]
     assert existing_consumer_tests <= set(plan["python_tests"])
     assert plan["frontend"]
@@ -150,9 +265,11 @@ def test_feature_block_upstreams_select_research_data_consumers(path: str) -> No
     manifest = ci_scope.load_manifest()
     plan = ci_scope.make_plan([("M", path)])
     assert not plan["full"]
-    assert set(plan["domains"]) == {"feature_blocks", "research_data", "annual", "pattern_scan"}
+    assert set(plan["domains"]) == {"feature_blocks", "research_data", "annual", "pattern_scan", "tenbagger_drivers", "strength_flags"}
     expected_tests = set(manifest["domains"]["feature_blocks"]["tests"]) | set(manifest["domains"]["research_data"]["tests"])
     expected_tests |= set(manifest["domains"]["annual"]["tests"])
+    expected_tests |= set(manifest["domains"]["tenbagger_drivers"]["tests"])
+    expected_tests |= set(manifest["domains"]["strength_flags"]["tests"])
     expected_tests |= {
         test for test in ci_scope.test_inventory(ci_scope.ROOT, manifest) if ci_scope.matches(test, manifest["domains"]["pattern_scan"]["tests"])
     }
@@ -180,6 +297,15 @@ def test_feature_block_domain_routes_new_execution_contracts() -> None:
     assert "scripts/tests/test_prepared_stock_input_v1.py" in plan["python_tests"]
     # Shared numerical foundations retain the existing full safety fallback.
     assert ci_scope.make_plan([("A", "research_core/derived_features_selective_v1.py")])["full"]
+
+
+def test_live_producer_changes_select_security_coverage_sqlite_consumer() -> None:
+    plan = ci_scope.make_plan([("M", "research_core/live_producer.py")])
+
+    assert not plan["full"]
+    assert "research_data" in plan["domains"]
+    assert "tests/test_security_coverage.py" in plan["python_tests"]
+    assert "opportunity" not in plan["domains"]
 
 
 ANNUAL_TESTS = {
@@ -253,20 +379,27 @@ def test_shared_json_integrity_preserves_full_fallback(status: str) -> None:
 @pytest.mark.parametrize(
     ("source", "expected_domains"),
     [
-        ("research_core/research_data_builder.py", {"research_data", "annual", "pattern_scan"}),
-        ("research_core/research_data_catalog.py", {"research_data", "annual", "pattern_scan"}),
-        ("research_core/research_data_paths.py", {"research_data", "annual", "pattern_scan"}),
-        ("research_core/research_measurement_v1.py", {"feature_blocks", "research_data", "annual", "pattern_scan"}),
-        ("research_core/feature_identity_v1.py", {"feature_blocks", "research_data", "annual", "pattern_scan"}),
+        ("research_core/research_data_builder.py", {"research_data", "annual", "pattern_scan", "tenbagger_drivers"}),
+        ("research_core/research_data_catalog.py", {"research_data", "annual", "pattern_scan", "tenbagger_drivers"}),
+        ("research_core/research_data_paths.py", {"research_data", "annual", "pattern_scan", "tenbagger_drivers"}),
+        (
+            "research_core/research_measurement_v1.py",
+            {"feature_blocks", "research_data", "annual", "pattern_scan", "tenbagger_drivers"},
+        ),
+        (
+            "research_core/feature_identity_v1.py",
+            {"feature_blocks", "research_data", "annual", "pattern_scan", "tenbagger_drivers"},
+        ),
     ],
 )
 def test_annual_upstream_dependency_closure_selects_annual_consumers(source: str, expected_domains: set[str]) -> None:
     plan = ci_scope.make_plan([("M", source)])
 
     assert not plan["full"]
-    assert set(plan["domains"]) == expected_domains
+    assert set(plan["domains"]) == expected_domains | {"strength_flags"}
     assert ANNUAL_TESTS <= set(plan["python_tests"])
     assert "scripts/tests/test_pattern_scan_shared_v1.py" in plan["python_tests"]
+    assert TENBAGGER_TESTS <= set(plan["python_tests"])
 
 
 @pytest.mark.parametrize("status", ["A", "M"])
@@ -275,27 +408,27 @@ def test_annual_upstream_dependency_closure_selects_annual_consumers(source: str
     [
         (
             "scripts/pattern_scan.py",
-            {"pattern_scan"},
+            {"pattern_scan", "tenbagger_drivers"},
             {"scripts/tests/test_pattern_scan_run_v1.py", "scripts/tests/test_pattern_scan_shared_v1.py"},
         ),
         (
             "research_core/pattern_scan_report_v1.py",
-            {"pattern_scan"},
+            {"pattern_scan", "tenbagger_drivers"},
             {"scripts/tests/test_pattern_scan_report_v1.py"},
         ),
         (
             "scripts/export_pattern_scan_report.py",
-            {"pattern_scan"},
+            {"pattern_scan", "tenbagger_drivers"},
             {"scripts/tests/test_pattern_scan_report_v1.py"},
         ),
         (
             "scripts/audit_pattern_scan_local_candidates.py",
-            {"pattern_scan"},
+            {"pattern_scan", "tenbagger_drivers"},
             {"scripts/tests/test_pattern_scan_local_candidate_audit_v5.py"},
         ),
         (
             "research_core/research_data_file_bundle_v1.py",
-            {"research_data", "annual", "pattern_scan"},
+            {"research_data", "annual", "pattern_scan", "tenbagger_drivers"},
             {
                 "scripts/tests/test_research_data_file_bundle_v1.py",
                 "scripts/tests/test_annual_publication.py",
@@ -309,8 +442,8 @@ def test_known_pattern_scan_entry_and_shared_bundle_route_consumers(status: str,
 
     assert not plan["full"]
     assert not plan["frontend"]
-    assert set(plan["domains"]) == expected_domains
-    assert required_tests <= set(plan["python_tests"])
+    assert set(plan["domains"]) == expected_domains | {"strength_flags"}
+    assert required_tests | TENBAGGER_TESTS <= set(plan["python_tests"])
     assert "scripts/tests/test_research_ledger.py" not in plan["python_tests"]
 
 

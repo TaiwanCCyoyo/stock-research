@@ -24,7 +24,8 @@ def inventory(root: Path) -> dict:
 
 
 @pytest.mark.parametrize("readonly", [False, True])
-def test_real_worktree_force_and_powershell_recursive_deletion_preserve_shared_files(tmp_path: Path, readonly: bool):
+@pytest.mark.parametrize("external", [False, True])
+def test_real_worktree_force_and_powershell_recursive_deletion_preserve_shared_files(tmp_path: Path, readonly: bool, external: bool):
     primary = tmp_path / "synthetic primary with spaces"
     primary.mkdir()
     run("git", "init", "-b", "main", cwd=primary)
@@ -34,7 +35,7 @@ def test_real_worktree_force_and_powershell_recursive_deletion_preserve_shared_f
     (primary / "tracked.txt").write_text("invented content\n")
     run("git", "add", "tracked.txt", cwd=primary)
     run("git", "commit", "-m", "test fixture", cwd=primary)
-    data = primary / "research_data"
+    data = tmp_path / "research home/catalog" if external else primary / "research_data"
     (data / "features/v1").mkdir(parents=True)
     (data / "features/v1/invented.json").write_bytes(b'{"stock":"INVENTED","MA20":20}')
     (data / "catalog.json").write_bytes(b'{"synthetic":true}')

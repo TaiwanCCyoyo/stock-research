@@ -13,7 +13,7 @@ Deliver a reading view of saved evidence, not new study conclusions.
   Quote the report exactly in history registration; do not infer an outcome from
   metrics or replace an unknown result with a favorable label.
 - Put maintained reusable data once in external `derived/<family>-v<N>/`.
-  Research bundles belong in the primary `research_data/` catalog; pinned legacy
+  Research bundles belong in the external `D:/StockData/stock-research/catalog/` catalog; pinned legacy
   `tasks/<id>/datasets/` stay in place. Use the existing catalog tool to register
   an existing bundle and add its contract/access row to the research-program index.
   Missing payload is a documented gap, not permission to synthesize or move it.

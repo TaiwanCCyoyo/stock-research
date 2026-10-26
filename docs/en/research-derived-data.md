@@ -153,7 +153,8 @@
 
 以下是 2026-10-15 之前的設計，只保留給既有版本讀取；新的共用衍生資料請用上一節。擁有者已同意刪除現有的 `research_cache` 雜湊版本（見決策紀錄）。
 
-2026-10-12：正式共用研究版本由 primary `research_data/` catalog 定位，
+2026-10-24 取代 2026-10-12 的位置規則：正式共用研究版本由外部
+`D:/StockData/stock-research/catalog/` catalog 定位，
 `research_cache/` 保留底層區塊。設定、固定版本讀取、原位 legacy 登記與備份範圍見
 [共用入口契約](../../tasks/20261012-research-data-entry/data-contract.md)。既有資料與 pinned 原始碼
 保留原位置及 bytes；入口完成不代表 2010 全市場版本或高效率每日延伸已完成。

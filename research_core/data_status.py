@@ -214,7 +214,7 @@ class DataStatusView:
                         "data_period": period,
                         "last_updated": observed.isoformat() if observed else None,
                         "symbols": _count(status.get("codes")),
-                        "rows": _count(bases.get("raw", {}).get("rows")),
+                        "rows": _count(status.get("rows", bases.get("raw", {}).get("rows"))),
                         "status": "stale" if _old(observed, now) or _coverage_old(period, now) else "ok",
                     })
                 except READ_ERRORS as exc:
@@ -243,10 +243,22 @@ class DataStatusView:
                     period = entry["coverage"]["raw_input_period"]
                     metadata = entry.get("viewer_metadata") or {}
                     state = "missing" if entry.get("metadata_error") else "ok" if entry["status"] == "complete" else "stale"
+                    version_time = None
+                    for field in ("version_created_at", "manifest_modified_at"):
+                        try:
+                            observed = _timestamp(metadata.get(field))
+                        except ValueError:
+                            continue
+                        if observed is not None:
+                            version_time = (observed.isoformat(), field)
+                            break
+
                     rows.append({
                         **empty,
                         "data_period": _period(period["start"], period["end"]),
                         "symbols": _count(metadata.get("security_count")),
+                        "last_updated": version_time[0] if version_time else None,
+                        "update_kind": version_time[1] if version_time else None,
                         "status": state,
                     })
                     if state != "ok":

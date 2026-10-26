@@ -21,6 +21,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.types import Receive, Scope, Send
 
+from research_api.data_coverage import create_data_coverage_router
 from research_api.data_series import create_data_series_router
 from research_api.data_status import create_data_status_router
 from research_api.history import history_router
@@ -123,6 +124,13 @@ class HeartbeatState:
 
 
 heartbeat = HeartbeatState()
+
+
+@router.get("/heartbeat")
+def heartbeat_age() -> dict[str, float | None]:
+    """Expose aggregate tab activity without changing it or reading research data."""
+    last = heartbeat.last_seen
+    return {"ageSeconds": None if last is None else max(0.0, time.monotonic() - last)}
 
 
 @router.post("/heartbeat")
@@ -249,7 +257,7 @@ def create_app() -> FastAPI:
     shared_router = create_shared_data_router()
     application.include_router(shared_router)
     application.include_router(shared_router, prefix="/api")
-    for data_router in (create_data_status_router(), create_data_series_router()):
+    for data_router in (create_data_status_router(), create_data_series_router(), create_data_coverage_router()):
         application.include_router(data_router)
         application.include_router(data_router, prefix="/api")
     historical = LazyHistoryStore()

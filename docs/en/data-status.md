@@ -159,3 +159,7 @@ blocked in the verification process. Overall `partial` continues to describe
 the existing historical/partial catalog entries. The first status file is
 rebuildable metadata; the normal daily backup includes it after the next daily
 refresh. A separate backup run was not performed for this publication.
+
+## Security coverage and stock navigation
+
+See [the coverage contract](security-coverage.md). Saved per-security summaries are maintained separately from the metadata-only overview. Presence, historical completeness, freshness and unknown reads remain distinct. Name and industry dates label observations; frozen study entries are fixed versions. The new coverage family reports summary-cell counts through the overview, rather than pretending they are raw market rows. Legacy data links resolve to the stock list or explicit identity candidates.

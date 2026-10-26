@@ -73,6 +73,29 @@ or `--check` to inspect both services without starting anything. Logs are under
 `.tmp/research-web-launcher/`. An old temporary preview URL on port 8518 is not
 this launcher's entry; use 5177 instead. Do not terminate unknown listeners.
 
+For a Windows desktop shortcut, use the existing environment's `pythonw.exe`
+with arguments `-B "<checkout>/scripts/start_research_web.py" --desktop` and set
+its working directory to that checkout. This is the supported hidden entry;
+no external adapter or private-function override is needed. It uses the selected
+interpreter directly for the API (no uv sync at launch), the same production
+build/preview path, configuration resolver and identity checks as the CLI.
+Diagnostics go to `.tmp/research-web-launcher/desktop-launcher.log` and the
+normal launcher/service logs. Keep that environment and Node/npm dependencies
+prepared before installing the shortcut.
+
+All launches serialize inspection, build and startup with a checkout/port lock.
+Repeated desktop clicks verify and reuse services, refresh browser activity and
+open another tab. Once every tab stops sending heartbeats for 180 seconds, a
+desktop launcher stops only children it created, including when it owns just
+one service. Any tab's heartbeat keeps them alive. Without an initial heartbeat
+the monitor allows 300 seconds; opening the browser also refreshes activity.
+Reused services keep their original ownership; unknown, mismatched or older
+APIs lacking the read-only heartbeat status endpoint are refused, never stopped.
+Browser background throttling or sleep longer than the grace period can also
+expire activity; click the shortcut again to restart your services.
+Temporary heartbeat-status request failures are retried without stopping services;
+only continuous failures exceeding the same 180-second grace end the owned run.
+
 The default `#market` reads the frozen 2010-onward catalog through a dedicated,
 read-only history API. Both the API and Vite must run during development.
 `npm run dev` starts Vite only. A 502 response from `/history-api` means

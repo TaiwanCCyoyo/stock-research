@@ -182,6 +182,7 @@ _CLI_SOURCE_FILES = (
     "research_core/research_data_builder.py",
     "research_core/research_data_catalog.py",
     "research_core/research_data_paths.py",
+    "research_core/producer_data.py",
     "research_core/research_measurement_v1.py",
     "StockProject/engine/data_loader.py",
     "uv.lock",
@@ -197,9 +198,10 @@ _CLI_PACKAGE_FILES = (
 )
 
 
-@pytest.fixture
+@pytest.fixture(params=[False, True], ids=["legacy-catalog", "external-catalog"])
 def synthetic_cli_publication(
     tmp_path: Path,
+    request: pytest.FixtureRequest,
 ) -> tuple[Path, Path, Path, dict[str, Any], dict[str, str]]:
     """Create a tiny registered Git worktree and publish only synthetic bundles."""
     repo = Path(__file__).resolve().parents[2]
@@ -240,7 +242,7 @@ def synthetic_cli_publication(
     subprocess.run([*git, "worktree", "add", "--detach", str(worktree), "HEAD"], check=True, capture_output=True, text=True)
 
     environment = os.environ.copy()
-    environment[DATA_ROOT_ENV] = str(primary / "research_data")
+    environment[DATA_ROOT_ENV] = str(tmp_path / "research-home/catalog" if request.param else primary / "research_data")
     catalog = DataCatalog(DataRoots.from_env(environment, worktree=worktree))
     parameters = {"fixture": "annual-publication.cli.v1", "seed": 11}
     input_entry = publish_bundle(
