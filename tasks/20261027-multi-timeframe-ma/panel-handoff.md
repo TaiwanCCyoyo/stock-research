@@ -111,7 +111,8 @@ Command:
 uv run pytest scripts/tests/test_multi_timeframe_ma_panel_v1.py scripts/tests/test_ci_scope.py -q
 ```
 
-Result: **402 passed in 81.76s** (130 panel cases and 272 selector cases).
+Original implementation result at reviewed HEAD `4b57244b...`:
+**402 passed in 81.76s** (130 panel cases and 272 selector cases).
 Normal-hook evidence accompanies the reported local commit; no publication or
 hosted CI is authorized in this turn. No unchanged core or unrelated research
 suite is rerun to replace its existing passing evidence.
@@ -126,14 +127,64 @@ suite is rerun to replace its existing passing evidence.
 | Short/20/21/long calendars, unknown at either/both R window boundaries, cross equals threshold       | `test_exact_recent_dates_and_public_ratio_warmup`, `test_cross_thresholds_and_known_false_d_do_not_add_mask_gates`                         |
 | Empty P and retained code/unknown fields                                                             | `test_empty_pool_preserves_unknowns_and_all_codes`                                                                                         |
 | Overlapping reasons, within-S6 scope, deduplicated exclusions and two original years in one ISO year | `test_overlapping_coverage_is_within_s6_and_uses_original_cutoff_year`                                                                     |
-| Same-cutoff scaling, future append and unchanged prior result                                        | `test_same_cutoff_positive_scale_and_future_append_do_not_rewrite_old_panel`                                                               |
+| Nondegenerate fixture-specific scaling, future append and unchanged prior result                     | `test_nondegenerate_fixture_scaling_and_future_append_preserve_panel`; not universal scale-invariance acceptance                           |
+| Constant-price scale boundary with exact public density/rank parity and observed dense flip          | `test_constant_price_scale_boundary_characterizes_known_dense_flip`; known numerical limitation, not an intended research rule             |
 | Malformed identities/calendar/dates/int8/tri-state/S6; inconsistent core density                     | Invalid request/state/date/weekly/known-density parametrized tests                                                                         |
 | Input snapshot/aliasing, output immutability, no file/socket/DB calls                                | `test_input_snapshots_immutable_outputs_and_no_io`                                                                                         |
 
 All weekly values are built through real public core MA/density functions on
 small artificial close arrays. Known-output corruption tests alone monkeypatch
 the core result to exercise contract rejection. No real data or reader parity
-is claimed, and floating scale tolerance never changes rank or signal rules.
+is claimed. The nondegenerate fixture's density tolerance does not establish
+universal rank/dense invariance; production ranking has no added tolerance.
+
+## MEDIUM known numerical limitation: scale boundary
+
+**The frozen mission's universal scale-invariance acceptance remains
+UNSATISFIED.** Exact public-oracle parity is not evidence that this numerical
+boundary meets that mission requirement.
+
+Both independent Astra/planner reviews reproduced the following artificial
+case at reviewed HEAD `4b57244b4739fdff68d099863bce765f826bf00b`, using the locked
+environment **Python 3.12.15 / NumPy 2.3.5 / pandas 2.3.3**:
+
+- Ten FAKE stocks; each has 150 constant weekly closes `100+i`, S6=true,
+  21 saved D states=0, and W/Wprev=0. Scale every weekly price by 0.97.
+- For FAKE_00, the existing core density changes from approximately
+  `1.2183270001374245e-15` to zero. Its exact pandas average percentile changes
+  from 1.0 to 0.10 and dense changes from 0 to 1.
+- P remains 10 and every M remains true at both scales. Panel density equals
+  public core density and ranks equal the exact pandas average-tie oracle at
+  each scale. The difference originates in the existing EMA floating tails.
+
+The added constant-price characterization locks the observed dense flip under
+these dependencies without locking every float digit. It explicitly checks
+P/M stability and exact oracle parity. The renamed nondegenerate scaling test
+continues to cover its own fixture only. Neither test treats the discrepancy
+as the intended research definition or as a satisfied mission acceptance.
+
+Classification impact is demonstrated: numerically tiny density differences
+can alter P-relative rank and the fixed 0.10 dense classification near this
+boundary. **Market impact is not quantified**; no real prices, populations,
+labels or research computation were read or run to estimate prevalence/effect.
+
+### Explicit parent/planner disposition
+
+On 2026-10-27 the parent accepted the planner's bounded MEDIUM disposition:
+engineering delivery may proceed after regression characterization and explicit
+documentation, while universal S7 scale-invariance acceptance stays unsatisfied.
+This is **not a waiver or amendment of the frozen mission** and needs no new
+owner choice for this characterization. A future numerical-contract change is
+separate work. Core/panel production bytes, EMA operation order, epsilon,
+rounding, normalization, tie handling and the 0.10 threshold are unchanged.
+This correction edits only this handoff and the existing panel test; shared
+integration files and frozen mission/contract/study are also unchanged.
+
+Characterization validation:
+`uv run pytest scripts/tests/test_multi_timeframe_ma_panel_v1.py -q` →
+**131 passed in 5.55s**. The selector mapping and tests are unchanged, so their
+existing passing evidence is retained. Normal hooks must pass on the local
+correction commit before parent Astra recheck; publication remains pending.
 
 ## Shared integration and remaining gates
 

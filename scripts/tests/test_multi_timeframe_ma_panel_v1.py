@@ -264,7 +264,8 @@ def test_overlapping_coverage_is_within_s6_and_uses_original_cutoff_year() -> No
 
 
 @pytest.mark.parametrize("factor", [0.25, 0.97, 2.0])
-def test_same_cutoff_positive_scale_and_future_append_do_not_rewrite_old_panel(factor: float) -> None:
+def test_nondegenerate_fixture_scaling_and_future_append_preserve_panel(factor: float) -> None:
+    """Fixture-specific invariance; constant-price float tails are characterized below."""
     request = request_of()
     packets = [packet_of(request, i) for i in range(10)]
     original = panel.evaluate_panel(request, packets)
@@ -284,6 +285,34 @@ def test_same_cutoff_positive_scale_and_future_append_do_not_rewrite_old_panel(f
     future = request_of(cutoff="2020-07-01")
     panel.evaluate_panel(future, [packet_of(future, i, w_current=core.UNKNOWN) for i in range(10)])
     assert panel.evaluate_panel(request, packets) == original
+
+
+def test_constant_price_scale_boundary_characterizes_known_dense_flip() -> None:
+    """Record the locked-dependency limitation, not a new research acceptance rule."""
+    request = request_of()
+    results = []
+    for factor in (1.0, 0.97):
+        packets = []
+        for i in range(10):
+            packet = packet_of(request, i, weeks=150, slope=0.0)
+            close = np.full(150, 100.0 + i, dtype=np.float64) * factor
+            weekly = replace(packet.weekly_series, close=close)
+            packets.append(replace(packet, weekly_series=weekly, weekly_ma=core.moving_averages(weekly)))
+        result = panel.evaluate_panel(request, packets)
+        densities = [core.density_at_cutoff(packet.weekly_series, packet.weekly_ma).density for packet in packets]
+        oracle = pd.Series(densities, dtype="float64").rank(method="average", pct=True)
+        assert result.pool_n == 10 and result.m == (True,) * 10
+        assert all(row.p_member for row in result.stocks)
+        assert [row.density for row in result.stocks] == densities
+        assert [row.rank_percentile for row in result.stocks] == oracle.tolist()
+        assert [row.dense for row in result.stocks] == [int(rank <= 0.10) for rank in oracle]
+        results.append(result)
+    before, after = results[0].stocks[0], results[1].stocks[0]
+    assert before.density is not None and after.density is not None
+    # Preserve the observed classification change without pinning float-tail digits.
+    assert before.density > 0 and after.density == 0
+    assert (before.rank_percentile, before.dense) == (1.0, core.FALSE)
+    assert (after.rank_percentile, after.dense) == (0.10, core.TRUE)
 
 
 @pytest.mark.parametrize(
