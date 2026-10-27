@@ -37,9 +37,28 @@ Normal terminals retain v1 meanings: `on_time`, `late`, `cohort_recovered`,
 `already_frozen`, `refused`, `failed`, and scheduled `not_recorded`. Failures and
 interrupt exceptions are re-raised after terminal persistence. Manual existing-day
 `FileExistsError` is re-raised; scheduled existing-day completion returns its path.
-Known completion records the actual UTC `finished_at_utc`; the business clock
-continues moving through v1's pre-publication check. Starting before Taipei 09:00
-does not make a run completed after 09:00 on time.
+`on_time` is the existing v1 classification. V1 checks its business clock at
+the start and when `day_frame` finishes, alongside its existing generation and
+eligibility rules. It does not check completion of serialization/publication at
+the Taipei 09:00 deadline. A calculation that crosses the deadline is classified
+late, but serialization/publication that crosses it after the last check can still
+leave `recorded_late=False`, an `on_time` terminal and a cohort. This inherited
+publication-deadline acceptance gap remains unresolved by this PR.
+
+The time fields describe distinct stages:
+
+- V1 captures `recorded_at_utc` before serialization; the cohort copies it as
+  `first_frozen_at_utc`. Neither field is the completion time of publication.
+- V2 captures `finished_at_utc` when its main flow exits into finalization.
+  Missing-day metadata, terminal publication and ledger append/fsync still follow.
+  This field is not the time invocation persistence completes.
+- A normal return from `run` guarantees its terminal was saved and the ledger
+  projection exists. There is no precise durability-completion timestamp field.
+  A persistence/projection error prevents a normal return and may leave a durable
+  terminal awaiting reconciliation.
+
+Recovered `interrupted` attempts retain `completion: unknown` and
+`finished_at_utc: null`; recovery does not fabricate any of these stage times.
 
 Recovery acquires the **existing** local attempt's OS lock through
 `artifact_store.try_os_lock/release_os_lock`; age and PIDs are never death evidence.
@@ -77,7 +96,9 @@ Orchestration writes a new day/cohort only through v1 `record_day`; existing day
 bytes are never replaced. A death after day publication and before cohort creation
 is recorded as unknown. A later invocation may call public v1 `record_day` again;
 only v1's existing frozen `recorded_late` and `recorded_at_utc` evidence can recover
-its cohort. Recovery itself does not create, shift, or guess a confirmatory window.
+its cohort. These retain the v1 classification/time semantics above and do not
+independently prove publication before the deadline. Recovery itself does not
+create, shift, or guess a confirmatory window.
 No terminal-free historical date, including 2026-10-26, is retrospectively filled.
 
 The root writer lock coordinates v2 writers only. Deployment must establish that
@@ -93,7 +114,13 @@ Focused tests: `scripts/tests/test_momentum_forward_attempts_v2.py`,
 `scripts/tests/test_momentum_forward_v1.py`. Tests use temporary roots, fixture
 generation/calendar/frames, and only child processes they create. They cover
 crashes after start, terminal and append fsync; active/unknown owners; concurrent
-invocations; frozen-day/cohort interruption; clock crossing; corrupt intent/JSONL;
+invocations; frozen-day/cohort interruption; calculation clock crossing; corrupt intent/JSONL;
 and byte preservation of synthetic legacy ledger/day/cohort artifacts. The CI
 domain registers the precise new production paths and both tests, with the v1
 suite as a regression dependency.
+
+The separate serialization/publication crossing case remains **failed/unmet**,
+as recorded in the [Astra review evidence](https://github.com/TaiwanCCyoyo/stock-research/pull/102#issuecomment-6435304921).
+Passing crash-recovery and selector tests do not satisfy that acceptance case.
+A complete deadline publication protocol needs a separately scoped versioned
+integration; this review correction changes neither runtime nor frozen day/cohort bytes.

@@ -2,7 +2,8 @@
 
 Implementation owner: Codex O2a session, isolated worktree
 `D:/Project/stock-research/.worktrees/forward-attempt-recovery`, branch
-`codex/forward-attempt-recovery`, based on fetched `origin/main` 735cd724.
+`codex/forward-attempt-recovery`, initially based on fetched `origin/main` 735cd724
+and subsequently normally merged with main 39991b45 (PR100).
 Keep this worktree for its open draft PR. Other worktrees, primary dirty submodule,
 untracked production forward-log, and unknown thread 01a17bce remain unowned by
 this session; the inventory is not a claim that all concurrent work is conflict-free.
@@ -11,6 +12,37 @@ this session; the inventory is not a claim that all concurrent work is conflict-
 run a production root, populate historical attempts, or start an actual study.
 See [data contract](data-contract.md) for physical journal/ledger compatibility,
 recovery, uncertainty and corruption stop behavior.
+
+## Unmet publication-deadline acceptance
+
+Switching to v2 improves invocation traceability and crash recovery only.
+It does not repair v1's publication-deadline gap. Production remains pending
+deployment; green CI is not evidence that a day/cohort was published before 09:00.
+
+| Synthetic case                                                                     | Evidence and acceptance status                                                                                                            |
+| ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Calculation itself crosses Taipei 09:00                                            | Existing v1/v2 calculation-crossing tests pass: the last v1 clock check observes the crossing and records late.                           |
+| `day_frame` completes at 08:59:59; serialization/publication completes at 09:00:01 | Astra reproduced `recorded_late=False`, v2 `on_time` and cohort creation. The intended complete-publication deadline is **failed/unmet**. |
+
+The [original Astra review record](https://github.com/TaiwanCCyoyo/stock-research/pull/102#issuecomment-6435304921)
+retains the serialization-crossing failure and direct-v1/scheduled-v2 diagnostic
+results. This patch leaves the original reviewer-owned failing test/log untouched.
+It does not rewrite the assertion to expect the incorrect `on_time`, mark that
+case repaired, or treat successful reproduction of the defect as a passing fix.
+
+V1's public `record_day` performs computation, serialization, day publication and
+cohort creation in one call, without a prepare/publish hook. An outer adapter
+cannot enforce a complete-publication deadline after that call returns. A full
+deadline protocol is a separately scoped versioned integration gap. This PR does
+not copy v1, install a runtime monkeypatch, call private helpers as a workaround,
+or rewrite frozen day/cohort artifacts.
+
+The timestamps must keep their stage meanings: `recorded_at_utc` and the copied
+`first_frozen_at_utc` precede serialization; `finished_at_utc` marks entry into v2
+finalization, before metadata/terminal/ledger fsync. A normal `run` return guarantees
+terminal persistence and ledger projection; there is no precise durability-finish
+timestamp. Recovered interrupted attempts remain completion-unknown with a null
+`finished_at_utc`.
 
 ## Proposed action after owner review and merge
 
@@ -64,3 +96,10 @@ Normal commit hooks and CI scope selection remain enabled. V1 module, CLI, missi
 roadmap, E1/S7 documents and all production data remain byte-identical. If code
 review identifies a required v1 adapter, stop and obtain that bounded scope rather
 than editing frozen code or changing research semantics.
+
+The CI follow-up adds `momentum_forward_v2` consumers to `research_data` and
+`momentum_only`. Exact A/M selection assertions cover `momentum_forward_v1.py`,
+`maintained_adjusted_daily.py` and `live_producer.py`, including both v2 suites and
+the v1 suite. Existing exact domain/test-set assertions remain exact, and unknown
+forward paths retain full fallback. `test_ci_scope.py`: **219 passed**; this is CI
+coverage evidence, separate from the unresolved serialization/publication case.
