@@ -1,8 +1,8 @@
 # E1-B2a：paired count cube 與 bootstrap 交接
 
 工程定義：`entry-window-bootstrap.v1`；研究定義仍為 `entry-window.v1`。
-本包只完成純記憶體核心與合成驗證，**尚非 merge-ready**：shared CI／program 接線等待 parent
-指派唯一整合 writer，Astra 的 SHA-bound review 及發布／hosted CI 也仍為獨立關卡。
+本包完成純記憶體核心、合成驗證與本機 shared CI／program 接線，**尚非 merge-ready**：
+最終整合的 Astra SHA-bound review、hosted CI 及 parent ready／merge 仍為獨立關卡。
 沒有真實市場結果、reader、runner、CLI、result、receipt 或研究結論。
 
 ## 所有權、基準與契約
@@ -13,8 +13,9 @@
 - Fetch 後 base：`9945d6878e1b3be530e4790ef8fd3a5db6dbcc7a`（已合併 PR105）。
   開工 GitHub open PR collection 為空；worktree／branch metadata 未出現其他 bootstrap owner。
   S7-B1 的 `multi_timeframe_ma_core_v1` 為平行獨立 owner。
-- 作者唯一三檔：`research_core/entry_window_bootstrap_v1.py`、
+- 核心套件三檔：`research_core/entry_window_bootstrap_v1.py`、
   `scripts/tests/test_entry_window_bootstrap_v1.py`、本 handoff。
+  後續 shared integration 另獲唯一 writer 授權，僅追加下節列明的 CI manifest、selector tests 與 program asset row。
 - 唯一研究契約：[mission](mission.md)、[data-contract](data-contract.md)。
   B1 公開 API：[entry_window_v1.py](../../research_core/entry_window_v1.py) 的
   `CountRow`、`SummaryKey`、`Summary`、`Comparison`、`COMPARISONS`、`METRICS`、`comparison_rates`。
@@ -97,69 +98,45 @@ for era in entry_window_v1.ERAS:
 若未來展示 sufficiency，引用**同 cell/era 的 cooled20** known_n／distinct 與兩臂分母，
 不能用 daily 樣本替代，也不能由 CI 重抽 distinct 門檻。
 
-## Shared integration staging（只供 parent 唯一 writer）
+## Shared integration (completed locally; final review pending)
 
-本包沒有修改以下三檔。以下片段是待整合工作，不代表已通過 selector 或可 merge。
+Parent assigned task-16 sole shared-file ownership after S7 PR107 merged at
+`32965822fcba8d107a072cf9596c8d2df6fb08fc`. That main was fetched and merged
+without conflicts into the existing bootstrap branch, preserving S7's domain,
+selector cases and asset row. No history was rewritten. The bootstrap core and
+its original 57-test suite remain byte-identical to the independently reviewed
+`ce18f604fdb55ac187a348e0d6436656b0c007d7`.
 
-1. `scripts/ci_test_domains.json`：在既有 `domains.entry_window.paths` 追加
-   `research_core/entry_window_bootstrap_v1.py`、
-   `tasks/20261027-entry-window/bootstrap-handoff.md`、`research_core/count_cube_v1.py`；
-   在該 domain 的 `tests` 追加 `scripts/tests/test_entry_window_bootstrap_v1.py`；
-   同檔 `reviewed_tests` 也精確加入此測試。保留全部 B1 路徑／依賴／tests 與 upstream consumers。
-   如果 sibling inputs 已整合，其路徑／test 也保留，不能取代。
-2. `scripts/tests/test_ci_scope.py`：既有 B1 `expected` 集合擴充 bootstrap test（及已整合 sibling test），
-   保留 test-source 追加 `test_ci_scope.py` 的既有規則。原 canonical dependency 測試由 manifest
-   組 expected 的邏輯保留，另斷言包含 bootstrap test。新增以下狹域 selector 案例：
+- `scripts/ci_test_domains.json`: existing `entry_window` paths now include this
+  bootstrap module/handoff and the public `count_cube_v1.py` dependency. The
+  bootstrap test is in both domain tests and `reviewed_tests`. All B1 paths,
+  upstream consumers and fallback rules remain; B2b inputs are a later package.
+- `scripts/tests/test_ci_scope.py`: the existing exact owned-path case now checks
+  B1 and bootstrap module/test/handoff for both added and modified status. Each
+  selects the two E1 tests; changed test files also select the selector test.
+  Canonical dependency cases retain complete exact domain/test-set assertions,
+  add `count_cube_v1.py`, and explicitly require the bootstrap test. Existing
+  unknown-path full fallback and S7 cases remain unchanged.
+- `docs/en/research-program.md`: adds `entry-window-bootstrap.v1`, linking the
+  E1 data contract and this handoff, with the public CountAxes/builder/weights/
+  bootstrap access path. It states pure/synthetic scope and pending real reader,
+  runner, market and owner/data/compute admission.
 
-```python
-@pytest.mark.parametrize("status", ["A", "M"])
-@pytest.mark.parametrize("source", [
-    "research_core/entry_window_bootstrap_v1.py",
-    "scripts/tests/test_entry_window_bootstrap_v1.py",
-    "tasks/20261027-entry-window/bootstrap-handoff.md",
-])
-def test_entry_window_bootstrap_paths_select_domain(status: str, source: str) -> None:
-    plan = ci_scope.make_plan([(status, source)])
-    expected = set(ci_scope.load_manifest()["domains"]["entry_window"]["tests"])
-    if source.endswith("test_entry_window_bootstrap_v1.py"):
-        expected.add("scripts/tests/test_ci_scope.py")
-    assert not plan["full"] and not plan["frontend"]
-    assert plan["domains"] == ["entry_window"]
-    assert set(plan["python_tests"]) == expected
-
-@pytest.mark.parametrize("status", ["A", "M"])
-@pytest.mark.parametrize("source", [
-    "research_core/count_cube_v1.py",
-    "research_core/entry_window_v1.py",
-    "research_core/momentum_only_v1.py",
-    "research_core/multiple_outcomes_v1.py",
-])
-def test_entry_window_bootstrap_dependencies(status: str, source: str) -> None:
-    plan = ci_scope.make_plan([(status, source)])
-    assert not plan["full"]
-    assert "entry_window" in plan["domains"]
-    assert "scripts/tests/test_entry_window_bootstrap_v1.py" in plan["python_tests"]
-```
-
-`count_cube_v1.py` 同時選既有 momentum_only 與其 consumers，不縮減 broad／full fallback。
-dependency 案例應再延用該檔既有 exact manifest-expanded expected 集合斷言，核對全部 consumer。
-
-3. `docs/en/research-program.md` 的 reusable asset 表追加一列（保留其他列）：
-
-| 工程定義                    | 契約／範圍                                                                                                                                                                                                                                                                       | 公開存取                                                                                          |
-| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `entry-window-bootstrap.v1` | [E1 data contract](../../tasks/20261027-entry-window/data-contract.md)、[bootstrap handoff](../../tasks/20261027-entry-window/bootstrap-handoff.md)：完整明傳 stock×year 五臂整數 cube、paired stock／two_way CI；pure/synthetic only；real reader／runner／market gate 尚未完成 | `research_core.entry_window_bootstrap_v1.CountAxes/build_cell_cube/paired_weights/bootstrap_cell` |
-
-相對 links 以 research-program.md 所在位置計。整合後執行
-`uv run pytest scripts/tests/test_ci_scope.py -q`、正常 hooks，以及當時新 HEAD 的 hosted checks。
-新模組不能只靠 unknown-path full-suite fallback 宣稱 CI 已接線。
+Local verification covers the selector suite plus the unchanged bootstrap
+suite, normal commit hooks and a read-only actual-diff selector plan. The final
+report binds exact results, integration HEAD/base and saved logs. Shared-file
+changes legitimately retain the existing full-suite CI fallback; the plan is
+recorded without executing an unrelated full suite locally. Publication is
+explicitly authorized, but final Astra review and hosted validation remain
+parent-coordinated gates. This package remains a draft and must not be merged
+by its author.
 
 ## 合成驗證與待辦
 
 聚焦命令：`uv run pytest scripts/tests/test_entry_window_bootstrap_v1.py -q`。
 最終合成套件：**57 passed in 1.67s**。包括 public B1 censored bridge、literal PCG64 goldens、
 year-weight malformed 與大整數聚合邊界。正常 commit hooks 及最終 HEAD 由本機完成報告綁定；
-沒有執行 shared selector 測試或 hosted CI，因本包仍未獲 shared integration／發布 ownership。
+Shared selector／bootstrap 的整合驗證與 hooks 結果由最終報告綁定；hosted CI 待發布後核實。
 
 驗收包括手算 stock／two_way counts／率／差、public helpers／B1 oracle、一份 weights 跨六帶、
 A=M 配對差零、row-order 不變、固定 seed／先 stock 再 year literal golden、跨 era 股票 draws、
@@ -167,7 +144,7 @@ A=M 配對差零、row-order 不變、固定 seed／先 stock 再 year literal g
 unknown/censored 重疊與 public B1 三種 censored 合成例、跨年 stock unions、完整矩陣，
 以及兩 method 的 default 2,000 reps 可重現小格。沒有大 memory benchmark 或真實資料。
 
-剩餘 gate：parent 指派 shared integration、Astra 對最終 SHA 審查、明確發布授權、
+Shared integration 與發布已獲 parent／owner 明確授權。剩餘 gate：Astra 對最終 SHA 審查、
 SHA-bound hosted CI／review、parent ready／merge；本包不 merge。
 未來真實 reader、calendar／generation／label parity、owner/data/compute admission、單次研究成本、
 執行與完整結果交付全部仍未解除。沒有市場資料讀取、labels／holdout／forward outcomes、

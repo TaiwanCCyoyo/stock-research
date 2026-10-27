@@ -24,12 +24,20 @@ FORWARD_V2_TESTS = {
 
 @pytest.mark.parametrize("status", ["A", "M"])
 @pytest.mark.parametrize(
-    "source", ["research_core/entry_window_v1.py", "tasks/20261027-entry-window/implementation-handoff.md", "scripts/tests/test_entry_window_v1.py"]
+    "source",
+    [
+        "research_core/entry_window_v1.py",
+        "tasks/20261027-entry-window/implementation-handoff.md",
+        "scripts/tests/test_entry_window_v1.py",
+        "research_core/entry_window_bootstrap_v1.py",
+        "tasks/20261027-entry-window/bootstrap-handoff.md",
+        "scripts/tests/test_entry_window_bootstrap_v1.py",
+    ],
 )
-def test_entry_window_owned_paths_select_exact_b1_domain(status: str, source: str) -> None:
+def test_entry_window_owned_paths_select_exact_domain(status: str, source: str) -> None:
     plan = ci_scope.make_plan([(status, source)])
-    expected = {"scripts/tests/test_entry_window_v1.py"}
-    if source.endswith("test_entry_window_v1.py"):
+    expected = {"scripts/tests/test_entry_window_v1.py", "scripts/tests/test_entry_window_bootstrap_v1.py"}
+    if source in expected:
         expected.add("scripts/tests/test_ci_scope.py")
     assert not plan["full"] and not plan["frontend"]
     assert plan["domains"] == ["entry_window"]
@@ -41,6 +49,7 @@ def test_entry_window_owned_paths_select_exact_b1_domain(status: str, source: st
     ("source", "expected_domains"),
     [
         ("research_core/momentum_only_v1.py", {"entry_window", "momentum_only", "strength_flags", "tenbagger_drivers", "momentum_forward_v2"}),
+        ("research_core/count_cube_v1.py", {"entry_window", "momentum_only", "strength_flags", "tenbagger_drivers", "momentum_forward_v2"}),
         ("research_core/pattern_scan_events_v1.py", {"entry_window", "pattern_scan", "strength_flags", "tenbagger_drivers"}),
         ("research_core/pattern_scan_groups_v1.py", {"entry_window", "pattern_scan", "strength_flags", "tenbagger_drivers"}),
         (
@@ -66,6 +75,7 @@ def test_entry_window_canonical_dependencies_preserve_exact_existing_consumers(s
     assert set(plan["domains"]) == expected_domains
     assert set(plan["python_tests"]) == expected
     assert "scripts/tests/test_entry_window_v1.py" in expected
+    assert "scripts/tests/test_entry_window_bootstrap_v1.py" in expected
 
 
 def test_unknown_entry_window_sources_keep_full_fallback() -> None:
@@ -234,7 +244,7 @@ def test_tenbagger_domain_registers_its_sources_and_tests(status: str, path: str
     ("source", "expected_domains"),
     [
         ("research_core/momentum_only_v1.py", {"momentum_only", "tenbagger_drivers", "momentum_forward_v2", "entry_window"}),
-        ("research_core/count_cube_v1.py", {"momentum_only", "tenbagger_drivers", "momentum_forward_v2"}),
+        ("research_core/count_cube_v1.py", {"momentum_only", "tenbagger_drivers", "momentum_forward_v2", "entry_window"}),
         ("research_core/live_producer.py", {"research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2"}),
         ("research_core/maintained_adjusted_daily.py", {"research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2"}),
         ("research_core/scratch_runs.py", {"research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2"}),
