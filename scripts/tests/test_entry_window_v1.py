@@ -89,20 +89,57 @@ def test_next_session_never_skips_missing_quote_and_retains_saturday() -> None:
 
 
 @pytest.mark.parametrize("band", entry.BANDS, ids=lambda b: b.band_id)
-def test_every_exact_endpoint_and_immediate_neighbor(band: entry.Band) -> None:
+@pytest.mark.parametrize("close", [10.0, 99.9, 100.0])
+def test_every_exact_endpoint_and_immediate_neighbor(band: entry.Band, close: float) -> None:
     calendar = pd.date_range("2019-01-01", periods=2)
-    a, b = 100 * band.lower, 100 * band.upper
+    a, b = close * band.lower, close * band.upper
     for opening, expected in ((np.nextafter(a, -np.inf), "below"), (a, "accepted"), (b, "accepted"), (np.nextafter(b, np.inf), "above")):
         q = _quotes(calendar)
+        q.raw_close[:] = close
         q.raw_open[1] = opening
         masks = entry.classify_quotes(calendar, q).bands[band.band_id]
         assert [name for name in ("accepted", "above", "below") if getattr(masks, name)[0]] == [expected]
     if a < b:
         q = _quotes(calendar)
+        q.raw_close[:] = close
         q.raw_open[1] = np.nextafter(a, np.inf)
         assert entry.classify_quotes(calendar, q).bands[band.band_id].accepted[0]
         q.raw_open[1] = np.nextafter(b, -np.inf)
         assert entry.classify_quotes(calendar, q).bands[band.band_id].accepted[0]
+
+
+@pytest.mark.parametrize("dtype", [np.float16, np.float32])
+@pytest.mark.parametrize("band", entry.BANDS, ids=lambda b: b.band_id)
+def test_mixed_precision_close_and_float64_endpoints_are_explicitly_rejected(dtype: type[np.float16] | type[np.float32], band: entry.Band) -> None:
+    calendar = pd.date_range("2019-01-01", periods=2)
+    for opening in (10.0 * band.lower, 10.0 * band.upper):
+        q = _quotes(calendar)
+        q.raw_close[:] = 10.0
+        q.raw_open[1] = opening
+        mixed = replace(q, raw_close=q.raw_close.astype(dtype))
+        with pytest.raises(ValueError, match="raw_close.*float64"):
+            entry.classify_quotes(calendar, mixed)
+
+
+@pytest.mark.parametrize("dtype", [np.float16, np.float32])
+@pytest.mark.parametrize("name", ["raw_open", "raw_high", "raw_low", "raw_close"])
+def test_every_raw_price_vector_requires_float64(name: str, dtype: type[np.float16] | type[np.float32]) -> None:
+    calendar = pd.date_range("2019-01-01", periods=2)
+    q = _quotes(calendar)
+    mixed = replace(q, **{name: getattr(q, name).astype(dtype)})
+    with pytest.raises(ValueError, match=f"{name}.*float64"):
+        entry.classify_quotes(calendar, mixed)
+
+
+@pytest.mark.parametrize("dtype", [np.float16, np.float32])
+@pytest.mark.parametrize("name", ["lower", "upper"])
+def test_official_limit_bounds_require_float64(name: str, dtype: type[np.float16] | type[np.float32]) -> None:
+    calendar = pd.date_range("2019-01-01", periods=2)
+    q = _quotes(calendar)
+    limits = entry.OfficialLimits("synthetic official fixture", np.full(2, 90.0), np.full(2, 110.0), np.ones(2, dtype=np.int8))
+    mixed_limits = replace(limits, **{name: getattr(limits, name).astype(dtype)})
+    with pytest.raises(ValueError, match=f"official {name}.*float64"):
+        entry.classify_quotes(calendar, replace(q, official_limits=mixed_limits))
 
 
 def test_range_touch_does_not_change_open_and_unknown_diagnostics_stay_unknown() -> None:

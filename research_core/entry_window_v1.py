@@ -58,7 +58,8 @@ COMPARISONS = tuple(
 class OfficialLimits:
     """Explicit official limits on quote sessions; quality 1 alone qualifies a row.
 
-    The caller verifies the source is official. Missing/invalid bounds or quality
+    Bounds must be np.float64 arrays, as for raw OHLC. The caller verifies the
+    source is official. Missing/invalid bounds or quality
     0/-1 stay unknown. This evidence never changes Q/M or implies a personal fill.
     """
 
@@ -72,6 +73,8 @@ class OfficialLimits:
 class Quotes:
     """Raw bars on calendar; three-state interval arrays indexed by signal day.
 
+    All raw OHLC vectors must have dtype np.float64; other floating dtypes are
+    rejected before any arithmetic rather than silently changing precision.
     action_to_next: 1 action, 0 no action, -1 unknown. Quality arrays: 1 known
     good, 0 known invalid, -1 unknown. They describe the entire (t,t1] interval
     and the fixed next-session quote, respectively, without any PIT assertion.
@@ -124,6 +127,12 @@ def _vector(values: np.ndarray, n: int, name: str, kind: str, allowed: tuple[int
         raise ValueError(f"{name} contains an unknown state")
 
 
+def _price_vector(values: NDArray[np.float64], n: int, name: str) -> None:
+    _vector(values, n, name, "f")
+    if values.dtype != np.dtype(np.float64):
+        raise ValueError(f"{name} must have dtype np.float64 for fixed-endpoint price comparisons")
+
+
 def _valid(values: NDArray[np.float64]) -> NDArray[np.bool_]:
     return np.isfinite(values) & (values > 0)
 
@@ -148,7 +157,7 @@ def classify_quotes(calendar: pd.DatetimeIndex, quotes: Quotes) -> QuoteMasks:
         raise ValueError("quote code/calendar must explicitly align with the common calendar")
     n = len(calendar)
     for name in ("raw_open", "raw_high", "raw_low", "raw_close"):
-        _vector(getattr(quotes, name), n, name, "f")
+        _price_vector(getattr(quotes, name), n, name)
     for name in ("action_to_next", "event_quality_to_next", "quote_quality_to_next"):
         _vector(getattr(quotes, name), n, name, "iu", (UNKNOWN, FALSE, TRUE))
     opening, high, low, closing = (_next(getattr(quotes, name)) for name in ("raw_open", "raw_high", "raw_low", "raw_close"))
@@ -192,8 +201,8 @@ def classify_quotes(calendar: pd.DatetimeIndex, quotes: Quotes) -> QuoteMasks:
     if limits is not None:
         if not limits.source.strip():
             raise ValueError("official limits require an explicit official source")
-        _vector(limits.lower, n, "official lower", "f")
-        _vector(limits.upper, n, "official upper", "f")
+        _price_vector(limits.lower, n, "official lower")
+        _price_vector(limits.upper, n, "official upper")
         _vector(limits.quality, n, "official quality", "iu", (UNKNOWN, FALSE, TRUE))
         lower, upper = _next(limits.lower), _next(limits.upper)
         quality = np.full(n, UNKNOWN, dtype=np.int8)

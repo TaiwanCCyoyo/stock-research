@@ -16,6 +16,14 @@ definition `entry-window.v1`.
   rejects duplicate, descending, non-session-date, timezone-aware, or mismatched calendars,
   vector lengths/types, and unknown state codes. It never sorts, fills, skips a missing
   next-session quote, or discovers a data root.
+- Raw OHLC and optional official lower/upper bounds require exact `np.float64` dtype.
+  float16/float32, including a lower-precision raw close mixed with a float64 open,
+  raise `ValueError` rather than enter quote classification. This makes the typed
+  price contract explicit and keeps band multiplication, shifted quotes, ratios and
+  official-limit comparisons in the same precision. Callers are responsible for
+  supplying these arrays; B1 does not silently convert them or restore precision
+  already lost upstream. The fixed bands, inclusive endpoints and no-epsilon policy
+  are unchanged.
 - `action_to_next[i]` describes **the whole `(calendar[i], calendar[i+1]]` interval**:
   `1` action, `0` explicitly no action, `-1` unknown. `event_quality_to_next[i]` and
   `quote_quality_to_next[i]` describe interval coverage and the fixed t1 quote quality:
@@ -104,6 +112,23 @@ edge case and completing typed-calendar corrections, the final core-only run pas
 41 tests. Normal commit hooks passed whitespace, size, secrets, UTF-8, Mypy, Pyright
 and Ruff checks; Prettier's asset-row formatting was retained before the final commit.
 These are synthetic implementation checks, not real-input parity or a research run.
+
+### PR #105 price-precision correction
+
+[Astra's finding on head 9e1415d](https://github.com/TaiwanCCyoyo/stock-research/pull/105#issuecomment-6439190907)
+reproduced a float32 raw close of 10 with float64 open 9.7 being classified below
+B01: the lower bound was multiplied in float32. Validation now enforces the existing
+`NDArray[np.float64]` price annotations at runtime for every raw OHLC and official
+limit bound. Supplied low/mixed precision is rejected explicitly; no implicit
+conversion, band change, rounding or epsilon is introduced.
+
+Author verification of the correction: the new mixed-dtype endpoint regressions
+failed all 12 cases before the fix. The complete updated core suite (77 cases) plus
+an unchanged local copy of the reviewer-owned probe suite (60 cases) passed all 137
+cases afterwards. The original reviewer files under the task-14 probe checkout were
+read only and remain unchanged. This author rerun corroborates the correction;
+Astra's independent re-review must still bind the new pushed head. The published
+branch was synchronized by normal merge with docs-only main `465405b067b2de4c50b0ec6c30cafe43a773a5d1`.
 
 Session-owned isolated checkout: `C:/Users/xjp01/Documents/Codex/2026-10-27/task-8/repo`,
 branch `codex/entry-window-core`, starting from fetched `origin/main`
