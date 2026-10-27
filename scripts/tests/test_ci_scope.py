@@ -32,11 +32,18 @@ FORWARD_V2_TESTS = {
         "research_core/entry_window_bootstrap_v1.py",
         "tasks/20261027-entry-window/bootstrap-handoff.md",
         "scripts/tests/test_entry_window_bootstrap_v1.py",
+        "research_core/entry_window_inputs_v1.py",
+        "tasks/20261027-entry-window/reader-staging-handoff.md",
+        "scripts/tests/test_entry_window_inputs_v1.py",
     ],
 )
 def test_entry_window_owned_paths_select_exact_domain(status: str, source: str) -> None:
     plan = ci_scope.make_plan([(status, source)])
-    expected = {"scripts/tests/test_entry_window_v1.py", "scripts/tests/test_entry_window_bootstrap_v1.py"}
+    expected = {
+        "scripts/tests/test_entry_window_v1.py",
+        "scripts/tests/test_entry_window_bootstrap_v1.py",
+        "scripts/tests/test_entry_window_inputs_v1.py",
+    }
     if source in expected:
         expected.add("scripts/tests/test_ci_scope.py")
     assert not plan["full"] and not plan["frontend"]
@@ -76,6 +83,7 @@ def test_entry_window_canonical_dependencies_preserve_exact_existing_consumers(s
     assert set(plan["python_tests"]) == expected
     assert "scripts/tests/test_entry_window_v1.py" in expected
     assert "scripts/tests/test_entry_window_bootstrap_v1.py" in expected
+    assert "scripts/tests/test_entry_window_inputs_v1.py" in expected
 
 
 def test_unknown_entry_window_sources_keep_full_fallback() -> None:
