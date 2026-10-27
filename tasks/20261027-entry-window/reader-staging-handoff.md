@@ -120,64 +120,51 @@ Read-only arrays remain unchanged through staging and public B1 counting.
 One fixture forbids maintained readers, canonical label construction, filesystem,
 SQLite and network entry points while staging and B1 counting still succeed.
 
-Normal hooks are required on the final changes. Shared CI/asset integration is
-**staged below only**, as instructed by the parent. Until a single writer applies
-it and current-head hosted CI and independent Astra review complete, this package
-is **not merge-ready**. Publication is held pending the parent's explicit bundled
-authorization; local work does not substitute for a delivered draft PR.
+The owner explicitly authorized branch publication and a draft PR. Parent then
+assigned this session the next serial shared integration after PR107 and PR108
+merged. The original publication hold is fulfilled. Final hosted checks and
+parent-verified Astra review remain pending; this package is **not merge-ready**
+and its author must not mark it ready or merge it.
 
 No market prices, real labels, holdout, forward outcomes, production data roots,
 downloads, generation holds/updates, scratch research runs, scheduler or deployment
 operations were used. Real reader/data/label/compute and original owner gates
 remain in force after an eventual code merge. No study card or result changed.
 
-## Staged shared integration: one parent-assigned writer only
+## Shared integration (completed locally; final review pending)
 
-No shared file has been edited by this package. Apply these additive changes to
-the latest integrated main; preserve all sibling package entries.
+Repository ID `1411737252`, owner `TaiwanCCyoyo`, and PR107/108 merged states
+were verified through the GitHub connector. Fetched main
+`9a2302651c9e19ff8720a78704d55d8a459d12ff` includes the S7 merge
+`32965822fcba8d107a072cf9596c8d2df6fb08fc` and was normally merged into this
+existing branch without conflicts or history rewriting. No new worktree was
+created. Parent assigned this session sole ownership of the following integration.
 
-`scripts/ci_test_domains.json`: append to existing `entry_window.paths`:
+The core `research_core/entry_window_inputs_v1.py` and its original 146-test suite
+remain byte-identical to independently reviewed
+`a3be055f4b998f54cbe6003a81d722986ffe04a9`. Only shared integration and this
+handoff changed. Earlier Astra evidence on that implementation included the
+146 tests, seven additional probes, 162 interval states, 27 required-key removals
+and forbidden-I/O import checks; that evidence is reused for the unchanged code.
 
-```json
-[
-    "research_core/entry_window_inputs_v1.py",
-    "tasks/20261027-entry-window/reader-staging-handoff.md"
-]
-```
+- `scripts/ci_test_domains.json`: adds this module/handoff to `entry_window`
+  paths, and its test to both domain tests and `reviewed_tests`. The existing B1,
+  bootstrap, count-cube, canonical dependencies and S7 domain remain intact.
+- `scripts/tests/test_ci_scope.py`: the existing exact A/M owned-path matrix
+  adds this module/test/handoff, increasing its cases by six. All E1 paths,
+  including B1 core, now select the three E1 suites; changes to an E1 test also
+  select the selector test itself. Existing canonical/oracle/count-cube dependency
+  cases explicitly require the input suite while preserving exact consumers.
+  Unknown-path, broad/full safety fallback and all S7 cases remain unchanged.
+- `docs/en/research-program.md`: adds `entry-window-inputs.v1` with E1 contract,
+  this handoff, public `stage_stock_inputs` access and pure/synthetic scope.
+  Real-source adapters and owner/data/label/compute gates stay explicit.
 
-Append `scripts/tests/test_entry_window_inputs_v1.py` to `entry_window.tests` and
-`reviewed_tests`. B1 core and canonical/oracle dependencies are already in this
-domain; keep their mapping so changes select both B1 and B2b tests.
-
-`scripts/tests/test_ci_scope.py`: extend the existing E1 owned-path A/M matrix
-with this module, new test and handoff, and replace its B1-only expected test set
-with all current E1 tests. For any changed E1 test, retain the selector test itself
-as a consumer. Add the following case using the same domain-derived expectation;
-the existing canonical dependency matrix must also include B2b in its assertions:
-
-```python
-@pytest.mark.parametrize("status", ["A", "M"])
-def test_entry_window_core_selects_staging_consumer(status: str) -> None:
-    manifest = ci_scope.load_manifest()
-    plan = ci_scope.make_plan([(status, "research_core/entry_window_v1.py")])
-    expected = {
-        test for test in ci_scope.test_inventory(ci_scope.ROOT, manifest)
-        if ci_scope.matches(test, manifest["domains"]["entry_window"]["tests"])
-    }
-    assert not plan["full"] and not plan["frontend"]
-    assert plan["domains"] == ["entry_window"]
-    assert set(plan["python_tests"]) == expected
-    assert "scripts/tests/test_entry_window_inputs_v1.py" in expected
-```
-
-Preserve unknown-path full fallback and existing broad/upstream rules. The new
-module must receive direct domain mapping rather than pass via full fallback.
-After integration, run `uv run pytest scripts/tests/test_ci_scope.py -q`, focused
-E1 tests, normal hooks and current-head hosted checks. No published-artifact
-verifier or unrelated market suite is required by this package.
-
-`docs/en/research-program.md`: add this asset row alongside `entry-window.v1`:
-
-| Asset                    | Contract / handoff                                                                                                                                                                                                                                | Public access / scope                                                                                                                                                                                                      |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `entry-window-inputs.v1` | [E1 data contract](../../tasks/20261027-entry-window/data-contract.md), [reader staging handoff](../../tasks/20261027-entry-window/reader-staging-handoff.md): exact calendar/security/generation/as-of/basis alignment of already-loaded packets | `research_core.entry_window_inputs_v1.stage_stock_inputs`; pure in-memory and synthetic only. Real source adapters, reader/runner, original labels and owner/data/compute admission remain gated; no market study has run. |
+Local verification:
+`uv run pytest scripts/tests/test_entry_window_inputs_v1.py scripts/tests/test_ci_scope.py -q`
+passed **410 tests in 80.24s** (146 unchanged input cases and 264 selector cases).
+Normal commit hooks and an actual-diff CI selection plan also apply. The author handback
+records exact results and final SHA/base. No published-artifact verifier or
+unrelated market suite is required or executed by this package. Final hosted CI,
+independent Astra review and the parent-controlled ready/merge decision remain
+open gates; publication itself does not make this package merge-ready.
