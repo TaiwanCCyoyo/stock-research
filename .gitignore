@@ -302,6 +302,9 @@ verify-*.png
 !tasks/20261024-strength-weakening-flags/results/
 !tasks/20261024-strength-weakening-flags/results/*.parquet
 !tasks/20261024-strength-weakening-flags/results/*.json
+!tasks/20261024-strength-weakening-flags/appendix/
+!tasks/20261024-strength-weakening-flags/appendix/*.csv
+!tasks/20261024-strength-weakening-flags/appendix/index.md
 !tasks/20261021-momentum-only-doubling/pr17-universe-v1.json
 !tasks/20261021-momentum-only-doubling/forward-log/
 !tasks/20261021-momentum-only-doubling/forward-log/cohort.json
