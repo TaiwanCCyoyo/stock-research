@@ -479,6 +479,19 @@
             ],
             "consumers": ["strength_flags", "tenbagger_drivers"]
         },
+        "momentum_forward_v2": {
+            "paths": [
+                "research_core/momentum_forward_attempts_v2.py",
+                "research_core/momentum_forward_run_v2.py",
+                "scripts/record_momentum_forward_day_v2.py",
+                "tasks/20261027-forward-attempt-recovery/*"
+            ],
+            "tests": [
+                "scripts/tests/test_momentum_forward_attempts_v2.py",
+                "scripts/tests/test_momentum_forward_run_v2.py",
+                "scripts/tests/test_momentum_forward_v1.py"
+            ]
+        },
         "tenbagger_drivers": {
             "paths": [
                 "research_core/industry_breadth_v1.py",
@@ -606,6 +619,8 @@
         "scripts/tests/test_method_environment_interactions.py",
         "scripts/tests/test_method_environment_publication.py",
         "scripts/tests/test_method_environment_runner.py",
+        "scripts/tests/test_momentum_forward_attempts_v2.py",
+        "scripts/tests/test_momentum_forward_run_v2.py",
         "scripts/tests/test_momentum_forward_v1.py",
         "scripts/tests/test_momentum_only_v1.py",
         "scripts/tests/test_multiple_outcomes_v1.py",
