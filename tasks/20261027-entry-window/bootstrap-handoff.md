@@ -124,9 +124,10 @@ its original 57-test suite remain byte-identical to the independently reviewed
 
 Local verification covers the selector suite plus the unchanged bootstrap
 suite, normal commit hooks and a read-only actual-diff selector plan. The final
-report binds exact results, integration HEAD/base and saved logs. Shared-file
-changes legitimately retain the existing full-suite CI fallback; the plan is
-recorded without executing an unrelated full suite locally. Publication is
+report binds exact results, integration HEAD/base and saved logs. The actual diff
+selects 23 test files across ci/entry_window/hooks/producer_link/prose with
+full=false and frontend=false. Unknown-path full-suite fallback rules remain
+unchanged. The read-only plan is recorded without executing unrelated tests locally. Publication is
 explicitly authorized, but final Astra review and hosted validation remain
 parent-coordinated gates. This package remains a draft and must not be merged
 by its author.
