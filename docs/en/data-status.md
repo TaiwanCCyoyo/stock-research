@@ -74,6 +74,9 @@ download/backfill process was present:
 | Monthly revenue     | TWSE   | 2013-01–2026-09       |   159,903 | 1,089 |       165 months |
 | Monthly revenue     | TPEx   | 2013-01–2026-09       |   128,576 |   896 |       165 months |
 
+The institutional rows above predate the pre-2019 history import; see
+[its record](#pre-2019-institutional-history-2026-10-27) for current coverage.
+
 The initial schema, count, and period probes took 34.758 seconds for institutional
 data and 9.072 seconds for revenue. Those are full-artifact audit timings, not HTTP
 latencies. Neither table is a complete historical listing universe: codes enter and
@@ -159,6 +162,37 @@ blocked in the verification process. Overall `partial` continues to describe
 the existing historical/partial catalog entries. The first status file is
 rebuildable metadata; the normal daily backup includes it after the next daily
 refresh. A separate backup run was not performed for this publication.
+
+## Pre-2019 institutional history: 2026-10-27
+
+The owner merged producer PR #12 as `59002b2438c956236b536c5562e79ef591bc0986`.
+It added an additive importer and recorded its one production run: 2,652 staged
+report days (1,853,314 rows) were inserted into `institutional.sqlite` without
+changing any 2019-or-later row. The producer's
+`docs/institutional-history-import.md` holds the per-year table, the verification
+and the limitations. The gitlink moves from `ee4171b` to that release.
+
+Read-only measurement on 2026-10-28 01:28 Asia/Taipei, both producer tasks Ready
+(one aggregate query, 61.6 seconds cold):
+
+| Market | Period                |      Rows | Codes | Report days |
+| ------ | --------------------- | --------: | ----: | ----------: |
+| TWSE   | 2012-05-02–2026-10-27 | 3,533,957 | 1,546 |       3,543 |
+| TPEx   | 2014-12-01–2026-10-27 | 1,873,643 | 1,187 |       2,901 |
+| TWSE   | of which before 2019  | 1,386,279 | 1,141 |       1,647 |
+| TPEx   | of which before 2019  |   467,035 |   850 |       1,005 |
+
+Reading these rows:
+
+- The status file reports one institutional period across both markets, starting
+  2012-05-02; TPEx starts 2014-12-01. The TWSE start is the endpoint's own stated
+  floor. The TPEx start is the earliest nonempty report found, and earlier TPEx
+  history is unknown, not absent.
+- Pre-2019 rows carry `instrument_type = 'unknown'`, so a filter on `'stock'`
+  silently drops them.
+- `published_at` is null and `fetched_at` is the 2026-10-24 acquisition time: the
+  history is not point-in-time. The status file's `last_updated` is the maximum
+  `fetched_at`.
 
 ## Security coverage and stock navigation
 
