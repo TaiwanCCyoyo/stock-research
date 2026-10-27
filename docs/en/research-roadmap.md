@@ -5,7 +5,7 @@
 mission 並由 owner 合併，門檻在看結果前固定。owner 待決事項見[第 6 節](#owner-decisions)；
 **交給 Codex 的順序與取捨見[第 8 節](#codex-queue)**（10-27 更新：#91 已合併、法人歷史已有作者匯入紀錄）。
 
-第一波狀態同步（2026-10-27）：[#100](https://github.com/TaiwanCCyoyo/stock-research/pull/100)（roadmap follow-up）已合併，merge SHA `39991b45766d7cafd4753201865e45a6223836b5`；[#101](https://github.com/TaiwanCCyoyo/stock-research/pull/101) 的 E1 mission 已合併，merge SHA `bf1af6233dd1fa321e0d9c033d92fed5e9fa250f`；[#102](https://github.com/TaiwanCCyoyo/stock-research/pull/102) 的 O2 invocation traceability／crash-recovery 程式已合併，merge SHA `71acd4e70f9c0d227eeb6f1941caa4bb6dacb2ce`。S7 仍為 planned；本次狀態同步不是 S7 mission，S7 mission 尚未合併。
+第一波狀態快照（2026-10-27）：[#100](https://github.com/TaiwanCCyoyo/stock-research/pull/100)（roadmap follow-up）已合併，merge SHA `39991b45766d7cafd4753201865e45a6223836b5`；[#101](https://github.com/TaiwanCCyoyo/stock-research/pull/101) 的 E1 mission 已合併，merge SHA `bf1af6233dd1fa321e0d9c033d92fed5e9fa250f`；[#102](https://github.com/TaiwanCCyoyo/stock-research/pull/102) 的 O2 invocation traceability／crash-recovery 程式已合併，merge SHA `71acd4e70f9c0d227eeb6f1941caa4bb6dacb2ce`。此第一波快照中的 S7 尚為 planned。後續更新（2026-10-27）：[#104](https://github.com/TaiwanCCyoyo/stock-research/pull/104) 的 S7 mission 已合併，merge SHA `48729a7123fe36feb2bb0c53e00889b9c04ca63d`；僅完成研究定義，尚無 runner／市場結果，資料與計算仍須通過既有 gates。
 
 ## 1. 一段話結論
 
