@@ -67,7 +67,7 @@ root. These are future v3 paths, not files created by this documentation change.
 | `bundles/<day>/.staging-<bundle_id>/`                                     | Writer-owned incomplete content; never accepted.                                                                   |
 | `bundles/<day>/<bundle_id>/`                                              | Complete no-replace candidate directory; existence alone gives no timing/cohort authority.                         |
 | `receipts/<day>.json`                                                     | One immutable no-replace acceptance receipt for that day, binding the exact bundle.                                |
-| `.staging-receipt-<attempt_id>-<uuid>`                                    | Incomplete receipt outside the candidate bundle; never accepted.                                                   |
+| `receipts/.staging-receipt-<attempt_id>-<uuid>`                           | Incomplete receipt outside the candidate bundle; never accepted.                                                   |
 | `.publication-v3-writer.lock`                                             | Stable local root writer lock, held through reconciliation, publication, receipt and terminal/projection handling. |
 | `attempt-journal-v2/<attempt_id>/{started.json,owner.lock,terminal.json}` | PR102 public journal API reused with the **v3 namespace as its root**; attempt authority only.                     |
 | `attempts-v2.jsonl`, `.attempts-v2-append.lock`                           | Journal projection and append lock within the v3 namespace; never the legacy root ledger.                          |
