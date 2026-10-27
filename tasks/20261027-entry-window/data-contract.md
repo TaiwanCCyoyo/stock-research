@@ -28,6 +28,7 @@
 
 鍵為 `(set_id, cadence, security_id, t)`，set_id 為 CORE／LEAD_B1，cadence 為 daily／cooled20。
 cooled20 先在完整原訊號集合 earliest-first 選出，再接報價及六帶。
+保留後排除接續 20 sessions，下一筆 index 差 >20（至少 21）；抑制候選不重設起點，與 mission 的 canonical helper 相同。
 t1 永遠是共同日曆下一 session；期末 no_next_session，停牌／缺開盤 no_open，不歸 above/below。
 對每個集合、口徑及原 t 年代定義：
 
@@ -41,22 +42,31 @@ t1 永遠是共同日曆下一 session；期末 no_next_session，停牌／缺�
   去重總損失須獨立列出，不把原因加總誤當總排除數。
 - 各帶 b 將 M 拆成接受 `A_b`、above `Rhi_b`、below `Rlo_b`，互斥且聯集為 M；
   六帶均使用 mission 固定端點與同一 M，不依帶改品質遮罩。
-- 各原標籤 L 將 M 拆成 effective-label 的 known、unknown、censored，沿用原互斥分類；
-  known 再拆 hit、loss、flat-win。保留原 outcome 與品質原因以供追溯。
-  無價帶對照、接受、拒絕的 known 比較都從同一 `M∩K_L` 切出。
+- 各原標籤 L 沿用 [PR61 `group_counts`](../../research_core/momentum_only_v1.py) 的計數語義：
+  `known_n` 是原 main-eligible 且通過原結果品質規則的列；known 再拆 hit、loss、flat-win。
+  `unknown_n` 計 effective-label 為 unknown，`censored_n` 獨立計 `calendar_full=False`，兩者可重疊。
+  `full_unknown_n` 只計 `calendar_full=True` 且 effective-label unknown。M 的互斥分割是
+  known、full_unknown、censored，不能把 unknown 與 censored 強制互斥或直接相加。
+  已觀測到的 censored hit 保留原 label=hit，但不是 known，也不進主表 hit_n。
+  保留原 outcome 與品質原因；無價帶對照、接受、拒絕的 known 比較都從同一 `M∩K_L` 切出。
 
 ```text
 signal_n = next_quote_known_n + next_quote_unknown_n
 next_quote_known_n = clean_quote_n + quality_excluded_n
 clean_quote_n = accepted_n + rejected_above_n + rejected_below_n
-clean_quote_n = known_n + unknown_n + censored_n  (per label)
+clean_quote_n = known_n + full_unknown_n + censored_n  (per label)
+accepted_n = accepted_known_n + accepted_full_unknown_n + accepted_censored_n
+rejected_n = rejected_above_n + rejected_below_n
+rejected_n = rejected_known_n + rejected_full_unknown_n + rejected_censored_n
+unknown_n = accepted_unknown_n + rejected_unknown_n  (overlap diagnostic only)
 known_n = hit_n + loss_n + flat_win_n
 known_n = accepted_known_n + rejected_known_n
 hit_n = accepted_hit_n + rejected_hit_n
 ```
 
-accepted／rejected 以及 above／below 各報 known、hit、loss、flat-win、unknown、censored。
-另報 S、Q 的標籤狀態及 Q\M、S\Q 的 hit／unknown／censored 損失；
+accepted／rejected 以及 above／below 各報 known、hit、loss、flat-win、unknown、full_unknown、censored。
+above／below 也各自以 known+full_unknown+censored 守恆；unknown 僅為可重疊診斷，不用於這個和式。
+另報 S、Q 的標籤狀態及 Q\M、S\Q 的 hit／unknown／full_unknown／censored 損失；
 不能把遮罩外未知視為非 hit，也不能只在乾淨分母報漏失而隱藏排除部分。
 distinct stocks 以股票集合聯集重組，不加總各年份 distinct 數。
 
@@ -116,7 +126,10 @@ verdict=not_evaluated，data_period=null 表示尚未評估，計畫期間只寫
 ## Gate 與本次驗證
 
 本次只驗三檔、相對連結、六帶及 24／12 格、既有卡片 schema、正常 hooks／相稱 CI。
-mission「後續 runner 的合成驗收」列出的案例是後續前置要求，本 PR 不宣稱已跑或已通過。
+mission「後續 runner 的合成驗收」是後續前置要求；本 PR 的純合成 probe 只核對既有 helper 的
+截尾／unknown 計數與冷卻邊界，不代表 runner 或其他整合驗收已完成。
+其中三種 censored-unhit、censored-missing-before-hit、censored-hit 必須各驗全體及接受／拒絕臂守恆，
+保留 unknown/censored 重疊；冷卻必驗差 20 拒／21 收、[0,20,21]→[0,21] 與抑制候選不重設起點。
 owner 合併 mission 且原 label／研究 gate 允許前，不讀 t+1 實際價格、labels 或 gap distribution。
 合併 mission 也不取消後續 runner、對齊、資源與正式單次計算關卡。
 矛盾／缺口就停止回報，不探索參數、不寫正式資料、不改排程、不部署、不跑長研究計算。

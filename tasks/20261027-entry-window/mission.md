@@ -35,7 +35,9 @@
 
 主要單位是各集合的合格股票日 `(security_id, t)`，每日、無冷卻。
 輔助為每股、每集合獨立的 20-session earliest-first 冷卻，沿用 PR61／PR17 session 距離規則：
-按原訊號 t 排序，保留後下一筆須距離至少 20 sessions。
+按原訊號 t 排序，保留後排除接續 20 個 sessions；下一筆 index 差必須 >20（至少 21）。
+沿用 [canonical helper](../../research_core/pattern_scan_events_v1.py) 的 `per_group_cooldown`：
+候選 `[0,20,21]` 保留 `[0,21]`，差 20 拒絕、差 21 接受；遭抑制候選不重設起點。
 **先對完整訊號集合冷卻，再接 t+1 報價、品質遮罩與六帶。**
 缺價、公司行動、報價被拒或標籤未知仍消耗冷卻；不得補選或各帶各自冷卻。
 
@@ -86,7 +88,10 @@
 沿用 PR61／PR17 吸收式 outcome、`C-base-daily` effective-label 與 `event_main_eligible`。
 全部固定在**原訊號 t** 的 reference-adjusted anchor；t+1..t+H 首次達倍數為 hit，
 完整未 hit 且期末收低為 loss，其餘已知未 hit 為 flat-win；先 hit 後回落仍是 hit。
-缺價／品質與截尾照原契約保留 unknown／censored，不進 known 分母。
+缺價／品質與截尾沿用原語義：`unknown_n`（effective-label 為 unknown）與 `censored_n`
+（日曆窗口不完整）是獨立、可重疊的診斷；known 只含原 main-eligible。
+互斥守恆用 `known_n + full_unknown_n + censored_n`，其中 full_unknown 是日曆完整但 effective-label unknown。
+已觀測到的 censored hit 保留原 `label=hit`，仍不進 known／主表 `hit_n`。
 不改錨到開盤、端點、接受或觸價日，不當開盤買入實際收益。
 H504 晚期截尾及年代可觀測範圍必須列明，不延長價格截止日。
 
@@ -161,24 +166,28 @@ H504 晚期截尾及年代可觀測範圍必須列明，不延長價格截止日
 
 ## 後續 runner 的合成驗收（本 PR 不執行研究）
 
-| 案例                   | 必須成立                                                   |
-| ---------------------- | ---------------------------------------------------------- |
-| 固定 t+1 缺價／期末    | 缺價仍 unknown，不跳日；末日不延長截止日                   |
-| 公司行動跨日／品質不明 | 排除主比較，原因與去重損失可核對；不改 t 訊號              |
-| 停牌／休市             | 不找復牌開盤，休市無假 bar；以共同日曆取 t+1               |
-| 價帶端點               | Open=A、Open=B 皆接受；B04 只接受相等；外側拒絕方向正確    |
-| 官方限價／未知         | 真假 one-price、有／無官方證據皆正確，不用 9.5% 補判       |
-| OHLC 順序              | 同 OHLC 可有不同日內順序，不輸出假成交或排隊分配           |
-| 冷卻先後               | 先冷卻再價帶，首筆缺價／被拒仍消耗冷卻，不補選             |
-| unknown／censored      | 共同遮罩、分母與守恆正確；缺值不當 0，零分母 null          |
-| 原 t outcome           | 六帶共享原標籤，不重錨；先 hit 後跌仍為 hit                |
-| 未來追加不變性         | 加入 t 後價格／事件不改 t 或更早訊號，品質遮罩不倒灌       |
-| paired bootstrap       | 合成整數 counts 可手算，固定種子可重現；六帶及對照共用權重 |
+| 案例                        | 必須成立                                                                                           |
+| --------------------------- | -------------------------------------------------------------------------------------------------- |
+| 固定 t+1 缺價／期末         | 缺價仍 unknown，不跳日；末日不延長截止日                                                           |
+| 公司行動跨日／品質不明      | 排除主比較，原因與去重損失可核對；不改 t 訊號                                                      |
+| 停牌／休市                  | 不找復牌開盤，休市無假 bar；以共同日曆取 t+1                                                       |
+| 價帶端點                    | Open=A、Open=B 皆接受；B04 只接受相等；外側拒絕方向正確                                            |
+| 官方限價／未知              | 真假 one-price、有／無官方證據皆正確，不用 9.5% 補判                                               |
+| OHLC 順序                   | 同 OHLC 可有不同日內順序，不輸出假成交或排隊分配                                                   |
+| 冷卻先後                    | 先冷卻再價帶；[0,20,21] 保留 [0,21]，差 20 拒／21 收，抑制候選不重設起點；首筆缺價／被拒仍消耗冷卻 |
+| unknown／censored           | 保留重疊診斷；主遮罩及每個接受／拒絕臂以 known+full_unknown+censored 守恆；零分母 null             |
+| censored-unhit              | 合成 H126、close=[10,11]：known/full_unknown/censored/unknown=0/0/1/1，不以 unknown 再加一次       |
+| censored-missing-before-hit | 合成 H126、close=[10,NaN,30]：missing-before-hit、計數 0/0/1/1，unknown 與 censored 均保留         |
+| censored-hit                | 合成 H126、close=[10,20]：保留 label=hit，計數 0/0/1/0，known 與主表 hit_n 皆為 0                  |
+| 原 t outcome                | 六帶共享原標籤，不重錨；先 hit 後跌仍為 hit                                                        |
+| 未來追加不變性              | 加入 t 後價格／事件不改 t 或更早訊號，品質遮罩不倒灌                                               |
+| paired bootstrap            | 合成整數 counts 可手算，固定種子可重現；六帶及對照共用權重                                         |
 
 ## 本 PR 驗收及停止關卡
 
 本 PR 只驗三檔範圍、相對文件連結、六帶與 24／12 格笛卡兒積、既有 study-card.v2 schema、
-正常 commit hooks 及相稱既有 CI。不新增測試框架或重複 CI 清單。
+正常 commit hooks 及相稱既有 CI。修正可用隔離暫存的純合成 probe 核對既有計數／冷卻 helper，
+但不代表後續 runner 或其他整合驗收已完成；不新增測試框架或重複 CI 清單。
 卡片沿規劃慣例：not_evaluated、空 key_numbers，無報告／收據／scratch 的欄位為 null；
 不把 mission 冒充 report，不虛構 report excerpt、hash、進度或研究數字。
 
