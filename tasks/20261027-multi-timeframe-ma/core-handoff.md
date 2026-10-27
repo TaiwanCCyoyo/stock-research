@@ -12,7 +12,7 @@ This is not full S7-B acceptance, a reader, or a market execution admission.
 - Base: fetched `origin/main` = `f337736f8e06c4dd21d010d19677ba8771a8ce87`.
 - Branch: `codex/multi-timeframe-ma-core`.
 - Isolated checkout: `C:/Users/xjp01/Documents/Codex/2026-10-27/task-15/repo`;
-  one session-owned checkout, retained for its open draft PR. The executor's
+  one session-owned checkout, retained pending authorized draft PR delivery. The executor's
   writable workspace is used; the dirty primary checkout is unchanged.
 - Only the new core, its synthetic test module, and this handoff are written.
 - Before branching, Git worktree metadata listed 20 existing checkouts. Exact
@@ -25,6 +25,24 @@ This is not full S7-B acceptance, a reader, or a market execution admission.
   unknown. No resource was cleaned, reassigned, or treated as abandoned.
 - PR105 still owned shared integration at initial verification. The three
   shared changes below are **proposals only**, not applied or validated.
+
+### Delivery status
+
+Implementation commit: `1306d939b15cbe3444b12daa87a8ca2024d0f438`.
+Its exact committed-head synthetic suite passed **87 tests in 1.17s**;
+normal commit hooks all passed, including Mypy, Pyright, Ruff, formatting,
+secret/large-file/UTF-8/whitespace checks. Only the three allowlisted paths are
+changed and the working tree was clean before the attempted publication.
+
+Publication is **blocked, known not executed**. The executor's automatic
+approval review rejected the exact action
+`git push --set-upstream origin codex/multi-timeframe-ma-core` to
+`https://github.com/TaiwanCCyoyo/stock-research.git`, saying external publication
+was not explicitly authorized by trusted user text. No remote branch, PR,
+hosted CI, bot review request or merge was created by this task. No alternate
+publication route was attempted. Explicit trusted approval of that branch/PR
+publication is the remaining execution-permission gate; a known-unexecuted
+denial may only be retried once with materially new relevant evidence.
 
 ## Public API and numerical contract
 
@@ -100,7 +118,8 @@ Only artificial arrays and in-memory OHLC were used. The public oracle calls
 are `derived_features.compute_features` and `technical_daily_v1.compute_technical`;
 no private helpers are imported and no maintained-family or frozen bytes change.
 EMA120 has hand-seed/recurrence evidence, **not** claimed existing-oracle parity.
-Normal commit hooks and SHA-bound hosted CI are reported with the delivered PR.
+Normal commit hooks passed on the implementation commit. SHA-bound hosted CI
+is not available because publication was denied; it remains a delivery gate.
 
 ## Staged shared integration — parent serializes after PR105 merge
 
