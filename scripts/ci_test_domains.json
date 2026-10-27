@@ -529,6 +529,20 @@
                 "scripts/tests/test_strength_flags_v1.py",
                 "scripts/tests/test_strength_flag_counts_v1.py"
             ]
+        },
+        "entry_window": {
+            "paths": [
+                "research_core/entry_window_v1.py",
+                "tasks/20261027-entry-window/implementation-handoff.md",
+                "tasks/20261027-entry-window/mission.md",
+                "tasks/20261027-entry-window/data-contract.md",
+                "research_core/momentum_only_v1.py",
+                "research_core/pattern_scan_events_v1.py",
+                "research_core/pattern_scan_groups_v1.py",
+                "research_core/multiple_outcomes_v1.py",
+                "research_core/hhhl_variants_paths.py"
+            ],
+            "tests": ["scripts/tests/test_entry_window_v1.py"]
         }
     },
     "reviewed_tests": [
@@ -571,6 +585,7 @@
         "scripts/tests/test_derived_features.py",
         "scripts/tests/test_derived_features_chunk_v2.py",
         "scripts/tests/test_derived_features_selective_v1.py",
+        "scripts/tests/test_entry_window_v1.py",
         "scripts/tests/test_export_market_atlas.py",
         "scripts/tests/test_feature_atlas_dataset.py",
         "scripts/tests/test_feature_atlas_features.py",

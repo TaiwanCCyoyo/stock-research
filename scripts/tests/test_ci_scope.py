@@ -24,6 +24,58 @@ FORWARD_V2_TESTS = {
 
 @pytest.mark.parametrize("status", ["A", "M"])
 @pytest.mark.parametrize(
+    "source", ["research_core/entry_window_v1.py", "tasks/20261027-entry-window/implementation-handoff.md", "scripts/tests/test_entry_window_v1.py"]
+)
+def test_entry_window_owned_paths_select_exact_b1_domain(status: str, source: str) -> None:
+    plan = ci_scope.make_plan([(status, source)])
+    expected = {"scripts/tests/test_entry_window_v1.py"}
+    if source.endswith("test_entry_window_v1.py"):
+        expected.add("scripts/tests/test_ci_scope.py")
+    assert not plan["full"] and not plan["frontend"]
+    assert plan["domains"] == ["entry_window"]
+    assert set(plan["python_tests"]) == expected
+
+
+@pytest.mark.parametrize("status", ["A", "M"])
+@pytest.mark.parametrize(
+    ("source", "expected_domains"),
+    [
+        ("research_core/momentum_only_v1.py", {"entry_window", "momentum_only", "strength_flags", "tenbagger_drivers", "momentum_forward_v2"}),
+        ("research_core/pattern_scan_events_v1.py", {"entry_window", "pattern_scan", "strength_flags", "tenbagger_drivers"}),
+        ("research_core/pattern_scan_groups_v1.py", {"entry_window", "pattern_scan", "strength_flags", "tenbagger_drivers"}),
+        (
+            "research_core/multiple_outcomes_v1.py",
+            {"entry_window", "hhhl", "opportunity", "research_data", "annual", "pattern_scan", "strength_flags", "tenbagger_drivers", "momentum_forward_v2"},
+        ),
+        (
+            "research_core/hhhl_variants_paths.py",
+            {"entry_window", "hhhl", "opportunity", "research_data", "annual", "pattern_scan", "strength_flags", "tenbagger_drivers", "momentum_forward_v2"},
+        ),
+    ],
+)
+def test_entry_window_canonical_dependencies_preserve_exact_existing_consumers(status: str, source: str, expected_domains: set[str]) -> None:
+    manifest = ci_scope.load_manifest()
+    plan = ci_scope.make_plan([(status, source)])
+    expected = {
+        test
+        for domain in expected_domains
+        for test in ci_scope.test_inventory(ci_scope.ROOT, manifest)
+        if ci_scope.matches(test, manifest["domains"][domain]["tests"])
+    }
+    assert not plan["full"]
+    assert set(plan["domains"]) == expected_domains
+    assert set(plan["python_tests"]) == expected
+    assert "scripts/tests/test_entry_window_v1.py" in expected
+
+
+def test_unknown_entry_window_sources_keep_full_fallback() -> None:
+    plan = ci_scope.make_plan([("A", "research_core/entry_window_unreviewed_v2.py")])
+    assert plan["full"] and plan["frontend"]
+    assert plan["python_tests"] == ci_scope.test_inventory(ci_scope.ROOT, ci_scope.load_manifest())
+
+
+@pytest.mark.parametrize("status", ["A", "M"])
+@pytest.mark.parametrize(
     ("source", "expected_domains"),
     [
         (
@@ -181,7 +233,7 @@ def test_tenbagger_domain_registers_its_sources_and_tests(status: str, path: str
 @pytest.mark.parametrize(
     ("source", "expected_domains"),
     [
-        ("research_core/momentum_only_v1.py", {"momentum_only", "tenbagger_drivers", "momentum_forward_v2"}),
+        ("research_core/momentum_only_v1.py", {"momentum_only", "tenbagger_drivers", "momentum_forward_v2", "entry_window"}),
         ("research_core/count_cube_v1.py", {"momentum_only", "tenbagger_drivers", "momentum_forward_v2"}),
         ("research_core/live_producer.py", {"research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2"}),
         ("research_core/maintained_adjusted_daily.py", {"research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2"}),
@@ -248,7 +300,7 @@ def test_research_data_upstreams_keep_all_downstream_tests(path: str, expected_d
     manifest = ci_scope.load_manifest()
     plan = ci_scope.make_plan([("M", path)])
     assert not plan["full"]
-    assert set(plan["domains"]) == expected_domains | {"strength_flags"}
+    assert set(plan["domains"]) == expected_domains | {"strength_flags"} | ({"entry_window"} if path == "research_core/hhhl_variants_paths.py" else set())
     assert set(manifest["domains"]["research_data"]["tests"]) <= set(plan["python_tests"])
     assert set(manifest["domains"]["annual"]["tests"]) <= set(plan["python_tests"])
     assert TENBAGGER_TESTS <= set(plan["python_tests"])
