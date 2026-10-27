@@ -293,6 +293,8 @@ verify-*.png
 !tasks/20261013-pattern-scan/resource-probe-v2.json.gz
 !tasks/20261013-pattern-scan/resource-probe-v3.json.gz
 !tasks/20261013-pattern-scan/q2-q6-v5-receipts.zip
+!tasks/20261013-pattern-scan/results/
+!tasks/20261013-pattern-scan/results/count-plan-probe-v5.zip
 
 # Momentum-only study: audit decisions and final aggregate tables (counts and rates, no quotes).
 !tasks/20261021-momentum-only-doubling/audit-decisions.json

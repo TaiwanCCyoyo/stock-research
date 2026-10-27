@@ -1,9 +1,12 @@
 # Q2–Q6 continuation on shared scratch
 
-**Status: parallel runner PR #81 merged; continuation paused pending PR #82's capacity-observation fix. Research remains incomplete.**
-The current runtime amendment and completed engineering probe are
-[bounded parallel execution](parallel-execution-v5.md). Four workers were selected;
-the bounded full-market capacity invocation follows PR #82's owner merge.
+**Status 2026-10-28: research remains incomplete; the owner paused the run for
+[exact count-plan optimization](count-plan-performance-v5.md).**
+PR #97 memory recovery passed actual four-worker capacity and resumed the run.
+The latest amendment records the preserved 12 terminal phases, B3's 16 completed
+groups, measured bottleneck and optimized-code restart gates. The earlier
+[bounded parallel execution](parallel-execution-v5.md) contract still governs
+worker limits, deterministic publication and the 8 GiB Job cap.
 The single-worker process started below was stopped, with its checkpoints retained.
 This implements package D's runner changes from
 [the current handoff](../20261024-data-homes-and-scratch/codex-handoff.md#d-pr17-續跑程式修改與重跑).
