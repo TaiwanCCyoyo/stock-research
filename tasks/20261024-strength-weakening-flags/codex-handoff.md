@@ -1,6 +1,7 @@
 # Codex handoff：強勢條件成立後，哪些轉弱訊號讓 2／5／10 倍機率下降
 
-> **狀態：尚未開始。** 這份檔案只分工作包並固定設計決定；mission 還沒寫，沒有任何市場計算。
+> **狀態（2026-10-27）：A（mission，#91）與 B（程式，#93）已合併，C 可以開始；尚無任何市場計算。**
+> 下方的設計決定與開工順序維持原樣。
 > 交付狀態的定義見[交付狀態](../../docs/en/research-program.md#delivery-states)。
 
 開始前先讀 AGENTS.md、`docs/en/git-workflow.md`、`docs/en/research-owner-contract.md`，
