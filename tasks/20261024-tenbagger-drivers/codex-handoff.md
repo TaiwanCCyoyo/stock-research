@@ -1,6 +1,9 @@
 # Codex handoff：10 倍股和產業齊漲、法人持續買進有沒有關係
 
-> **狀態：尚未開始。** 這份檔案只分工作包並固定設計決定；mission 還沒寫，沒有任何市場計算。
+> **狀態（2026-10-27）：A（mission，#92）與 B（程式，#94）已合併，C 可以開始；尚無任何市場計算。**
+> 法人歷史已由 [producer PR #12](https://github.com/TaiwanCCyoyo/stock-data-downloader/pull/12) 匯入正式資料庫
+> （依其紀錄 TWSE 2012-05-02 起、TPEx 2014-12-01 起）；執行時仍照 mission T8 讀實際連續覆蓋，不預設起點。
+> 下方的設計決定與開工順序維持原樣。
 > 交付狀態的定義見[交付狀態](../../docs/en/research-program.md#delivery-states)。
 
 開始前先讀 AGENTS.md、`docs/en/git-workflow.md`、`docs/en/research-owner-contract.md`、
