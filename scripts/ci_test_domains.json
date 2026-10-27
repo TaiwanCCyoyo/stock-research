@@ -530,6 +530,17 @@
                 "scripts/tests/test_strength_flag_counts_v1.py"
             ]
         },
+        "multi_timeframe_ma": {
+            "paths": [
+                "research_core/multi_timeframe_ma_core_v1.py",
+                "tasks/20261027-multi-timeframe-ma/core-handoff.md",
+                "tasks/20261027-multi-timeframe-ma/mission.md",
+                "tasks/20261027-multi-timeframe-ma/data-contract.md",
+                "research_core/derived_features.py",
+                "research_core/technical_daily_v1.py"
+            ],
+            "tests": ["scripts/tests/test_multi_timeframe_ma_core_v1.py"]
+        },
         "entry_window": {
             "paths": [
                 "research_core/entry_window_v1.py",
@@ -647,6 +658,7 @@
         "scripts/tests/test_momentum_forward_run_v2.py",
         "scripts/tests/test_momentum_forward_v1.py",
         "scripts/tests/test_momentum_only_v1.py",
+        "scripts/tests/test_multi_timeframe_ma_core_v1.py",
         "scripts/tests/test_multiple_outcomes_v1.py",
         "scripts/tests/test_mypy_scopes.py",
         "scripts/tests/test_opportunity_artifact_publication.py",

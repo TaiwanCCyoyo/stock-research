@@ -9,12 +9,19 @@ This is not full S7-B acceptance, a reader, or a market execution admission.
 ## Scope, ownership and base
 
 - Owner: the delegated S7-B1 implementer in the 2026-10-27 `task-15` executor.
-- Base: fetched `origin/main` = `f337736f8e06c4dd21d010d19677ba8771a8ce87`.
+- Initial implementation base: `f337736f8e06c4dd21d010d19677ba8771a8ce87`.
+- Local integration base: fetched `origin/main` =
+  `9945d6878e1b3be530e4790ef8fd3a5db6dbcc7a` (PR105 merged); normal merge
+  `210aa4351db3323403a4b5ec27bf054d16856aa3` preserved the reviewed S7 commits.
+  The fresh GitHub open-PR query returned no PRs before integration.
 - Branch: `codex/multi-timeframe-ma-core`.
 - Isolated checkout: `C:/Users/xjp01/Documents/Codex/2026-10-27/task-15/repo`;
   one session-owned checkout, retained pending authorized draft PR delivery. The executor's
   writable workspace is used; the dirty primary checkout is unchanged.
-- Only the new core, its synthetic test module, and this handoff are written.
+- Initial implementation wrote the new core, its synthetic test module and this
+  handoff. The parent subsequently designated this task the sole S7 shared
+  integration writer, adding only `docs/en/research-program.md`,
+  `scripts/ci_test_domains.json` and `scripts/tests/test_ci_scope.py` to scope.
 - Before branching, Git worktree metadata listed 20 existing checkouts. Exact
   checks for all three allowlisted paths across those checkouts returned no
   files; the sole open PR105 changed six E1/shared files, none in this allowlist.
@@ -23,26 +30,33 @@ This is not full S7-B acceptance, a reader, or a market execution admission.
   did not finish its broader inventory; the acting session interrupted that
   read-only command. Ignored-byte totals and other sessions' liveness remain
   unknown. No resource was cleaned, reassigned, or treated as abandoned.
-- PR105 still owned shared integration at initial verification. The three
-  shared changes below are **proposals only**, not applied or validated.
+- PR105 owned shared integration at initial verification. After its merge,
+  parent explicitly authorized the local S7-only integration recorded below;
+  E1-B2 packages remain separate owners, and no E1-B2 files are changed here.
 
 ### Delivery status
 
 Implementation commit: `1306d939b15cbe3444b12daa87a8ca2024d0f438`.
 Its exact committed-head synthetic suite passed **87 tests in 1.17s**;
 normal commit hooks all passed, including Mypy, Pyright, Ruff, formatting,
-secret/large-file/UTF-8/whitespace checks. Only the three allowlisted paths are
-changed and the working tree was clean before the attempted publication.
+secret/large-file/UTF-8/whitespace checks. That implementation changed only the
+initial three allowlisted paths; its working tree was clean before publication.
 
 Publication is **blocked, known not executed**. The executor's automatic
 approval review rejected the exact action
 `git push --set-upstream origin codex/multi-timeframe-ma-core` to
 `https://github.com/TaiwanCCyoyo/stock-research.git`, saying external publication
 was not explicitly authorized by trusted user text. No remote branch, PR,
-hosted CI, bot review request or merge was created by this task. No alternate
+hosted CI, bot review request or PR merge was created by this task. No alternate
 publication route was attempted. Explicit trusted approval of that branch/PR
 publication is the remaining execution-permission gate; a known-unexecuted
 denial may only be retried once with materially new relevant evidence.
+
+Parent reported an independent Astra clean review of
+`6a4d7029aee09bc68739ce7f276728286115cdbd`, with 87 independent synthetic tests
+plus MA/tri-state/lineage probes passing. The local main synchronization and
+shared integration leave the reviewed core and its test file byte-identical.
+The new shared integration still needs its own SHA-bound Astra review.
 
 ## Public API and numerical contract
 
@@ -121,83 +135,41 @@ EMA120 has hand-seed/recurrence evidence, **not** claimed existing-oracle parity
 Normal commit hooks passed on the implementation commit. SHA-bound hosted CI
 is not available because publication was denied; it remains a delivery gate.
 
-## Staged shared integration — parent serializes after PR105 merge
+## Local shared integration after PR105 merge
 
-No shared file is edited in this PR. These exact proposals target the corrected
-existing selector file `scripts/tests/test_ci_scope.py`. They require parent
-ownership, integration, selector validation, current-head hooks/hosted CI and
-Astra's SHA-bound review before this package is merge-ready.
+The previously staged S7-only changes are now applied under the parent's sole
+writer assignment. The shared-file changes are limited to:
 
-Add this row to `docs/en/research-program.md`'s reusable-assets table:
+- `docs/en/research-program.md`: the `multi-timeframe-ma-core.v1` reusable asset
+  row, linking this handoff and the S7 data contract, naming the five public
+  functions and explicitly retaining pure/synthetic scope and market gates.
+- `scripts/ci_test_domains.json`: `multi_timeframe_ma` owns the new core,
+  this handoff, S7 mission/data-contract and the two public oracle source paths;
+  its test is registered in the domain and sorted `reviewed_tests` inventory.
+  Direct ownership of `technical_daily_v1.py` selects both S7 and the existing
+  research-data consumers; no broad consumer edge is added. Existing consumer
+  relationships and the `research_core/derived_*` full fallback are unchanged.
+- `scripts/tests/test_ci_scope.py`: 14 A/M cases check exact domain/test
+  selection for the module, test, handoff, mission and data-contract, preserve
+  technical-oracle consumers, and retain the derived-oracle full fallback.
+  This is the corrected existing selector path; no guessed selector is added.
 
-```markdown
-| `multi-timeframe-ma-core.v1` | Research definition `multi-timeframe-ma.v1`; [data contract](../../tasks/20261027-multi-timeframe-ma/data-contract.md) / [core handoff](../../tasks/20261027-multi-timeframe-ma/core-handoff.md) | `research_core.multi_timeframe_ma_core_v1.moving_averages/bull_at_cutoff/ratio_cross/weekly_turn/density_at_cutoff`; pure/synthetic only. Real reader, calendar verification, cross-stock runner/barrier and market evaluation are pending; owner/data/compute gates remain. |
+Validation command:
+
+```text
+uv run pytest scripts/tests/test_multi_timeframe_ma_core_v1.py scripts/tests/test_ci_scope.py -q
 ```
 
-Add the following member under `domains` in `scripts/ci_test_domains.json`:
+Result: **337 passed in 75.72s** (87 S7 synthetic cases and 250 selector cases).
+The selector suite checks selection/contracts without running the repository's
+full test plan. The core suite still uses only artificial in-memory inputs.
+Normal commit hooks must pass on the reported local integration commit; its
+final SHA and hook evidence accompany the local patch delivery.
 
-```json
-"multi_timeframe_ma": {
-    "paths": [
-        "research_core/multi_timeframe_ma_core_v1.py",
-        "tasks/20261027-multi-timeframe-ma/core-handoff.md",
-        "tasks/20261027-multi-timeframe-ma/mission.md",
-        "tasks/20261027-multi-timeframe-ma/data-contract.md",
-        "research_core/derived_features.py",
-        "research_core/technical_daily_v1.py"
-    ],
-    "tests": ["scripts/tests/test_multi_timeframe_ma_core_v1.py"]
-}
-```
-
-Also add `scripts/tests/test_multi_timeframe_ma_core_v1.py` to `reviewed_tests`
-in its sorted position. Keep `research_core/derived_*` in existing `full_paths`;
-adding an explicit dependency must not weaken its full-suite fallback.
-
-Append these assertions to `scripts/tests/test_ci_scope.py`:
-
-```python
-@pytest.mark.parametrize("status", ["A", "M"])
-@pytest.mark.parametrize("source", [
-    "research_core/multi_timeframe_ma_core_v1.py",
-    "scripts/tests/test_multi_timeframe_ma_core_v1.py",
-    "tasks/20261027-multi-timeframe-ma/core-handoff.md",
-    "tasks/20261027-multi-timeframe-ma/mission.md",
-    "tasks/20261027-multi-timeframe-ma/data-contract.md",
-])
-def test_multi_timeframe_ma_owned_paths(status: str, source: str) -> None:
-    plan = ci_scope.make_plan([(status, source)])
-    assert not plan["full"] and not plan["frontend"]
-    assert plan["domains"] == ["multi_timeframe_ma"]
-    expected = {"scripts/tests/test_multi_timeframe_ma_core_v1.py"}
-    if source.startswith("scripts/tests/"):
-        expected.add("scripts/tests/test_ci_scope.py")
-    assert set(plan["python_tests"]) == expected
-
-
-@pytest.mark.parametrize("status", ["A", "M"])
-def test_multi_timeframe_ma_public_technical_oracle_dependency(status: str) -> None:
-    plan = ci_scope.make_plan([(status, "research_core/technical_daily_v1.py")])
-    assert not plan["full"]
-    assert "multi_timeframe_ma" in plan["domains"]
-    assert "research_data" in plan["domains"]
-    assert "scripts/tests/test_multi_timeframe_ma_core_v1.py" in plan["python_tests"]
-    assert "scripts/tests/test_technical_daily_v1.py" in plan["python_tests"]
-
-
-@pytest.mark.parametrize("status", ["A", "M"])
-def test_multi_timeframe_ma_public_derived_oracle_keeps_full_fallback(status: str) -> None:
-    plan = ci_scope.make_plan([(status, "research_core/derived_features.py")])
-    assert plan["full"] and plan["frontend"]
-    assert "scripts/tests/test_multi_timeframe_ma_core_v1.py" in plan["python_tests"]
-    assert plan["python_tests"] == ci_scope.test_inventory(ci_scope.ROOT, ci_scope.load_manifest())
-```
-
-The snippets above are staged, not executed selector evidence. After integration
-run `uv run pytest scripts/tests/test_ci_scope.py -q` and the new synthetic file,
-then normal hooks and SHA-bound hosted CI. Before integration the additional
-unregistered test/module legitimately invokes the existing safety fallback;
-the draft/full CI gate can remain pending rather than claim full validation.
+This closes local shared registration and selector validation only. Publication
+remains blocked/pending explicit trusted approval; no push or PR creation is
+attempted in this integration turn. SHA-bound hosted CI and independent Astra
+review of the integrated head remain gates before any merge-ready claim.
 
 ## Deferred work and unchanged admission gates
 
@@ -211,7 +183,8 @@ The mission's full 16-class S7-B matrix has **not** passed.
 No market prices, outcomes, labels, holdout, producer/shared root, downloads,
 generation holds/updates, scratch/research computation, production deployment,
 scheduler or trading were accessed or changed. No report, receipt or market
-result is manufactured. Shared integration and independent Astra review remain
-open; actual market work still needs S1/S2 completion or explicit owner reorder,
+result is manufactured. Local shared integration is complete; review of that
+integration, publication and hosted CI remain open. Actual market work still
+needs S1/S2 completion or explicit owner reorder,
 owner overlap verification, qualified fixed-G/as_of data, and the original
 owner/data/compute and single-long-run admission gates.
