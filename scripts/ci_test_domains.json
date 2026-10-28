@@ -91,7 +91,8 @@
                 "annual",
                 "pattern_scan",
                 "tenbagger_drivers",
-                "momentum_forward_v2"
+                "momentum_forward_v2",
+                "momentum_forward_v3"
             ]
         },
         "owner_hhhl_labels": {
@@ -485,7 +486,8 @@
             "consumers": [
                 "strength_flags",
                 "tenbagger_drivers",
-                "momentum_forward_v2"
+                "momentum_forward_v2",
+                "momentum_forward_v3"
             ]
         },
         "momentum_forward_v2": {
@@ -499,7 +501,15 @@
                 "scripts/tests/test_momentum_forward_attempts_v2.py",
                 "scripts/tests/test_momentum_forward_run_v2.py",
                 "scripts/tests/test_momentum_forward_v1.py"
-            ]
+            ],
+            "consumers": ["momentum_forward_v3"]
+        },
+        "momentum_forward_v3": {
+            "paths": [
+                "research_core/momentum_forward_publication_v3.py",
+                "tasks/20261027-forward-publication-deadline/content-publication-handoff.md"
+            ],
+            "tests": ["scripts/tests/test_momentum_forward_publication_v3.py"]
         },
         "tenbagger_drivers": {
             "paths": [
@@ -674,6 +684,7 @@
         "scripts/tests/test_method_environment_publication.py",
         "scripts/tests/test_method_environment_runner.py",
         "scripts/tests/test_momentum_forward_attempts_v2.py",
+        "scripts/tests/test_momentum_forward_publication_v3.py",
         "scripts/tests/test_momentum_forward_run_v2.py",
         "scripts/tests/test_momentum_forward_v1.py",
         "scripts/tests/test_momentum_only_v1.py",

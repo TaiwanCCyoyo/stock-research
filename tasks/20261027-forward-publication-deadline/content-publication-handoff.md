@@ -41,9 +41,11 @@ copied, linked or read by this package.
 
 The exclusive source paths are the new
 `research_core/momentum_forward_publication_v3.py`,
-`scripts/tests/test_momentum_forward_publication_v3.py` and this file. PR115 owns
-the shared program/CI integration slot. The integration snippets below are staged
-as documentation only; no shared file is edited until parent releases that slot.
+`scripts/tests/test_momentum_forward_publication_v3.py` and this file. Parent later
+released the shared program/CI writer slot after PR115 became immutable. The
+previously staged registration below is now integrated locally; no push or PR
+publication is authorized. Core and new-suite bytes remain exactly those reviewed
+at `35ce350e4597ad00de8905c186009e9c4e028f49`.
 
 ## Public interface and schemas
 
@@ -152,19 +154,21 @@ G/event selection, or need for production roots/cohort mutation stops at parent.
 Migration, deployment, scheduler switching and the first future accepted day
 each retain their own gates after eventual review/merge.
 
-## Staged shared-file integration (writer slot pending)
+## Shared-file integration (writer slot released)
 
-Rebase the unpublished task branch onto integration-time main before applying
-these snippets. Preserve PR115 and all existing S7/E1 unions. This section is not
-authorization to write those shared files or publish a branch/PR.
+The integration rechecked fetched main `346156ab`; the unpublished task branch
+was already current. At that check PR115 remained open/draft at `7a7b58db`, so no
+unmerged PR115 content was imported or edited. Existing S7/E1 domain entries and
+their test unions are preserved. Recheck main before final handback and normally
+sync if PR115 has merged. Publication of this package still requires its own gate.
 
-Add the following asset row to `docs/en/research-program.md`:
+The following asset row is added to `docs/en/research-program.md`:
 
 ```markdown
 | `momentum-forward-publication.v3` | [Candidate-content handoff](../../tasks/20261027-forward-publication-deadline/content-publication-handoff.md): immutable three-member candidate bundles and ephemeral live post-publication observations; no receipts/accepted cohort; finite G/event remains pending | `research_core.momentum_forward_publication_v3`: serialize_candidate / publish_candidate / publish_and_observe / inspect_candidate; explicit root, synthetic verification only, production pending |
 ```
 
-Add to `scripts/ci_test_domains.json` without changing full-path fallbacks:
+Registered in `scripts/ci_test_domains.json` without changing full-path fallbacks:
 
 ```json
 {
@@ -178,29 +182,27 @@ Add to `scripts/ci_test_domains.json` without changing full-path fallbacks:
 }
 ```
 
-Append `momentum_forward_v3` to the existing `momentum_only`, `research_data`
-and `momentum_forward_v2` consumer sets, preserving their other consumers. Add
-the new test to sorted `reviewed_tests`; test discovery remains in `scripts/tests`.
-The v1/public predicate and v2/public journal dependencies must both propagate.
-`artifact_*`, JSON-integrity and unknown-forward full fallback remain intact.
+The existing `momentum_only`, `research_data` and `momentum_forward_v2` consumer
+sets each gain `momentum_forward_v3`, preserving their other consumers. The new
+test is in sorted `reviewed_tests`; test discovery remains in `scripts/tests`.
+The v1/public predicate and v2/public journal dependencies propagate to the new
+suite. `artifact_*`, JSON-integrity and unknown-forward full fallback remain intact.
 
-In existing `scripts/tests/test_ci_scope.py`, add exact A/M selection assertions
-for the new source/test/handoff and for v1, v2 attempts/run, maintained-adjusted
-daily and live-producer upstreams. Require the v3 domain/new suite plus each
-existing domain's full union. Update affected expected domain/test sets exactly;
-do not replace equality with containment. Unknown forward and artifact-store
-paths must still select the full inventory. Run the actual selector over the
-integrated diff after registration. Until that slot is released, the actual
-unregistered new source/test must retain its conservative full fallback; a local
-scoped/green claim would be false.
+Existing `scripts/tests/test_ci_scope.py` now has 34 additional A/M cases: exact
+selection for source/test/handoff, nine v1/v2/shared/S7-oracle upstream paths, and
+five shared/unknown full-fallback paths. Expected domain and test unions stay
+exact; no equality assertion was weakened to containment. The existing E1/S7
+selection tests continue to pass, including E1 membership on momentum/count-cube
+changes and S7 membership on the public technical oracle. The five earlier v2
+selection failures are fixed by registration; their frozen test file is unchanged.
 
-## Author verification snapshot
+## Author verification before registration (retained)
 
 At base main `346156ab`, the new suite passed **99 cases** in 25.85 s.
 The combined new/artifact-store/v1/v2 run then reported **177 passed, 5 failed**
 in 31.35 s. All five failures are existing v2 CI-selector assertions: the new
-test is not yet in the writer-locked reviewed manifest, so the unchanged selector
-correctly switches to full fallback. This is a pending shared-integration gate,
+test was not yet in the writer-locked reviewed manifest, so the unchanged selector
+correctly switched to full fallback. This was a pending shared-integration gate,
 not a claim that the whole regression run passed. No v1/v2 assertion was changed.
 
 The actual unregistered three-path selector returned `full=true`, 324 test files,
@@ -211,4 +213,21 @@ and recheck the five pending selection assertions plus existing selector contrac
 
 After explicit NaT type narrowing and bounded child handshake/cleanup adjustments,
 the new suite was rerun: **99 passed** in 7.69 s. Shared-registration failures
-remain pending; that rerun does not claim they were repaired.
+remained pending at that checkpoint; that rerun did not claim they were repaired.
+
+## Integrated verification
+
+- Selector plus complete v2-run suite: **328 passed** in 50.96 s. This includes
+  all five formerly failing cases and the 34 new mapping/fallback cases.
+- New candidate, artifact-store, v1 and v2-attempt suites: **160 passed** in
+  10.49 s. All tests use synthetic roots; no market research was run.
+- Actual tracked integration diff: `full=false`, 22 selected test files, domains
+  `ci`, `hooks`, `momentum_forward_v3`, `producer_link`, `prose`. The committed-head
+  plan is generated again at handback; its diagnostics stay local under `.tmp/`.
+- Core and new-suite files compare byte-identically to the reviewed core commit.
+  Original PR103/v1/v2 files and publication primitives remain unchanged. Normal
+  commit hooks are retained; final commit/results are supplied in the handback.
+
+Finite G/the exact receipt event, B2 acceptance/reader/cohort-chain work, outcome
+review and publication approval remain outstanding. Integration does not choose
+G, add receipts, turn any candidate into an accepted sample or authorize deployment.
