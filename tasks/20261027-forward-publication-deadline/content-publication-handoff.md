@@ -231,3 +231,18 @@ remained pending at that checkpoint; that rerun did not claim they were repaired
 Finite G/the exact receipt event, B2 acceptance/reader/cohort-chain work, outcome
 review and publication approval remain outstanding. Integration does not choose
 G, add receipts, turn any candidate into an accepted sample or authorize deployment.
+
+## Main integration after PR115 merge
+
+Parent confirmed PR115 squash-merged as main
+`b65f6ccf5b206a5ccc7b6e928dfaa3011a71df3b`. The unpublished O2 branch was
+normally rebased onto that fetched main without conflicts or a force push.
+The complete S7 core/panel/weeks domain and all three E1 suites remain in the
+union alongside v3. No unmerged PR115 branch was imported or edited.
+
+On this integrated base, selector + v2-run + v3-candidate suites reported
+**433 passed** in 61.53 s. The merged selector file passed the normal pre-commit
+configuration, including Mypy, Pyright and Ruff. Core and new-suite bytes still
+compare exactly to reviewed commit `35ce350e4597ad00de8905c186009e9c4e028f49`.
+The final committed-head plan is regenerated at handback; no publication,
+G/event choice, receipt/acceptance or deployment is authorized by this sync.
