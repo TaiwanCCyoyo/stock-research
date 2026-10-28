@@ -1289,13 +1289,16 @@ def test_checkout_identity_consumer_is_selected_for_test_and_eol_policy(change: 
         "tasks/20261027-multi-timeframe-ma/core-handoff.md",
         "tasks/20261027-multi-timeframe-ma/mission.md",
         "tasks/20261027-multi-timeframe-ma/data-contract.md",
+        "research_core/multi_timeframe_ma_panel_v1.py",
+        "scripts/tests/test_multi_timeframe_ma_panel_v1.py",
+        "tasks/20261027-multi-timeframe-ma/panel-handoff.md",
     ],
 )
 def test_multi_timeframe_ma_owned_paths(status: str, source: str) -> None:
     plan = ci_scope.make_plan([(status, source)])
     assert not plan["full"] and not plan["frontend"]
     assert plan["domains"] == ["multi_timeframe_ma"]
-    expected = {"scripts/tests/test_multi_timeframe_ma_core_v1.py"}
+    expected = {"scripts/tests/test_multi_timeframe_ma_core_v1.py", "scripts/tests/test_multi_timeframe_ma_panel_v1.py"}
     if source.startswith("scripts/tests/"):
         expected.add("scripts/tests/test_ci_scope.py")
     assert set(plan["python_tests"]) == expected
@@ -1308,6 +1311,7 @@ def test_multi_timeframe_ma_public_technical_oracle_dependency(status: str) -> N
     assert "multi_timeframe_ma" in plan["domains"]
     assert "research_data" in plan["domains"]
     assert "scripts/tests/test_multi_timeframe_ma_core_v1.py" in plan["python_tests"]
+    assert "scripts/tests/test_multi_timeframe_ma_panel_v1.py" in plan["python_tests"]
     assert "scripts/tests/test_technical_daily_v1.py" in plan["python_tests"]
 
 
@@ -1316,4 +1320,12 @@ def test_multi_timeframe_ma_public_derived_oracle_keeps_full_fallback(status: st
     plan = ci_scope.make_plan([(status, "research_core/derived_features.py")])
     assert plan["full"] and plan["frontend"]
     assert "scripts/tests/test_multi_timeframe_ma_core_v1.py" in plan["python_tests"]
+    assert "scripts/tests/test_multi_timeframe_ma_panel_v1.py" in plan["python_tests"]
+    assert plan["python_tests"] == ci_scope.test_inventory(ci_scope.ROOT, ci_scope.load_manifest())
+
+
+@pytest.mark.parametrize("status", ["A", "M"])
+def test_unknown_multi_timeframe_panel_keeps_full_fallback(status: str) -> None:
+    plan = ci_scope.make_plan([(status, "research_core/multi_timeframe_ma_panel_unreviewed_v2.py")])
+    assert plan["full"] and plan["frontend"]
     assert plan["python_tests"] == ci_scope.test_inventory(ci_scope.ROOT, ci_scope.load_manifest())
