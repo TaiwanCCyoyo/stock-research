@@ -133,8 +133,16 @@ Environment: Python 3.12.15, NumPy 2.3.5, pandas 2.3.3.
   technical/derived upstreams and unknown-path full fallback are tested.
   Existing full-path exceptions, frontend policy and other domain mappings stay.
 
-Normal commit hooks and the final SHA-bound local report complete delivery
-verification. Local patch/log artifacts are review aids, not market results.
+Implementation HEAD: `3d89b7a42578dd304db0aed03d532bd362447b36`, directly on
+the base above. Normal commit hooks passed: whitespace/EOF, large-file,
+secrets, Prettier, UTF-8 hygiene, Mypy, Pyright and Ruff. The first hook attempt
+formatted files and identified a typing issue in the deliberately malformed
+test fixture. Its `Any` boundary annotation was corrected without production
+behavior changes. After formatting and that correction, the dedicated suite
+and S7 selector cases passed **124 tests, 284 deselected** (5.54s). The final
+handoff-only commit records this evidence; the parent-facing report and local
+patch/log identify its final review HEAD. These are local review aids, not
+market results. The checkout was clean after the implementation commit.
 
 ## Remaining gates and limitations
 
