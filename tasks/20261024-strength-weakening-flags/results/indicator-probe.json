@@ -1,0 +1,1 @@
+{"codes":["1104","1416","1589","2330","6236","6986","6965","2495","3014","1789","6569","1533","2472","6982","8067","4946","5371","6230","8463","6469"],"comparisons":[],"reason":"stored technical tables are computed at another asof; cutoff recomputation through PR17 adapter is required","selected":[],"shared_reads":[]}
