@@ -22,6 +22,99 @@ FORWARD_V2_TESTS = {
 }
 
 
+FORWARD_V3_TEST = "scripts/tests/test_momentum_forward_publication_v3.py"
+
+
+@pytest.mark.parametrize("status", ["A", "M"])
+@pytest.mark.parametrize(
+    "source",
+    [
+        "research_core/momentum_forward_publication_v3.py",
+        "tasks/20261027-forward-publication-deadline/content-publication-handoff.md",
+        FORWARD_V3_TEST,
+    ],
+)
+def test_forward_v3_owned_paths_select_exact_candidate_suite(status: str, source: str) -> None:
+    plan = ci_scope.make_plan([(status, source)])
+    expected = {FORWARD_V3_TEST}
+    if source == FORWARD_V3_TEST:
+        expected.add("scripts/tests/test_ci_scope.py")
+    assert not plan["full"] and not plan["frontend"]
+    assert plan["domains"] == ["momentum_forward_v3"]
+    assert set(plan["python_tests"]) == expected
+
+
+@pytest.mark.parametrize("status", ["A", "M"])
+@pytest.mark.parametrize(
+    ("source", "expected_domains"),
+    [
+        (
+            "research_core/momentum_forward_v1.py",
+            {"momentum_only", "strength_flags", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3"},
+        ),
+        ("research_core/momentum_forward_attempts_v2.py", {"momentum_forward_v2", "momentum_forward_v3"}),
+        ("research_core/momentum_forward_run_v2.py", {"momentum_forward_v2", "momentum_forward_v3"}),
+        ("scripts/record_momentum_forward_day_v2.py", {"momentum_forward_v2", "momentum_forward_v3"}),
+        (
+            "research_core/maintained_adjusted_daily.py",
+            {"research_data", "annual", "pattern_scan", "strength_flags", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3"},
+        ),
+        (
+            "research_core/live_producer.py",
+            {"research_data", "annual", "pattern_scan", "strength_flags", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3"},
+        ),
+        (
+            "research_core/momentum_only_v1.py",
+            {"entry_window", "momentum_only", "strength_flags", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3"},
+        ),
+        (
+            "research_core/count_cube_v1.py",
+            {"entry_window", "momentum_only", "strength_flags", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3"},
+        ),
+        (
+            "research_core/technical_daily_v1.py",
+            {
+                "research_data",
+                "multi_timeframe_ma",
+                "annual",
+                "pattern_scan",
+                "strength_flags",
+                "tenbagger_drivers",
+                "momentum_forward_v2",
+                "momentum_forward_v3",
+            },
+        ),
+    ],
+)
+def test_forward_v3_upstreams_preserve_exact_existing_unions(status: str, source: str, expected_domains: set[str]) -> None:
+    manifest = ci_scope.load_manifest()
+    inventory = ci_scope.test_inventory(ci_scope.ROOT, manifest)
+    plan = ci_scope.make_plan([(status, source)])
+    expected = {test for domain in expected_domains for test in inventory if ci_scope.matches(test, manifest["domains"][domain]["tests"])}
+    assert not plan["full"] and not plan["frontend"]
+    assert set(plan["domains"]) == expected_domains
+    assert set(plan["python_tests"]) == expected
+    assert {FORWARD_V3_TEST, "scripts/tests/test_momentum_forward_v1.py", *FORWARD_V2_TESTS} <= expected
+
+
+@pytest.mark.parametrize("status", ["A", "M"])
+@pytest.mark.parametrize(
+    "source",
+    [
+        "research_core/artifact_store.py",
+        "research_core/artifact_unreviewed_v4.py",
+        "research_core/json_integrity.py",
+        "research_core/momentum_forward_unreviewed_v4.py",
+        "scripts/record_momentum_forward_unreviewed_v4.py",
+    ],
+)
+def test_forward_v3_dependencies_keep_shared_and_unknown_full_fallback(status: str, source: str) -> None:
+    plan = ci_scope.make_plan([(status, source)])
+    assert plan["full"] and plan["frontend"]
+    assert plan["python_tests"] == ci_scope.test_inventory(ci_scope.ROOT, ci_scope.load_manifest())
+    assert FORWARD_V3_TEST in plan["python_tests"]
+
+
 @pytest.mark.parametrize("status", ["A", "M"])
 @pytest.mark.parametrize(
     "source",
@@ -55,17 +148,45 @@ def test_entry_window_owned_paths_select_exact_domain(status: str, source: str) 
 @pytest.mark.parametrize(
     ("source", "expected_domains"),
     [
-        ("research_core/momentum_only_v1.py", {"entry_window", "momentum_only", "strength_flags", "tenbagger_drivers", "momentum_forward_v2"}),
-        ("research_core/count_cube_v1.py", {"entry_window", "momentum_only", "strength_flags", "tenbagger_drivers", "momentum_forward_v2"}),
+        (
+            "research_core/momentum_only_v1.py",
+            {"entry_window", "momentum_only", "strength_flags", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3"},
+        ),
+        (
+            "research_core/count_cube_v1.py",
+            {"entry_window", "momentum_only", "strength_flags", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3"},
+        ),
         ("research_core/pattern_scan_events_v1.py", {"entry_window", "pattern_scan", "strength_flags", "tenbagger_drivers"}),
         ("research_core/pattern_scan_groups_v1.py", {"entry_window", "pattern_scan", "strength_flags", "tenbagger_drivers"}),
         (
             "research_core/multiple_outcomes_v1.py",
-            {"entry_window", "hhhl", "opportunity", "research_data", "annual", "pattern_scan", "strength_flags", "tenbagger_drivers", "momentum_forward_v2"},
+            {
+                "entry_window",
+                "hhhl",
+                "opportunity",
+                "research_data",
+                "annual",
+                "pattern_scan",
+                "strength_flags",
+                "tenbagger_drivers",
+                "momentum_forward_v2",
+                "momentum_forward_v3",
+            },
         ),
         (
             "research_core/hhhl_variants_paths.py",
-            {"entry_window", "hhhl", "opportunity", "research_data", "annual", "pattern_scan", "strength_flags", "tenbagger_drivers", "momentum_forward_v2"},
+            {
+                "entry_window",
+                "hhhl",
+                "opportunity",
+                "research_data",
+                "annual",
+                "pattern_scan",
+                "strength_flags",
+                "tenbagger_drivers",
+                "momentum_forward_v2",
+                "momentum_forward_v3",
+            },
         ),
     ],
 )
@@ -98,15 +219,15 @@ def test_unknown_entry_window_sources_keep_full_fallback() -> None:
     [
         (
             "research_core/momentum_forward_v1.py",
-            {"momentum_only", "strength_flags", "tenbagger_drivers", "momentum_forward_v2"},
+            {"momentum_only", "strength_flags", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3"},
         ),
         (
             "research_core/maintained_adjusted_daily.py",
-            {"research_data", "annual", "pattern_scan", "tenbagger_drivers", "strength_flags", "momentum_forward_v2"},
+            {"research_data", "annual", "pattern_scan", "tenbagger_drivers", "strength_flags", "momentum_forward_v2", "momentum_forward_v3"},
         ),
         (
             "research_core/live_producer.py",
-            {"research_data", "annual", "pattern_scan", "tenbagger_drivers", "strength_flags", "momentum_forward_v2"},
+            {"research_data", "annual", "pattern_scan", "tenbagger_drivers", "strength_flags", "momentum_forward_v2", "momentum_forward_v3"},
         ),
     ],
 )
@@ -251,19 +372,22 @@ def test_tenbagger_domain_registers_its_sources_and_tests(status: str, path: str
 @pytest.mark.parametrize(
     ("source", "expected_domains"),
     [
-        ("research_core/momentum_only_v1.py", {"momentum_only", "tenbagger_drivers", "momentum_forward_v2", "entry_window"}),
-        ("research_core/count_cube_v1.py", {"momentum_only", "tenbagger_drivers", "momentum_forward_v2", "entry_window"}),
-        ("research_core/live_producer.py", {"research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2"}),
-        ("research_core/maintained_adjusted_daily.py", {"research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2"}),
-        ("research_core/scratch_runs.py", {"research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2"}),
+        ("research_core/momentum_only_v1.py", {"momentum_only", "tenbagger_drivers", "momentum_forward_v2", "entry_window", "momentum_forward_v3"}),
+        ("research_core/count_cube_v1.py", {"momentum_only", "tenbagger_drivers", "momentum_forward_v2", "entry_window", "momentum_forward_v3"}),
+        ("research_core/live_producer.py", {"research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3"}),
+        (
+            "research_core/maintained_adjusted_daily.py",
+            {"research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3"},
+        ),
+        ("research_core/scratch_runs.py", {"research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3"}),
         ("research_core/pattern_scan_inputs_v1.py", {"pattern_scan", "tenbagger_drivers"}),
         (
             "research_core/hhhl_variants_run.py",
-            {"hhhl", "opportunity", "research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2"},
+            {"hhhl", "opportunity", "research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3"},
         ),
         (
             "research_core/research_measurement_v1.py",
-            {"feature_blocks", "research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2"},
+            {"feature_blocks", "research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3"},
         ),
     ],
 )
@@ -296,6 +420,7 @@ def test_tenbagger_dependencies_propagate_to_exact_consumer_tests(source: str, e
                 "pattern_scan",
                 "tenbagger_drivers",
                 "momentum_forward_v2",
+                "momentum_forward_v3",
             },
             {
                 "scripts/tests/test_method_environment_runner.py",
@@ -308,7 +433,7 @@ def test_tenbagger_dependencies_propagate_to_exact_consumer_tests(source: str, e
     + [
         (
             path,
-            {"hhhl", "opportunity", "research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2"},
+            {"hhhl", "opportunity", "research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3"},
             {"tests/test_opportunity_history_api.py", "scripts/tests/test_multiple_outcomes_v1.py"},
         )
         for path in ("research_core/hhhl_variants_paths.py", "research_core/hhhl_variants_observations.py")
@@ -392,12 +517,22 @@ def test_feature_block_upstreams_select_research_data_consumers(path: str) -> No
     manifest = ci_scope.load_manifest()
     plan = ci_scope.make_plan([("M", path)])
     assert not plan["full"]
-    assert set(plan["domains"]) == {"feature_blocks", "research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2", "strength_flags"}
+    assert set(plan["domains"]) == {
+        "feature_blocks",
+        "research_data",
+        "annual",
+        "pattern_scan",
+        "tenbagger_drivers",
+        "momentum_forward_v2",
+        "strength_flags",
+        "momentum_forward_v3",
+    }
     expected_tests = set(manifest["domains"]["feature_blocks"]["tests"]) | set(manifest["domains"]["research_data"]["tests"])
     expected_tests |= set(manifest["domains"]["annual"]["tests"])
     expected_tests |= set(manifest["domains"]["tenbagger_drivers"]["tests"])
     expected_tests |= set(manifest["domains"]["strength_flags"]["tests"])
     expected_tests |= set(manifest["domains"]["momentum_forward_v2"]["tests"])
+    expected_tests |= set(manifest["domains"]["momentum_forward_v3"]["tests"])
     expected_tests |= {
         test for test in ci_scope.test_inventory(ci_scope.ROOT, manifest) if ci_scope.matches(test, manifest["domains"]["pattern_scan"]["tests"])
     }
@@ -507,16 +642,25 @@ def test_shared_json_integrity_preserves_full_fallback(status: str) -> None:
 @pytest.mark.parametrize(
     ("source", "expected_domains"),
     [
-        ("research_core/research_data_builder.py", {"research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2"}),
-        ("research_core/research_data_catalog.py", {"research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2"}),
-        ("research_core/research_data_paths.py", {"research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2"}),
+        (
+            "research_core/research_data_builder.py",
+            {"research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3"},
+        ),
+        (
+            "research_core/research_data_catalog.py",
+            {"research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3"},
+        ),
+        (
+            "research_core/research_data_paths.py",
+            {"research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3"},
+        ),
         (
             "research_core/research_measurement_v1.py",
-            {"feature_blocks", "research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2"},
+            {"feature_blocks", "research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3"},
         ),
         (
             "research_core/feature_identity_v1.py",
-            {"feature_blocks", "research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2"},
+            {"feature_blocks", "research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3"},
         ),
     ],
 )
@@ -556,7 +700,7 @@ def test_annual_upstream_dependency_closure_selects_annual_consumers(source: str
         ),
         (
             "research_core/research_data_file_bundle_v1.py",
-            {"research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2"},
+            {"research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3"},
             {
                 "scripts/tests/test_research_data_file_bundle_v1.py",
                 "scripts/tests/test_annual_publication.py",
