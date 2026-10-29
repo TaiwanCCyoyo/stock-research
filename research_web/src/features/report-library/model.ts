@@ -85,3 +85,22 @@ export function reportFrameSrc(
     const params = new URLSearchParams({ palette, appearance });
     return `/reports/${encodeURIComponent(id)}/index.html#${params}`;
 }
+
+/** Accept only the shared-data route requested by this viewer's own frame. */
+export function reportNavigationHash(
+    source: unknown,
+    frameWindow: unknown,
+    data: unknown,
+): "#data" | null {
+    if (
+        !frameWindow ||
+        source !== frameWindow ||
+        !data ||
+        typeof data !== "object"
+    )
+        return null;
+    const message = data as { type?: unknown; href?: unknown };
+    return message.type === "rk:navigate" && message.href === "#data"
+        ? "#data"
+        : null;
+}

@@ -731,6 +731,14 @@
         if (meta.reportUrl) $("#report-link").href = meta.reportUrl;
     }
     async function start() {
+        $("#shared-data-link").addEventListener("click", (event) => {
+            if (window.parent === window) return;
+            event.preventDefault();
+            window.parent.postMessage(
+                { type: "rk:navigate", href: "#data" },
+                "*",
+            );
+        });
         try {
             if (!window.ReportKit || !window.REPORT_READY)
                 throw new Error("報告元件未初始化");

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { reportFrameSrc, statusLabel } from "./model";
+import { reportFrameSrc, reportNavigationHash, statusLabel } from "./model";
 import { useReportIndex } from "./useReportIndex";
 import { SourceInfo } from "../../components/ui/primitives";
 import "./reports.css";
@@ -41,6 +41,12 @@ export function ReportViewer({
         const receive = (event: MessageEvent) => {
             // Trust only messages from our own frame, whatever their origin reports.
             if (event.source !== frame.current?.contentWindow) return;
+            const target = reportNavigationHash(
+                event.source,
+                frame.current?.contentWindow,
+                event.data,
+            );
+            if (target) window.location.hash = target;
             const data = event.data as { type?: string; height?: number };
             if (
                 data?.type === "rk:height" &&

@@ -1,8 +1,12 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { readFileSync } from "node:fs";
+import { runInNewContext } from "node:vm";
+import { studioRoute } from "../../app/routes.ts";
 import {
     filterReports,
     reportFrameSrc,
+    reportNavigationHash,
     reportTags,
     statusLabel,
     validateReportIndex,
@@ -74,4 +78,98 @@ test("frame source encodes the id and carries the first-paint theme", () => {
         reportFrameSrc("a b", "ocean", "dark"),
         "/reports/a%20b/index.html#palette=ocean&appearance=dark",
     );
+});
+
+test("only this report frame can request the fixed shared-data route", () => {
+    const frame = {};
+    const message = { type: "rk:navigate", href: "#data" };
+    assert.equal(reportNavigationHash(frame, frame, message), "#data");
+    for (const source of [{}, null, undefined])
+        assert.equal(reportNavigationHash(source, frame, message), null);
+    assert.equal(reportNavigationHash(null, null, message), null);
+    for (const data of [
+        null,
+        [],
+        "#data",
+        { ...message, type: "other" },
+        { ...message, href: "https://example.com" },
+        { ...message, href: "#data/2330" },
+    ])
+        assert.equal(reportNavigationHash(frame, frame, data), null);
+    assert.equal(studioRoute("#data").page, "overview");
+});
+
+test("the actual report link posts to its host and keeps standalone navigation", () => {
+    const script = readFileSync(
+        new URL(
+            "../../../../tasks/20261024-strength-weakening-flags/web-report/app.js",
+            import.meta.url,
+        ),
+        "utf8",
+    );
+    const html = readFileSync(
+        new URL(
+            "../../../../tasks/20261024-strength-weakening-flags/web-report/index.html",
+            import.meta.url,
+        ),
+        "utf8",
+    );
+    const link = html.match(/<a\b[^>]*\bid="shared-data-link"[^>]*>/)?.[0];
+    assert.ok(link);
+    assert.match(link, /href="\/#data"/);
+    assert.doesNotMatch(link, /target=/);
+    for (const embedded of [true, false]) {
+        let click: ((event: { preventDefault(): void }) => void) | undefined;
+        let start: (() => Promise<void>) | undefined;
+        let prevented = false;
+        const messages: unknown[] = [];
+        const frame = {};
+        const parent = {
+            postMessage: (data: unknown, target: string) => {
+                assert.equal(target, "*");
+                messages.push(data);
+            },
+        };
+        const page: Record<string, unknown> = {
+            ReportKit: {},
+            REPORT_READY: new Promise(() => {}),
+        };
+        page.parent = embedded ? parent : page;
+        runInNewContext(script, {
+            window: page,
+            document: {
+                querySelector: (selector: string) => {
+                    assert.equal(selector, "#shared-data-link");
+                    return {
+                        addEventListener: (
+                            type: string,
+                            handler: typeof click,
+                        ) => {
+                            assert.equal(type, "click");
+                            click = handler;
+                        },
+                    };
+                },
+                addEventListener: (type: string, handler: typeof start) => {
+                    assert.equal(type, "DOMContentLoaded");
+                    start = handler;
+                },
+            },
+        });
+        assert.ok(start);
+        void start();
+        assert.ok(click);
+        click({
+            preventDefault: () => {
+                prevented = true;
+            },
+        });
+        assert.equal(prevented, embedded);
+        assert.equal(messages.length, embedded ? 1 : 0);
+        if (embedded)
+            assert.equal(
+                reportNavigationHash(frame, frame, messages[0]),
+                "#data",
+            );
+    }
 });

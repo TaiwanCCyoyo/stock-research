@@ -51,3 +51,11 @@ C與D正式成果合併、符合研究交付條件後，才依 `scratch_runs` �
 | `strength-flags-presentation` | D、保留          | 本工作包報告與閱讀入口的獨立checkout，待正常PR流程。                                             |
 
 沒有建立新自動追蹤或排程，重開機後不會自動啟動C；後續只接續保存結果的交付。
+
+## 2026-10-29 窄範圍審查修正
+
+- `report.md` 的 CORE 兩項區間上界改為 -10.17、-1.92 pp，僅修正保存值的四捨五入文字。
+- 共用資料入口在 iframe 中傳送固定 `rk:navigate`／`#data` 訊息；主頁只接受自己的 report frame 與這個固定路由，沿用既有 sandbox 權限。獨立頁保留一般 `/#data` 連結。沒有新增 top-navigation 或 popup 權限，也未改 frozen kit。
+- 作者執行：report-library／主頁路由 12 項 Node 測試、既有報告服務與實際 viewer sandbox 等 17 項 Node 測試全部通過；`npm run build` 通過 TypeScript 與 Vite 建置。建置仍有 bundle 大小與既有 shell child-process deprecation 警告，沒有因此調整安全設定。
+- 以上是程式與離線測試證據。實際桌面／手機的排版、字型、表格捲動、焦點、iframe 高度／主題與點擊導覽仍未驗收；既有 file 預覽安全拒絕維持，不以另一瀏覽器或服務迴避。未啟動預覽服務或部署。
+- 本輪沒有重新產生資料 chunks、CSV 附錄、研究結果或收據，也沒有修改卡片引文、baseline、hold 或排程。C #111 必須先合併，D #113 才可合併；本輪不執行合併或正式 APPROVE。
