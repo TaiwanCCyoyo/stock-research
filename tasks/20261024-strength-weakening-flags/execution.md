@@ -62,7 +62,8 @@ Windows I/O counters 包含 cache，不能當實體磁碟吞吐；pool startup �
 ## 已核實的密鑰掃描誤報
 
 Owner 於 2026-10-28 同意精確登記本批 46 個雜湊誤報：41 個最終結果 SHA-256、
-4 個共用家族原有的已發布檔校驗值、1 個 Git commit；沒有逐股中間檔或 checkpoint 雜湊。
+3 個共用家族原有發布檔的 SHA-256 校驗值、1 個 caller 日期序列的 `calendar.sha256` object_digest、
+1 個 Git commit；沒有逐股中間檔或 checkpoint 雜湊。
 `.secrets.baseline` 只新增兩個 JSON 結果路徑的 Windows／POSIX 精確紀錄，共 92 筆，
 既有紀錄與掃描設定保持原值。檔案由 1,000,345 增至 1,028,277 bytes，低於 1 MiB。
 
