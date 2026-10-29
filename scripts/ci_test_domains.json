@@ -545,18 +545,24 @@
                 "research_core/multi_timeframe_ma_core_v1.py",
                 "research_core/multi_timeframe_ma_panel_v1.py",
                 "research_core/multi_timeframe_ma_weeks_v1.py",
+                "research_core/multi_timeframe_ma_counts_v1.py",
                 "tasks/20261027-multi-timeframe-ma/core-handoff.md",
                 "tasks/20261027-multi-timeframe-ma/panel-handoff.md",
                 "tasks/20261027-multi-timeframe-ma/week-calendar-handoff.md",
+                "tasks/20261027-multi-timeframe-ma/counts-handoff.md",
                 "tasks/20261027-multi-timeframe-ma/mission.md",
                 "tasks/20261027-multi-timeframe-ma/data-contract.md",
+                "research_core/momentum_only_v1.py",
+                "research_core/pattern_scan_events_v1.py",
+                "research_core/pattern_scan_groups_v1.py",
                 "research_core/derived_features.py",
                 "research_core/technical_daily_v1.py"
             ],
             "tests": [
                 "scripts/tests/test_multi_timeframe_ma_core_v1.py",
                 "scripts/tests/test_multi_timeframe_ma_panel_v1.py",
-                "scripts/tests/test_multi_timeframe_ma_weeks_v1.py"
+                "scripts/tests/test_multi_timeframe_ma_weeks_v1.py",
+                "scripts/tests/test_multi_timeframe_ma_counts_v1.py"
             ]
         },
         "entry_window": {
@@ -689,6 +695,7 @@
         "scripts/tests/test_momentum_forward_v1.py",
         "scripts/tests/test_momentum_only_v1.py",
         "scripts/tests/test_multi_timeframe_ma_core_v1.py",
+        "scripts/tests/test_multi_timeframe_ma_counts_v1.py",
         "scripts/tests/test_multi_timeframe_ma_panel_v1.py",
         "scripts/tests/test_multi_timeframe_ma_weeks_v1.py",
         "scripts/tests/test_multiple_outcomes_v1.py",
