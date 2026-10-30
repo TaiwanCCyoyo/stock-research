@@ -93,7 +93,14 @@ def _overlaps(left: Path, right: Path) -> bool:
 def _git_read(root: Path, *arguments: str) -> str:
     command = ["git", "-c", "core.quotePath=false", "-C", str(root), *arguments]
     try:
-        result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", check=False)
+        result = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            check=False,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )
     except (OSError, UnicodeError) as error:
         LOGGER.warning("Git identity check could not run: root=%s error=%s", root, error)
         raise ValueError(f"Git worktree identity check failed: {error}") from error
