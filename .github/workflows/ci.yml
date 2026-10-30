@@ -10,36 +10,28 @@ permissions:
     contents: read
 
 concurrency:
-    # Metadata edits must neither cancel validation nor replace its check result.
-    # A running Ubuntu no-op lets Actions evaluate the distinct job name; a job-level
-    # skip leaves the name expression unevaluated. All real checks remain on Windows.
-    group: ${{ github.workflow }}-${{ github.event.action == 'edited' && github.event.changes.base == null && github.run_id || github.event.pull_request.number || github.run_id }}
-    cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+    # Metadata reruns validate normally without interrupting the active run.
+    # New code, base changes and ready-for-review events supersede the old context.
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+    cancel-in-progress: ${{ github.event_name == 'pull_request' && !(github.event.action == 'edited' && github.event.changes.base == null) }}
 
 jobs:
     repository-checks:
-        name: ${{ github.event.action == 'edited' && github.event.changes.base == null && 'metadata-edit-ignored' || 'repository-checks' }}
-        runs-on: ${{ github.event.action == 'edited' && github.event.changes.base == null && 'ubuntu-latest' || 'windows-latest' }}
+        name: repository-checks
+        runs-on: windows-latest
         timeout-minutes: 60
         env:
-            METADATA_EDIT: ${{ github.event.action == 'edited' && github.event.changes.base == null }}
             PRE_COMMIT_HOME: ${{ github.workspace }}/.cache/pre-commit
         steps:
-            - name: Metadata edit ignored
-              if: env.METADATA_EDIT == 'true'
-              run: echo "Title/body edit only; code validation is unchanged."
             - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-              if: env.METADATA_EDIT != 'true'
               with:
                   persist-credentials: false
                   fetch-depth: 0
             # .python-version is the single exact Python pin; a loose "3.12" ran the runner's stale 3.12.10.
             - name: Read Python pin
-              if: env.METADATA_EDIT != 'true'
               id: python-version
               run: '"version=$((Get-Content .python-version -Raw).Trim())" >> $env:GITHUB_OUTPUT'
             - uses: astral-sh/setup-uv@f0ec1fc3b38f5e7cd731bb6ce540c5af426746bb # v6.1.0
-              if: env.METADATA_EDIT != 'true'
               with:
                   version: "0.13.6"
                   enable-cache: true
@@ -49,7 +41,6 @@ jobs:
                       .python-version
                   python-version: ${{ steps.python-version.outputs.version }}
             - name: Select test scope
-              if: env.METADATA_EDIT != 'true'
               id: scope
               env:
                   CHECK_BASE: ${{ github.event.pull_request.base.sha }}
@@ -63,17 +54,14 @@ jobs:
                   }
                   if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             - name: Install dependencies
-              if: env.METADATA_EDIT != 'true'
               run: uv sync --locked --group dev --group viewer --group static-report
             - name: Identify hook interpreter
-              if: env.METADATA_EDIT != 'true'
               id: hook-python
               run: |
                   $identity = uv run --no-sync python -c "import hashlib, sys; print(hashlib.sha256((sys.version + sys.executable).encode()).hexdigest())"
                   if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
                   "identity=$identity" >> $env:GITHUB_OUTPUT
             - name: Restore hook environments
-              if: env.METADATA_EDIT != 'true'
               id: hook-cache
               uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
               with:
@@ -81,19 +69,18 @@ jobs:
                   key: pre-commit-${{ runner.os }}-${{ runner.arch }}-${{ steps.hook-python.outputs.identity }}-${{ hashFiles('.pre-commit-config.yaml', 'uv.lock') }}
             - name: Prepare hook environments
               id: hook-environments
-              if: env.METADATA_EDIT != 'true' && steps.hook-cache.outputs.cache-hit != 'true'
+              if: steps.hook-cache.outputs.cache-hit != 'true'
               run: |
                   uv run --no-sync pre-commit install-hooks
                   if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             # Save complete environments before checks; later failure/cancellation cannot undo the upload.
             - name: Save hook environments
-              if: env.METADATA_EDIT != 'true' && steps.hook-cache.outputs.cache-hit != 'true' && steps.hook-environments.outcome == 'success'
+              if: steps.hook-cache.outputs.cache-hit != 'true' && steps.hook-environments.outcome == 'success'
               uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
               with:
                   path: ${{ env.PRE_COMMIT_HOME }}
                   key: ${{ steps.hook-cache.outputs.cache-primary-key }}
             - name: Repository checks
-              if: env.METADATA_EDIT != 'true'
               env:
                   CHECK_BASE: ${{ github.event.pull_request.base.sha }}
                   CHECK_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
@@ -107,22 +94,22 @@ jobs:
                   }
                   if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             - name: Draft selector and CI contracts
-              if: env.METADATA_EDIT != 'true' && github.event_name == 'pull_request' && github.event.pull_request.draft && steps.scope.outputs.full == 'true'
+              if: github.event_name == 'pull_request' && github.event.pull_request.draft && steps.scope.outputs.full == 'true'
               run: uv run --no-sync python -m pytest --durations=20 scripts/tests/test_ci_scope.py scripts/tests/test_mypy_scopes.py scripts/tests/test_file_hygiene.py
             - name: Draft full validation remains pending
-              if: env.METADATA_EDIT != 'true' && github.event_name == 'pull_request' && github.event.pull_request.draft && steps.scope.outputs.full == 'true'
+              if: github.event_name == 'pull_request' && github.event.pull_request.draft && steps.scope.outputs.full == 'true'
               run: |
                   "::error::Full validation remains pending for this draft. Mark ready for review to run it; this check does not certify a pass."
                   exit 1
             - name: Setup Node
-              if: env.METADATA_EDIT != 'true' && steps.scope.outputs.frontend == 'true'
+              if: steps.scope.outputs.frontend == 'true'
               uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
               with:
                   node-version: "24.22.2"
                   cache: npm
                   cache-dependency-path: research_web/package-lock.json
             - name: Frontend validation
-              if: env.METADATA_EDIT != 'true' && steps.scope.outputs.frontend == 'true'
+              if: steps.scope.outputs.frontend == 'true'
               working-directory: research_web
               run: |
                   npm ci
@@ -134,10 +121,10 @@ jobs:
                   npm run build
                   if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             - name: Selected Python tests
-              if: env.METADATA_EDIT != 'true' && steps.scope.outputs.run_tests == 'true'
+              if: steps.scope.outputs.run_tests == 'true'
               run: uv run --no-sync python scripts/ci_scope.py --execute --plan .tmp/ci-plan.json
             - name: Publish scope explanation
-              if: always() && env.METADATA_EDIT != 'true'
+              if: always()
               run: |
                   if (Test-Path .tmp/ci-plan.json) {
                       $plan = Get-Content .tmp/ci-plan.json -Raw | ConvertFrom-Json

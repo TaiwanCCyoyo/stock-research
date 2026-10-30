@@ -2,8 +2,10 @@
 
 The implementing agent owns [PR follow-through](git-workflow.md#pr-follow-through): assess findings, fix and verify valid issues within scope, push the fixes, and promptly resolve addressed threads before waiting for current-head CI and renewed review. Resolution does not guarantee that a new review will start; verify its actual status before reporting completion. The owner retains merge authority.
 
-Target repository: `TaiwanCCyoyo/stock-research`, base `main`. Branch protection has not been
-verified for this repository; see [PR setup](pr-setup.md).
+Target repository: `TaiwanCCyoyo/stock-research`, base `main`. A read-only check on
+2026-10-31 confirmed `repository-checks` is required from GitHub Actions App 15368
+(`strict=false`). Recheck current server settings when diagnosing a blocked PR;
+this observation does not authorize changing them. See [PR setup](pr-setup.md).
 
 ## Current workflow
 
@@ -28,10 +30,13 @@ verified for this repository; see [PR setup](pr-setup.md).
   contracts, because CI never checks out or runs producer code.
   Legacy files outside the change are not newly subjected to targeted type checks.
   It does not download market data, initialize the data submodule or run studies.
-- PR title/body edits run only a separately named Ubuntu metadata no-op,
-  with a separate concurrency group. They neither replace `repository-checks`
-  nor cancel an in-flight validation. Base-branch edits still validate, as do
-  new commits and ready-for-review events. Manual dispatch retains full validation.
+- PR title/body edits run real Windows `repository-checks` with the normal
+  selected scope. All PR events share one concurrency group, but metadata edits
+  do not cancel its active run. New commits, base edits and ready-for-review
+  events supersede old validation; manual dispatch retains full validation.
+  Metadata edits therefore cost another scoped run. See [event semantics and
+  hosted acceptance](ci-metadata-validation.md), including pending-run replacement
+  and the distinction between successful checks and actual merge eligibility.
 - Hooks and selected tests read the same merge-base/head pair from the scope
   plan. pre-commit's `--from-ref/--to-ref` already diffs from the merge base;
   passing the plan's pair keeps both steps on one recorded comparison.
