@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { reportFrameSrc, reportNavigationHash, statusLabel } from "./model";
 import { useReportIndex } from "./useReportIndex";
+import { ReportIndexNotice } from "./ReportIndexNotice";
 import { SourceInfo } from "../../components/ui/primitives";
 import "./reports.css";
 
@@ -29,7 +30,7 @@ export function ReportViewer({
     palette: string;
     appearance: string;
 }) {
-    const { reports, error } = useReportIndex();
+    const { reports, error, issue, loading, retry } = useReportIndex();
     const report = reports?.find((r) => r.id === reportId);
     const frame = useRef<HTMLIFrameElement>(null);
     // The first-paint theme is fixed in the URL; later changes are posted, so the
@@ -92,20 +93,42 @@ export function ReportViewer({
                 </a>
             </div>
             <p className="u-notice">
-                歷史研究，不是買賣訊號。請留意報告中的研究限制。
+                這份報告分析過去的股票表現，不能直接當作現在買進或賣出的依據。
             </p>
-            {error && (
-                <div role="alert" className="u-notice">
-                    <p>報告清單暫時無法讀取。</p>
-                    <SourceInfo>
-                        <p>{error}</p>
-                    </SourceInfo>
-                </div>
+            {issue && (
+                <ReportIndexNotice
+                    issue={issue}
+                    error={error}
+                    loading={loading}
+                    retry={retry}
+                    reload={() => window.location.reload()}
+                />
             )}
-            {reports && !report && (
+            {loading && !issue && (
+                <p role="status" className="u-muted">
+                    正在讀取報告資訊…
+                </p>
+            )}
+            {reports && !report && !issue && (
                 <div role="alert" className="u-notice">
-                    <p>找不到這份報告，請返回研究頁選擇其他報告。</p>
-                    <SourceInfo>
+                    <strong>這份報告目前不在清單中</strong>
+                    <p>
+                        連結可能已變更，或這份報告尚未加入目前的網站。你可以重新讀取清單，或返回研究列表選擇報告。
+                    </p>
+                    <div className="u-actions">
+                        <button
+                            type="button"
+                            className="u-btn"
+                            onClick={retry}
+                            disabled={loading}
+                        >
+                            {loading ? "正在重新讀取…" : "重新讀取報告資訊"}
+                        </button>
+                        <a className="u-btn" href="#studies">
+                            返回研究列表
+                        </a>
+                    </div>
+                    <SourceInfo label="查看查找詳情">
                         <p>報告識別：{reportId}</p>
                         <p>
                             預期位置：<code>tasks/{reportId}/web-report/</code>

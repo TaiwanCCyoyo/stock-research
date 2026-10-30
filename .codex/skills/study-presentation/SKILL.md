@@ -46,6 +46,14 @@ over slogans or fragments that require interpretation. Clarify what a displayed
 date means; do not imply task creation is publication or completion. Simplify
 labels without changing the underlying research verdict or implying approval.
 
+Design failure states as part of the reading route. Explain what could not be
+loaded, what remains usable, and the next available action. Distinguish missing
+reports, connection failures and mismatched versions when evidence permits;
+never imply the report itself is missing just because its index failed. Label
+technical diagnostics as error details, not data sources. Keep retries bounded
+and user-initiated, preserve version checks, and do not promise that a refresh
+will repair a persistent build inconsistency.
+
 Before calling the reading view ready, assess whether a new reader can explain
 the question, comparison, conclusion and caveat without the chat. Check actual
 desktop/narrow-screen reading and meaningful interactions when permitted. Source

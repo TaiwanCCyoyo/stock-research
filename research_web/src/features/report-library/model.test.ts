@@ -10,6 +10,8 @@ import {
     reportTags,
     statusLabel,
     validateReportIndex,
+    readReportIndex,
+    ReportIndexError,
     type ReportEntry,
 } from "./model.ts";
 
@@ -22,6 +24,56 @@ const entry = (id: string, title: string, tags: string[]): ReportEntry => ({
     period: "",
     kit: "v1",
     tags,
+});
+
+test("report loading distinguishes retryable failures without accepting mismatched versions", async () => {
+    const signal = new AbortController().signal;
+    const responses = [
+        new Response("unavailable", { status: 503 }),
+        new Response("<html>not an index</html>"),
+        Response.json({
+            schema: "research-reports.v1",
+            version: "development",
+            reports: [],
+        }),
+        Response.json({
+            schema: "research-reports.v1",
+            version: "release-123",
+            reports: [],
+        }),
+    ];
+    let calls = 0;
+    const fetcher: typeof fetch = async (url, options) => {
+        assert.equal(url, "/reports/index.json");
+        assert.equal(options?.signal, signal);
+        assert.equal(options?.cache, "no-store");
+        return responses[calls++]!;
+    };
+    for (const code of ["http", "invalid_index", "version_mismatch"]) {
+        await assert.rejects(
+            readReportIndex(signal, "release-123", fetcher),
+            (error: unknown) =>
+                error instanceof ReportIndexError && error.code === code,
+        );
+    }
+    assert.deepEqual(
+        (await readReportIndex(signal, "release-123", fetcher)).reports,
+        [],
+    );
+    assert.equal(calls, 4);
+    const aborted = new AbortController();
+    aborted.abort();
+    await assert.rejects(
+        readReportIndex(
+            aborted.signal,
+            "release-123",
+            async (_url, options) => {
+                options?.signal?.throwIfAborted();
+                return responses[3]!;
+            },
+        ),
+        { name: "AbortError" },
+    );
 });
 
 test("search matches every word across title, id and tags, and a tag narrows", () => {

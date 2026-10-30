@@ -17,6 +17,44 @@ export type ReportIndex = {
     reports: ReportEntry[];
 };
 
+export type ReportIndexIssue =
+    "version_mismatch" | "invalid_index" | "http" | "network";
+
+export class ReportIndexError extends Error {
+    readonly code: ReportIndexIssue;
+    constructor(code: ReportIndexIssue, message: string) {
+        super(message);
+        this.name = "ReportIndexError";
+        this.code = code;
+    }
+}
+
+export async function readReportIndex(
+    signal: AbortSignal,
+    expectedVersion?: string,
+    fetcher: typeof fetch = fetch,
+): Promise<ReportIndex> {
+    const response = await fetcher("/reports/index.json", {
+        signal,
+        cache: "no-store",
+    });
+    if (!response.ok)
+        throw new ReportIndexError(
+            "http",
+            `報告清單讀取失敗（HTTP ${response.status}）`,
+        );
+    let value: unknown;
+    try {
+        value = await response.json();
+    } catch {
+        throw new ReportIndexError(
+            "invalid_index",
+            "報告清單回傳的內容不是有效 JSON。",
+        );
+    }
+    return validateReportIndex(value, expectedVersion);
+}
+
 const STATUS_LABELS: Record<string, string> = {
     exploratory: "探索中",
     descriptive: "描述性結果",
@@ -40,12 +78,18 @@ export function validateReportIndex(
         (value as { schema?: unknown }).schema !== "research-reports.v1" ||
         !Array.isArray((value as { reports?: unknown }).reports)
     )
-        throw new Error("報告清單格式不符，無法讀取。");
+        throw new ReportIndexError(
+            "invalid_index",
+            "報告清單格式不符，無法讀取。",
+        );
     if (
         expectedVersion !== undefined &&
         (value as { version?: unknown }).version !== expectedVersion
     )
-        throw new Error("報告索引版本與目前頁面不一致，請重新載入頁面。");
+        throw new ReportIndexError(
+            "version_mismatch",
+            "報告索引版本與目前頁面不一致，請重新載入頁面。",
+        );
     return value as ReportIndex;
 }
 

@@ -4,6 +4,69 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createServer } from "vite";
 
+test("report error notices explain partial availability and offer the right user action", async () => {
+    const server = await createServer({
+        logLevel: "silent",
+        server: { middlewareMode: true, hmr: false },
+    });
+    try {
+        const { ReportIndexNotice } = await server.ssrLoadModule(
+            "/src/features/report-library/ReportIndexNotice.tsx",
+        );
+        const descendants = (element) => {
+            if (!element || typeof element !== "object") return [];
+            return [
+                element,
+                ...[element.props?.children]
+                    .flat(Infinity)
+                    .flatMap(descendants),
+            ];
+        };
+        for (const issue of [
+            "version_mismatch",
+            "invalid_index",
+            "http",
+            "network",
+        ]) {
+            let retried = 0,
+                reloaded = 0;
+            const props = {
+                issue,
+                error: "synthetic diagnostic",
+                loading: false,
+                retry: () => retried++,
+                reload: () => reloaded++,
+            };
+            const element = ReportIndexNotice(props);
+            const html = renderToStaticMarkup(element);
+            assert.match(html, /如果下方已顯示報告/);
+            assert.match(html, /查看錯誤詳情/);
+            assert.doesNotMatch(html, /資料來源/);
+            assert.match(html, /href="#studies"/);
+            assert.doesNotMatch(html, /<details[^>]*\bopen/);
+            assert.equal(
+                retried + reloaded,
+                0,
+                "no automatic retry or page reload",
+            );
+            const button = descendants(element).find(
+                (node) => node.type === "button",
+            );
+            button.props.onClick();
+            assert.equal(reloaded, issue === "version_mismatch" ? 1 : 0);
+            assert.equal(retried, issue === "version_mismatch" ? 0 : 1);
+            const loading = ReportIndexNotice({ ...props, loading: true });
+            assert.equal(
+                descendants(loading).find((node) => node.type === "button")
+                    .props.disabled,
+                true,
+            );
+        }
+    } finally {
+        await server.close();
+    }
+});
+
 test("study cards keep unlike metrics separate and preserve reading context", async () => {
     const server = await createServer({
         logLevel: "silent",

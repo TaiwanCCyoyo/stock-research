@@ -162,6 +162,13 @@
 }
 
 /* ---------- viewer ---------- */
+.rv-notice {
+    display: grid;
+    gap: 10px;
+}
+.rv-notice p {
+    margin: 0;
+}
 .rv-page {
     max-width: none;
     min-width: 0;
