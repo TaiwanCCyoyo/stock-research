@@ -227,6 +227,251 @@
     let selected = null;
     let rows = [];
 
+    const guidedState = {
+        group: "CORE",
+        flag: "X5_MA60",
+        horizon: "252",
+        row: null,
+    };
+
+    const flagExplanations = {
+        Y3: "觀察收盤是否跌破起點時已確認的固定支撐價。",
+        X5_MA20:
+            "20 日均線是近期 20 個交易日的平均收盤價；觀察期間內收盤曾低於它，不要求當天剛跌破。",
+        X5_MA60:
+            "60 日均線是近期 60 個交易日的平均收盤價；觀察期間內收盤曾低於它，不要求當天剛跌破。",
+        X6_10: "觀察收盤是否比起點價格低至少 10%。",
+        X6_15: "觀察收盤是否比起點價格低至少 15%。",
+        X7: "布林下軌是依近期價格波動估出的下方界線；觀察收盤是否低於它。",
+        X8: "觀察新的波段高點是否低於前一個已確認高點。",
+    };
+
+    function verdictExplanation(row) {
+        const verdict = key(row, "verdict");
+        const explanations = {
+            weakens_beyond_drop:
+                "把觀察點時漲跌幅相近的事件分組比較後，仍支持出現訊號組的翻倍比例較低。這是歷史關聯，不代表訊號造成結果。",
+            weakens_with_drop:
+                "直接比較時，出現訊號組的翻倍比例較低；考慮觀察點時的漲跌幅後，證據還不夠明確。這不代表訊號已被證明有或沒有額外作用。",
+            inseparable: "可比較的資料不足，無法清楚區分兩組。",
+            opposite: "這一格的直接比較沒有顯示出現訊號組的比例較低。",
+            unresolved: "這一格的資料還沒有給出明確方向。",
+            not_applicable: "此訊號在研究中不適用。",
+        };
+        return explanations[verdict] || "此格沒有保存判讀。";
+    }
+
+    function guidedSelect(labelText, options, value, onChange) {
+        const labelNode = make("label", "filter-label", labelText);
+        const select = document.createElement("select");
+        select.setAttribute("aria-label", labelText);
+        options.forEach(([optionValue, optionLabel]) => {
+            const option = document.createElement("option");
+            option.value = optionValue;
+            option.textContent = optionLabel;
+            option.selected = optionValue === value;
+            select.append(option);
+        });
+        select.addEventListener("change", () => onChange(select.value));
+        labelNode.append(select);
+        return labelNode;
+    }
+
+    function renderGuidedExplorer() {
+        const controls = $("#guided-controls");
+        controls.replaceChildren();
+        controls.append(
+            guidedSelect(
+                "強勢組別",
+                [
+                    ["CORE", "雙重強勢"],
+                    ["LEAD_B1", "雙重強勢＋大漲日"],
+                ],
+                guidedState.group,
+                (value) => {
+                    guidedState.group = value;
+                    updateGuidedComparison();
+                },
+            ),
+            guidedSelect(
+                "轉弱訊號",
+                [
+                    ["Y3", human("flag", "Y3")],
+                    ["X5_MA20", human("flag", "X5_MA20")],
+                    ["X5_MA60", human("flag", "X5_MA60")],
+                    ["X6_10", human("flag", "X6_10")],
+                    ["X6_15", human("flag", "X6_15")],
+                    ["X7", human("flag", "X7")],
+                    ["X8", human("flag", "X8")],
+                ],
+                guidedState.flag,
+                (value) => {
+                    guidedState.flag = value;
+                    updateGuidedComparison();
+                },
+            ),
+            guidedSelect(
+                "達標期限",
+                [
+                    ["126", "半年（126 個交易日）"],
+                    ["252", "一年（252 個交易日）"],
+                ],
+                guidedState.horizon,
+                (value) => {
+                    guidedState.horizon = value;
+                    updateGuidedComparison();
+                },
+            ),
+        );
+        $("#guided-evidence-button").addEventListener("click", () => {
+            if (guidedState.row) pickRow(guidedState.row);
+        });
+        updateGuidedComparison();
+    }
+
+    function updateGuidedComparison() {
+        const row = rows.find(
+            (candidate) =>
+                baseFull(candidate) &&
+                key(candidate, "group") === guidedState.group &&
+                Number(val(candidate, "target_multiple")) === 2 &&
+                String(val(candidate, "horizon")).replace(/^H/, "") ===
+                    guidedState.horizon &&
+                String(val(candidate, "landmark")).replace(/^L/, "") === "20" &&
+                key(candidate, "flag") === guidedState.flag,
+        );
+        guidedState.row = row || null;
+        const host = $("#guided-comparison");
+        host.replaceChildren();
+        const evidenceButton = $("#guided-evidence-button");
+        evidenceButton.disabled = !row;
+        if (!row) {
+            host.append(
+                make(
+                    "p",
+                    "load-error",
+                    "這個組合沒有可用的保存結果；沒有可比較的比例。",
+                ),
+            );
+            $("#false-abandonment-card").replaceChildren();
+            return;
+        }
+
+        const triggered = val(row, "triggered_rate");
+        const notTriggered = val(row, "not_triggered_rate");
+        const difference = val(row, "pooled_difference");
+        const standardizedDifference = val(row, "standardized_difference");
+        const comparison = make("div", "rate-comparison");
+        comparison.append(
+            make(
+                "p",
+                "comparison-heading",
+                `${label(row, "group", "group")} · ${human("flag", guidedState.flag)} · ${guidedState.horizon === "126" ? "半年" : "一年"} · 2 倍目標`,
+            ),
+            make(
+                "p",
+                "signal-explanation",
+                flagExplanations[guidedState.flag] ||
+                    "此訊號的定義請見完整研究細節。",
+            ),
+        );
+        comparison.append(
+            make("p", "scale-caption", "兩組共用 0% 到 100% 刻度"),
+        );
+        const bars = make("div", "rate-bars");
+        [
+            ["已出現訊號", triggered, "triggered"],
+            ["尚未出現訊號", notTriggered, "not-triggered"],
+        ].forEach(([labelText, rate, stateClass]) => {
+            const item = make("div", `rate-item ${stateClass}`);
+            const heading = make("div", "rate-label");
+            heading.append(
+                make("span", "", labelText),
+                make("strong", "", fmtPct(rate)),
+            );
+            const track = make("div", "rate-track");
+            track.setAttribute("role", "img");
+            track.setAttribute(
+                "aria-label",
+                typeof rate === "number"
+                    ? `${labelText}翻倍比例 ${fmtPct(rate)}`
+                    : `${labelText}沒有可用的翻倍比例數值`,
+            );
+            const fill = make("span", "rate-fill");
+            if (typeof rate === "number") {
+                fill.style.width = `${Math.max(0, Math.min(100, rate * 100))}%`;
+                track.append(fill);
+            } else {
+                track.classList.add("is-missing");
+                track.textContent = "沒有可用比例，不能視為 0%";
+            }
+            const axis = make("div", "rate-axis");
+            axis.append(make("span", "", "0%"), make("span", "", "100%"));
+            item.append(heading, track, axis);
+            bars.append(item);
+        });
+        comparison.append(bars);
+        const delta = make("p", "difference-callout");
+        if (typeof difference === "number") {
+            const direction =
+                difference < 0 ? "較低" : difference > 0 ? "較高" : "相同";
+            delta.textContent = `直接比較時，出現訊號組的翻倍比例比尚未出現組${direction} ${(Math.abs(difference) * 100).toFixed(2)} 個百分點。`;
+        } else {
+            delta.textContent = "沒有可用的兩組翻倍比例差值。";
+        }
+        comparison.append(
+            delta,
+            make(
+                "p",
+                "standardized-readout",
+                `把第20日漲跌幅相近的觀察分組比較後，兩組差異為 ${typeof standardizedDifference === "number" ? `${(standardizedDifference * 100).toFixed(2)} 個百分點` : "無法判定"}。負值表示出現訊號的一組較低；差異是否夠明確，還要看下方判讀。`,
+            ),
+            make("p", "saved-verdict", verdictExplanation(row)),
+        );
+        host.append(comparison);
+
+        const costCard = $("#false-abandonment-card");
+        costCard.replaceChildren();
+        const costDetails = make("details", "cost-details");
+        costDetails.append(
+            make("summary", "", "查看計算方式、計數與資料不明時的範圍"),
+            make(
+                "p",
+                "",
+                "計算方式：第一次翻倍前已出現訊號的事件數，除以訊號狀態已知的最終翻倍事件數。訊號不明的事件另列，不當作未出現。",
+            ),
+            make(
+                "p",
+                "",
+                `第一次翻倍前出現訊號：${fmtInt(val(row, "hit_triggered_n"))}；訊號已知但未出現：${fmtInt(val(row, "hit_not_triggered_n"))}；訊號狀態不明：${fmtInt(val(row, "hit_flag_unknown_n"))}。`,
+            ),
+            make(
+                "p",
+                "",
+                `若未知訊號都當作未出現，下界為 ${fmtPct(val(row, "false_abandonment_lower"))}；若未知訊號都當作曾出現，上界為 ${fmtPct(val(row, "false_abandonment_upper"))}。這是邏輯範圍，不是信賴區間。`,
+            ),
+        );
+        costCard.append(
+            make(
+                "h3",
+                "",
+                "最後真的翻倍的事件中，也有多少之前出現過這個訊號？",
+            ),
+            make("p", "cost-rate", fmtPct(val(row, "false_abandonment_rate"))),
+            make(
+                "p",
+                "",
+                `這裡只看資料觀察完整、而且在期限內確實翻倍的事件。訊號可以在起點後第 20 個交易日之後才出現，只要早於第一次翻倍。`,
+            ),
+            make(
+                "p",
+                "muted",
+                "上方比較的是前 20 個交易日內的訊號，並排除到第 20 日（含當日）已翻倍的觀察。這張卡看的時間更長、對象也不同；不能把這個比例當成第 20 日賣出後會錯過翻倍的機率。",
+            ),
+            costDetails,
+        );
+    }
+
     function baseFull(row) {
         return splitAll(row) && eraAll(row) && full(row);
     }
@@ -242,9 +487,17 @@
     function pickRow(row) {
         selected = row;
         renderDetail();
-        document
-            .querySelector("#detail")
-            .scrollIntoView({ block: "start", behavior: "smooth" });
+        const disclosure = $("#evidence-disclosure");
+        disclosure.open = true;
+        const title = $("#detail-title");
+        title.focus({ preventScroll: true });
+        const reduceMotion =
+            window.matchMedia &&
+            window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        title.scrollIntoView({
+            block: "start",
+            behavior: reduceMotion ? "auto" : "smooth",
+        });
     }
 
     function renderPrimary() {
@@ -753,6 +1006,7 @@
             rows = summaryRows();
             if (!rows.length) throw new Error("摘要資料為空");
             linkMeta();
+            renderGuidedExplorer();
             renderPrimary();
             renderGrid();
         } catch (error) {

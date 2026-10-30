@@ -2,41 +2,41 @@
     "schema": "study-card.v2",
     "task_id": "20261024-strength-weakening-flags",
     "kind": "study",
-    "question": "強勢條件成立後，哪些轉弱訊號讓後續漲到 2／3／5／10 倍的機率下降？",
-    "answer": "28個主要比較的翻倍比例皆較低；分層後只有低於60日均線、觀察一年在兩組強勢條件下仍有下降證據，尚不批准停損規則。",
+    "question": "股票已經大漲後，哪些轉弱警訊伴隨較低的繼續上漲機會？最後大漲的股票也會出現這些警訊嗎？",
+    "answer": "一年內再翻倍的主要比較中，低於60日均線的警訊最明確。但最後翻倍的事件也常曾出現它，不能直接當成賣出規則。",
     "verdict": "mixed",
     "data_period": { "from": "2010-01-04", "to": "2026-10-12" },
     "key_numbers": [
         {
-            "label": "主要比較",
+            "label": "預先指定的主要比較",
             "value": 28,
             "unit": "count",
             "highlight": false,
             "source_excerpt": "主要比較共 28 格"
         },
         {
-            "label": "分層後仍有下降證據",
+            "label": "較嚴格檢查後仍支持下降",
             "value": 2,
             "unit": "count",
             "highlight": true,
             "source_excerpt": "其中 2 格通過分層後仍下降的固定判讀"
         },
         {
-            "label": "達標前觸發：雙重強勢",
+            "label": "最終翻倍前曾低於60日均線：雙重強勢",
             "value": 66.04,
             "unit": "percent",
             "highlight": false,
             "source_excerpt": "在雙重強勢組最後確實翻倍的完整事件中，66.04% 在首次翻倍前曾觸發低於60日均線"
         },
         {
-            "label": "達標前觸發：強勢加大漲日",
+            "label": "最終翻倍前曾低於60日均線：強勢加大漲日",
             "value": 56.64,
             "unit": "percent",
             "highlight": false,
             "source_excerpt": "雙重強勢＋大漲日組為 56.64%"
         }
     ],
-    "limitation": "歷史全已看過，僅描述關聯；達標前觸發比例不是第20日停損錯殺率。起始來源檔狀態未觀測，限制隨原收據保留。",
+    "limitation": "這是過去資料的比較，尚未驗證實際買賣績效。最終翻倍前的警訊可出現在第20日以後，不能當成第20日賣出的錯失比例。運算起始來源檔狀態未記錄，原收據保留此限制。",
     "report": {
         "web_report": "web-report/index.html",
         "markdown": "report.md"

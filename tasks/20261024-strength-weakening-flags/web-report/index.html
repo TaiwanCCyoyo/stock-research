@@ -3,14 +3,14 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>強勢條件成立後，轉弱訊號和後續上漲</title>
+        <title>已經大漲的股票，出現轉弱後，還能再翻倍嗎？</title>
         <meta
             name="report:title"
-            content="強勢條件成立後，轉弱訊號和後續上漲"
+            content="已經大漲的股票，出現轉弱後，還能再翻倍嗎？"
         />
         <meta
             name="report:summary"
-            content="描述強勢條件成立後，不同轉弱訊號與後續達標結果的歷史關係。28 個主格率皆下降，僅 2 格符合分層後仍有下降證據的判讀。"
+            content="用保存的台股歷史比較，探索強勢股票出現轉弱訊號後，後續達標率如何變化。"
         />
         <meta name="report:date" content="2026-10-28" />
         <meta name="report:status" content="descriptive" />
@@ -26,149 +26,267 @@
     <body>
         <main class="rk-page">
             <header class="rk-hero">
-                <p class="rk-eyebrow">
-                    台股 · 描述性研究 · 2010–2026 已看過的期間
-                </p>
-                <h1>強勢條件成立後，哪些轉弱訊號伴隨較低的後續達標率？</h1>
+                <p class="rk-eyebrow">台股歷史比較 · 2010–2026 已看過的期間</p>
+                <h1>已經大漲的股票，出現轉弱後，還能再翻倍嗎？</h1>
                 <p class="rk-lede">
-                    在 28
-                    個預先指定的主比較格中，轉弱訊號觸發組的達標率都低於未觸發組；只有
-                    2 格符合分層後仍有下降證據。其餘 26
-                    格雖有合併下降，標準化差異尚未確立，不能據此證明訊號沒有額外資訊。
+                    股票已經漲得很強，卻開始回落：這是大漲結束的警訊，還是上漲途中的顛簸？本研究看到，收盤低於60日均線與較低的一年翻倍比例有較明確關聯；但最後真的翻倍的觀察中，也有很多曾出現這個警訊。下面從一個例子開始看。
                 </p>
             </header>
 
             <aside class="rk-banner" role="note">
-                <strong>研究範圍：</strong
-                >這是已看過歷史期間的描述性結果，不代表因果或停損批准，也不是帳戶報酬。大漲日是以單日原始漲幅至少
-                9.5% 作為代理，並非實際漲停判定；該條件只從 2015-06
-                起可用。所有結果不明與期限未走完的觀察均保留，不等同零。
+                <strong>先知道：</strong
+                >這是已看過的歷史比較，只呈現訊號與後續結果同時出現的關係；沒有模擬實際買賣或帳戶報酬。研究把單日原始漲幅至少
+                9.5% 當作「大漲日」代理，並非實際漲停判定；這項條件只從 2015-06
+                起可用。結果不明或資料期間不足的事件都保留，不能當成零。
             </aside>
 
-            <section class="rk-section" id="overview">
+            <section
+                class="rk-section reading-guide"
+                aria-labelledby="guide-title"
+            >
                 <header>
                     <div>
-                        <span class="rk-q">整體結果</span>
-                        <h2>主比較：28 格皆下降，2 格符合分層後仍有下降證據</h2>
+                        <span class="rk-q">先看研究怎麼比較</span>
+                        <h2 id="guide-title">所有期限都從同一個起點計算</h2>
                     </div>
                 </header>
-                <p>
-                    兩格都在收盤低於 60 日均線時出現：雙重強勢組的 252
-                    日、起點後第 20
-                    日觀察點，以及雙重強勢加大漲日組的同一組設定。其他 26
-                    格只支持合併比率較低；標準化差異未確立。
-                </p>
+                <ol class="study-timeline" aria-label="研究時間順序">
+                    <li>
+                        <span class="timeline-step">起點</span
+                        ><span
+                            >符合強勢條件的交易日；以當日價格作基準，例如 100
+                            元要到 200 元才算翻倍。</span
+                        >
+                    </li>
+                    <li>
+                        <span class="timeline-step">接下來 20 個交易日</span
+                        ><span
+                            >看這段期間內是否曾出現訊號；到第 20
+                            日已達標的事件不納入比較。</span
+                        >
+                    </li>
+                    <li>
+                        <span class="timeline-step">半年／一年</span
+                        ><span
+                            >查看起點後 126／252
+                            個交易日內是否曾到達目標，不要求期末仍在目標之上；期限不從第
+                            20 日重新起算。</span
+                        >
+                    </li>
+                </ol>
                 <p class="muted">
-                    組別條件：雙重強勢＝收盤高於年線至少 60%、且相對過去 250
-                    個交易日最低收盤至少 2.5
-                    倍；雙重強勢＋大漲日再要求起點當日原始漲幅至少 9.5%。
+                    「雙重強勢」同時符合兩件事：收盤價至少是年線（過去 240
+                    個交易日的平均收盤價）的 1.6 倍，而且是過去 250
+                    個交易日最低收盤價的至少 2.5
+                    倍。另一組再要求起點當日原始漲幅至少
+                    9.5%（大漲日代理，並非漲停判定；2015-06 起可用）。
                 </p>
-                <div class="rk-table-wrap">
-                    <table class="rk-table" id="primary-table">
-                        <caption>
-                            主格只使用整體期間與合併切片；比率由保存的彙總表讀取。
-                        </caption>
-                        <thead></thead>
-                        <tbody>
-                            <tr>
-                                <td>正在載入已保存的彙總結果…</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
             </section>
 
-            <section class="rk-section" id="explore">
+            <section
+                class="rk-section guided-explorer"
+                id="guided-explorer"
+                aria-labelledby="explorer-title"
+            >
                 <header>
                     <div>
-                        <span class="rk-q">探索全部比較</span>
-                        <h2>選擇組別、達標倍數、期限、觀察點與訊號</h2>
+                        <span class="rk-q">互動比較</span>
+                        <h2 id="explorer-title">
+                            訊號出現後，達標比例差多少？
+                        </h2>
                     </div>
                 </header>
-                <p>
-                    次要格用來瀏覽保存的完整比較，不代表額外的主判讀。型態支撐與型態下緣因沒有對應型態價位而不適用；沒有已知分母的比率顯示為空值，不視為
-                    0。
+                <p class="explorer-context">
+                    固定比較 2 倍目標，觀察起點後前 20
+                    個交易日，期限為半年或一年。切換組別、訊號與期限；比例取自已保存的研究結果。同一股票在不同起點日可形成多個事件，並非每檔股票只計一次。
                 </p>
-                <div id="grid-controls" class="control-row"></div>
-                <div class="rk-table-wrap">
-                    <table class="rk-table" id="grid-table">
-                        <caption>
-                            所有保存的整體期間合併格；點選一列查看同格切片與結果細節。
-                        </caption>
-                        <thead></thead>
-                        <tbody>
-                            <tr>
-                                <td>載入中…</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            <section class="rk-section" id="detail">
-                <header>
-                    <div>
-                        <span class="rk-q">選取格的證據</span>
-                        <h2 id="detail-title">請從上方表格選一格</h2>
-                    </div>
-                </header>
-                <div id="detail-content">
-                    <p class="muted">
-                        此處會顯示差異區間、冷卻支持度、未知／設限筆數、切片比較與上漲幅度分層。
+                <div
+                    id="guided-controls"
+                    class="control-row"
+                    aria-label="比較條件"
+                ></div>
+                <div
+                    id="guided-comparison"
+                    class="guided-comparison"
+                    aria-live="polite"
+                    aria-atomic="true"
+                ></div>
+                <article
+                    id="false-abandonment-card"
+                    class="false-abandonment-card"
+                    aria-live="polite"
+                    aria-atomic="true"
+                ></article>
+                <div class="method-note">
+                    <h3>為什麼還要看相似漲幅的比較？</h3>
+                    <p>
+                        起點後漲得較多或較少，之後達標機會本來就可能不同。研究也把觀察點時漲幅相近的事件放在一起比較；這個差異仍是粗略分組的歷史關聯，不能證明訊號造成結果，也不是完全控制價格變化。
                     </p>
                 </div>
+                <details class="signal-definitions">
+                    <summary>第一次看這些訊號？查看白話說明</summary>
+                    <ul>
+                        <li>
+                            20／60 日均線：過去 20／60
+                            個交易日的平均收盤價；研究看收盤是否曾低於均線，不要求當天剛跌破。
+                        </li>
+                        <li>
+                            布林下軌：依近期價格波動估出的下方界線；訊號是收盤低於它。
+                        </li>
+                        <li>
+                            較低高點：新確認的波段高點低於前一個已確認高點。
+                        </li>
+                        <li>
+                            起點固定支撐：起點時已確認的支撐價，之後不隨新低點改動。
+                        </li>
+                        <li>
+                            下跌 10%／15%：相對起點價格下跌，不是相對前一天。
+                        </li>
+                    </ul>
+                </details>
+                <button
+                    id="guided-evidence-button"
+                    class="secondary-button"
+                    type="button"
+                >
+                    查看這個比較的完整證據
+                </button>
             </section>
 
-            <section class="rk-section" id="cost">
-                <header>
-                    <div>
-                        <span class="rk-q">觸發代價如何計算</span>
-                        <h2>首次達標前已觸發的訊號比例</h2>
+            <details class="evidence-disclosure" id="evidence-disclosure">
+                <summary>查看完整研究結果、全部比較表與技術細節</summary>
+                <section class="rk-section" id="overview">
+                    <header>
+                        <div>
+                            <span class="rk-q">整體結果</span>
+                            <h2>
+                                主比較：28 格皆下降，2 格符合分層後仍有下降證據
+                            </h2>
+                        </div>
+                    </header>
+                    <p>
+                        兩格都在收盤低於 60 日均線時出現：雙重強勢組的 252
+                        日、起點後第 20
+                        日觀察點，以及雙重強勢加大漲日組的同一組設定。其他 26
+                        格只支持合併比率較低；標準化差異未確立。
+                    </p>
+                    <p class="muted">
+                        組別條件：雙重強勢＝收盤高於年線至少 60%、且相對過去 250
+                        個交易日最低收盤至少 2.5
+                        倍；雙重強勢＋大漲日再要求起點當日原始漲幅至少 9.5%。
+                    </p>
+                    <div class="rk-table-wrap">
+                        <table class="rk-table" id="primary-table">
+                            <caption>
+                                主格只使用整體期間與合併切片；比率由保存的彙總表讀取。
+                            </caption>
+                            <thead></thead>
+                            <tbody>
+                                <tr>
+                                    <td>正在載入已保存的彙總結果…</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
-                </header>
-                <p>
-                    錯殺代價以 T/(T+F)
-                    表示，並另外呈現結果不明狀態的邏輯下界與上界；這些界限不是信賴區間。計數只使用日曆期滿、曾於期限內達標的事件，並要求訊號出現在首次達標之前。這是代價描述，不是起點後第
-                    20
-                    日風險集或停損規則績效；同一訊號跨觀察點的代價相同是預期情況。
-                </p>
-                <p>
-                    此計算使用達標前觸發、未觸發與結果不明訊號的專用計數；不以觀察點風險集的觸發後達標結果替代。
-                </p>
-            </section>
+                </section>
 
-            <section class="rk-section" id="limits">
-                <header>
-                    <div>
-                        <span class="rk-q">定義與限制</span>
-                        <h2>觀察到的關係不能直接轉成交易規則</h2>
+                <section class="rk-section" id="explore">
+                    <header>
+                        <div>
+                            <span class="rk-q">探索全部比較</span>
+                            <h2>次要探索：其他倍數與全部比較格</h2>
+                        </div>
+                    </header>
+                    <p>
+                        這裡保留 3、5、10
+                        倍等次要格，供探索保存結果；它們不構成新的確認性結論。型態支撐與型態下緣因沒有對應型態價位而不適用；沒有已知分母的比率顯示為空值，不視為
+                        0。
+                    </p>
+                    <div id="grid-controls" class="control-row"></div>
+                    <div class="rk-table-wrap">
+                        <table class="rk-table" id="grid-table">
+                            <caption>
+                                所有保存的整體期間合併格；點選一列查看同格切片與結果細節。
+                            </caption>
+                            <thead></thead>
+                            <tbody>
+                                <tr>
+                                    <td>載入中…</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
-                </header>
-                <ul class="definition-list">
-                    <li>
-                        <b>跌破起點固定支撐低點：</b
-                        >取起點收盤下方、起點時已確認的 1.5 ATR
-                        低點中最高者，不是最近低點。
-                    </li>
-                    <li>
-                        <b>收盤低於 20／60 日均線：</b
-                        >只要求收盤低於均線，不要求當日剛發生跌破。
-                    </li>
-                    <li><b>較起點下跌 10%／15%：</b>以起點價格為固定基準。</li>
-                    <li><b>收盤低於布林下軌：</b>依保存訊號狀態判讀。</li>
-                    <li><b>新確認較低高點：</b>依保存訊號狀態判讀。</li>
-                    <li>
-                        <b>型態支撐／型態下緣：</b
-                        >因缺少對應的型態支撐與型態下緣價位而不適用。
-                    </li>
-                </ul>
-                <p>
-                    各組訊號、強勢條件與後續結果皆在同一段已看過的歷史資料中定義。保存的區間僅呈現既定估計；瀏覽器不會重新估計或依結果分類。
-                </p>
-                <p>
-                    執行開始時未記錄來源檔狀態，因此無法完全確認運算期間來源是否曾改寫後復原；原紀錄保留這項限制。
-                </p>
-            </section>
+                </section>
+
+                <section class="rk-section" id="detail">
+                    <header>
+                        <div>
+                            <span class="rk-q">選取格的證據</span>
+                            <h2 id="detail-title" tabindex="-1">
+                                請從上方表格選一格
+                            </h2>
+                        </div>
+                    </header>
+                    <div id="detail-content">
+                        <p class="muted">
+                            此處會顯示差異區間、冷卻支持度、未知／設限筆數、切片比較與上漲幅度分層。
+                        </p>
+                    </div>
+                </section>
+
+                <section class="rk-section" id="cost">
+                    <header>
+                        <div>
+                            <span class="rk-q">觸發代價如何計算</span>
+                            <h2>首次達標前已觸發的訊號比例</h2>
+                        </div>
+                    </header>
+                    <p>
+                        錯殺代價以 T/(T+F)
+                        表示，並另外呈現結果不明狀態的邏輯下界與上界；這些界限不是信賴區間。計數只使用日曆期滿、曾於期限內達標的事件，並要求訊號出現在首次達標之前。這是代價描述，不是起點後第
+                        20
+                        日風險集或停損規則績效；同一訊號跨觀察點的代價相同是預期情況。
+                    </p>
+                    <p>
+                        此計算使用達標前觸發、未觸發與結果不明訊號的專用計數；不以觀察點風險集的觸發後達標結果替代。
+                    </p>
+                </section>
+
+                <section class="rk-section" id="limits">
+                    <header>
+                        <div>
+                            <span class="rk-q">定義與限制</span>
+                            <h2>觀察到的關係不能直接轉成交易規則</h2>
+                        </div>
+                    </header>
+                    <ul class="definition-list">
+                        <li>
+                            <b>跌破起點固定支撐低點：</b
+                            >取起點收盤下方、起點時已確認的 1.5 ATR
+                            低點中最高者，不是最近低點。
+                        </li>
+                        <li>
+                            <b>收盤低於 20／60 日均線：</b
+                            >只要求收盤低於均線，不要求當日剛發生跌破。
+                        </li>
+                        <li>
+                            <b>較起點下跌 10%／15%：</b>以起點價格為固定基準。
+                        </li>
+                        <li><b>收盤低於布林下軌：</b>依保存訊號狀態判讀。</li>
+                        <li><b>新確認較低高點：</b>依保存訊號狀態判讀。</li>
+                        <li>
+                            <b>型態支撐／型態下緣：</b
+                            >因缺少對應的型態支撐與型態下緣價位而不適用。
+                        </li>
+                    </ul>
+                    <p>
+                        各組訊號、強勢條件與後續結果皆在同一段已看過的歷史資料中定義。保存的區間僅呈現既定估計；瀏覽器不會重新估計或依結果分類。
+                    </p>
+                    <p>
+                        執行開始時未記錄來源檔狀態，因此無法完全確認運算期間來源是否曾改寫後復原；原紀錄保留這項限制。
+                    </p>
+                </section>
+            </details>
 
             <footer class="report-links">
                 <a id="source-link" href="#" rel="noopener">研究資料來源</a>
