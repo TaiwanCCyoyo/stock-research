@@ -297,7 +297,7 @@ def _state(item: Preview, primary: Path, directory: Path, environment: Mapping[s
         reports = _json_response(item.web_port, "/reports/index.json")
         if not reports or reports.get("version") != "development":
             raise PreviewError("報告清單與開發頁面版本不同，請由開發 session 檢查。")
-        row.update(status="ready", message="使用與正式版相同的資料設定；頁面與 API 來自這個分支。", url=f"http://127.0.0.1:{item.web_port}/{item.route}")
+        row.update(status="ready", message="使用正式版的資料來源，呈現開發中的修改。", url=f"http://127.0.0.1:{item.web_port}/{item.route}")
     except (PreviewError, OSError, ValueError, subprocess.SubprocessError) as exc:
         row["message"] = str(exc) if isinstance(exc, PreviewError) else "無法確認預覽狀態，請由開發 session 檢查登記與啟動紀錄。"
     return row
