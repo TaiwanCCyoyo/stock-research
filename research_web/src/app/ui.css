@@ -328,17 +328,20 @@ a.u-card:hover {
     font-size: 13px;
     color: var(--muted);
 }
-.u-source summary {
+span.u-source {
+    display: inline-flex;
+}
+details.u-source summary {
     display: inline-flex;
     align-items: center;
     gap: 6px;
     cursor: pointer;
     list-style: none;
 }
-.u-source summary::-webkit-details-marker {
+details.u-source summary::-webkit-details-marker {
     display: none;
 }
-.u-source summary::before {
+details.u-source summary::before {
     content: "i";
     display: grid;
     place-items: center;
@@ -350,12 +353,83 @@ a.u-card:hover {
     font-weight: 800;
     font-style: italic;
 }
-.u-source[open] > div {
+details.u-source[open] > div {
     margin-top: 8px;
     padding: 12px 14px;
     border-radius: var(--radius-md);
     background: var(--chip);
     line-height: 1.6;
+}
+.studio .u-source-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    text-align: left;
+}
+.u-source-icon {
+    display: grid;
+    place-items: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 1.5px solid currentColor;
+    font-size: 10px;
+    font-weight: 800;
+    font-style: italic;
+}
+.u-source-panel {
+    position: fixed;
+    z-index: 60;
+    box-sizing: border-box;
+    width: max-content;
+    max-width: min(560px, calc(100vw - 24px));
+    max-height: calc(100dvh - 24px);
+    overflow: auto;
+    overscroll-behavior: contain;
+    overflow-wrap: anywhere;
+    padding: 12px 14px;
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    box-shadow: var(--shadow-lift);
+    color: var(--ink);
+    font-size: 13px;
+    line-height: 1.6;
+}
+.u-source-panel > :first-child {
+    margin-top: 0;
+}
+.u-source-panel > :last-child {
+    margin-bottom: 0;
+}
+.u-source-panel-toolbar {
+    position: sticky;
+    top: -12px;
+    display: flex;
+    justify-content: flex-end;
+    margin: -12px -14px 8px;
+    padding: 6px 8px;
+    background: var(--surface);
+}
+.studio .u-source-close {
+    min-height: 36px;
+    padding: 4px 10px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--ink);
+    font: inherit;
+}
+.u-source-trigger:focus-visible,
+.u-source-panel:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
 }
 .u-notice {
     padding: 10px 14px;
