@@ -28,12 +28,13 @@ verified for this repository; see [PR setup](pr-setup.md).
   contracts, because CI never checks out or runs producer code.
   Legacy files outside the change are not newly subjected to targeted type checks.
   It does not download market data, initialize the data submodule or run studies.
-- PR title/body edits produce only a separately named skipped metadata check,
+- PR title/body edits run only a separately named Ubuntu metadata no-op,
   with a separate concurrency group. They neither replace `repository-checks`
   nor cancel an in-flight validation. Base-branch edits still validate, as do
   new commits and ready-for-review events. Manual dispatch retains full validation.
-- Hooks and selected tests use the same merge-base/head diff. A base branch
-  advancing does not by itself add unrelated files to the hook invocation.
+- Hooks and selected tests read the same merge-base/head pair from the scope
+  plan. pre-commit's `--from-ref/--to-ref` already diffs from the merge base;
+  passing the plan's pair keeps both steps on one recorded comparison.
 - Reviews check placement as well as behavior: AGENTS.md
   [Project Layout And Ownership](../../AGENTS.md#project-layout-and-ownership) says
   where code, tests, data and records belong, and which placement findings to raise.

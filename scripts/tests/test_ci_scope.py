@@ -1197,9 +1197,18 @@ def test_workflow_retains_stable_check_and_explicit_full_entry() -> None:
     assert "edited" in workflow["on"]["pull_request"]["types"]
     assert "paths-ignore" not in workflow["on"]["pull_request"]
     job = workflow["jobs"]["repository-checks"]
-    metadata_only = "github.event.action == 'edited' && !github.event.changes.base"
+    metadata_only = "github.event.action == 'edited' && github.event.changes.base == null"
     assert job["name"] == "${{ " + metadata_only + " && 'metadata-edit-ignored' || 'repository-checks' }}"
-    assert job["if"] == "github.event.action != 'edited' || github.event.changes.base"
+    assert "if" not in job  # Job-level skipping prevents Actions from evaluating its name.
+    assert job["runs-on"] == "${{ " + metadata_only + " && 'ubuntu-latest' || 'windows-latest' }}"
+    assert job["env"]["METADATA_EDIT"] == "${{ " + metadata_only + " }}"
+    for step in job["steps"]:
+        if step.get("name") == "Metadata edit ignored":
+            assert step["if"] == "env.METADATA_EDIT == 'true'"
+            assert step["run"].startswith("echo ")
+        else:
+            assert "env.METADATA_EDIT != 'true'" in step["if"]
+
     assert workflow["concurrency"]["group"] == (
         "${{ github.workflow }}-${{ " + metadata_only + " && github.run_id || github.event.pull_request.number || github.run_id }}"
     )
@@ -1207,7 +1216,7 @@ def test_workflow_retains_stable_check_and_explicit_full_entry() -> None:
     assert "--full" in steps["Select test scope"]["run"]
     assert "--execute" in steps["Selected Python tests"]["run"]
     assert "SKIP" not in steps["Repository checks"].get("env", {})
-    assert "if" not in steps["Repository checks"]
+    assert steps["Repository checks"]["if"] == "env.METADATA_EDIT != 'true'"
     assert "steps.scope.outputs.frontend" in steps["Frontend validation"]["if"]
     assert all(command in steps["Frontend validation"]["run"] for command in ["npm test", "npm run lint", "npm run build"])
     # test:local-data reads private local artifacts that a public hosted runner never has; run it locally only
@@ -1233,8 +1242,8 @@ def test_hook_environments_are_saved_after_preparation_before_downstream_checks(
         "pre-commit-${{ runner.os }}-${{ runner.arch }}-${{ steps.hook-python.outputs.identity }}-${{ hashFiles('.pre-commit-config.yaml', 'uv.lock') }}"
     )
     assert save["with"]["key"] == "${{ steps.hook-cache.outputs.cache-primary-key }}"
-    assert prepare["if"] == "steps.hook-cache.outputs.cache-hit != 'true'"
-    assert save["if"] == "steps.hook-cache.outputs.cache-hit != 'true' && steps.hook-environments.outcome == 'success'"
+    assert prepare["if"] == "env.METADATA_EDIT != 'true' && steps.hook-cache.outputs.cache-hit != 'true'"
+    assert save["if"] == "env.METADATA_EDIT != 'true' && steps.hook-cache.outputs.cache-hit != 'true' && steps.hook-environments.outcome == 'success'"
     assert (
         indices["Restore hook environments"]
         < indices["Prepare hook environments"]
@@ -1603,3 +1612,11 @@ def test_importer_closure_retains_build_prerequisite_without_unrelated_consumers
     assert not plan["full"] and plan["frontend"]
     assert plan["domains"] == []
     assert plan["python_tests"] == ["tests/test_fixture.py", "tests/test_node.py"]
+
+
+def test_prettier_uses_an_exact_node_runtime_for_reusable_hook_cache() -> None:
+    config = yaml.load((ci_scope.ROOT / ".pre-commit-config.yaml").read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
+    prettier = next(hook for repo in config["repos"] for hook in repo["hooks"] if hook["id"] == "prettier")
+    version = prettier["language_version"]
+    parts = version.split(".")
+    assert len(parts) == 3 and all(part.isascii() and part.isdigit() for part in parts), version
