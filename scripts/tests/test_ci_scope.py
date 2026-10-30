@@ -1617,6 +1617,7 @@ def test_importer_closure_retains_build_prerequisite_without_unrelated_consumers
 def test_prettier_uses_an_exact_node_runtime_for_reusable_hook_cache() -> None:
     config = yaml.load((ci_scope.ROOT / ".pre-commit-config.yaml").read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
     prettier = next(hook for repo in config["repos"] for hook in repo["hooks"] if hook["id"] == "prettier")
-    version = prettier["language_version"]
+    # A hook-level pin overrides the repository-wide default; either must be an exact release.
+    version = prettier.get("language_version") or config["default_language_version"]["node"]
     parts = version.split(".")
     assert len(parts) == 3 and all(part.isascii() and part.isdigit() for part in parts), version
