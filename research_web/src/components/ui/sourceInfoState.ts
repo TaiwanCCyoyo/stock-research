@@ -141,3 +141,12 @@ export function sourceHandleScroll(
         dismiss();
     }
 }
+
+/** Explicit user scrolling outside the panel overrides retained keyboard focus. */
+export function sourceHandleScrollIntent(
+    panel: HTMLElement | null,
+    target: Node | null,
+    dismiss: () => void,
+): void {
+    if (!target || !panel?.contains(target)) dismiss();
+}

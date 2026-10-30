@@ -4,6 +4,7 @@ import { CLOSED, TIP_NAVIGATION_EVENTS, tipReducer } from "./tipState.ts";
 import {
     SOURCE_CLOSED,
     sourceHandleScroll,
+    sourceHandleScrollIntent,
     sourceNextTabStop,
     sourceOpen,
     sourcePanelPosition,
@@ -12,6 +13,34 @@ import {
     sourceReturnFromClose,
     sourceTabStops,
 } from "./sourceInfoState.ts";
+
+test("external wheel or touch intent dismisses even while the trigger retains focus", () => {
+    const triggerNode = {},
+        internalNode = {},
+        outsideNode = {};
+    const document = { activeElement: triggerNode };
+    const trigger = {
+        ownerDocument: document,
+        contains: (node: unknown) => node === triggerNode,
+    } as unknown as HTMLElement;
+    const panel = {
+        contains: (node: unknown) => node === internalNode,
+    } as unknown as HTMLElement;
+    let state = sourceReducer(SOURCE_CLOSED, "focus");
+    const dismiss = () => {
+        state = sourceReducer(state, "navigate");
+    };
+    sourceHandleScroll(trigger, panel, null, () => {}, dismiss);
+    assert.equal(sourceOpen(state), true); // Focus-triggered browser scroll stays open.
+    sourceHandleScrollIntent(panel, internalNode as Node, dismiss);
+    assert.equal(sourceOpen(state), true);
+    sourceHandleScrollIntent(panel, outsideNode as Node, dismiss);
+    assert.equal(document.activeElement, triggerNode);
+    assert.equal(sourceOpen(state), false);
+    state = sourceReducer(SOURCE_CLOSED, "focus");
+    sourceHandleScrollIntent(panel, null, dismiss);
+    assert.equal(sourceOpen(state), false);
+});
 
 test("focus-driven outer scrolling keeps the preview and repositions it; unrelated scrolling dismisses", () => {
     const triggerNode = {},

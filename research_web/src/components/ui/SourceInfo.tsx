@@ -12,6 +12,7 @@ import { TIP_NAVIGATION_EVENTS } from "./tipState.ts";
 import {
     SOURCE_CLOSED,
     sourceHandleScroll,
+    sourceHandleScrollIntent,
     sourceNextTabStop,
     sourceOpen,
     sourcePanelPosition,
@@ -92,9 +93,23 @@ export function SourceInfo({
                 away,
             );
         };
+        const scrollIntent = (event: Event) =>
+            sourceHandleScrollIntent(
+                panel.current,
+                event.target instanceof Node ? event.target : null,
+                away,
+            );
         document.addEventListener("pointerdown", outside);
         document.addEventListener("keydown", escape);
         window.addEventListener("scroll", scroll, true);
+        window.addEventListener("wheel", scrollIntent, {
+            capture: true,
+            passive: true,
+        });
+        window.addEventListener("touchmove", scrollIntent, {
+            capture: true,
+            passive: true,
+        });
         window.addEventListener("resize", away);
         for (const name of TIP_NAVIGATION_EVENTS)
             window.addEventListener(name, away);
@@ -102,6 +117,8 @@ export function SourceInfo({
             document.removeEventListener("pointerdown", outside);
             document.removeEventListener("keydown", escape);
             window.removeEventListener("scroll", scroll, true);
+            window.removeEventListener("wheel", scrollIntent, true);
+            window.removeEventListener("touchmove", scrollIntent, true);
             window.removeEventListener("resize", away);
             for (const name of TIP_NAVIGATION_EVENTS)
                 window.removeEventListener(name, away);
