@@ -57,8 +57,8 @@ from research_core import daily_conditions_v1, price_basis, technical_daily_v1
 from research_core.artifact_store import file_digest, object_digest, publish_noreplace, read_json, write_json
 from research_core.artifact_store import release_os_lock as _release_os_lock
 from research_core.artifact_store import try_os_lock as _try_os_lock
-from research_core.live_producer import read_stable, readonly_sqlite
-from research_core.run_receipt import InputSpec, assert_inputs_unchanged, code_identity, fingerprint_inputs
+from research_core.live_producer import assert_producer_idle, read_stable, readonly_sqlite
+from research_core.run_receipt import InputSpec, assert_inputs_unchanged, changed_inputs, code_identity, fingerprint_inputs
 from research_core.shared_data import shared_data_root
 
 LOGGER = logging.getLogger(__name__)
@@ -401,8 +401,35 @@ def _prune(family: Path, keep: list[str]) -> list[str]:
     return removed
 
 
-def update(*, producer_root: Path, root: Path | None = None) -> dict[str, Any]:
-    """Build a complete new generation from live producer data and make it current."""
+def _unchanged_since_current(previous: str | None, root: Path | None) -> dict[str, Any] | None:
+    """The current generation's status when its recorded inputs and code still match, else None.
+
+    Compares the recorded input fingerprint with the live files (size, time, WAL; the same
+    test the end-of-run check uses) and the recorded code commit with this checkout's. A
+    dirty checkout on either side, or any failure to compare, means rebuild.
+    """
+    if previous is None:
+        return None
+    try:
+        status = current_generation(root)
+        recorded = status.get("code") or {}
+        now_code = code_identity()
+        if recorded.get("dirty") or now_code["dirty"] or recorded.get("commit") != now_code["commit"]:
+            return None
+        if changed_inputs(status["input_fingerprint"]):
+            return None
+        return status
+    except (OSError, KeyError, ValueError, RuntimeError) as error:
+        LOGGER.warning("Could not compare inputs with generation %s, rebuilding: %s", previous, error)
+        return None
+
+
+def update(*, producer_root: Path, root: Path | None = None, skip_unchanged: bool = False) -> dict[str, Any]:
+    """Build a complete new generation from live producer data and make it current.
+
+    With `skip_unchanged`, a producer that has not changed since the current generation was
+    built (same fingerprinted size/time/WAL, same clean code commit) publishes nothing.
+    """
     started = time.monotonic()
     family = family_dir(root)
     (family / "generations").mkdir(parents=True, exist_ok=True)
@@ -410,6 +437,21 @@ def update(*, producer_root: Path, root: Path | None = None) -> dict[str, Any]:
     staging: Path | None = None
     try:
         previous = read_json(family / "current.json")["generation"] if (family / "current.json").is_file() else None
+        if skip_unchanged:
+            assert_producer_idle()
+            unchanged = _unchanged_since_current(previous, root)
+            if unchanged is not None:
+                LOGGER.info("unchanged since generation %s; skipped", previous)
+                return {
+                    "family": FAMILY,
+                    "generation": unchanged["generation"],
+                    "asof": unchanged["asof"],
+                    "previous": unchanged.get("previous_generation"),
+                    "pruned": [],
+                    "held": sorted(held_generations(root)),
+                    "path": unchanged["path"],
+                    "unchanged": True,
+                }
         bars, actions, fingerprint, source_policy = load_inputs(producer_root)
         loaded = time.monotonic()
         asof = cast(pd.Timestamp, bars["Date"].max()).date().isoformat()
