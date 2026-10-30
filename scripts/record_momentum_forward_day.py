@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 import subprocess
 from pathlib import Path
 
@@ -58,12 +59,14 @@ def main() -> None:
     parser.add_argument("--workers", type=int, default=1)
     parser.add_argument("--scheduled", action="store_true", help="wait for today's shared generation, then record it (the weekday 21:00 task)")
     args = parser.parse_args()
+    LOGGER.info("starting record_momentum_forward_day pid=%d scheduled=%s date=%s workers=%d", os.getpid(), args.scheduled, args.date, args.workers)
     try:
         root = resolve_forward_log_root(args.root)
     except ForwardLogMigrationError as error:
         LOGGER.error("%s", error)
         raise SystemExit(f"forward-log migration failed, nothing recorded: {error}") from error
     identity = _code_identity()
+    LOGGER.info("code_commit=%s dirty=%s", identity["commit"], identity["dirty"])
     dirty = UNCOMMITTED if identity["dirty"] else None
     if args.scheduled:
         commit = str(identity["commit"])

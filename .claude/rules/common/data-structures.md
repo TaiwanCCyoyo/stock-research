@@ -85,8 +85,12 @@ powershell.exe -NoProfile -Command "Get-ScheduledTask -TaskName 'StockProject-*'
 database mean a writer is attached, or was attached and did not exit cleanly.
 
 Research reads of the live data obey the same schedule: `research_core/live_producer.py`'s
-`assert_producer_idle()` refuses the weekday 18:00-18:45 window (Asia/Taipei) and any running
-`StockProject-*` task, SQLite is opened read-only, and `read_stable()` fails a file
+`assert_producer_idle()` refuses the weekday 18:00-18:45 window (Asia/Taipei), any running
+`StockProject-*` task, and any live producer writer process even when its task shows Ready (a
+`.run_daily.lock` / `.official_backfill.lock` in the producer root whose pid is running, or a
+python/uv process running `run_daily.py` or `backfill_official_history.py`; on 2026-10-29 a
+`DailyUpdate` orphan outlived its 3h task limit by 34 minutes; a stale lock only logs a
+warning), SQLite is opened read-only, and `read_stable()` fails a file
 rewritten mid-read. A read-only SQLite connection may still create `-shm`/`-wal` beside a
 WAL database; they belong to SQLite, so do not delete them while anything may be open.
 
