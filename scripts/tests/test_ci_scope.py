@@ -1407,7 +1407,9 @@ def test_pinned_node_and_built_frontend_precede_python_consumers() -> None:
     indices = {step["name"]: i for i, step in enumerate(steps) if "name" in step}
     assert indices["Setup Node"] < indices["Frontend validation"] < indices["Selected Python tests"]
     assert "npm run build" in steps[indices["Frontend validation"]]["run"]
-    assert steps[indices["Setup Node"]]["with"]["node-version"] == "24"
+    # Frontend checks and Node hooks run on one exact release, so a moving "24" cannot diverge from the hook pin.
+    hooks = yaml.load((ci_scope.ROOT / ".pre-commit-config.yaml").read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
+    assert steps[indices["Setup Node"]]["with"]["node-version"] == hooks["default_language_version"]["node"]
 
 
 def test_changed_suffix_style_hook_test_is_always_selected(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
