@@ -75,6 +75,15 @@ desktop/narrow-screen reading and meaningful interactions when permitted. Source
 inspection and DOM tests establish behavior, not visual readability; record any
 missing visual acceptance honestly and honor tool access restrictions.
 
+For a substantial report or a readability revision, ask an independent subagent
+that did not write the draft to review the reader-facing text. Give it the
+mission and saved evidence, not an assumption that the draft is good. Require
+specific passages, the reader's likely misunderstanding and proposed wording;
+prioritize unexplained terms, teaching or disclaimer language, redundant UI
+narration and claims stronger than the evidence. Preserve concrete limitations
+and exact meanings. The main agent decides and integrates changes; this review
+does not substitute for actual interface acceptance or authorize hosted reviews.
+
 ## Evidence and delivery
 
 - Identify the current report/publication, formal outcome and data contract.
