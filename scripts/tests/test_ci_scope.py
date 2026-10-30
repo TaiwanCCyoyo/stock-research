@@ -969,8 +969,6 @@ def test_dashboard_identity_selects_api_and_launcher_consumers() -> None:
         "research_core/development_previews.py",
         "research_api/development_previews.py",
         "scripts/development_preview.py",
-        "tests/test_development_previews.py",
-        "tests/test_development_main.py",
         "scripts/start_research_web.py",
         "research_core/dashboard_identity.py",
         "research_api/main.py",
@@ -1570,6 +1568,7 @@ def test_multi_timeframe_counts_program_registration_keeps_prose_contracts(statu
         "scripts/tests/test_tenbagger_drivers_v1.py",
         "tests/test_security_coverage.py",
         "tests/test_security_coverage_maintenance.py",
+        "tests/test_development_previews.py",
     ],
 )
 def test_changed_domain_test_does_not_reverse_source_dependencies(status: str, path: str) -> None:
