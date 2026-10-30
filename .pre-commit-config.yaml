@@ -34,6 +34,9 @@ repos:
       hooks:
           - id: prettier
             exclude: ^tasks/20261005-relative-strength-holding/evidence/
+            # Pin Node: with the default "latest", nodeenv picked 27.0.0-alpha on 2026-10-30
+            # and crashed parsing its version, failing every CI run before any check ran.
+            language_version: 26.5.0
 
     # Enforce UTF-8 encoding and reject decode corruption. The language constraint this
     # hook used to carry was removed on 2026-08-23; see scripts/file_hygiene.py.
