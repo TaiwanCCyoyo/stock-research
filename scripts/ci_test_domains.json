@@ -167,8 +167,6 @@
                 "research_core/study_presentation.py",
                 "research_core/study_cards.py",
                 "research_api/studies.py",
-                "tasks/*/study.json",
-                "tasks/20261024-data-homes-and-scratch/study-card-v2.schema.json",
                 "research_core/strategy_map_capture.py",
                 "scripts/*opportunity*",
                 "scripts/*saved_research*",
@@ -593,6 +591,26 @@
                 "scripts/tests/test_entry_window_bootstrap_v1.py",
                 "scripts/tests/test_entry_window_inputs_v1.py"
             ]
+        },
+        "study_card_records": {
+            "paths": [
+                "tasks/*/study.json",
+                "tasks/20261024-data-homes-and-scratch/study-card-v2.schema.json"
+            ],
+            "tests": [
+                "scripts/tests/test_study_cards.py",
+                "scripts/tests/test_study_presentation.py",
+                "tests/test_dashboard_task_index.py",
+                "tests/test_dashboard_presentation.py",
+                "tests/test_research_api.py",
+                "tests/test_research_api_security.py"
+            ],
+            "consumers": ["task_records"],
+            "frontend": true
+        },
+        "scratch_card_consumer": {
+            "paths": ["research_core/scratch_runs.py"],
+            "tests": ["scripts/tests/test_study_cards.py"]
         }
     },
     "reviewed_tests": [
