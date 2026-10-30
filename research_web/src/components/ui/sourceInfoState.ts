@@ -107,3 +107,37 @@ export function sourceRestoreFocus(
     trigger.focus({ preventScroll: true });
     return true;
 }
+
+/** The close control is the explicit reverse boundary, independent of layout. */
+export function sourceReturnFromClose(
+    event: {
+        key: string;
+        shiftKey: boolean;
+        preventDefault(): void;
+        stopPropagation(): void;
+    },
+    trigger: HTMLElement | null,
+): boolean {
+    if (event.key !== "Tab" || !event.shiftKey || !trigger) return false;
+    event.preventDefault();
+    event.stopPropagation();
+    trigger.focus({ preventScroll: true });
+    return true;
+}
+
+/** Browser focus scrolling must not dismiss the control that owns that focus. */
+export function sourceHandleScroll(
+    trigger: HTMLElement | null,
+    panel: HTMLElement | null,
+    target: Node | null,
+    reposition: () => void,
+    dismiss: () => void,
+): void {
+    if (target && panel?.contains(target)) return;
+    const active = trigger?.ownerDocument.activeElement;
+    if (active && (trigger?.contains(active) || panel?.contains(active))) {
+        reposition();
+    } else {
+        dismiss();
+    }
+}

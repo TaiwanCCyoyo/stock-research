@@ -3,13 +3,100 @@ import test from "node:test";
 import { CLOSED, TIP_NAVIGATION_EVENTS, tipReducer } from "./tipState.ts";
 import {
     SOURCE_CLOSED,
+    sourceHandleScroll,
     sourceNextTabStop,
     sourceOpen,
     sourcePanelPosition,
     sourceReducer,
     sourceRestoreFocus,
+    sourceReturnFromClose,
     sourceTabStops,
 } from "./sourceInfoState.ts";
+
+test("focus-driven outer scrolling keeps the preview and repositions it; unrelated scrolling dismisses", () => {
+    const triggerNode = {},
+        panelLink = {},
+        input = {},
+        internalScroll = {};
+    const document = { activeElement: triggerNode };
+    const trigger = {
+        ownerDocument: document,
+        contains: (node: unknown) => node === triggerNode,
+    } as unknown as HTMLElement;
+    const panel = {
+        contains: (node: unknown) =>
+            node === panelLink || node === internalScroll,
+    } as unknown as HTMLElement;
+    let state = sourceReducer(SOURCE_CLOSED, "focus");
+    let anchor = { left: 20, top: 900, bottom: 920 };
+    let place = sourcePanelPosition(
+        anchor,
+        { width: 200, height: 100 },
+        { width: 900, height: 640 },
+    );
+    const reposition = () => {
+        place = sourcePanelPosition(
+            anchor,
+            { width: 200, height: 100 },
+            { width: 900, height: 640 },
+        );
+    };
+    const dismiss = () => {
+        state = sourceReducer(state, "navigate");
+    };
+    // Tabbing to an offscreen trigger scrolls the host after its focus event.
+    anchor = { left: 20, top: 100, bottom: 120 };
+    sourceHandleScroll(trigger, panel, null, reposition, dismiss);
+    assert.equal(sourceOpen(state), true);
+    assert.deepEqual(place, { left: 20, top: 128 });
+    document.activeElement = panelLink;
+    sourceHandleScroll(trigger, panel, null, reposition, dismiss);
+    assert.equal(sourceOpen(state), true);
+    document.activeElement = input;
+    sourceHandleScroll(
+        trigger,
+        panel,
+        internalScroll as Node,
+        reposition,
+        dismiss,
+    );
+    assert.equal(sourceOpen(state), true); // Panel's own scrollbar never dismisses.
+    sourceHandleScroll(trigger, panel, null, reposition, dismiss);
+    assert.equal(sourceOpen(state), false);
+});
+
+test("Shift+Tab from close cancels portal-native traversal and restores the exact trigger", () => {
+    const calls: string[] = [];
+    const trigger = {
+        focus: (options: FocusOptions) => {
+            assert.equal(options.preventScroll, true);
+            calls.push("trigger-focus");
+        },
+    } as unknown as HTMLElement;
+    const event = {
+        key: "Tab",
+        shiftKey: true,
+        preventDefault: () => calls.push("cancel-native-tab"),
+        stopPropagation: () => calls.push("stop-portal-bubble"),
+    };
+    assert.equal(sourceReturnFromClose(event, trigger), true);
+    assert.deepEqual(calls, [
+        "cancel-native-tab",
+        "stop-portal-bubble",
+        "trigger-focus",
+    ]);
+    calls.length = 0;
+    assert.equal(
+        sourceReturnFromClose({ ...event, shiftKey: false }, trigger),
+        false,
+    );
+    assert.equal(
+        sourceReturnFromClose({ ...event, key: "Escape" }, trigger),
+        false,
+    );
+    assert.equal(sourceReturnFromClose(event, null), false);
+    assert.deepEqual(calls, []);
+});
 
 test("portal focus bridge preserves main-page Tab order and excludes unavailable controls", () => {
     const document = {
