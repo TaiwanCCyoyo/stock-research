@@ -17,12 +17,22 @@ who never saw the conversation must understand what was studied and what the
 result does and does not support. Explain an unfamiliar condition at first use;
 keep research codes and compact statistical labels in the evidence layer.
 
+Draft the main answer before choosing tables or UI components. For each main
+panel, write a short sentence stating the supported finding, then choose the
+evidence that makes it understandable. Put population, denominator and period
+beside that evidence; a headline must not silently broaden the claim. For a new
+reading design or a report readers find confusing, apply the sourced techniques
+in [reader-first reports](references/reader-first-reports.md). Adapt presentation
+techniques to a self-contained page: there is no speaker to supply missing context.
+
 Build the reading path around the question, the finding, its practical meaning
 and limits, then supporting evidence. Lead with an understandable finding rather
 than a count of comparison cells. A small hypothetical example can explain a
 definition (such as the price used as the target's base); label it as an example,
-never as observed data. A timeline helps when observation and outcome windows
-differ. Do not turn this reading path into a mandatory layout for simple results.
+never as observed data. When signal observation and outcome tracking use different
+windows, show their order on a timeline with a named starting point and explicit
+day ranges; avoid making readers infer which event "before" or "after" refers to.
+Do not turn this reading path into a mandatory layout for simple results.
 
 Choose a visual only when its comparison is valid. Counts, percentages, returns
 and different populations must not share comparison bars merely because a card
@@ -75,14 +85,19 @@ desktop/narrow-screen reading and meaningful interactions when permitted. Source
 inspection and DOM tests establish behavior, not visual readability; record any
 missing visual acceptance honestly and honor tool access restrictions.
 
-For a substantial report or a readability revision, ask an independent subagent
-that did not write the draft to review the reader-facing text. Give it the
-mission and saved evidence, not an assumption that the draft is good. Require
-specific passages, the reader's likely misunderstanding and proposed wording;
-prioritize unexplained terms, teaching or disclaimer language, redundant UI
-narration and claims stronger than the evidence. Preserve concrete limitations
-and exact meanings. The main agent decides and integrates changes; this review
-does not substitute for actual interface acceptance or authorize hosted reviews.
+Before delivering a report or revising its reader-facing presentation, require
+an independent subagent that did not write the draft to review it in two passes.
+First provide only the reader-facing overview, without the author's explanation
+or expected answer. Have it state the question, compared populations, time windows
+and main conclusion in everyday language. If it must consult the appendix to
+understand a group name or find the answer, revise the overview. Then provide the
+mission and saved evidence to check meaning, denominators and unsupported claims.
+Require concrete passages, likely misunderstandings and proposed corrections,
+including teaching or disclaimer language and redundant UI narration. The main
+agent decides and integrates changes while preserving necessary limitations.
+An agent's fluent paraphrase is only a preliminary check; reader confusion or
+failed actual interactions overrides it. This review does not substitute for
+desktop/mobile acceptance or authorize hosted reviews.
 
 ## Evidence and delivery
 

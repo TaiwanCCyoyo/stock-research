@@ -65,13 +65,16 @@
         };
         const map = maps[kind] || {};
         const key = String(value);
+        if (kind === "group" && key === "CORE") return "已大幅上漲的股票";
+        if (kind === "group" && key === "LEAD_B1")
+            return "再加上當天漲至少9.5%";
         if (Object.prototype.hasOwnProperty.call(map, key)) return map[key];
         if (kind === "horizon") return `${key.replace(/^H/, "")} 日`;
         if (kind === "landmark") return `第 ${key.replace(/^L/, "")} 日`;
         if (kind === "split" && key === "all") return "合併切片";
         const simple = {
-            CORE: "雙重強勢",
-            LEAD_B1: "雙重強勢＋大漲日",
+            CORE: "已大幅上漲的股票",
+            LEAD_B1: "再加上當天漲至少9.5%",
             "C-base": "全市場基準",
             "C-base-daily": "一般股票日",
             "C-52w": "相對 52 週高點基準",
@@ -91,8 +94,8 @@
             development: "固定股票半部一",
             "cross-check": "固定股票半部二",
             full: "整體資料",
-            drop_best_year: "移除本格影響最大的年份",
-            drop_best_stock: "移除本格影響最大的股票",
+            drop_best_year: "移除本格達標事件最多的年份",
+            drop_best_stock: "移除本格達標事件最多的股票",
             lt1: "低於 1 倍",
             b1_1p10: "1.00–1.10 倍",
             b1p10_1p25: "1.10–1.25 倍",
@@ -282,10 +285,10 @@
         controls.replaceChildren();
         controls.append(
             guidedSelect(
-                "強勢組別",
+                "比較哪一組",
                 [
-                    ["CORE", "雙重強勢"],
-                    ["LEAD_B1", "雙重強勢＋大漲日"],
+                    ["CORE", human("group", "CORE")],
+                    ["LEAD_B1", human("group", "LEAD_B1")],
                 ],
                 guidedState.group,
                 (value) => {
@@ -380,9 +383,19 @@
         );
         const bars = make("div", "rate-bars");
         [
-            ["已出現訊號", triggered, "triggered"],
-            ["尚未出現訊號", notTriggered, "not-triggered"],
-        ].forEach(([labelText, rate, stateClass]) => {
+            [
+                "前20個交易日內曾出現訊號",
+                triggered,
+                "triggered",
+                "triggered_known_n",
+            ],
+            [
+                "前20個交易日內未出現訊號",
+                notTriggered,
+                "not-triggered",
+                "not_triggered_known_n",
+            ],
+        ].forEach(([labelText, rate, stateClass, knownField]) => {
             const item = make("div", `rate-item ${stateClass}`);
             const heading = make("div", "rate-label");
             heading.append(
@@ -407,15 +420,27 @@
             }
             const axis = make("div", "rate-axis");
             axis.append(make("span", "", "0%"), make("span", "", "100%"));
-            item.append(heading, track, axis);
+            item.append(
+                heading,
+                track,
+                axis,
+                make(
+                    "p",
+                    "muted",
+                    `比例依結果已知的 ${fmtInt(val(row, knownField))} 筆事件計算。`,
+                ),
+            );
             bars.append(item);
         });
         comparison.append(bars);
+        comparison.append(
+            make("p", "muted", "尚無法判定結果者另列，未計入上述比例。"),
+        );
         const delta = make("p", "difference-callout");
         if (typeof difference === "number") {
             const direction =
                 difference < 0 ? "較低" : difference > 0 ? "較高" : "相同";
-            delta.textContent = `直接比較時，出現訊號組的翻倍比例比尚未出現組${direction} ${(Math.abs(difference) * 100).toFixed(2)} 個百分點。`;
+            delta.textContent = `直接比較時，前20個交易日內曾出現訊號組的翻倍比例比未出現組${direction} ${(Math.abs(difference) * 100).toFixed(2)} 個百分點。`;
         } else {
             delta.textContent = "沒有可用的兩組翻倍比例差值。";
         }
@@ -564,7 +589,7 @@
                     className: "numeric",
                 },
                 {
-                    label: "錯殺代價 T/(T+F)",
+                    label: "最終達標前曾有訊號比例 T/(T+F)",
                     render: (r) =>
                         fmtPct(
                             val(
@@ -713,7 +738,7 @@
                         className: "numeric",
                     },
                     {
-                        label: "錯殺代價",
+                        label: "最終達標前曾有訊號比例",
                         render: (r) => fmtPct(val(r, "false_abandonment_rate")),
                         className: "numeric",
                     },
@@ -792,7 +817,7 @@
                 `${fmtInt(val(selected, "unknown_unknown_n"))}／${fmtInt(val(selected, "unknown_censored_n"))}`,
             ],
             [
-                "錯殺代價及未知邏輯界限",
+                "最終達標前曾有訊號比例及未知邏輯界限",
                 `${fmtPct(val(selected, "false_abandonment_rate"))}（${fmtPct(val(selected, "false_abandonment_lower"))}–${fmtPct(val(selected, "false_abandonment_upper"))}）`,
             ],
             [
@@ -849,7 +874,7 @@
         );
         const sliceBlock = make("div", "detail-block");
         sliceBlock.append(
-            make("h3", "", "年代、固定股票半部與移除最大影響切片"),
+            make("h3", "", "不同年代、股票分半與移除達標事件最多的年份或股票"),
         );
         sliceBlock.append(
             make(

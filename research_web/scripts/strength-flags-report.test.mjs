@@ -146,12 +146,44 @@ test("saved report supports guided choices and full evidence without changing de
         (e) => e.tagName === "select",
     );
     assert.equal(guided.length, 3);
+    assert.match(guided[0].textContent, /已大幅上漲的股票/);
+    assert.match(guided[0].textContent, /再加上當天漲至少9.5%/);
+    assert(!guided[0].textContent.includes("雙重強勢"));
+    const overview = html.match(
+        /<section\b[^>]*\bid="main-findings"[^>]*>[\s\S]*?<\/section>/,
+    )?.[0];
+    assert(overview, "the reading overview must be present");
+    for (const savedRate of ["10.2%", "22.5%", "66%"])
+        assert(
+            overview.includes(savedRate),
+            `overview must retain ${savedRate}`,
+        );
     assert.deepEqual(
         guided.map((e) => e.value),
         ["CORE", "X5_MA60", "252"],
     );
     assert.match(ids.get("guided-comparison").textContent, /10\.2%/);
     assert.match(ids.get("guided-comparison").textContent, /22\.5%/);
+    assert.match(
+        ids.get("guided-comparison").textContent,
+        /前20個交易日內曾出現訊號/,
+    );
+    assert.match(
+        ids.get("guided-comparison").textContent,
+        /前20個交易日內未出現訊號/,
+    );
+    assert.match(
+        ids.get("guided-comparison").textContent,
+        /結果已知的 28,483 筆事件/,
+    );
+    assert.match(
+        ids.get("guided-comparison").textContent,
+        /結果已知的 43,908 筆事件/,
+    );
+    assert.match(
+        ids.get("guided-comparison").textContent,
+        /尚無法判定結果者另列/,
+    );
     assert.match(ids.get("false-abandonment-card").textContent, /66\.0%/);
     assert.equal(ids.get("evidence-disclosure").open, false);
     assert.equal(ids.get("full-results-disclosure").open, false);
@@ -259,7 +291,10 @@ test("saved report supports guided choices and full evidence without changing de
     }
     assert.equal(tbody("grid-table").children.length, 1);
     tbody("grid-table").children[0].listeners.click();
-    assert.match(ids.get("detail-title").textContent, /雙重強勢.*252.*20.*60/);
+    assert.match(
+        ids.get("detail-title").textContent,
+        /已大幅上漲的股票.*252.*20.*60/,
+    );
     const detail = ids.get("detail-content").textContent;
     assert(detail.includes("8,733／4,490／0"));
     assert(detail.includes("66.0%"));
