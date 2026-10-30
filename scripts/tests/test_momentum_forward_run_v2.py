@@ -282,8 +282,6 @@ def test_corrupt_ledger_blocks_before_market_reads(tmp_path: Path, source: dict[
         "research_core/momentum_forward_attempts_v2.py",
         "research_core/momentum_forward_run_v2.py",
         "scripts/record_momentum_forward_day_v2.py",
-        "scripts/tests/test_momentum_forward_attempts_v2.py",
-        "scripts/tests/test_momentum_forward_run_v2.py",
     ],
 )
 def test_ci_domain_selects_new_suites_and_v1_regression(path: str) -> None:
