@@ -179,7 +179,15 @@ def _call_source(encoded: str, mode: str) -> str:
     if node is None:
         raise RuntimeError("Node unavailable for exact original source semantic validation: cannot locate node on PATH")
     try:
-        completed = subprocess.run([node, str(SOURCE_GATE), mode], input=encoded, check=True, capture_output=True, text=True, encoding="utf-8")
+        completed = subprocess.run(
+            [node, str(SOURCE_GATE), mode],
+            input=encoded,
+            check=True,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )
     except subprocess.CalledProcessError as error:
         raise ValueError(f"Exact original source semantic validation failed: {error.stderr or error}") from error
     except OSError as error:

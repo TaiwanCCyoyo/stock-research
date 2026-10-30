@@ -1567,6 +1567,8 @@ def test_multi_timeframe_counts_program_registration_keeps_prose_contracts(statu
         "scripts/tests/test_strength_flags_v1.py",
         "scripts/tests/test_entry_window_v1.py",
         "scripts/tests/test_multi_timeframe_ma_core_v1.py",
+        "scripts/tests/test_momentum_forward_attempts_v2.py",
+        "scripts/tests/test_momentum_forward_run_v2.py",
         "scripts/tests/test_momentum_forward_publication_v3.py",
         "scripts/tests/test_tenbagger_drivers_v1.py",
         "tests/test_security_coverage.py",

@@ -17,6 +17,37 @@ from scripts import opportunity_history_native_validation as gate
 from scripts.opportunity_native_receipt_cache import semantic_receipt_cache
 
 
+@pytest.mark.parametrize("mode", ["--verify", "--derive"])
+@pytest.mark.parametrize("window_flag", [0x08000000, None])
+def test_source_process_hides_console_and_preserves_protocol(monkeypatch: pytest.MonkeyPatch, mode: str, window_flag: int | None) -> None:
+    if window_flag is None:
+        monkeypatch.delattr(subprocess, "CREATE_NO_WINDOW", raising=False)
+    else:
+        monkeypatch.setattr(subprocess, "CREATE_NO_WINDOW", window_flag, raising=False)
+    monkeypatch.setattr(gate.shutil, "which", lambda _name: "synthetic-node")
+    calls: list[tuple[list[str], dict[str, Any]]] = []
+
+    def run(command: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        calls.append((command, kwargs))
+        return subprocess.CompletedProcess(command, 0, stdout='{"status":"verified"}')
+
+    monkeypatch.setattr(subprocess, "run", run)
+    assert gate._call_source('{"synthetic":true}', mode) == '{"status":"verified"}'
+    assert calls == [
+        (
+            ["synthetic-node", str(gate.SOURCE_GATE), mode],
+            {
+                "input": '{"synthetic":true}',
+                "check": True,
+                "capture_output": True,
+                "text": True,
+                "encoding": "utf-8",
+                "creationflags": window_flag or 0,
+            },
+        )
+    ]
+
+
 @pytest.fixture(scope="module")
 def original_native() -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     values = [math.exp(-0.01 * min(index, 19) + 0.03 * max(0, min(index - 19, 40)) - 0.02 * max(0, index - 59)) for index in range(90)]
