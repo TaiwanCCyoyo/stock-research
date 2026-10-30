@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import sqlite3
 import subprocess
 import sys
@@ -699,3 +700,19 @@ def test_skip_unchanged_rebuilds_when_anything_differs(environment: tuple[Path, 
     second = maintained_adjusted_daily.update(producer_root=producer, skip_unchanged=change != "force_default")
 
     assert "unchanged" not in second and second["generation"] != first["generation"]
+
+
+def test_skip_unchanged_rebuilds_when_the_producer_root_moved(environment: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:
+    # The old root stays untouched; reading a different root is a different input even when its files look alike.
+    producer, _ = environment
+    _clean_code(monkeypatch)
+    first = maintained_adjusted_daily.update(producer_root=producer)
+    moved = producer.parent / f"{producer.name}-moved"
+    shutil.copytree(producer, moved)
+    monkeypatch.setattr(maintained_adjusted_daily, "datetime", _Later(1))
+
+    second = maintained_adjusted_daily.update(producer_root=moved, skip_unchanged=True)
+
+    assert "unchanged" not in second and second["generation"] != first["generation"]
+    recorded = maintained_adjusted_daily.current_generation()["input_fingerprint"]["inputs"]["price_daily"]["path"]
+    assert Path(recorded).parent == moved

@@ -94,9 +94,15 @@ def family_dir(root: Path | None = None) -> Path:
     return (shared_data_root() if root is None else root) / "derived" / FAMILY
 
 
+def input_paths(producer_root: Path) -> dict[str, Path]:
+    """The two live producer inputs under `producer_root`, by fingerprint name."""
+    return {"price_daily": producer_root / "price_daily.parquet", "corporate_actions": producer_root / "corporate_actions.sqlite"}
+
+
 def load_inputs(producer_root: Path) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, Any], dict[str, Any]]:
     """Fingerprint (which refuses a busy producer) and read the two live producer inputs."""
-    prices_path, actions_path = producer_root / "price_daily.parquet", producer_root / "corporate_actions.sqlite"
+    paths = input_paths(producer_root)
+    prices_path, actions_path = paths["price_daily"], paths["corporate_actions"]
     fingerprint = fingerprint_inputs([
         InputSpec("price_daily", prices_path, date_column="Date", live_producer=True),
         InputSpec("corporate_actions", actions_path, tables={"corporate_actions": "ex_date"}, live_producer=True),
@@ -401,12 +407,18 @@ def _prune(family: Path, keep: list[str]) -> list[str]:
     return removed
 
 
-def _unchanged_since_current(previous: str | None, root: Path | None) -> dict[str, Any] | None:
+def _same_path(left: str | Path, right: Path) -> bool:
+    return os.path.normcase(os.path.abspath(left)) == os.path.normcase(os.path.abspath(right))
+
+
+def _unchanged_since_current(previous: str | None, root: Path | None, producer_root: Path) -> dict[str, Any] | None:
     """The current generation's status when its recorded inputs and code still match, else None.
 
-    Compares the recorded input fingerprint with the live files (size, time, WAL; the same
-    test the end-of-run check uses) and the recorded code commit with this checkout's. A
-    dirty checkout on either side, or any failure to compare, means rebuild.
+    The recorded inputs must be the files this run would read under `producer_root`: a moved
+    producer root with an untouched old copy is a different input. Then compares the recorded
+    input fingerprint with the live files (size, time, WAL; the same test the end-of-run check
+    uses) and the recorded code commit with this checkout's. A dirty checkout on either side,
+    or any failure to compare, means rebuild.
     """
     if previous is None:
         return None
@@ -415,6 +427,10 @@ def _unchanged_since_current(previous: str | None, root: Path | None) -> dict[st
         recorded = status.get("code") or {}
         now_code = code_identity()
         if recorded.get("dirty") or now_code["dirty"] or recorded.get("commit") != now_code["commit"]:
+            return None
+        recorded_inputs = status["input_fingerprint"]["inputs"]
+        expected = input_paths(producer_root)
+        if set(recorded_inputs) != set(expected) or not all(_same_path(recorded_inputs[name]["path"], path) for name, path in expected.items()):
             return None
         if changed_inputs(status["input_fingerprint"]):
             return None
@@ -439,7 +455,7 @@ def update(*, producer_root: Path, root: Path | None = None, skip_unchanged: boo
         previous = read_json(family / "current.json")["generation"] if (family / "current.json").is_file() else None
         if skip_unchanged:
             assert_producer_idle()
-            unchanged = _unchanged_since_current(previous, root)
+            unchanged = _unchanged_since_current(previous, root, producer_root)
             if unchanged is not None:
                 LOGGER.info("unchanged since generation %s; skipped", previous)
                 return {
