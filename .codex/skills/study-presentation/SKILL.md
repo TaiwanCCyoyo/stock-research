@@ -43,6 +43,9 @@ not create per-task desktop shortcuts or hand-assemble frontend/API processes.
 Verify the selected branch and shared data configuration before offering its
 ready link. Retire the registration after owner merge, independently of the
 worktree preservation and cleanup decision.
+Verify returning to main with its original launcher closed: the return action
+must restore a verified primary service, retain the preview on failure, and
+keep the two launchers' lifetimes independent. A clickable URL is insufficient.
 
 This workflow does not authorize downloads, updates, backtests, old-package
 replacement, cleanup or changes to accepted research rules.

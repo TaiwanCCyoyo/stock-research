@@ -3,6 +3,7 @@ import { test } from "node:test";
 import {
     loadPreviews,
     localPreviewUrl,
+    openMainDashboard,
     readPreviewIndex,
     startPreview,
 } from "./model.ts";
@@ -200,4 +201,226 @@ test("launch cancellation stays recognizable during fetch and body reading", asy
     await assert.rejects(loadPreviews("/previews", signal, abortedBody), {
         name: "AbortError",
     });
+});
+
+const mainUrl = "http://127.0.0.1:5177/";
+const mainStatus = "/api/development-main";
+
+test("return to main starts once and polls without launching again before navigation", async () => {
+    const requests: { url: string; method: string }[] = [];
+    let waits = 0;
+    const fetcher: typeof fetch = async (url, options) => {
+        requests.push({ url: String(url), method: options?.method ?? "GET" });
+        if (requests.length === 1) {
+            assert.equal(
+                new Headers(options?.headers).get("X-Requested-With"),
+                "development-preview",
+            );
+        } else assert.equal(options?.headers, undefined);
+        return Response.json(
+            requests.length < 3
+                ? { status: "starting", url: null, message: "" }
+                : { status: "ready", url: mainUrl, message: "" },
+        );
+    };
+    assert.equal(
+        await openMainDashboard(
+            mainStatus,
+            mainUrl,
+            new AbortController().signal,
+            {
+                fetcher,
+                wait: async () => {
+                    waits++;
+                },
+            },
+        ),
+        mainUrl,
+    );
+    assert.deepEqual(requests, [
+        { url: `${mainStatus}/open`, method: "POST" },
+        { url: mainStatus, method: "GET" },
+        { url: mainStatus, method: "GET" },
+    ]);
+    assert.equal(waits, 2);
+});
+
+test("already running main returns immediately without status polling", async () => {
+    let calls = 0;
+    assert.equal(
+        await openMainDashboard(
+            mainStatus,
+            mainUrl,
+            new AbortController().signal,
+            {
+                fetcher: async () => {
+                    calls++;
+                    return Response.json({
+                        status: "ready",
+                        url: mainUrl,
+                        message: "",
+                    });
+                },
+                wait: async () => {
+                    assert.fail("ready main must not wait");
+                },
+            },
+        ),
+        mainUrl,
+    );
+    assert.equal(calls, 1);
+});
+
+test("return to main rejects another loopback service and unsafe or missing URLs", async () => {
+    for (const url of [
+        "http://127.0.0.1:5178/",
+        "http://127.0.0.1:5177/#different",
+        "https://example.com/",
+        "javascript:alert(1)",
+        null,
+    ]) {
+        await assert.rejects(
+            openMainDashboard(
+                mainStatus,
+                mainUrl,
+                new AbortController().signal,
+                {
+                    fetcher: async () =>
+                        Response.json({ status: "ready", url, message: "" }),
+                },
+            ),
+            /網址與預期不同/,
+        );
+    }
+    await assert.rejects(
+        openMainDashboard(
+            mainStatus,
+            "https://example.com",
+            new AbortController().signal,
+            {
+                fetcher: async () => {
+                    assert.fail("invalid main URL must not launch");
+                },
+            },
+        ),
+        /正式版網址無法確認/,
+    );
+});
+
+test("stopped, unavailable and malformed main states leave the preview usable", async () => {
+    for (const status of ["stopped", "unavailable", "unknown"]) {
+        await assert.rejects(
+            openMainDashboard(
+                mainStatus,
+                mainUrl,
+                new AbortController().signal,
+                {
+                    fetcher: async () =>
+                        Response.json({ status, url: null, message: "" }),
+                    wait: async () => {
+                        assert.fail("terminal failure must not poll");
+                    },
+                },
+            ),
+            /正式版/,
+        );
+    }
+    await assert.rejects(
+        openMainDashboard(mainStatus, mainUrl, new AbortController().signal, {
+            fetcher: async () => new Response("<html>wrong service</html>"),
+        }),
+        /無法確認正式版狀態/,
+    );
+});
+
+test("main polling failure is readable and does not silently relaunch", async () => {
+    let calls = 0;
+    await assert.rejects(
+        openMainDashboard(mainStatus, mainUrl, new AbortController().signal, {
+            fetcher: async () => {
+                if (++calls === 1)
+                    return Response.json({
+                        status: "starting",
+                        url: null,
+                        message: "",
+                    });
+                throw new TypeError("Failed to fetch");
+            },
+            wait: async () => {},
+        }),
+        /無法連上預覽服務/,
+    );
+    assert.equal(calls, 2);
+});
+
+test("main polling stops at its bound and keeps the current page", async () => {
+    let calls = 0;
+    await assert.rejects(
+        openMainDashboard(mainStatus, mainUrl, new AbortController().signal, {
+            fetcher: async () => {
+                calls++;
+                return Response.json({
+                    status: "starting",
+                    url: null,
+                    message: "",
+                });
+            },
+            wait: async () => {},
+            pollLimit: 2,
+        }),
+        /準備時間較長/,
+    );
+    assert.equal(calls, 3);
+});
+
+test("cancelled main waits cannot return a navigation URL or issue another request", async () => {
+    const controller = new AbortController();
+    let calls = 0;
+    await assert.rejects(
+        openMainDashboard(mainStatus, mainUrl, controller.signal, {
+            fetcher: async () => {
+                calls++;
+                return Response.json({
+                    status: "starting",
+                    url: null,
+                    message: "",
+                });
+            },
+            wait: async () => {
+                controller.abort();
+            },
+        }),
+        { name: "AbortError" },
+    );
+    assert.equal(calls, 1);
+    await assert.rejects(
+        openMainDashboard(mainStatus, mainUrl, controller.signal, {
+            fetcher: async () => {
+                assert.fail("cancelled request must not start main");
+            },
+        }),
+        { name: "AbortError" },
+    );
+});
+
+test("main readiness timeout aborts a stalled request after twelve minutes", async (context) => {
+    context.mock.timers.enable({ apis: ["setTimeout"] });
+    const pending = openMainDashboard(
+        mainStatus,
+        mainUrl,
+        new AbortController().signal,
+        {
+            fetcher: async (_url, options) =>
+                new Promise((_resolve, reject) => {
+                    options?.signal?.addEventListener(
+                        "abort",
+                        () => reject(options.signal?.reason),
+                        { once: true },
+                    );
+                }),
+        },
+    );
+    const rejected = assert.rejects(pending, /準備時間較長/);
+    context.mock.timers.tick(12 * 60 * 1000);
+    await rejected;
 });

@@ -21,6 +21,7 @@ from typing import Any
 from urllib.parse import urlsplit
 
 from research_core.artifact_store import object_digest, release_os_lock, safe_path, try_os_lock, write_json
+from research_core.dashboard_identity import dashboard_identity
 from research_core.producer_data import primary_checkout, read_env_file_value
 
 LOGGER = logging.getLogger(__name__)
@@ -37,6 +38,7 @@ DATA_KEYS = (
     "VITE_ARTIFACT_MODE",
 )
 START_SECONDS = 90
+MAIN_START_SECONDS = 720
 
 
 class PreviewError(ValueError):
@@ -80,7 +82,7 @@ def _identifier(value: str) -> str:
 def loopback_url(value: str) -> str:
     parsed = urlsplit(value)
     try:
-        valid = parsed.scheme == "http" and parsed.hostname == "127.0.0.1" and parsed.port is not None
+        valid = parsed.scheme == "http" and parsed.hostname == "127.0.0.1" and parsed.port is not None and parsed.port > 0
     except ValueError:
         valid = False
     if not valid or parsed.username or parsed.password or parsed.query or parsed.fragment or parsed.path not in {"", "/"}:
@@ -347,33 +349,196 @@ def open_preview(identifier: str, *, root: Path = ROOT, environment: Mapping[str
                 environment.get("RESEARCH_PREVIEW_MAIN_URL") or environment.get("RESEARCH_WEB_URL", "http://127.0.0.1:5177/")
             ),
             RESEARCH_PREVIEW_CONFIG_ID=_configuration(child_environment),
+            RESEARCH_PREVIEW_MAIN_API_TARGET=loopback_url(
+                environment.get("RESEARCH_PREVIEW_MAIN_API_TARGET") or environment.get("RESEARCH_WEB_API_TARGET", "http://127.0.0.1:8517/")
+            ),
         )
-        executable = primary / ".venv" / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
-        if not executable.is_file():
-            executable = Path(sys.executable)
-        command = [
-            str(executable),
-            "-B",
-            str(target / "scripts/start_research_web.py"),
-            "--dev",
-            "--desktop",
-            "--no-browser",
-            "--web-port",
-            str(item.web_port),
-            "--api-port",
-            str(item.api_port),
-        ]
-        with safe_path(directory / f"{item.id}.log").open("ab") as output:
-            process = subprocess.Popen(
-                command,
-                cwd=target,
-                env=child_environment,
-                stdin=subprocess.DEVNULL,
-                stdout=output,
-                stderr=output,
-                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
-                close_fds=True,
-            )
-        _write(directory / f"{item.id}.launch.json", {"started": time.time(), "pid": process.pid})
-    LOGGER.info("Started development preview %s (launcher %s)", item.id, process.pid)
+        pid = _detach("preview", identifier=item.id, root=root, environment=child_environment)
+        _write(directory / f"{item.id}.launch.json", {"started": time.time(), "pid": pid})
+    LOGGER.info("Started development preview %s (launcher %s)", item.id, pid)
     return {"status": "starting", "url": None, "message": "正在啟動；完成後即可開啟預覽。"}
+
+
+def _main_urls(environment: Mapping[str, str]) -> tuple[str, str]:
+    web = loopback_url(environment.get("RESEARCH_PREVIEW_MAIN_URL", "http://127.0.0.1:5177/"))
+    api = loopback_url(environment.get("RESEARCH_PREVIEW_MAIN_API_TARGET", "http://127.0.0.1:8517/"))
+    if web == api:
+        raise PreviewError("正式版的網站與 API 連接埠不可相同。")
+    return web, api
+
+
+def main_environment(primary: Path, environment: Mapping[str, str]) -> dict[str, str]:
+    """Read primary configuration afresh; preview overrides cannot become main."""
+    excluded = {*DATA_KEYS, "VITE_API_BASE", "RESEARCH_WEB_VERSION", "RESEARCH_WEB_URL", "RESEARCH_WEB_API_TARGET", "RESEARCH_WEB_BUILD"}
+    result = {
+        key: value
+        for key, value in environment.items()
+        if key not in excluded and not key.startswith(("GIT_", "RESEARCH_PREVIEW_", "RESEARCH_DESKTOP_", "RESEARCH_WEB_BUILD_"))
+    }
+    return preview_environment(primary, result)
+
+
+def _main_setup(root: Path, environment: Mapping[str, str]) -> tuple[Path, str, str, dict[str, str]]:
+    primary = _primary(root)
+    if _git(primary, "branch", "--show-current") != "main":
+        raise PreviewError("主要工作目錄目前不在 main，請由開發 session 確認後再啟動正式版。")
+    if not safe_path(primary / "scripts/start_research_web.py").is_file():
+        raise PreviewError("正式版缺少標準啟動器。")
+    web, api = _main_urls(environment)
+    return primary, web, api, main_environment(primary, environment)
+
+
+def _main_status(root: Path, environment: Mapping[str, str]) -> dict[str, Any]:
+    primary, web_url, api_url, expected = _main_setup(root, environment)
+    web_port, api_port = urlsplit(web_url).port, urlsplit(api_url).port
+    assert web_port is not None and api_port is not None
+    launch_path = registry_directory(root) / ".main.launch.json"
+    launch = json.loads(safe_path(launch_path).read_text(encoding="utf-8")) if launch_path.exists() else {}
+    pending = isinstance(launch, dict) and 0 <= time.time() - float(launch.get("started", 0)) < MAIN_START_SECONDS
+    found: list[dict[str, Any] | None] = []
+    for port, service in ((web_port, "research-web"), (api_port, "history-api")):
+        identity = _json_response(port, "/__research_service__")
+        if identity is None:
+            if not _available(port):
+                if pending:
+                    return {"status": "starting", "url": None, "message": "正在確認正式版服務，完成後即可返回。"}
+                raise PreviewError("正式版連接埠已被無法確認的服務占用，不會停止或接管它。")
+            found.append(None)
+            continue
+        if (
+            identity.get("schema") != "stock-research-service.v1"
+            or identity.get("service") != service
+            or os.path.normcase(str(Path(str(identity.get("projectRoot", ""))).absolute())) != os.path.normcase(str(primary))
+        ):
+            raise PreviewError("正式版連接埠屬於其他服務，不會停止或接管它。")
+        if identity.get("dataMode") != expected["STOCK_RESEARCH_DATA_MODE"]:
+            raise PreviewError("執行中的正式版與目前資料設定不同，請由開發 session 檢查。")
+        if service == "history-api" and identity.get("configId") != dashboard_identity(expected)["configId"]:
+            raise PreviewError("正式版 API 的資料設定已改變，請由開發 session 檢查。")
+        if service == "research-web":
+            if identity.get("build") != "production" or identity.get("apiTarget", "").rstrip("/") != api_url.rstrip("/"):
+                raise PreviewError("執行中的頁面不是正式版，或未連到正式版 API。")
+            release = identity.get("release")
+            index = _json_response(port, "/reports/index.json")
+            manifest = _json_response(port, "/release.json")
+            if not release or release == "development" or not index or not manifest or index.get("version") != release or manifest.get("version") != release:
+                raise PreviewError("正式版頁面與報告清單版本不同，請由開發 session 檢查。")
+        found.append(identity)
+    if all(found):
+        return {"status": "ready", "url": web_url, "message": "正式版已就緒。"}
+    if pending:
+        return {"status": "starting", "url": None, "message": "正在啟動正式版；首次啟動可能需要建置頁面。"}
+    return {"status": "stopped", "url": None, "message": "正式版尚未完整啟動，可以從這裡啟動後返回。"}
+
+
+def main_status(*, root: Path = ROOT, environment: Mapping[str, str] | None = None) -> dict[str, Any]:
+    try:
+        return _main_status(root, os.environ if environment is None else environment)
+    except (PreviewError, OSError, ValueError, subprocess.SubprocessError) as exc:
+        message = str(exc) if isinstance(exc, PreviewError) else "暫時無法確認正式版狀態，請稍後重試。"
+        return {"status": "unavailable", "url": None, "message": message}
+
+
+def open_main(*, root: Path = ROOT, environment: Mapping[str, str] | None = None) -> dict[str, Any]:
+    environment = os.environ if environment is None else environment
+    directory = registry_directory(root)
+    with _lock(directory):
+        status = main_status(root=root, environment=environment)
+        if status["status"] != "stopped":
+            return status
+        primary, web, api, child_environment = _main_setup(root, environment)
+        # Only the short-lived helper receives these routing hints. It strips
+        # them again before spawning the primary launcher's production process.
+        child_environment.update(RESEARCH_PREVIEW_MAIN_URL=web, RESEARCH_PREVIEW_MAIN_API_TARGET=api)
+        pid = _detach("main", root=root, environment=child_environment)
+        _write(directory / ".main.launch.json", {"started": time.time(), "pid": pid})
+    LOGGER.info("Started primary dashboard launcher %s from %s", pid, primary)
+    return {"status": "starting", "url": None, "message": "正在啟動正式版；完成後會返回正式版頁面。"}
+
+
+def _python(primary: Path) -> Path:
+    executable = primary / ".venv" / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+    return executable if executable.is_file() else Path(sys.executable)
+
+
+def _detach(kind: str, *, root: Path, environment: Mapping[str, str], identifier: str | None = None) -> int:
+    """Wait for an intermediate parent to exit, breaking taskkill /T ancestry."""
+    command = [str(_python(_primary(root))), "-B", "-m", "research_core.development_previews", f"--detach-{kind}"]
+    if identifier is not None:
+        command.append(_identifier(identifier))
+    with safe_path(registry_directory(root) / "detach.log").open("ab") as output:
+        result = subprocess.run(
+            command,
+            cwd=root,
+            env=dict(environment),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=output,
+            timeout=20,
+            check=False,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )
+    try:
+        pid = int(result.stdout)
+        if result.returncode or pid <= 0:
+            raise ValueError("spawn failed")
+    except (ValueError, TypeError) as exc:
+        raise PreviewError("啟動器未能完成啟動，請由開發 session 檢查啟動紀錄。") from exc
+    return pid
+
+
+def _spawn_detached(kind: str, *, root: Path, environment: Mapping[str, str], identifier: str | None = None) -> int:
+    """Internal helper: only fixed primary or CLI-registered preview launchers."""
+    primary = _primary(root)
+    if kind == "main":
+        target, web, api, child_environment = _main_setup(root, environment)
+        web_port, api_port = urlsplit(web).port, urlsplit(api).port
+        options: list[str] = []
+        logfile = ".main.log"
+    elif kind == "preview" and identifier is not None:
+        item = _load(registry_directory(root) / f"{_identifier(identifier)}.json")
+        target = Path(item.worktree)
+        _validate_worktree(primary, target, item.branch)
+        web_port, api_port = item.web_port, item.api_port
+        child_environment = dict(environment)
+        options = ["--dev"]
+        logfile = f"{item.id}.log"
+    else:
+        raise PreviewError("不支援這個啟動操作。")
+    command = [
+        str(_python(primary)),
+        "-B",
+        str(target / "scripts/start_research_web.py"),
+        *options,
+        "--desktop",
+        "--no-browser",
+        "--web-port",
+        str(web_port),
+        "--api-port",
+        str(api_port),
+    ]
+    with safe_path(registry_directory(root) / logfile).open("ab") as output:
+        process = subprocess.Popen(
+            command,
+            cwd=target,
+            env=child_environment,
+            stdin=subprocess.DEVNULL,
+            stdout=output,
+            stderr=output,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0) | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0),
+            start_new_session=os.name != "nt",
+            close_fds=True,
+        )
+    return process.pid
+
+
+if __name__ == "__main__":
+    # Private, fixed helper protocol. No arbitrary paths, command or shell input.
+    arguments = sys.argv[1:]
+    if arguments == ["--detach-main"]:
+        launched = _spawn_detached("main", root=ROOT, environment=os.environ)
+    elif len(arguments) == 2 and arguments[0] == "--detach-preview":
+        launched = _spawn_detached("preview", root=ROOT, environment=os.environ, identifier=arguments[1])
+    else:
+        raise SystemExit("Use python -m scripts.development_preview for preview management.")
+    sys.stdout.write(str(launched))

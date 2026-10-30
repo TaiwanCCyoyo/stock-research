@@ -16,8 +16,43 @@
     gap: 2px;
     font-size: 12px;
 }
-.dp-context a {
+.studio .dp-return {
     color: var(--accent);
+    background: none;
+    padding: 0;
+    text-align: left;
+    font-size: inherit;
+}
+.dp-return:disabled {
+    opacity: 0.7;
+    cursor: wait;
+}
+.dp-main-feedback {
+    position: fixed;
+    z-index: 32;
+    top: 76px;
+    right: max(16px, calc((100% - 1180px) / 2));
+    width: min(360px, calc(100vw - 32px));
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: var(--shadow-lift);
+}
+.dp-main-feedback p {
+    margin: 0 0 12px;
+    line-height: 1.6;
+}
+.dp-main-feedback > div {
+    display: flex;
+    gap: 12px;
+}
+.studio .dp-main-feedback button {
+    padding: 6px 12px;
+    border-radius: var(--radius-pill);
+    background: var(--chip);
+    color: var(--ink);
 }
 .dp-dialog {
     position: fixed;

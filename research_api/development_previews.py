@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import os
+import subprocess
 from pathlib import Path
 from urllib.parse import urlsplit
 
 from fastapi import APIRouter, HTTPException, Request
 
-from research_core.development_previews import PreviewError, list_previews, loopback_url, open_preview
+from research_core.development_previews import PreviewError, list_previews, loopback_url, main_status, open_main, open_preview
 
 
 def _local_request(request: Request, *, mutation: bool) -> None:
@@ -48,7 +49,22 @@ def create_development_preview_router(root: Path | None = None) -> APIRouter:
             return open_preview(identifier, root=root)
         except PreviewError as exc:
             raise HTTPException(409, str(exc)) from exc
-        except OSError as exc:
+        except (OSError, subprocess.SubprocessError) as exc:
             raise HTTPException(503, "無法啟動預覽，請由開發 session 檢查啟動紀錄。") from exc
+
+    @router.get("/development-main")
+    def primary_status(request: Request) -> dict:
+        _local_request(request, mutation=False)
+        return main_status(root=root)
+
+    @router.post("/development-main/open")
+    def open_primary(request: Request) -> dict:
+        _local_request(request, mutation=True)
+        try:
+            return open_main(root=root)
+        except PreviewError as exc:
+            raise HTTPException(409, str(exc)) from exc
+        except (OSError, subprocess.SubprocessError) as exc:
+            raise HTTPException(503, "無法啟動正式版，請由開發 session 檢查啟動紀錄。") from exc
 
     return router

@@ -49,6 +49,19 @@ preview, not permission to terminate a process or silently switch data modes.
 Paths, process identity and configuration details belong in diagnostics rather
 than the main reader interface.
 
+**返回正式版** checks the primary Dashboard before navigating in the same tab.
+If it is stopped, the explicit button action starts the primary checkout's
+standard production launcher in a hidden window, using primary configuration
+afresh. The page waits for verified readiness; cancellation stops waiting only,
+and a failure leaves the preview available for retry. Read-only status polling
+never launches a process. Unknown occupied ports are not taken over.
+
+Both preview and primary launches use a short-lived helper that exits before
+the action returns. Their launchers have independent lifetimes: closing one
+launcher must not terminate the other through Windows process-tree cleanup.
+The existing desktop heartbeat still stops an unused service normally; this
+feature adds no scheduler or permanently running background service.
+
 After verified owner merge, retire the registration. Retirement affects the
 preview listing only; it does not delete a worktree, data or another session's
 processes. Follow the existing Git/worktree cleanup contract separately. Do not
@@ -65,6 +78,11 @@ insufficient. A browser rendering check remains distinct from HTTP and component
 tests. No successful automated check implies that the owner has merged or
 deployed this feature into main.
 
+Exercise returning while main is stopped as well as already running. Confirm
+that readiness uses primary identities and production release/report versions,
+and that closing the initiating launcher leaves the destination usable. A
+working return URL alone does not verify this lifecycle.
+
 ## Initial delivery (2026-10-31)
 
 This session owns `.worktrees/development-preview` on
@@ -78,9 +96,19 @@ Browser acceptance used Edge: the header opens the panel, a stopped registration
 transitions through startup to a ready link, the link opens a separate tab, and
 the preview shows its return-to-main link. Desktop and 390-pixel viewport captures
 are retained locally in primary `.tmp/development-preview-desktop.jpg` and
-`.tmp/development-preview-mobile.jpg`. Main was not running, so successful
-navigation to a running main instance remains unverified; the return URL was
-checked. The trial uses main's existing report/card content, not unmerged PR113.
+`.tmp/development-preview-mobile.jpg`. Initially only the return URL was checked;
+the stopped-main follow-up below supersedes that limited check. The trial uses
+main's existing report/card content, not unmerged PR113.
+
+The return-button follow-up started with both primary ports stopped. Edge
+showed the cancellable waiting state, then navigated the same tab to port 5177.
+The primary production web/API identified the primary checkout and configured
+data; the status endpoint verified its release and report index as ready. The
+hidden launcher was running after its short-lived parent had exited. Existing
+preview and unrelated services were not terminated for this check. The waiting
+capture is `.tmp/development-return-main-waiting.jpg`. Primary source and the
+desktop shortcut were unchanged; its standard launcher built its existing main
+source when opening it normally.
 
 The four earlier strength-flags worktrees remain: mission/code are retained for
 historical citations; execution is retained pending the presentation handoff;

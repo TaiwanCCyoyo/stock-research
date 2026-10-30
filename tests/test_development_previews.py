@@ -81,9 +81,23 @@ def test_open_is_fixed_hidden_launch_and_duplicate_click_is_idempotent(registry:
     register_example(registry)
     popen = MagicMock(return_value=MagicMock(pid=1234))
     monkeypatch.setattr(previews.subprocess, "Popen", popen)
-    env = {"RESEARCH_WEB_URL": "http://127.0.0.1:5177/", "STOCK_PRODUCER_DATA_ROOT": str(primary / "canonical"), "RESEARCH_WEB_VERSION": "old-release"}
+    detach = MagicMock(return_value=1234)
+    monkeypatch.setattr(previews, "_detach", detach)
+    env = {
+        "RESEARCH_WEB_URL": "http://127.0.0.1:21000/",
+        "RESEARCH_WEB_API_TARGET": "http://127.0.0.1:21001/",
+        "RESEARCH_PREVIEW_MAIN_URL": "http://127.0.0.1:5177/",
+        "RESEARCH_PREVIEW_MAIN_API_TARGET": "http://127.0.0.1:8517/",
+        "STOCK_PRODUCER_DATA_ROOT": str(primary / "canonical"),
+        "RESEARCH_WEB_VERSION": "old-release",
+    }
     assert previews.open_preview("example", root=primary, environment=env)["status"] == "starting"
     assert previews.open_preview("example", root=primary, environment=env)["status"] == "starting"
+    detach.assert_called_once()
+    assert detach.call_args.args == ("preview",)
+    assert detach.call_args.kwargs["identifier"] == "example"
+    popen.assert_not_called()
+    previews._spawn_detached("preview", root=primary, environment=detach.call_args.kwargs["environment"], identifier="example")
     popen.assert_called_once()
     args, kwargs = popen.call_args
     assert args[0][2] == str(target / "scripts/start_research_web.py")
@@ -92,8 +106,9 @@ def test_open_is_fixed_hidden_launch_and_duplicate_click_is_idempotent(registry:
     assert kwargs["env"]["VITE_API_BASE"] == "/api"
     assert kwargs["env"]["STOCK_PRODUCER_DATA_ROOT"] == str(primary / "canonical")
     assert kwargs["env"]["RESEARCH_WEB_VERSION"] == "development"
-    assert kwargs["env"]["RESEARCH_PREVIEW_MAIN_URL"] == env["RESEARCH_WEB_URL"]
-    assert kwargs["creationflags"] == getattr(previews.subprocess, "CREATE_NO_WINDOW", 0)
+    assert kwargs["env"]["RESEARCH_PREVIEW_MAIN_URL"] == env["RESEARCH_PREVIEW_MAIN_URL"]
+    assert kwargs["env"]["RESEARCH_PREVIEW_MAIN_API_TARGET"] == env["RESEARCH_PREVIEW_MAIN_API_TARGET"]
+    assert kwargs["creationflags"] == getattr(previews.subprocess, "CREATE_NO_WINDOW", 0) | getattr(previews.subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
 
 
 def test_ready_requires_same_worktree_data_config_and_development_index(registry: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:

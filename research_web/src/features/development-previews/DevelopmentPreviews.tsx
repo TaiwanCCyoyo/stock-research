@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { apiUrl } from "../../api/base";
 import {
     loadPreviews,
+    openMainDashboard,
     startPreview,
     STATUS_LABELS,
     type PreviewIndex,
@@ -19,9 +20,12 @@ export function DevelopmentPreviews() {
     const [listError, setListError] = useState("");
     const [launchError, setLaunchError] = useState("");
     const [starting, setStarting] = useState<string | null>(null);
+    const [mainPending, setMainPending] = useState(false);
+    const [mainError, setMainError] = useState("");
     const dialog = useRef<HTMLDialogElement>(null);
     const trigger = useRef<HTMLButtonElement>(null);
     const launch = useRef<AbortController | null>(null);
+    const mainLaunch = useRef<AbortController | null>(null);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -67,7 +71,50 @@ export function DevelopmentPreviews() {
         else dialog.current?.close();
     }, [open]);
 
-    useEffect(() => () => launch.current?.abort(), []);
+    useEffect(
+        () => () => {
+            launch.current?.abort();
+            const controller = mainLaunch.current;
+            mainLaunch.current = null;
+            controller?.abort();
+        },
+        [],
+    );
+
+    const returnToMain = async () => {
+        if (!index.current || mainLaunch.current) return;
+        const controller = new AbortController();
+        mainLaunch.current = controller;
+        setMainPending(true);
+        setMainError("");
+        try {
+            const url = await openMainDashboard(
+                apiUrl("development-main"),
+                index.current.mainUrl,
+                controller.signal,
+            );
+            if (!controller.signal.aborted) window.location.assign(url);
+        } catch (reason) {
+            if (!controller.signal.aborted)
+                setMainError(
+                    reason instanceof Error
+                        ? reason.message
+                        : "正式版暫時無法開啟，請稍後重試。",
+                );
+        } finally {
+            if (mainLaunch.current === controller) {
+                mainLaunch.current = null;
+                setMainPending(false);
+            }
+        }
+    };
+
+    const cancelReturn = () => {
+        mainLaunch.current?.abort();
+        mainLaunch.current = null;
+        setMainPending(false);
+        setMainError("");
+    };
 
     const close = () => {
         launch.current?.abort();
@@ -106,14 +153,36 @@ export function DevelopmentPreviews() {
                         開發預覽
                         {index.current.pr ? ` · PR #${index.current.pr}` : ""}
                     </span>
-                    <a
-                        href={index.current.mainUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                    <button
+                        className="dp-return"
+                        disabled={mainPending}
+                        onClick={() => void returnToMain()}
                     >
-                        返回正式版 ↗
-                    </a>
+                        {mainPending ? "正在開啟正式版…" : "返回正式版"}
+                    </button>
                 </span>
+            )}
+            {(mainPending || mainError) && (
+                <section
+                    className="dp-main-feedback"
+                    aria-label="返回正式版狀態"
+                >
+                    <p role="status" aria-live="polite">
+                        {mainPending ? "正在開啟正式版…" : mainError}
+                    </p>
+                    {mainPending ? (
+                        <button onClick={cancelReturn}>取消等待</button>
+                    ) : (
+                        <div>
+                            <button onClick={() => void returnToMain()}>
+                                重試
+                            </button>
+                            <button onClick={() => setMainError("")}>
+                                關閉
+                            </button>
+                        </div>
+                    )}
+                </section>
             )}
             <button
                 className="dp-trigger"

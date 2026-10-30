@@ -164,6 +164,104 @@ export async function startPreview(
     }
 }
 
+function waitForMainPoll(
+    milliseconds: number,
+    signal: AbortSignal,
+): Promise<void> {
+    return new Promise((resolve, reject) => {
+        signal.throwIfAborted();
+        const cancel = () => {
+            clearTimeout(timer);
+            reject(signal.reason);
+        };
+        const timer = setTimeout(() => {
+            signal.removeEventListener("abort", cancel);
+            resolve();
+        }, milliseconds);
+        signal.addEventListener("abort", cancel, { once: true });
+    });
+}
+
+/** One user request starts main once; subsequent requests only observe readiness. */
+export async function openMainDashboard(
+    statusUrl: string,
+    expectedUrl: string,
+    signal: AbortSignal,
+    options: {
+        fetcher?: typeof fetch;
+        wait?: (milliseconds: number, signal: AbortSignal) => Promise<void>;
+        pollLimit?: number;
+    } = {},
+): Promise<string> {
+    const target = localPreviewUrl(expectedUrl);
+    if (!target) throw new Error("正式版網址無法確認，請重新整理頁面。");
+    signal.throwIfAborted();
+    const controller = new AbortController();
+    const cancel = () => controller.abort(signal.reason);
+    signal.addEventListener("abort", cancel, { once: true });
+    let timedOut = false;
+    const timeout = setTimeout(
+        () => {
+            timedOut = true;
+            controller.abort();
+        },
+        12 * 60 * 1000,
+    );
+    const fetcher = options.fetcher ?? fetch;
+    const wait = options.wait ?? waitForMainPoll;
+    const pollLimit = options.pollLimit ?? 360;
+    try {
+        for (let attempt = 0; attempt <= pollLimit; attempt++) {
+            controller.signal.throwIfAborted();
+            const response = await withUserMessage(
+                fetcher(attempt === 0 ? `${statusUrl}/open` : statusUrl, {
+                    signal: controller.signal,
+                    cache: "no-store",
+                    ...(attempt === 0
+                        ? {
+                              method: "POST",
+                              headers: {
+                                  "X-Requested-With": "development-preview",
+                              },
+                          }
+                        : {}),
+                }),
+                "無法連上預覽服務，請稍後重試。",
+            );
+            if (!response.ok)
+                throw new Error("正式版暫時無法開啟，請稍後重試。");
+            const result: unknown = await withUserMessage(
+                response.json(),
+                "無法確認正式版狀態，請稍後重試。",
+            );
+            controller.signal.throwIfAborted();
+            if (!record(result))
+                throw new Error("無法確認正式版狀態，請稍後重試。");
+            if (result.status === "ready") {
+                const url = localPreviewUrl(result.url);
+                if (!url || url !== target)
+                    throw new Error(
+                        "正式版網址與預期不同，已保留目前頁面。請重新整理後再試。",
+                    );
+                return url;
+            }
+            if (result.status === "stopped")
+                throw new Error("正式版尚未啟動，請再試一次。");
+            if (result.status !== "starting")
+                throw new Error("正式版暫時無法開啟，請稍後重試。");
+            if (attempt < pollLimit) await wait(2000, controller.signal);
+        }
+        throw new Error("正式版準備時間較長，尚未確認完成。請稍後重試。");
+    } catch (reason) {
+        if (timedOut)
+            throw new Error("正式版準備時間較長，尚未確認完成。請稍後重試。");
+        throw reason;
+    } finally {
+        clearTimeout(timeout);
+        signal.removeEventListener("abort", cancel);
+    }
+}
+
 export const STATUS_LABELS: Record<PreviewStatus, string> = {
     ready: "可以開啟",
     stopped: "尚未啟動",
