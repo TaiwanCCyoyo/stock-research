@@ -52,6 +52,15 @@ ordinary scope note brief and visually quiet; do not turn it into a warning box
 packed with definitions. Put secondary qualifications next to the relevant
 measure or in the details, while preserving the main limitation in view.
 
+Remove narration of interactions the interface already makes clear; retain the
+date, units and qualifications that identify the displayed values. A detail
+action should reveal the selected evidence directly, not expand every table
+before it. In an embedded report, coordinate focus and scrolling with the host
+after its layout updates, and keep the target clear of sticky navigation.
+Avoid a blanket disclaimer in every report wrapper. State the study's concrete
+scope and limitations where they affect interpretation, without telling the
+reader what they should or should not do or repeating the same warning.
+
 Design failure states as part of the reading route. Explain what could not be
 loaded, what remains usable, and the next available action. Distinguish missing
 reports, connection failures and mismatched versions when evidence permits;

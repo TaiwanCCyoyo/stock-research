@@ -1,5 +1,12 @@
-import { useEffect, useRef, useState } from "react";
-import { reportFrameSrc, reportNavigationHash, statusLabel } from "./model";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+    reportFrameHeight,
+    reportFrameSrc,
+    reportNavigationHash,
+    reportRevealRequest,
+    revealReportEvidence,
+    statusLabel,
+} from "./model";
 import { useReportIndex } from "./useReportIndex";
 import { ReportIndexNotice } from "./ReportIndexNotice";
 import { SourceInfo } from "../../components/ui/primitives";
@@ -37,6 +44,18 @@ export function ReportViewer({
     // frame never reloads (and loses its state) when the viewer changes the theme.
     const [src] = useState(() => reportFrameSrc(reportId, palette, appearance));
     const [height, setHeight] = useState<number | null>(null);
+    const [reveal, setReveal] = useState<{
+        source: Window;
+        document: Document;
+    } | null>(null);
+    const handledReveal = useRef<typeof reveal>(null);
+
+    useLayoutEffect(() => {
+        if (reveal && reveal !== handledReveal.current && frame.current) {
+            handledReveal.current = reveal;
+            revealReportEvidence(frame.current, reveal.source, reveal.document);
+        }
+    }, [height, reveal]);
 
     useEffect(() => {
         const receive = (event: MessageEvent) => {
@@ -48,13 +67,33 @@ export function ReportViewer({
                 event.data,
             );
             if (target) window.location.hash = target;
+            const request = reportRevealRequest(
+                event.source,
+                frame.current?.contentWindow,
+                event.data,
+            );
+            if (request && frame.current?.contentWindow) {
+                try {
+                    const document = frame.current.contentDocument;
+                    if (!document) return;
+                    const measured = reportFrameHeight(
+                        document.documentElement.scrollHeight,
+                    );
+                    const nextHeight = measured ?? request.height;
+                    if (nextHeight !== null) setHeight(nextHeight);
+                    // A fresh object also services repeated requests at the same height.
+                    setReveal({
+                        source: frame.current.contentWindow,
+                        document,
+                    });
+                } catch {
+                    if (request.height !== null) setHeight(request.height);
+                }
+            }
             const data = event.data as { type?: string; height?: number };
-            if (
-                data?.type === "rk:height" &&
-                typeof data.height === "number" &&
-                data.height > 0
-            )
-                setHeight(Math.min(Math.ceil(data.height), 200_000));
+            const nextHeight = reportFrameHeight(data?.height);
+            if (data?.type === "rk:height" && nextHeight !== null)
+                setHeight(nextHeight);
         };
         window.addEventListener("message", receive);
         return () => window.removeEventListener("message", receive);
@@ -92,9 +131,6 @@ export function ReportViewer({
                     在新分頁開啟 ↗
                 </a>
             </div>
-            <p className="u-notice">
-                這份報告分析過去的股票表現，不能直接當作現在買進或賣出的依據。
-            </p>
             {issue && (
                 <ReportIndexNotice
                     issue={issue}
@@ -145,12 +181,13 @@ export function ReportViewer({
                     sandbox="allow-scripts allow-same-origin allow-downloads"
                     referrerPolicy="no-referrer"
                     style={height ? { height } : undefined}
-                    onLoad={() =>
+                    onLoad={() => {
+                        setReveal(null);
                         frame.current?.contentWindow?.postMessage(
                             { type: "rk:theme", palette, appearance },
                             "*",
-                        )
-                    }
+                        );
+                    }}
                 />
             )}
         </div>

@@ -7,6 +7,9 @@ import {
     filterReports,
     reportFrameSrc,
     reportNavigationHash,
+    reportRevealRequest,
+    reportFrameHeight,
+    revealReportEvidence,
     reportTags,
     statusLabel,
     validateReportIndex,
@@ -24,6 +27,76 @@ const entry = (id: string, title: string, tags: string[]): ReportEntry => ({
     period: "",
     kit: "v1",
     tags,
+});
+
+test("evidence reveal accepts only the current frame and a fixed heading with bounded heights", () => {
+    const frame = {};
+    const message = {
+        type: "rk:reveal",
+        target: "detail-title",
+        height: 2123.2,
+    };
+    assert.deepEqual(reportRevealRequest(frame, frame, message), {
+        target: "detail-title",
+        height: 2124,
+    });
+    for (const source of [{}, null, undefined])
+        assert.equal(reportRevealRequest(source, frame, message), null);
+    assert.equal(reportRevealRequest(null, null, message), null);
+    for (const data of [
+        null,
+        [],
+        "detail-title",
+        { ...message, type: "other" },
+        { ...message, target: "#data" },
+        { ...message, target: "body" },
+    ])
+        assert.equal(reportRevealRequest(frame, frame, data), null);
+    for (const height of [Infinity, NaN, -1, 0, "3000"])
+        assert.equal(reportFrameHeight(height), null);
+    assert.equal(reportFrameHeight(999999), 200000);
+});
+
+test("committed evidence reveal handles repeats, sticky clearance and stale documents", () => {
+    const source = {} as Window;
+    let focused = 0;
+    const scrolls: ScrollToOptions[] = [];
+    const document = {
+        getElementById: (id: string) => {
+            assert.equal(id, "detail-title");
+            return {
+                focus: (options: FocusOptions) => {
+                    assert.equal(options.preventScroll, true);
+                    focused++;
+                },
+                getBoundingClientRect: () => ({ top: 1200 }),
+            };
+        },
+    } as unknown as Document;
+    const frame = {
+        contentWindow: source,
+        contentDocument: document,
+        getBoundingClientRect: () => ({ top: -200 }),
+        ownerDocument: {
+            querySelector: (selector: string) => {
+                assert.equal(selector, ".shell-header");
+                return { getBoundingClientRect: () => ({ bottom: 64 }) };
+            },
+            defaultView: {
+                scrollY: 300,
+                scrollTo: (options: ScrollToOptions) => scrolls.push(options),
+            },
+        },
+    } as unknown as HTMLIFrameElement;
+    assert.equal(revealReportEvidence(frame, {} as Window, document), false);
+    assert.equal(revealReportEvidence(frame, source, {} as Document), false);
+    assert.equal(revealReportEvidence(frame, source, document), true);
+    assert.equal(revealReportEvidence(frame, source, document), true);
+    assert.equal(focused, 2);
+    assert.deepEqual(scrolls, [
+        { top: 1220, behavior: "instant" },
+        { top: 1220, behavior: "instant" },
+    ]);
 });
 
 test("report loading distinguishes retryable failures without accepting mismatched versions", async () => {

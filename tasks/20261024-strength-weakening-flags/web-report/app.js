@@ -491,13 +491,18 @@
         disclosure.open = true;
         const title = $("#detail-title");
         title.focus({ preventScroll: true });
-        const reduceMotion =
-            window.matchMedia &&
-            window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        title.scrollIntoView({
-            block: "start",
-            behavior: reduceMotion ? "auto" : "smooth",
-        });
+        if (window.parent !== window) {
+            window.parent.postMessage(
+                {
+                    type: "rk:reveal",
+                    target: "detail-title",
+                    height: document.documentElement.scrollHeight,
+                },
+                "*",
+            );
+        } else {
+            title.scrollIntoView({ block: "start", behavior: "auto" });
+        }
     }
 
     function renderPrimary() {

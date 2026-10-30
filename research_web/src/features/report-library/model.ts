@@ -148,3 +148,71 @@ export function reportNavigationHash(
         ? "#data"
         : null;
 }
+
+/** Reveal only the fixed evidence heading, from the currently mounted frame. */
+export function reportRevealRequest(
+    source: unknown,
+    frameWindow: unknown,
+    data: unknown,
+): { target: "detail-title"; height: number | null } | null {
+    if (
+        !frameWindow ||
+        source !== frameWindow ||
+        !data ||
+        typeof data !== "object"
+    )
+        return null;
+    const message = data as {
+        type?: unknown;
+        target?: unknown;
+        height?: unknown;
+    };
+    if (message.type !== "rk:reveal" || message.target !== "detail-title")
+        return null;
+    return {
+        target: "detail-title",
+        height: reportFrameHeight(message.height),
+    };
+}
+
+export function reportFrameHeight(value: unknown): number | null {
+    return typeof value === "number" && Number.isFinite(value) && value > 0
+        ? Math.min(Math.ceil(value), 200_000)
+        : null;
+}
+
+/** Run after React commits the frame height; stale documents cannot move the page. */
+export function revealReportEvidence(
+    frame: HTMLIFrameElement,
+    source: Window,
+    expectedDocument: Document,
+): boolean {
+    try {
+        if (
+            frame.contentWindow !== source ||
+            frame.contentDocument !== expectedDocument
+        )
+            return false;
+        const heading = expectedDocument.getElementById("detail-title");
+        if (!heading) return false;
+        const host = frame.ownerDocument.defaultView;
+        if (!host) return false;
+        const header = frame.ownerDocument.querySelector(".shell-header");
+        const clearance =
+            Math.max(0, header?.getBoundingClientRect().bottom ?? 0) + 16;
+        heading.focus({ preventScroll: true });
+        host.scrollTo({
+            top: Math.max(
+                0,
+                host.scrollY +
+                    frame.getBoundingClientRect().top +
+                    heading.getBoundingClientRect().top -
+                    clearance,
+            ),
+            behavior: "instant",
+        });
+        return true;
+    } catch {
+        return false;
+    }
+}

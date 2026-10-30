@@ -154,10 +154,29 @@ test("saved report supports guided choices and full evidence without changing de
     assert.match(ids.get("guided-comparison").textContent, /22\.5%/);
     assert.match(ids.get("false-abandonment-card").textContent, /66\.0%/);
     assert.equal(ids.get("evidence-disclosure").open, false);
+    assert.equal(ids.get("full-results-disclosure").open, false);
+    const evidence = html.slice(
+        html.indexOf('id="evidence-disclosure"'),
+        html.indexOf('id="full-results-disclosure"'),
+    );
+    assert(evidence.includes('id="detail-title"'));
+    assert(!evidence.includes('id="grid-table"'));
     ids.get("guided-evidence-button").listeners.click();
     assert.equal(ids.get("evidence-disclosure").open, true);
+    assert.equal(ids.get("full-results-disclosure").open, false);
     assert.equal(ids.get("detail-title").focused, true);
     assert.match(ids.get("detail-content").textContent, /8,733／4,490／0/);
+    const messages = [];
+    page.parent = { postMessage: (message) => messages.push(message) };
+    ids.get("guided-evidence-button").listeners.click();
+    ids.get("guided-evidence-button").listeners.click();
+    assert.equal(messages.length, 2);
+    for (const message of messages) {
+        assert.equal(message.type, "rk:reveal");
+        assert.equal(message.target, "detail-title");
+    }
+    assert.equal(ids.get("full-results-disclosure").open, false);
+    page.parent = page;
     guided[0].value = "LEAD_B1";
     guided[0].listeners.change();
     assert.match(ids.get("guided-comparison").textContent, /10\.0%/);
