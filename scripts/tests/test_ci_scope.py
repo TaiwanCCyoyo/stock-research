@@ -963,6 +963,31 @@ def test_dashboard_identity_selects_api_and_launcher_consumers() -> None:
     assert ci_scope.make_plan([("M", "research_api/__init__.py")])["full"]
 
 
+@pytest.mark.parametrize(
+    "path",
+    [
+        "research_core/development_previews.py",
+        "research_api/development_previews.py",
+        "scripts/development_preview.py",
+        "tests/test_development_previews.py",
+        "tests/test_development_main.py",
+        "scripts/start_research_web.py",
+        "research_core/dashboard_identity.py",
+        "research_api/main.py",
+    ],
+)
+def test_development_preview_sources_select_both_control_suites(path: str) -> None:
+    plan = ci_scope.make_plan([("M", path)])
+    assert not plan["full"] and plan["frontend"]
+    assert {
+        "tests/test_development_previews.py",
+        "tests/test_development_main.py",
+        "scripts/tests/test_start_research_web.py",
+        "scripts/tests/test_dashboard_identity.py",
+        "tests/test_research_api_security.py",
+    } <= set(plan["python_tests"])
+
+
 def test_new_path_and_union_fail_safe() -> None:
     assert ci_scope.make_plan([("M", "research_web/src/app/App.tsx"), ("A", "unknown/new.py")])["full"]
     plan = ci_scope.make_plan([("M", "research_core/hhhl_transition.py"), ("M", ".codex/skills/new/SKILL.md")])

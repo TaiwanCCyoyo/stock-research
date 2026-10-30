@@ -32,7 +32,7 @@ if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from research_core.artifact_store import release_os_lock, try_os_lock
-from research_core.dashboard_identity import dashboard_identity
+from research_core.dashboard_identity import ROOT_KEYS, dashboard_identity
 from research_core.producer_data import primary_checkout, read_env_file_value
 from research_core.saved_research_studio import StudioError, read_studio_package
 
@@ -74,18 +74,33 @@ def _startup_lock(root: Path, api_port: int, web_port: int) -> Iterator[None]:
             release_os_lock(handle)
 
 
-def _desktop_idle(api_port: int, started: float) -> bool:
+@dataclass
+class DesktopActivity:
+    """Launcher-owned activity survives an API worker reload."""
+
+    last_seen: float | None = None
+
+
+def _desktop_idle(api_port: int, started: float, activity: DesktopActivity | None = None) -> bool:
     """Only observe activity; never ask a reused API to shut itself down."""
     with urllib.request.urlopen(f"http://127.0.0.1:{api_port}/heartbeat", timeout=3) as response:
         payload = json.loads(response.read().decode("utf-8"))
     if not isinstance(payload, dict) or "ageSeconds" not in payload:
         raise RuntimeError("API 心跳格式不符，無法監控桌面分頁。")
     age = payload["ageSeconds"]
-    elapsed = time.monotonic() - started
+    now = time.monotonic()
+    elapsed = now - started
     if age is None:
+        # A reloaded API starts with no heartbeat. Retain the last confirmed
+        # activity in the launcher rather than treating this as an old, unused
+        # startup. Repeated None responses must not renew the grace period.
+        if activity is not None and activity.last_seen is not None:
+            return now - activity.last_seen > DESKTOP_GRACE_SECONDS
         return elapsed > FIRST_HEARTBEAT_SECONDS
     if not isinstance(age, (int, float)) or isinstance(age, bool) or not math.isfinite(age) or age < 0:
         raise RuntimeError("API 心跳格式不符，無法監控桌面分頁。")
+    if activity is not None:
+        activity.last_seen = max(started, now - age)
     return min(age, elapsed) > DESKTOP_GRACE_SECONDS
 
 
@@ -93,7 +108,7 @@ def launch_environment(root: Path, environ: dict[str, str]) -> dict[str, str]:
     """Resolve launcher settings without modifying the caller's environment."""
     environment = dict(environ)
     primary = primary_checkout(root)
-    local = {key: read_env_file_value(primary / ".env.local", key) for key in (*MODE_KEYS, *PATH_KEYS)} if primary is not None else {}
+    local = {key: read_env_file_value(primary / ".env.local", key) for key in (*MODE_KEYS, *PATH_KEYS, *ROOT_KEYS)} if primary is not None else {}
     # An explicit process mode overrides both file modes, including demo use.
     modes = [environ[key] for key in MODE_KEYS if key in environ]
     if not modes:
@@ -103,6 +118,11 @@ def launch_environment(root: Path, environ: dict[str, str]) -> dict[str, str]:
     for key in PATH_KEYS:
         if key not in environment and local.get(key) is not None:
             environment[key] = str(local[key])
+    # Freeze configured and unconfigured roots in child environments. A later
+    # .env edit must not silently change a running API's fallback destination.
+    for key in ROOT_KEYS:
+        if key not in environment:
+            environment[key] = local.get(key) or ""
     configured = [key in environment for key in PATH_KEYS]
     mode = modes[0] if modes else ("local-private" if any(configured) else "public-synthetic")
     if mode == "local-private":
@@ -129,8 +149,10 @@ def _verify_live_mode(name: str, port: int, environment: dict[str, str]) -> None
             payload = json.loads(response.read().decode("utf-8"))
         if not isinstance(payload, dict) or payload.get("dataMode") != environment[MODE_KEYS[0]]:
             raise ValueError("資料模式不符或服務版本尚未提供模式")
-        if name == "history-api" and payload.get("configId") != dashboard_identity(environment)["configId"]:
-            raise ValueError("私有來源設定不符或服務版本尚未提供設定身份")
+        if name == "history-api":
+            expected = dashboard_identity(environment)
+            if payload.get("configVersion") != expected["configVersion"] or payload.get("configId") != expected["configId"]:
+                raise ValueError("完整來源設定不符或服務版本尚未提供新版設定身份")
         if name == "history-api" and "RESEARCH_WEB_URL" in environment and payload.get("webUrl") != environment["RESEARCH_WEB_URL"]:
             raise ValueError("API 記錄的網站網址不符")
         if name == "research-web" and payload.get("apiTarget") != environment["RESEARCH_WEB_API_TARGET"]:
@@ -209,7 +231,7 @@ def _command(name: str, root: Path, port: int | None = None, dev: bool = False) 
         uv = shutil.which("uv")
         if uv is None:
             raise RuntimeError("找不到 uv；請先在專案環境安裝 uv。")
-        return [
+        command = [
             uv,
             "run",
             "python",
@@ -221,6 +243,9 @@ def _command(name: str, root: Path, port: int | None = None, dev: bool = False) 
             "--port",
             str(port or 8517),
         ]
+        if dev:
+            command.extend(["--reload", "--reload-dir", str(root / "research_api"), "--reload-dir", str(root / "research_core")])
+        return command
 
     npm = shutil.which("npm.cmd" if os.name == "nt" else "npm")
     if npm is None:
@@ -357,13 +382,16 @@ def _start_child(name: str, root: Path, log_dir: Path, environment: dict[str, st
     log_path = log_dir / f"{name}.log"
     log_file = log_path.open("ab")
     creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    command = (
+        [environment["RESEARCH_DESKTOP_PYTHON"], "-B", "-m", "uvicorn", "research_api.main:app", "--host", "127.0.0.1", "--port", str(port or 8517)]
+        if name == "history-api" and environment and "RESEARCH_DESKTOP_PYTHON" in environment
+        else _command(name, root, port, dev)
+    )
+    if name == "history-api" and dev and "--reload" not in command:
+        command.extend(["--reload", "--reload-dir", str(root / "research_api"), "--reload-dir", str(root / "research_core")])
     try:
         process = subprocess.Popen(
-            (
-                [environment["RESEARCH_DESKTOP_PYTHON"], "-B", "-m", "uvicorn", "research_api.main:app", "--host", "127.0.0.1", "--port", str(port or 8517)]
-                if name == "history-api" and environment and "RESEARCH_DESKTOP_PYTHON" in environment
-                else _command(name, root, port, dev)
-            ),
+            command,
             cwd=root,
             env=environment,
             stdin=subprocess.DEVNULL,
@@ -500,8 +528,9 @@ def _run_services(
         _announce("服務記錄位於 .tmp/research-web-launcher/")
         # Validate heartbeat support before opening the browser, including on reuse.
         started = time.monotonic()
+        activity = DesktopActivity()
         if desktop:
-            _desktop_idle(api_port, started)
+            _desktop_idle(api_port, started, activity)
             request = urllib.request.Request(f"http://127.0.0.1:{api_port}/heartbeat", data=b"", headers={"X-Requested-With": "desktop-launcher"})
             with urllib.request.urlopen(request, timeout=3) as response:
                 response.read()
@@ -521,11 +550,11 @@ def _run_services(
                 )
             if desktop:
                 try:
-                    if _desktop_idle(api_port, started):
+                    if _desktop_idle(api_port, started, activity):
                         # Recheck under the startup lock: a concurrent click may
                         # have refreshed activity before we acquired it.
                         with _startup_lock(root, api_port, web_port):
-                            if _desktop_idle(api_port, started):
+                            if _desktop_idle(api_port, started, activity):
                                 LOGGER.info("桌面分頁心跳已停止，僅清理本次啟動的服務")
                                 for child in reversed(children):
                                     _stop_child(child)
