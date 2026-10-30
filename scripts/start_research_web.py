@@ -74,18 +74,33 @@ def _startup_lock(root: Path, api_port: int, web_port: int) -> Iterator[None]:
             release_os_lock(handle)
 
 
-def _desktop_idle(api_port: int, started: float) -> bool:
+@dataclass
+class DesktopActivity:
+    """Launcher-owned activity survives an API worker reload."""
+
+    last_seen: float | None = None
+
+
+def _desktop_idle(api_port: int, started: float, activity: DesktopActivity | None = None) -> bool:
     """Only observe activity; never ask a reused API to shut itself down."""
     with urllib.request.urlopen(f"http://127.0.0.1:{api_port}/heartbeat", timeout=3) as response:
         payload = json.loads(response.read().decode("utf-8"))
     if not isinstance(payload, dict) or "ageSeconds" not in payload:
         raise RuntimeError("API 心跳格式不符，無法監控桌面分頁。")
     age = payload["ageSeconds"]
-    elapsed = time.monotonic() - started
+    now = time.monotonic()
+    elapsed = now - started
     if age is None:
+        # A reloaded API starts with no heartbeat. Retain the last confirmed
+        # activity in the launcher rather than treating this as an old, unused
+        # startup. Repeated None responses must not renew the grace period.
+        if activity is not None and activity.last_seen is not None:
+            return now - activity.last_seen > DESKTOP_GRACE_SECONDS
         return elapsed > FIRST_HEARTBEAT_SECONDS
     if not isinstance(age, (int, float)) or isinstance(age, bool) or not math.isfinite(age) or age < 0:
         raise RuntimeError("API 心跳格式不符，無法監控桌面分頁。")
+    if activity is not None:
+        activity.last_seen = max(started, now - age)
     return min(age, elapsed) > DESKTOP_GRACE_SECONDS
 
 
@@ -506,8 +521,9 @@ def _run_services(
         _announce("服務記錄位於 .tmp/research-web-launcher/")
         # Validate heartbeat support before opening the browser, including on reuse.
         started = time.monotonic()
+        activity = DesktopActivity()
         if desktop:
-            _desktop_idle(api_port, started)
+            _desktop_idle(api_port, started, activity)
             request = urllib.request.Request(f"http://127.0.0.1:{api_port}/heartbeat", data=b"", headers={"X-Requested-With": "desktop-launcher"})
             with urllib.request.urlopen(request, timeout=3) as response:
                 response.read()
@@ -527,11 +543,11 @@ def _run_services(
                 )
             if desktop:
                 try:
-                    if _desktop_idle(api_port, started):
+                    if _desktop_idle(api_port, started, activity):
                         # Recheck under the startup lock: a concurrent click may
                         # have refreshed activity before we acquired it.
                         with _startup_lock(root, api_port, web_port):
-                            if _desktop_idle(api_port, started):
+                            if _desktop_idle(api_port, started, activity):
                                 LOGGER.info("桌面分頁心跳已停止，僅清理本次啟動的服務")
                                 for child in reversed(children):
                                     _stop_child(child)

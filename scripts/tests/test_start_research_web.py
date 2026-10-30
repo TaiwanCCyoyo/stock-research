@@ -85,6 +85,52 @@ def test_desktop_idle_rejects_unverifiable_heartbeat(payload: object) -> None:
         launcher._desktop_idle(18517, 0)
 
 
+@pytest.mark.parametrize(
+    "observations",
+    [
+        [(0, None), (400, 1), (405, None), (410, 0), (591, 181), (591, 181)],
+        [(0, None), (400, 1), (405, None), (579, None), (580, None), (580, None)],
+    ],
+    ids=["active-tab-resumes-after-worker-reload", "abandoned-reload-still-expires"],
+)
+def test_desktop_monitor_preserves_confirmed_activity_across_api_reload(tmp_path: Path, observations: list[tuple[float, float | None]]) -> None:
+    process = MagicMock()
+    process.poll.return_value = None
+    child = launcher.ManagedChild("research-web", process, io.BytesIO())
+    clock = [0.0]
+    sequence = iter(observations)
+    observed: list[tuple[float, float | None]] = []
+
+    def heartbeat(request: str | launcher.urllib.request.Request, **kwargs: object) -> MagicMock:
+        response = MagicMock()
+        if isinstance(request, launcher.urllib.request.Request):
+            response.__enter__.return_value.read.return_value = b""
+        else:
+            now, age = next(sequence)
+            clock[0] = now
+            observed.append((now, age))
+            response.__enter__.return_value.read.return_value = json.dumps({"ageSeconds": age}).encode()
+        return response
+
+    with (
+        patch.object(launcher, "project_root", return_value=tmp_path),
+        patch.object(launcher, "_inspect_service", side_effect=("reusable", "stopped")),
+        patch.object(launcher, "_configure_logging", return_value=tmp_path),
+        patch.object(launcher, "_build_website", return_value="current"),
+        patch.object(launcher, "_start_child", return_value=child),
+        patch.object(launcher, "_wait_until_ready"),
+        patch.object(launcher, "_verify_live_mode"),
+        patch.object(launcher.urllib.request, "urlopen", side_effect=heartbeat),
+        patch.object(launcher.time, "monotonic", side_effect=lambda: clock[0]),
+        patch.object(launcher.time, "sleep") as sleep,
+        patch.object(launcher, "_stop_child") as stop,
+    ):
+        assert launcher.run(desktop=True, no_browser=True, api_port=18517, web_port=15177) == 0
+    assert observed == observations
+    assert sleep.call_args_list == [call(5)] * 3
+    stop.assert_called_once_with(child)
+
+
 def test_desktop_child_uses_selected_python_without_uv_and_hides_console(tmp_path: Path) -> None:
     environment = {"RESEARCH_DESKTOP_PYTHON": "C:/existing venv/pythonw.exe"}
     with patch.object(launcher.subprocess, "Popen") as popen, patch.object(launcher, "_command") as command:
