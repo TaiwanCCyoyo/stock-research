@@ -437,6 +437,24 @@ body {
     font-variant-numeric: tabular-nums;
 }
 
+.comparison-scroll {
+    max-height: 32rem;
+    overflow: auto;
+    overscroll-behavior: contain;
+}
+
+.comparison-scroll:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+
+.comparison-scroll thead {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--surface);
+}
+
 .definition-list {
     padding-left: 1.25rem;
     line-height: 1.75;
