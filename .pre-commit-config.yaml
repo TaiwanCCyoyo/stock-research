@@ -1,5 +1,10 @@
 # Retained H05 evidence code keeps its exact original bytes: hooks that rewrite files skip it,
 # while secret, large-file and encoding checks still cover it.
+# Pin the Node that nodeenv installs for Node hooks ("system" is unsupported on Windows).
+# Letting it pick "latest" broke CI on 2026-10-30 when it resolved an unparseable
+# 27.0.0-alpha build. Keep it on the Node major used for research_web (24).
+default_language_version:
+    node: 24.14.0
 repos:
     # Basic out-of-the-box checks
     - repo: https://github.com/pre-commit/pre-commit-hooks
