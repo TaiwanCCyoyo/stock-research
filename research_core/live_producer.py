@@ -193,8 +193,8 @@ def assert_producer_idle(now: datetime | None = None, *, task_timeout: float | N
     LOGGER.debug("Producer idle at %s", moment.isoformat(timespec="seconds"))
 
 
-def default_wait_deadline(now: datetime | None = None, *, at: clock_time = clock_time(23, 30)) -> datetime:
-    """`at` (default 23:30) on `now`'s Asia/Taipei day."""
+def default_wait_deadline(now: datetime | None = None, *, at: clock_time = clock_time(22, 0)) -> datetime:
+    """`at` (default 22:00, so a 20:30 task still finishes inside its 2h limit) on `now`'s Asia/Taipei day."""
     return producer_time(now).replace(hour=at.hour, minute=at.minute, second=0, microsecond=0)
 
 

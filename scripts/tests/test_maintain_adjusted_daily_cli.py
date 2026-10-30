@@ -15,7 +15,7 @@ NOON = datetime(2026, 10, 29, 12, 0, tzinfo=TAIPEI)
 
 
 def test_wait_deadline_options() -> None:
-    assert cli._wait_deadline(None, False, NOON) == datetime(2026, 10, 29, 23, 30, tzinfo=TAIPEI)
+    assert cli._wait_deadline(None, False, NOON) == datetime(2026, 10, 29, 22, 0, tzinfo=TAIPEI)
     assert cli._wait_deadline("22:15", False, NOON) == datetime(2026, 10, 29, 22, 15, tzinfo=TAIPEI)
     assert cli._wait_deadline("22:15", True, NOON) is None
 

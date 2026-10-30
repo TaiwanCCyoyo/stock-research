@@ -26,7 +26,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 def _wait_deadline(wait_until: str | None, no_wait: bool, now: datetime | None = None) -> datetime | None:
-    """Deadline for waiting on a busy producer: `--wait-until HH:MM` (Asia/Taipei), else 23:30 today; None checks once."""
+    """Deadline for waiting on a busy producer: `--wait-until HH:MM` (Asia/Taipei), else 22:00 today; None checks once."""
     if no_wait:
         return None
     if wait_until is None:
@@ -45,7 +45,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="command", required=True)
     update_parser = sub.add_parser("update")
-    update_parser.add_argument("--wait-until", metavar="HH:MM", help="wait for a busy producer until this Asia/Taipei time (default 23:30)")
+    update_parser.add_argument("--wait-until", metavar="HH:MM", help="wait for a busy producer until this Asia/Taipei time (default 22:00)")
     update_parser.add_argument("--no-wait", action="store_true", help="fail at once when the producer is busy")
     update_parser.add_argument("--force", action="store_true", help="rebuild even when inputs and code are unchanged since the current generation")
     sub.add_parser("status")
