@@ -10,7 +10,12 @@ directory. Files are published through a temp sibling and a no-replace rename, s
 interrupted copy leaves no truncated file under its final name. A file that already exists in
 the new root must agree with legacy: byte-identical, except append-only `*.jsonl` ledgers where
 legacy must be a byte prefix of the new file (the new one may have grown). Anything else raises
-`ForwardLogMigrationError`, and the caller must not record. Lock files are not data and are skipped.
+`ForwardLogMigrationError`, and the caller must not record.
+
+Lock files: every legacy `*.lock` must be lockable before anything is copied, which proves no
+recorder still owns the legacy log. A v2 attempt's `owner.lock` is then copied like data: recovery
+needs it to prove a released owner and close the attempt as interrupted. Only the top-level
+coordination locks (`.attempts-v2-*.lock`), which v2 recreates on demand, are not copied.
 """
 
 from __future__ import annotations
@@ -23,14 +28,13 @@ import stat
 import uuid
 from pathlib import Path
 
-from research_core.artifact_store import file_digest, publish_noreplace, safe_path
+from research_core.artifact_store import file_digest, publish_noreplace, release_os_lock, safe_path, try_os_lock
 from research_core.producer_data import REPO_ROOT, primary_checkout
 from research_core.shared_data import shared_data_root
 
 LOGGER = logging.getLogger(__name__)
 TASK_ID = "20261021-momentum-only-doubling"
 _STAGING_PREFIX = ".migrating-"
-_SKIPPED_SUFFIXES = (".lock",)
 _REPARSE = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 1024)
 
 
@@ -63,7 +67,7 @@ def _legacy_files(legacy: Path) -> list[Path]:
             path = Path(directory) / name
             if not stat.S_ISREG(path.lstat().st_mode):
                 raise ForwardLogMigrationError(f"legacy forward log contains a non-regular file: {path}")
-            if not name.endswith(_SKIPPED_SUFFIXES):
+            if not (Path(directory) == legacy and name.endswith(".lock")):
                 found.append(path)
     return sorted(found, key=lambda path: path.relative_to(legacy).as_posix())
 
@@ -98,6 +102,15 @@ def _copy_noreplace(source: Path, destination: Path) -> None:
     publish_noreplace(staged, destination)
 
 
+def _assert_no_live_owner(legacy: Path) -> None:
+    """Every legacy lock file must be lockable now: a held one means a recorder still owns the log."""
+    for lock in sorted(legacy.rglob("*.lock")):
+        with lock.open("r+b") as handle:
+            if not try_os_lock(handle):
+                raise ForwardLogMigrationError(f"legacy forward log is still in use (lock held: {lock}); migrate after that recorder stops")
+            release_os_lock(handle)
+
+
 def migrate_legacy_forward_log(legacy: Path | None, root: Path) -> tuple[int, int]:
     """Copy legacy files missing from `root`; return (copied, already_present). Legacy is never modified."""
     if legacy is None or not legacy.exists():
@@ -107,7 +120,9 @@ def migrate_legacy_forward_log(legacy: Path | None, root: Path) -> tuple[int, in
         raise ForwardLogMigrationError(f"legacy forward log is not a directory: {legacy}")
     pending: list[tuple[Path, Path]] = []
     present = 0
-    for source in _legacy_files(legacy):  # validate everything before copying anything
+    sources = _legacy_files(legacy)
+    _assert_no_live_owner(legacy)
+    for source in sources:  # validate everything before copying anything
         relative = source.relative_to(legacy)
         destination = safe_path(root / relative)
         if not destination.exists():

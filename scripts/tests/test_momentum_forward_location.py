@@ -128,3 +128,37 @@ def test_entry_points_stop_without_recording_on_mismatch(module: ModuleType, loc
     assert "nothing recorded" in str(raised.value)
     assert called == []
     assert not (root / "attempts.jsonl").exists()
+
+
+def test_v2_attempt_owner_lock_is_copied_for_recovery(locations: tuple[Path, Path]) -> None:
+    # recover() needs each attempt's owner.lock to prove a released owner; only root coordination locks stay behind.
+    legacy, root = locations
+    attempt = legacy / "attempt-journal-v2" / "a1"
+    attempt.mkdir(parents=True)
+    (attempt / "started.json").write_bytes(b'{"s":1}')
+    (attempt / "owner.lock").write_bytes(b"")
+
+    paths.migrate_legacy_forward_log(legacy, root)
+
+    assert (root / "attempt-journal-v2" / "a1" / "owner.lock").is_file()
+    assert (root / "attempt-journal-v2" / "a1" / "started.json").read_bytes() == b'{"s":1}'
+    assert not (root / ".attempts-v2-append.lock").exists()
+
+
+def test_a_held_legacy_lock_stops_migration_before_any_copy(locations: tuple[Path, Path]) -> None:
+    from research_core.artifact_store import release_os_lock, try_os_lock
+
+    legacy, root = locations
+    attempt = legacy / "attempt-journal-v2" / "a1"
+    attempt.mkdir(parents=True)
+    (attempt / "owner.lock").write_bytes(b"")
+    with (attempt / "owner.lock").open("r+b") as held:
+        assert try_os_lock(held)
+        try:
+            # A second handle conflicts even inside one process on Windows; elsewhere use a child process.
+            if sys.platform == "win32":
+                with pytest.raises(paths.ForwardLogMigrationError, match="still in use"):
+                    paths.migrate_legacy_forward_log(legacy, root)
+                assert not root.exists()
+        finally:
+            release_os_lock(held)
