@@ -76,52 +76,54 @@ test("study cards keep unlike metrics separate and preserve reading context", as
         const { StudyCardView } = await server.ssrLoadModule(
             "/src/features/studies/StudyCardView.tsx",
         );
-        const html = renderToStaticMarkup(
-            createElement(StudyCardView, {
-                card: {
-                    id: "synthetic-study",
-                    date: "2025-12-31",
-                    question: "合成研究問題",
-                    answer: "合成研究結論，條件限制也必須保留。",
-                    verdict: "mixed",
-                    dataPeriod: null,
-                    keyNumbers: [
-                        {
-                            label: "比較組數",
-                            value: 28,
-                            unit: "count",
-                            highlight: false,
-                        },
-                        {
-                            label: "達標比例",
-                            value: 66.04,
-                            unit: "percent",
-                            highlight: true,
-                        },
-                        {
-                            label: "價格倍數",
-                            value: 2,
-                            unit: "ratio",
-                            highlight: false,
-                        },
-                    ],
-                    limitation: "合成限制：不能推論實際交易績效。",
-                    reportHref: "#report/synthetic-study",
-                    accountRun: null,
-                    caveats: [],
-                    progress: null,
-                    details: {
-                        originalSummary: null,
-                        reportPath: null,
-                        webReportReason: null,
-                        sharedData: ["synthetic-family"],
-                        sharedDataReason: null,
-                        note: null,
-                        numberSources: [],
-                    },
-                },
-            }),
+        const { SourceInfo } = await server.ssrLoadModule(
+            "/src/components/ui/primitives.tsx",
         );
+        const element = createElement(StudyCardView, {
+            card: {
+                id: "synthetic-study",
+                date: "2025-12-31",
+                question: "合成研究問題",
+                answer: "合成研究結論，條件限制也必須保留。",
+                verdict: "mixed",
+                dataPeriod: null,
+                keyNumbers: [
+                    {
+                        label: "比較組數",
+                        value: 28,
+                        unit: "count",
+                        highlight: false,
+                    },
+                    {
+                        label: "達標比例",
+                        value: 66.04,
+                        unit: "percent",
+                        highlight: true,
+                    },
+                    {
+                        label: "價格倍數",
+                        value: 2,
+                        unit: "ratio",
+                        highlight: false,
+                    },
+                ],
+                limitation: "合成限制：不能推論實際交易績效。",
+                reportHref: "#report/synthetic-study",
+                accountRun: null,
+                caveats: [],
+                progress: null,
+                details: {
+                    originalSummary: null,
+                    reportPath: null,
+                    webReportReason: null,
+                    sharedData: ["synthetic-family"],
+                    sharedDataReason: null,
+                    note: null,
+                    numberSources: [],
+                },
+            },
+        });
+        const html = renderToStaticMarkup(element);
         assert.match(html, /<dt>比較組數<\/dt><dd>28<\/dd>/);
         assert.match(html, /<dt>達標比例<\/dt><dd>66\.04%<\/dd>/);
         assert.match(html, /<dt>價格倍數<\/dt><dd>2 倍<\/dd>/);
@@ -130,8 +132,30 @@ test("study cards keep unlike metrics separate and preserve reading context", as
         assert.match(html, /不能推論實際交易績效/);
         assert.doesNotMatch(html, /is-clamped/);
         assert.match(html, /href="#report\/synthetic-study"/);
-        assert.match(html, /href="#data">查看資料總覽/);
-        assert.doesNotMatch(html, /<a[^>]*>synthetic-family<\/a>/);
+        assert.match(html, /aria-expanded="false"[^>]*>.*原文與資料來源/);
+        assert.doesNotMatch(html, /href="#data"/);
+        // Closed portal contents are absent from SSR. Inspect the actual React
+        // children supplied by the card to SourceInfo, without replacing its
+        // disclosure behavior or duplicating the card's source-link markup.
+        const sourceContents = [];
+        const visit = (node) => {
+            if (!node || typeof node !== "object") return;
+            if (node.type === SourceInfo) {
+                sourceContents.push(node.props.children);
+                return;
+            }
+            if (typeof node.type === "function") {
+                visit(node.type(node.props));
+                return;
+            }
+            [node.props?.children].flat(Infinity).forEach(visit);
+        };
+        visit(element);
+        assert.equal(sourceContents.length, 1);
+        const sourceHtml = renderToStaticMarkup(sourceContents[0]);
+        assert.match(sourceHtml, /href="#data">查看資料總覽/);
+        assert.match(sourceHtml, /synthetic-family/);
+        assert.doesNotMatch(sourceHtml, /<a[^>]*>synthetic-family<\/a>/);
     } finally {
         await server.close();
     }
