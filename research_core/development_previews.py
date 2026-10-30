@@ -296,6 +296,9 @@ def _state(item: Preview, primary: Path, directory: Path, environment: Mapping[s
         config = _configuration(expected)
         if api.get("previewConfigId") != config:
             raise PreviewError("無法確認共用資料設定一致；請更新分支的預覽支援，並重新啟動。")
+        expected_identity = dashboard_identity(expected)
+        if api.get("configVersion") != expected_identity["configVersion"] or api.get("configId") != expected_identity["configId"]:
+            raise PreviewError("預覽尚未提供完整資料位置核對，或使用的資料位置已改變，請更新並重新啟動。")
         reports = _json_response(item.web_port, "/reports/index.json")
         if not reports or reports.get("version") != "development":
             raise PreviewError("報告清單與開發頁面版本不同，請由開發 session 檢查。")
@@ -413,8 +416,17 @@ def _main_status(root: Path, environment: Mapping[str, str]) -> dict[str, Any]:
             raise PreviewError("正式版連接埠屬於其他服務，不會停止或接管它。")
         if identity.get("dataMode") != expected["STOCK_RESEARCH_DATA_MODE"]:
             raise PreviewError("執行中的正式版與目前資料設定不同，請由開發 session 檢查。")
-        if service == "history-api" and identity.get("configId") != dashboard_identity(expected)["configId"]:
-            raise PreviewError("正式版 API 的資料設定已改變，請由開發 session 檢查。")
+        if service == "history-api":
+            expected_identity = dashboard_identity(expected)
+            if identity.get("configVersion") != expected_identity["configVersion"]:
+                return {
+                    "status": "unavailable",
+                    "url": None,
+                    "reason": "identity_update_required",
+                    "message": "正式版需要更新；更新並重新開啟後，就能從這裡返回。",
+                }
+            if identity.get("configId") != expected_identity["configId"]:
+                raise PreviewError("正式版 API 的資料設定已改變，請由開發 session 檢查。")
         if service == "research-web":
             if identity.get("build") != "production" or identity.get("apiTarget", "").rstrip("/") != api_url.rstrip("/"):
                 raise PreviewError("執行中的頁面不是正式版，或未連到正式版 API。")

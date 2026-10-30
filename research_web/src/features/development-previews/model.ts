@@ -247,6 +247,13 @@ export async function openMainDashboard(
             }
             if (result.status === "stopped")
                 throw new Error("正式版尚未啟動，請再試一次。");
+            if (
+                result.status === "unavailable" &&
+                result.reason === "identity_update_required"
+            )
+                throw new Error(
+                    "正式版需要更新；更新並重新開啟後，就能從這裡返回。",
+                );
             if (result.status !== "starting")
                 throw new Error("正式版暫時無法開啟，請稍後重試。");
             if (attempt < pollLimit) await wait(2000, controller.signal);

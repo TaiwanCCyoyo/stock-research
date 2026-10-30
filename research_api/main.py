@@ -251,7 +251,7 @@ def create_app() -> FastAPI:
         title="Research API",
         description="Read-only view over backtest task artifacts.",
     )
-    application.state.dashboard_identity = dashboard_identity(dict(os.environ))
+    application.state.dashboard_identity = dashboard_identity(dict(os.environ), repo_root=REPO_ROOT)
     application.add_exception_handler(QueryError, query_error_handler)
     application.add_exception_handler(Exception, unexpected_error_handler)
     application.include_router(router)

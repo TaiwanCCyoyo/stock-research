@@ -56,6 +56,15 @@ afresh. The page waits for verified readiness; cancellation stops waiting only,
 and a failure leaves the preview available for retry. Read-only status polling
 never launches a process. Unknown occupied ports are not taken over.
 
+Readiness requires `dashboard-config.v2`: the mode, producer root, shared root,
+research catalog root and private presentation paths all contribute to the
+configuration identity. The standard launcher fixes the effective roots in its
+child environment at startup. Changing primary configuration from A to B cannot
+make a still-running A service appear ready for B. Older services without this
+identity require an update and restart; the return action leaves them untouched
+and displays an update hint. Merge and normal primary update must precede the
+final end-to-end acceptance with the new identity.
+
 Both preview and primary launches use a short-lived helper that exits before
 the action returns. Their launchers have independent lifetimes: closing one
 launcher must not terminate the other through Windows process-tree cleanup.
@@ -109,6 +118,13 @@ preview and unrelated services were not terminated for this check. The waiting
 capture is `.tmp/development-return-main-waiting.jpg`. Primary source and the
 desktop shortcut were unchanged; its standard launcher built its existing main
 source when opening it normally.
+
+This successful navigation was observed before the final full-root identity
+requirement. The existing primary service is deliberately retained on its old
+source and must now be reported as needing an update. Synthetic tests cover
+every A-to-B root change and rejection of a missing identity version. Final
+live navigation with `dashboard-config.v2` remains pending owner merge and
+normal primary update; this PR does not update primary code for its own test.
 
 The four earlier strength-flags worktrees remain: mission/code are retained for
 historical citations; execution is retained pending the presentation handoff;

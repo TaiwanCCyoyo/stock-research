@@ -128,7 +128,7 @@ def test_ready_requires_same_worktree_data_config_and_development_index(registry
             "schema": "stock-research-service.v1",
             "service": "history-api",
             "projectRoot": str(target),
-            "dataMode": "public-synthetic",
+            **dashboard_identity(env),
             "previewConfigId": previews._configuration(env),
         },
     }
@@ -139,6 +139,12 @@ def test_ready_requires_same_worktree_data_config_and_development_index(registry
     identities[item.api_port]["previewConfigId"] = "different"
     assert previews.list_previews(root=primary, environment={})["items"][0]["status"] == "unavailable"
     identities[item.api_port]["previewConfigId"] = previews._configuration(env)
+    fingerprint = identities[item.api_port].pop("configVersion")
+    assert previews.list_previews(root=primary, environment={})["items"][0]["status"] == "unavailable"
+    identities[item.api_port]["configVersion"] = fingerprint
+    identities[item.api_port]["configId"] = "other-effective-roots"
+    assert previews.list_previews(root=primary, environment={})["items"][0]["status"] == "unavailable"
+    identities[item.api_port]["configId"] = dashboard_identity(env)["configId"]
     report["version"] = "old-release"
     assert previews.list_previews(root=primary, environment={})["items"][0]["status"] == "unavailable"
 

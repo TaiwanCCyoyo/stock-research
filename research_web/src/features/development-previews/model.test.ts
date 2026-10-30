@@ -333,6 +333,19 @@ test("stopped, unavailable and malformed main states leave the preview usable", 
     );
 });
 
+test("older main gives an update hint instead of pretending retry will fix it", async () => {
+    await assert.rejects(
+        openMainDashboard(mainStatus, mainUrl, new AbortController().signal, {
+            fetcher: async () =>
+                Response.json({
+                    status: "unavailable",
+                    reason: "identity_update_required",
+                }),
+        }),
+        /正式版需要更新/,
+    );
+});
+
 test("main polling failure is readable and does not silently relaunch", async () => {
     let calls = 0;
     await assert.rejects(

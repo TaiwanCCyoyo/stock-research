@@ -63,6 +63,29 @@ def test_main_ready_reuses_verified_production_service(main_root: Path, monkeypa
     detach.assert_not_called()
 
 
+@pytest.mark.parametrize("key", ["STOCK_PRODUCER_DATA_ROOT", "STOCK_RESEARCH_SHARED_ROOT", "STOCK_RESEARCH_DATA_ROOT"])
+def test_main_rejects_running_root_a_after_primary_changes_to_b(main_root: Path, monkeypatch: pytest.MonkeyPatch, key: str) -> None:
+    settings = main_root / ".env.local"
+    settings.write_text(f"{key}={main_root / 'source-a'}\n", encoding="utf-8")
+    ready_services(main_root, monkeypatch)
+    assert previews.main_status(root=main_root, environment={})["status"] == "ready"
+    settings.write_text(f"{key}={main_root / 'source-b'}\n", encoding="utf-8")
+    detach = MagicMock()
+    monkeypatch.setattr(previews, "_detach", detach)
+    assert previews.open_main(root=main_root, environment={})["status"] == "unavailable"
+    detach.assert_not_called()
+
+
+def test_main_without_complete_identity_requires_update(main_root: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    identities = ready_services(main_root, monkeypatch)
+    del identities[(8517, "/__research_service__")]["configVersion"]
+    detach = MagicMock()
+    monkeypatch.setattr(previews, "_detach", detach)
+    result = previews.open_main(root=main_root, environment={})
+    assert result["status"] == "unavailable" and result["reason"] == "identity_update_required"
+    detach.assert_not_called()
+
+
 def test_stopped_main_launches_once_and_waits_for_build_deadline(main_root: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     detach = MagicMock(return_value=321)
     monkeypatch.setattr(previews, "_detach", detach)

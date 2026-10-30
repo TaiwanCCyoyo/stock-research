@@ -32,7 +32,7 @@ if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from research_core.artifact_store import release_os_lock, try_os_lock
-from research_core.dashboard_identity import dashboard_identity
+from research_core.dashboard_identity import ROOT_KEYS, dashboard_identity
 from research_core.producer_data import primary_checkout, read_env_file_value
 from research_core.saved_research_studio import StudioError, read_studio_package
 
@@ -108,7 +108,7 @@ def launch_environment(root: Path, environ: dict[str, str]) -> dict[str, str]:
     """Resolve launcher settings without modifying the caller's environment."""
     environment = dict(environ)
     primary = primary_checkout(root)
-    local = {key: read_env_file_value(primary / ".env.local", key) for key in (*MODE_KEYS, *PATH_KEYS)} if primary is not None else {}
+    local = {key: read_env_file_value(primary / ".env.local", key) for key in (*MODE_KEYS, *PATH_KEYS, *ROOT_KEYS)} if primary is not None else {}
     # An explicit process mode overrides both file modes, including demo use.
     modes = [environ[key] for key in MODE_KEYS if key in environ]
     if not modes:
@@ -118,6 +118,11 @@ def launch_environment(root: Path, environ: dict[str, str]) -> dict[str, str]:
     for key in PATH_KEYS:
         if key not in environment and local.get(key) is not None:
             environment[key] = str(local[key])
+    # Freeze configured and unconfigured roots in child environments. A later
+    # .env edit must not silently change a running API's fallback destination.
+    for key in ROOT_KEYS:
+        if key not in environment:
+            environment[key] = local.get(key) or ""
     configured = [key in environment for key in PATH_KEYS]
     mode = modes[0] if modes else ("local-private" if any(configured) else "public-synthetic")
     if mode == "local-private":
@@ -144,8 +149,10 @@ def _verify_live_mode(name: str, port: int, environment: dict[str, str]) -> None
             payload = json.loads(response.read().decode("utf-8"))
         if not isinstance(payload, dict) or payload.get("dataMode") != environment[MODE_KEYS[0]]:
             raise ValueError("資料模式不符或服務版本尚未提供模式")
-        if name == "history-api" and payload.get("configId") != dashboard_identity(environment)["configId"]:
-            raise ValueError("私有來源設定不符或服務版本尚未提供設定身份")
+        if name == "history-api":
+            expected = dashboard_identity(environment)
+            if payload.get("configVersion") != expected["configVersion"] or payload.get("configId") != expected["configId"]:
+                raise ValueError("完整來源設定不符或服務版本尚未提供新版設定身份")
         if name == "history-api" and "RESEARCH_WEB_URL" in environment and payload.get("webUrl") != environment["RESEARCH_WEB_URL"]:
             raise ValueError("API 記錄的網站網址不符")
         if name == "research-web" and payload.get("apiTarget") != environment["RESEARCH_WEB_API_TARGET"]:
