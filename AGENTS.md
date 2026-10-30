@@ -31,6 +31,7 @@ never a place to read from or write to. See `docs/en/bootstrap-stock-research.md
 
 - Windows is the primary development platform: check path handling, and reject tests that assume POSIX-only paths or shells.
 - Keep shared hook and hygiene logic shell-neutral: put cross-agent checks in Python scripts under `scripts/` rather than Bash, PowerShell, or agent-specific command fragments.
+- Toolchain versions (owner preference 2026-10-31): consistency and security both matter. Never let a pin resolve through a moving alias that can cross a major or pick a prerelease (`latest`, `lts`, nodeenv defaults); pin an exact release where a cache or another pin keys on it, and keep every pin of one tool equal across hooks, CI and both repositories (Node 24.22.2 today: `default_language_version` and `setup-node`). Choose the newest patch of the supported line rather than an arbitrary older one, and upgrade promptly when a security release lands, changing all pins of that tool together.
 - Prefer the GitHub plugin for repository, issue, PR, CI, and review workflows; fall back to authenticated `gh` when the plugin is unavailable or lacks the operation. Local Git work requires no plugin.
 
 ## Project Layout And Ownership
