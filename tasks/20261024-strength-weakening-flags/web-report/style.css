@@ -6,6 +6,13 @@ body {
     background: var(--page, var(--surface));
 }
 
+.report-context {
+    margin: 16px 0;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.7;
+}
+
 .rk-page {
     max-width: 1180px;
 }

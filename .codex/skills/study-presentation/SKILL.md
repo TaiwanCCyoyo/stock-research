@@ -46,6 +46,12 @@ over slogans or fragments that require interpretation. Clarify what a displayed
 date means; do not imply task creation is publication or completion. Simplify
 labels without changing the underlying research verdict or implying approval.
 
+Guide through layout and responsive explanations, not a lecturing voice. Prefer
+neutral statements over repeated 「先知道」「下面帶你看」 introductions. Keep an
+ordinary scope note brief and visually quiet; do not turn it into a warning box
+packed with definitions. Put secondary qualifications next to the relevant
+measure or in the details, while preserving the main limitation in view.
+
 Design failure states as part of the reading route. Explain what could not be
 loaded, what remains usable, and the next available action. Distinguish missing
 reports, connection failures and mismatched versions when evidence permits;
