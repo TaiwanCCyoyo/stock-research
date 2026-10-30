@@ -14,7 +14,7 @@ import pandas as pd
 
 from research_core.hhhl_variants_observations import classify_window, flag_history
 from research_core.pattern_scan_events_v1 import describe_price_path
-from research_core.pattern_scan_flags_v1 import FLAG_IDS, event_flag_observations, event_flags
+from research_core.pattern_scan_flags_v1 import FLAG_IDS, _FollowupFlagPlan
 
 LOGGER = logging.getLogger(__name__)
 COMMON_COLUMNS = (
@@ -197,6 +197,7 @@ def followup_values(
     landmark_flags: list[dict[str, Any]] = []
     first_flags: list[dict[str, Any]] = []
     closes = cast(pd.Series, frame["Close"]).to_numpy(dtype=float, na_value=np.nan).tolist()
+    flag_plan = _FollowupFlagPlan(frame, pivots)
     for supplied in events.to_dict(orient="records"):
         row = cast(dict[str, Any], supplied)
         horizon = _positive(row["horizon"], "event horizon")
@@ -228,10 +229,8 @@ def followup_values(
         common["base_main_eligible"] = row.get("base_main_eligible", clock.main_eligible)
         path = describe_price_path(closes, t0, horizon=horizon)
         stop = min(len(frame), t0 + horizon + 1)
-        bounded = frame.iloc[:stop]
-        bounded_pivots = pivots.loc[cast(pd.Series, pivots["confirmation_index"]).lt(stop)]
         levels = {name: _optional(row.get(name)) for name in ("support", "lower", "confirmed_support")}
-        daily = event_flags(bounded, bounded_pivots, t0, **levels)
+        daily = flag_plan.daily(t0, stop, **levels)
         paths.append({
             **common,
             **{f"path_{key}" if key in {"category", "reason"} else key: value for key, value in asdict(path).items()},
@@ -244,7 +243,7 @@ def followup_values(
         for prefix, hit in (("first_flag", None), ("before_hit_first_flag", clock.first_hit_offset)):
             first.update({f"{prefix}_{key}": value for key, value in _first(daily, horizon, first_hit=hit).items()})
         first_flags.append(first)
-        observations = event_flag_observations(bounded, bounded_pivots, t0, horizons=(horizon,), landmarks=landmark_values, **levels)
+        observations = flag_plan.observations(daily, t0, stop, horizon, landmark_values)
         for supplied_observation in observations.to_dict(orient="records"):
             observation = cast(dict[str, Any], supplied_observation)
             for original, renamed in (("label", "clock_label"), ("calendar_full", "clock_calendar_full"), ("first_hit_offset", "clock_first_hit_offset")):
