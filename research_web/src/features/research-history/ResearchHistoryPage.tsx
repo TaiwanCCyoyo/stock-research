@@ -44,9 +44,9 @@ export function ResearchHistoryPage() {
             )}
             <div className="ss-head-row">
                 <div>
-                    <h1>研究歷程</h1>
+                    <h1>研究紀錄</h1>
                     <p className="ss-muted">
-                        做過的嘗試與保存的結論，包含行不通的方法。
+                        查看過去研究的方法、結果與原始報告。
                     </p>
                 </div>
                 <input

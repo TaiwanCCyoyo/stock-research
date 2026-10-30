@@ -70,12 +70,12 @@ export function ReportViewer({
         <div className="rv-page">
             <div className="rv-bar u-card">
                 <a className="rv-back u-btn" href="#studies">
-                    ← 研究
+                    ← 返回研究列表
                 </a>
                 <div className="rv-title">
                     <strong>{report?.title || "研究報告"}</strong>
                     <span>
-                        {report?.date && <span>{report.date}</span>}
+                        {report?.date && <span>報告日期 {report.date}</span>}
                         {report?.period && (
                             <span>資料期間 {report.period}</span>
                         )}
