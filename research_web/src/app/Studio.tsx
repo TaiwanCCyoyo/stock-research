@@ -12,6 +12,7 @@ import { StrategyDetailPage } from "../features/strategies/StrategyDetailPage";
 import { StrategyComparePage } from "../features/strategies/StrategyComparePage";
 import { StudiesPage } from "../features/studies/StudiesPage";
 import { ReportViewer } from "../features/report-library/ReportViewer";
+import { DevelopmentPreviews } from "../features/development-previews/DevelopmentPreviews";
 import {
     LegacyStockResolver,
     StockCoverageDetail,
@@ -194,6 +195,7 @@ export default function Studio() {
                     <span className="shell-theme-dot" />
                     主題
                 </button>
+                <DevelopmentPreviews />
             </header>
             {settings && (
                 <>

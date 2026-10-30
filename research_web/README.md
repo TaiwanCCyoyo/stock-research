@@ -6,6 +6,11 @@ explorer, a saved-research library and the dated ETF field guide. The earlier K-
 
 ## Start
 
+For unmerged work, the **開發預覽** button opens registered task checkouts in a
+separate tab. See [development previews](../docs/en/development-previews.md) for
+registration, data selection and session handoff. The desktop shortcut remains
+attached to the primary checkout.
+
 Data overview and institutional/revenue chart endpoint contracts, units, and measured
 coverage are documented in [data status](../docs/en/data-status.md). Frontend rendering
 can use `/api/data-status` and `/api/data-series/v1/`; these endpoints acquire no data.

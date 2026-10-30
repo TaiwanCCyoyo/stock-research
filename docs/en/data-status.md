@@ -191,8 +191,39 @@ Reading these rows:
 - Pre-2019 rows carry `instrument_type = 'unknown'`, so a filter on `'stock'`
   silently drops them.
 - `published_at` is null and `fetched_at` is the 2026-10-24 acquisition time: the
-  history is not point-in-time. The status file's `last_updated` is the maximum
-  `fetched_at`.
+  history is not point-in-time. Since producer PR #13 (below) the status file's
+  `last_updated` is the latest `fetched_at` of the newest report date, so this
+  backfill no longer sets it.
+
+## Bounded status reads: 2026-10-28
+
+The owner merged producer PR #13 as `c0832bbe59979f84d728c2632a15ff84c9c0fb45`;
+the gitlink moves from `59002b2` to that release. Before it, one mixed SQL
+aggregate per artifact read the whole table (16 GB for official prices). The
+daily runs of 2026-10-26 through 2026-10-30 hit the 120-second deadline and
+published healthy official-price and institutional data, and on some days
+monthly revenue, as `missing`. The primary producer checkout reached `c0832bb`
+only on 2026-10-30 21:49, so those runs all used the old code.
+
+The release changes what consumers read:
+
+- Counts and period bounds come from one `GROUP BY code` pass. `rows` and
+  `symbols` keep their meaning; a NULL code is not a symbol.
+- For official prices, institutional reports and monthly revenue,
+  `last_updated` is the latest fetch time among rows of the newest period, not
+  the table-wide maximum. Observation-only datasets keep the maximum.
+- A `missing` entry that could not be read carries `unavailable_reason`
+  (`absent`, `read_deadline`, `changed_during_read` or `unreadable`). The field
+  is additive; `research_core/data_status.py` ignores it and still accepts only
+  `ok`, `stale` and `missing`.
+- A read that the artifact changed under is retried once, inside the same
+  deadline.
+
+First production refresh with the release, 2026-10-31 02:06 Asia/Taipei, both
+producer tasks Ready: all six datasets `ok`. Official prices took 107.7
+seconds, including one `changed_during_read` retry, so on a cold cache it is
+still close to the 120-second deadline. Institutional data took 11.0 seconds.
+The first scheduled daily run on the new code is 2026-11-02.
 
 ## Security coverage and stock navigation
 

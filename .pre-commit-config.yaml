@@ -1,5 +1,11 @@
 # Retained H05 evidence code keeps its exact original bytes: hooks that rewrite files skip it,
 # while secret, large-file and encoding checks still cover it.
+# Pin the Node that nodeenv installs for Node hooks ("system" is unsupported on Windows).
+# Letting it pick "latest" broke CI on 2026-10-30 when it resolved an unparseable
+# 27.0.0-alpha build; "lts" would also drift across majors. Keep this exact release
+# equal to the CI setup-node version so hooks and research_web run the same Node.
+default_language_version:
+    node: 24.22.2
 repos:
     # Basic out-of-the-box checks
     - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -33,10 +39,9 @@ repos:
       rev: v3.9.5
       hooks:
           - id: prettier
+            # Keep fresh nodeenv installs off upstream alpha releases.
+            language_version: "24.22.2"
             exclude: ^tasks/20261005-relative-strength-holding/evidence/
-            # Pin Node: with the default "latest", nodeenv picked 27.0.0-alpha on 2026-10-30
-            # and crashed parsing its version, failing every CI run before any check ran.
-            language_version: 26.5.0
 
     # Enforce UTF-8 encoding and reject decode corruption. The language constraint this
     # hook used to carry was removed on 2026-08-23; see scripts/file_hygiene.py.
