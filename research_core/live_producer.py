@@ -128,7 +128,10 @@ def _pid_is_running(pid: int) -> bool:
             return ctypes.get_last_error() == 5
         try:
             code = ctypes.c_ulong()
-            return bool(kernel32.GetExitCodeProcess(ctypes.c_void_p(handle), ctypes.byref(code))) and code.value == 259  # STILL_ACTIVE
+            if not kernel32.GetExitCodeProcess(ctypes.c_void_p(handle), ctypes.byref(code)):
+                # The process exists (we hold a handle) but its state is unknown: never call it exited.
+                return True
+            return code.value == 259  # STILL_ACTIVE
         finally:
             kernel32.CloseHandle(ctypes.c_void_p(handle))
     try:
@@ -153,7 +156,10 @@ def live_lock_writers(root: Path) -> list[tuple[int, str]]:
         if not path.is_file():
             continue
         try:
-            pid = json.loads(path.read_text(encoding="utf-8")).get("pid")
+            text = path.read_text(encoding="utf-8")
+            if not text.strip():
+                continue  # a released lock: the producer clears its record rather than deleting the file
+            pid = json.loads(text).get("pid")
         except (OSError, ValueError, AttributeError) as error:
             LOGGER.warning("Unreadable producer lock %s (%s); ignoring it", path, error)
             continue
@@ -194,7 +200,12 @@ def assert_producer_idle(now: datetime | None = None, *, task_timeout: float | N
 
 
 def default_wait_deadline(now: datetime | None = None, *, at: clock_time = clock_time(22, 0)) -> datetime:
-    """`at` (default 22:00, so a 20:30 task still finishes inside its 2h limit) on `now`'s Asia/Taipei day."""
+    """`at` (default 22:00) on `now`'s Asia/Taipei day.
+
+    22:00 bounds the wait only: it leaves the 20:30 task's 2h limit room for a typical ~15 minute
+    rebuild, but neither the probe nor the rebuild after it has a time budget, so it does not
+    guarantee the run ends inside that limit.
+    """
     return producer_time(now).replace(hour=at.hour, minute=at.minute, second=0, microsecond=0)
 
 
@@ -208,8 +219,10 @@ def wait_for_producer_idle(
 ) -> None:
     """Poll `check` until the producer is idle or `deadline` passes; `None` checks once.
 
-    Logs one INFO line per wait. Past the deadline the last `ProducerBusyError` is logged at
-    ERROR and re-raised, so a scheduled run exits non-zero instead of silently skipping.
+    Logs one INFO line per wait. The last wait is shortened to end at the deadline, where one
+    final check runs, so a producer that turns idle just before the deadline is not missed.
+    Still busy at the deadline, the last `ProducerBusyError` is logged at ERROR and re-raised,
+    so a scheduled run exits non-zero instead of silently skipping.
     """
     label = "none" if deadline is None else producer_time(deadline).strftime("%H:%M")
     while True:
@@ -217,11 +230,13 @@ def wait_for_producer_idle(
             check()
             return
         except ProducerBusyError as error:
-            if deadline is None or clock() + timedelta(seconds=poll_seconds) > deadline:
-                LOGGER.error("producer still busy (%s) and no further check fits before deadline %s; giving up", error, label)
+            remaining = 0.0 if deadline is None else (deadline - clock()).total_seconds()
+            if remaining <= 0:
+                LOGGER.error("producer still busy (%s) at deadline %s; giving up", error, label)
                 raise
-            LOGGER.info("producer busy (%s); next check in %.0fs, deadline %s", error, poll_seconds, label)
-            sleep(poll_seconds)
+            wait = min(poll_seconds, remaining)
+            LOGGER.info("producer busy (%s); next check in %.0fs, deadline %s", error, wait, label)
+            sleep(wait)
 
 
 def readonly_sqlite(path: Path, *, timeout: float = 30.0) -> sqlite3.Connection:

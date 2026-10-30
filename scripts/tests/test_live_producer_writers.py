@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import subprocess
+import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from types import SimpleNamespace
@@ -90,7 +91,12 @@ def test_process_query_parsing_and_fail_closed(monkeypatch: pytest.MonkeyPatch, 
     assert command[0] == "powershell.exe" and "run_daily" in command[-1] and "backfill_official_history" in command[-1] and timeout == 1.5
 
 
+# The root conftest stubs query_writer_processes for every test; keep the real one to test it.
+_REAL_QUERY_WRITER_PROCESSES = live_producer.query_writer_processes
+
+
 def test_non_windows_reports_no_processes(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(live_producer, "query_writer_processes", _REAL_QUERY_WRITER_PROCESSES)
     monkeypatch.setattr(live_producer, "sys", SimpleNamespace(platform="linux"))
     monkeypatch.setattr(live_producer, "_powershell_writer_processes", lambda timeout: pytest.fail("must not query"))
     assert live_producer.query_writer_processes() == []
@@ -151,3 +157,60 @@ def test_no_wait_checks_once(caplog: pytest.LogCaptureFixture) -> None:
     with pytest.raises(ProducerBusyError):
         wait_for_producer_idle(None, check=check, sleep=lambda seconds: pytest.fail("no sleeping without a deadline"))
     assert calls == [1]
+
+
+def test_windows_query_runs_the_powershell_probe(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(live_producer, "query_writer_processes", _REAL_QUERY_WRITER_PROCESSES)
+    monkeypatch.setattr(live_producer, "sys", SimpleNamespace(platform="win32"))
+    monkeypatch.setattr(live_producer, "_powershell_writer_processes", lambda timeout: [(5, "python.exe")])
+    assert live_producer.query_writer_processes(timeout=2.0) == [(5, "python.exe")]
+
+
+def test_wait_checks_again_at_the_deadline_when_less_than_a_poll_remains() -> None:
+    # Busy at 21:56 with a 22:00 deadline; the producer finishes at 21:57.
+    deadline = datetime(2026, 10, 29, 22, 0, tzinfo=TAIPEI)
+    moment = [datetime(2026, 10, 29, 21, 56, tzinfo=TAIPEI)]
+    sleeps: list[float] = []
+
+    def check() -> None:
+        if moment[0] < datetime(2026, 10, 29, 21, 57, tzinfo=TAIPEI):
+            raise ProducerBusyError("run_daily finishing")
+
+    def sleep(seconds: float) -> None:
+        sleeps.append(seconds)
+        moment[0] += timedelta(seconds=seconds)
+
+    wait_for_producer_idle(deadline, check=check, clock=lambda: moment[0], sleep=sleep)
+    assert sleeps == [240.0] and moment[0] == deadline
+
+
+class _Kernel32:
+    """Stand-in for kernel32 where OpenProcess succeeds and GetExitCodeProcess fails."""
+
+    class _Function:
+        def __init__(self, result: Any) -> None:
+            self.result = result
+            self.restype: Any = None
+
+        def __call__(self, *args: Any) -> Any:
+            return self.result
+
+    def __init__(self) -> None:
+        self.OpenProcess = self._Function(1234)
+        self.GetExitCodeProcess = self._Function(0)
+        self.CloseHandle = self._Function(1)
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="exercises the Windows liveness branch")
+def test_a_failed_exit_code_query_counts_as_running(monkeypatch: pytest.MonkeyPatch) -> None:
+    import ctypes
+
+    monkeypatch.setattr(ctypes, "WinDLL", lambda *args, **kwargs: _Kernel32())
+    assert live_producer._pid_is_running(4321), "a process whose state cannot be read must not be treated as exited"
+
+
+def test_an_empty_released_lock_is_ignored_silently(producer: Path, caplog: pytest.LogCaptureFixture) -> None:
+    (producer / ".run_daily.lock").write_text("", encoding="utf-8")
+    with caplog.at_level(logging.WARNING):
+        assert live_lock_writers(producer) == []
+    assert not caplog.records
