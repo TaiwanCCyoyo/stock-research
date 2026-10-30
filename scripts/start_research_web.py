@@ -209,7 +209,7 @@ def _command(name: str, root: Path, port: int | None = None, dev: bool = False) 
         uv = shutil.which("uv")
         if uv is None:
             raise RuntimeError("找不到 uv；請先在專案環境安裝 uv。")
-        return [
+        command = [
             uv,
             "run",
             "python",
@@ -221,6 +221,9 @@ def _command(name: str, root: Path, port: int | None = None, dev: bool = False) 
             "--port",
             str(port or 8517),
         ]
+        if dev:
+            command.extend(["--reload", "--reload-dir", str(root / "research_api"), "--reload-dir", str(root / "research_core")])
+        return command
 
     npm = shutil.which("npm.cmd" if os.name == "nt" else "npm")
     if npm is None:
@@ -357,13 +360,16 @@ def _start_child(name: str, root: Path, log_dir: Path, environment: dict[str, st
     log_path = log_dir / f"{name}.log"
     log_file = log_path.open("ab")
     creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    command = (
+        [environment["RESEARCH_DESKTOP_PYTHON"], "-B", "-m", "uvicorn", "research_api.main:app", "--host", "127.0.0.1", "--port", str(port or 8517)]
+        if name == "history-api" and environment and "RESEARCH_DESKTOP_PYTHON" in environment
+        else _command(name, root, port, dev)
+    )
+    if name == "history-api" and dev and "--reload" not in command:
+        command.extend(["--reload", "--reload-dir", str(root / "research_api"), "--reload-dir", str(root / "research_core")])
     try:
         process = subprocess.Popen(
-            (
-                [environment["RESEARCH_DESKTOP_PYTHON"], "-B", "-m", "uvicorn", "research_api.main:app", "--host", "127.0.0.1", "--port", str(port or 8517)]
-                if name == "history-api" and environment and "RESEARCH_DESKTOP_PYTHON" in environment
-                else _command(name, root, port, dev)
-            ),
+            command,
             cwd=root,
             env=environment,
             stdin=subprocess.DEVNULL,

@@ -1,7 +1,9 @@
-"""Read-only research API: thin HTTP views over existing task/query functions.
+"""Research API: thin HTTP views over existing task/query functions.
 
 Endpoints only re-expose data produced by research_lab.dashboard_core and
 scripts.stock_research_query; no new query logic lives here.
+The local development-preview router separately controls registered launchers;
+it never writes research data or accepts arbitrary process commands.
 """
 
 from __future__ import annotations
@@ -24,6 +26,7 @@ from starlette.types import Receive, Scope, Send
 from research_api.data_coverage import create_data_coverage_router
 from research_api.data_series import create_data_series_router
 from research_api.data_status import create_data_status_router
+from research_api.development_previews import create_development_preview_router
 from research_api.history import history_router
 from research_api.private_artifacts import create_private_artifact_router
 from research_api.saved_research_studio import create_studio_router
@@ -252,6 +255,9 @@ def create_app() -> FastAPI:
     application.add_exception_handler(QueryError, query_error_handler)
     application.add_exception_handler(Exception, unexpected_error_handler)
     application.include_router(router)
+    preview_router = create_development_preview_router()
+    application.include_router(preview_router)
+    application.include_router(preview_router, prefix="/api")
     application.include_router(create_private_artifact_router())
     application.include_router(create_private_artifact_router(), prefix="/api")
     shared_router = create_shared_data_router()

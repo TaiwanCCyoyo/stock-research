@@ -36,5 +36,13 @@ Deliver a reading view of saved evidence, not new study conclusions.
   Include useful conclusions and limitations in the overview, detailed evidence
   on demand. Record missing report, registration or shared-data links with a reason.
 
+For an unmerged report, register its worktree in the Dashboard's development
+preview entry using [the preview workflow](../../../docs/en/development-previews.md).
+Keep a stable project ID and update its location when the worktree changes; do
+not create per-task desktop shortcuts or hand-assemble frontend/API processes.
+Verify the selected branch and shared data configuration before offering its
+ready link. Retire the registration after owner merge, independently of the
+worktree preservation and cleanup decision.
+
 This workflow does not authorize downloads, updates, backtests, old-package
 replacement, cleanup or changes to accepted research rules.
