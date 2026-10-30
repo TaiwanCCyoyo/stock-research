@@ -307,8 +307,11 @@ def record_with_ledger(
         destination = root / "days" / f"{entry['target_day']}.parquet"
         existed = destination.exists()
         had_cohort = (root / "cohort.json").exists()
+        LOGGER.info("computing day=%s workers=%d codes=%d", entry["target_day"], workers, len(codes))
+        computing_started = time.monotonic()
         try:
             path = record_day(root, codes, day=day, code_commit=code_commit, workers=workers, now=now)
+            LOGGER.info("computed day=%s in %.1fs", entry["target_day"], time.monotonic() - computing_started)
         except FileExistsError as error:
             entry.update({"outcome": "already_frozen", "reason": str(error)})
             raise

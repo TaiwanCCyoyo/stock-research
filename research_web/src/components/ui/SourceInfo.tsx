@@ -11,11 +11,14 @@ import { createPortal } from "react-dom";
 import { TIP_NAVIGATION_EVENTS } from "./tipState.ts";
 import {
     SOURCE_CLOSED,
+    sourceHandleScroll,
+    sourceHandleScrollIntent,
     sourceNextTabStop,
     sourceOpen,
     sourcePanelPosition,
     sourceReducer,
     sourceRestoreFocus,
+    sourceReturnFromClose,
     sourceTabStops,
 } from "./sourceInfoState.ts";
 
@@ -58,6 +61,16 @@ export function SourceInfo({
         // Bridge the small visual gap between the trigger and its portal.
         leaveTimer.current = setTimeout(() => dispatch("leave"), 150);
     };
+    const reposition = () => {
+        if (trigger.current && panel.current)
+            setPlace(
+                sourcePanelPosition(
+                    trigger.current.getBoundingClientRect(),
+                    panel.current.getBoundingClientRect(),
+                    { width: innerWidth, height: innerHeight },
+                ),
+            );
+    };
     useEffect(() => () => cancelLeave(), []);
     useEffect(() => {
         if (!open) return;
@@ -72,15 +85,31 @@ export function SourceInfo({
         };
         const away = () => dispatch("navigate");
         const scroll = (event: Event) => {
-            if (!(
-                event.target instanceof Node &&
-                panel.current?.contains(event.target)
-            ))
-                away();
+            sourceHandleScroll(
+                trigger.current,
+                panel.current,
+                event.target instanceof Node ? event.target : null,
+                reposition,
+                away,
+            );
         };
+        const scrollIntent = (event: Event) =>
+            sourceHandleScrollIntent(
+                panel.current,
+                event.target instanceof Node ? event.target : null,
+                away,
+            );
         document.addEventListener("pointerdown", outside);
         document.addEventListener("keydown", escape);
         window.addEventListener("scroll", scroll, true);
+        window.addEventListener("wheel", scrollIntent, {
+            capture: true,
+            passive: true,
+        });
+        window.addEventListener("touchmove", scrollIntent, {
+            capture: true,
+            passive: true,
+        });
         window.addEventListener("resize", away);
         for (const name of TIP_NAVIGATION_EVENTS)
             window.addEventListener(name, away);
@@ -88,6 +117,8 @@ export function SourceInfo({
             document.removeEventListener("pointerdown", outside);
             document.removeEventListener("keydown", escape);
             window.removeEventListener("scroll", scroll, true);
+            window.removeEventListener("wheel", scrollIntent, true);
+            window.removeEventListener("touchmove", scrollIntent, true);
             window.removeEventListener("resize", away);
             for (const name of TIP_NAVIGATION_EVENTS)
                 window.removeEventListener(name, away);
@@ -95,14 +126,7 @@ export function SourceInfo({
     }, [open]);
     useLayoutEffect(() => {
         if (!open) return setPlace(null);
-        if (trigger.current && panel.current)
-            setPlace(
-                sourcePanelPosition(
-                    trigger.current.getBoundingClientRect(),
-                    panel.current.getBoundingClientRect(),
-                    { width: innerWidth, height: innerHeight },
-                ),
-            );
+        reposition();
     }, [open, children]);
     useLayoutEffect(() => {
         if (open && state.pinned && focusOnCommit.current) {
@@ -203,6 +227,12 @@ export function SourceInfo({
                                 type="button"
                                 className="u-source-close"
                                 aria-label={`關閉${label}`}
+                                onKeyDown={(event) =>
+                                    sourceReturnFromClose(
+                                        event,
+                                        trigger.current,
+                                    )
+                                }
                                 onClick={() => {
                                     dispatch("escape");
                                     trigger.current?.focus({
