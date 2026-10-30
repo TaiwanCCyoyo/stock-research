@@ -305,11 +305,9 @@ verify-*.png
 !tasks/20261024-strength-weakening-flags/results/*.parquet
 !tasks/20261024-strength-weakening-flags/results/*.json
 !tasks/20261021-momentum-only-doubling/pr17-universe-v1.json
-!tasks/20261021-momentum-only-doubling/forward-log/
-!tasks/20261021-momentum-only-doubling/forward-log/cohort.json
-!tasks/20261021-momentum-only-doubling/forward-log/attempts.jsonl
-!tasks/20261021-momentum-only-doubling/forward-log/days/
-!tasks/20261021-momentum-only-doubling/forward-log/days/*.parquet
+# The forward log lives under the research-data root since 2026-10-31 (amendments/2026-10-31-forward-log-location.md).
+!tasks/20261021-momentum-only-doubling/amendments/
+!tasks/20261021-momentum-only-doubling/amendments/*.md
 
 # Tenbagger study: final aggregate tables and receipts only; intermediates live in shared scratch.
 !tasks/20261024-tenbagger-drivers/results/
