@@ -684,9 +684,7 @@ export function SharedDataPage({
                                     </div>
                                     {current && day >= 0 && (
                                         <div className="u-card shared-card">
-                                            <h3>
-                                                游標當日 · {current.dates[day]}
-                                            </h3>
+                                            <h3>{current.dates[day]}</h3>
                                             <dl>
                                                 {reference &&
                                                     [
