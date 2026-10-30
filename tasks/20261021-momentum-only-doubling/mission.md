@@ -302,7 +302,9 @@ B = 同標籤的 `C-base-daily`。對每個領先家族（B1、H1）× 12 個標
   `generation`、`code_commit`、`security_id`、`base_eligible` 與原因、原始 close、當代還原 close、
   七個 atoms 的值／bin／status、24 集合成立旗標、`C-52w-daily` 狀態、
   B1／H1／B4／形狀家族原始狀態（PR17 detector 合併後且每日增量可在合理時間完成時才填；否則 null 加原因）、`recorded_late`。
-- **位置與凍結：** primary checkout `tasks/20261021-momentum-only-doubling/forward-log/days/`，
+- **位置與凍結：**（存放位置已於 2026-10-31 修正為研究資料根目錄，見
+  [位置修正](amendments/2026-10-31-forward-log-location.md)；以下為原登記文字，判定規則不變）
+  primary checkout `tasks/20261021-momentum-only-doubling/forward-log/days/`，
   每個交易日一個小 parquet（約 1,900 列），以 `research_core.artifact_store` 的 no-replace 發布寫入，
   已存在的日子不能被覆寫；更正只能另寫帶原日期與原因的 correction 檔。每月經一般 task branch／PR
   交付，合併由 owner 決定，不直接 commit 到 `main`。
