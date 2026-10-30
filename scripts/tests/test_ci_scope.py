@@ -31,14 +31,11 @@ FORWARD_V3_TEST = "scripts/tests/test_momentum_forward_publication_v3.py"
     [
         "research_core/momentum_forward_publication_v3.py",
         "tasks/20261027-forward-publication-deadline/content-publication-handoff.md",
-        FORWARD_V3_TEST,
     ],
 )
 def test_forward_v3_owned_paths_select_exact_candidate_suite(status: str, source: str) -> None:
     plan = ci_scope.make_plan([(status, source)])
     expected = {FORWARD_V3_TEST}
-    if source == FORWARD_V3_TEST:
-        expected.add("scripts/tests/test_ci_scope.py")
     assert not plan["full"] and not plan["frontend"]
     assert plan["domains"] == ["momentum_forward_v3"]
     assert set(plan["python_tests"]) == expected
@@ -121,13 +118,10 @@ def test_forward_v3_dependencies_keep_shared_and_unknown_full_fallback(status: s
     [
         "research_core/entry_window_v1.py",
         "tasks/20261027-entry-window/implementation-handoff.md",
-        "scripts/tests/test_entry_window_v1.py",
         "research_core/entry_window_bootstrap_v1.py",
         "tasks/20261027-entry-window/bootstrap-handoff.md",
-        "scripts/tests/test_entry_window_bootstrap_v1.py",
         "research_core/entry_window_inputs_v1.py",
         "tasks/20261027-entry-window/reader-staging-handoff.md",
-        "scripts/tests/test_entry_window_inputs_v1.py",
     ],
 )
 def test_entry_window_owned_paths_select_exact_domain(status: str, source: str) -> None:
@@ -137,8 +131,6 @@ def test_entry_window_owned_paths_select_exact_domain(status: str, source: str) 
         "scripts/tests/test_entry_window_bootstrap_v1.py",
         "scripts/tests/test_entry_window_inputs_v1.py",
     }
-    if source in expected:
-        expected.add("scripts/tests/test_ci_scope.py")
     assert not plan["full"] and not plan["frontend"]
     assert plan["domains"] == ["entry_window"]
     assert set(plan["python_tests"]) == expected
@@ -283,17 +275,13 @@ def test_strength_upstreams_select_both_downstream_tests(status: str, source: st
         "research_core/strength_flag_counts_v1.py",
         "research_core/strength_flags_run_v1.py",
         "scripts/run_strength_flags.py",
-        *sorted(STRENGTH_TESTS),
     ],
 )
-def test_strength_owned_sources_and_tests_select_the_complete_domain(status: str, source: str) -> None:
+def test_strength_owned_sources_select_the_complete_domain(status: str, source: str) -> None:
     plan = ci_scope.make_plan([(status, source)])
     assert not plan["full"] and not plan["frontend"]
     assert set(plan["domains"]) == {"strength_flags"}
     expected_tests = STRENGTH_TESTS.copy()
-    if source in STRENGTH_TESTS:
-        # This selector contract names the changed test, so the existing reference closure retains it too.
-        expected_tests.add("scripts/tests/test_ci_scope.py")
     assert set(plan["python_tests"]) == expected_tests
 
 
@@ -354,15 +342,14 @@ TENBAGGER_OWN_PATHS = [
     "research_core/tenbagger_drivers_run_v1.py",
     "scripts/run_tenbagger_drivers.py",
     "tasks/20261024-tenbagger-drivers/mission.md",
-    *sorted(TENBAGGER_TESTS),
 ]
 
 
 @pytest.mark.parametrize("status", ["A", "M"])
 @pytest.mark.parametrize("path", TENBAGGER_OWN_PATHS)
-def test_tenbagger_domain_registers_its_sources_and_tests(status: str, path: str) -> None:
+def test_tenbagger_domain_registers_its_sources(status: str, path: str) -> None:
     plan = ci_scope.make_plan([(status, path)])
-    expected_tests = TENBAGGER_TESTS | ({"scripts/tests/test_ci_scope.py"} if path in TENBAGGER_TESTS else set())
+    expected_tests = TENBAGGER_TESTS
 
     assert not plan["full"]
     assert plan["domains"] == ["tenbagger_drivers"]
@@ -382,7 +369,10 @@ def test_tenbagger_domain_registers_its_sources_and_tests(status: str, path: str
             "research_core/maintained_adjusted_daily.py",
             {"research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3"},
         ),
-        ("research_core/scratch_runs.py", {"research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3"}),
+        (
+            "research_core/scratch_runs.py",
+            {"research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3", "scratch_card_consumer"},
+        ),
         ("research_core/pattern_scan_inputs_v1.py", {"pattern_scan", "tenbagger_drivers"}),
         (
             "research_core/hhhl_variants_run.py",
@@ -763,7 +753,6 @@ def test_unreviewed_future_test_keeps_full_inventory_fallback(tmp_path: Path, mo
         [("M", ".github/workflows/ci.yml")],
         [("M", "scripts/ci_scope.py")],
         [("M", "scripts/ci_test_domains.json")],
-        [("M", "scripts/tests/test_ci_scope.py")],
         [("M", ".github/workflows/ci.yml"), ("M", "scripts/ci_scope.py"), ("M", "scripts/ci_test_domains.json"), ("M", "scripts/tests/test_ci_scope.py")],
     ],
 )
@@ -1208,8 +1197,12 @@ def test_workflow_retains_stable_check_and_explicit_full_entry() -> None:
     assert "edited" in workflow["on"]["pull_request"]["types"]
     assert "paths-ignore" not in workflow["on"]["pull_request"]
     job = workflow["jobs"]["repository-checks"]
-    assert job["name"] == "repository-checks"
-    assert "if" not in job
+    metadata_only = "github.event.action == 'edited' && !github.event.changes.base"
+    assert job["name"] == "${{ " + metadata_only + " && 'metadata-edit-ignored' || 'repository-checks' }}"
+    assert job["if"] == "github.event.action != 'edited' || github.event.changes.base"
+    assert workflow["concurrency"]["group"] == (
+        "${{ github.workflow }}-${{ " + metadata_only + " && github.run_id || github.event.pull_request.number || github.run_id }}"
+    )
     steps = {step["name"]: step for step in job["steps"] if "name" in step}
     assert "--full" in steps["Select test scope"]["run"]
     assert "--execute" in steps["Selected Python tests"]["run"]
@@ -1282,6 +1275,8 @@ def test_repository_check_native_dispatch(tmp_path: Path, event: str, exit_code:
     step = next(step for step in workflow["jobs"]["repository-checks"]["steps"] if step.get("name") == "Repository checks")
     (tmp_path / "uv.cmd").write_text('@echo off\n> "%CI_ARGS_FILE%" echo %*\nexit /b %CI_EXIT_CODE%\n', encoding="ascii")
     args_file = tmp_path / "arguments.txt"
+    (tmp_path / ".tmp").mkdir()
+    (tmp_path / ".tmp/ci-plan.json").write_text(json.dumps({"merge_base": "3" * 40, "head": "4" * 40}), encoding="utf-8")
     environment = {
         **os.environ,
         "PATH": str(tmp_path) + os.pathsep + os.environ.get("PATH", ""),
@@ -1299,8 +1294,8 @@ def test_repository_check_native_dispatch(tmp_path: Path, event: str, exit_code:
         assert "--all-files" in arguments
         assert "--from-ref" not in arguments
     else:
-        assert "--from-ref " + "1" * 40 in arguments
-        assert "--to-ref " + "2" * 40 in arguments
+        assert "--from-ref " + "3" * 40 in arguments
+        assert "--to-ref " + "4" * 40 in arguments
         assert "--all-files" not in arguments
 
 
@@ -1417,7 +1412,7 @@ def test_changed_suffix_style_hook_test_is_always_selected(tmp_path: Path, monke
     monkeypatch.setattr(ci_scope, "load_manifest", lambda: manifest)
     plan = ci_scope.make_plan([("M", names[1])], root=tmp_path)
     assert not plan["full"]
-    assert set(plan["python_tests"]) == set(names)
+    assert set(plan["python_tests"]) == {names[1]}
 
 
 @pytest.mark.parametrize("change", [("A", "scripts/tests/test_hhhl_variants_checkout_identity.py"), ("M", ".gitattributes")])
@@ -1432,18 +1427,14 @@ def test_checkout_identity_consumer_is_selected_for_test_and_eol_policy(change: 
     "source",
     [
         "research_core/multi_timeframe_ma_core_v1.py",
-        "scripts/tests/test_multi_timeframe_ma_core_v1.py",
         "tasks/20261027-multi-timeframe-ma/core-handoff.md",
         "research_core/multi_timeframe_ma_weeks_v1.py",
-        "scripts/tests/test_multi_timeframe_ma_weeks_v1.py",
         "tasks/20261027-multi-timeframe-ma/week-calendar-handoff.md",
         "tasks/20261027-multi-timeframe-ma/mission.md",
         "tasks/20261027-multi-timeframe-ma/data-contract.md",
         "research_core/multi_timeframe_ma_panel_v1.py",
-        "scripts/tests/test_multi_timeframe_ma_panel_v1.py",
         "tasks/20261027-multi-timeframe-ma/panel-handoff.md",
         "research_core/multi_timeframe_ma_counts_v1.py",
-        "scripts/tests/test_multi_timeframe_ma_counts_v1.py",
         "tasks/20261027-multi-timeframe-ma/counts-handoff.md",
     ],
 )
@@ -1457,8 +1448,6 @@ def test_multi_timeframe_ma_owned_paths(status: str, source: str) -> None:
         "scripts/tests/test_multi_timeframe_ma_weeks_v1.py",
         "scripts/tests/test_multi_timeframe_ma_counts_v1.py",
     }
-    if source.startswith("scripts/tests/"):
-        expected.add("scripts/tests/test_ci_scope.py")
     assert set(plan["python_tests"]) == expected
 
 
@@ -1532,3 +1521,85 @@ def test_multi_timeframe_counts_program_registration_keeps_prose_contracts(statu
     assert not plan["full"] and not plan["frontend"]
     assert plan["domains"] == ["prose"] and set(plan["python_tests"]) == expected
     assert "scripts/tests/test_agent_instruction_contract.py" in expected
+
+
+@pytest.mark.parametrize("status", ["A", "M", "R"])
+@pytest.mark.parametrize(
+    "path",
+    [
+        "scripts/tests/test_strength_flags_v1.py",
+        "scripts/tests/test_entry_window_v1.py",
+        "scripts/tests/test_multi_timeframe_ma_core_v1.py",
+        "scripts/tests/test_momentum_forward_publication_v3.py",
+        "scripts/tests/test_tenbagger_drivers_v1.py",
+        "tests/test_security_coverage.py",
+        "tests/test_security_coverage_maintenance.py",
+    ],
+)
+def test_changed_domain_test_does_not_reverse_source_dependencies(status: str, path: str) -> None:
+    plan = ci_scope.make_plan([(status, path)])
+    assert not plan["full"]
+    assert plan["domains"] == []
+    assert path in plan["python_tests"]
+    assert "scripts/tests/test_pattern_scan_followup_summary_v1.py" not in plan["python_tests"]
+    assert "scripts/tests/test_annual_rotation.py" not in plan["python_tests"]
+
+
+def test_scratch_change_selects_card_progress_consumer_without_opportunity_bucket() -> None:
+    plan = ci_scope.make_plan([("M", "research_core/scratch_runs.py")])
+    assert not plan["full"] and not plan["frontend"]
+    assert "scripts/tests/test_study_cards.py" in plan["python_tests"]
+    assert "opportunity" not in plan["domains"]
+    assert "scripts/tests/test_opportunity_artifact_publication.py" not in plan["python_tests"]
+
+
+@pytest.mark.parametrize("status", ["A", "M", "D", "R"])
+@pytest.mark.parametrize(
+    "path",
+    [
+        "tasks/20991231-new-study/study.json",
+        "tasks/20261024-data-homes-and-scratch/study-card-v2.schema.json",
+    ],
+)
+def test_card_records_keep_reader_api_dashboard_and_frontend_contracts(status: str, path: str) -> None:
+    plan = ci_scope.make_plan([(status, path)])
+    assert not plan["full"] and plan["frontend"]
+    assert set(plan["domains"]) == {"study_card_records", "task_records"}
+    assert {
+        "scripts/tests/test_study_cards.py",
+        "scripts/tests/test_study_presentation.py",
+        "tests/test_dashboard_task_index.py",
+        "tests/test_research_api.py",
+    } <= set(plan["python_tests"])
+    assert "scripts/tests/test_opportunity_artifact_publication.py" not in plan["python_tests"]
+
+
+def test_changed_node_consumer_test_retains_frontend_build() -> None:
+    plan = ci_scope.make_plan([("M", "scripts/tests/test_opportunity_node_runtime.py")])
+    assert not plan["full"] and plan["frontend"]
+    assert "scripts/tests/test_opportunity_node_runtime.py" in plan["python_tests"]
+    assert "opportunity" not in plan["domains"]
+
+
+def test_importer_closure_retains_build_prerequisite_without_unrelated_consumers(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    sources = {
+        "test_fixture.py": "def shared(): pass\n",
+        "test_node.py": "from tests.test_fixture import shared\n",
+        "test_unrelated.py": "def test_unrelated(): pass\n",
+    }
+    manifest = ci_scope.load_manifest()
+    manifest["test_roots"] = ["tests"]
+    manifest["reviewed_tests"] = [f"tests/{name}" for name in sources]
+    manifest["domains"] = {
+        "source": {"paths": ["research_core/source.py"], "tests": ["tests/test_fixture.py"], "consumers": ["unrelated"]},
+        "node": {"paths": [], "tests": ["tests/test_node.py"], "frontend": True},
+        "unrelated": {"paths": [], "tests": ["tests/test_unrelated.py"]},
+    }
+    monkeypatch.setattr(ci_scope, "load_manifest", lambda: manifest)
+    (tmp_path / "tests").mkdir()
+    for name, text in sources.items():
+        (tmp_path / "tests" / name).write_text(text, encoding="utf-8")
+    plan = ci_scope.make_plan([("M", "tests/test_fixture.py")], root=tmp_path)
+    assert not plan["full"] and plan["frontend"]
+    assert plan["domains"] == []
+    assert plan["python_tests"] == ["tests/test_fixture.py", "tests/test_node.py"]

@@ -16,7 +16,11 @@ verified for this repository; see [PR setup](pr-setup.md).
 - `scripts/ci_scope.py` selects Python tests by domain from
   `scripts/ci_test_domains.json`. New files route like modified ones, by the
   domain that owns their location. A changed test file runs itself and every test that directly or
-  indirectly imports it. An unmapped
+  indirectly imports it, retaining their frontend build prerequisites without
+  treating the test as a source change to every domain it verifies. Study-card
+  records select their reader, API and dashboard contracts plus frontend checks;
+  other task owners still contribute their tests. Scratch changes include the
+  study-card progress consumer. An unmapped
   `tasks/` or `docs/` record selects the record contracts plus the tests and owned
   code that mention its task id or file name; a task `web-report/` adds frontend
   checks. Shared and configuration paths, unowned code, and records read by unowned
@@ -24,6 +28,12 @@ verified for this repository; see [PR setup](pr-setup.md).
   contracts, because CI never checks out or runs producer code.
   Legacy files outside the change are not newly subjected to targeted type checks.
   It does not download market data, initialize the data submodule or run studies.
+- PR title/body edits produce only a separately named skipped metadata check,
+  with a separate concurrency group. They neither replace `repository-checks`
+  nor cancel an in-flight validation. Base-branch edits still validate, as do
+  new commits and ready-for-review events. Manual dispatch retains full validation.
+- Hooks and selected tests use the same merge-base/head diff. A base branch
+  advancing does not by itself add unrelated files to the hook invocation.
 - Reviews check placement as well as behavior: AGENTS.md
   [Project Layout And Ownership](../../AGENTS.md#project-layout-and-ownership) says
   where code, tests, data and records belong, and which placement findings to raise.
