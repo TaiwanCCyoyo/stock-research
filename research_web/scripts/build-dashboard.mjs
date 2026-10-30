@@ -230,6 +230,7 @@ function buildStage(root, stage, version) {
         cwd: webRoot,
         stdio: "inherit",
         shell: process.platform === "win32",
+        windowsHide: true,
     };
     if (!hasBuildDependencies(webRoot)) {
         const install = spawnSync(npm, ["ci"], options);
