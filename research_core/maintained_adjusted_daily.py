@@ -57,8 +57,8 @@ from research_core import daily_conditions_v1, price_basis, technical_daily_v1
 from research_core.artifact_store import file_digest, object_digest, publish_noreplace, read_json, write_json
 from research_core.artifact_store import release_os_lock as _release_os_lock
 from research_core.artifact_store import try_os_lock as _try_os_lock
-from research_core.live_producer import read_stable, readonly_sqlite
-from research_core.run_receipt import InputSpec, assert_inputs_unchanged, code_identity, fingerprint_inputs
+from research_core.live_producer import assert_producer_idle, read_stable, readonly_sqlite
+from research_core.run_receipt import InputSpec, assert_inputs_unchanged, changed_inputs, code_identity, fingerprint_inputs
 from research_core.shared_data import shared_data_root
 
 LOGGER = logging.getLogger(__name__)
@@ -94,9 +94,15 @@ def family_dir(root: Path | None = None) -> Path:
     return (shared_data_root() if root is None else root) / "derived" / FAMILY
 
 
+def input_paths(producer_root: Path) -> dict[str, Path]:
+    """The two live producer inputs under `producer_root`, by fingerprint name."""
+    return {"price_daily": producer_root / "price_daily.parquet", "corporate_actions": producer_root / "corporate_actions.sqlite"}
+
+
 def load_inputs(producer_root: Path) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, Any], dict[str, Any]]:
     """Fingerprint (which refuses a busy producer) and read the two live producer inputs."""
-    prices_path, actions_path = producer_root / "price_daily.parquet", producer_root / "corporate_actions.sqlite"
+    paths = input_paths(producer_root)
+    prices_path, actions_path = paths["price_daily"], paths["corporate_actions"]
     fingerprint = fingerprint_inputs([
         InputSpec("price_daily", prices_path, date_column="Date", live_producer=True),
         InputSpec("corporate_actions", actions_path, tables={"corporate_actions": "ex_date"}, live_producer=True),
@@ -401,8 +407,45 @@ def _prune(family: Path, keep: list[str]) -> list[str]:
     return removed
 
 
-def update(*, producer_root: Path, root: Path | None = None) -> dict[str, Any]:
-    """Build a complete new generation from live producer data and make it current."""
+def _same_path(left: str | Path, right: Path) -> bool:
+    return os.path.normcase(os.path.abspath(left)) == os.path.normcase(os.path.abspath(right))
+
+
+def _unchanged_since_current(previous: str | None, root: Path | None, producer_root: Path) -> dict[str, Any] | None:
+    """The current generation's status when its recorded inputs and code still match, else None.
+
+    The recorded inputs must be the files this run would read under `producer_root`: a moved
+    producer root with an untouched old copy is a different input. Then compares the recorded
+    input fingerprint with the live files (size, time, WAL; the same test the end-of-run check
+    uses) and the recorded code commit with this checkout's. A dirty checkout on either side,
+    or any failure to compare, means rebuild.
+    """
+    if previous is None:
+        return None
+    try:
+        status = current_generation(root)
+        recorded = status.get("code") or {}
+        now_code = code_identity()
+        if recorded.get("dirty") or now_code["dirty"] or recorded.get("commit") != now_code["commit"]:
+            return None
+        recorded_inputs = status["input_fingerprint"]["inputs"]
+        expected = input_paths(producer_root)
+        if set(recorded_inputs) != set(expected) or not all(_same_path(recorded_inputs[name]["path"], path) for name, path in expected.items()):
+            return None
+        if changed_inputs(status["input_fingerprint"]):
+            return None
+        return status
+    except (OSError, KeyError, ValueError, RuntimeError) as error:
+        LOGGER.warning("Could not compare inputs with generation %s, rebuilding: %s", previous, error)
+        return None
+
+
+def update(*, producer_root: Path, root: Path | None = None, skip_unchanged: bool = False) -> dict[str, Any]:
+    """Build a complete new generation from live producer data and make it current.
+
+    With `skip_unchanged`, a producer that has not changed since the current generation was
+    built (same fingerprinted size/time/WAL, same clean code commit) publishes nothing.
+    """
     started = time.monotonic()
     family = family_dir(root)
     (family / "generations").mkdir(parents=True, exist_ok=True)
@@ -410,6 +453,21 @@ def update(*, producer_root: Path, root: Path | None = None) -> dict[str, Any]:
     staging: Path | None = None
     try:
         previous = read_json(family / "current.json")["generation"] if (family / "current.json").is_file() else None
+        if skip_unchanged:
+            assert_producer_idle()
+            unchanged = _unchanged_since_current(previous, root, producer_root)
+            if unchanged is not None:
+                LOGGER.info("unchanged since generation %s; skipped", previous)
+                return {
+                    "family": FAMILY,
+                    "generation": unchanged["generation"],
+                    "asof": unchanged["asof"],
+                    "previous": unchanged.get("previous_generation"),
+                    "pruned": [],
+                    "held": sorted(held_generations(root)),
+                    "path": unchanged["path"],
+                    "unchanged": True,
+                }
         bars, actions, fingerprint, source_policy = load_inputs(producer_root)
         loaded = time.monotonic()
         asof = cast(pd.Timestamp, bars["Date"].max()).date().isoformat()
