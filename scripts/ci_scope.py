@@ -156,6 +156,11 @@ def make_plan(changes: list[tuple[str, str]], *, root: Path = ROOT, force_full: 
             full = True
             reasons.append(f"{status} {path}: shared/configuration safety fallback")
             continue
+        if path in inventory:
+            # A test is a consumer, not a source change to everything it exercises.
+            # Keep its build prerequisites without reversing the domain dependency graph.
+            reasons.append(f"{status} {path}: changed test and transitive test importers; preserve build prerequisites")
+            continue
         # New and modified files route alike: no unchanged code can import a file that did not exist,
         # so a new file's impact is the domain that owns its location plus the changed tests that use it.
         owners = domain_owners(path, manifest)
@@ -164,9 +169,6 @@ def make_plan(changes: list[tuple[str, str]], *, root: Path = ROOT, force_full: 
             reasons.append(f"{status} {path}: frontend lint/build/tests")
             if not owners:
                 owners = ["web"]
-        if not owners and path in inventory:
-            reasons.append(f"{status} {path}: unmapped test file runs itself and every test that directly or indirectly imports it")
-            continue
         if not owners and reference_key(path) is not None:
             routed = route_by_reference(path, manifest, references)
             if routed is None:
@@ -193,6 +195,7 @@ def make_plan(changes: list[tuple[str, str]], *, root: Path = ROOT, force_full: 
             changed_tests.update(importers)
             pending.extend(importers)
             reasons.append(f"{test}: {len(importers)} more test file(s) that import it")
+    frontend = frontend or any(manifest["domains"][name].get("frontend", False) for test in changed_tests for name in domain_owners(test, manifest))
     if not changes and not force_full:
         selected_domains.add("hooks")
         reasons.append("Empty diff: repository and selector contracts remain checked")

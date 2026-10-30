@@ -1,4 +1,5 @@
 import { defineConfig, loadEnv } from "vite";
+import type { Plugin } from "vite";
 import type { ServerResponse } from "node:http";
 import { existsSync, readFileSync } from "node:fs";
 import react from "@vitejs/plugin-react";
@@ -11,8 +12,50 @@ import * as reports from "./scripts/research-reports.mjs";
 
 // AI-written reports live beside their studies: tasks/<task-id>/web-report/.
 const tasksRoot = fileURLToPath(new URL("../tasks", import.meta.url));
-let buildOutDir = "";
 const releaseVersion = process.env.RESEARCH_WEB_VERSION ?? "development";
+
+/** Only a completed build may write report output. Dev/SSR teardown must not
+ * replace the index belonging to a production release already on disk. */
+export function researchReportsPlugin(
+    reportTasksRoot = tasksRoot,
+    version = releaseVersion,
+): Plugin {
+    let buildOutDir = "";
+    let buildSucceeded = false;
+    return {
+        name: "research-reports",
+        configResolved(config) {
+            buildOutDir =
+                config.command === "build"
+                    ? resolve(config.root, config.build.outDir)
+                    : "";
+        },
+        buildStart() {
+            buildSucceeded = false;
+        },
+        buildEnd(error) {
+            buildSucceeded = !error;
+        },
+        // Serve report HTML untouched, before Vite injects its dev client.
+        configureServer(server) {
+            server.middlewares.use((request, response, next) => {
+                if (
+                    !reports.handleReportRequest(
+                        reportTasksRoot,
+                        request.url,
+                        response,
+                        version,
+                    )
+                )
+                    next();
+            });
+        },
+        writeBundle() {
+            if (buildOutDir && buildSucceeded)
+                reports.copyReports(reportTasksRoot, buildOutDir, version);
+        },
+    };
+}
 
 // https://vite.dev/config/
 /** The release a preview is actually serving, read on every request: the
@@ -96,35 +139,7 @@ export default defineConfig(({ command, mode }) => {
                     );
                 },
             },
-            {
-                name: "research-reports",
-                configResolved(config) {
-                    buildOutDir = resolve(config.root, config.build.outDir);
-                },
-                // Registered directly (not as a post hook) so report HTML is served
-                // untouched, before Vite's HTML transform could inject its client.
-                configureServer(server) {
-                    server.middlewares.use((request, response, next) => {
-                        if (
-                            !reports.handleReportRequest(
-                                tasksRoot,
-                                request.url,
-                                response,
-                                releaseVersion,
-                            )
-                        )
-                            next();
-                    });
-                },
-                closeBundle() {
-                    if (buildOutDir)
-                        reports.copyReports(
-                            tasksRoot,
-                            buildOutDir,
-                            releaseVersion,
-                        );
-                },
-            },
+            researchReportsPlugin(),
             {
                 // The launcher reads this to reuse only a matching service. It
                 // answers from the development server and from `vite preview`.

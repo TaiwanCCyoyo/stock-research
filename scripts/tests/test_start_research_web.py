@@ -38,7 +38,7 @@ def test_help_uses_utf8_even_when_redirected_stream_defaults_to_cp1252() -> None
 @pytest.fixture(autouse=True)
 def isolated_launcher(monkeypatch: pytest.MonkeyPatch) -> None:
     """Never inherit workstation private settings or query real services."""
-    for key in (*launcher.MODE_KEYS, *launcher.PATH_KEYS):
+    for key in (*launcher.MODE_KEYS, *launcher.PATH_KEYS, *launcher.ROOT_KEYS):
         monkeypatch.delenv(key, raising=False)
     monkeypatch.setattr(launcher, "primary_checkout", lambda root: None)
 
@@ -58,6 +58,28 @@ def test_unconfigured_defaults_synthetic_without_mutating_environment(tmp_path: 
     assert environment == {"UNRELATED": "preserved"}
     assert resolved["UNRELATED"] == "preserved"
     assert all(resolved[key] == "public-synthetic" for key in launcher.MODE_KEYS)
+
+
+def test_launcher_materializes_all_data_roots_with_process_precedence_and_stable_snapshot(tmp_path: Path) -> None:
+    values = {key: str(tmp_path / f"source-{index}") for index, key in enumerate(launcher.ROOT_KEYS)}
+    local = tmp_path / ".env.local"
+    local.write_text("\n".join(f'{key}="{value}"' for key, value in values.items()), encoding="utf-8")
+    override = {launcher.ROOT_KEYS[0]: str(tmp_path / "process-source")}
+    with patch.object(launcher, "primary_checkout", return_value=tmp_path):
+        resolved = launcher.launch_environment(tmp_path / "worktree", override)
+    assert {key: resolved[key] for key in launcher.ROOT_KEYS} == {**values, **override}
+    before = launcher.dashboard_identity(resolved)
+    local.write_text("\n".join(f'{key}="{tmp_path / "changed"}"' for key in launcher.ROOT_KEYS), encoding="utf-8")
+    with patch("research_core.dashboard_identity.primary_checkout", return_value=tmp_path):
+        assert launcher.dashboard_identity(resolved, repo_root=tmp_path / "worktree") == before
+
+
+def test_launcher_freezes_unconfigured_roots_without_requiring_data(tmp_path: Path) -> None:
+    resolved = launcher.launch_environment(tmp_path, {})
+    assert all(resolved[key] == "" for key in launcher.ROOT_KEYS)
+    (tmp_path / ".env.local").write_text("\n".join(f'{key}="{tmp_path / "new-source"}"' for key in launcher.ROOT_KEYS), encoding="utf-8")
+    with patch("research_core.dashboard_identity.primary_checkout", return_value=tmp_path):
+        assert launcher.dashboard_identity(resolved, repo_root=tmp_path) == launcher.dashboard_identity(resolved)
 
 
 @pytest.mark.parametrize(
@@ -83,6 +105,52 @@ def test_desktop_idle_rejects_unverifiable_heartbeat(payload: object) -> None:
     response.__enter__.return_value.read.return_value = json.dumps(payload).encode()
     with patch.object(launcher.urllib.request, "urlopen", return_value=response), pytest.raises(RuntimeError, match="心跳格式"):
         launcher._desktop_idle(18517, 0)
+
+
+@pytest.mark.parametrize(
+    "observations",
+    [
+        [(0, None), (400, 1), (405, None), (410, 0), (591, 181), (591, 181)],
+        [(0, None), (400, 1), (405, None), (579, None), (580, None), (580, None)],
+    ],
+    ids=["active-tab-resumes-after-worker-reload", "abandoned-reload-still-expires"],
+)
+def test_desktop_monitor_preserves_confirmed_activity_across_api_reload(tmp_path: Path, observations: list[tuple[float, float | None]]) -> None:
+    process = MagicMock()
+    process.poll.return_value = None
+    child = launcher.ManagedChild("research-web", process, io.BytesIO())
+    clock = [0.0]
+    sequence = iter(observations)
+    observed: list[tuple[float, float | None]] = []
+
+    def heartbeat(request: str | launcher.urllib.request.Request, **kwargs: object) -> MagicMock:
+        response = MagicMock()
+        if isinstance(request, launcher.urllib.request.Request):
+            response.__enter__.return_value.read.return_value = b""
+        else:
+            now, age = next(sequence)
+            clock[0] = now
+            observed.append((now, age))
+            response.__enter__.return_value.read.return_value = json.dumps({"ageSeconds": age}).encode()
+        return response
+
+    with (
+        patch.object(launcher, "project_root", return_value=tmp_path),
+        patch.object(launcher, "_inspect_service", side_effect=("reusable", "stopped")),
+        patch.object(launcher, "_configure_logging", return_value=tmp_path),
+        patch.object(launcher, "_build_website", return_value="current"),
+        patch.object(launcher, "_start_child", return_value=child),
+        patch.object(launcher, "_wait_until_ready"),
+        patch.object(launcher, "_verify_live_mode"),
+        patch.object(launcher.urllib.request, "urlopen", side_effect=heartbeat),
+        patch.object(launcher.time, "monotonic", side_effect=lambda: clock[0]),
+        patch.object(launcher.time, "sleep") as sleep,
+        patch.object(launcher, "_stop_child") as stop,
+    ):
+        assert launcher.run(desktop=True, no_browser=True, api_port=18517, web_port=15177) == 0
+    assert observed == observations
+    assert sleep.call_args_list == [call(5)] * 3
+    stop.assert_called_once_with(child)
 
 
 def test_desktop_child_uses_selected_python_without_uv_and_hides_console(tmp_path: Path) -> None:
@@ -340,6 +408,28 @@ def test_changed_private_source_or_missing_identity_refuses_reuse(tmp_path: Path
     response.__enter__.return_value.read.return_value = json.dumps(payload).encode()
     with patch.object(launcher.urllib.request, "urlopen", return_value=response):
         with pytest.raises(RuntimeError, match="設定身份|來源設定"):
+            launcher._verify_live_mode("history-api", 18517, environment)
+
+
+@pytest.mark.parametrize("key", launcher.ROOT_KEYS)
+def test_changed_effective_root_refuses_api_reuse(tmp_path: Path, key: str) -> None:
+    environment = {"VITE_ARTIFACT_MODE": "public-synthetic", "STOCK_RESEARCH_DATA_MODE": "public-synthetic", key: str(tmp_path / "new")}
+    payload = launcher.dashboard_identity({**environment, key: str(tmp_path / "old")})
+    response = MagicMock()
+    response.__enter__.return_value.read.return_value = json.dumps(payload).encode()
+    with patch.object(launcher.urllib.request, "urlopen", return_value=response):
+        with pytest.raises(RuntimeError, match="完整來源設定"):
+            launcher._verify_live_mode("history-api", 18517, environment)
+
+
+def test_legacy_identity_is_rejected_even_with_matching_digest() -> None:
+    environment = {"VITE_ARTIFACT_MODE": "public-synthetic", "STOCK_RESEARCH_DATA_MODE": "public-synthetic"}
+    payload = launcher.dashboard_identity(environment)
+    payload.pop("configVersion")
+    response = MagicMock()
+    response.__enter__.return_value.read.return_value = json.dumps(payload).encode()
+    with patch.object(launcher.urllib.request, "urlopen", return_value=response):
+        with pytest.raises(RuntimeError, match="新版設定身份"):
             launcher._verify_live_mode("history-api", 18517, environment)
 
 
