@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM python:3.13.18-slim
 
 ENV PYTHONUNBUFFERED=1
 ENV PATH="/app/.venv/bin:${PATH}"
