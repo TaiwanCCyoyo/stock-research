@@ -84,7 +84,14 @@ def running_producer_tasks(*, timeout: float | None = None) -> list[str]:
     if sys.platform != "win32":
         return []
     try:
-        result = subprocess.run(["powershell.exe", "-NoProfile", "-Command", TASK_QUERY], capture_output=True, text=True, check=False, timeout=timeout)
+        result = subprocess.run(
+            ["powershell.exe", "-NoProfile", "-Command", TASK_QUERY],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=timeout,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )
     except subprocess.TimeoutExpired as error:
         raise ProducerBusyError("producer scheduled-task query timed out") from error
     if result.returncode != 0:
@@ -94,7 +101,14 @@ def running_producer_tasks(*, timeout: float | None = None) -> list[str]:
 
 def _powershell_writer_processes(timeout: float | None) -> list[tuple[int, str]]:
     try:
-        result = subprocess.run(["powershell.exe", "-NoProfile", "-Command", PROCESS_QUERY], capture_output=True, text=True, check=False, timeout=timeout)
+        result = subprocess.run(
+            ["powershell.exe", "-NoProfile", "-Command", PROCESS_QUERY],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=timeout,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )
     except subprocess.TimeoutExpired as error:
         raise ProducerBusyError("producer process query timed out") from error
     if result.returncode != 0:
