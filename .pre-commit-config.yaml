@@ -38,8 +38,6 @@ repos:
       rev: v3.9.5
       hooks:
           - id: prettier
-            # Avoid nodeenv's moving latest release (which can be a prerelease).
-            language_version: "24.22.2"
             exclude: ^tasks/20261005-relative-strength-holding/evidence/
 
     # Enforce UTF-8 encoding and reject decode corruption. The language constraint this
