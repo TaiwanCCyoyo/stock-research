@@ -66,6 +66,8 @@
             "tests": [
                 "scripts/tests/test_derived_features_chunk_v2.py",
                 "scripts/tests/test_maintained_adjusted_daily.py",
+                "scripts/tests/test_maintain_adjusted_daily_cli.py",
+                "scripts/tests/test_live_producer_writers.py",
                 "scripts/tests/test_research_data_catalog.py",
                 "scripts/tests/test_research_data_execution.py",
                 "scripts/tests/test_research_data_extension.py",
@@ -706,6 +708,8 @@
         "scripts/tests/test_industry_role_runner.py",
         "scripts/tests/test_institutional_flow_v1.py",
         "scripts/tests/test_json_integrity.py",
+        "scripts/tests/test_live_producer_writers.py",
+        "scripts/tests/test_maintain_adjusted_daily_cli.py",
         "scripts/tests/test_maintained_adjusted_daily.py",
         "scripts/tests/test_market_context.py",
         "scripts/tests/test_market_context_artifact.py",

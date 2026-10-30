@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import sqlite3
 import subprocess
 import sys
@@ -661,3 +662,57 @@ def test_holds_listing_reads_only_formal_holder_files(environment: tuple[Path, P
     (holds / ".other-124.tmp").write_text("{", encoding="utf-8")
     assert [record["holder"] for record in maintained_adjusted_daily.held_generations()[generation]] == ["study"]
     assert sorted(path.name for path in holds.glob("*.tmp")) == [".other-124.tmp"], "a completed hold write leaves no temporary file"
+
+
+def _clean_code(monkeypatch: pytest.MonkeyPatch, commit: str = "c0ffee") -> None:
+    monkeypatch.setattr(maintained_adjusted_daily, "code_identity", lambda: {"commit": commit, "dirty": False})
+    monkeypatch.setattr(maintained_adjusted_daily, "assert_producer_idle", lambda: None)
+
+
+def test_skip_unchanged_publishes_nothing_when_inputs_and_code_match(
+    environment: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    producer, _ = environment
+    _clean_code(monkeypatch)
+    first = maintained_adjusted_daily.update(producer_root=producer)
+
+    with caplog.at_level("INFO"):
+        again = maintained_adjusted_daily.update(producer_root=producer, skip_unchanged=True)
+
+    assert again["unchanged"] is True and again["generation"] == first["generation"] and again["asof"] == first["asof"]
+    assert f"unchanged since generation {first['generation']}; skipped" in caplog.text
+    assert maintained_adjusted_daily.current_generation()["generation"] == first["generation"]
+
+
+@pytest.mark.parametrize("change", ["inputs", "code", "dirty", "force_default"])
+def test_skip_unchanged_rebuilds_when_anything_differs(environment: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch, change: str) -> None:
+    producer, _ = environment
+    _clean_code(monkeypatch)
+    first = maintained_adjusted_daily.update(producer_root=producer)
+    if change == "inputs":
+        _producer(producer, closes_2330=[100.0, 100.0, 95.0, 97.0])
+    elif change == "code":
+        _clean_code(monkeypatch, "deadbeef")
+    elif change == "dirty":
+        monkeypatch.setattr(maintained_adjusted_daily, "code_identity", lambda: {"commit": "c0ffee", "dirty": True})
+    monkeypatch.setattr(maintained_adjusted_daily, "datetime", _Later(1))  # a distinct generation id
+
+    second = maintained_adjusted_daily.update(producer_root=producer, skip_unchanged=change != "force_default")
+
+    assert "unchanged" not in second and second["generation"] != first["generation"]
+
+
+def test_skip_unchanged_rebuilds_when_the_producer_root_moved(environment: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:
+    # The old root stays untouched; reading a different root is a different input even when its files look alike.
+    producer, _ = environment
+    _clean_code(monkeypatch)
+    first = maintained_adjusted_daily.update(producer_root=producer)
+    moved = producer.parent / f"{producer.name}-moved"
+    shutil.copytree(producer, moved)
+    monkeypatch.setattr(maintained_adjusted_daily, "datetime", _Later(1))
+
+    second = maintained_adjusted_daily.update(producer_root=moved, skip_unchanged=True)
+
+    assert "unchanged" not in second and second["generation"] != first["generation"]
+    recorded = maintained_adjusted_daily.current_generation()["input_fingerprint"]["inputs"]["price_daily"]["path"]
+    assert Path(recorded).parent == moved
