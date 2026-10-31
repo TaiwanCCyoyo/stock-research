@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import argparse
 import io
 import json
 import subprocess
+from collections.abc import Callable
 from pathlib import Path
 from unittest.mock import MagicMock, call, patch
 
@@ -10,6 +12,305 @@ import pytest
 
 from research_core.saved_research_studio import synthetic_studio_package, write_split_package
 from scripts import start_research_web as launcher
+
+
+def test_cancel_release_probe_stops_only_probe_tree(tmp_path: Path) -> None:
+    cancellation = launcher.LaunchCancellation()
+    process = MagicMock(pid=4321, args=["node", "--check"])
+    process.poll.return_value = None
+    with (
+        patch.object(launcher.shutil, "which", return_value="node"),
+        patch.object(launcher.subprocess, "Popen", return_value=process) as popen,
+        patch.object(launcher.time, "sleep", side_effect=lambda seconds: cancellation.request()),
+        patch.object(launcher, "_kill_tree") as kill,
+        patch.object(launcher, "_stop_child") as stop,
+    ):
+        with pytest.raises(launcher.LaunchCancelled):
+            launcher._release_is_current(tmp_path, {}, cancellation)
+    kill.assert_called_once_with(process)
+    stop.assert_not_called()
+    assert popen.call_args.args[0][-1] == "--check"
+    assert popen.call_args.kwargs["start_new_session"] == (launcher.os.name != "nt")
+    assert popen.call_args.kwargs["creationflags"] == getattr(subprocess, "CREATE_NO_WINDOW", 0)
+
+
+@pytest.mark.parametrize(("exit_code", "expected"), [(0, True), (1, False)])
+def test_release_probe_preserves_exit_status(tmp_path: Path, exit_code: int, expected: bool) -> None:
+    process = MagicMock()
+    process.poll.return_value = exit_code
+    with (
+        patch.object(launcher.shutil, "which", return_value="node"),
+        patch.object(launcher.subprocess, "Popen", return_value=process),
+        patch.object(launcher, "_kill_tree") as kill,
+    ):
+        assert launcher._release_is_current(tmp_path, {}) is expected
+    kill.assert_not_called()
+
+
+def test_release_probe_timeout_keeps_existing_release_and_stops_probe(tmp_path: Path) -> None:
+    process = MagicMock(args=["node", "--check"])
+    process.poll.return_value = None
+    with (
+        patch.object(launcher.shutil, "which", return_value="node"),
+        patch.object(launcher.subprocess, "Popen", return_value=process),
+        patch.object(launcher.time, "monotonic", side_effect=[0, 60]),
+        patch.object(launcher, "_kill_tree") as kill,
+    ):
+        assert launcher._release_is_current(tmp_path, {}, launcher.LaunchCancellation()) is True
+    kill.assert_called_once_with(process)
+
+
+def test_release_probe_spawn_failure_keeps_existing_release(tmp_path: Path) -> None:
+    with (
+        patch.object(launcher.shutil, "which", return_value="node"),
+        patch.object(launcher.subprocess, "Popen", side_effect=OSError("unavailable")),
+        patch.object(launcher, "_kill_tree") as kill,
+    ):
+        assert launcher._release_is_current(tmp_path, {}) is True
+    kill.assert_not_called()
+
+
+def test_cancel_while_waiting_for_startup_lock_does_not_release_another_lock(tmp_path: Path) -> None:
+    cancellation = launcher.LaunchCancellation()
+    with (
+        patch.object(launcher, "try_os_lock", return_value=False),
+        patch.object(launcher.time, "sleep", side_effect=lambda seconds: cancellation.request()),
+        patch.object(launcher, "release_os_lock") as release,
+    ):
+        with pytest.raises(launcher.LaunchCancelled), launcher._startup_lock(tmp_path, 18517, 15177, cancellation):
+            pytest.fail("Cancelled lock must not enter startup")
+    release.assert_not_called()
+
+
+def test_cancel_build_stops_only_owned_tree_and_drains_output(tmp_path: Path) -> None:
+    cancellation = launcher.LaunchCancellation()
+    process = MagicMock(pid=4321, args=["npm"])
+
+    def communicate(timeout: float | None = None) -> tuple[bytes, None]:
+        if timeout is not None:
+            assert timeout <= launcher.POLL_INTERVAL_SECONDS
+            cancellation.request()
+            raise subprocess.TimeoutExpired("npm", timeout)
+        return b"partial build output", None
+
+    process.communicate.side_effect = communicate
+    with (
+        patch.object(launcher.shutil, "which", return_value="npm"),
+        patch.object(launcher.subprocess, "Popen", return_value=process) as popen,
+        patch.object(launcher, "_kill_tree") as kill,
+        patch.object(launcher, "_remove_abandoned_stages") as cleanup,
+    ):
+        with pytest.raises(launcher.LaunchCancelled):
+            launcher._build_website(tmp_path, tmp_path, {}, cancellation)
+    kill.assert_called_once_with(process)
+    cleanup.assert_called_once_with(tmp_path / "research_web", tag=popen.call_args.kwargs["env"]["RESEARCH_WEB_STAGE_TAG"])
+    assert (tmp_path / "build.log").read_bytes() == b"partial build output"
+
+
+def test_cancellable_build_preserves_total_timeout(tmp_path: Path) -> None:
+    process = MagicMock(pid=4321, args=["npm"])
+    process.communicate.side_effect = [subprocess.TimeoutExpired("npm", 0.25), (b"partial", None)]
+    with (
+        patch.object(launcher.shutil, "which", return_value="npm"),
+        patch.object(launcher.subprocess, "Popen", return_value=process),
+        patch.object(launcher.time, "monotonic", side_effect=[0, 0, launcher.BUILD_TIMEOUT_SECONDS]),
+        patch.object(launcher, "_kill_tree") as kill,
+        patch.object(launcher, "_remove_abandoned_stages"),
+    ):
+        with pytest.raises(RuntimeError, match="逾時"):
+            launcher._build_website(tmp_path, tmp_path, {}, launcher.LaunchCancellation())
+    kill.assert_called_once_with(process)
+
+
+def test_cancel_service_readiness_poll(tmp_path: Path) -> None:
+    cancellation = launcher.LaunchCancellation()
+    process = MagicMock()
+    process.poll.return_value = None
+    child = launcher.ManagedChild("history-api", process, io.BytesIO())
+    with patch.object(launcher, "_port_is_open", return_value=False), patch.object(launcher.time, "sleep", side_effect=lambda seconds: cancellation.request()):
+        with pytest.raises(launcher.LaunchCancelled):
+            launcher._wait_until_ready(child, 18517, tmp_path, cancellation)
+
+
+def test_cancel_readiness_stops_owned_child_and_preserves_reused_service(tmp_path: Path) -> None:
+    feedback = MagicMock(cancellation=launcher.LaunchCancellation())
+    child = launcher.ManagedChild("research-web", MagicMock(), io.BytesIO())
+
+    def cancel(*args: object) -> None:
+        feedback.cancellation.request()
+        feedback.cancellation.check()
+
+    with (
+        patch.object(launcher, "project_root", return_value=tmp_path),
+        patch.object(launcher, "_inspect_service", side_effect=("reusable", "stopped")),
+        patch.object(launcher, "_configure_logging", return_value=tmp_path),
+        patch.object(launcher, "_build_website", return_value="current"),
+        patch.object(launcher, "_verify_live_mode"),
+        patch.object(launcher, "_start_child", return_value=child) as start,
+        patch.object(launcher, "_wait_until_ready", side_effect=cancel),
+        patch.object(launcher, "_stop_child") as stop,
+        patch.object(launcher.webbrowser, "open") as browser,
+    ):
+        with pytest.raises(launcher.LaunchCancelled):
+            launcher.run(desktop=True, feedback=feedback)
+    assert start.call_count == 1
+    assert start.call_args.args[0] == "research-web"
+    stop.assert_called_once_with(child)
+    browser.assert_not_called()
+    feedback.failed.assert_not_called()
+
+
+def test_cancel_before_browser_preserves_both_reused_services(tmp_path: Path) -> None:
+    feedback = MagicMock(cancellation=launcher.LaunchCancellation())
+    with (
+        patch.object(launcher, "project_root", return_value=tmp_path),
+        patch.object(launcher, "_inspect_service", return_value="reusable"),
+        patch.object(launcher, "_configure_logging", return_value=tmp_path),
+        patch.object(launcher, "_release_is_current", return_value=True),
+        patch.object(launcher, "_verify_live_mode"),
+        patch.object(launcher, "_desktop_idle", return_value=False),
+        patch.object(launcher.urllib.request, "urlopen") as request,
+        patch.object(launcher, "_stop_child") as stop,
+        patch.object(launcher.webbrowser, "open") as browser,
+    ):
+        request.return_value.__enter__.return_value.read.side_effect = feedback.cancellation.request
+        with pytest.raises(launcher.LaunchCancelled):
+            launcher.run(desktop=True, feedback=feedback)
+    stop.assert_not_called()
+    browser.assert_not_called()
+    feedback.ready.assert_not_called()
+    feedback.failed.assert_not_called()
+
+
+def test_cancel_at_browser_status_prevents_browser_and_cleans_owned_child(tmp_path: Path) -> None:
+    feedback = MagicMock(cancellation=launcher.LaunchCancellation())
+    child = launcher.ManagedChild("research-web", MagicMock(), io.BytesIO())
+
+    def status(message: str) -> None:
+        if message.startswith("4 / 4"):
+            feedback.cancellation.request()
+
+    feedback.status.side_effect = status
+    with (
+        patch.object(launcher, "project_root", return_value=tmp_path),
+        patch.object(launcher, "_inspect_service", side_effect=("reusable", "stopped")),
+        patch.object(launcher, "_configure_logging", return_value=tmp_path),
+        patch.object(launcher, "_build_website", return_value="current"),
+        patch.object(launcher, "_verify_live_mode"),
+        patch.object(launcher, "_start_child", return_value=child),
+        patch.object(launcher, "_wait_until_ready"),
+        patch.object(launcher, "_desktop_idle", return_value=False),
+        patch.object(launcher.urllib.request, "urlopen"),
+        patch.object(launcher, "_stop_child") as stop,
+        patch.object(launcher.webbrowser, "open") as browser,
+    ):
+        with pytest.raises(launcher.LaunchCancelled):
+            launcher.run(desktop=True, feedback=feedback)
+    browser.assert_not_called()
+    stop.assert_called_once_with(child)
+    feedback.ready.assert_not_called()
+    feedback.failed.assert_not_called()
+
+
+def test_cancel_after_environment_returns_cancelled_without_failure_popup(tmp_path: Path) -> None:
+    feedback = MagicMock(cancellation=launcher.LaunchCancellation())
+    args = argparse.Namespace(desktop=True, no_browser=False, check=False, api_port=18517, web_port=15177, dev=False)
+
+    def environment(*args: object) -> dict[str, str]:
+        feedback.cancellation.request()
+        return {}
+
+    with (
+        patch.object(launcher, "project_root", return_value=tmp_path),
+        patch.object(launcher, "launch_environment", side_effect=environment),
+        patch.object(launcher, "_inspect_service") as inspect,
+    ):
+        assert launcher._execute(args, tmp_path / "desktop.log", feedback) == launcher.CANCELLED_EXIT_CODE
+    inspect.assert_not_called()
+    feedback.failed.assert_not_called()
+
+
+@pytest.mark.parametrize("failure_at", ["logging", "environment", "identity"])
+def test_desktop_early_errors_are_visible_and_persisted(tmp_path: Path, failure_at: str) -> None:
+    feedback = MagicMock()
+    args = argparse.Namespace(desktop=True, no_browser=False, check=False, api_port=18517, web_port=15177, dev=False)
+    log_path = tmp_path / "desktop.log"
+    target = {"logging": "_configure_logging", "environment": "launch_environment", "identity": "_inspect_service"}[failure_at]
+    with (
+        patch.object(launcher, "project_root", return_value=tmp_path),
+        patch.object(launcher, target, side_effect=RuntimeError("early failure")),
+        patch.object(launcher.sys, "stdout", None),
+        patch.object(launcher.sys, "stderr", None),
+    ):
+        assert launcher._execute(args, log_path, feedback) == 1
+    assert "early failure" in log_path.read_text(encoding="utf-8")
+    assert "early failure" in feedback.failed.call_args.args[0]
+    feedback.ready.assert_not_called()
+
+
+@pytest.mark.parametrize("option", ["--check", "--no-browser"])
+def test_desktop_noninteractive_options_skip_window(tmp_path: Path, option: str) -> None:
+    with (
+        patch.object(launcher.sys, "argv", ["launcher", "--desktop", option]),
+        patch.object(launcher, "project_root", return_value=tmp_path),
+        patch.object(launcher, "run_desktop_launch") as ui,
+        patch.object(launcher, "_execute", return_value=0),
+    ):
+        assert launcher.main() == 0
+    ui.assert_not_called()
+
+
+def test_desktop_window_precedes_logging_and_environment(tmp_path: Path) -> None:
+    order: list[str] = []
+
+    def show(operation: Callable[[launcher.LaunchFeedback], int], log_path: Path) -> int:
+        order.append("window")
+        return operation(MagicMock())
+
+    def execute(*args: object) -> int:
+        order.append("execute")
+        return 0
+
+    with (
+        patch.object(launcher.sys, "argv", ["launcher", "--desktop"]),
+        patch.object(launcher, "project_root", return_value=tmp_path),
+        patch.object(launcher, "run_desktop_launch", side_effect=show),
+        patch.object(launcher, "_execute", side_effect=execute),
+    ):
+        assert launcher.main() == 0
+    assert order == ["window", "execute"]
+
+
+@pytest.mark.parametrize("browser_result", [True, False])
+def test_feedback_ready_requires_browser_success_and_monitor_still_runs(tmp_path: Path, browser_result: bool) -> None:
+    feedback = MagicMock()
+    process = MagicMock()
+    process.poll.return_value = 1
+    process.returncode = 1
+    child = launcher.ManagedChild("research-web", process, io.BytesIO())
+    with (
+        patch.object(launcher, "project_root", return_value=tmp_path),
+        patch.object(launcher, "_inspect_service", side_effect=("reusable", "stopped")),
+        patch.object(launcher, "_configure_logging", return_value=tmp_path),
+        patch.object(launcher, "_build_website", return_value="current"),
+        patch.object(launcher, "_start_child", return_value=child),
+        patch.object(launcher, "_wait_until_ready"),
+        patch.object(launcher, "_verify_live_mode"),
+        patch.object(launcher, "_desktop_idle", return_value=False),
+        patch.object(launcher.urllib.request, "urlopen"),
+        patch.object(launcher.webbrowser, "open", return_value=browser_result),
+        patch.object(launcher, "_stop_child") as stop,
+    ):
+        assert launcher.run(desktop=True, feedback=feedback) == 1
+    assert feedback.ready.call_count == int(browser_result)
+    assert "意外結束" in feedback.failed.call_args.args[0] if browser_result else "瀏覽器" in feedback.failed.call_args.args[0]
+    if browser_result:
+        names = [invocation[0] for invocation in feedback.mock_calls]
+        assert names.index("ready") < names.index("failed")
+    stages = [invocation.args[0] for invocation in feedback.status.call_args_list]
+    assert stages[0].startswith("1 / 4")
+    assert stages[-1].startswith("4 / 4")
+    stop.assert_called_once_with(child)
 
 
 def test_direct_script_entry_imports_shared_helpers() -> None:
