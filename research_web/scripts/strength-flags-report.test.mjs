@@ -156,11 +156,11 @@ test("saved report supports guided choices and full evidence without changing de
     assert.match(html, /前20日內收盤曾低於60日均線/);
     assert.match(
         html,
-        /data-related-report="20261013-pattern-scan" href="\.\.\/\.\.\/20261013-pattern-scan\/web-report\/index\.html"/,
+        /data-related-report="20261013-pattern-scan"\s+href="\.\.\/\.\.\/20261013-pattern-scan\/web-report\/index\.html"/,
     );
     assert.match(
         html,
-        /data-related-report="20261021-momentum-only-doubling" href="\.\.\/\.\.\/20261021-momentum-only-doubling\/web-report\/index\.html"/,
+        /data-related-report="20261021-momentum-only-doubling"\s+href="\.\.\/\.\.\/20261021-momentum-only-doubling\/web-report\/index\.html"/,
     );
     assert.equal(
         ids.get("pattern-report-link").href,
