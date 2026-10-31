@@ -97,6 +97,70 @@ body {
     line-height: 1.6;
 }
 
+.research-lineage {
+    margin: 8px 0 28px;
+    padding: 20px 0 4px;
+    border-top: 1px solid var(--line-strong);
+}
+
+.research-lineage h2 {
+    max-width: 780px;
+    margin: 0 0 18px;
+    color: var(--ink);
+    font-family: var(--font-serif);
+    font-size: clamp(20px, 3vw, 26px);
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+.lineage-steps {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0 26px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.lineage-steps li {
+    min-width: 0;
+    padding: 12px 4px 8px 0;
+    border-top: 2px solid var(--line-strong);
+}
+
+.lineage-steps li:last-child {
+    border-top-color: var(--accent);
+}
+
+.lineage-kicker {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.lineage-steps p {
+    margin: 8px 0;
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.65;
+}
+
+.lineage-steps a {
+    display: inline-block;
+    margin: 2px 0 4px;
+    color: var(--accent);
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.lineage-steps small {
+    display: block;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.55;
+}
+
 .reading-guide,
 .guided-explorer {
     padding: clamp(18px, 3vw, 28px);
@@ -568,6 +632,15 @@ body {
     .study-timeline {
         grid-template-columns: minmax(0, 1fr);
         gap: 12px;
+    }
+
+    .lineage-steps {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 12px;
+    }
+
+    .lineage-steps li {
+        padding-top: 10px;
     }
 
     .study-timeline li {

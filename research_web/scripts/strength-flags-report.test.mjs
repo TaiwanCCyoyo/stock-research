@@ -113,7 +113,7 @@ const page = {
     URL,
     URLSearchParams,
     console,
-    location: { hash: "" },
+    location: { hash: "", protocol: "https:" },
     matchMedia: () => ({ matches: false }),
     CustomEvent: class {},
     addEventListener: () => {},
@@ -154,8 +154,27 @@ test("saved report supports guided choices and full evidence without changing de
     assert.equal(ids.get("main-not-triggered-rate").textContent, "22.5%");
     assert.equal(ids.get("main-cost-rate").textContent, "66.0%");
     assert.match(html, /前20日內收盤曾低於60日均線/);
+    assert.match(
+        html,
+        /data-related-report="20261013-pattern-scan" href="\.\.\/\.\.\/20261013-pattern-scan\/web-report\/index\.html"/,
+    );
+    assert.match(
+        html,
+        /data-related-report="20261021-momentum-only-doubling" href="\.\.\/\.\.\/20261021-momentum-only-doubling\/web-report\/index\.html"/,
+    );
+    assert.equal(
+        ids.get("pattern-report-link").href,
+        "../20261013-pattern-scan/index.html",
+    );
+    assert.equal(
+        ids.get("momentum-report-link").href,
+        "../20261021-momentum-only-doubling/index.html",
+    );
+    assert.match(html, /型態搭配哪些條件，後來更常翻倍/);
+    assert.match(html, /未翻倍且期末收低的比例也較高/);
+    assert.match(html, /觀察2、3、5、10倍結果；下方28格主要比較只涵蓋翻倍/);
     assert.match(html, /100 元要到 200/);
-    assert.match(html, /符合這兩項價格條件的股票/);
+    assert.match(html, /符合兩項大幅上漲條件的股票中/);
     assert.match(html, /收盤價.*是否曾達到起點收盤價的兩倍/s);
     assert.deepEqual(
         guided.map((e) => e.value),
@@ -163,6 +182,20 @@ test("saved report supports guided choices and full evidence without changing de
     );
     assert.match(ids.get("guided-comparison").textContent, /10\.2%/);
     assert.match(ids.get("guided-comparison").textContent, /22\.5%/);
+    const guidedHeading = () =>
+        descendants(ids.get("guided-comparison")).find(
+            (e) => e.className === "comparison-heading",
+        );
+    assert.match(
+        guidedHeading().textContent,
+        /在符合上述兩項漲幅條件的股票中，依條件成立後第1至20個交易日內是否曾出現「收盤低於\s*60\s*日均線」分組。比較兩組起點後一年內，收盤價曾達到起點收盤價兩倍的比例。/,
+    );
+    const standardized = () =>
+        descendants(ids.get("guided-comparison")).find(
+            (e) => e.className === "standardized-readout",
+        )?.textContent;
+    assert.match(standardized(), /出現訊號組的翻倍比例比未出現組低/);
+    assert(!standardized().includes("負值表示"));
     assert.match(
         ids.get("guided-comparison").textContent,
         /前20個交易日內曾出現訊號/,
@@ -199,6 +232,32 @@ test("saved report supports guided choices and full evidence without changing de
     assert.match(ids.get("detail-content").textContent, /8,733／4,490／0/);
     const messages = [];
     page.parent = { postMessage: (message) => messages.push(message) };
+    for (const [id, reportId] of [
+        ["pattern-report-link", "20261013-pattern-scan"],
+        ["momentum-report-link", "20261021-momentum-only-doubling"],
+    ]) {
+        let prevented = false;
+        ids.get(id).listeners.click({
+            preventDefault: () => {
+                prevented = true;
+            },
+        });
+        assert(
+            prevented,
+            `${reportId} uses host navigation in the embedded view`,
+        );
+    }
+    assert.deepEqual(
+        messages.map(({ type, href }) => ({ type, href })),
+        [
+            { type: "rk:navigate", href: "#report/20261013-pattern-scan" },
+            {
+                type: "rk:navigate",
+                href: "#report/20261021-momentum-only-doubling",
+            },
+        ],
+    );
+    messages.length = 0;
     ids.get("guided-evidence-button").listeners.click();
     ids.get("guided-evidence-button").listeners.click();
     assert.equal(messages.length, 2);
@@ -213,10 +272,15 @@ test("saved report supports guided choices and full evidence without changing de
     assert.match(ids.get("guided-comparison").textContent, /10\.0%/);
     assert.match(ids.get("guided-comparison").textContent, /23\.9%/);
     assert.match(ids.get("false-abandonment-card").textContent, /56\.6%/);
+    assert.match(
+        guidedHeading().textContent,
+        /符合上述兩項漲幅條件，且起點當日原始漲幅至少 9\.5% 的股票/,
+    );
     guided[2].value = "126";
     guided[2].listeners.change();
     assert.match(ids.get("guided-comparison").textContent, /7\.7%/);
     assert.match(ids.get("false-abandonment-card").textContent, /34\.4%/);
+    assert.match(guidedHeading().textContent, /起點後半年內/);
     // Every guided choice must use the selected stored row, including a different cost population.
     const summary = page.REPORT_TABLES.summary.flatMap((chunk) =>
         chunk.rows.map((row) =>

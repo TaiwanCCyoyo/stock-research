@@ -127,12 +127,13 @@ export function reportFrameSrc(id: string, appearance: string): string {
     return `/reports/${encodeURIComponent(id)}/index.html#${params}`;
 }
 
-/** Accept only the shared-data route requested by this viewer's own frame. */
+/** Accept only routes requested by this viewer's own frame and loaded index. */
 export function reportNavigationHash(
     source: unknown,
     frameWindow: unknown,
     data: unknown,
-): "#data" | null {
+    reportIds: readonly string[] | null,
+): "#data" | `#report/${string}` | null {
     if (
         !frameWindow ||
         source !== frameWindow ||
@@ -141,9 +142,25 @@ export function reportNavigationHash(
     )
         return null;
     const message = data as { type?: unknown; href?: unknown };
-    return message.type === "rk:navigate" && message.href === "#data"
-        ? "#data"
-        : null;
+    if (message.type !== "rk:navigate" || typeof message.href !== "string")
+        return null;
+    if (message.href === "#data") return "#data";
+    if (!message.href.startsWith("#report/")) return null;
+
+    const encodedId = message.href.slice("#report/".length);
+    let reportId: string;
+    try {
+        reportId = decodeURIComponent(encodedId);
+    } catch {
+        return null;
+    }
+    if (
+        !/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(reportId) ||
+        encodeURIComponent(reportId) !== encodedId ||
+        !reportIds?.includes(reportId)
+    )
+        return null;
+    return `#report/${encodedId}`;
 }
 
 /** Reveal only the fixed evidence heading, from the currently mounted frame. */

@@ -11,6 +11,18 @@ Deliver a reading view of saved evidence, not new study conclusions.
 
 ## Design for a reader who has forgotten the study
 
+Reconstruct the research lineage before writing the opening. Identify the prior
+question, its saved answer, what this study reuses, and the additional question
+it asks. Link stable task/report sources and register that relationship in the
+research index or a task-owned lineage record so another session can recover it
+without chat history. Distinguish a direct comparison baseline from a source of
+methods; do not imply that a follow-up replaces or disproves its predecessor.
+Mark partial or unpublished predecessor reports honestly and preserve the source
+version used at the time. Do not substitute a later rerun, a temporary preview
+URL or another session's worktree for the historical source. When populations,
+time origins or denominators differ, explain that beside any cross-study
+comparison. Synchronize this context across the reading page, report and card.
+
 Before building the reading view, state the reader's question, the compared
 groups, the target outcome and the time origin in everyday language. A person
 who never saw the conversation must understand what was studied and what the

@@ -1,5 +1,14 @@
 # 研究總覽與跨 session 交接
 
+## 強勢條件研究的承接脈絡
+
+[型態與條件研究（PR17）](../../tasks/20261013-pattern-scan/mission.md) →
+[不要求型態、只看強勢條件（PR61）](../../tasks/20261021-momentum-only-doubling/report.md) →
+[條件成立後再比較有／無轉弱訊號](../../tasks/20261024-strength-weakening-flags/report.md)。
+前者提供背景與訊號方法，PR61 提供直接的條件基線；本研究新增條件成立後的訊號觀察與後續達標比較。
+來源版本、額外問題、分母差異與前作發布狀態見[研究承接紀錄](../../tasks/20261024-strength-weakening-flags/research-lineage.md)。
+此索引不把 PR17 尚在整理的完整重跑報告視為已發布，也不以後來重跑結果替換本研究原始依據。
+
 > Current public-export availability (2026-10-09): source-data packages containing
 > real quote vectors, anchor-close samples or corporate-action factors are retained
 > locally, not distributed in the public repository. Historical receipts and fixed

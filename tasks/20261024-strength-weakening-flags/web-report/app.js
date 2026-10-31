@@ -253,9 +253,9 @@
         const verdict = key(row, "verdict");
         const explanations = {
             weakens_beyond_drop:
-                "把觀察點時漲跌幅相近的事件分組比較後，仍支持出現訊號組的翻倍比例較低。這是歷史關聯，不代表訊號造成結果。",
+                "把觀察點時漲跌幅相近的事件分組比較後，出現訊號組的翻倍比例仍較低。",
             weakens_with_drop:
-                "直接比較時，出現訊號組的翻倍比例較低；考慮觀察點時的漲跌幅後，證據還不夠明確。這不代表訊號已被證明有或沒有額外作用。",
+                "直接比較時，出現訊號組的翻倍比例較低；考慮觀察點時的漲跌幅後，差異還不夠明確。",
             inseparable: "可比較的資料不足，無法清楚區分兩組。",
             opposite: "這一格的直接比較沒有顯示出現訊號組的比例較低。",
             unresolved: "這一格的資料還沒有給出明確方向。",
@@ -284,6 +284,12 @@
         return group === "LEAD_B1"
             ? "已大幅上漲、且起點當天漲至少 9.5% 的股票"
             : "已大幅上漲的股票";
+    }
+
+    function guidedPopulationDescription(group) {
+        return group === "LEAD_B1"
+            ? "符合上述兩項漲幅條件，且起點當日原始漲幅至少 9.5% 的股票"
+            : "符合上述兩項漲幅條件的股票";
     }
 
     function flagDescription(flag) {
@@ -428,11 +434,16 @@
         const difference = val(row, "pooled_difference");
         const standardizedDifference = val(row, "standardized_difference");
         const comparison = make("div", "rate-comparison");
+        const horizonText = guidedState.horizon === "126" ? "半年" : "一年";
+        const signalText = flagDescription(guidedState.flag).replace(
+            /^收盤曾?/,
+            "收盤",
+        );
         comparison.append(
             make(
                 "p",
                 "comparison-heading",
-                `${groupDescription(guidedState.group)} · ${guidedState.horizon === "126" ? "半年" : "一年"}內達到起點價 2 倍 · 前 20 日${flagDescription(guidedState.flag)}`,
+                `在${guidedPopulationDescription(guidedState.group)}中，依條件成立後第1至20個交易日內是否曾出現「${signalText}」分組。比較兩組起點後${horizonText}內，收盤價曾達到起點收盤價兩倍的比例。`,
             ),
             make(
                 "p",
@@ -502,8 +513,11 @@
         const delta = make("p", "difference-callout");
         if (typeof difference === "number") {
             const direction =
-                difference < 0 ? "較低" : difference > 0 ? "較高" : "相同";
-            delta.textContent = `直接比較時，前20個交易日內曾出現訊號組的翻倍比例比未出現組${direction} ${(Math.abs(difference) * 100).toFixed(2)} 個百分點。`;
+                difference < 0 ? "低" : difference > 0 ? "高" : "相同";
+            delta.textContent =
+                direction === "相同"
+                    ? "直接比較時，兩組翻倍比例相同。"
+                    : `直接比較時，前20個交易日內曾出現訊號組的翻倍比例比未出現組${direction} ${(Math.abs(difference) * 100).toFixed(2)} 個百分點。`;
         } else {
             delta.textContent = "沒有可用的兩組翻倍比例差值。";
         }
@@ -512,7 +526,11 @@
             make(
                 "p",
                 "standardized-readout",
-                `把第20日漲跌幅相近的觀察分組比較後，兩組差異為 ${typeof standardizedDifference === "number" ? `${(standardizedDifference * 100).toFixed(2)} 個百分點` : "無法判定"}。負值表示出現訊號的一組較低；差異是否夠明確，還要看下方判讀。`,
+                typeof standardizedDifference === "number"
+                    ? standardizedDifference === 0
+                        ? "按第20日漲跌幅相近的觀察分組後，兩組翻倍比例相同。"
+                        : `按第20日漲跌幅相近的觀察分組後，出現訊號組的翻倍比例比未出現組${standardizedDifference < 0 ? "低" : "高"} ${(Math.abs(standardizedDifference) * 100).toFixed(2)} 個百分點。`
+                    : "按第20日漲跌幅相近的觀察分組後，兩組差異沒有可用的保存估計。",
             ),
             make("p", "saved-verdict", verdictExplanation(row)),
         );
@@ -1076,7 +1094,30 @@
         if (meta.sourceUrl) $("#source-link").href = meta.sourceUrl;
         if (meta.reportUrl) $("#report-link").href = meta.reportUrl;
     }
+    function relatedReportLinks() {
+        const reports = [
+            ["pattern-report-link", "20261013-pattern-scan"],
+            ["momentum-report-link", "20261021-momentum-only-doubling"],
+        ];
+        const hosted = ["http:", "https:"].includes(
+            window.location && window.location.protocol,
+        );
+        for (const [elementId, reportId] of reports) {
+            const link = $("#" + elementId);
+            if (!link) continue;
+            if (hosted) link.href = `../${reportId}/index.html`;
+            link.addEventListener("click", (event) => {
+                if (window.parent === window) return;
+                event.preventDefault();
+                window.parent.postMessage(
+                    { type: "rk:navigate", href: `#report/${reportId}` },
+                    "*",
+                );
+            });
+        }
+    }
     async function start() {
+        relatedReportLinks();
         $("#shared-data-link").addEventListener("click", (event) => {
             if (window.parent === window) return;
             event.preventDefault();

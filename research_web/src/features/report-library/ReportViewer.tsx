@@ -120,6 +120,7 @@ export function ReportViewer({
                 event.source,
                 frame.current?.contentWindow,
                 event.data,
+                reports?.map(({ id }) => id) ?? null,
             );
             if (target) window.location.hash = target;
             const request = reportRevealRequest(
@@ -152,7 +153,7 @@ export function ReportViewer({
         };
         window.addEventListener("message", receive);
         return () => window.removeEventListener("message", receive);
-    }, []);
+    }, [reports]);
 
     useLayoutEffect(() => {
         if (frameThemeState === "ready") applyFrameTheme();

@@ -306,13 +306,26 @@ test("report theme bridge rejects incomplete required tokens", () => {
     );
 });
 
-test("only this report frame can request the fixed shared-data route", () => {
+test("only this report frame can request data or a registered report route", () => {
     const frame = {};
+    const ids = ["20261013-pattern-scan", "20261012-hhhl-v4-variants"];
     const message = { type: "rk:navigate", href: "#data" };
-    assert.equal(reportNavigationHash(frame, frame, message), "#data");
+    assert.equal(reportNavigationHash(frame, frame, message, ids), "#data");
     for (const source of [{}, null, undefined])
-        assert.equal(reportNavigationHash(source, frame, message), null);
-    assert.equal(reportNavigationHash(null, null, message), null);
+        assert.equal(reportNavigationHash(source, frame, message, ids), null);
+    assert.equal(reportNavigationHash(null, null, message, ids), null);
+    assert.equal(
+        reportNavigationHash(
+            frame,
+            frame,
+            {
+                type: "rk:navigate",
+                href: "#report/20261013-pattern-scan",
+            },
+            ids,
+        ),
+        "#report/20261013-pattern-scan",
+    );
     for (const data of [
         null,
         [],
@@ -320,12 +333,32 @@ test("only this report frame can request the fixed shared-data route", () => {
         { ...message, type: "other" },
         { ...message, href: "https://example.com" },
         { ...message, href: "#data/2330" },
+        { type: "rk:navigate", href: "#report/unknown-report" },
+        { type: "rk:navigate", href: "#report/..%2Fsecret" },
+        { type: "rk:navigate", href: "#report/%zz" },
+        {
+            type: "rk:navigate",
+            href: "#report/%32%30%32%36%31%30%31%33-pattern-scan",
+        },
+        {
+            type: "rk:navigate",
+            href: "//example.com/#report/20261013-pattern-scan",
+        },
     ])
-        assert.equal(reportNavigationHash(frame, frame, data), null);
+        assert.equal(reportNavigationHash(frame, frame, data, ids), null);
+    assert.equal(
+        reportNavigationHash(
+            frame,
+            frame,
+            { type: "rk:navigate", href: "#report/20261013-pattern-scan" },
+            null,
+        ),
+        null,
+    );
     assert.equal(studioRoute("#data").page, "overview");
 });
 
-test("the actual report link posts to its host and keeps standalone navigation", () => {
+test("the actual report links post approved routes to their host", () => {
     const script = readFileSync(
         new URL(
             "../../../../tasks/20261024-strength-weakening-flags/web-report/app.js",
@@ -344,10 +377,18 @@ test("the actual report link posts to its host and keeps standalone navigation",
     assert.ok(link);
     assert.match(link, /href="\/#data"/);
     assert.doesNotMatch(link, /target=/);
+    const relatedLink = html.match(
+        /<a\b[^>]*\bid="pattern-report-link"[^>]*>/,
+    )?.[0];
+    assert.ok(relatedLink);
+    assert.doesNotMatch(relatedLink, /target=/);
     for (const embedded of [true, false]) {
-        let click: ((event: { preventDefault(): void }) => void) | undefined;
+        const clicks = new Map<
+            string,
+            (event: { preventDefault(): void }) => void
+        >();
         let start: (() => Promise<void>) | undefined;
-        let prevented = false;
+        let preventCount = 0;
         const messages: unknown[] = [];
         const frame = {};
         const parent = {
@@ -365,14 +406,15 @@ test("the actual report link posts to its host and keeps standalone navigation",
             window: page,
             document: {
                 querySelector: (selector: string) => {
-                    assert.equal(selector, "#shared-data-link");
                     return {
                         addEventListener: (
                             type: string,
-                            handler: typeof click,
+                            handler: (event: {
+                                preventDefault(): void;
+                            }) => void,
                         ) => {
                             assert.equal(type, "click");
-                            click = handler;
+                            clicks.set(selector, handler);
                         },
                     };
                 },
@@ -384,18 +426,30 @@ test("the actual report link posts to its host and keeps standalone navigation",
         });
         assert.ok(start);
         void start();
-        assert.ok(click);
-        click({
-            preventDefault: () => {
-                prevented = true;
-            },
-        });
-        assert.equal(prevented, embedded);
-        assert.equal(messages.length, embedded ? 1 : 0);
-        if (embedded)
+        const click = (selector: string) => {
+            const handler = clicks.get(selector);
+            assert.ok(handler, `missing click handler for ${selector}`);
+            handler({
+                preventDefault: () => {
+                    preventCount += 1;
+                },
+            });
+        };
+        click("#pattern-report-link");
+        click("#shared-data-link");
+        assert.equal(preventCount, embedded ? 2 : 0);
+        assert.equal(messages.length, embedded ? 2 : 0);
+        if (embedded) {
             assert.equal(
-                reportNavigationHash(frame, frame, messages[0]),
+                reportNavigationHash(frame, frame, messages[0], [
+                    "20261013-pattern-scan",
+                ]),
+                "#report/20261013-pattern-scan",
+            );
+            assert.equal(
+                reportNavigationHash(frame, frame, messages[1], []),
                 "#data",
             );
+        }
     }
 });

@@ -47,7 +47,7 @@ test("all eight themes define the shared report tokens for light and dark", () =
     assert.deepEqual([...REPORT_KIT_COLOR_TOKEN_NAMES].sort(), kitColorTokens);
 
     const css = [
-        readFileSync(new URL("../index.css", import.meta.url), "utf8"),
+        readFileSync(new URL("./studio.css", import.meta.url), "utf8"),
         readFileSync(new URL("./themes.css", import.meta.url), "utf8"),
     ]
         .join("\n")
@@ -99,7 +99,10 @@ test("all eight themes define the shared report tokens for light and dark", () =
                     tokens[token],
                     `${theme.id}/${appearance} kit color: ${token}`,
                 );
-            assert.equal(tokens["--warn"], "#ffb547");
+            assert.equal(
+                tokens["--warn"],
+                appearance === "dark" ? "#f0c27a" : "#a86a12",
+            );
             assert.equal(tokens["--compare"], "var(--muted)");
             assert.equal(
                 tokens["--warn-soft"],
