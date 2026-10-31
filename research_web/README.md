@@ -95,6 +95,21 @@ Diagnostics go to `.tmp/research-web-launcher/desktop-launcher.log` and the
 normal launcher/service logs. Keep that environment and Node/npm dependencies
 prepared before installing the shortcut.
 
+The shortcut's interpreter is the primary checkout's `.venv`, the same environment
+the `StockResearch-*` scheduled tasks use through `uv run`. Keep it the only
+maintained research environment. After any Python or dependency security update
+(`.python-version`, `uv.lock`):
+
+1. Close the Dashboard and any development preview started from it; they hold
+   files in `.venv`, and a rebuild that starts while they run can leave it half
+   deleted.
+2. In the primary checkout run `uv sync --locked` (the default groups include
+   `viewer`).
+3. Run `.venv\Scripts\python.exe -B scripts\start_research_web.py --check`, then
+   reopen the Dashboard.
+4. Remove interpreters nothing uses any more with `uv python uninstall <version>`,
+   then `uv cache prune`.
+
 All launches serialize inspection, build and startup with a checkout/port lock.
 Repeated desktop clicks verify and reuse services, refresh browser activity and
 open another tab. Once every tab stops sending heartbeats for 180 seconds, a
