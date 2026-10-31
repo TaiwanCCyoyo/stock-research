@@ -122,14 +122,12 @@ def run(
 
 
 def code_identity(repo: Path) -> tuple[str, str | None]:
-    """Lazy CLI identity, after durable start; ignore producer gitlink and log outputs."""
+    """Lazy CLI identity, after durable start; ignore the producer gitlink."""
     import subprocess
 
     def git(*arguments: str) -> str:
         return subprocess.run(["git", "-C", str(repo), *arguments], capture_output=True, text=True, check=True).stdout.strip()
 
     commit = git("rev-parse", "HEAD")
-    dirty = git(
-        "status", "--porcelain", "--untracked-files=no", "--ignore-submodules=all", "--", ".", ":(exclude)tasks/20261021-momentum-only-doubling/forward-log"
-    )
+    dirty = git("status", "--porcelain", "--untracked-files=no", "--ignore-submodules=all", "--", ".")
     return commit, "uncommitted code: record from a clean commit" if dirty else None

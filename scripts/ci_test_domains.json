@@ -481,13 +481,15 @@
                 "research_core/momentum_only_v1.py",
                 "research_core/count_cube_v1.py",
                 "research_core/momentum_forward_v1.py",
+                "research_core/momentum_forward_paths.py",
                 "scripts/run_momentum_only.py",
                 "scripts/record_momentum_forward_day.py",
                 "tasks/20261021-momentum-only-doubling/*"
             ],
             "tests": [
                 "scripts/tests/test_momentum_only_v1.py",
-                "scripts/tests/test_momentum_forward_v1.py"
+                "scripts/tests/test_momentum_forward_v1.py",
+                "scripts/tests/test_momentum_forward_location.py"
             ],
             "consumers": [
                 "strength_flags",
@@ -719,6 +721,7 @@
         "scripts/tests/test_method_environment_publication.py",
         "scripts/tests/test_method_environment_runner.py",
         "scripts/tests/test_momentum_forward_attempts_v2.py",
+        "scripts/tests/test_momentum_forward_location.py",
         "scripts/tests/test_momentum_forward_publication_v3.py",
         "scripts/tests/test_momentum_forward_run_v2.py",
         "scripts/tests/test_momentum_forward_v1.py",
