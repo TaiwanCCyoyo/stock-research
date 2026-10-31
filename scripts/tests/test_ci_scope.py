@@ -1217,29 +1217,32 @@ def test_workflow_retains_stable_check_and_explicit_full_entry() -> None:
     assert "push" not in workflow["on"]
     assert "schedule" not in workflow["on"]
     assert "workflow_dispatch" in workflow["on"]
-    assert "edited" in workflow["on"]["pull_request"]["types"]
+    assert workflow["on"]["pull_request"]["branches"] == ["main"]
+    assert set(workflow["on"]["pull_request"]["types"]) == {
+        "opened",
+        "synchronize",
+        "reopened",
+        "ready_for_review",
+        "edited",
+    }
     assert "paths-ignore" not in workflow["on"]["pull_request"]
+    assert workflow["permissions"] == {"contents": "read"}
     job = workflow["jobs"]["repository-checks"]
     metadata_only = "github.event.action == 'edited' && github.event.changes.base == null"
-    assert job["name"] == "${{ " + metadata_only + " && 'metadata-edit-ignored' || 'repository-checks' }}"
-    assert "if" not in job  # Job-level skipping prevents Actions from evaluating its name.
-    assert job["runs-on"] == "${{ " + metadata_only + " && 'ubuntu-latest' || 'windows-latest' }}"
-    assert job["env"]["METADATA_EDIT"] == "${{ " + metadata_only + " }}"
-    for step in job["steps"]:
-        if step.get("name") == "Metadata edit ignored":
-            assert step["if"] == "env.METADATA_EDIT == 'true'"
-            assert step["run"].startswith("echo ")
-        else:
-            assert "env.METADATA_EDIT != 'true'" in step["if"]
+    assert job["name"] == "repository-checks"
+    assert job["runs-on"] == "windows-latest"
+    assert "if" not in job  # A skipped required job cannot stand in for validation.
+    assert "METADATA_EDIT" not in job["env"]
+    assert all(step.get("name") != "Metadata edit ignored" for step in job["steps"])
+    assert all("METADATA_EDIT" not in step.get("if", "") for step in job["steps"])
 
-    assert workflow["concurrency"]["group"] == (
-        "${{ github.workflow }}-${{ " + metadata_only + " && github.run_id || github.event.pull_request.number || github.run_id }}"
-    )
+    assert workflow["concurrency"]["group"] == "${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}"
+    assert workflow["concurrency"]["cancel-in-progress"] == ("${{ github.event_name == 'pull_request' && !(" + metadata_only + ") }}")
     steps = {step["name"]: step for step in job["steps"] if "name" in step}
     assert "--full" in steps["Select test scope"]["run"]
     assert "--execute" in steps["Selected Python tests"]["run"]
     assert "SKIP" not in steps["Repository checks"].get("env", {})
-    assert steps["Repository checks"]["if"] == "env.METADATA_EDIT != 'true'"
+    assert "if" not in steps["Repository checks"]
     assert "steps.scope.outputs.frontend" in steps["Frontend validation"]["if"]
     assert all(command in steps["Frontend validation"]["run"] for command in ["npm test", "npm run lint", "npm run build"])
     # test:local-data reads private local artifacts that a public hosted runner never has; run it locally only
@@ -1265,8 +1268,8 @@ def test_hook_environments_are_saved_after_preparation_before_downstream_checks(
         "pre-commit-${{ runner.os }}-${{ runner.arch }}-${{ steps.hook-python.outputs.identity }}-${{ hashFiles('.pre-commit-config.yaml', 'uv.lock') }}"
     )
     assert save["with"]["key"] == "${{ steps.hook-cache.outputs.cache-primary-key }}"
-    assert prepare["if"] == "env.METADATA_EDIT != 'true' && steps.hook-cache.outputs.cache-hit != 'true'"
-    assert save["if"] == "env.METADATA_EDIT != 'true' && steps.hook-cache.outputs.cache-hit != 'true' && steps.hook-environments.outcome == 'success'"
+    assert prepare["if"] == "steps.hook-cache.outputs.cache-hit != 'true'"
+    assert save["if"] == "steps.hook-cache.outputs.cache-hit != 'true' && steps.hook-environments.outcome == 'success'"
     assert (
         indices["Restore hook environments"]
         < indices["Prepare hook environments"]
@@ -1564,6 +1567,8 @@ def test_multi_timeframe_counts_program_registration_keeps_prose_contracts(statu
         "scripts/tests/test_strength_flags_v1.py",
         "scripts/tests/test_entry_window_v1.py",
         "scripts/tests/test_multi_timeframe_ma_core_v1.py",
+        "scripts/tests/test_momentum_forward_attempts_v2.py",
+        "scripts/tests/test_momentum_forward_run_v2.py",
         "scripts/tests/test_momentum_forward_publication_v3.py",
         "scripts/tests/test_tenbagger_drivers_v1.py",
         "tests/test_security_coverage.py",

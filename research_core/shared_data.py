@@ -42,6 +42,7 @@ def _worktrees(primary: Path) -> list[Path]:
         check=False,
         env=environment,
         timeout=30,
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
     )
     if result.returncode != 0:
         raise SharedRootError(f"cannot list worktrees of {primary}: {result.stderr.strip()}")
