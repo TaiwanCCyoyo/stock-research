@@ -19,6 +19,31 @@
         <meta name="report:kit" content="v1" />
         <link rel="stylesheet" href="kit/report-kit.css" />
         <link rel="stylesheet" href="style.css" />
+        <script type="application/ld+json">
+            {
+                "@context": "https://schema.org",
+                "@type": "Report",
+                "identifier": "20261024-strength-weakening-flags",
+                "name": "已大漲的股票，接著轉弱，之後還會翻倍嗎？",
+                "isBasedOn": [
+                    {
+                        "@type": "Report",
+                        "identifier": "20261021-momentum-only-doubling",
+                        "name": "只看強勢條件的翻倍機率",
+                        "description": "直接基線：提供兩個強勢條件、母體、標籤與倍數期限",
+                        "url": "../../20261021-momentum-only-doubling/web-report/index.html"
+                    },
+                    {
+                        "@type": "Report",
+                        "identifier": "20261013-pattern-scan",
+                        "name": "2010 起全市場型態掃描",
+                        "description": "方法來源（階段報告）：提供轉弱訊號定義與觀察時鐘",
+                        "url": "../../20261013-pattern-scan/web-report/index.html"
+                    }
+                ],
+                "citation": "../research-lineage.md"
+            }
+        </script>
         <script defer src="kit/report-kit.js"></script>
         <script defer src="data/manifest.js"></script>
         <script defer src="app.js"></script>
@@ -32,20 +57,65 @@
                     2010–2026 台股，翻倍＝收盤達起點兩倍
                 </p>
                 <p class="rk-lede">
-                    沿用前作的兩個強勢條件，這次追問：條件成立後若先轉弱，之後翻倍的比例差多少？
+                    沿用<a
+                        data-related-report="20261021-momentum-only-doubling"
+                        href="../../20261021-momentum-only-doubling/web-report/index.html"
+                        >〈只看強勢條件的翻倍機率〉</a
+                    >的兩個強勢條件，這次追問：條件成立後若先轉弱，之後翻倍的比例差多少？
                 </p>
-                <ul class="rise-criteria">
-                    <li>起點收盤價至少是過去240個交易日平均收盤價的1.6倍。</li>
-                    <li>起點收盤價至少是過去250個交易日最低收盤價的2.5倍。</li>
-                </ul>
-                <p class="hero-example">
-                    翻倍以起點收盤價為準，例如起點100元，之後收盤到200元即達標；一年追蹤至起點後第252個交易日。
-                </p>
+                <div class="rise-explain">
+                    <p class="rise-lead">
+                        什麼叫「已大漲」？以起點收盤 100
+                        元的股票為例，要同時符合：
+                    </p>
+                    <ul class="rise-criteria">
+                        <li>
+                            比一年均價高六成以上：近 240
+                            個交易日（約一年）的平均收盤價不超過 62.5 元。
+                        </li>
+                        <li>
+                            是一年低點的 2.5 倍以上：近 250
+                            個交易日（約一年）的最低收盤價不超過 40 元。
+                        </li>
+                    </ul>
+                    <p class="hero-example">
+                        兩個條件都符合的股票，本文稱為「強勢股」。翻倍目標是收盤到
+                        200 元，追蹤約一年（起點後 252 個交易日）。
+                    </p>
+                    <div class="price-line" aria-hidden="true">
+                        <span class="price-axis"></span>
+                        <span class="price-tick above" style="left: 20%"
+                            ><b>40</b>一年最低</span
+                        >
+                        <span class="price-tick below" style="left: 31.25%"
+                            ><b>62.5</b>一年均價上限</span
+                        >
+                        <span
+                            class="price-tick above is-start"
+                            style="left: 50%"
+                            ><b>100</b>起點</span
+                        >
+                        <span class="price-tick below is-end" style="left: 100%"
+                            ><b>200</b>翻倍目標</span
+                        >
+                    </div>
+                </div>
                 <nav class="lineage-crumb" aria-label="研究脈絡">
-                    <a href="#lineage-title">前作</a>：型態與條件研究
-                    <span aria-hidden="true">→</span> 只看強勢條件
+                    <a
+                        data-related-report="20261013-pattern-scan"
+                        href="../../20261013-pattern-scan/web-report/index.html"
+                        >型態與條件研究（階段報告）</a
+                    >
                     <span aria-hidden="true">→</span>
-                    <b>本作</b>：加上轉弱訊號
+                    <a
+                        data-related-report="20261021-momentum-only-doubling"
+                        href="../../20261021-momentum-only-doubling/web-report/index.html"
+                        >只看強勢條件</a
+                    >
+                    <span aria-hidden="true">→</span>
+                    本作：加上轉弱訊號
+                    <span aria-hidden="true">·</span>
+                    <a href="#lineage-title">完整脈絡</a>
                 </nav>
             </header>
 
@@ -60,7 +130,7 @@
                             前20個交易日跌破60日均線的強勢股，一年內翻倍的比例不到未跌破者的一半
                         </h2>
                         <p class="answer-note">
-                            10.2% 對 22.5%；這是歷史關聯，不是訊號造成。
+                            60日均線＝近60個交易日的平均收盤價；收盤低於它，代表股價落到近三個月的平均之下。
                         </p>
                     </header>
                     <div
@@ -90,7 +160,7 @@
                         </div>
                         <p class="headline-basis">
                             一年內翻倍的比例 · 2010-01-04–2026-10-12 ·
-                            強勢股；強勢股＋大漲日自 2015-06 起
+                            上述兩條件的強勢股
                         </p>
                     </div>
                     <div class="headline-diffs">
@@ -116,7 +186,9 @@
                             ></span>
                         </div>
                         <div class="gap-row">
-                            <span class="gap-name">扣掉漲跌幅差異後</span>
+                            <span class="gap-name"
+                                >只和第20日漲跌幅相近的事件比</span
+                            >
                             <span class="gap-track"
                                 ><span
                                     class="gap-fill"
@@ -140,7 +212,7 @@
                     id="counter-note"
                     aria-labelledby="counter-title"
                 >
-                    <h3 id="counter-title">反面提醒</h3>
+                    <h3 id="counter-title">同一訊號也常出現在最後翻倍的股票</h3>
                     <p class="counter-population">
                         另一批事件：觀察期限完整、最後確實翻倍的強勢股
                     </p>
@@ -149,13 +221,13 @@
                     </p>
                     <p>在第一次翻倍前，曾收盤低於60日均線。</p>
                     <p class="muted">
-                        訊號可能在前20日之後才出現，不能解讀為第20日賣出會錯過的比例。
+                        這批事件看的是到翻倍為止的整段期間，訊號可能在第20日之後才出現。
                     </p>
                 </aside>
             </div>
 
             <p class="main-limit">
-                主要限制：強勢條件、訊號與結果全在同一段已看過的歷史內，沒有另一段未看過期間的獨立驗證。
+                主要限制：強勢條件、訊號與結果取自同一段已看過的歷史、尚無獨立驗證期；兩組差異是歷史上的關聯。
             </p>
 
             <section
@@ -219,6 +291,7 @@
                     aria-label="比較條件"
                 ></div>
                 <p class="explorer-context">切換條件，看兩組翻倍比例怎麼變</p>
+                <p class="explorer-screen" id="explorer-screen-note"></p>
                 <div
                     id="guided-comparison"
                     class="guided-comparison"
@@ -236,7 +309,7 @@
                         訊號觀察期是符合上方兩項價格條件後的第1–20個交易日；比較「這段期間內有訊號」與「沒有訊號」兩組，之後到達起點股價兩倍的比例。同一股票在不同起點日可形成多筆觀察。
                     </p>
                     <p>
-                        強勢股＋大漲日再要求起點當日原始漲幅至少9.5%；此條件只從2015年6月起可用，且不是交易所正式漲停判定。
+                        強勢股＋大漲日再要求起點當日原始漲幅至少9.5%（接近台股單日漲停10%的大漲）；此條件只從2015年6月起可用，且不是交易所正式漲停判定。
                     </p>
                 </div>
                 <div class="method-note footnote">
@@ -256,7 +329,7 @@
                             布林下軌：依近期價格波動估出的下方界線；訊號是收盤低於它。
                         </li>
                         <li>
-                            較低高點：新確認的波段高點低於前一個已確認高點。
+                            較低高點：新確認的波段高點低於前一個已確認高點，即反彈的高點一次比一次低。
                         </li>
                         <li>
                             起點固定支撐：起點時已確認的支撐價，之後不隨新低點改動。
@@ -337,7 +410,7 @@
                             <span class="rk-q">整體結果</span>
                             <h2>
                                 28
-                                種比較都是有訊號組較低；扣掉漲跌幅差異後，只有「跌破60日均線、看一年」在兩種強勢股都仍然較低
+                                種比較都是有訊號組較低；只和漲幅相近的事件比時，只有「跌破60日均線、看一年」在兩種強勢股都仍然較低
                             </h2>
                         </div>
                     </header>
@@ -351,10 +424,8 @@
                         主要結果涵蓋28種翻倍比較情境（兩種強勢條件、七個適用訊號、半年與一年）。3、5、10倍結果保留在次要表格；翻倍的主要結果不能直接推論到其他倍數。
                     </p>
                     <p class="muted">
-                        技術名稱對照：「強勢股」＝雙重強勢，即收盤高於年線至少
-                        60%、且相對過去 250 個交易日最低收盤至少 2.5
-                        倍；「強勢股＋大漲日」＝雙重強勢＋大漲日，再要求起點當日原始漲幅至少
-                        9.5%。
+                        名稱對照：「強勢股」＝上方兩條件都符合的股票；「強勢股＋大漲日」＝強勢股，再要求起點當日原始漲幅至少
+                        9.5%（接近台股單日漲停 10% 的大漲）。
                     </p>
                     <details class="table-fold" id="primary-table-fold" open>
                         <summary>主要比較表（28 種）</summary>
@@ -423,14 +494,14 @@
                         </div>
                     </header>
                     <p>
-                        只看觀察期限完整、最後確實翻倍的事件，計算其中在第一次翻倍之前曾出現訊號的比例。這是描述翻倍過程，不是第20日賣出會錯過多少的答案，也不是停損規則的績效。
+                        只看觀察期限完整、最後確實翻倍的事件，計算其中在第一次翻倍之前曾出現訊號的比例。只看最後翻倍的事件，並涵蓋到首次翻倍為止的整段期間。
                     </p>
                     <details>
                         <summary>計算方式與範圍</summary>
                         <p>
-                            原定義稱「錯殺代價」，以 T/(T+F)
-                            表示，並另外呈現結果不明狀態的邏輯下界與上界；這些界限不是信賴區間。計數只使用日曆期滿、曾於期限內達標的事件，並要求訊號出現在首次達標之前，不是起點後第
-                            20 日風險集；同一訊號跨觀察點的代價相同是預期情況。
+                            比例＝最後翻倍者中，翻倍前曾出現訊號的比例，並另外呈現結果不明狀態的邏輯下界與上界；這些界限不是信賴區間。計數只使用日曆期滿、曾於期限內達標的事件，並要求訊號出現在首次達標之前，與第
+                            20
+                            日仍未翻倍的事件集合不同；同一訊號跨觀察點的比例相同是預期情況。
                         </p>
                         <p>
                             此計算使用達標前觸發、未觸發與結果不明訊號的專用計數；不以觀察點風險集的觸發後達標結果替代。
@@ -442,14 +513,15 @@
                     <header>
                         <div>
                             <span class="rk-q">定義與限制</span>
-                            <h2>觀察到的關係不能直接轉成交易規則</h2>
+                            <h2>定義與限制：同一段歷史、未模擬買賣</h2>
                         </div>
                     </header>
                     <ul class="definition-list">
                         <li>
                             <b>跌破起點固定支撐低點：</b
-                            >取起點收盤下方、起點時已確認的 1.5 ATR
-                            低點中最高者，不是最近低點。
+                            >取起點時已確認、且低於起點收盤的波段低點中最高的一個，不是最近的低點。波段低點＝股價自低點反彈至少
+                            1.5 倍 ATR（近 14
+                            個交易日的平均每日波幅）後確認的低點。
                         </li>
                         <li>
                             <b>收盤低於 20／60 日均線：</b
@@ -459,7 +531,10 @@
                             <b>較起點下跌 10%／15%：</b>以起點價格為固定基準。
                         </li>
                         <li><b>收盤低於布林下軌：</b>依保存訊號狀態判讀。</li>
-                        <li><b>新確認較低高點：</b>依保存訊號狀態判讀。</li>
+                        <li>
+                            <b>新確認較低高點：</b
+                            >反彈的高點一次比一次低；依保存訊號狀態判讀。
+                        </li>
                         <li>
                             <b>型態支撐／型態下緣：</b
                             >因缺少對應的型態支撐與型態下緣價位而不適用。

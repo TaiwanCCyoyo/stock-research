@@ -405,6 +405,23 @@ test("the actual report links post approved routes to their host", () => {
         runInNewContext(script, {
             window: page,
             document: {
+                querySelectorAll: (selector: string) => {
+                    assert.equal(selector, "a[data-related-report]");
+                    return [
+                        ...html.matchAll(/data-related-report="([^"]+)"/g),
+                    ].map((match) => ({
+                        dataset: { relatedReport: match[1] },
+                        addEventListener: (
+                            type: string,
+                            handler: (event: {
+                                preventDefault(): void;
+                            }) => void,
+                        ) => {
+                            assert.equal(type, "click");
+                            clicks.set("report:" + match[1], handler);
+                        },
+                    }));
+                },
                 querySelector: (selector: string) => {
                     return {
                         addEventListener: (
@@ -435,7 +452,7 @@ test("the actual report links post approved routes to their host", () => {
                 },
             });
         };
-        click("#pattern-report-link");
+        click("report:20261013-pattern-scan");
         click("#shared-data-link");
         assert.equal(preventCount, embedded ? 2 : 0);
         assert.equal(messages.length, embedded ? 2 : 0);

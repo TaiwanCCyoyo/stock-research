@@ -48,7 +48,9 @@ Opening one comparison must not force the reader through the entire grid.
 [Government Analysis Function guidance](https://analysisfunction.civilservice.gov.uk/policy-store/communicating-quality-uncertainty-and-change/)
 places important quality limitations alongside results and explains their
 effect on interpretation. State a concrete boundary, such as a missing independent
-period, instead of repeating a general instruction not to trade. Preserve
+period, only where it changes how the adjacent number is read; phrase it as a fact
+about population, window or data, not about what a reader might do (see the
+[tone table](writing-and-visual-aids.md#tone)). Preserve
 unknowns and the distinction between association and causation. The source is
 being updated for accessibility; use it for communication principles, not as a
 current accessibility specification.

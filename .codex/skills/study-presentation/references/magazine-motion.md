@@ -15,9 +15,10 @@ supported claim never depend on them. Derived from the strength-flags review (PR
   do not give every block the same weight.
 - **Counter-evidence is a sidebar, not a sentence under the headline.** A figure with a
   different population or window (for example "most doublers had dipped first") needs
-  its population label above the number so it is not read as "selling would miss it".
+  its population label above the number so it is not read as the same population as the headline.
 - **Breadcrumb for lineage.** Prior-study context becomes a thin "previous → this" line
-  near the top; the full account moves after the results.
+  near the top; the full account moves after the results. Every predecessor station is a
+  `data-related-report` link; only the current study is plain text.
 - **Order:** question → answer → one-line main limitation → timeline → self-serve
   exploration → evidence → lineage and limits.
 

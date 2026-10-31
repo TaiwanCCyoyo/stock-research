@@ -23,11 +23,27 @@ URL or another session's worktree for the historical source. When populations,
 time origins or denominators differ, explain that beside any cross-study
 comparison. Synchronize this context across the reading page, report and card.
 
+Every mention of a predecessor is a clickable report link written as
+`<a data-related-report="<task-id>">`. In the breadcrumb every station except
+the current study is such a link. Say what each predecessor supplies (the
+baseline conditions, or the source of a method), never just "前作". For machines,
+add an inert `<script type="application/ld+json">` whose `isBasedOn` entries
+are keyed by task ID and whose `citation` points to that task's
+`research-lineage.md`, the canonical record. Do not use `rel="prev|next"` for
+lineage, do not add fields to study-card.v2, and do not edit a predecessor
+report to add a back link; the reverse relation is registered in the research
+index.
+
 Before building the reading view, state the reader's question, the compared
 groups, the target outcome and the time origin in everyday language. A person
 who never saw the conversation must understand what was studied and what the
-result does and does not support. Explain an unfamiliar condition at first use;
-keep research codes and compact statistical labels in the evidence layer.
+result does and does not support. Write for a magazine reader who never joined
+the discussion. Wherever a group is defined by a threshold, multiple or window,
+give one plain sentence at first use plus the concrete numbers of one shared
+example for the whole page (for example a start price of 100). Rewriting a
+formula in words is not an explanation. Keep research codes, statistical
+abbreviations and symbols in tables and the evidence layer. See
+[writing and visual aids](references/writing-and-visual-aids.md).
 
 Draft the main answer before choosing tables or UI components. For each main
 panel, write a short sentence stating the supported finding, then choose the
@@ -40,8 +56,8 @@ techniques to a self-contained page: there is no speaker to supply missing conte
 Build the reading path around the question, the finding, its practical meaning
 and limits, then supporting evidence. Lead with an understandable finding rather
 than a count of comparison cells. A small hypothetical example can explain a
-definition (such as the price used as the target's base); label it as an example,
-never as observed data. When signal observation and outcome tracking use different
+definition; label it as an example, never as observed data
+([choosing the aid](references/writing-and-visual-aids.md)). When signal observation and outcome tracking use different
 windows, show their order on a timeline with a named starting point and explicit
 day ranges; avoid making readers infer which event "before" or "after" refers to.
 Do not turn this reading path into a mandatory layout for simple results.
@@ -75,18 +91,22 @@ labels without changing the underlying research verdict or implying approval.
 
 Guide through layout and responsive explanations, not a lecturing voice. Prefer
 neutral statements over repeated 「先知道」「下面帶你看」 introductions. Keep an
-ordinary scope note brief and visually quiet; do not turn it into a warning box
-packed with definitions. Put secondary qualifications next to the relevant
-measure or in the details, while preserving the main limitation in view.
+ordinary scope note brief and visually quiet. Put secondary qualifications next
+to the relevant measure or in the details, while preserving the main limitation
+in view.
 
 Remove narration of interactions the interface already makes clear; retain the
 date, units and qualifications that identify the displayed values. A detail
 action should reveal the selected evidence directly, not expand every table
 before it. In an embedded report, coordinate focus and scrolling with the host
 after its layout updates, and keep the target clear of sticky navigation.
-Avoid a blanket disclaimer in every report wrapper. State the study's concrete
-scope and limitations where they affect interpretation, without telling the
-reader what they should or should not do or repeating the same warning.
+Write limits as facts beside the number they qualify (population, window,
+missing independent period, unknown is not 0), and only when they change how
+the reader reads that number. Do not make an unmeasured reader action (selling,
+stop-losses, trading rules) the subject of a sentence, do not title sections as
+warnings, and do not add disclaimers, 「僅供參考」 or 「不要照做」 lines. Write to
+inform a reader, not to guard against imitators. Before/after wording is in the
+tone table of [writing and visual aids](references/writing-and-visual-aids.md#tone).
 
 Design failure states as part of the reading route. Explain what could not be
 loaded, what remains usable, and the next available action. Distinguish missing

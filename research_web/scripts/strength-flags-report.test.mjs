@@ -91,10 +91,23 @@ for (const m of html.matchAll(/<([a-z0-9]+)\b[^>]*\bid="([^"]+)"[^>]*>/g)) {
         e.createTBody();
     }
 }
+const relatedLinks = [];
+for (const m of html.matchAll(
+    /<a\b[^>]*\bdata-related-report="([^"]+)"[^>]*>/g,
+)) {
+    const id = /\bid="([^"]+)"/.exec(m[0])?.[1];
+    const e = (id && ids.get(id)) || new Element("a");
+    e.dataset.relatedReport = m[1];
+    relatedLinks.push(e);
+}
 const callbacks = [];
 const document = {
     documentElement: new Element("html"),
     head: new Element("head"),
+    querySelectorAll: (q) => {
+        assert.equal(q, "a[data-related-report]");
+        return relatedLinks;
+    },
     createElement: (t) => new Element(t),
     createElementNS: (_, t) => new Element(t),
     querySelector: (q) => {
@@ -169,6 +182,40 @@ test("saved report supports guided choices and full evidence without changing de
     assert.equal(
         ids.get("momentum-report-link").href,
         "../20261021-momentum-only-doubling/index.html",
+    );
+    const crumb = html.slice(
+        html.indexOf('class="lineage-crumb"'),
+        html.indexOf("</nav>", html.indexOf('class="lineage-crumb"')),
+    );
+    assert.match(crumb, /data-related-report="20261013-pattern-scan"/);
+    assert.match(
+        crumb,
+        /data-related-report="20261021-momentum-only-doubling"/,
+    );
+    assert.match(crumb, /href="#lineage-title"/);
+    assert.match(html, /application\/ld\+json/);
+    assert.match(html, /"isBasedOn"/);
+    assert.match(html, /不超過 62\.5 元/);
+    assert.match(html, /不超過 40 元/);
+    for (const gone of [
+        "不是訊號造成",
+        "反面提醒",
+        "不能解讀為第20日賣出",
+        "不是停損規則",
+        "T/(T+F)",
+    ])
+        assert(!html.includes(gone), `${gone} was removed from the page`);
+    assert.match(
+        ids.get("explorer-screen-note").textContent,
+        /只有「收盤低於60日均線、看一年」這一種在漲幅相近時仍較低/,
+    );
+    assert.match(
+        ids.get("explorer-screen-note").textContent,
+        /共 28 格比較中的 2 格/,
+    );
+    assert.match(
+        ids.get("main-adjusted-difference").textContent,
+        /只和第20日漲跌幅相近的事件比，仍低/,
     );
     assert.match(html, /型態搭配哪些條件，後來更常翻倍/);
     assert.match(html, /未翻倍且期末收低的比例也較高/);

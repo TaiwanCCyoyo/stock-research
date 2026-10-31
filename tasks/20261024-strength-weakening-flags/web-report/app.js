@@ -364,13 +364,13 @@
                 : "兩組比例差目前沒有可用的保存數值。";
         $("#main-adjusted-difference").textContent =
             typeof adjusted === "number"
-                ? `扣掉第20日漲跌幅差異後${
+                ? `只和第20日漲跌幅相近的事件比${
                       typeof difference === "number" &&
                       Math.sign(difference) === Math.sign(adjusted)
-                          ? "仍"
-                          : ""
-                  }${word(adjusted)} ${pp(adjusted)} 個百分點（28 種比較中僅 2 種在分層後仍較低，見下方互動比較）`
-                : "扣掉漲跌幅差異後的差值目前沒有可用的保存數值。";
+                          ? "，仍"
+                          : "，"
+                  }${word(adjusted)} ${pp(adjusted)} 個百分點`
+                : "只和漲跌幅相近的事件比時的差值目前沒有可用的保存數值。";
         setGap("direct", difference);
         setGap("adjusted", adjusted);
         $("#main-cost-rate").textContent = fmtPct(
@@ -427,7 +427,53 @@
         $("#guided-evidence-button").addEventListener("click", () => {
             if (guidedState.row) pickRow(guidedState.row);
         });
+        renderScreenNote();
         updateGuidedComparison();
+    }
+
+    // Counts the main comparisons from the saved rows: 2 groups x 7 signals
+    // x 2 horizons, and how many keep a lower rate among similar-move events.
+    function renderScreenNote() {
+        const node = $("#explorer-screen-note");
+        if (!node) return;
+        const flags = [
+            "Y3",
+            "X5_MA20",
+            "X5_MA60",
+            "X6_10",
+            "X6_15",
+            "X7",
+            "X8",
+        ];
+        const main = rows.filter(
+            (r) =>
+                baseFull(r) &&
+                Number(val(r, "target_multiple")) === 2 &&
+                String(val(r, "landmark")).replace(/^L/, "") === "20" &&
+                ["126", "252"].includes(
+                    String(val(r, "horizon")).replace(/^H/, ""),
+                ) &&
+                ["CORE", "LEAD_B1"].includes(key(r, "group")) &&
+                flags.includes(key(r, "flag")),
+        );
+        const still = main.filter(
+            (r) => key(r, "verdict") === "weakens_beyond_drop",
+        );
+        if (!main.length || !still.length) {
+            node.textContent = "";
+            return;
+        }
+        const combos = new Set(
+            still.map(
+                (r) =>
+                    `${human("flag", key(r, "flag"))}、${String(val(r, "horizon")).replace(/^H/, "") === "252" ? "看一年" : "看半年"}`,
+            ),
+        );
+        const kinds = new Set(still.map((r) => key(r, "group")));
+        node.textContent =
+            combos.size === 1
+                ? `七種轉弱訊號和兩個期限裡，只有「${[...combos][0]}」這一種在漲幅相近時仍較低（${kinds.size === 2 ? "兩種強勢股都是如此" : groupDescription([...kinds][0])}；共 ${main.length} 格比較中的 ${still.length} 格）。`
+                : `共 ${main.length} 格主要比較中，有 ${still.length} 格在漲幅相近時仍較低（${[...combos].join("、")}）。`;
     }
 
     // One fixed 0-based scale for every comparison: the next 10% above the
@@ -637,7 +683,7 @@
             make(
                 "p",
                 "muted",
-                "上方比較的是前 20 個交易日內的訊號，並排除到第 20 日（含當日）已翻倍的觀察。這張卡看的時間更長、對象也不同；不能把這個比例當成第 20 日賣出後會錯過翻倍的機率。",
+                "上方比較的是前 20 個交易日內的訊號，並排除到第 20 日（含當日）已翻倍的觀察。這張卡看的時間更長、對象也不同。",
             ),
             costDetails,
         );
@@ -735,7 +781,7 @@
                     className: "numeric",
                 },
                 {
-                    label: "最終達標前曾有訊號比例 T/(T+F)",
+                    label: "最後翻倍者中，翻倍前曾出現訊號的比例",
                     render: (r) =>
                         fmtPct(
                             val(
@@ -1160,16 +1206,17 @@
         if (meta.reportUrl) $("#report-link").href = meta.reportUrl;
     }
     function relatedReportLinks() {
-        const reports = [
-            ["pattern-report-link", "20261013-pattern-scan"],
-            ["momentum-report-link", "20261021-momentum-only-doubling"],
-        ];
         const hosted = ["http:", "https:"].includes(
             window.location && window.location.protocol,
         );
-        for (const [elementId, reportId] of reports) {
-            const link = $("#" + elementId);
-            if (!link) continue;
+        const links = document.querySelectorAll
+            ? Array.from(document.querySelectorAll("a[data-related-report]"))
+            : [];
+        for (const link of links) {
+            const reportId =
+                (link.dataset && link.dataset.relatedReport) ||
+                (link.getAttribute && link.getAttribute("data-related-report"));
+            if (!reportId) continue;
             if (hosted) link.href = `../${reportId}/index.html`;
             link.addEventListener("click", (event) => {
                 if (window.parent === window) return;
