@@ -292,7 +292,7 @@ test("saved report supports guided choices and full evidence without changing de
     tbody("grid-table").children[0].listeners.click();
     assert.match(
         ids.get("detail-title").textContent,
-        /已大幅上漲的股票.*252.*20.*60/,
+        /已大幅上漲的股票.*截至起點後第 252 個交易日.*內，收盤價曾達到起點收盤價的 2 倍.*20.*60/,
     );
     const detail = ids.get("detail-content").textContent;
     assert(detail.includes("8,733／4,490／0"));

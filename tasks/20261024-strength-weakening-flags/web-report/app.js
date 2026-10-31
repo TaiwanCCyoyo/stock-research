@@ -819,7 +819,7 @@
 
     function renderDetail() {
         if (!selected) return;
-        const title = `${groupDescription(key(selected, "group"))} · 起點後第 ${text(val(selected, "horizon"))} 個交易日（${horizonLabel(val(selected, "horizon"))}）達到 ${text(val(selected, "target_multiple"))} 倍 · 第 1–${text(val(selected, "landmark"))} 日${flagDescription(key(selected, "flag"))}`;
+        const title = `${groupDescription(key(selected, "group"))} · 截至起點後第 ${text(val(selected, "horizon"))} 個交易日（${horizonLabel(val(selected, "horizon"))}）內，收盤價曾達到起點收盤價的 ${text(val(selected, "target_multiple"))} 倍 · 第 1–${text(val(selected, "landmark"))} 日${flagDescription(key(selected, "flag"))}`;
         $("#detail-title").textContent = title;
         const host = $("#detail-content");
         host.replaceChildren();
