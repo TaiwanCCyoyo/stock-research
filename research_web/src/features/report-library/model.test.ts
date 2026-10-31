@@ -1,11 +1,20 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { readFileSync } from "node:fs";
+import { runInNewContext } from "node:vm";
+import { studioRoute } from "../../app/routes.ts";
 import {
     filterReports,
     reportFrameSrc,
+    reportNavigationHash,
+    reportRevealRequest,
+    reportFrameHeight,
+    revealReportEvidence,
     reportTags,
     statusLabel,
     validateReportIndex,
+    readReportIndex,
+    ReportIndexError,
     type ReportEntry,
 } from "./model.ts";
 
@@ -18,6 +27,126 @@ const entry = (id: string, title: string, tags: string[]): ReportEntry => ({
     period: "",
     kit: "v1",
     tags,
+});
+
+test("evidence reveal accepts only the current frame and a fixed heading with bounded heights", () => {
+    const frame = {};
+    const message = {
+        type: "rk:reveal",
+        target: "detail-title",
+        height: 2123.2,
+    };
+    assert.deepEqual(reportRevealRequest(frame, frame, message), {
+        target: "detail-title",
+        height: 2124,
+    });
+    for (const source of [{}, null, undefined])
+        assert.equal(reportRevealRequest(source, frame, message), null);
+    assert.equal(reportRevealRequest(null, null, message), null);
+    for (const data of [
+        null,
+        [],
+        "detail-title",
+        { ...message, type: "other" },
+        { ...message, target: "#data" },
+        { ...message, target: "body" },
+    ])
+        assert.equal(reportRevealRequest(frame, frame, data), null);
+    for (const height of [Infinity, NaN, -1, 0, "3000"])
+        assert.equal(reportFrameHeight(height), null);
+    assert.equal(reportFrameHeight(999999), 200000);
+});
+
+test("committed evidence reveal handles repeats, sticky clearance and stale documents", () => {
+    const source = {} as Window;
+    let focused = 0;
+    const scrolls: ScrollToOptions[] = [];
+    const document = {
+        getElementById: (id: string) => {
+            assert.equal(id, "detail-title");
+            return {
+                focus: (options: FocusOptions) => {
+                    assert.equal(options.preventScroll, true);
+                    focused++;
+                },
+                getBoundingClientRect: () => ({ top: 1200 }),
+            };
+        },
+    } as unknown as Document;
+    const frame = {
+        contentWindow: source,
+        contentDocument: document,
+        getBoundingClientRect: () => ({ top: -200 }),
+        ownerDocument: {
+            querySelector: (selector: string) => {
+                assert.equal(selector, ".shell-header");
+                return { getBoundingClientRect: () => ({ bottom: 64 }) };
+            },
+            defaultView: {
+                scrollY: 300,
+                scrollTo: (options: ScrollToOptions) => scrolls.push(options),
+            },
+        },
+    } as unknown as HTMLIFrameElement;
+    assert.equal(revealReportEvidence(frame, {} as Window, document), false);
+    assert.equal(revealReportEvidence(frame, source, {} as Document), false);
+    assert.equal(revealReportEvidence(frame, source, document), true);
+    assert.equal(revealReportEvidence(frame, source, document), true);
+    assert.equal(focused, 2);
+    assert.deepEqual(scrolls, [
+        { top: 1220, behavior: "instant" },
+        { top: 1220, behavior: "instant" },
+    ]);
+});
+
+test("report loading distinguishes retryable failures without accepting mismatched versions", async () => {
+    const signal = new AbortController().signal;
+    const responses = [
+        new Response("unavailable", { status: 503 }),
+        new Response("<html>not an index</html>"),
+        Response.json({
+            schema: "research-reports.v1",
+            version: "development",
+            reports: [],
+        }),
+        Response.json({
+            schema: "research-reports.v1",
+            version: "release-123",
+            reports: [],
+        }),
+    ];
+    let calls = 0;
+    const fetcher: typeof fetch = async (url, options) => {
+        assert.equal(url, "/reports/index.json");
+        assert.equal(options?.signal, signal);
+        assert.equal(options?.cache, "no-store");
+        return responses[calls++]!;
+    };
+    for (const code of ["http", "invalid_index", "version_mismatch"]) {
+        await assert.rejects(
+            readReportIndex(signal, "release-123", fetcher),
+            (error: unknown) =>
+                error instanceof ReportIndexError && error.code === code,
+        );
+    }
+    assert.deepEqual(
+        (await readReportIndex(signal, "release-123", fetcher)).reports,
+        [],
+    );
+    assert.equal(calls, 4);
+    const aborted = new AbortController();
+    aborted.abort();
+    await assert.rejects(
+        readReportIndex(
+            aborted.signal,
+            "release-123",
+            async (_url, options) => {
+                options?.signal?.throwIfAborted();
+                return responses[3]!;
+            },
+        ),
+        { name: "AbortError" },
+    );
 });
 
 test("search matches every word across title, id and tags, and a tag narrows", () => {
@@ -74,4 +203,98 @@ test("frame source encodes the id and carries the first-paint theme", () => {
         reportFrameSrc("a b", "ocean", "dark"),
         "/reports/a%20b/index.html#palette=ocean&appearance=dark",
     );
+});
+
+test("only this report frame can request the fixed shared-data route", () => {
+    const frame = {};
+    const message = { type: "rk:navigate", href: "#data" };
+    assert.equal(reportNavigationHash(frame, frame, message), "#data");
+    for (const source of [{}, null, undefined])
+        assert.equal(reportNavigationHash(source, frame, message), null);
+    assert.equal(reportNavigationHash(null, null, message), null);
+    for (const data of [
+        null,
+        [],
+        "#data",
+        { ...message, type: "other" },
+        { ...message, href: "https://example.com" },
+        { ...message, href: "#data/2330" },
+    ])
+        assert.equal(reportNavigationHash(frame, frame, data), null);
+    assert.equal(studioRoute("#data").page, "overview");
+});
+
+test("the actual report link posts to its host and keeps standalone navigation", () => {
+    const script = readFileSync(
+        new URL(
+            "../../../../tasks/20261024-strength-weakening-flags/web-report/app.js",
+            import.meta.url,
+        ),
+        "utf8",
+    );
+    const html = readFileSync(
+        new URL(
+            "../../../../tasks/20261024-strength-weakening-flags/web-report/index.html",
+            import.meta.url,
+        ),
+        "utf8",
+    );
+    const link = html.match(/<a\b[^>]*\bid="shared-data-link"[^>]*>/)?.[0];
+    assert.ok(link);
+    assert.match(link, /href="\/#data"/);
+    assert.doesNotMatch(link, /target=/);
+    for (const embedded of [true, false]) {
+        let click: ((event: { preventDefault(): void }) => void) | undefined;
+        let start: (() => Promise<void>) | undefined;
+        let prevented = false;
+        const messages: unknown[] = [];
+        const frame = {};
+        const parent = {
+            postMessage: (data: unknown, target: string) => {
+                assert.equal(target, "*");
+                messages.push(data);
+            },
+        };
+        const page: Record<string, unknown> = {
+            ReportKit: {},
+            REPORT_READY: new Promise(() => {}),
+        };
+        page.parent = embedded ? parent : page;
+        runInNewContext(script, {
+            window: page,
+            document: {
+                querySelector: (selector: string) => {
+                    assert.equal(selector, "#shared-data-link");
+                    return {
+                        addEventListener: (
+                            type: string,
+                            handler: typeof click,
+                        ) => {
+                            assert.equal(type, "click");
+                            click = handler;
+                        },
+                    };
+                },
+                addEventListener: (type: string, handler: typeof start) => {
+                    assert.equal(type, "DOMContentLoaded");
+                    start = handler;
+                },
+            },
+        });
+        assert.ok(start);
+        void start();
+        assert.ok(click);
+        click({
+            preventDefault: () => {
+                prevented = true;
+            },
+        });
+        assert.equal(prevented, embedded);
+        assert.equal(messages.length, embedded ? 1 : 0);
+        if (embedded)
+            assert.equal(
+                reportNavigationHash(frame, frame, messages[0]),
+                "#data",
+            );
+    }
 });

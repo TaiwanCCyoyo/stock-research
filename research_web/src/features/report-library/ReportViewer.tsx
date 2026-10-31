@@ -1,6 +1,14 @@
-import { useEffect, useRef, useState } from "react";
-import { reportFrameSrc, statusLabel } from "./model";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+    reportFrameHeight,
+    reportFrameSrc,
+    reportNavigationHash,
+    reportRevealRequest,
+    revealReportEvidence,
+    statusLabel,
+} from "./model";
 import { useReportIndex } from "./useReportIndex";
+import { ReportIndexNotice } from "./ReportIndexNotice";
 import { SourceInfo } from "../../components/ui/primitives";
 import "./reports.css";
 
@@ -29,25 +37,63 @@ export function ReportViewer({
     palette: string;
     appearance: string;
 }) {
-    const { reports, error } = useReportIndex();
+    const { reports, error, issue, loading, retry } = useReportIndex();
     const report = reports?.find((r) => r.id === reportId);
     const frame = useRef<HTMLIFrameElement>(null);
     // The first-paint theme is fixed in the URL; later changes are posted, so the
     // frame never reloads (and loses its state) when the viewer changes the theme.
     const [src] = useState(() => reportFrameSrc(reportId, palette, appearance));
     const [height, setHeight] = useState<number | null>(null);
+    const [reveal, setReveal] = useState<{
+        source: Window;
+        document: Document;
+    } | null>(null);
+    const handledReveal = useRef<typeof reveal>(null);
+
+    useLayoutEffect(() => {
+        if (reveal && reveal !== handledReveal.current && frame.current) {
+            handledReveal.current = reveal;
+            revealReportEvidence(frame.current, reveal.source, reveal.document);
+        }
+    }, [height, reveal]);
 
     useEffect(() => {
         const receive = (event: MessageEvent) => {
             // Trust only messages from our own frame, whatever their origin reports.
             if (event.source !== frame.current?.contentWindow) return;
+            const target = reportNavigationHash(
+                event.source,
+                frame.current?.contentWindow,
+                event.data,
+            );
+            if (target) window.location.hash = target;
+            const request = reportRevealRequest(
+                event.source,
+                frame.current?.contentWindow,
+                event.data,
+            );
+            if (request && frame.current?.contentWindow) {
+                try {
+                    const document = frame.current.contentDocument;
+                    if (!document) return;
+                    const measured = reportFrameHeight(
+                        document.documentElement.scrollHeight,
+                    );
+                    const nextHeight = measured ?? request.height;
+                    if (nextHeight !== null) setHeight(nextHeight);
+                    // A fresh object also services repeated requests at the same height.
+                    setReveal({
+                        source: frame.current.contentWindow,
+                        document,
+                    });
+                } catch {
+                    if (request.height !== null) setHeight(request.height);
+                }
+            }
             const data = event.data as { type?: string; height?: number };
-            if (
-                data?.type === "rk:height" &&
-                typeof data.height === "number" &&
-                data.height > 0
-            )
-                setHeight(Math.min(Math.ceil(data.height), 200_000));
+            const nextHeight = reportFrameHeight(data?.height);
+            if (data?.type === "rk:height" && nextHeight !== null)
+                setHeight(nextHeight);
         };
         window.addEventListener("message", receive);
         return () => window.removeEventListener("message", receive);
@@ -64,12 +110,12 @@ export function ReportViewer({
         <div className="rv-page">
             <div className="rv-bar u-card">
                 <a className="rv-back u-btn" href="#studies">
-                    ← 研究
+                    ← 返回研究列表
                 </a>
                 <div className="rv-title">
                     <strong>{report?.title || "研究報告"}</strong>
                     <span>
-                        {report?.date && <span>{report.date}</span>}
+                        {report?.date && <span>報告日期 {report.date}</span>}
                         {report?.period && (
                             <span>資料期間 {report.period}</span>
                         )}
@@ -85,21 +131,40 @@ export function ReportViewer({
                     在新分頁開啟 ↗
                 </a>
             </div>
-            <p className="u-notice">
-                歷史研究，不是買賣訊號。請留意報告中的研究限制。
-            </p>
-            {error && (
-                <div role="alert" className="u-notice">
-                    <p>報告清單暫時無法讀取。</p>
-                    <SourceInfo>
-                        <p>{error}</p>
-                    </SourceInfo>
-                </div>
+            {issue && (
+                <ReportIndexNotice
+                    issue={issue}
+                    error={error}
+                    loading={loading}
+                    retry={retry}
+                    reload={() => window.location.reload()}
+                />
             )}
-            {reports && !report && (
+            {loading && !issue && (
+                <p role="status" className="u-muted">
+                    正在讀取報告資訊…
+                </p>
+            )}
+            {reports && !report && !issue && (
                 <div role="alert" className="u-notice">
-                    <p>找不到這份報告，請返回研究頁選擇其他報告。</p>
-                    <SourceInfo>
+                    <strong>這份報告目前不在清單中</strong>
+                    <p>
+                        連結可能已變更，或這份報告尚未加入目前的網站。你可以重新讀取清單，或返回研究列表選擇報告。
+                    </p>
+                    <div className="u-actions">
+                        <button
+                            type="button"
+                            className="u-btn"
+                            onClick={retry}
+                            disabled={loading}
+                        >
+                            {loading ? "正在重新讀取…" : "重新讀取報告資訊"}
+                        </button>
+                        <a className="u-btn" href="#studies">
+                            返回研究列表
+                        </a>
+                    </div>
+                    <SourceInfo label="查看查找詳情">
                         <p>報告識別：{reportId}</p>
                         <p>
                             預期位置：<code>tasks/{reportId}/web-report/</code>
@@ -116,12 +181,13 @@ export function ReportViewer({
                     sandbox="allow-scripts allow-same-origin allow-downloads"
                     referrerPolicy="no-referrer"
                     style={height ? { height } : undefined}
-                    onLoad={() =>
+                    onLoad={() => {
+                        setReveal(null);
                         frame.current?.contentWindow?.postMessage(
                             { type: "rk:theme", palette, appearance },
                             "*",
-                        )
-                    }
+                        );
+                    }}
                 />
             )}
         </div>
