@@ -1,4 +1,10 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+    useCallback,
+    useEffect,
+    useLayoutEffect,
+    useRef,
+    useState,
+} from "react";
 import {
     reportFrameHeight,
     reportFrameSrc,
@@ -10,6 +16,13 @@ import {
 import { useReportIndex } from "./useReportIndex";
 import { ReportIndexNotice } from "./ReportIndexNotice";
 import { SourceInfo } from "../../components/ui/primitives";
+import {
+    applyReportThemeTokens,
+    readReportThemeTokens,
+    reportFrameThemeView,
+    reportThemeMessage,
+    type ReportFrameThemeState,
+} from "./themeBridge";
 import "./reports.css";
 
 /**
@@ -40,15 +53,57 @@ export function ReportViewer({
     const { reports, error, issue, loading, retry } = useReportIndex();
     const report = reports?.find((r) => r.id === reportId);
     const frame = useRef<HTMLIFrameElement>(null);
-    // The first-paint theme is fixed in the URL; later changes are posted, so the
-    // frame never reloads (and loses its state) when the viewer changes the theme.
-    const [src] = useState(() => reportFrameSrc(reportId, palette, appearance));
+    // The report URL has a standalone forest fallback. Studio tokens are applied
+    // after load; later palette changes never replace src or lose report state.
+    const [src] = useState(() => reportFrameSrc(reportId, appearance));
+    const standaloneSrc = reportFrameSrc(reportId, appearance);
     const [height, setHeight] = useState<number | null>(null);
+    const [frameAttempt, setFrameAttempt] = useState(0);
+    const [frameThemeState, setFrameThemeState] =
+        useState<ReportFrameThemeState>("loading");
+    const [frameThemeError, setFrameThemeError] = useState("");
     const [reveal, setReveal] = useState<{
         source: Window;
         document: Document;
     } | null>(null);
     const handledReveal = useRef<typeof reveal>(null);
+
+    const applyFrameTheme = useCallback(() => {
+        try {
+            const studio = document.querySelector<HTMLElement>(".studio");
+            const frameDocument = frame.current?.contentDocument;
+            const child = frame.current?.contentWindow;
+            if (!studio || !frameDocument?.documentElement || !child)
+                throw new Error("同源報告文件目前無法存取");
+            const computed = window.getComputedStyle(studio);
+            const tokens = readReportThemeTokens((name) =>
+                computed.getPropertyValue(name),
+            );
+            if (!tokens) throw new Error("研究室主題 token 不完整");
+            applyReportThemeTokens(frameDocument.documentElement.style, tokens);
+            frameDocument.documentElement.style.colorScheme = appearance;
+            child.postMessage(
+                reportThemeMessage(appearance, tokens),
+                window.location.origin,
+            );
+            setFrameThemeError("");
+            setFrameThemeState("ready");
+        } catch {
+            setFrameThemeError("報告顏色未能跟隨網站設定，內容仍可閱讀。");
+            setFrameThemeState("fallback");
+        }
+    }, [appearance]);
+
+    useEffect(() => {
+        if (frameThemeState !== "loading" || (reports && !report)) return;
+        const timeout = window.setTimeout(() => {
+            setFrameThemeError(
+                "報告載入逾時；目前顯示可用內容。你可以重試載入。",
+            );
+            setFrameThemeState("fallback");
+        }, 15000);
+        return () => window.clearTimeout(timeout);
+    }, [frameAttempt, frameThemeState, report, reports]);
 
     useLayoutEffect(() => {
         if (reveal && reveal !== handledReveal.current && frame.current) {
@@ -99,12 +154,16 @@ export function ReportViewer({
         return () => window.removeEventListener("message", receive);
     }, []);
 
-    useEffect(() => {
-        frame.current?.contentWindow?.postMessage(
-            { type: "rk:theme", palette, appearance },
-            "*",
-        );
-    }, [palette, appearance]);
+    useLayoutEffect(() => {
+        if (frameThemeState === "ready") applyFrameTheme();
+    }, [applyFrameTheme, frameThemeState, palette]);
+
+    const retryFrame = () => {
+        setFrameThemeError("");
+        setFrameThemeState("loading");
+        setFrameAttempt((attempt) => attempt + 1);
+    };
+    const frameThemeView = reportFrameThemeView(frameThemeState);
 
     return (
         <div className="rv-page">
@@ -124,7 +183,7 @@ export function ReportViewer({
                 </div>
                 <a
                     className="rv-open u-btn"
-                    href={src}
+                    href={standaloneSrc}
                     target="_blank"
                     rel="noreferrer"
                 >
@@ -144,6 +203,23 @@ export function ReportViewer({
                 <p role="status" className="u-muted">
                     正在讀取報告資訊…
                 </p>
+            )}
+            {frameThemeState === "loading" && (!reports || report) && (
+                <p role="status" className="u-muted">
+                    正在載入研究報告…
+                </p>
+            )}
+            {frameThemeView.showFallback && frameThemeError && (
+                <div className="rv-theme-fallback" role="status">
+                    <p>{frameThemeError}</p>
+                    <button
+                        type="button"
+                        className="u-btn"
+                        onClick={retryFrame}
+                    >
+                        重試報告與主題
+                    </button>
+                </div>
             )}
             {reports && !report && !issue && (
                 <div role="alert" className="u-notice">
@@ -174,19 +250,28 @@ export function ReportViewer({
             )}
             {(!reports || report) && (
                 <iframe
+                    key={frameAttempt}
                     ref={frame}
                     className="rv-frame"
                     title={report?.title || reportId}
                     src={src}
                     sandbox="allow-scripts allow-same-origin allow-downloads"
                     referrerPolicy="no-referrer"
-                    style={height ? { height } : undefined}
+                    style={{
+                        ...(height ? { height } : {}),
+                        ...(frameThemeView.hidden
+                            ? { visibility: "hidden" as const }
+                            : {}),
+                    }}
                     onLoad={() => {
                         setReveal(null);
-                        frame.current?.contentWindow?.postMessage(
-                            { type: "rk:theme", palette, appearance },
-                            "*",
+                        applyFrameTheme();
+                    }}
+                    onError={() => {
+                        setFrameThemeError(
+                            "報告載入失敗；目前顯示可用內容。你可以重試載入。",
                         );
+                        setFrameThemeState("fallback");
                     }}
                 />
             )}

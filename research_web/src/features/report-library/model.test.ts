@@ -4,6 +4,15 @@ import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 import { studioRoute } from "../../app/routes.ts";
 import {
+    applyReportThemeTokens,
+    readReportThemeTokens,
+    REPORT_KIT_COLOR_TOKEN_NAMES,
+    REPORT_THEME_TOKEN_NAMES,
+    reportFrameThemeView,
+    reportThemeMessage,
+    STUDIO_THEME_TOKEN_NAMES,
+} from "./themeBridge.ts";
+import {
     filterReports,
     reportFrameSrc,
     reportNavigationHash,
@@ -198,10 +207,102 @@ test("report index version matches the current shell while legacy pages stay com
     );
 });
 
-test("frame source encodes the id and carries the first-paint theme", () => {
+test("frame source encodes the id and keeps a standalone fallback appearance", () => {
     assert.equal(
-        reportFrameSrc("a b", "ocean", "dark"),
-        "/reports/a%20b/index.html#palette=ocean&appearance=dark",
+        reportFrameSrc("a b", "dark"),
+        "/reports/a%20b/index.html#palette=forest&appearance=dark",
+    );
+});
+
+test("report theme bridge maps allowlisted Studio colors to every kit color", () => {
+    const supplied = new Map<string, string>([
+        ["--paper", "#ffffff"],
+        ["--surface", "#f9fafb"],
+        [
+            "--surface-2",
+            "color-mix(in srgb, var(--surface) 82%, var(--accent-soft))",
+        ],
+        ["--ink", "#15202b"],
+        ["--muted", "#697887"],
+        ["--line", "#dce3e9"],
+        ["--chip", "#eef2f5"],
+        ["--accent", "#34627f"],
+        ["--accent-soft", "#e7eef3"],
+        ["--positive", "#356574"],
+        ["--gain", "#c84c50"],
+        ["--loss", "#238568"],
+        ["--cell-light", "#e3ebd8"],
+        ["--cell-mid", "#a9c9af"],
+        ["--cell-deep", "#6eaa91"],
+        ["--cell-warm", "#e4e4b4"],
+        ["--membrane", "#f8fbf5"],
+        ["--highlight", "#a3640f"],
+        ["--card-border", "color-mix(in srgb, var(--ink) 9%, transparent)"],
+        ["--on-accent", "#ffffff"],
+        ["--warn", "#ffb547"],
+    ]);
+    const requested: string[] = [];
+    const tokens = readReportThemeTokens((name) => {
+        requested.push(name);
+        return supplied.get(name) ?? "";
+    });
+    assert.ok(tokens);
+    assert.deepEqual(requested, STUDIO_THEME_TOKEN_NAMES);
+    assert.ok(
+        REPORT_KIT_COLOR_TOKEN_NAMES.every((name) =>
+            REPORT_THEME_TOKEN_NAMES.includes(name),
+        ),
+    );
+    assert.equal(tokens["--warn"], "#ffb547");
+    assert.equal(
+        tokens["--warn-soft"],
+        "color-mix(in srgb, var(--warn) 14%, var(--surface))",
+    );
+    assert.equal(tokens["--compare"], "var(--muted)");
+    assert.notEqual(tokens["--compare"], tokens["--accent"]);
+    assert.equal(
+        tokens["--gain-soft"],
+        "color-mix(in srgb, var(--gain) 14%, transparent)",
+    );
+    const applied = new Map<string, string>();
+    applyReportThemeTokens(
+        { setProperty: (name, value) => applied.set(name, value) },
+        tokens,
+    );
+    assert.deepEqual([...applied.keys()], REPORT_THEME_TOKEN_NAMES);
+    assert.deepEqual(reportThemeMessage("dark", tokens), {
+        type: "rk:theme",
+        palette: "forest",
+        appearance: "dark",
+        tokens,
+    });
+});
+
+test("frame theme view hides first paint but exposes a retryable fallback", () => {
+    assert.deepEqual(reportFrameThemeView("loading"), {
+        hidden: true,
+        showFallback: false,
+    });
+    assert.deepEqual(reportFrameThemeView("ready"), {
+        hidden: false,
+        showFallback: false,
+    });
+    assert.deepEqual(reportFrameThemeView("fallback"), {
+        hidden: false,
+        showFallback: true,
+    });
+});
+
+test("report theme bridge rejects incomplete required tokens", () => {
+    assert.equal(
+        readReportThemeTokens(() => ""),
+        null,
+    );
+    assert.equal(
+        readReportThemeTokens((name) =>
+            name === "--accent" ? "#234" : name === "--paper" ? "#fff" : "",
+        ),
+        null,
     );
 });
 

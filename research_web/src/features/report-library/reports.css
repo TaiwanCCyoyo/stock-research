@@ -169,6 +169,23 @@
 .rv-notice p {
     margin: 0;
 }
+.rv-theme-fallback {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px 14px;
+    margin: 0 0 12px;
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+}
+.rv-theme-fallback p {
+    flex: 1 1 28em;
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+}
 .rv-page {
     max-width: none;
     min-width: 0;

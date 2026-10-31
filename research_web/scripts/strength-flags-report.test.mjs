@@ -149,15 +149,14 @@ test("saved report supports guided choices and full evidence without changing de
     assert.match(guided[0].textContent, /已大幅上漲的股票/);
     assert.match(guided[0].textContent, /再加上當天漲至少9.5%/);
     assert(!guided[0].textContent.includes("雙重強勢"));
-    const overview = html.match(
-        /<section\b[^>]*\bid="main-findings"[^>]*>[\s\S]*?<\/section>/,
-    )?.[0];
-    assert(overview, "the reading overview must be present");
-    for (const savedRate of ["10.2%", "22.5%", "66%"])
-        assert(
-            overview.includes(savedRate),
-            `overview must retain ${savedRate}`,
-        );
+    assert(ids.get("main-findings"), "the main finding must be present");
+    assert.equal(ids.get("main-triggered-rate").textContent, "10.2%");
+    assert.equal(ids.get("main-not-triggered-rate").textContent, "22.5%");
+    assert.equal(ids.get("main-cost-rate").textContent, "66.0%");
+    assert.match(html, /前20日內收盤曾低於60日均線/);
+    assert.match(html, /100 元要到 200/);
+    assert.match(html, /符合這兩項價格條件的股票/);
+    assert.match(html, /收盤價.*是否曾達到起點收盤價的兩倍/s);
     assert.deepEqual(
         guided.map((e) => e.value),
         ["CORE", "X5_MA60", "252"],

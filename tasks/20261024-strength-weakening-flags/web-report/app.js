@@ -280,6 +280,69 @@
         return labelNode;
     }
 
+    function groupDescription(group) {
+        return group === "LEAD_B1"
+            ? "已大幅上漲、且起點當天漲至少 9.5% 的股票"
+            : "已大幅上漲的股票";
+    }
+
+    function flagDescription(flag) {
+        const descriptions = {
+            Y3: "收盤跌破起點時已確認的固定支撐價",
+            X5_MA20: "收盤曾低於 20 日均線",
+            X5_MA60: "收盤曾低於 60 日均線",
+            X6_10: "收盤比起點價低至少 10%",
+            X6_15: "收盤比起點價低至少 15%",
+            X7: "收盤低於布林下軌",
+            X8: "新確認高點低於前一個已確認高點",
+        };
+        return descriptions[flag] || human("flag", flag);
+    }
+
+    function mainFindingRow() {
+        return rows.find(
+            (row) =>
+                baseFull(row) &&
+                key(row, "group") === "CORE" &&
+                Number(val(row, "target_multiple")) === 2 &&
+                String(val(row, "horizon")).replace(/^H/, "") === "252" &&
+                String(val(row, "landmark")).replace(/^L/, "") === "20" &&
+                key(row, "flag") === "X5_MA60",
+        );
+    }
+
+    function renderMainFinding() {
+        const row = mainFindingRow();
+        if (!row) {
+            $("#main-triggered-rate").textContent = "—";
+            $("#main-not-triggered-rate").textContent = "—";
+            $("#main-triggered-count").textContent = "沒有可用的已知事件數";
+            $("#main-not-triggered-count").textContent = "沒有可用的已知事件數";
+            $("#main-difference").textContent =
+                "此比較目前沒有可用的保存結果。";
+            $("#main-cost-rate").textContent = "—";
+            return;
+        }
+        $("#main-triggered-rate").textContent = fmtPct(
+            val(row, "triggered_rate"),
+        );
+        $("#main-not-triggered-rate").textContent = fmtPct(
+            val(row, "not_triggered_rate"),
+        );
+        $("#main-triggered-count").textContent =
+            `結果已知的 ${fmtInt(val(row, "triggered_known_n"))} 筆觀察`;
+        $("#main-not-triggered-count").textContent =
+            `結果已知的 ${fmtInt(val(row, "not_triggered_known_n"))} 筆觀察`;
+        const difference = val(row, "pooled_difference");
+        $("#main-difference").textContent =
+            typeof difference === "number"
+                ? `直接比較時，曾低於均線組低 ${(Math.abs(difference) * 100).toFixed(2)} 個百分點。`
+                : "兩組比例差目前沒有可用的保存數值。";
+        $("#main-cost-rate").textContent = fmtPct(
+            val(row, "false_abandonment_rate"),
+        );
+    }
+
     function renderGuidedExplorer() {
         const controls = $("#guided-controls");
         controls.replaceChildren();
@@ -287,8 +350,8 @@
             guidedSelect(
                 "比較哪一組",
                 [
-                    ["CORE", human("group", "CORE")],
-                    ["LEAD_B1", human("group", "LEAD_B1")],
+                    ["CORE", "已大幅上漲的股票"],
+                    ["LEAD_B1", "已大幅上漲的股票，再加上當天漲至少9.5%"],
                 ],
                 guidedState.group,
                 (value) => {
@@ -369,7 +432,7 @@
             make(
                 "p",
                 "comparison-heading",
-                `${label(row, "group", "group")} · ${human("flag", guidedState.flag)} · ${guidedState.horizon === "126" ? "半年" : "一年"} · 2 倍目標`,
+                `${groupDescription(guidedState.group)} · ${guidedState.horizon === "126" ? "半年" : "一年"}內達到起點價 2 倍 · 前 20 日${flagDescription(guidedState.flag)}`,
             ),
             make(
                 "p",
@@ -415,7 +478,7 @@
                 fill.style.width = `${Math.max(0, Math.min(100, rate * 100))}%`;
                 track.append(fill);
             } else {
-                track.classList.add("is-missing");
+                track.className = "rate-track is-missing";
                 track.textContent = "沒有可用比例，不能視為 0%";
             }
             const axis = make("div", "rate-axis");
@@ -756,7 +819,7 @@
 
     function renderDetail() {
         if (!selected) return;
-        const title = `${label(selected, "group", "group")} · ${text(val(selected, "target_multiple"))} 倍 · ${horizonLabel(val(selected, "horizon"))} · ${landmarkLabel(val(selected, "landmark"))} · ${label(selected, "flag", "flag")}`;
+        const title = `${groupDescription(key(selected, "group"))} · 起點後第 ${text(val(selected, "horizon"))} 個交易日（${horizonLabel(val(selected, "horizon"))}）達到 ${text(val(selected, "target_multiple"))} 倍 · 第 1–${text(val(selected, "landmark"))} 日${flagDescription(key(selected, "flag"))}`;
         $("#detail-title").textContent = title;
         const host = $("#detail-content");
         host.replaceChildren();
@@ -1036,6 +1099,7 @@
             rows = summaryRows();
             if (!rows.length) throw new Error("摘要資料為空");
             linkMeta();
+            renderMainFinding();
             renderGuidedExplorer();
             renderPrimary();
             renderGrid();

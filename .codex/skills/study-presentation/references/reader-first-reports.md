@@ -53,6 +53,31 @@ unknowns and the distinction between association and causation. The source is
 being updated for accessibility; use it for communication principles, not as a
 current accessibility specification.
 
+## Apply editorial hierarchy to the web
+
+[NN/g's visual hierarchy guidance](https://www.nngroup.com/articles/visual-hierarchy-ux-definition/)
+uses weight, scale, contrast and grouping to establish reading order. Give the
+supported finding and its paired values emphasis; keep explanations quieter.
+Bold everything and the hierarchy disappears. Replace compact chains of group,
+signal and horizon labels with a sentence that names the comparison and period.
+
+[The Pudding's design process](https://pudding.cool/process/how-to-make-dope-shit-part-2/)
+starts with the message and iterates its visual expression. Its
+[responsive storytelling guidance](https://pudding.cool/process/responsive-scrollytelling/)
+also allows stacked mobile views when transitions add no meaning. A report need
+not imitate slides, force steps, or override ordinary scrolling. Keep paired
+comparisons together rather than fragmenting every value into a separate card.
+
+Use brief transitions only to clarify a reader-initiated change. Keep the saved
+numeric values immediately accurate, and follow
+[reduced-motion preferences](https://web.dev/learn/accessibility/motion).
+An effect is not evidence that the report communicates better.
+
+Theme colors belong to the shared viewer contract. Report layouts consume
+semantic color tokens rather than detecting theme names or maintaining palettes.
+Check the embedded view across supported themes as well as the standalone fallback;
+do not rewrite a frozen kit to repair the host's theme integration.
+
 ## Verify understanding separately from factual correctness
 
 The project's independent-review requirement is an editorial process, not a

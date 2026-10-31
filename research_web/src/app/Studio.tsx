@@ -20,7 +20,7 @@ import {
 } from "../features/data-overview/CoveragePages";
 import { DataOverviewPage } from "../features/data-overview/DataOverviewPage";
 import { studioRoute, type StudioPage } from "./routes";
-import { reportPalette, themeId, THEMES, type ThemeId } from "./themes";
+import { themeId, THEMES, type ThemeId } from "./themes";
 import { ThemeAtmosphere } from "./ThemeAtmosphere";
 import "./studio.css";
 import "./themes.css";
@@ -300,7 +300,7 @@ export default function Studio() {
                     <ReportViewer
                         key={reportId}
                         reportId={reportId}
-                        palette={reportPalette(palette)}
+                        palette={palette}
                         appearance={resolvedAppearance}
                     />
                 )}

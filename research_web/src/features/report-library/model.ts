@@ -120,13 +120,10 @@ export function filterReports(
     });
 }
 
-/** First-paint theme travels in the frame URL hash; later changes use postMessage. */
-export function reportFrameSrc(
-    id: string,
-    palette: string,
-    appearance: string,
-): string {
-    const params = new URLSearchParams({ palette, appearance });
+/** Standalone fallback travels in the frame URL hash; host tokens are injected
+ * separately. */
+export function reportFrameSrc(id: string, appearance: string): string {
+    const params = new URLSearchParams({ palette: "forest", appearance });
     return `/reports/${encodeURIComponent(id)}/index.html#${params}`;
 }
 
