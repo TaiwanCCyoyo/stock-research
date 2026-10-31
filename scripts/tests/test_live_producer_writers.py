@@ -91,6 +91,44 @@ def test_process_query_parsing_and_fail_closed(monkeypatch: pytest.MonkeyPatch, 
     assert command[0] == "powershell.exe" and "run_daily" in command[-1] and "backfill_official_history" in command[-1] and timeout == 1.5
 
 
+@pytest.mark.parametrize("probe", ["scheduled_tasks", "writer_processes"])
+@pytest.mark.parametrize("flag_available", [True, False])
+def test_powershell_probes_hide_console_when_supported(monkeypatch: pytest.MonkeyPatch, probe: str, flag_available: bool) -> None:
+    monkeypatch.setattr(live_producer, "sys", SimpleNamespace(platform="win32"))
+    expected_flag = 0x08000000
+    if flag_available:
+        monkeypatch.setattr(subprocess, "CREATE_NO_WINDOW", expected_flag, raising=False)
+    else:
+        monkeypatch.delattr(subprocess, "CREATE_NO_WINDOW", raising=False)
+    seen: list[tuple[list[str], dict[str, Any]]] = []
+
+    def run(command: list[str], **kwargs: Any) -> Any:
+        seen.append((command, kwargs))
+        stdout = "StockProject-DailyUpdate\n" if probe == "scheduled_tasks" else "321 python.exe\n"
+        return SimpleNamespace(returncode=0, stderr="", stdout=stdout)
+
+    monkeypatch.setattr(live_producer.subprocess, "run", run)
+    if probe == "scheduled_tasks":
+        assert live_producer.running_producer_tasks(timeout=2.25) == ["StockProject-DailyUpdate"]
+        expected_command = ["powershell.exe", "-NoProfile", "-Command", live_producer.TASK_QUERY]
+    else:
+        assert live_producer._powershell_writer_processes(2.25) == [(321, "python.exe")]
+        expected_command = ["powershell.exe", "-NoProfile", "-Command", live_producer.PROCESS_QUERY]
+
+    assert seen == [
+        (
+            expected_command,
+            {
+                "capture_output": True,
+                "text": True,
+                "check": False,
+                "timeout": 2.25,
+                "creationflags": expected_flag if flag_available else 0,
+            },
+        )
+    ]
+
+
 # The root conftest stubs query_writer_processes for every test; keep the real one to test it.
 _REAL_QUERY_WRITER_PROCESSES = live_producer.query_writer_processes
 
@@ -99,6 +137,8 @@ def test_non_windows_reports_no_processes(monkeypatch: pytest.MonkeyPatch) -> No
     monkeypatch.setattr(live_producer, "query_writer_processes", _REAL_QUERY_WRITER_PROCESSES)
     monkeypatch.setattr(live_producer, "sys", SimpleNamespace(platform="linux"))
     monkeypatch.setattr(live_producer, "_powershell_writer_processes", lambda timeout: pytest.fail("must not query"))
+    monkeypatch.setattr(live_producer.subprocess, "run", lambda *args, **kwargs: pytest.fail("must not launch PowerShell"))
+    assert live_producer.running_producer_tasks() == []
     assert live_producer.query_writer_processes() == []
 
 
