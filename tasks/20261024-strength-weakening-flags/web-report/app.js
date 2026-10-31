@@ -65,16 +65,15 @@
         };
         const map = maps[kind] || {};
         const key = String(value);
-        if (kind === "group" && key === "CORE") return "已大幅上漲的股票";
-        if (kind === "group" && key === "LEAD_B1")
-            return "再加上當天漲至少9.5%";
+        if (kind === "group" && key === "CORE") return "強勢股";
+        if (kind === "group" && key === "LEAD_B1") return "強勢股＋大漲日";
         if (Object.prototype.hasOwnProperty.call(map, key)) return map[key];
         if (kind === "horizon") return `${key.replace(/^H/, "")} 日`;
         if (kind === "landmark") return `第 ${key.replace(/^L/, "")} 日`;
         if (kind === "split" && key === "all") return "合併切片";
         const simple = {
-            CORE: "已大幅上漲的股票",
-            LEAD_B1: "再加上當天漲至少9.5%",
+            CORE: "強勢股",
+            LEAD_B1: "強勢股＋大漲日",
             "C-base": "全市場基準",
             "C-base-daily": "一般股票日",
             "C-52w": "相對 52 週高點基準",
@@ -267,7 +266,6 @@
     function guidedSelect(labelText, options, value, onChange) {
         const labelNode = make("label", "filter-label", labelText);
         const select = document.createElement("select");
-        select.setAttribute("aria-label", labelText);
         options.forEach(([optionValue, optionLabel]) => {
             const option = document.createElement("option");
             option.value = optionValue;
@@ -282,8 +280,8 @@
 
     function groupDescription(group) {
         return group === "LEAD_B1"
-            ? "已大幅上漲、且起點當天漲至少 9.5% 的股票"
-            : "已大幅上漲的股票";
+            ? "強勢股＋大漲日（起點當天漲至少 9.5%）的股票"
+            : "強勢股";
     }
 
     function guidedPopulationDescription(group) {
@@ -317,6 +315,20 @@
         );
     }
 
+    const GAP_SCALE_PP = 15;
+    function setGap(name, value) {
+        const fill = $(`#gap-${name}-fill`);
+        const label = $(`#gap-${name}-value`);
+        if (typeof value !== "number") {
+            fill.style.width = "0%";
+            label.textContent = "—";
+            return;
+        }
+        const size = Math.abs(value) * 100;
+        fill.style.width = `${Math.min(100, (size / GAP_SCALE_PP) * 100)}%`;
+        label.textContent = `${size.toFixed(1)} 個百分點`;
+    }
+
     function renderMainFinding() {
         const row = mainFindingRow();
         if (!row) {
@@ -326,6 +338,9 @@
             $("#main-not-triggered-count").textContent = "沒有可用的已知事件數";
             $("#main-difference").textContent =
                 "此比較目前沒有可用的保存結果。";
+            $("#main-adjusted-difference").textContent = "";
+            setGap("direct", null);
+            setGap("adjusted", null);
             $("#main-cost-rate").textContent = "—";
             return;
         }
@@ -340,10 +355,24 @@
         $("#main-not-triggered-count").textContent =
             `結果已知的 ${fmtInt(val(row, "not_triggered_known_n"))} 筆觀察`;
         const difference = val(row, "pooled_difference");
+        const adjusted = val(row, "standardized_difference");
+        const pp = (v) => (Math.abs(v) * 100).toFixed(1);
+        const word = (v) => (v < 0 ? "低" : "高");
         $("#main-difference").textContent =
             typeof difference === "number"
-                ? `直接比較時，曾低於均線組低 ${(Math.abs(difference) * 100).toFixed(2)} 個百分點。`
+                ? `直接比較${word(difference)} ${pp(difference)} 個百分點`
                 : "兩組比例差目前沒有可用的保存數值。";
+        $("#main-adjusted-difference").textContent =
+            typeof adjusted === "number"
+                ? `扣掉第20日漲跌幅差異後${
+                      typeof difference === "number" &&
+                      Math.sign(difference) === Math.sign(adjusted)
+                          ? "仍"
+                          : ""
+                  }${word(adjusted)} ${pp(adjusted)} 個百分點（28 種比較中僅 2 種在分層後仍較低，見下方互動比較）`
+                : "扣掉漲跌幅差異後的差值目前沒有可用的保存數值。";
+        setGap("direct", difference);
+        setGap("adjusted", adjusted);
         $("#main-cost-rate").textContent = fmtPct(
             val(row, "false_abandonment_rate"),
         );
@@ -356,13 +385,13 @@
             guidedSelect(
                 "比較哪一組",
                 [
-                    ["CORE", "已大幅上漲的股票"],
-                    ["LEAD_B1", "已大幅上漲的股票，再加上當天漲至少9.5%"],
+                    ["CORE", "強勢股"],
+                    ["LEAD_B1", "強勢股＋大漲日"],
                 ],
                 guidedState.group,
                 (value) => {
                     guidedState.group = value;
-                    updateGuidedComparison();
+                    updateGuidedComparison(true);
                 },
             ),
             guidedSelect(
@@ -379,7 +408,7 @@
                 guidedState.flag,
                 (value) => {
                     guidedState.flag = value;
-                    updateGuidedComparison();
+                    updateGuidedComparison(true);
                 },
             ),
             guidedSelect(
@@ -391,7 +420,7 @@
                 guidedState.horizon,
                 (value) => {
                     guidedState.horizon = value;
-                    updateGuidedComparison();
+                    updateGuidedComparison(true);
                 },
             ),
         );
@@ -401,7 +430,32 @@
         updateGuidedComparison();
     }
 
-    function updateGuidedComparison() {
+    // One fixed 0-based scale for every comparison: the next 10% above the
+    // highest stored rate, so switching comparisons never rescales the bars.
+    let cachedScaleMax = null;
+    function scaleMaxPct() {
+        if (cachedScaleMax === null) {
+            let top = 0;
+            for (const candidate of rows.filter(
+                (r) =>
+                    baseFull(r) &&
+                    Number(val(r, "target_multiple")) === 2 &&
+                    String(val(r, "landmark")).replace(/^L/, "") === "20" &&
+                    ["126", "252"].includes(
+                        String(val(r, "horizon")).replace(/^H/, ""),
+                    ) &&
+                    ["CORE", "LEAD_B1"].includes(key(r, "group")),
+            ))
+                for (const name of ["triggered_rate", "not_triggered_rate"]) {
+                    const rate = val(candidate, name);
+                    if (typeof rate === "number" && rate > top) top = rate;
+                }
+            cachedScaleMax = Math.max(10, Math.ceil((top * 100) / 10) * 10);
+        }
+        return cachedScaleMax;
+    }
+
+    function updateGuidedComparison(animate) {
         const row = rows.find(
             (candidate) =>
                 baseFull(candidate) &&
@@ -433,7 +487,10 @@
         const notTriggered = val(row, "not_triggered_rate");
         const difference = val(row, "pooled_difference");
         const standardizedDifference = val(row, "standardized_difference");
-        const comparison = make("div", "rate-comparison");
+        const comparison = make(
+            "div",
+            animate ? "rate-comparison is-fresh" : "rate-comparison",
+        );
         const horizonText = guidedState.horizon === "126" ? "半年" : "一年";
         const signalText = flagDescription(guidedState.flag).replace(
             /^收盤曾?/,
@@ -453,7 +510,11 @@
             ),
         );
         comparison.append(
-            make("p", "scale-caption", "兩組共用 0% 到 100% 刻度"),
+            make(
+                "p",
+                "scale-caption",
+                `刻度 0–${scaleMaxPct()}%（兩組共用，從 0 起算）`,
+            ),
         );
         const bars = make("div", "rate-bars");
         [
@@ -486,14 +547,18 @@
             );
             const fill = make("span", "rate-fill");
             if (typeof rate === "number") {
-                fill.style.width = `${Math.max(0, Math.min(100, rate * 100))}%`;
+                fill.style.width = `${Math.max(0, Math.min(100, (rate * 100 * 100) / scaleMaxPct()))}%`;
                 track.append(fill);
             } else {
                 track.className = "rate-track is-missing";
                 track.textContent = "沒有可用比例，不能視為 0%";
             }
             const axis = make("div", "rate-axis");
-            axis.append(make("span", "", "0%"), make("span", "", "100%"));
+            axis.append(
+                make("span", "", "0%"),
+                make("span", "", `${scaleMaxPct() / 2}%`),
+                make("span", "", `${scaleMaxPct()}%`),
+            );
             item.append(
                 heading,
                 track,
@@ -1116,7 +1181,42 @@
             });
         }
     }
+    function foldTablesOnPhone() {
+        const narrow =
+            typeof window.matchMedia === "function" &&
+            window.matchMedia("(max-width: 680px)").matches;
+        if (!narrow) return;
+        for (const id of ["#primary-table-fold", "#grid-table-fold"]) {
+            const fold = $(id);
+            if (fold) fold.open = false;
+        }
+    }
+    function revealTimeline() {
+        const timeline = $("#study-timeline");
+        const reduced =
+            typeof window.matchMedia === "function" &&
+            window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (!timeline || reduced || typeof IntersectionObserver !== "function")
+            return;
+        const steps = Array.from(timeline.children);
+        timeline.className += " js-reveal";
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries
+                    .filter((entry) => entry.isIntersecting)
+                    .forEach((entry, order) => {
+                        observer.unobserve(entry.target);
+                        setTimeout(() => {
+                            entry.target.className += " is-lit";
+                        }, order * 140);
+                    });
+            },
+            { threshold: 0.4 },
+        );
+        steps.forEach((step) => observer.observe(step));
+    }
     async function start() {
+        revealTimeline();
         relatedReportLinks();
         $("#shared-data-link").addEventListener("click", (event) => {
             if (window.parent === window) return;
@@ -1144,6 +1244,7 @@
             renderGuidedExplorer();
             renderPrimary();
             renderGrid();
+            foldTablesOnPhone();
         } catch (error) {
             $("#load-error").hidden = false;
             $("#primary-table tbody").replaceChildren();

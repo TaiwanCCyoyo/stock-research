@@ -1,3 +1,8 @@
+:root {
+    --group-a: var(--accent);
+    --group-b: var(--ink);
+}
+
 body {
     background: var(--paper);
 }
@@ -21,9 +26,33 @@ body {
     white-space: nowrap;
 }
 
-#main-findings {
+.hero-subtitle {
+    margin: 4px 0 10px;
+    color: var(--muted);
+    font-size: 15px;
+}
+
+.lineage-crumb {
     margin-top: 10px;
-    padding-block: 22px 28px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.lineage-crumb a {
+    color: var(--accent);
+}
+
+.lineage-crumb b {
+    color: var(--ink);
+}
+
+.answer-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 260px;
+    gap: 0 32px;
+    align-items: start;
+    margin-top: 10px;
+    padding-block: 22px 18px;
     border-block: 1px solid var(--line-strong);
 }
 
@@ -35,42 +64,52 @@ body {
     line-height: 1.45;
 }
 
+.answer-note {
+    margin: 8px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+}
+
 .headline-comparison {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    margin: 20px 0;
+    margin: 20px 0 12px;
     border-block: 1px solid var(--line);
-    background: var(--surface);
 }
 
 .headline-rate {
     display: grid;
     align-content: start;
-    gap: 7px;
-    padding: 18px clamp(14px, 3vw, 28px);
+    gap: 6px;
+    padding: 16px clamp(8px, 2vw, 24px) 10px 0;
 }
 
 .headline-rate + .headline-rate {
+    padding-left: clamp(14px, 3vw, 28px);
     border-left: 1px solid var(--line);
 }
 
-.headline-rate > span:first-child {
+.headline-label {
     color: var(--muted);
     font-size: 14px;
     line-height: 1.5;
 }
 
 .headline-rate strong {
-    color: var(--ink);
     font-family: var(--font-serif);
-    font-size: clamp(38px, 6vw, 58px);
-    font-weight: 600;
+    font-size: clamp(56px, 11vw, 112px);
+    font-weight: 700;
     font-variant-numeric: tabular-nums;
-    line-height: 1.05;
+    line-height: 1;
 }
 
-.headline-rate.triggered strong {
-    color: var(--loss);
+.group-a strong,
+.group-a .rate-fill {
+    color: var(--group-a);
+}
+
+.group-b strong {
+    color: var(--group-b);
 }
 
 .known-count {
@@ -78,14 +117,141 @@ body {
     font-size: 12px;
 }
 
-.headline-difference {
+.headline-basis {
     grid-column: 1 / -1;
     margin: 0;
-    padding: 11px clamp(14px, 3vw, 28px);
-    border-top: 1px solid var(--line);
+    padding: 8px 0 12px;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.headline-diffs p {
+    margin: 4px 0;
+    color: var(--ink);
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.5;
+}
+
+.gap-ruler {
+    display: grid;
+    gap: 8px;
+    max-width: 560px;
+    margin: 14px 0;
+}
+
+.gap-row {
+    display: grid;
+    grid-template-columns: 8.5em minmax(0, 1fr) 6em;
+    gap: 10px;
+    align-items: center;
+    font-size: 13px;
+}
+
+.gap-track {
+    display: block;
+    height: 12px;
+    background: var(--line);
+}
+
+.gap-fill {
+    display: block;
+    width: 0;
+    height: 100%;
+    background: var(--ink);
+}
+
+.gap-row:first-child .gap-fill {
+    background: repeating-linear-gradient(
+        45deg,
+        var(--ink) 0 4px,
+        var(--surface) 4px 6px
+    );
+}
+
+.gap-value {
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+.gap-axis {
+    margin: 0;
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.footnote,
+.explorer-notes p {
+    max-width: 34rem;
+    color: var(--muted);
+    font-size: 12.5px;
+    line-height: 1.7;
+}
+
+.counter-note {
+    padding: 14px 16px;
+    border: 1px dashed var(--line-strong);
+    border-radius: 10px;
+    background: var(--surface-2);
+    font-size: 14px;
+}
+
+.counter-note h3 {
+    margin: 0 0 6px;
+    font-size: 15px;
+}
+
+.counter-note p {
+    margin: 6px 0;
+    line-height: 1.6;
+}
+
+.counter-population {
+    color: var(--muted);
+}
+
+.counter-rate strong {
+    color: var(--ink);
+    font-family: var(--font-serif);
+    font-size: 40px;
+    font-variant-numeric: tabular-nums;
+}
+
+.main-limit {
+    margin: 12px 0 24px;
+    padding: 8px 12px;
+    border-left: 3px solid var(--line-strong);
     color: var(--ink);
     font-size: 14px;
+}
+
+.table-fold > summary {
+    margin: 8px 0;
+    color: var(--accent);
     font-weight: 600;
+    cursor: pointer;
+}
+
+.study-timeline.js-reveal li {
+    opacity: 0.3;
+    transition: opacity 0.25s ease;
+}
+
+.study-timeline.js-reveal li.is-lit {
+    opacity: 1;
+}
+
+.rate-comparison.is-fresh {
+    animation: fresh-in 0.22s ease-out;
+}
+
+@keyframes fresh-in {
+    from {
+        opacity: 0.4;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 .rise-criteria {
@@ -213,8 +379,9 @@ body {
 }
 
 .explorer-context {
-    max-width: 760px;
+    margin: 0 0 12px;
     color: var(--muted);
+    font-size: 14px;
 }
 
 .guided-explorer .control-row {
@@ -310,11 +477,11 @@ body {
 }
 
 .triggered .rate-fill {
-    background: var(--loss);
+    background: var(--group-a);
 }
 
 .not-triggered .rate-fill {
-    background: var(--compare);
+    background: var(--group-b);
 }
 
 .difference-callout {
@@ -334,9 +501,9 @@ body {
 .saved-verdict {
     margin: 10px 0 0;
     padding: 10px 12px;
-    border-left: 3px solid var(--accent);
+    border-left: 3px solid var(--line-strong);
     color: var(--muted);
-    background: var(--accent-soft);
+    background: var(--surface-2);
     font-size: 14px;
 }
 
@@ -609,9 +776,9 @@ body {
 
 .load-error {
     padding: 12px;
-    border: 1px solid var(--loss);
+    border: 1px solid var(--warn);
     border-radius: 8px;
-    color: var(--loss);
+    color: var(--warn);
     background: var(--surface-2);
 }
 
@@ -662,13 +829,22 @@ body {
         margin-block: 18px;
     }
 
-    .headline-comparison {
+    .answer-layout {
         grid-template-columns: minmax(0, 1fr);
     }
 
-    .headline-rate + .headline-rate {
-        border-top: 1px solid var(--line);
-        border-left: 0;
+    .headline-rate strong {
+        font-size: 14vw;
+    }
+
+    .counter-note {
+        margin-top: 8px;
+    }
+
+    .gap-row {
+        grid-template-columns: 6.5em minmax(0, 1fr) 5.5em;
+        gap: 6px;
+        font-size: 12px;
     }
 
     .evidence-disclosure > .rk-section {
@@ -681,5 +857,11 @@ body {
     *::before,
     *::after {
         scroll-behavior: auto !important;
+        animation: none !important;
+        transition: none !important;
+    }
+
+    .study-timeline.js-reveal li {
+        opacity: 1;
     }
 }

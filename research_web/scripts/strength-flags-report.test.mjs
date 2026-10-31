@@ -146,8 +146,8 @@ test("saved report supports guided choices and full evidence without changing de
         (e) => e.tagName === "select",
     );
     assert.equal(guided.length, 3);
-    assert.match(guided[0].textContent, /已大幅上漲的股票/);
-    assert.match(guided[0].textContent, /再加上當天漲至少9.5%/);
+    assert.match(guided[0].textContent, /強勢股/);
+    assert.match(guided[0].textContent, /強勢股＋大漲日/);
     assert(!guided[0].textContent.includes("雙重強勢"));
     assert(ids.get("main-findings"), "the main finding must be present");
     assert.equal(ids.get("main-triggered-rate").textContent, "10.2%");
@@ -289,6 +289,25 @@ test("saved report supports guided choices and full evidence without changing de
             ),
         ),
     );
+    // Bars share one 0-based scale: the next 10% above the highest stored rate.
+    const topRate = Math.max(
+        ...summary
+            .filter(
+                (r) =>
+                    r.row_kind === "full" &&
+                    r.era === "all" &&
+                    r.split === "all" &&
+                    r.landmark === 20 &&
+                    r.target_multiple === 2 &&
+                    [126, 252].includes(r.horizon) &&
+                    ["CORE", "LEAD_B1"].includes(r.group_id),
+            )
+            .flatMap((r) => [
+                r.triggered_hit_rate ?? 0,
+                r.untriggered_hit_rate ?? 0,
+            ]),
+    );
+    const scaleMax = Math.max(10, Math.ceil((topRate * 100) / 10) * 10);
     for (const group of ["CORE", "LEAD_B1"])
         for (const flag of [
             "Y3",
@@ -322,12 +341,16 @@ test("saved report supports guided choices and full evidence without changing de
                 const fills = descendants(ids.get("guided-comparison")).filter(
                     (e) => e.className === "rate-fill",
                 );
-                assert.deepEqual(
-                    fills.map((e) => Number.parseFloat(e.style.width)),
-                    [
-                        expected.triggered_hit_rate * 100,
-                        expected.untriggered_hit_rate * 100,
-                    ],
+                const widths = fills.map((e) =>
+                    Number.parseFloat(e.style.width),
+                );
+                const wanted = [
+                    (expected.triggered_hit_rate * 10000) / scaleMax,
+                    (expected.untriggered_hit_rate * 10000) / scaleMax,
+                ];
+                assert.equal(widths.length, 2);
+                widths.forEach((w, i) =>
+                    assert(Math.abs(w - wanted[i]) < 1e-9),
                 );
                 assert(
                     ids
@@ -356,7 +379,7 @@ test("saved report supports guided choices and full evidence without changing de
     tbody("grid-table").children[0].listeners.click();
     assert.match(
         ids.get("detail-title").textContent,
-        /已大幅上漲的股票.*截至起點後第 252 個交易日.*內，收盤價曾達到起點收盤價的 2 倍.*20.*60/,
+        /強勢股.*截至起點後第 252 個交易日.*內，收盤價曾達到起點收盤價的 2 倍.*20.*60/,
     );
     const detail = ids.get("detail-content").textContent;
     assert(detail.includes("8,733／4,490／0"));

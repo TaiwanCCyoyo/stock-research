@@ -54,6 +54,11 @@ Explain each percentage's denominator and observation window beside it, especial
 when adjacent measures use different populations. Preserve unknown values and
 distinguish percentage-point differences from relative changes.
 
+Reports are HTML, so do not default to paragraphs and cards. When the finding is a
+paired comparison, a sequence or a proportion, give it a visual protagonist (front-page
+numbers, a timeline, an icon array) and keep prose as narrow footnotes. Techniques and
+their motion limits are in [magazine layout and motion](references/magazine-motion.md).
+
 Use interaction to answer a reader's next question: changing a condition should
 update the relevant visual, explanation and selected evidence together. Start
 with one clearly explained comparison and expose broader exploration deliberately.
