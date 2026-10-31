@@ -80,7 +80,14 @@ this launcher's entry; use 5177 instead. Do not terminate unknown listeners.
 
 For a Windows desktop shortcut, use the existing environment's `pythonw.exe`
 with arguments `-B "<checkout>/scripts/start_research_web.py" --desktop` and set
-its working directory to that checkout. This is the supported hidden entry;
+its working directory to that checkout. A small native window immediately shows
+launch progress, then hides after the browser opens successfully. The **Cancel**
+button and window close button cancel startup, keep the window
+visible while cleanup finishes, and stop only this launch's build and services.
+Existing services remain running.
+Startup or later service failures reopen the window with an error and an
+**Open log** button. `--check` and `--no-browser` do not open this window.
+This is the supported desktop entry without a console window;
 no external adapter or private-function override is needed. It uses the selected
 interpreter directly for the API (no uv sync at launch), the same production
 build/preview path, configuration resolver and identity checks as the CLI.
