@@ -3,6 +3,21 @@
 
     const $ = (selector) => document.querySelector(selector);
     const kit = () => window.ReportKit;
+    // Labels follow the selected target multiple: 2x keeps the plain
+    // "翻倍" wording, 3x/5x/10x say "達到N倍" so no row is mislabelled.
+    const reachWords = (target) => {
+        const n = Number(target);
+        const doubled = n === 2 || !Number.isFinite(n);
+        const ev = doubled ? "翻倍" : `達到${n}倍`;
+        return {
+            ev,
+            neg: doubled ? "未翻倍" : `未達到${n}倍`,
+            rate: doubled ? "翻倍率" : `達到${n}倍的比例`,
+            ratio: doubled ? "翻倍率比" : `達到${n}倍的比例比`,
+            first: doubled ? "首次翻倍" : `首次達到${n}倍`,
+            last: doubled ? "最後翻倍" : `最後達到${n}倍`,
+        };
+    };
     const labelMap = (name) =>
         (window.REPORT_META && window.REPORT_META[name]) || {};
     const FIELD_ALIASES = {
@@ -704,7 +719,7 @@
                 "p",
                 "cost-sowhat",
                 typeof val(row, "false_abandonment_rate") === "number"
-                    ? `這批最後翻倍的事件中有 ${fmtPct(val(row, "false_abandonment_rate"))} 在翻倍前曾出現這個訊號；所以第20日若以「${signalText}」排除，會一併排除其中${val(row, "false_abandonment_rate") >= 0.3 ? "相當一部分" : "一部分"}最後翻倍的股票。`
+                    ? `這批最後翻倍的事件中有 ${fmtPct(val(row, "false_abandonment_rate"))} 在翻倍前曾出現這個訊號（觀察整段期間，不限第20日）。`
                     : "這個組合沒有可用的比例。",
             ),
             costDetails,
@@ -899,6 +914,11 @@
             candidates = candidates.filter((r) =>
                 fields.every(([field]) => matching(r, field)),
             );
+            const gridTarget =
+                selectedValue("target_multiple") === "*"
+                    ? null
+                    : selectedValue("target_multiple");
+            const gw = gridTarget === null ? null : reachWords(gridTarget);
             table(
                 $("#grid-table"),
                 [
@@ -920,12 +940,12 @@
                     },
                     { label: "訊號", render: (r) => label(r, "flag", "flag") },
                     {
-                        label: "有訊號翻倍率",
+                        label: gw ? `有訊號：${gw.rate}` : "有訊號：達標比例",
                         render: (r) => fmtPct(val(r, "triggered_rate")),
                         className: "numeric",
                     },
                     {
-                        label: "無訊號翻倍率",
+                        label: gw ? `無訊號：${gw.rate}` : "無訊號：達標比例",
                         render: (r) =>
                             fmtPct(
                                 val(
@@ -951,7 +971,9 @@
                         className: "numeric",
                     },
                     {
-                        label: "最後翻倍者中，翻倍前曾有訊號的比例",
+                        label: gw
+                            ? `${gw.last}者中，${gw.first}前曾有訊號的比例`
+                            : "最後達標者中，首次達標前曾有訊號的比例",
                         render: (r) => fmtPct(val(r, "false_abandonment_rate")),
                         className: "numeric",
                     },
@@ -998,12 +1020,13 @@
                     "standardized_difference",
                 ].includes(key(r, "metric")),
             );
+        const w = reachWords(val(selected, "target_multiple"));
         const detailStats = [
             [
-                "有訊號／無訊號翻倍率",
+                `有訊號／無訊號：${w.rate}`,
                 `${fmtPct(val(selected, "triggered_hit_rate"))}／${fmtPct(val(selected, "untriggered_hit_rate"))}`,
             ],
-            ["翻倍率比", fmtRatio(val(selected, "hit_rate_ratio"))],
+            [w.ratio, fmtRatio(val(selected, "hit_rate_ratio"))],
             [
                 "原始差／調整後差",
                 `${fmtPp(val(selected, "pooled_difference"))}／${fmtPp(val(selected, "standardized_difference"))}`,
@@ -1030,11 +1053,11 @@
                 `${fmtInt(val(selected, "unknown_unknown_n"))}／${fmtInt(val(selected, "unknown_censored_n"))}`,
             ],
             [
-                "最後翻倍者中，翻倍前曾有訊號的比例（含訊號不明時的範圍）",
+                `${w.last}者中，${w.first}前曾有訊號的比例（含訊號不明時的範圍）`,
                 `${fmtPct(val(selected, "false_abandonment_rate"))}${rangeNote(selected, "（", "）")}`,
             ],
             [
-                "首次翻倍前：有訊號／無訊號／訊號不明",
+                `${w.first}前：有訊號／無訊號／訊號不明`,
                 `${fmtInt(val(selected, "hit_triggered_n"))}／${fmtInt(val(selected, "hit_not_triggered_n"))}／${fmtInt(val(selected, "hit_flag_unknown_n"))}`,
             ],
         ];
@@ -1050,7 +1073,10 @@
             },
             {
                 label: "指標",
-                render: (r) => human("measure", val(r, "metric")),
+                render: (r) =>
+                    key(r, "metric") === "hit_rate_ratio"
+                        ? w.ratio
+                        : human("measure", val(r, "metric")),
             },
             {
                 label: "下限",
@@ -1087,7 +1113,11 @@
         );
         const sliceBlock = make("div", "detail-block");
         sliceBlock.append(
-            make("h3", "", "不同年代、股票分半與移除翻倍事件最多的年份或股票"),
+            make(
+                "h3",
+                "",
+                `不同年代、股票分半與移除${w.ev}事件最多的年份或股票`,
+            ),
         );
         sliceBlock.append(
             make(
@@ -1100,7 +1130,7 @@
             {
                 label: "切片",
                 render: (r) =>
-                    `${human("era", val(r, "era"))} · ${human("split", val(r, "split"))} · ${human("row", val(r, "row_kind"))}`,
+                    `${human("era", val(r, "era"))} · ${human("split", val(r, "split"))} · ${human("row", val(r, "row_kind")).replace("翻倍事件", `${w.ev}事件`)}`,
             },
             {
                 label: "移除標的",
@@ -1113,7 +1143,7 @@
                 ],
             },
             {
-                label: "有訊號翻倍率",
+                label: `有訊號：${w.rate}`,
                 render: (r) =>
                     fmtPct(
                         val(
@@ -1125,7 +1155,7 @@
                     ),
             },
             {
-                label: "無訊號翻倍率",
+                label: `無訊號：${w.rate}`,
                 render: (r) =>
                     fmtPct(
                         val(
@@ -1202,7 +1232,7 @@
                     `${fmtInt(val(r, "known_n"))}／${fmtInt(val(r, "unknown_n"))}／${fmtInt(val(r, "censored_n"))}`,
             },
             {
-                label: "翻倍／未翻倍且收低／未翻倍但未收低",
+                label: `${w.ev}／${w.neg}且收低／${w.neg}但未收低`,
                 render: (r) =>
                     `${fmtInt(val(r, "hit_n"))}／${fmtInt(val(r, "loss_n"))}／${fmtInt(val(r, "flat_win_n"))}`,
             },

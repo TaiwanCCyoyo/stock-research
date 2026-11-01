@@ -228,7 +228,17 @@ test("saved report supports guided choices and full evidence without changing de
     );
     assert.match(html, /起點到第20日漲跌幅相近|起點到第20日/);
     assert.match(html, /100 ÷\s*1\.6/);
-    assert.match(html, /所以第20日若以跌破60日均線排除/);
+    // The full-horizon share must not be turned into a day-20 exclusion claim.
+    assert.match(html, /觀察整段期間，不限第20日/);
+    assert.doesNotMatch(html, /第20日若以|一併排除|會錯失|錯失/);
+    assert.doesNotMatch(
+        ids.get("false-abandonment-card").textContent,
+        /第20日若以|一併排除|會錯失|錯失/,
+    );
+    assert.match(
+        ids.get("false-abandonment-card").textContent,
+        /觀察整段期間，不限第20日/,
+    );
     assert.match(html, /結果在觀察點時已經定了/);
     // First paint carries the final headline figures; the data-driven nodes
     // show a plain loading state, never an empty gap.
@@ -472,6 +482,36 @@ test("saved report supports guided choices and full evidence without changing de
     const nonApplicable = tbody("grid-table").children[0];
     assert(nonApplicable.textContent.includes("不適用"));
     assert.equal(nonApplicable.children[5].textContent, "—");
+    // 3x/5x/10x results are never labelled as doubling.
+    const gridState = { 0: "CORE", 2: "252", 3: "20", 4: "X5_MA60" };
+    for (const [i, v] of Object.entries(gridState)) {
+        menus[i].value = v;
+        menus[i].listeners.change();
+    }
+    for (const t of ["3", "5", "10"]) {
+        menus[1].value = t;
+        menus[1].listeners.change();
+        const rowsNow = tbody("grid-table").children;
+        assert.equal(rowsNow.length, 1, `${t}x narrows to one row`);
+        const head = ids.get("grid-table").textContent;
+        assert(head.includes(`有訊號：達到${t}倍的比例`), `${t}x header`);
+        assert(!head.includes("翻倍"), `${t}x grid has no doubling wording`);
+        rowsNow[0].listeners.click();
+        const d = ids.get("detail-content").textContent;
+        for (const phrase of [
+            `達到${t}倍的比例比`,
+            `最後達到${t}倍者中，首次達到${t}倍前曾有訊號的比例`,
+            `首次達到${t}倍前：有訊號／無訊號／訊號不明`,
+            `未達到${t}倍且收低`,
+            `移除達到${t}倍事件最多`,
+        ])
+            assert(d.includes(phrase), `${t}x detail has ${phrase}`);
+        assert(!d.includes("翻倍"), `${t}x detail has no doubling wording`);
+    }
+    menus[1].value = "2";
+    menus[1].listeners.change();
+    tbody("grid-table").children[0].listeners.click();
+    assert(ids.get("detail-content").textContent.includes("首次翻倍前"));
     assert(
         !/\b(?:CORE|LEAD_B1|Y1|Y2|X5_MA60|L20)\b|世代|雜湊|快照|20261024-strength/.test(
             body,
