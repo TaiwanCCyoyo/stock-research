@@ -142,7 +142,7 @@ body {
 
 .gap-row {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 6em;
+    grid-template-columns: minmax(0, 1fr) 8.5em;
     gap: 4px 10px;
     align-items: center;
     font-size: 13px;
@@ -165,7 +165,7 @@ body {
     background: var(--ink);
 }
 
-.gap-row:first-child .gap-fill {
+.gap-row:first-of-type .gap-fill {
     background: repeating-linear-gradient(
         45deg,
         var(--ink) 0 4px,
@@ -969,4 +969,59 @@ body {
 
 .explorer-screen:empty {
     display: none;
+}
+
+.answer-scope {
+    max-width: 860px;
+    margin: 10px 0 0;
+    color: var(--ink);
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 3.2em;
+}
+
+@media (max-width: 680px) {
+    .answer-scope {
+        min-height: 5.2em;
+    }
+}
+
+.gap-title {
+    margin: 0;
+    color: var(--ink);
+    font-weight: 600;
+}
+
+.adjusted-note {
+    max-width: 34rem;
+    margin: 8px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.7;
+    min-height: 3.5em;
+}
+
+.counter-sowhat {
+    color: var(--ink);
+    font-weight: 600;
+}
+
+.source-fold {
+    margin-top: 20px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+    font-size: 13px;
+}
+
+.source-fold > summary {
+    color: var(--muted);
+    cursor: pointer;
+}
+
+.source-fold .report-links {
+    border-top: 0;
+}
+
+.load-error .secondary-button {
+    margin-left: 8px;
 }

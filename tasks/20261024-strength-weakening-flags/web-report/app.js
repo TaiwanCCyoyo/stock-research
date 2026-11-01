@@ -87,14 +87,14 @@
             X6_15: "較起點下跌至少 15%",
             X7: "收盤低於布林下軌",
             X8: "新確認較低高點",
-            daily: "每日",
-            cooled: "冷卻後",
+            daily: "每日（未去重）",
+            cooled: "去重後",
             all: "整體期間／合併",
             development: "固定股票半部一",
             "cross-check": "固定股票半部二",
             full: "整體資料",
-            drop_best_year: "移除本格達標事件最多的年份",
-            drop_best_stock: "移除本格達標事件最多的股票",
+            drop_best_year: "移除本格翻倍事件最多的年份",
+            drop_best_stock: "移除本格翻倍事件最多的股票",
             lt1: "低於 1 倍",
             b1_1p10: "1.00–1.10 倍",
             b1p10_1p25: "1.10–1.25 倍",
@@ -111,21 +111,21 @@
             3: "3 倍",
             5: "5 倍",
             10: "10 倍",
-            triggered: "已觸發",
-            not_triggered: "未觸發",
-            untriggered: "未觸發",
-            all_false: "未觸發",
+            triggered: "有訊號",
+            not_triggered: "無訊號",
+            untriggered: "無訊號",
+            all_false: "無訊號",
             not_applicable: "不適用",
-            pooled: "合併估計",
-            pooled_difference: "合併差",
-            standardized: "標準化估計",
-            standardized_difference: "標準化差",
-            stock: "以股票為單位重抽",
-            two_way: "股票與年份重抽",
-            two_way_cluster: "股票與年份重抽",
-            hit_rate_ratio: "達標率比",
-            difference_pooled: "合併差",
-            difference_standardized: "標準化差",
+            pooled: "原始差",
+            pooled_difference: "原始差",
+            standardized: "調整後差",
+            standardized_difference: "調整後差",
+            stock: "依股票重新抽樣",
+            two_way: "依股票與年份重新抽樣",
+            two_way_cluster: "依股票與年份重新抽樣",
+            hit_rate_ratio: "翻倍率比",
+            difference_pooled: "原始差",
+            difference_standardized: "調整後差",
             "2010-2012": "2010–2012 年",
             "2013-2018": "2013–2018 年",
             "2019+": "2019 年起",
@@ -151,6 +151,14 @@
     const fmtRatio = (v) => {
         const ratio = typeof v === "number" ? kit().fmt.ratio(v, 1) : null;
         return ratio === null ? "—" : `${ratio.toFixed(2)}×`;
+    };
+    // "No gap" when the unknown-signal bounds coincide with the estimate.
+    const rangeNote = (row, open, close) => {
+        const lo = val(row, "false_abandonment_lower");
+        const hi = val(row, "false_abandonment_upper");
+        if (typeof lo !== "number" || typeof hi !== "number") return "";
+        if (lo === hi) return `${open}無資料缺漏${close}`;
+        return `${open}${fmtPct(lo)}–${fmtPct(hi)}${close}`;
     };
     const fmtInt = (v) => kit().fmt.int(typeof v === "number" ? v : null);
     const sumStored = (row, names) => {
@@ -336,8 +344,7 @@
             $("#main-not-triggered-rate").textContent = "—";
             $("#main-triggered-count").textContent = "沒有可用的已知事件數";
             $("#main-not-triggered-count").textContent = "沒有可用的已知事件數";
-            $("#main-difference").textContent =
-                "此比較目前沒有可用的保存結果。";
+            $("#gap-title").textContent = "此比較目前沒有可用的保存結果。";
             $("#main-adjusted-difference").textContent = "";
             setGap("direct", null);
             setGap("adjusted", null);
@@ -358,19 +365,18 @@
         const adjusted = val(row, "standardized_difference");
         const pp = (v) => (Math.abs(v) * 100).toFixed(1);
         const word = (v) => (v < 0 ? "低" : "高");
-        $("#main-difference").textContent =
-            typeof difference === "number"
-                ? `直接比較${word(difference)} ${pp(difference)} 個百分點`
-                : "兩組比例差目前沒有可用的保存數值。";
+        const same =
+            typeof difference === "number" &&
+            typeof adjusted === "number" &&
+            Math.sign(difference) === Math.sign(adjusted);
+        $("#gap-title").textContent =
+            typeof difference === "number" && typeof adjusted === "number"
+                ? `原始差 ${pp(difference)} 個百分點；調整後${same ? "仍" : ""}${word(adjusted) === "低" ? "差" : "反向差"} ${pp(adjusted)} 個百分點`
+                : "兩種差距目前沒有可用的保存數值。";
         $("#main-adjusted-difference").textContent =
             typeof adjusted === "number"
-                ? `只和第20日漲跌幅相近的事件比${
-                      typeof difference === "number" &&
-                      Math.sign(difference) === Math.sign(adjusted)
-                          ? "，仍"
-                          : "，"
-                  }${word(adjusted)} ${pp(adjusted)} 個百分點`
-                : "只和漲跌幅相近的事件比時的差值目前沒有可用的保存數值。";
+                ? `調整後：只和「起點到第20日漲跌幅相近」的事件比（例如都漲了約10%的放在一起），有訊號組${same ? "仍" : ""}${word(adjusted)} ${pp(adjusted)} 個百分點。`
+                : "調整後的差值目前沒有可用的保存數值。";
         setGap("direct", difference);
         setGap("adjusted", adjusted);
         $("#main-cost-rate").textContent = fmtPct(
@@ -412,7 +418,7 @@
                 },
             ),
             guidedSelect(
-                "達標期限",
+                "翻倍期限",
                 [
                     ["126", "半年（126 個交易日）"],
                     ["252", "一年（252 個交易日）"],
@@ -435,6 +441,7 @@
     // x 2 horizons, and how many keep a lower rate among similar-move events.
     function renderScreenNote() {
         const node = $("#explorer-screen-note");
+        const scope = $("#main-scope");
         if (!node) return;
         const flags = [
             "Y3",
@@ -461,6 +468,7 @@
         );
         if (!main.length || !still.length) {
             node.textContent = "";
+            if (scope) scope.textContent = "";
             return;
         }
         const combos = new Set(
@@ -470,6 +478,11 @@
             ),
         );
         const kinds = new Set(still.map((r) => key(r, "group")));
+        if (scope)
+            scope.textContent =
+                combos.size === 1
+                    ? `七種轉弱訊號、兩個期限共 ${main.length} 種比較，扣掉第20日漲跌幅差異後，只有「${[...combos][0]}」在${kinds.size === 2 ? "兩種強勢股都" : groupDescription([...kinds][0])}仍較低（其餘 ${main.length - still.length} 種已不明確）。`
+                    : `${main.length} 種比較中，扣掉第20日漲跌幅差異後仍較低的有 ${still.length} 種（${[...combos].join("、")}）。`;
         node.textContent =
             combos.size === 1
                 ? `七種轉弱訊號和兩個期限裡，只有「${[...combos][0]}」這一種在漲幅相近時仍較低（${kinds.size === 2 ? "兩種強勢股都是如此" : groupDescription([...kinds][0])}；共 ${main.length} 格比較中的 ${still.length} 格）。`
@@ -665,7 +678,9 @@
             make(
                 "p",
                 "",
-                `若未知訊號都當作未出現，下界為 ${fmtPct(val(row, "false_abandonment_lower"))}；若未知訊號都當作曾出現，上界為 ${fmtPct(val(row, "false_abandonment_upper"))}。這是邏輯範圍，不是信賴區間。`,
+                rangeNote(row, "", "") === "無資料缺漏"
+                    ? "無資料缺漏：沒有訊號不明的事件，比例不受缺漏影響。"
+                    : `若訊號不明者都當作未出現，比例最低為 ${fmtPct(val(row, "false_abandonment_lower"))}；都當作曾出現，最高為 ${fmtPct(val(row, "false_abandonment_upper"))}。這是邏輯上的範圍。`,
             ),
         );
         costCard.append(
@@ -683,7 +698,14 @@
             make(
                 "p",
                 "muted",
-                "上方比較的是前 20 個交易日內的訊號，並排除到第 20 日（含當日）已翻倍的觀察。這張卡看的時間更長、對象也不同。",
+                "這張卡看的時間更長、對象也不同：上方比較只看前 20 個交易日內的訊號，並排除到第 20 日（含當日）已翻倍的觀察；這張卡看到翻倍為止的整段期間，且只含最後翻倍的事件。",
+            ),
+            make(
+                "p",
+                "cost-sowhat",
+                typeof val(row, "false_abandonment_rate") === "number"
+                    ? `這批最後翻倍的事件中有 ${fmtPct(val(row, "false_abandonment_rate"))} 在翻倍前曾出現這個訊號；所以第20日若以「${signalText}」排除，會一併排除其中${val(row, "false_abandonment_rate") >= 0.3 ? "相當一部分" : "一部分"}最後翻倍的股票。`
+                    : "這個組合沒有可用的比例。",
             ),
             costDetails,
         );
@@ -745,17 +767,17 @@
                 },
                 { label: "訊號", render: (r) => label(r, "flag", "flag") },
                 {
-                    label: "已觸發：達標率／已知數",
+                    label: "有訊號：翻倍率／事件數",
                     render: (r) =>
                         `${fmtPct(val(r, "triggered_rate", "rate_triggered", "flagged_rate"))}／${fmtInt(val(r, "triggered_known_n", "known_triggered_n", "triggered_n"))}`,
                 },
                 {
-                    label: "未觸發：達標率／已知數",
+                    label: "無訊號：翻倍率／事件數",
                     render: (r) =>
                         `${fmtPct(val(r, "not_triggered_rate", "rate_not_triggered", "unflagged_rate"))}／${fmtInt(val(r, "not_triggered_known_n", "known_not_triggered_n", "not_triggered_n"))}`,
                 },
                 {
-                    label: "合併差",
+                    label: "原始差",
                     render: (r) =>
                         fmtPp(
                             val(
@@ -768,7 +790,7 @@
                     className: "numeric",
                 },
                 {
-                    label: "標準化差",
+                    label: "調整後差",
                     render: (r) =>
                         fmtPp(
                             val(
@@ -793,12 +815,11 @@
                     className: "numeric",
                 },
                 {
-                    label: "未知邏輯下／上界（非信賴區間）",
-                    render: (r) =>
-                        `${fmtPct(val(r, "false_abandonment_lower"))}／${fmtPct(val(r, "false_abandonment_upper"))}`,
+                    label: "訊號不明時的範圍",
+                    render: (r) => rangeNote(r, "", "") || "—",
                 },
                 {
-                    label: "保存判讀",
+                    label: "判讀",
                     render: (r) => label(r, "verdict", "verdict"),
                 },
             ],
@@ -899,12 +920,12 @@
                     },
                     { label: "訊號", render: (r) => label(r, "flag", "flag") },
                     {
-                        label: "已觸發達標率",
+                        label: "有訊號翻倍率",
                         render: (r) => fmtPct(val(r, "triggered_rate")),
                         className: "numeric",
                     },
                     {
-                        label: "未觸發達標率",
+                        label: "無訊號翻倍率",
                         render: (r) =>
                             fmtPct(
                                 val(
@@ -917,7 +938,7 @@
                         className: "numeric",
                     },
                     {
-                        label: "合併差",
+                        label: "原始差",
                         render: (r) =>
                             fmtPp(
                                 val(
@@ -930,12 +951,12 @@
                         className: "numeric",
                     },
                     {
-                        label: "最終達標前曾有訊號比例",
+                        label: "最後翻倍者中，翻倍前曾有訊號的比例",
                         render: (r) => fmtPct(val(r, "false_abandonment_rate")),
                         className: "numeric",
                     },
                     {
-                        label: "保存判讀",
+                        label: "判讀",
                         render: (r) => label(r, "verdict", "verdict"),
                     },
                 ],
@@ -953,7 +974,7 @@
         const host = $("#detail-content");
         host.replaceChildren();
         const summary = make("div", "detail-block");
-        summary.append(make("h3", "", "所選完整合併格：點估計、區間與支持度"));
+        summary.append(make("h3", "", "所選比較的數字、不確定範圍與樣本量"));
         const base = {
             group: key(selected, "group"),
             target: key(selected, "target_multiple"),
@@ -979,41 +1000,41 @@
             );
         const detailStats = [
             [
-                "已觸發／未觸發達標率",
+                "有訊號／無訊號翻倍率",
                 `${fmtPct(val(selected, "triggered_hit_rate"))}／${fmtPct(val(selected, "untriggered_hit_rate"))}`,
             ],
-            ["達標率比", fmtRatio(val(selected, "hit_rate_ratio"))],
+            ["翻倍率比", fmtRatio(val(selected, "hit_rate_ratio"))],
             [
-                "合併差／標準化差",
+                "原始差／調整後差",
                 `${fmtPp(val(selected, "pooled_difference"))}／${fmtPp(val(selected, "standardized_difference"))}`,
             ],
             [
-                "已觸發冷卻後已知數／股票數",
+                "有訊號：去重後事件數／股票數",
                 `${fmtInt(val(selected, "triggered_cooled_known_n"))}／${fmtInt(val(selected, "triggered_cooled_stock_n"))}`,
             ],
             [
-                "未觸發冷卻後已知數／股票數",
+                "無訊號：去重後事件數／股票數",
                 `${fmtInt(val(selected, "all_false_cooled_known_n"))}／${fmtInt(val(selected, "all_false_cooled_stock_n"))}`,
             ],
             [
-                "已觸發／未觸發結果不明數",
+                "有訊號／無訊號：結果不明數",
                 `${fmtInt(val(selected, "triggered_unknown_n"))}／${fmtInt(val(selected, "all_false_unknown_n"))}`,
             ],
             [
-                "已觸發／未觸發期限未走完數",
+                "有訊號／無訊號：追蹤不足數",
                 `${fmtInt(val(selected, "triggered_censored_n"))}／${fmtInt(val(selected, "all_false_censored_n"))}`,
             ],
             ["訊號狀態未知事件數", fmtInt(val(selected, "unknown_event_n"))],
             [
-                "未知訊號的結果不明／期限未走完數",
+                "訊號不明者：結果不明／追蹤不足數",
                 `${fmtInt(val(selected, "unknown_unknown_n"))}／${fmtInt(val(selected, "unknown_censored_n"))}`,
             ],
             [
-                "最終達標前曾有訊號比例及未知邏輯界限",
-                `${fmtPct(val(selected, "false_abandonment_rate"))}（${fmtPct(val(selected, "false_abandonment_lower"))}–${fmtPct(val(selected, "false_abandonment_upper"))}）`,
+                "最後翻倍者中，翻倍前曾有訊號的比例（含訊號不明時的範圍）",
+                `${fmtPct(val(selected, "false_abandonment_rate"))}${rangeNote(selected, "（", "）")}`,
             ],
             [
-                "首次達標前訊號 T／F／U",
+                "首次翻倍前：有訊號／無訊號／訊號不明",
                 `${fmtInt(val(selected, "hit_triggered_n"))}／${fmtInt(val(selected, "hit_not_triggered_n"))}／${fmtInt(val(selected, "hit_flag_unknown_n"))}`,
             ],
         ];
@@ -1024,29 +1045,29 @@
         summary.append(statsList);
         tableIn(summary, intervals, [
             {
-                label: "重抽方法",
+                label: "不確定範圍的算法",
                 render: (r) => human("method", val(r, "method", "bootstrap")),
             },
             {
-                label: "估計量",
+                label: "指標",
                 render: (r) => human("measure", val(r, "metric")),
             },
             {
-                label: "下界",
+                label: "下限",
                 render: (r) =>
                     key(r, "metric") === "hit_rate_ratio"
                         ? fmtRatio(val(r, "lower"))
                         : fmtPp(val(r, "lower")),
             },
             {
-                label: "上界",
+                label: "上限",
                 render: (r) =>
                     key(r, "metric") === "hit_rate_ratio"
                         ? fmtRatio(val(r, "upper"))
                         : fmtPp(val(r, "upper")),
             },
             {
-                label: "可定義／總重抽次數",
+                label: "有效／總模擬次數",
                 render: (r) =>
                     `${fmtInt(val(r, "defined_replicates"))}／${fmtInt(val(r, "replicates"))}`,
             },
@@ -1066,13 +1087,13 @@
         );
         const sliceBlock = make("div", "detail-block");
         sliceBlock.append(
-            make("h3", "", "不同年代、股票分半與移除達標事件最多的年份或股票"),
+            make("h3", "", "不同年代、股票分半與移除翻倍事件最多的年份或股票"),
         );
         sliceBlock.append(
             make(
                 "p",
                 "muted",
-                "切片直接顯示保存結果。移除的年份或股票依各格分別決定；這些列沒有信賴區間或保存判讀。",
+                "直接顯示保存結果。移除的年份或股票依各格分別決定；這些列沒有不確定範圍或判讀。",
             ),
         );
         tableIn(sliceBlock, slices, [
@@ -1092,7 +1113,7 @@
                 ],
             },
             {
-                label: "已觸發率",
+                label: "有訊號翻倍率",
                 render: (r) =>
                     fmtPct(
                         val(
@@ -1104,7 +1125,7 @@
                     ),
             },
             {
-                label: "未觸發率",
+                label: "無訊號翻倍率",
                 render: (r) =>
                     fmtPct(
                         val(
@@ -1116,12 +1137,12 @@
                     ),
             },
             {
-                label: "已觸發／未觸發已知數",
+                label: "有訊號／無訊號事件數",
                 render: (r) =>
                     `${fmtInt(val(r, "triggered_known_n"))}／${fmtInt(val(r, "all_false_known_n"))}`,
             },
             {
-                label: "合併差",
+                label: "原始差",
                 render: (r) =>
                     fmtPp(
                         val(
@@ -1133,11 +1154,11 @@
                     ),
             },
             {
-                label: "標準化差",
+                label: "調整後差",
                 render: (r) => fmtPp(val(r, "standardized_difference")),
             },
             {
-                label: "結果不明／期限未走完（各狀態加總）",
+                label: "結果不明／追蹤不足（各狀態加總）",
                 render: (r) =>
                     `${fmtInt(sumStored(r, ["triggered_unknown_n", "all_false_unknown_n", "unknown_unknown_n", "not_applicable_unknown_n"]))}／${fmtInt(sumStored(r, ["triggered_censored_n", "all_false_censored_n", "unknown_censored_n", "not_applicable_censored_n"]))}`,
             },
@@ -1158,12 +1179,12 @@
             make(
                 "p",
                 "muted",
-                "展示保存的每日／冷卻後計數與狀態；不從事件原始列重算比率或筆數。",
+                "顯示保存的每日與去重後計數；去重＝同一股票20個交易日內只留最早一筆。不從事件原始列重算。",
             ),
         );
         tableIn(strata, strataRows, [
             {
-                label: "資料口徑",
+                label: "計數方式",
                 render: (r) => human("basis", val(r, "basis")),
             },
             {
@@ -1176,12 +1197,12 @@
             },
             { label: "事件數", render: (r) => fmtInt(val(r, "event_n")) },
             {
-                label: "已知／結果不明／期限未走完",
+                label: "已知／結果不明／追蹤不足",
                 render: (r) =>
                     `${fmtInt(val(r, "known_n"))}／${fmtInt(val(r, "unknown_n"))}／${fmtInt(val(r, "censored_n"))}`,
             },
             {
-                label: "達標／未達標且收低／未達標但未收低",
+                label: "翻倍／未翻倍且收低／未翻倍但未收低",
                 render: (r) =>
                     `${fmtInt(val(r, "hit_n"))}／${fmtInt(val(r, "loss_n"))}／${fmtInt(val(r, "flat_win_n"))}`,
             },
@@ -1262,6 +1283,20 @@
         );
         steps.forEach((step) => observer.observe(step));
     }
+    // Nodes whose text comes from the saved data; they start as "loading" in
+    // the HTML and say so plainly if the data never arrives.
+    const PENDING_IDS = [
+        "main-triggered-count",
+        "main-not-triggered-count",
+        "main-scope",
+        "gap-title",
+        "main-adjusted-difference",
+        "gap-direct-value",
+        "gap-adjusted-value",
+        "explorer-screen-note",
+        "guided-comparison",
+        "false-abandonment-card",
+    ];
     async function start() {
         revealTimeline();
         relatedReportLinks();
@@ -1272,6 +1307,9 @@
                 { type: "rk:navigate", href: "#data" },
                 "*",
             );
+        });
+        $("#load-retry").addEventListener("click", () => {
+            window.location.reload();
         });
         try {
             if (!window.ReportKit || !window.REPORT_READY)
@@ -1294,6 +1332,10 @@
             foldTablesOnPhone();
         } catch (error) {
             $("#load-error").hidden = false;
+            for (const id of PENDING_IDS) {
+                const node = $(`#${id}`);
+                if (node) node.textContent = "無法載入";
+            }
             $("#primary-table tbody").replaceChildren();
             const tr = document.createElement("tr");
             const td = make(

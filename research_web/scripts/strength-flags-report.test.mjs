@@ -149,6 +149,7 @@ document.head.appendChild = (node) => {
     setImmediate(() => node.onload());
     return node;
 };
+const body = html.split("<body>")[1].replace(/<[^>]+>/g, "");
 test("saved report supports guided choices and full evidence without changing denominators", async () => {
     run("kit/report-kit.js");
     run("data/manifest.js");
@@ -215,8 +216,31 @@ test("saved report supports guided choices and full evidence without changing de
     );
     assert.match(
         ids.get("main-adjusted-difference").textContent,
-        /只和第20日漲跌幅相近的事件比，仍低/,
+        /起點到第20日漲跌幅相近.*有訊號組仍低 4\.8 個百分點/,
     );
+    assert.match(
+        ids.get("gap-title").textContent,
+        /原始差 12\.3 個百分點；調整後仍差 4\.8 個百分點/,
+    );
+    assert.match(
+        ids.get("main-scope").textContent,
+        /七種轉弱訊號、兩個期限共 28 種比較，扣掉第20日漲跌幅差異後，只有「收盤低於60日均線、看一年」在兩種強勢股都仍較低/,
+    );
+    assert.match(html, /起點到第20日漲跌幅相近|起點到第20日/);
+    assert.match(html, /100 ÷\s*1\.6/);
+    assert.match(html, /所以第20日若以跌破60日均線排除/);
+    assert.match(html, /結果在觀察點時已經定了/);
+    // First paint carries the final headline figures; the data-driven nodes
+    // show a plain loading state, never an empty gap.
+    assert.match(html, /id="main-cost-rate">66\.0%</);
+    for (const id of ["main-scope", "gap-title", "main-adjusted-difference"])
+        assert.match(
+            html,
+            new RegExp(`id="${id}"[^>]*>[\r\n ]*載入中…`),
+            `${id} has a loading state in the first HTML`,
+        );
+    for (const gone of ["保存判讀", "冷卻", "標準化差", "達標", "階段報告）"])
+        assert(!body.includes(gone) || gone === "階段報告）", gone);
     assert.match(html, /型態搭配哪些條件，後來更常翻倍/);
     assert.match(html, /未翻倍且期末收低的比例也較高/);
     assert.match(html, /觀察2、3、5、10倍結果；下方28格主要比較只涵蓋翻倍/);
@@ -437,8 +461,8 @@ test("saved report supports guided choices and full evidence without changing de
     assert.equal(detailTables[0].querySelector("tbody").children.length, 6);
     assert.equal(detailTables[1].querySelector("tbody").children.length, 7);
     assert(detailTables[0].textContent.includes("×"));
-    assert(detailTables[1].textContent.includes("標準化差"));
-    assert(detailTables[2].textContent.includes("未達標但未收低"));
+    assert(detailTables[1].textContent.includes("調整後差"));
+    assert(detailTables[2].textContent.includes("未翻倍但未收低"));
     menus[0].value = "LEAD_B1";
     menus[0].listeners.change();
     tbody("grid-table").children[0].listeners.click();
@@ -448,7 +472,6 @@ test("saved report supports guided choices and full evidence without changing de
     const nonApplicable = tbody("grid-table").children[0];
     assert(nonApplicable.textContent.includes("不適用"));
     assert.equal(nonApplicable.children[5].textContent, "—");
-    const body = html.split("<body>")[1].replace(/<[^>]+>/g, "");
     assert(
         !/\b(?:CORE|LEAD_B1|Y1|Y2|X5_MA60|L20)\b|世代|雜湊|快照|20261024-strength/.test(
             body,
@@ -467,4 +490,59 @@ test("saved report supports guided choices and full evidence without changing de
             visualLayoutChecked: false,
         }),
     );
+});
+
+test("a failed data load never leaves a blank or endless loading state", async () => {
+    const failDocument = {
+        ...document,
+        addEventListener: (name, callback) => {
+            if (name === "DOMContentLoaded") failCallbacks.push(callback);
+        },
+    };
+    const failCallbacks = [];
+    const failPage = {
+        document: failDocument,
+        URL,
+        URLSearchParams,
+        console,
+        location: { hash: "", protocol: "file:", reload: () => {} },
+        matchMedia: () => ({ matches: false }),
+        CustomEvent: class {},
+        addEventListener: () => {},
+    };
+    failPage.window = failPage;
+    failPage.parent = failPage;
+    const failContext = vm.createContext(failPage);
+    for (const id of [
+        "main-scope",
+        "gap-title",
+        "main-adjusted-difference",
+        "gap-direct-value",
+        "gap-adjusted-value",
+        "main-triggered-count",
+        "explorer-screen-note",
+        "guided-comparison",
+        "false-abandonment-card",
+    ])
+        ids.get(id).textContent = "載入中…";
+    ids.get("load-error").hidden = true;
+    document.currentScript = { src: "https://report.invalid/app.js" };
+    vm.runInContext(
+        fs.readFileSync(path.join(root, "app.js"), "utf8"),
+        failContext,
+    );
+    for (const callback of failCallbacks) await callback();
+    assert.equal(ids.get("load-error").hidden, false);
+    assert(ids.get("load-retry").listeners.click, "retry button is wired");
+    for (const id of [
+        "main-scope",
+        "gap-title",
+        "main-adjusted-difference",
+        "gap-direct-value",
+        "main-triggered-count",
+        "guided-comparison",
+        "false-abandonment-card",
+    ])
+        assert.match(ids.get(id).textContent, /無法載入/, id);
+    assert.match(html, /id="load-retry"/);
 });
