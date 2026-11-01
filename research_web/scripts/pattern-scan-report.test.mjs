@@ -521,13 +521,20 @@ test("the overview and evidence disclosure preserve the current completion bound
     const html = readFileSync(join(folder, "index.html"), "utf8");
 
     assert.match(html, /看見型態之後，股票更容易翻倍嗎/);
-    assert.match(html, /三個主要發現/);
+    assert.match(html, /另外兩個發現/);
     assert.ok(
-        html.indexOf("三個主要發現") < html.indexOf('id="family-summary"'),
+        html.indexOf("另外兩個發現") < html.indexOf('id="family-summary"'),
     );
     assert.match(html, /完整成果與資料取得/);
     // Answer first: the page opens with the question's answer and its denominator.
-    assert.ok(html.indexOf("432") < html.indexOf("三個主要發現"));
+    // The per-pattern answer leads; the 432/525 direction count is a later supplement.
+    const answer = html.indexOf('id="main-answer"');
+    const supplement = html.indexOf("432", answer);
+    assert.ok(html.indexOf('id="headline-table"') < supplement);
+    assert.ok(supplement < html.indexOf("另外兩個發現"));
+    assert.doesNotMatch(html, /先在一半股票上挑出表現最好的幾個再組合/);
+    assert.match(html, /這份研究想找出：哪些型態與一年內翻倍有關/);
+    assert.match(html, /不是 1,104\s*次獨立檢定/);
     assert.ok(
         html.indexOf('id="main-answer"') <
             html.indexOf('id="research-lineage"'),
@@ -585,6 +592,70 @@ test("the overview and evidence disclosure preserve the current completion bound
         "downloads",
     ])
         assert.match(html, new RegExp(`id="${id}"`));
+});
+
+test("the headline summary matches the saved per-pattern numbers", () => {
+    const html = readFileSync(join(folder, "index.html"), "utf8");
+    const context = {};
+    context.window = context;
+    runInNewContext(
+        readFileSync(join(folder, "data/final-v1/summary.js"), "utf8"),
+        context,
+        { timeout: 5000 },
+    );
+    const rows = context.REPORT_DATA.comparisonSummary.rows.filter(
+        (row) => row.horizon === 252,
+    );
+    assert.equal(rows.length, 12);
+    const evidence = JSON.parse(
+        readFileSync(
+            join(folder, "data/final-v1/interpretation-evidence.json"),
+            "utf8",
+        ),
+    );
+    const counts = Object.fromEntries(
+        evidence.candidate_by_family
+            .filter((row) => row.horizon === 252)
+            .map((row) => [
+                row.family,
+                [row.higher_n, row.lower_n, row.incomparable_n],
+            ]),
+    );
+    const reader = readFileSync(join(folder, "reader.js"), "utf8");
+    for (const [family, values] of Object.entries(counts))
+        assert.ok(
+            reader.includes(`${family}: [${values.join(", ")}]`),
+            `reader.js condition counts for ${family}`,
+        );
+    // Same classification rule as the headline sentence: both views agree in sign.
+    let high = 0;
+    let low = 0;
+    let flat = 0;
+    let top = 0;
+    for (const row of rows) {
+        const [higher, lower] = counts[row.target];
+        if (row.delta_pp >= 0.5 && higher > lower) high += 1;
+        else if (row.delta_pp <= -0.5 && lower > higher) low += 1;
+        else flat += 1;
+        top = Math.max(top, row.delta_pp);
+    }
+    assert.deepEqual([high, low, flat], [6, 4, 2]);
+    assert.ok(Math.round(top) === 5);
+    assert.match(
+        html,
+        /六種的翻倍比例比一般合格日高（最多高約\s*5 個百分點），四種較低，兩種看不出差別/,
+    );
+    const evidenceTotal = evidence.candidate_totals.find(
+        (row) => row.horizon === 252,
+    );
+    assert.match(html, new RegExp(`${evidenceTotal.higher_n}\\s*組較高`));
+    assert.match(html, new RegExp(`${evidenceTotal.lower_n}\\s*組較低`));
+    // Reader tone and no mixed-up comparison wording in the headline block.
+    const block = html.slice(
+        html.indexOf('id="main-answer"'),
+        html.indexOf('class="reader-explorer"'),
+    );
+    assert.doesNotMatch(block, /先在一半股票|不要照做|僅供參考/);
 });
 
 test("downloads accept report-local data files and refuse traversal or URLs", () => {

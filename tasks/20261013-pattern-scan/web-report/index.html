@@ -7,7 +7,7 @@
         <meta name="report:title" content="看見型態之後，股票更容易翻倍嗎？" />
         <meta
             name="report:summary"
-            content="1,942 檔台股、十二種型態：追蹤約一年，加上相同篩選條件後，有型態的組合翻倍比例較高的有 432 組、較低的有 525 組；轉弱訊號同時碰到沒翻倍與後來翻倍的股票。"
+            content="1,942 檔台股、十二種型態：追蹤約一年，十二種型態裡六種的翻倍比例比一般合格日高、四種較低、兩種看不出差別；加上篩選條件後整體並不一致變高（432 組較高、525 組較低）；轉弱訊號同時碰到沒翻倍與後來翻倍的股票。"
         />
         <meta name="report:date" content="2026-10-31" />
         <meta name="report:status" content="exploratory" />
@@ -52,7 +52,7 @@
                 <p class="rk-eyebrow">台股 · 2010–2026 · 描述性研究</p>
                 <h1 id="report-title">看見型態之後，股票更容易翻倍嗎？</h1>
                 <p class="rk-lede">
-                    不一定。平台突破、跳空突破等少數型態出現後，一年內翻倍的比例約
+                    不一定。平台突破、跳空突破等型態出現後，一年內翻倍的比例約
                     15%，高於所有合格日（全市場任一天符合基本資格的股票日）的
                     9.83%；但加上篩選條件後優勢並不一致，用「轉弱」訊號（例如收盤跌破
                     20 日均線）把股票排除，也會同時排掉許多後來翻倍的股票。
@@ -104,37 +104,48 @@
             <div class="answer-layout">
                 <section id="main-answer" aria-labelledby="answer-title">
                     <h2 id="answer-title">
-                        篩選條件相同時，有型態的組合不比沒有型態的更常翻倍：432
-                        組較高，525 組較低
+                        十二種型態各有高低：追蹤約一年，六種的翻倍比例比一般合格日高（最多高約
+                        5 個百分點），四種較低，兩種看不出差別
                     </h2>
-                    <p class="answer-note">
-                        一組＝一種型態搭配一組篩選條件（例如「收盤高於 20
-                        日平均價」）。每組都拿來和「同一天也符合這些條件、但沒有出現該型態」的股票比較翻倍比例。條件組合是先在一半股票上挑出表現最好的幾個再組合而成，固定後看另一半股票；數「幾組較高、幾組較低」，是為了看加上型態後整體偏向哪一邊。
+                    <p class="answer-purpose">
+                        這份研究想找出：哪些型態與一年內翻倍有關，以及沒有出現型態的股票表現如何。
                     </p>
-                    <div
-                        class="headline-comparison"
-                        role="group"
-                        aria-label="追蹤約一年，有型態的翻倍比例較高與較低的組數"
-                    >
-                        <div class="headline-rate">
-                            <span class="headline-label"
-                                >有型態的翻倍比例較高的組合</span
-                            >
-                            <strong>432</strong>
-                        </div>
-                        <div class="headline-rate">
-                            <span class="headline-label"
-                                >有型態的翻倍比例較低的組合</span
-                            >
-                            <strong>525</strong>
-                        </div>
-                        <p class="headline-basis">
-                            追蹤約一年（252 個交易日）· 共 1,104 組（12 種型態 ×
-                            各 92 組事先固定的條件）· 另有 16 組比例相同 · 131
-                            組無法比較（型態或同條件對照那一側沒有可判定的樣本）·
-                            結果來自另一半股票，不是新期間
-                        </p>
+                    <div class="headline-table-wrap">
+                        <table class="headline-table" id="headline-table">
+                            <caption>
+                                追蹤約一年（252
+                                個交易日）的翻倍比例，由高到低排列
+                            </caption>
+                            <thead>
+                                <tr>
+                                    <th scope="col">型態</th>
+                                    <th scope="col">
+                                        不加條件<small
+                                            >有型態 對 所有合格日（隔 20
+                                            個交易日取一天）</small
+                                        >
+                                    </th>
+                                    <th scope="col">
+                                        加上篩選條件後<small
+                                            >各 92
+                                            組裡，有型態比同條件、沒型態的較高／較低</small
+                                        >
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="headline-rows"></tbody>
+                        </table>
                     </div>
+                    <p class="answer-note">
+                        「不加條件」的對照包含有型態的日子，只是它們佔極少數。「組」＝一種型態搭配一組篩選條件（例如「收盤高於
+                        20
+                        日平均價」）；每組只和同一天也符合這些條件、但沒有出現該型態的股票比較。
+                    </p>
+                    <p class="answer-overall" id="headline-overall">
+                        整體來看，把十二種型態與各組篩選條件全部算進去，加上型態並沒有讓翻倍比例一致變高（432
+                        組較高、525 組較低；這是方向計數，不是 1,104
+                        次獨立檢定）。
+                    </p>
                     <details class="reader-explorer">
                         <summary>改看約半年，或查看四種結果的完整分布</summary>
                         <label for="reader-horizon"
@@ -185,25 +196,15 @@
             </div>
 
             <p class="main-limit">
-                兩半股票都來自已看過的歷史，不是新期間的驗證。432、525 是 1,104
-                組各自比較的方向計數，不是 1,104
-                次獨立檢定，也沒有模擬買賣。選法與其他限制見頁尾「來源與限制」。
+                兩半股票都來自已看過的歷史，不是新期間的驗證；各組條件彼此重疊，也沒有模擬買賣。條件組合怎麼選出來，與其他限制見頁尾「來源與限制」。
             </p>
 
             <section
                 class="reader-findings"
                 aria-labelledby="reader-findings-title"
             >
-                <h2 id="reader-findings-title">三個主要發現</h2>
+                <h2 id="reader-findings-title">另外兩個發現</h2>
                 <div class="reader-cards">
-                    <article class="rk-card">
-                        <h3>型態有高有低，加了條件也沒有一致的好處</h3>
-                        <p>
-                            <strong>平台突破</strong>（橫向整理 25–65
-                            天後放量突破）與<strong>跳空突破</strong>（開盤直接跳空越過前一日最高價）的翻倍比例高於一般水準；但把所有條件組合放在一起看，低於「沒有型態」對照的組合比高於的更多。
-                        </p>
-                        <a href="#Q1">看問題 1</a>
-                    </article>
                     <article class="rk-card">
                         <h3>飆股裡常見的型態，不等於看見型態後常翻倍</h3>
                         <p>
