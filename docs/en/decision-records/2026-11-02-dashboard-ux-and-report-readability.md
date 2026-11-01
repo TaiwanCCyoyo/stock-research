@@ -4,9 +4,8 @@
 
 Owner discussion: 2026-11-02 (Asia/Taipei). The owner accepts the audit direction,
 wants the discussion and PR rationale recorded, and intends to assess the finished
-experience rather than supervise implementation details. This record prepares
-the implementation slices; it does not claim they are already implemented or
-that planned PRs have been opened. Merge remains with the owner. Normal checks,
+experience rather than supervise implementation details. This record preserves
+the initial decisions and the delivery evidence below. Merge remains with the owner. Normal checks,
 current-head review and applicable visual-acceptance holds remain in force.
 
 The dashboard currently makes it difficult to distinguish the original research
@@ -42,7 +41,7 @@ Readiness is independent of research success, execution progress and provenance.
   real result change inside a presentation update. An unresolved numerical
   contradiction requires a disclosed correction or a pending status, not a guess.
 
-## Proposed delivery: eight PRs total
+## Delivery: eight PRs total
 
 P0 is [PR #136](https://github.com/TaiwanCCyoyo/stock-research/pull/136), merged at
 `f005d8ce`. All eight planned PRs now exist. Current-head checks and review remain
@@ -53,7 +52,7 @@ acceptance.
 | ----- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------ |
 | P0    | [PR136](https://github.com/TaiwanCCyoyo/stock-research/pull/136) | Merged: decisions and PR rationale requirements                                |
 | P1    | [PR142](https://github.com/TaiwanCCyoyo/stock-research/pull/142) | Reading API, visibility, Markdown and return context; SSR review fix delivered |
-| P2    | [PR139](https://github.com/TaiwanCCyoyo/stock-research/pull/139) | Shell/home; browser focus-loop follow-up delivered                             |
+| P2    | [PR139](https://github.com/TaiwanCCyoyo/stock-research/pull/139) | Merged at 9d53ff5: shell/home and browser focus-loop correction                |
 | P3    | [PR140](https://github.com/TaiwanCCyoyo/stock-research/pull/140) | Data/stock; complete versions available on demand                              |
 | P4    | [PR141](https://github.com/TaiwanCCyoyo/stock-research/pull/141) | Map/ETF/account interactions                                                   |
 | P5    | [PR145](https://github.com/TaiwanCCyoyo/stock-research/pull/145) | 15 reading editions: 12 ready, 3 history pending source contradictions         |
@@ -271,11 +270,51 @@ it here after creation. Do not claim all past PRs met this standard: recent PRs
 include both clear problem/solution narratives and change-list-heavy descriptions.
 Do not retroactively rewrite other sessions' or merged PRs as part of this work.
 
+### Implementation acceptance evidence
+
+Representative browser checks used the isolated previews, not the formal service:
+
+- P2: skip link preserved the route, theme focus wrapped in both directions and
+  returned on Escape, mobile navigation fit 390 pixels, stock entry opened stocks.
+- P3: dataset count scope and price/coverage dates were explicit; the known stock
+  name survived detail loading. Long versions expand on demand and wrap at 390
+  pixels. Synthetic actual-component checks covered empty-success retry, disabled
+  loading, HTTP 503 disclosure and unmount before a late response. Nonempty refresh
+  has no public UI trigger and was not claimed as a browser-tested path.
+- P4: ETF selection outside search, detail/back focus and basket clearing passed.
+  Actual comparison component with synthetic data preserved choices after 503,
+  retried successfully, cancelled obsolete/unmounted requests, and restored the
+  keyboard-selected date after pointer inspection. Full real-map acceptance is
+  still pending its initial data preparation; synthetic data is not market evidence.
+- P5: 12 default reports and the three named history records were checked.
+  Rank-profile source expansion focused the source panel; returning preserved
+  search `20260823` and scroll Y=477. Runner-retention's historical warning and
+  text fit a 390-pixel viewport.
+- P6: 17 default reports; confirmation source expansion focused the source panel;
+  returning preserved `five-slot` and Y=316. Narrow report/table reading passed.
+- P7: 20 default reports; HHHL variants source expansion focused the source panel;
+  returning preserved `hhhl` and Y=733. Narrow report/table reading passed.
+
+These are representative per-batch UI checks, not 52 separate visual inspections.
+All 52 reading editions received independent content/source checks. Published
+artifact verification passed before and after the reader change. Hosted CI found
+the new reader test missing from the reviewed domain inventory; the correction
+adds explicit ownership rather than weakening the full-safety fallback. Current
+head CI and Dot review remain the acceptance sources; owner reading is still held.
+
+The original scope table above records the proposed plan; the delivery table and
+this evidence describe the subsequent implementation. All-theme contrast and
+long-report printing were not exhaustively validated.
+
 Session-owned checkouts retained for their open PRs and previews:
 `report-reading-readiness` (P1), `dashboard-shell-ux` (P2), `dashboard-data-ux`
 (P3), `dashboard-interaction-ux` (P4), `legacy-early-reading` (P5),
 `dashboard-ux-delivery-plan` reused on `codex/legacy-september-reading` (P6),
 and `legacy-october-reading` (P7), all under primary `.worktrees/`.
 No session-owned checkout has been removed; the old P0 branch is retained while
-its checkout serves P6. Other inventoried worktrees remain untouched. Cleanup
+its checkout serves P6. After the merged P2 preview exited normally and its process
+identities were checked, its clean checkout was reused on the local-only branch
+`codex/dashboard-ux-integrated` for a combined preview (registration
+`dashboard-ux-integrated`, port 20008). Original PR branches remain intact; this
+does not deploy or merge the report PRs. Other inventoried worktrees remain untouched. Cleanup
 requires verified owner merge and the normal preservation/process/data gates.
