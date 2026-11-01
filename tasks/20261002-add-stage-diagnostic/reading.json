@@ -1,0 +1,26 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20261002-add-stage-diagnostic",
+    "state": "ready",
+    "reason": "已依保存的完整文字結果整理問題、比較、分母、限制及後續資訊；屬閱讀就緒，不是策略或擁有者驗收。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "非命中損益主要來自已加碼或未加碼的嘗試？延遲路徑為何惡化？",
+    "answer": "兩條保存路徑中，有實際加碼成交的非命中組淨現金為正，未加碼組為負；不能據此認定加碼造成獲利。",
+    "limitation": "這是事後依實際成交分組的整段嘗試歸因，不是隨機對照、加碼增量損益或新策略回測。",
+    "data_period": null,
+    "sources": [
+        {
+            "label": "主要結果來源",
+            "path": "20261002-add-stage-diagnostic/report.md"
+        },
+        {
+            "label": "後續結果或口徑說明",
+            "path": "20261002-add-retry/execution-normal-v1.md"
+        },
+        {
+            "label": "後續結果或口徑說明",
+            "path": "20261002-one-lot-delay-resumption/execution-v4.md"
+        }
+    ]
+}

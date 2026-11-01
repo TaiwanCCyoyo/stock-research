@@ -1,0 +1,26 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20261002-entry-extension-cap",
+    "state": "ready",
+    "reason": "已依保存的完整文字結果整理問題、比較、分母、限制及後續資訊；屬閱讀就緒，不是策略或擁有者驗收。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "首次進場限制近 60 日漲幅不超過 50%，能否降低試錯成本而保留收益？",
+    "answer": "這個固定上限雖降低交易與侵蝕，卻只保留每日對照約 13.69% 淨利，未通過原篩選。",
+    "limitation": "僅適用此排名、部位與 ret60 上限的已暴露期間；不能推論所有避免追高的方法無效。",
+    "data_period": null,
+    "sources": [
+        {
+            "label": "主要結果來源",
+            "path": "20261002-entry-extension-cap/execution-v1.md"
+        },
+        {
+            "label": "後續結果或口徑說明",
+            "path": "20261002-one-lot-delay-resumption/execution-v4.md"
+        },
+        {
+            "label": "後續結果或口徑說明",
+            "path": "20261002-add-stage-diagnostic/report.md"
+        }
+    ]
+}

@@ -1,0 +1,25 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20261021-momentum-only-doubling",
+    "state": "ready",
+    "reason": "已依保存的完整文字結果整理問題、比較、分母、限制及後續資訊；屬閱讀就緒，不是策略或擁有者驗收。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "完全不看型態的強勢條件能解釋多少大漲？型態另有多少貢獻？",
+    "answer": "純強勢條件的歷史翻倍率較高，但未翻倍收低也較多；型態額外貢獻仍未評估，不能宣稱已回答原題全部。",
+    "limitation": "條件從同一段已看過歷史選出；每日比例不是交易勝率，型態原始狀態缺件使分解與 share 均不可判定。",
+    "data_period": {
+        "from": "2010-01-04",
+        "to": "2026-10-12"
+    },
+    "sources": [
+        {
+            "label": "主要結果來源",
+            "path": "20261021-momentum-only-doubling/report.md"
+        },
+        {
+            "label": "原始問題與規則",
+            "path": "20261021-momentum-only-doubling/mission.md"
+        }
+    ]
+}

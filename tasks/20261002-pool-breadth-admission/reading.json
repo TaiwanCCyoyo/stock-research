@@ -1,0 +1,18 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20261002-pool-breadth-admission",
+    "state": "ready",
+    "reason": "已依保存的完整文字結果整理問題、比較、分母、限制及後續資訊；屬閱讀就緒，不是策略或擁有者驗收。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "只有研究池過半股票近 20 日報酬為正才允許新買與加碼，能否改善試錯？",
+    "answer": "廣度門檻降低操作與帳戶回撤，但非命中淨現金比原對照少 59,163 元，未過事前比較規則。",
+    "limitation": "這是研究池的廣度而非全台股；失敗指此精確設定的探索條件，不代表所有市場濾網無效。",
+    "data_period": null,
+    "sources": [
+        {
+            "label": "主要結果來源",
+            "path": "20261002-pool-breadth-admission/execution-v1.md"
+        }
+    ]
+}

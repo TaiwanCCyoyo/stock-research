@@ -1,0 +1,25 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20261002-catalog-participation",
+    "state": "ready",
+    "reason": "已依保存的完整文字結果整理問題、比較、分母、限制及後續資訊；屬閱讀就緒，不是策略或擁有者驗收。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "每日與每週退出帳戶，是否參與歷史翻倍波段，又在哪裡耗損？",
+    "answer": "每週退出在波段高點仍持有的案例僅多 2 段，不能抵銷它已失敗的非命中損益篩選。",
+    "limitation": "事後波段及目前族群分類不能當成當時可知訊號；持有高點不等於賣在高點或賺完整波段。",
+    "data_period": {
+        "from": "2019-01-02",
+        "to": "2023-12-29"
+    },
+    "sources": [
+        {
+            "label": "主要結果來源",
+            "path": "20261002-catalog-participation/report.md"
+        },
+        {
+            "label": "後續結果或口徑說明",
+            "path": "20261002-weekly-rank-exit/execution-v2.md"
+        }
+    ]
+}

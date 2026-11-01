@@ -1,0 +1,29 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20261009-hhhl-pattern-probability",
+    "state": "ready",
+    "reason": "已依保存的完整文字結果整理問題、比較、分母、限制及後續資訊；屬閱讀就緒，不是策略或擁有者驗收。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "頭頭高／底底高 v1 突破後，半年翻倍比例是否高於簡單控制？站穩後如何？",
+    "answer": "v1 真型態突破翻倍 7.86%，新高爆量主控制 7.88%，沒有顯示整體額外優勢。",
+    "limitation": "v1 未過擁有者辨識涵蓋率要求；站穩為暫定定義，事件比例及價格路徑都不是可交易策略或帳戶損失。",
+    "data_period": {
+        "from": "2019-01-02",
+        "to": "2026-08-14"
+    },
+    "sources": [
+        {
+            "label": "主要結果來源",
+            "path": "20261009-hhhl-pattern-probability/report.md"
+        },
+        {
+            "label": "原始問題與規則",
+            "path": "20261009-hhhl-pattern-probability/mission.md"
+        },
+        {
+            "label": "後續結果或口徑說明",
+            "path": "20261010-hhhl-v4-probability/report.md"
+        }
+    ]
+}

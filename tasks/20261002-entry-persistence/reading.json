@@ -1,0 +1,18 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20261002-entry-persistence",
+    "state": "ready",
+    "reason": "已依保存的完整文字結果整理問題、比較、分母、限制及後續資訊；屬閱讀就緒，不是策略或擁有者驗收。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "要求連續三晚符合進場條件，能否減少非命中侵蝕與操作？",
+    "answer": "淨利保留約 97.23%、委託減少，但一個完整二十次非命中窗口的侵蝕更大，因此未過原篩選。",
+    "limitation": "全域最差窗口仍受未結束嘗試限制；已知反例足以判定此設定未通過，不等於全部連續確認方法無效。",
+    "data_period": null,
+    "sources": [
+        {
+            "label": "主要結果來源",
+            "path": "20261002-entry-persistence/execution-v3.md"
+        }
+    ]
+}
