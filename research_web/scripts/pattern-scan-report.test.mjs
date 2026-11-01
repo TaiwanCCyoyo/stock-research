@@ -284,7 +284,7 @@ test("the actual renderer preserves zero, null, fraction, pp and multiple units 
             "0",
             "—",
             "12.5%",
-            "+1.25 pt",
+            "+1.25 百分點",
             "1.5×",
             "<img src=x onerror=alert(1)>",
         ],
@@ -375,18 +375,18 @@ test("the first-screen comparison keeps twelve Q1 families on one scope and swit
     assert.deepEqual(rowCells(rows.children[0]), [
         "HHHL v4 突破型態（H1）",
         "1.25×",
-        "+1.25 pt",
+        "+1.25 百分點",
         "100",
         "200",
         "20%",
     ]);
     assert.match(
         page.elements.get("family-summary-baseline").textContent,
-        /C-base-daily 命中率 40%（K=1,000）/,
+        /所有合格日的翻倍比例 40%（樣本 1,000）/,
     );
     assert.match(
         page.elements.get("family-summary-scope").textContent,
-        /Q1 固定口徑.*split=all.*era=all.*mkt=all.*cohort=union/,
+        /不加額外條件.*全部股票.*全部年份.*全部市場/,
     );
     assert.match(
         readFileSync(join(folder, "index.html"), "utf8"),
@@ -394,7 +394,7 @@ test("the first-screen comparison keeps twelve Q1 families on one scope and swit
     );
     assert.match(
         page.elements.get("family-summary-status").textContent,
-        /十二家族/,
+        /十二種型態/,
     );
 
     selector.value = "252";
@@ -404,14 +404,14 @@ test("the first-screen comparison keeps twelve Q1 families on one scope and swit
     assert.deepEqual(rowCells(rows.children[0]), [
         "HHHL v4 突破型態（H1）",
         "0.75×",
-        "−1.25 pt",
+        "−1.25 百分點",
         "80",
         "180",
         "25%",
     ]);
     assert.match(
         page.elements.get("family-summary-baseline").textContent,
-        /C-base-daily 命中率 50%（K=900）/,
+        /所有合格日的翻倍比例 50%（樣本 900）/,
     );
 });
 
@@ -473,14 +473,14 @@ test("summary denominators show N/A while real zero counts and rates remain zero
     assert.deepEqual(rowCells(rows[2]), [
         "布林通道收縮後突破（B2）",
         "N/A",
-        "0 pt",
+        "0 百分點",
         "10",
         "12",
         "0%",
     ]);
     assert.match(
         page.elements.get("family-summary-baseline").textContent,
-        /N\/A（K=0）/,
+        /N\/A（樣本 0）/,
     );
 });
 

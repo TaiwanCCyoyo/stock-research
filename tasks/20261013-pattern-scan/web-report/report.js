@@ -39,6 +39,326 @@
     const familyLabel = (code) =>
         familyNames[code] ? `${familyNames[code]}（${code}）` : code;
 
+    // Reader view: which columns, with plain-language headers, each table shows.
+    // Rows, values and downloads are untouched; the full column set stays in the files.
+    const horizonText = (value) =>
+        value === 126
+            ? "126 日（約半年）"
+            : value === 252
+              ? "252 日（約一年）"
+              : present(value)
+                ? `${value} 日`
+                : null;
+    const controlNames = {
+        pattern: "有型態的日子",
+        "C-base-no-pattern": "同條件、沒有型態的日子",
+        "C-base-all": "同條件的所有日子（含有型態者）",
+        "C-base-daily": "所有合格日",
+        "C-base-random": "隨機日期",
+        "C-52w": "股價在 52 週高點附近的日子",
+        "C-dip": "股價跌深的日子",
+        "C-trend": "股價走在趨勢上的日子",
+    };
+    const controlName = (code) => controlNames[code] || code;
+    const populationNames = {
+        hit: "後來翻倍",
+        nonhit: "最後沒翻倍",
+        unknown: "無法判斷",
+    };
+    const flagNames = {
+        Y1: "跌破支撐價（Y1）",
+        Y2: "跌破較低價位（Y2）",
+        Y3: "跌破已確認前低（Y3）",
+        X5_MA20: "收盤跌破 20 日均線",
+        X5_MA60: "收盤跌破 60 日均線",
+        X6_10: "從起點跌 10%",
+        X6_15: "從起點跌 15%",
+        X7: "跌破布林通道下緣",
+        X8: "高點降低",
+    };
+    const stateNames = {
+        triggered: "有出現",
+        all_false: "沒出現",
+        unknown: "無法判斷",
+    };
+    const pathNames = {
+        direct_failure: "先跌 10% 就沒再漲 10%",
+        rise_then_fall: "曾漲 20% 以上後回落",
+        sideways: "大致盤整",
+        slow_decline: "緩慢下跌",
+        unknown: "無法判斷",
+    };
+    const binNames = {
+        pooled: "全部",
+        lt1: "低於起點",
+        b1_1p10: "高於起點 0–10%",
+        b1p10_1p25: "高於起點 10–25%",
+        ge1p25: "高於起點 25% 以上",
+    };
+    const mapped = (names, key) => (row) =>
+        present(row[key]) ? names[row[key]] || row[key] : null;
+    const familyOf = (code) =>
+        present(code) ? familyLabel(String(code).split(":")[0]) : null;
+    // "H1:original", "H1:original:C-52w", "H1:candidate:pattern-scan.v1:H1:<atoms>", "C-base-daily"
+    const splitGroup = (group) => {
+        const text = String(group ?? "");
+        const parts = text.split(":");
+        if (!familyNames[parts[0]])
+            return { code: null, what: controlName(text) };
+        if (parts[1] === "candidate") {
+            const tail = parts.slice(4);
+            const control = controlNames[tail[tail.length - 1]]
+                ? tail.pop()
+                : null;
+            const atoms = tail.join(":").split("&").join(" & ");
+            return {
+                code: parts[0],
+                what: `條件組合 ${atoms}${control ? `，對照：${controlName(control)}` : ""}`,
+            };
+        }
+        const rest = parts.slice(2).join(":");
+        return {
+            code: parts[0],
+            what: rest ? `型態，對照：${controlName(rest)}` : "型態本身",
+        };
+    };
+    const groupLabel = (key) => (row) => {
+        const { code, what } = splitGroup(row[key]);
+        return code ? `${familyLabel(code)}｜${what}` : what;
+    };
+    const candidateParts = (id) => {
+        const parts = String(id ?? "").split(":");
+        return {
+            code: parts[2],
+            atoms: parts.slice(3).join(":").split("&").join(" & "),
+        };
+    };
+    const col = (label, kind, key, extra) => ({ label, kind, key, ...extra });
+    const familyCol = (key) =>
+        col("型態", "text", key, { get: (row) => familyOf(row[key]) });
+    const horizonCol = col("追蹤期限", "text", "horizon", {
+        get: (row) => horizonText(row.horizon),
+    });
+    const flagCol = col("轉弱訊號", "text", "flag_id", {
+        get: mapped(flagNames, "flag_id"),
+    });
+    const outcomeCol = col("事件結果", "text", "population", {
+        get: mapped(populationNames, "population"),
+    });
+    const fullDownload = "完整欄位下載";
+    const views = {
+        "Q1:0": {
+            title: "十二種型態的翻倍比例（另一半股票）",
+            downloadLabel: fullDownload,
+            columns: [
+                familyCol("target"),
+                horizonCol,
+                col("比較對象", "text", "control_id", {
+                    get: (row) => controlName(row.control_id),
+                }),
+                col("事件數", "integer", "event_n"),
+                col("可判定樣本數", "integer", "known_n"),
+                col("翻倍比例", "percent", "hit_rate"),
+                col("期滿仍虧損比例", "percent", "loss_rate"),
+                col("股票檔數", "integer", "distinct_stock_n"),
+            ],
+        },
+        "Q2:0": {
+            title: "固定的十組條件：有型態比沒有型態高多少（百分點）",
+            downloadLabel: fullDownload,
+            columns: [
+                familyCol("target"),
+                col("篩選條件（研究代號）", "text", "atoms"),
+                horizonCol,
+                col(
+                    "比沒有型態高（百分點）",
+                    "percentage_points",
+                    "pattern_minus_no_pattern_pp",
+                ),
+                col(
+                    "比所有日子高（百分點）",
+                    "percentage_points",
+                    "pattern_minus_all_pp",
+                ),
+                col("有型態樣本數", "integer", "pattern_known_n"),
+                col("沒型態樣本數", "integer", "no_pattern_known_n"),
+                col("期滿仍虧損比例", "percent", "loss_rate"),
+            ],
+        },
+        "Q3:0": {
+            title: "附錄：每組條件下，有型態與各種對照的翻倍比例",
+            downloadLabel: fullDownload,
+            columns: [
+                col("型態", "text", "candidate_id", {
+                    get: (row) =>
+                        familyLabel(candidateParts(row.candidate_id).code),
+                }),
+                col("篩選條件（研究代號）", "text", "candidate_id", {
+                    get: (row) => candidateParts(row.candidate_id).atoms,
+                }),
+                col("比較對象", "text", "control_id", {
+                    get: (row) => controlName(row.control_id),
+                }),
+                horizonCol,
+                col("事件數", "integer", "event_n"),
+                col("可判定樣本數", "integer", "known_n"),
+                col("翻倍比例", "percent", "hit_rate"),
+                col("期滿仍虧損比例", "percent", "loss_rate"),
+            ],
+        },
+        "Q4:0": {
+            title: "已翻倍段落中，出現過型態的比例，對照同數量隨機日期",
+            downloadLabel: fullDownload,
+            columns: [
+                col("型態或條件組合", "text", "group", {
+                    get: groupLabel("group"),
+                }),
+                col("翻倍段落數", "integer", "episode_n"),
+                col("型態出現比例", "percent", "pattern_coverage_rate"),
+                col("隨機日期出現比例", "percent", "random_coverage_rate"),
+                col("差距（百分點）", "percentage_points", "coverage_delta_pp"),
+                col("無法判斷的段數", "integer", "pattern_unknown_n"),
+            ],
+        },
+        "Q4:1": {
+            title: "附錄：出現比例的上下限與其他對照",
+            downloadLabel: fullDownload,
+            columns: [
+                col("型態或對照", "text", "group_id", {
+                    get: groupLabel("group_id"),
+                }),
+                col("翻倍段落數", "integer", "episode_n"),
+                col("有出現", "integer", "matched_n"),
+                col("沒出現", "integer", "unmatched_n"),
+                col("無法判斷", "integer", "unknown_n"),
+                col("出現比例", "percent", "coverage_rate"),
+                col(
+                    "下限（無法判斷都算沒出現）",
+                    "percent",
+                    "coverage_lower_bound",
+                ),
+                col(
+                    "上限（無法判斷都算有出現）",
+                    "percent",
+                    "coverage_upper_bound",
+                ),
+            ],
+        },
+        "Q5:0": {
+            title: "附錄：途中走勢分布",
+            downloadLabel: fullDownload,
+            columns: [
+                familyCol("target_pattern_id"),
+                horizonCol,
+                outcomeCol,
+                col("途中走勢", "text", "path_category", {
+                    get: mapped(pathNames, "path_category"),
+                }),
+                col("事件數", "integer", "path_n"),
+                col("股票檔數", "integer", "distinct_stock_n"),
+            ],
+        },
+        "Q5:1": {
+            title: "附錄：追蹤期間的報酬（中位數）",
+            downloadLabel: fullDownload,
+            columns: [
+                familyCol("target_pattern_id"),
+                horizonCol,
+                outcomeCol,
+                col("事件數", "integer", "sample_n"),
+                col("該型態報酬中位數", "percent", "own_return_median"),
+                col(
+                    "同期 0050 報酬中位數",
+                    "percent",
+                    "benchmark_return_median",
+                ),
+                col("同行報酬中位數", "percent", "peer_return_median"),
+            ],
+        },
+        "Q5:2": {
+            title: "附錄：最早出現的轉弱訊號",
+            downloadLabel: fullDownload,
+            columns: [
+                familyCol("target_pattern_id"),
+                horizonCol,
+                outcomeCol,
+                flagCol,
+                col("訊號狀態", "text", "first_state", {
+                    get: mapped(stateNames, "first_state"),
+                }),
+                col("事件數", "integer", "first_n"),
+                col(
+                    "最早出現日（第幾個交易日，中位數）",
+                    "number",
+                    "first_day_median",
+                ),
+            ],
+        },
+        "Q6:0": {
+            title: "附錄：轉弱訊號出現的比例",
+            downloadLabel: fullDownload,
+            columns: [
+                familyCol("target_pattern_id"),
+                horizonCol,
+                flagCol,
+                col("沒翻倍者的樣本數", "integer", "nonhit_known_n"),
+                col("沒翻倍者出現訊號的比例", "percent", "nonhit_known_rate"),
+                col("翻倍者的樣本數", "integer", "hit_cost_known_n"),
+                col(
+                    "翻倍者在翻倍前出現訊號的比例",
+                    "percent",
+                    "hit_cost_known_rate",
+                ),
+            ],
+        },
+        "Q6:1": {
+            title: "附錄：型態出現後第 10 個交易日仍未翻倍者的後續",
+            downloadLabel: fullDownload,
+            columns: [
+                familyCol("target_pattern_id"),
+                horizonCol,
+                flagCol,
+                col("觀察日", "text", "landmark", {
+                    get: (row) =>
+                        numeric(row.landmark) ? `第 ${row.landmark} 日` : null,
+                }),
+                col("訊號", "text", "flag_state", {
+                    get: mapped(stateNames, "flag_state"),
+                }),
+                col("當時價位（對起點）", "text", "return_bin", {
+                    get: mapped(binNames, "return_bin"),
+                }),
+                col("樣本數", "integer", "known_n"),
+                col("最後翻倍比例", "percent", "hit_rate"),
+            ],
+        },
+        "Q6:2": {
+            title: "附錄：訊號的取捨",
+            downloadLabel: fullDownload,
+            columns: [
+                familyCol("target_pattern_id"),
+                horizonCol,
+                flagCol,
+                col("沒翻倍者出現訊號的比例", "percent", "nonhit_trigger_rate"),
+                col(
+                    "翻倍者在翻倍前出現訊號的比例",
+                    "percent",
+                    "hit_before_target_cost",
+                ),
+                col("沒翻倍者樣本數", "integer", "nonhit_population_n"),
+                col("翻倍者樣本數", "integer", "hit_population_n"),
+            ],
+        },
+    };
+    const viewFor = (questionId, index, columns) => {
+        const view = views[`${questionId}:${index}`];
+        if (!view) return null;
+        const keys = new Set(columns.map((column) => column.key));
+        return view.columns.every((column) => keys.has(column.key))
+            ? view
+            : null;
+    };
+
     function node(tag, text, className) {
         const element = document.createElement(tag);
         if (present(text)) element.textContent = String(text);
@@ -71,10 +391,14 @@
         return value;
     }
 
-    function downloadList(target, values, fallback) {
-        const entries = array(values).filter(
-            (item) => item && dataHref(item.href),
-        );
+    function downloadList(target, values, fallback, labelOverride) {
+        const seen = new Set();
+        const entries = array(values).filter((item) => {
+            if (!item || !dataHref(item.href) || seen.has(item.href))
+                return false;
+            seen.add(item.href);
+            return true;
+        });
         if (!entries.length) {
             if (fallback) target.append(node("p", fallback, "rk-foot"));
             return;
@@ -82,7 +406,17 @@
         const ul = node("ul", null, "download-list");
         for (const item of entries) {
             const li = node("li");
-            const a = node("a", item.label || item.href);
+            const extension = /\.csv\.gz$/.test(item.href)
+                ? "CSV.gz"
+                : /\.csv$/.test(item.href)
+                  ? "CSV"
+                  : null;
+            const a = node(
+                "a",
+                labelOverride && extension
+                    ? `${labelOverride}（${extension}）`
+                    : item.label || item.href,
+            );
             a.href = dataHref(item.href);
             a.setAttribute("download", "");
             li.append(a);
@@ -112,9 +446,9 @@
         else if (kind === "number")
             cell.textContent = numberFormat.format(value);
         else if (kind === "percent")
-            cell.textContent = `${numberFormat.format(value * 100)}%`;
+            cell.textContent = `${headlineFormat.format(value * 100)}%`;
         else if (kind === "percentage_points" || kind === "pp")
-            cell.textContent = `${formatPoints(value)} pt`;
+            cell.textContent = `${formatPoints(value)} 百分點`;
         else if (kind === "multiple")
             cell.textContent = `${numberFormat.format(value)}×`;
         else cell.textContent = String(value);
@@ -131,8 +465,8 @@
     }
 
     function formatPoints(value) {
-        if (value > 0) return `+${numberFormat.format(value)}`;
-        if (value < 0) return `−${numberFormat.format(Math.abs(value))}`;
+        if (value > 0) return `+${headlineFormat.format(value)}`;
+        if (value < 0) return `−${headlineFormat.format(Math.abs(value))}`;
         return "0";
     }
 
@@ -143,7 +477,11 @@
             null,
             "rk-card question-table",
         );
-        const title = definition.title || `資料表 ${index + 1}`;
+        const allColumns = array(definition.columns).filter(
+            (column) => column && typeof column.key === "string",
+        );
+        const view = viewFor(questionId, index, allColumns);
+        const title = view?.title || definition.title || `資料表 ${index + 1}`;
         const headingId = `${questionId}-table-${index + 1}`;
         if (collapsible) {
             const summary = node("summary", title, "table-details-summary");
@@ -154,9 +492,7 @@
             heading.id = headingId;
             article.append(heading);
         }
-        const columns = array(definition.columns).filter(
-            (column) => column && typeof column.key === "string",
-        );
+        const columns = view ? view.columns : allColumns;
         const rows = array(definition.rows);
         if (!columns.length || !rows.length) {
             article.append(node("p", "尚未提供表格資料。", "rk-foot"));
@@ -225,7 +561,14 @@
             for (let rowIndex = start; rowIndex < end; rowIndex += 1) {
                 const tr = node("tr");
                 for (const column of columns)
-                    tr.append(tableCell(rows[rowIndex]?.[column.key], column));
+                    tr.append(
+                        tableCell(
+                            column.get
+                                ? column.get(rows[rowIndex] || {})
+                                : rows[rowIndex]?.[column.key],
+                            column,
+                        ),
+                    );
                 fragment.append(tr);
             }
             tbody.replaceChildren(fragment);
@@ -257,7 +600,12 @@
         });
         controls.append(summary, previous, pageLabel, next, sizeLabel);
         article.append(controls);
-        downloadList(article, definition.downloads);
+        downloadList(
+            article,
+            definition.downloads,
+            undefined,
+            view?.downloadLabel,
+        );
         renderRows();
         return article;
     }
@@ -268,37 +616,15 @@
         const scopeElement = byId("family-summary-scope");
         const baselineElement = byId("family-summary-baseline");
         const statusElement = byId("family-summary-status");
-        const fixedScope =
-            "Q1 固定口徑：無額外條件 · split=all · era=all · mkt=all · cohort=union";
         selector.value = "126";
-        scopeElement.textContent = fixedScope;
-
-        const recordedScope = comparison?.scope;
-        if (typeof recordedScope === "string" && recordedScope.trim()) {
-            scopeElement.textContent += ` · 記錄 scope：${recordedScope}`;
-        } else if (
-            recordedScope &&
-            typeof recordedScope === "object" &&
-            !Array.isArray(recordedScope)
-        ) {
-            const details = Object.entries(recordedScope)
-                .map(([key, value]) => {
-                    const text =
-                        value && typeof value === "object"
-                            ? JSON.stringify(value)
-                            : String(value);
-                    return `${key}=${text}`;
-                })
-                .join(" · ");
-            if (details)
-                scopeElement.textContent += ` · 記錄 scope：${details}`;
-        }
+        scopeElement.textContent =
+            "不加額外條件 · 全部股票 · 全部年份 · 全部市場（與問題 2–6 用的另一半股票不是同一批樣本）";
 
         if (!comparison || !Array.isArray(comparison.rows)) {
             statusElement.textContent =
-                "尚未提供跨家族對照摘要；不以空白或零代替資料。";
+                "尚未提供跨型態對照摘要；不以空白或零代替資料。";
             baselineElement.textContent =
-                "C-base-daily 基準：N/A（比較摘要尚未提供）。";
+                "所有合格日的翻倍比例：N/A（比較摘要尚未提供）。";
             return;
         }
 
@@ -328,7 +654,7 @@
                 baseline && Number.isInteger(baseline.known_n)
                     ? baseline.known_n
                     : null;
-            baselineElement.textContent = `H${horizon} 倍數基準：C-base-daily 命中率 ${rateText(baseline?.hit_rate, baselineKnown)}（K=${countText(baselineKnown)}）。`;
+            baselineElement.textContent = `追蹤 ${horizon} 個交易日：所有合格日的翻倍比例 ${rateText(baseline?.hit_rate, baselineKnown)}（樣本 ${countText(baselineKnown)}）。`;
 
             const fragment = document.createDocumentFragment();
             for (const row of rows) {
@@ -349,7 +675,7 @@
                     ),
                     cell(
                         known > 0 && controlKnown > 0 && numeric(row.delta_pp)
-                            ? `${row.delta_pp > 0 ? "+" : row.delta_pp < 0 ? "−" : ""}${headlineFormat.format(Math.abs(row.delta_pp))} pt`
+                            ? `${row.delta_pp > 0 ? "+" : row.delta_pp < 0 ? "−" : ""}${headlineFormat.format(Math.abs(row.delta_pp))} 百分點`
                             : "N/A",
                     ),
                     cell(countText(known)),
@@ -361,8 +687,8 @@
             rowsElement.replaceChildren(fragment);
             statusElement.textContent =
                 rows.length === 12 && familyCount === 12
-                    ? `已列出 H${horizon} 的十二家族資料。`
-                    : `H${horizon} 目前提供 ${intFormat.format(rows.length)} 列／${intFormat.format(familyCount)} 個家族；未提供的家族不推定為零。`;
+                    ? `已列出追蹤 ${horizon} 個交易日的十二種型態。`
+                    : `追蹤 ${horizon} 個交易日目前提供 ${intFormat.format(rows.length)} 列／${intFormat.format(familyCount)} 種型態；未提供的不推定為零。`;
         }
 
         selector.addEventListener("change", renderHorizon);
@@ -383,19 +709,16 @@
         byId("report-title").textContent = report.title;
         document.title = report.title;
     }
-    byId("as-of").textContent =
-        `資料更新時間：${present(report.asOf) ? report.asOf : "未提供"}`;
+    // The cut-off is shown once in the header chips; the sources section explains the gap to the completion date.
+    byId("as-of").textContent = "";
+    byId("as-of").hidden = true;
     if (report.status === "complete") {
         byId("completion-banner").hidden = true;
     }
     const study = report.study || {};
-    const period = array(study.period);
     const meta = [];
-    if (period.length === 2) meta.push(`${period[0]} 至 ${period[1]}`);
     if (numeric(study.stockN))
         meta.push(`${intFormat.format(study.stockN)} 檔股票`);
-    if (array(study.horizons).length)
-        meta.push(`觀察期 ${study.horizons.join("／")} 個交易日`);
     if (present(study.cutoff)) meta.push(`資料截止 ${study.cutoff}`);
     for (const text of meta)
         byId("study-meta").append(node("span", text, "rk-badge"));
@@ -470,7 +793,7 @@
     const provenance = [...array(report.provenance)];
     if (present(study.generation))
         provenance.unshift({
-            label: "價格等價移交世代",
+            label: "價格資料版本",
             value: study.generation,
         });
     for (const item of provenance) {
