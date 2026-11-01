@@ -765,6 +765,81 @@ body {
     font-size: 11px;
     line-height: 1.6;
 }
+.pattern-guide-lead {
+    margin: 0 0 12px;
+    line-height: 1.8;
+}
+.pattern-guide-details {
+    padding: 12px 16px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+}
+.pattern-guide-details > summary {
+    cursor: pointer;
+    font-weight: 600;
+    line-height: 1.7;
+}
+.pattern-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+    gap: 12px;
+    margin-top: 12px;
+}
+.pattern-item {
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface-2);
+}
+.pattern-item h3 {
+    margin: 0 0 6px;
+    font-size: 15px;
+    line-height: 1.4;
+}
+.pattern-item p {
+    font-weight: 400;
+    margin: 6px 0 0;
+    font-size: 13px;
+    line-height: 1.7;
+}
+.pattern-item .pattern-eg {
+    color: var(--muted);
+}
+.pattern-code {
+    margin-right: 6px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    color: var(--accent);
+    background: var(--accent-soft);
+    font-family: var(--font-mono);
+    font-size: 12px;
+}
+.pattern-item .shape {
+    display: block;
+    width: 100%;
+    max-width: 280px;
+    height: auto;
+    margin: 6px 0 2px;
+}
+.shape .ln {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 2;
+    stroke-linejoin: round;
+}
+.shape .lv {
+    stroke: var(--muted);
+    stroke-width: 1;
+    stroke-dasharray: 4 3;
+}
+.shape .hit {
+    fill: var(--gain);
+}
+.shape text {
+    fill: var(--muted);
+    font-size: 10px;
+}
 .research-lineage {
     margin-top: 28px;
 }

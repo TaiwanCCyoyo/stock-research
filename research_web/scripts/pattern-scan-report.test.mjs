@@ -373,7 +373,7 @@ test("the first-screen comparison keeps twelve Q1 families on one scope and swit
     assert.equal(selector.value, "126");
     assert.equal(rows.children.length, 12);
     assert.deepEqual(rowCells(rows.children[0]), [
-        "H1",
+        "頭頭低（H1）",
         "1.25×",
         "+1.25 pt",
         "100",
@@ -402,7 +402,7 @@ test("the first-screen comparison keeps twelve Q1 families on one scope and swit
 
     assert.equal(rows.children.length, 12);
     assert.deepEqual(rowCells(rows.children[0]), [
-        "H1",
+        "頭頭低（H1）",
         "0.75×",
         "−1.25 pt",
         "80",
@@ -454,10 +454,24 @@ test("summary denominators show N/A while real zero counts and rates remain zero
     const rows = page.elements.get("family-summary-rows").children;
     const rowCells = (row) => row.children.map((cell) => cell.textContent);
 
-    assert.deepEqual(rowCells(rows[0]), ["H1", "N/A", "N/A", "0", "0", "N/A"]);
-    assert.deepEqual(rowCells(rows[1]), ["B1", "N/A", "N/A", "9", "0", "N/A"]);
+    assert.deepEqual(rowCells(rows[0]), [
+        "頭頭低（H1）",
+        "N/A",
+        "N/A",
+        "0",
+        "0",
+        "N/A",
+    ]);
+    assert.deepEqual(rowCells(rows[1]), [
+        "杯形突破（B1）",
+        "N/A",
+        "N/A",
+        "9",
+        "0",
+        "N/A",
+    ]);
     assert.deepEqual(rowCells(rows[2]), [
-        "B2",
+        "布林通道收縮後突破（B2）",
         "N/A",
         "0 pt",
         "10",
@@ -536,6 +550,33 @@ test("the overview and evidence disclosure preserve the current completion bound
     assert.doesNotMatch(html, /僅供參考|不要照做|不可外推|不構成策略通過/);
     assert.doesNotMatch(html, /獨立重建稽核尚未完成/);
     assert.match(html, /<details class="evidence-details">/);
+    // Pattern guide: names plus codes, defined before the first question, no bare code legend.
+    assert.ok(
+        html.indexOf('id="pattern-guide"') < html.indexOf('id="questions"'),
+    );
+    assert.doesNotMatch(html, /代號對照/);
+    const guide = html.slice(
+        html.indexOf('id="pattern-guide"'),
+        html.indexOf('id="questions"'),
+    );
+    for (const code of [
+        "H1",
+        "B1",
+        "B2",
+        "B3",
+        "B4",
+        "R1",
+        "R2",
+        "R3",
+        "P1",
+        "L1",
+        "L2",
+        "L3",
+    ])
+        assert.match(guide, new RegExp(`pattern-code">${code}<`));
+    const svgs = guide.match(/<svg[^>]*>/g) ?? [];
+    assert.equal(svgs.length, 3);
+    assert.ok(svgs.every((tag) => /aria-hidden="true"/.test(tag)));
     for (const id of [
         "audit-status",
         "audit-notes",

@@ -22,6 +22,23 @@
         pending: "尚未完成",
     };
 
+    const familyNames = {
+        H1: "頭頭低",
+        B1: "杯形突破",
+        B2: "布林通道收縮後突破",
+        B3: "平台突破",
+        B4: "跳空突破",
+        R1: "跌破區間支撐後收復",
+        R2: "跌深近低的看漲 K 棒",
+        R3: "RSI 背離",
+        P1: "突破後回測",
+        L1: "突破 60 日高點",
+        L2: "近五日回落、收盤仍高於 60 日均線",
+        L3: "跌破 20 日低點後收復",
+    };
+    const familyLabel = (code) =>
+        familyNames[code] ? `${familyNames[code]}（${code}）` : code;
+
     function node(tag, text, className) {
         const element = document.createElement(tag);
         if (present(text)) element.textContent = String(text);
@@ -320,7 +337,7 @@
                 const tr = node("tr");
                 tr.append(
                     cell(
-                        present(row.target) ? row.target : "N/A",
+                        present(row.target) ? familyLabel(row.target) : "N/A",
                         "family-name",
                     ),
                     cell(

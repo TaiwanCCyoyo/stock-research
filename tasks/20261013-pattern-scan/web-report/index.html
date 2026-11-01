@@ -128,7 +128,7 @@
                         <p class="headline-basis">
                             追蹤約一年（252 個交易日）· 共 1,104 組（12 種型態 ×
                             各 92 組事先固定的條件）· 另有 16 組比例相同、131
-                            組無法計算 · 留作交叉檢核的那一半股票 ·
+                            組無法計算 · 依代碼固定分組中的交叉檢核組 ·
                             2010-01-04–2026-10-12
                         </p>
                     </div>
@@ -182,7 +182,9 @@
             </div>
 
             <p class="main-limit">
-                主要限制：型態、條件與結果取自同一段已看過的歷史，交叉檢核的那一半也不是獨立的驗證期；數字是事件之間的關聯，沒有模擬買賣。
+                股票依代碼固定分成兩組：先用開發組選出條件，再把候選組合固定，列出另一組股票的比較結果。兩組都來自已看過的歷史；前十名的展示與後續追蹤，還用到了另一組的一年期排序。因此交叉檢核組不是新的期間或獨立驗證。432、525
+                等數字是 1,104 組各自對照「同條件、沒有該型態」的方向計數，不是
+                1,104 次獨立檢定；數字是事件之間的關聯，沒有模擬買賣。
             </p>
 
             <section
@@ -309,9 +311,325 @@
                 <p class="rk-foot">每題下方可展開比較口徑、原始表格與下載。</p>
             </section>
 
+            <section
+                class="rk-section pattern-guide"
+                id="pattern-guide"
+                aria-labelledby="pattern-guide-title"
+            >
+                <header>
+                    <div>
+                        <span class="rk-q">先認識型態</span>
+                        <h2 id="pattern-guide-title">十二個型態是什麼</h2>
+                    </div>
+                </header>
+                <p class="pattern-guide-lead">
+                    十二種大致分三類：<strong>向上突破</strong>（頭頭低
+                    H1、杯形突破 B1、布林通道收縮後突破 B2、平台突破
+                    B3、跳空突破 B4、突破 60 日高點 L1、突破後回測
+                    P1）、<strong>跌破後收復或反轉</strong>（跌破區間支撐後收復
+                    R1、跌深近低的看漲 K 棒 R2、RSI 背離 R3、跌破 20
+                    日低點後收復
+                    L3）、<strong>上升途中的回檔</strong>（季線上拉回
+                    L2）。下列範例盡量以「型態出現當天收盤 100
+                    元」為起點，價格皆為示意。
+                </p>
+                <details class="pattern-guide-details">
+                    <summary>展開每個型態怎麼判定（含示意圖）</summary>
+                    <div class="pattern-grid">
+                        <article class="pattern-item">
+                            <h3><span class="pattern-code">H1</span>頭頭低</h3>
+                            <svg
+                                viewBox="0 0 240 124"
+                                class="shape"
+                                aria-hidden="true"
+                                focusable="false"
+                            >
+                                <line
+                                    class="lv"
+                                    x1="104"
+                                    y1="46"
+                                    x2="226"
+                                    y2="46"
+                                />
+                                <polyline
+                                    class="ln"
+                                    points="14,62 56,94 104,46 150,70 206,30"
+                                />
+                                <circle class="hit" cx="206" cy="30" r="4" />
+                                <text x="56" y="110" text-anchor="middle">
+                                    前低 84
+                                </text>
+                                <text x="104" y="38" text-anchor="middle">
+                                    高點 96
+                                </text>
+                                <text x="150" y="86" text-anchor="middle">
+                                    回檔低點 90
+                                </text>
+                                <text x="232" y="20" text-anchor="end">
+                                    收盤 100
+                                </text>
+                            </svg>
+                            <p>
+                                股價來回起伏，最近一次回檔的低點沒有比前一個低點更低（持平或更高），隨後收盤站上最近的高點區域，且創
+                                20 日新高、成交量放大。起伏以「從高點回落 1.5
+                                倍平均真實波幅（ATR，近 14
+                                日平均每天的波動幅度）」來辨認。
+                            </p>
+                            <p class="pattern-eg">
+                                例：前低 84 元、反彈高點 96 元、回檔低點 90
+                                元；某天收盤 100 元，高過 96 元，是 20
+                                日新高，量達前 20 日均量的 1.5
+                                倍（漲停日免量）。上方近期有壓力線擋著，或前 20
+                                日平均成交額不到 100
+                                萬元，都不算。價格僅為示意，實際以個股波動幅度換算。
+                            </p>
+                        </article>
+                        <article class="pattern-item">
+                            <h3>
+                                <span class="pattern-code">B1</span
+                                >杯形突破（有柄／無柄）
+                            </h3>
+                            <svg
+                                viewBox="0 0 240 124"
+                                class="shape"
+                                aria-hidden="true"
+                                focusable="false"
+                            >
+                                <line
+                                    class="lv"
+                                    x1="150"
+                                    y1="42"
+                                    x2="226"
+                                    y2="42"
+                                />
+                                <path
+                                    class="ln"
+                                    d="M14 27 C30 110 130 110 150 42 L176 57 L214 37"
+                                />
+                                <circle class="hit" cx="214" cy="37" r="4" />
+                                <text x="14" y="16">杯緣 104</text>
+                                <text x="84" y="118" text-anchor="middle">
+                                    杯底 74
+                                </text>
+                                <text x="176" y="74" text-anchor="middle">
+                                    柄 92–98
+                                </text>
+                                <text x="232" y="20" text-anchor="end">
+                                    收盤 100
+                                </text></svg
+                            ><svg
+                                viewBox="0 0 240 124"
+                                class="shape"
+                                aria-hidden="true"
+                                focusable="false"
+                            >
+                                <line
+                                    class="lv"
+                                    x1="14"
+                                    y1="42"
+                                    x2="226"
+                                    y2="42"
+                                />
+                                <path
+                                    class="ln"
+                                    d="M14 42 C30 118 150 118 214 37"
+                                />
+                                <circle class="hit" cx="214" cy="37" r="4" />
+                                <text x="14" y="34">杯緣 98</text>
+                                <text x="110" y="118" text-anchor="middle">
+                                    杯底 70
+                                </text>
+                                <text x="232" y="20" text-anchor="end">
+                                    收盤 100
+                                </text>
+                            </svg>
+                            <p>
+                                先漲過一段，形成左杯緣，回落成杯底（深
+                                12–35%）再爬回杯緣附近。有柄：杯緣旁再小幅整理
+                                5–15 日；無柄：直接收盤站上左杯緣最高價。
+                            </p>
+                            <p class="pattern-eg">
+                                有柄例：杯緣 104 元、杯底 74 元（深約
+                                29%）；柄的高點 98 元、低點 92 元；收盤 100
+                                元高過柄的高點，量達前 50 日均量 1.4
+                                倍。無柄例：杯緣 98 元、杯底 70 元，收盤 100
+                                元高過杯緣最高價（無柄不另設量能門檻）。杯緣收盤至少是之前
+                                120 日最低收盤的 1.3 倍，杯長 30–250 日。
+                            </p>
+                        </article>
+                        <article class="pattern-item">
+                            <h3>
+                                <span class="pattern-code">B2</span
+                                >布林通道收縮後突破
+                            </h3>
+
+                            <p>
+                                布林通道（20 日均線上下 2 倍標準差）的寬度，近 5
+                                個交易日內曾縮到前 125
+                                日最窄；當天收盤站上通道上緣。B2b
+                                另加量能：成交量達前 20 日均量 1.5 倍。
+                            </p>
+                            <p class="pattern-eg">
+                                例：通道上緣 99 元，收盤 100 元。
+                            </p>
+                        </article>
+                        <article class="pattern-item">
+                            <h3>
+                                <span class="pattern-code">B3</span>平台突破
+                            </h3>
+
+                            <p>
+                                股價在 25–65
+                                個交易日的平台內橫向整理，高低差不超過最高價的
+                                15%，且平台開始前已從低點漲過 25%
+                                以上；某天收盤高過平台最高價，量達前 50 日均量
+                                1.5 倍。子型：量縮（平台最後 10
+                                日均量不超過平台均量的 0.8
+                                倍）、振幅收斂（最後三分之一的振幅小於最前三分之一的
+                                0.6 倍）。
+                            </p>
+                            <p class="pattern-eg">
+                                例：平台最高 99 元、最低 86 元（高低差約
+                                13%）；收盤 100 元站上 99 元。
+                            </p>
+                        </article>
+                        <article class="pattern-item">
+                            <h3>
+                                <span class="pattern-code">B4</span>跳空突破
+                            </h3>
+
+                            <p>
+                                開盤直接跳空越過前一日最高價 2%
+                                以上，全天最低價仍高於前一日最高價（缺口沒補），收盤是前
+                                60 日最高收盤，量達前 20 日均量 2 倍。
+                            </p>
+                            <p class="pattern-eg">
+                                例：前一日最高 96 元；今天開盤 98
+                                元以上、最低價高於 96 元，收盤 100 元。
+                            </p>
+                        </article>
+                        <article class="pattern-item">
+                            <h3>
+                                <span class="pattern-code">R1</span
+                                >跌破區間支撐後收復（含回測確認）
+                            </h3>
+
+                            <p>
+                                前 60 日高低差不超過最低價的
+                                35%，且至少兩次低點碰到支撐（支撐 ×1.03
+                                以內，相隔 10
+                                日以上）；某天收盤跌破支撐、最低價只比支撐低不超過
+                                1.5 倍 ATR，之後 1–5
+                                日內第一次收盤回到支撐上方。R1b：收復後第 3–15
+                                日，收盤第一次回測到支撐 ×1.03
+                                以下（沒有收破破底期間的最低價），再等第一根收盤高於開盤的紅
+                                K。
+                            </p>
+                            <p class="pattern-eg">
+                                例：支撐 98 元；破底日收盤 95 元；兩天後收盤 100
+                                元，收復。
+                            </p>
+                        </article>
+                        <article class="pattern-item">
+                            <h3>
+                                <span class="pattern-code">R2</span
+                                >跌深近低的看漲 K 棒（含次日確認）
+                            </h3>
+
+                            <p>
+                                前一天收盤比 20 日前低 10% 以上且低於 20
+                                日均線，K 線最低價不高於前 60 日最低價的 1.03
+                                倍，當天出現看漲 K
+                                線：吞噬（R2a）、刺透（R2b）、孕線（R2c）或錘子（R2d）。R2e：完成日的隔天收盤高過該
+                                K 線組合的最高價。
+                            </p>
+                            <p class="pattern-eg">
+                                例：20 日前收盤 100 元，前一天收盤 88 元（跌
+                                12%）、低於 20 日均線，當天出現看漲吞噬。
+                            </p>
+                        </article>
+                        <article class="pattern-item">
+                            <h3>
+                                <span class="pattern-code">R3</span>RSI 背離
+                            </h3>
+
+                            <p>
+                                兩個相隔 10–60 日的低點（各是前 5 日到後 3
+                                日內的最低點，第 3
+                                日後才確認），第二個價格更低但 RSI14
+                                更高，且第一個低點的 RSI 在 30
+                                以下。R3a：確認日收盤高過第二低點當天的收盤。R3b：確認後
+                                20 日內，RSI 第一次高過兩低點之間的最高 RSI。
+                            </p>
+                            <p class="pattern-eg">
+                                例：第一低點 80 元（RSI 25），第二低點 76
+                                元（RSI 31），間隔 25 日。
+                            </p>
+                        </article>
+                        <article class="pattern-item">
+                            <h3>
+                                <span class="pattern-code">P1</span>突破後回測
+                            </h3>
+
+                            <p>
+                                先收盤高過前 60 日最高價且量達前 20 日均量 1.5
+                                倍；3–20 日後，收盤第一次回到該價位 ±3%
+                                內，途中沒有收破 −3%；其後 5
+                                日內，第一個收盤高過前一日最高價的日子。
+                            </p>
+                            <p class="pattern-eg">
+                                例：壓力 94 元；突破後回測，收盤落在 91.2–96.8
+                                元；再突破日收盤 100 元。
+                            </p>
+                        </article>
+                        <article class="pattern-item">
+                            <h3>
+                                <span class="pattern-code">L1</span>突破 60
+                                日高點
+                            </h3>
+
+                            <p>收盤高過前 60 日最高價。</p>
+                            <p class="pattern-eg">
+                                例：前 60 日最高價 95 元，收盤 100 元。
+                            </p>
+                        </article>
+                        <article class="pattern-item">
+                            <h3>
+                                <span class="pattern-code">L2</span
+                                >近五日回落、收盤仍高於 60 日均線
+                            </h3>
+
+                            <p>
+                                收盤在 60 日均線之上，且比 5
+                                個交易日前的收盤低（簡稱「季線上拉回」）；不要求剛站上均線、均線上彎，也不要求五天每天都跌。
+                            </p>
+                            <p class="pattern-eg">
+                                例：60 日均線 96 元，收盤 100 元，5 日前收盤 104
+                                元。
+                            </p>
+                        </article>
+                        <article class="pattern-item">
+                            <h3>
+                                <span class="pattern-code">L3</span>跌破 20
+                                日低點後收復
+                            </h3>
+
+                            <p>
+                                某天最低價跌破前 20 日最低價；之後 5
+                                個交易日內，第一個收盤回到原低點上方、且當天沒有再創更低低點的日子。
+                            </p>
+                            <p class="pattern-eg">
+                                例：前 20 日最低價 95 元；某天最低價 92
+                                元；兩天後收盤 100 元，回到 95 元之上。
+                            </p>
+                        </article>
+                    </div>
+                </details>
+            </section>
+
             <div id="questions"></div>
             <details class="reader-family-details">
-                <summary>查看十二種型態的完整對照表（含代號）</summary>
+                <summary>查看十二種型態的完整對照表</summary>
                 <section
                     class="family-summary rk-card"
                     id="family-summary"
@@ -335,11 +653,9 @@
                         </label>
                     </header>
                     <p class="family-summary-codes">
-                        代號對照：H1 頭頭低 · B1 杯形突破（有柄／無柄）· B2
-                        布林通道收縮後突破 · B3 平台突破 · B4 跳空突破 · R1
-                        跌破支撐後收復 · R2 下跌後的反轉 K 線 · R3 RSI 背離 · P1
-                        突破後回測 · L1 突破 60 日高點 · L2 站上 60
-                        日均線後短線回檔 · L3 跌破 20 日低點後收復
+                        各型態怎麼判定，見上方「<a href="#pattern-guide"
+                            >十二個型態是什麼</a
+                        >」。
                     </p>
                     <p class="family-summary-scope" id="family-summary-scope">
                         Q1 無額外條件 · split=all · era=all · mkt=all ·
@@ -376,10 +692,15 @@
                         尚未提供跨型態對照摘要；不以空白或零代替資料。
                     </p>
                     <p class="family-summary-units rk-foot">
-                        C-base-daily、C-base-all
-                        是兩種「不看型態」的全市場基準；× 是型態的翻倍比例除以
-                        C-base-daily（不是投資報酬倍數），Δ 是與 C-base-all
-                        相差的百分點（pt）。K 是計入比例的樣本數；Loss rate
+                        C-base-daily
+                        是所有合格股票日（沒有冷卻，每個合格日期各算一筆）；C-base-all
+                        是合格股票日的間隔取樣（每檔留下一筆後，接下來 20
+                        個交易日不再記，仍包含有型態的日子）。×
+                        是型態的翻倍比例除以 C-base-daily（不是投資報酬倍數），Δ
+                        是型態比例減去 C-base-all
+                        的百分點（pt），兩欄的對照不同。這張表不加篩選條件，用全部股票、全期、全市場；問題
+                        2–6 主要用交叉檢核組，兩者不是同一批樣本。K
+                        是計入比例的樣本數；Loss rate
                         是追蹤期滿仍未翻倍、且最後收盤低於起點的比例。null
                         或零分母顯示 N/A，真實的零照實顯示。
                     </p>
