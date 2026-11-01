@@ -261,6 +261,17 @@
     font-weight: 400;
     margin-top: 4px;
 }
+.fh-rank-holdings {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+.fh-rank-holdings small {
+    font-size: 12px;
+}
 .fh-stock-card {
     position: relative;
     background: var(--accent-soft);
