@@ -13,8 +13,37 @@ import {
     qualityReasonLabel,
     versionLabel,
     compactVersionLabel,
+    symbolDisplayIdentity,
     type SharedSeries,
 } from "./model.ts";
+
+test("known security identity overrides a code-only name only for its own selection", () => {
+    const known = { code: "1240", name: "茂生農經", market: "TPEX" };
+    assert.deepEqual(
+        symbolDisplayIdentity("1240", { code: "1240", name: "1240" }, known),
+        { name: "茂生農經", market: "TPEX" },
+    );
+    assert.deepEqual(
+        symbolDisplayIdentity(
+            "2330",
+            { code: "2330", name: "台積電", market: "TWSE" },
+            known,
+        ),
+        { name: "台積電", market: "TWSE" },
+    );
+    assert.deepEqual(symbolDisplayIdentity("2330", undefined, known), {
+        name: "2330",
+        market: undefined,
+    });
+    assert.equal(
+        symbolDisplayIdentity(
+            "1240",
+            { code: "1240", name: "茂生農經" },
+            { code: "1240", name: "  " },
+        ).name,
+        "茂生農經",
+    );
+});
 
 test("version labels shorten hash tokens while preserving semantic identifiers", () => {
     const hash = "abcdef0123456789".repeat(4);

@@ -44,6 +44,19 @@ export function compactVersionLabel(version: string): string {
     );
 }
 
+export function symbolDisplayIdentity(
+    selected: string,
+    symbol?: { code: string; name?: string | null; market?: string | null },
+    known?: { code?: string; name?: string; market?: string },
+) {
+    const matchingKnown = known?.code === selected ? known : undefined;
+    const matchingSymbol = symbol?.code === selected ? symbol : undefined;
+    return {
+        name: matchingKnown?.name?.trim() || matchingSymbol?.name || selected,
+        market: matchingKnown?.market || matchingSymbol?.market,
+    };
+}
+
 export interface SharedSeries {
     code: string;
     basis: Basis;

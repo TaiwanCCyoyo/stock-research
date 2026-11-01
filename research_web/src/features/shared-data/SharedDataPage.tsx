@@ -6,6 +6,7 @@ import {
     BASIS_LABELS,
     BASIS_EXPLANATIONS,
     qualityReasonLabel,
+    symbolDisplayIdentity,
     resolveSymbolInput,
     formatNumber as fmt,
     formatFeature,
@@ -167,8 +168,11 @@ export function SharedDataPage({
     const current =
         series?.code === selected && series.basis === basis ? series : null;
     const symbol = symbols.find((item) => item.code === selected);
-    const displayName = symbol?.name || knownName || selected;
-    const displayMarket = symbol?.market || knownMarket;
+    const { name: displayName, market: displayMarket } = symbolDisplayIdentity(
+        selected,
+        symbol,
+        { code, name: knownName, market: knownMarket },
+    );
     const Heading = embedded ? "h2" : "h1";
     const StockHeading = embedded ? "h3" : "h2";
     const institutional = useOverlay<InstitutionalRow>(
