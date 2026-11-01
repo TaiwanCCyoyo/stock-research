@@ -44,14 +44,42 @@ Readiness is independent of research success, execution progress and provenance.
 
 ## Proposed delivery: eight PRs total
 
-P0 is [PR #136](https://github.com/TaiwanCCyoyo/stock-research/pull/136), open for
-review. Local hooks and independent document review passed; hosted current-head
-checks and review must be read from the PR. P1-P7 have no PR numbers yet.
+P0 is [PR #136](https://github.com/TaiwanCCyoyo/stock-research/pull/136), merged at
+`f005d8ce`. All eight planned PRs now exist. Current-head checks and review remain
+authoritative on GitHub; implementation and editorial readiness are not owner
+acceptance.
+
+| Slice | Delivery                                                         | Current handoff                                                                |
+| ----- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| P0    | [PR136](https://github.com/TaiwanCCyoyo/stock-research/pull/136) | Merged: decisions and PR rationale requirements                                |
+| P1    | [PR142](https://github.com/TaiwanCCyoyo/stock-research/pull/142) | Reading API, visibility, Markdown and return context; SSR review fix delivered |
+| P2    | [PR139](https://github.com/TaiwanCCyoyo/stock-research/pull/139) | Shell/home; browser focus-loop follow-up delivered                             |
+| P3    | [PR140](https://github.com/TaiwanCCyoyo/stock-research/pull/140) | Data/stock; complete versions available on demand                              |
+| P4    | [PR141](https://github.com/TaiwanCCyoyo/stock-research/pull/141) | Map/ETF/account interactions                                                   |
+| P5    | [PR145](https://github.com/TaiwanCCyoyo/stock-research/pull/145) | 15 reading editions: 12 ready, 3 history pending source contradictions         |
+| P6    | [PR143](https://github.com/TaiwanCCyoyo/stock-research/pull/143) | 17 reading editions, corrected interpretation and explicit period gaps         |
+| P7    | [PR144](https://github.com/TaiwanCCyoyo/stock-research/pull/144) | 20 reading editions including completion-v2 and HHHL corrections               |
+
+P5-P7 depend on P1. They were opened against its branch, but normal CI only runs
+for PRs targeting main. Their delivery base therefore becomes main after bringing
+in the P1 review fix; the parent diff remains visible until P1 merges. Review the
+batch commits separately, and do not merge around the dependency or owner hold.
+All report PRs retain the owner's final reading/acceptance hold.
+
+Content review checked all 52 editions independently against declared sources.
+It corrected a partial signal gate mistaken for overall passage, ambiguous
+contribution denominators and baseline amounts, and clarified later corrections.
+Three early editions remain history (smoke, ranking-horizon, runner-retention);
+they are readable but their unresolved source differences are not a ready result.
+The three original missing-source tasks remain history without reconstruction.
 
 These are delivery identifiers, not GitHub PR numbers. Split further only when a
 slice cannot be reviewed or accepted coherently; update this record with the
-reason and actual count. Do not create all worktrees at once: at most five belong
-to this session, and dependencies can require owner merge before the next slice.
+reason and actual count. The initial budget was five worktrees. This session
+reported a temporary increase to seven before creating the last two batches:
+three UI PRs still needed their review/preview checkouts, P1 needed its reader
+checkout and P6 reused P0's checkout. P5 and P7 needed isolated writers while
+those reviews continued. No unrelated worktree was removed to meet the budget.
 
 | ID  | Proposed PR                                            | Reader-visible result and scope                                                                                                                                                                                                                           | Dependency                                     | State                   |
 | --- | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- | ----------------------- |
@@ -243,6 +271,11 @@ it here after creation. Do not claim all past PRs met this standard: recent PRs
 include both clear problem/solution narratives and change-list-heavy descriptions.
 Do not retroactively rewrite other sessions' or merged PRs as part of this work.
 
-Session-owned checkout: `.worktrees/dashboard-ux-delivery-plan`, branch
-`codex/dashboard-ux-delivery-plan`; retain for P0 review until owner merge and safe
-cleanup. Other inventoried worktrees belong to other sessions and remain untouched.
+Session-owned checkouts retained for their open PRs and previews:
+`report-reading-readiness` (P1), `dashboard-shell-ux` (P2), `dashboard-data-ux`
+(P3), `dashboard-interaction-ux` (P4), `legacy-early-reading` (P5),
+`dashboard-ux-delivery-plan` reused on `codex/legacy-september-reading` (P6),
+and `legacy-october-reading` (P7), all under primary `.worktrees/`.
+No session-owned checkout has been removed; the old P0 branch is retained while
+its checkout serves P6. Other inventoried worktrees remain untouched. Cleanup
+requires verified owner merge and the normal preservation/process/data gates.
