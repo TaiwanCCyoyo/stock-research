@@ -373,7 +373,7 @@ test("the first-screen comparison keeps twelve Q1 families on one scope and swit
     assert.equal(selector.value, "126");
     assert.equal(rows.children.length, 12);
     assert.deepEqual(rowCells(rows.children[0]), [
-        "頭頭低（H1）",
+        "HHHL v4 突破型態（H1）",
         "1.25×",
         "+1.25 pt",
         "100",
@@ -402,7 +402,7 @@ test("the first-screen comparison keeps twelve Q1 families on one scope and swit
 
     assert.equal(rows.children.length, 12);
     assert.deepEqual(rowCells(rows.children[0]), [
-        "頭頭低（H1）",
+        "HHHL v4 突破型態（H1）",
         "0.75×",
         "−1.25 pt",
         "80",
@@ -455,7 +455,7 @@ test("summary denominators show N/A while real zero counts and rates remain zero
     const rowCells = (row) => row.children.map((cell) => cell.textContent);
 
     assert.deepEqual(rowCells(rows[0]), [
-        "頭頭低（H1）",
+        "HHHL v4 突破型態（H1）",
         "N/A",
         "N/A",
         "0",

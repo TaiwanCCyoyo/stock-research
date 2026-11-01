@@ -806,6 +806,21 @@ body {
 .pattern-item .pattern-eg {
     color: var(--muted);
 }
+.pattern-aside {
+    display: block;
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 400;
+}
+.pattern-precise {
+    margin-top: 8px;
+}
+.pattern-precise > summary {
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+}
 .pattern-code {
     margin-right: 6px;
     padding: 1px 6px;
