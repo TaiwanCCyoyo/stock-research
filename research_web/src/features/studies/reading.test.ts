@@ -11,6 +11,48 @@ import {
 } from "./reading.ts";
 import { cardsFromStudies } from "./v2.ts";
 import { filterStudies } from "./model.ts";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { createServer } from "vite";
+
+test("card links name the reading edition separately from its acceptance state", async () => {
+    const server = await createServer({
+        logLevel: "silent",
+        server: { middlewareMode: true, hmr: false },
+    });
+    try {
+        const { StudyCardView } = await server.ssrLoadModule(
+            "/src/features/studies/StudyCardView.tsx",
+        );
+        const original = {
+            ...pendingCard("20260906-five-slot-confirmation", "待整理"),
+            reportHref: readingLink("20260906-five-slot-confirmation"),
+        };
+        for (const [card, label] of [
+            [original, "查看原文"],
+            [
+                withReading(original, { ...record, state: "history" }),
+                "查看閱讀版",
+            ],
+            [withReading(original, record), "讀報告"],
+        ] as const) {
+            const html = renderToStaticMarkup(
+                createElement(StudyCardView, { card }),
+            );
+            const link = html.match(
+                /<a\b[^>]*href="[^"]*view=reading[^"]*"[^>]*>([^<]*)<\/a>/,
+            );
+            assert.ok(link, "the readable document remains reachable");
+            assert.equal(link[1], label);
+            assert.ok(
+                !link[0].includes("aria-label="),
+                "visible link text remains its accessible name",
+            );
+        }
+    } finally {
+        await server.close();
+    }
+});
 
 test("server rendering has a safe default research route without window", () => {
     assert.equal(currentStudyHash(), "");

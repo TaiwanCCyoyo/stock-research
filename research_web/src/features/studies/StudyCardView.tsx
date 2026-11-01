@@ -87,7 +87,9 @@ export function StudyCardView({
                         >
                             {readingState(card) === "ready"
                                 ? "讀報告"
-                                : "查看原文"}
+                                : card.reading?.edition
+                                  ? "查看閱讀版"
+                                  : "查看原文"}
                         </a>
                     )}
                     {card.accountRun && (
