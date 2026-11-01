@@ -10,6 +10,7 @@ import {
     formatSigned,
     featureRows,
     qualityCounts,
+    qualityReasonLabel,
     versionLabel,
     type SharedSeries,
 } from "./model.ts";
@@ -31,6 +32,22 @@ const fixture: SharedSeries = {
     tech: { SMA5: [10.5, 99, null] },
     pivots: [],
 };
+test("compound quality failures remain distinct and untranslated codes are not presented as valid data", () => {
+    assert.equal(
+        qualityReasonLabel("missing_official_quote|invalid_ohlc"),
+        "缺少官方報價；開高低收價格不合理或缺漏",
+    );
+    assert.equal(
+        qualityReasonLabel("duplicate_date|duplicate_date"),
+        "同一日期有重複紀錄",
+    );
+    assert.equal(
+        qualityReasonLabel("future_reason"),
+        "其他資料品質問題（詳見來源）",
+    );
+    assert.equal(qualityReasonLabel(null), "缺少有效開高低收價格");
+    assert.equal(fixture.quality_reason[1], "missing_quote");
+});
 test("invalid quality and missing OHLC stay whitespace even if a numeric price exists", () => {
     assert.deepEqual(candleRows(fixture), [
         { time: "2020-01-01", open: 10, high: 12, low: 9, close: 11 },

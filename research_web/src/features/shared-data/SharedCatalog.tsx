@@ -27,12 +27,12 @@ function CatalogCard({ entries }: { entries: CatalogEntry[] }) {
                         value={entry.version_id}
                         onChange={(event) => setVersion(event.target.value)}
                     >
-                        {entries.map((item, i) => (
+                        {entries.map((item) => (
                             <option
                                 key={item.version_id}
                                 value={item.version_id}
                             >
-                                資料 {i + 1}
+                                {item.version_id}
                                 {item.recommended === true ? " · 建議選用" : ""}
                             </option>
                         ))}
@@ -42,6 +42,11 @@ function CatalogCard({ entries }: { entries: CatalogEntry[] }) {
             <p>
                 {entry.coverage?.raw_input_period?.start ?? "期間未提供"} –{" "}
                 {entry.coverage?.raw_input_period?.end ?? "未提供"}
+            </p>
+            <p className="shared-note shared-catalog-identity">
+                資料集：{entry.data_id}
+                <br />
+                版本：{entry.version_id}
             </p>
             <p>
                 涵蓋股票：

@@ -1,4 +1,40 @@
 export type Basis = "reference_factor_adjusted" | "raw" | "permanent_adjusted";
+export const BASIS_LABELS: Record<Basis, string> = {
+    reference_factor_adjusted: "參考因子還原",
+    raw: "原始價格",
+    permanent_adjusted: "永久還原",
+};
+export const BASIS_EXPLANATIONS: Record<Basis, string> = {
+    reference_factor_adjusted:
+        "依公司事件參考因子還原，包含現金股息；用於本頁技術指標比較，不代表股息再投入或帳戶含息報酬。",
+    raw: "保留來源報價、不做還原；用來查看當時報價，公司事件可能造成價格不連續。",
+    permanent_adjusted:
+        "依分割、除權、減資等永久事件參考因子還原，不還原現金股息；用來比較排除這些事件影響後的價格。",
+};
+const QUALITY_LABELS: Record<string, string> = {
+    missing_official_quote: "缺少官方報價",
+    invalid_ohlc: "開高低收價格不合理或缺漏",
+    duplicate_date: "同一日期有重複紀錄",
+    unsupported_action: "公司事件類型尚未支援",
+    ambiguous_same_day_actions: "同日公司事件的組合尚未釐清",
+    ambiguous_or_missing_action_factor: "公司事件還原因子缺漏或不一致",
+    invalid_adjusted_ohlc: "還原後價格無效",
+    unexplained_raw_jump: "原始價格有無法解釋的大幅跳動",
+    unexplained_adjusted_jump: "還原價格有無法解釋的大幅跳動",
+};
+export function qualityReasonLabel(reason: string | null | undefined): string {
+    if (!reason || reason === "缺少有效 OHLC") return "缺少有效開高低收價格";
+    return [
+        ...new Set(
+            reason
+                .split("|")
+                .map(
+                    (code) =>
+                        QUALITY_LABELS[code] ?? "其他資料品質問題（詳見來源）",
+                ),
+        ),
+    ].join("；");
+}
 export interface SharedSeries {
     code: string;
     basis: Basis;

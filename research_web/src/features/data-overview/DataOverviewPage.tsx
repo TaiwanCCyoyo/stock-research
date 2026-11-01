@@ -6,6 +6,9 @@ import {
     datasetPeriodLabel,
     datasetUpdatedLabel,
     datasetHref,
+    catalogIdentity,
+    catalogGuideHref,
+    assetIndexHref,
     statusLabel,
     validateDataStatus,
     type DataStatus,
@@ -17,10 +20,12 @@ import { StockCoverageList } from "./CoveragePages";
 function useDataStatus() {
     const [data, setData] = useState<DataStatus | null>(null);
     const [error, setError] = useState("");
+    const [loading, setLoading] = useState(true);
     const [retry, setRetry] = useState(0);
     useEffect(() => {
         const control = new AbortController();
         setError("");
+        setLoading(true);
         fetch(apiUrl("/data-status"), {
             signal: control.signal,
             cache: "no-store",
@@ -32,14 +37,19 @@ function useDataStatus() {
                     );
                 return response.json();
             })
-            .then((value) => setData(validateDataStatus(value)))
+            .then((value) => {
+                if (!control.signal.aborted) setData(validateDataStatus(value));
+            })
             .catch((cause: Error) => {
-                if (cause.name !== "AbortError")
+                if (!control.signal.aborted && cause.name !== "AbortError")
                     setError(cause.message || "資料總覽暫時讀不到。");
+            })
+            .finally(() => {
+                if (!control.signal.aborted) setLoading(false);
             });
         return () => control.abort();
     }, [retry]);
-    return { data, error, retry: () => setRetry((n) => n + 1) };
+    return { data, error, loading, retry: () => setRetry((n) => n + 1) };
 }
 
 export function DataOverviewPage({ stocks = false }: { stocks?: boolean }) {
@@ -68,14 +78,39 @@ export function DataOverviewPage({ stocks = false }: { stocks?: boolean }) {
             ) : (
                 <div>
                     <div className="u-eyebrow">資料總覽</div>
-                    <h1 className="u-title">這台電腦上有哪些資料。</h1>
+                    <h1 className="u-title">資料集總覽</h1>
                     <p className="u-lede">
                         每份資料涵蓋的期間、最近更新時間與狀態。
+                    </p>
+                    <p className="u-muted">
+                        代號數依各資料集的收錄範圍計算，可能包含
+                        ETF、歷史證券或不同身分時段，不等於目前上市普通股家數。
                     </p>
                     {status.data?.status === "updating" && (
                         <p className="u-notice do-banner">
                             每日資料正在更新，部分數字可能稍後才會變動。
                         </p>
+                    )}
+                    {status.data && status.loading && (
+                        <p className="u-notice" role="status">
+                            正在重新讀取；以下保留上次成功讀取的結果。
+                        </p>
+                    )}
+                    {status.data && status.error && (
+                        <div className="u-notice" role="alert">
+                            <p>
+                                {status.error}{" "}
+                                以下保留上次成功讀取的結果，尚未確認目前狀態。
+                            </p>
+                            {groups.length > 0 && (
+                                <button
+                                    className="u-btn"
+                                    onClick={status.retry}
+                                >
+                                    重新讀取
+                                </button>
+                            )}
+                        </div>
                     )}
                     {!status.data ? (
                         status.error ? (
@@ -91,6 +126,17 @@ export function DataOverviewPage({ stocks = false }: { stocks?: boolean }) {
                         ) : (
                             <p className="u-skeleton">正在讀取資料總覽…</p>
                         )
+                    ) : groups.length === 0 ? (
+                        <div className="u-card do-state" role="status">
+                            <p>上次成功讀取時沒有已登錄的資料集。</p>
+                            <button
+                                className="u-btn"
+                                onClick={status.retry}
+                                disabled={status.loading}
+                            >
+                                {status.loading ? "正在重新讀取…" : "重新讀取"}
+                            </button>
+                        </div>
                     ) : (
                         groups.map((group) => (
                             <section key={group.source}>
@@ -118,6 +164,26 @@ export function DataOverviewPage({ stocks = false }: { stocks?: boolean }) {
                                                     </InfoTip>
                                                 </span>
                                             </div>
+                                            {catalogIdentity(item) && (
+                                                <div className="do-identity">
+                                                    <span>
+                                                        資料集：
+                                                        {
+                                                            catalogIdentity(
+                                                                item,
+                                                            )!.dataId
+                                                        }
+                                                    </span>
+                                                    <span>
+                                                        版本：
+                                                        {
+                                                            catalogIdentity(
+                                                                item,
+                                                            )!.version
+                                                        }
+                                                    </span>
+                                                </div>
+                                            )}
                                             <p className="do-period">
                                                 {datasetPeriodLabel(item)}
                                             </p>
@@ -127,7 +193,7 @@ export function DataOverviewPage({ stocks = false }: { stocks?: boolean }) {
                                                     <dd>
                                                         {countLabel(
                                                             item.symbols,
-                                                            "檔",
+                                                            "個",
                                                         )}
                                                     </dd>
                                                 </div>
@@ -153,9 +219,25 @@ export function DataOverviewPage({ stocks = false }: { stocks?: boolean }) {
                                                 </a>
                                             )}
                                             {item.source === "catalog" && (
-                                                <InfoTip>
-                                                    固定研究資料保留原版本；取得方式請由來源研究與正式資料目錄查詢。
-                                                </InfoTip>
+                                                <div className="do-source-links">
+                                                    <a
+                                                        href={catalogGuideHref}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                    >
+                                                        資料目錄取用說明 ↗
+                                                    </a>
+                                                    <a
+                                                        href={assetIndexHref}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                    >
+                                                        來源研究與資料契約索引 ↗
+                                                    </a>
+                                                    <p className="u-muted do-note">
+                                                        以本卡的資料集與版本識別查找；固定版本不隨每日資料更新。
+                                                    </p>
+                                                </div>
                                             )}
                                         </article>
                                     ))}
