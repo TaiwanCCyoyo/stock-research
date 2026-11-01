@@ -609,10 +609,20 @@
                 "tests/test_dashboard_task_index.py",
                 "tests/test_dashboard_presentation.py",
                 "tests/test_research_api.py",
-                "tests/test_research_api_security.py"
+                "tests/test_research_api_security.py",
+                "scripts/tests/test_direction_drafts.py"
             ],
             "consumers": ["task_records"],
             "frontend": true
+        },
+        "direction_drafts": {
+            "paths": [
+                "tasks/*/direction-draft.md",
+                "docs/en/direction-drafts.md",
+                "docs/en/templates/direction-draft.md",
+                "docs/en/examples/direction-draft-*.md"
+            ],
+            "tests": ["scripts/tests/test_direction_drafts.py"]
         },
         "scratch_card_consumer": {
             "paths": ["research_core/scratch_runs.py"],
@@ -660,6 +670,7 @@
         "scripts/tests/test_derived_features_chunk_v2.py",
         "scripts/tests/test_derived_features_selective_v1.py",
         "scripts/tests/test_desktop_launch_feedback.py",
+        "scripts/tests/test_direction_drafts.py",
         "scripts/tests/test_entry_window_bootstrap_v1.py",
         "scripts/tests/test_entry_window_inputs_v1.py",
         "scripts/tests/test_entry_window_v1.py",
