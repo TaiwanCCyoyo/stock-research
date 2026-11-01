@@ -91,6 +91,8 @@
   `record_momentum_forward_day --scheduled --workers 4`。它等到共用世代的 as-of 等於當天且 producer 閒置才記錄，
   最多等 12 小時且不超過隔日 09:00，判定準時用執行完成時的時間；等不到（含休市，世代日曆不是交易所行事曆，所以不從舊世代推論休市）
   就寫一行 `not_recorded`，附最後看到的世代與缺漏日。每次執行恰好一行紀錄，讀不到世代也記 `failed`。
+  `momentum-forward.log` 結尾有 `exiting record_momentum_forward_day ... exit_code=N`，收到 Ctrl-C／終止訊號時另有 `received signal`；
+  工作排程的結果碼（例如 0xC000013A）與它不一致時，以 `attempts.jsonl` 與這兩行為準。
   程式乾淨判定忽略 `stock-data-downloader` 子模組指標（前瞻紀錄不執行子模組程式）；`forward-log/` 已不在 checkout 內；
   不乾淨時寫一行 `refused` 後結束。紀錄寫到
   `D:/StockData/stock-research/logs/momentum-forward.log`。

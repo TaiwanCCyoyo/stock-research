@@ -270,3 +270,28 @@ def test_missing_days_follow_the_cohort_window(tmp_path: Path) -> None:
     (root / "cohort.json").write_text(json.dumps({"confirmatory_start": "2026-10-23", "confirmatory_end": "2027-10-22"}), encoding="utf-8")
     entry = forward.missing_entry(root, status)
     assert entry == {"confirmatory_window": ["2026-10-23", "2027-10-22"], "missing_confirmatory_days": ["2026-10-26", "2027-10-22"]}
+
+
+def test_run_logs_exit_code_and_names_stop_signal(monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture) -> None:
+    import signal
+
+    from scripts import record_momentum_forward_day as script
+
+    handlers: dict[int, Any] = {}
+    monkeypatch.setattr(script.signal, "signal", lambda number, handler: handlers.__setitem__(number, handler))
+    caplog.set_level("INFO")
+
+    monkeypatch.setattr(script, "main", lambda: None)
+    assert script.run() == 0
+    assert "exit_code=0" in caplog.text
+
+    monkeypatch.setattr(script, "main", lambda: (_ for _ in ()).throw(SystemExit("producer busy")))
+    assert script.run() == 1
+    assert "producer busy" in caplog.text and "exit_code=1" in caplog.text
+
+    def interrupted() -> None:
+        handlers[signal.SIGINT](signal.SIGINT, None)
+
+    monkeypatch.setattr(script, "main", interrupted)
+    assert script.run() == 130
+    assert "received signal SIGINT" in caplog.text
