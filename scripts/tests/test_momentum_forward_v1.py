@@ -237,24 +237,21 @@ def test_a_failed_record_leaves_one_line_not_two(tmp_path: Path, fake_generation
     assert [line["outcome"] for line in forward.read_attempts(tmp_path)] == ["failed"]
 
 
-def test_a_tracked_ledger_may_grow_but_code_changes_stay_dirty(tmp_path: Path) -> None:
+def test_untracked_files_are_ignored_and_code_changes_stay_dirty(tmp_path: Path) -> None:
     import subprocess
 
-    from scripts.record_momentum_forward_day import OUTPUT_PATHSPEC, _code_identity
+    from scripts.record_momentum_forward_day import _code_identity
 
     def git(*arguments: str) -> None:
         subprocess.run(["git", "-C", str(tmp_path), *arguments], check=True, capture_output=True)
 
-    ledger = tmp_path / OUTPUT_PATHSPEC / "attempts.jsonl"
-    ledger.parent.mkdir(parents=True)
-    ledger.write_text("{}\n", encoding="utf-8")
+    stray = tmp_path / "forward-log-copy.jsonl"
     (tmp_path / "code.py").write_text("x = 1\n", encoding="utf-8")
     git("init", "-q")
     git("add", ".")
     git("-c", "user.name=t", "-c", "user.email=t@example.invalid", "commit", "-q", "-m", "init")
     assert _code_identity(tmp_path)["dirty"] is False
-    with ledger.open("a", encoding="utf-8") as stream:
-        stream.write("{}\n")
+    stray.write_text("{}" + chr(10), encoding="utf-8")  # untracked output never counts as code
     assert _code_identity(tmp_path)["dirty"] is False
     (tmp_path / "code.py").write_text("x = 2\n", encoding="utf-8")
     assert _code_identity(tmp_path)["dirty"] is True

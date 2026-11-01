@@ -33,6 +33,7 @@ if __package__ in {None, ""}:
 
 from research_core.artifact_store import release_os_lock, try_os_lock
 from research_core.dashboard_identity import ROOT_KEYS, dashboard_identity
+from research_core.desktop_launch_feedback import CANCELLED_EXIT_CODE, LaunchCancellation, LaunchCancelled, LaunchFeedback, record_failure, run_desktop_launch
 from research_core.producer_data import primary_checkout, read_env_file_value
 from research_core.saved_research_studio import StudioError, read_studio_package
 
@@ -55,9 +56,11 @@ FIRST_HEARTBEAT_SECONDS = 300.0
 
 
 @contextmanager
-def _startup_lock(root: Path, api_port: int, web_port: int) -> Iterator[None]:
+def _startup_lock(root: Path, api_port: int, web_port: int, cancellation: LaunchCancellation | None = None) -> Iterator[None]:
     """Serialize inspection/build/startup, including launches from the console."""
     directory = root / ".tmp" / "research-web-launcher"
+    if cancellation is not None:
+        cancellation.check()
     directory.mkdir(parents=True, exist_ok=True)
     with (directory / f"startup-{api_port}-{web_port}.lock").open("a+b") as handle:
         if handle.tell() == 0:
@@ -65,10 +68,14 @@ def _startup_lock(root: Path, api_port: int, web_port: int) -> Iterator[None]:
             handle.flush()
         deadline = time.monotonic() + BUILD_TIMEOUT_SECONDS + 2 * STARTUP_TIMEOUT_SECONDS + 30
         while not try_os_lock(handle):
+            if cancellation is not None:
+                cancellation.check()
             if time.monotonic() >= deadline:
                 raise RuntimeError("另一個啟動器仍在啟動，請稍後再試。")
             time.sleep(POLL_INTERVAL_SECONDS)
         try:
+            if cancellation is not None:
+                cancellation.check()
             yield
         finally:
             release_os_lock(handle)
@@ -167,7 +174,9 @@ def _verify_live_mode(name: str, port: int, environment: dict[str, str]) -> None
 
 def _announce(message: str) -> None:
     """Write deliberate CLI status, independently of the persistent log."""
-    sys.stdout.write(message + "\n")
+    if sys.stdout is not None:
+        sys.stdout.write(message + "\n")
+    LOGGER.info(message)
 
 
 @dataclass
@@ -306,13 +315,17 @@ def _remove_abandoned_stages(web_root: Path, *, tag: str) -> None:
             LOGGER.exception("無法移除中斷建置的暫存目錄 %s", stage)
 
 
-def _release_is_current(root: Path, environment: dict[str, str]) -> bool:
+def _release_is_current(root: Path, environment: dict[str, str], cancellation: LaunchCancellation | None = None) -> bool:
     """Ask the build script, without building, whether dist is current."""
+    if cancellation is not None:
+        cancellation.check()
     node = shutil.which("node")
     if node is None:
         return True
+    process: subprocess.Popen[bytes] | None = None
     try:
-        result = subprocess.run(
+        deadline = time.monotonic() + 60
+        process = subprocess.Popen(
             [node, str(root / "research_web" / "scripts" / "build-dashboard.mjs"), "--check"],
             cwd=root,
             env=environment,
@@ -320,20 +333,35 @@ def _release_is_current(root: Path, environment: dict[str, str]) -> bool:
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
-            timeout=60,
-            check=False,
+            start_new_session=os.name != "nt",
         )
+        while True:
+            if cancellation is not None:
+                cancellation.check()
+            exit_code = process.poll()
+            if exit_code is not None:
+                if cancellation is not None:
+                    cancellation.check()
+                return exit_code == 0
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise subprocess.TimeoutExpired(process.args, 60)
+            time.sleep(min(POLL_INTERVAL_SECONDS, remaining))
     except (OSError, subprocess.TimeoutExpired):
         LOGGER.exception("無法確認網站版本")
         return True
-    return result.returncode == 0
+    finally:
+        if process is not None and process.poll() is None:
+            _kill_tree(process)
 
 
-def _build_website(root: Path, log_dir: Path, environment: dict[str, str]) -> str:
+def _build_website(root: Path, log_dir: Path, environment: dict[str, str], cancellation: LaunchCancellation | None = None) -> str:
     """Build the production website if its sources or data mode changed.
 
     Returns "built" or "current". The build script keeps the previous release
     when a build fails."""
+    if cancellation is not None:
+        cancellation.check()
     npm = shutil.which("npm.cmd" if os.name == "nt" else "npm")
     if npm is None:
         raise RuntimeError("找不到 npm；請先安裝 Node.js 與研究網站相依套件。")
@@ -354,7 +382,21 @@ def _build_website(root: Path, log_dir: Path, environment: dict[str, str]) -> st
         start_new_session=os.name != "nt",
     )
     try:
-        stdout, _ = process.communicate(timeout=BUILD_TIMEOUT_SECONDS)
+        if cancellation is None:
+            stdout, _ = process.communicate(timeout=BUILD_TIMEOUT_SECONDS)
+        else:
+            deadline = started + BUILD_TIMEOUT_SECONDS
+            while True:
+                cancellation.check()
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise subprocess.TimeoutExpired(process.args, BUILD_TIMEOUT_SECONDS)
+                try:
+                    stdout, _ = process.communicate(timeout=min(POLL_INTERVAL_SECONDS, remaining))
+                    cancellation.check()
+                    break
+                except subprocess.TimeoutExpired:
+                    continue
     except BaseException as exc:
         # Timeout, Ctrl+C or any other interruption: stop and wait for the
         # whole build tree and drop its stage before returning, so nothing can
@@ -364,7 +406,12 @@ def _build_website(root: Path, log_dir: Path, environment: dict[str, str]) -> st
         _remove_abandoned_stages(root / "research_web", tag=tag)
         with log_path.open("ab") as log_file:
             log_file.write(stdout or b"")
-        LOGGER.error("網站建置中斷（%s），已停止整個建置程序樹，pid=%s", type(exc).__name__, process.pid)
+        LOGGER.log(
+            logging.INFO if isinstance(exc, LaunchCancelled) else logging.ERROR,
+            "網站建置中斷（%s），已停止整個建置程序樹，pid=%s",
+            type(exc).__name__,
+            process.pid,
+        )
         if isinstance(exc, subprocess.TimeoutExpired):
             raise RuntimeError("建置網站逾時，已停止建置；先前的版本保留不動，詳見 .tmp/research-web-launcher/build.log。") from exc
         raise
@@ -432,9 +479,11 @@ def _stop_child(child: ManagedChild) -> None:
     LOGGER.info("已停止本次啟動的 %s", child.name)
 
 
-def _wait_until_ready(child: ManagedChild, port: int, root: Path) -> None:
+def _wait_until_ready(child: ManagedChild, port: int, root: Path, cancellation: LaunchCancellation | None = None) -> None:
     deadline = time.monotonic() + STARTUP_TIMEOUT_SECONDS
     while time.monotonic() < deadline:
+        if cancellation is not None:
+            cancellation.check()
         exit_code = child.process.poll()
         if exit_code is not None:
             raise RuntimeError(f"{child.name} 啟動失敗（結束碼 {exit_code}）；詳見 .tmp/research-web-launcher/{child.name}.log。")
@@ -462,11 +511,27 @@ def _configure_logging(root: Path) -> Path:
     return log_dir
 
 
-def run(*, no_browser: bool = False, check: bool = False, api_port: int = 8517, web_port: int = 5177, dev: bool = False, desktop: bool = False) -> int:
+def run(
+    *,
+    no_browser: bool = False,
+    check: bool = False,
+    api_port: int = 8517,
+    web_port: int = 5177,
+    dev: bool = False,
+    desktop: bool = False,
+    feedback: LaunchFeedback | None = None,
+) -> int:
     root = project_root()
+    cancellation = feedback.cancellation if feedback is not None else None
+    if cancellation is not None:
+        cancellation.check()
     if api_port == web_port or not all(1 <= port <= 65535 for port in (api_port, web_port)):
         raise RuntimeError("API 與網站 port 必須不同，且介於 1–65535。")
+    if feedback is not None:
+        feedback.status("1 / 4　正在確認資料設定…")
     environment = launch_environment(root, dict(os.environ))
+    if cancellation is not None:
+        cancellation.check()
     environment["RESEARCH_WEB_API_TARGET"] = f"http://127.0.0.1:{api_port}"
     # The API points visitors of its own port to the real website.
     environment["RESEARCH_WEB_URL"] = f"http://127.0.0.1:{web_port}"
@@ -482,13 +547,28 @@ def run(*, no_browser: bool = False, check: bool = False, api_port: int = 8517, 
     )
     with ExitStack() as startup:
         if not check:
-            startup.enter_context(_startup_lock(root, api_port, web_port))
-        return _run_services(root, environment, startup, no_browser=no_browser, check=check, api_port=api_port, web_port=web_port, dev=dev, desktop=desktop)
+            if feedback is not None:
+                feedback.status("2 / 4　正在準備網站；若已有啟動作業，會稍候接續…")
+            startup.enter_context(_startup_lock(root, api_port, web_port, cancellation))
+        return _run_services(
+            root, environment, startup, no_browser=no_browser, check=check, api_port=api_port, web_port=web_port, dev=dev, desktop=desktop, feedback=feedback
+        )
 
 
 def _run_services(
-    root: Path, environment: dict[str, str], startup: ExitStack, *, no_browser: bool, check: bool, api_port: int, web_port: int, dev: bool, desktop: bool
+    root: Path,
+    environment: dict[str, str],
+    startup: ExitStack,
+    *,
+    no_browser: bool,
+    check: bool,
+    api_port: int,
+    web_port: int,
+    dev: bool,
+    desktop: bool,
+    feedback: LaunchFeedback | None = None,
 ) -> int:
+    cancellation = feedback.cancellation if feedback is not None else None
     services = (("history-api", api_port), ("research-web", web_port))
     try:
         states = {name: _inspect_service(name, port, root) for name, port in services}
@@ -506,22 +586,35 @@ def _run_services(
     log_dir = _configure_logging(root)
     children: list[ManagedChild] = []
     try:
+        if cancellation is not None:
+            cancellation.check()
         if not dev and states["research-web"] == "reusable":
             # Never replace the release a running preview is serving.
-            if not _release_is_current(root, environment):
+            current = _release_is_current(root, environment, cancellation) if cancellation is not None else _release_is_current(root, environment)
+            if not current:
                 _announce("提醒：執行中的網站不是最新版本；啟動器不會在它執行時更新，請自行關閉後再執行一次。")
         elif not dev:
+            if feedback is not None:
+                feedback.status("2 / 4　正在更新網站，程式有變動時可能需要半分鐘…")
             _announce("正在確認網站是否需要重新建置（程式有變動時約需半分鐘）…")
-            built = _build_website(root, log_dir, environment)
+            built = _build_website(root, log_dir, environment, cancellation) if cancellation is not None else _build_website(root, log_dir, environment)
             _announce("網站已重新建置" if built == "built" else "網站已是最新版本")
         for name, port in services:
+            if cancellation is not None:
+                cancellation.check()
+            if feedback is not None:
+                label = "資料服務" if name == "history-api" else "網站"
+                feedback.status(f"3 / 4　正在確認{label}可用…")
             if states[name] == "reusable":
                 _announce(f"沿用現有 {name}（{port}）")
                 continue
             _announce(f"正在啟動 {name}（{port}）…")
             child = _start_child(name, root, log_dir, environment, port, dev)
             children.append(child)
-            _wait_until_ready(child, port, root)
+            if cancellation is None:
+                _wait_until_ready(child, port, root)
+            else:
+                _wait_until_ready(child, port, root, cancellation)
             _verify_live_mode(name, port, environment)
             _announce(f"{name} 已就緒")
         _announce(f"研究網站已就緒：http://127.0.0.1:{web_port}")
@@ -535,11 +628,23 @@ def _run_services(
             with urllib.request.urlopen(request, timeout=3) as response:
                 response.read()
         startup.close()
+        if cancellation is not None:
+            cancellation.check()
         if not no_browser:
+            if feedback is not None:
+                feedback.status("4 / 4　正在開啟瀏覽器…")
+            if cancellation is not None:
+                cancellation.check()
             if not webbrowser.open(f"http://127.0.0.1:{web_port}"):
                 raise RuntimeError("無法開啟預設瀏覽器。")
+            if cancellation is not None:
+                cancellation.check()
+            if feedback is not None:
+                feedback.ready()
         heartbeat_failure_since: float | None = None
         while children:
+            if cancellation is not None:
+                cancellation.check()
             failed_child = next(
                 (child for child in children if child.process.poll() is not None),
                 None,
@@ -553,7 +658,7 @@ def _run_services(
                     if _desktop_idle(api_port, started, activity):
                         # Recheck under the startup lock: a concurrent click may
                         # have refreshed activity before we acquired it.
-                        with _startup_lock(root, api_port, web_port):
+                        with _startup_lock(root, api_port, web_port, cancellation):
                             if _desktop_idle(api_port, started, activity):
                                 LOGGER.info("桌面分頁心跳已停止，僅清理本次啟動的服務")
                                 for child in reversed(children):
@@ -572,12 +677,18 @@ def _run_services(
                         raise RuntimeError("心跳查詢持續失敗超過 180 秒，停止本次服務。") from exc
             time.sleep(5 if desktop else 0.5)
         return 0
+    except LaunchCancelled:
+        LOGGER.info("使用者已取消啟動，正在停止本次啟動的服務")
+        raise
     except KeyboardInterrupt:
         _announce("收到 Ctrl+C，正在停止本次啟動的服務…")
         return 130
     except (OSError, RuntimeError) as exc:
-        sys.stderr.write(f"啟動失敗：{exc}\n")
+        if sys.stderr is not None:
+            sys.stderr.write(f"啟動失敗：{exc}\n")
         LOGGER.exception("啟動研究網站失敗")
+        if feedback is not None:
+            feedback.failed(str(exc))
         return 1
     finally:
         for child in reversed(children):
@@ -591,21 +702,51 @@ def main() -> int:
         if isinstance(stream, io.TextIOWrapper):
             stream.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(description="啟動研究網站與歷史 API")
-    parser.add_argument("--desktop", action="store_true", help="隱藏桌面啟動；所有分頁停止心跳 180 秒後清理本次服務")
+    parser.add_argument("--desktop", action="store_true", help="顯示桌面啟動進度；所有分頁停止心跳 180 秒後清理本次服務")
     parser.add_argument("--no-browser", action="store_true", help="啟動後不開啟瀏覽器")
     parser.add_argument("--check", action="store_true", help="只檢查兩個服務身份與可用狀態")
     parser.add_argument("--api-port", type=int, default=8517, help="API port")
     parser.add_argument("--web-port", type=int, default=5177, help="網站 port")
     parser.add_argument("--dev", action="store_true", help="改用開發模式（即時重新載入，但動畫較慢）")
     args = parser.parse_args()
-    if args.desktop:
-        log_dir = _configure_logging(project_root())
-        output = (log_dir / "desktop-launcher.log").open("a", encoding="utf-8", buffering=1)
-        sys.stdout = sys.stderr = output
+    log_path = project_root() / ".tmp" / "research-web-launcher" / "desktop-launcher.log"
+    if args.desktop and not args.check and not args.no_browser:
+        return run_desktop_launch(lambda feedback: _execute(args, log_path, feedback), log_path)
+    return _execute(args, log_path)
+
+
+def _execute(args: argparse.Namespace, log_path: Path, feedback: LaunchFeedback | None = None) -> int:
+    previous_streams = sys.stdout, sys.stderr
     try:
-        return run(desktop=args.desktop, no_browser=args.no_browser, check=args.check, api_port=args.api_port, web_port=args.web_port, dev=args.dev)
-    except (RuntimeError, ValueError, OSError) as exc:
-        sys.stderr.write(f"啟動失敗：{exc}\n")
+        with ExitStack() as capture:
+            if args.desktop:
+                _configure_logging(project_root())
+                output = capture.enter_context(log_path.open("a", encoding="utf-8", buffering=1))
+                sys.stdout = sys.stderr = output
+            try:
+                return run(
+                    desktop=args.desktop,
+                    no_browser=args.no_browser,
+                    check=args.check,
+                    api_port=args.api_port,
+                    web_port=args.web_port,
+                    dev=args.dev,
+                    feedback=feedback,
+                )
+            finally:
+                sys.stdout, sys.stderr = previous_streams
+    except LaunchCancelled:
+        LOGGER.info("使用者已取消啟動，本次服務已清理")
+        return CANCELLED_EXIT_CODE
+    except Exception as exc:
+        message = f"啟動失敗：{exc}"
+        LOGGER.exception("啟動研究網站失敗")
+        if args.desktop:
+            message = record_failure(log_path, message)
+        if sys.stderr is not None:
+            sys.stderr.write(message + "\n")
+        if feedback is not None:
+            feedback.failed(message)
         return 1
 
 

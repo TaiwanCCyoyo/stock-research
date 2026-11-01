@@ -123,9 +123,21 @@ def event_flags(
     t0 = _index(t0, "t0")
     if t0 >= len(frame):
         raise ValueError("t0 must be within the common calendar")
+    support, lower, confirmed_support = (_level(value) for value in (support, lower, confirmed_support))
+    return _flags_from_records(frame, _pivots(frame, pivots), t0, support=support, lower=lower, confirmed_support=confirmed_support)
+
+
+def _flags_from_records(
+    frame: pd.DataFrame,
+    records: tuple[_Pivot, ...],
+    t0: int,
+    *,
+    support: float | None = None,
+    lower: float | None = None,
+    confirmed_support: float | None = None,
+) -> pd.DataFrame:
     supplied_confirmed_support = confirmed_support is not None
     support, lower, confirmed_support = (_level(value) for value in (support, lower, confirmed_support))
-    records = _pivots(frame, pivots)
     close = frame["Close"].to_numpy(dtype=float, na_value=np.nan)
     anchor = float(close[t0])
     eligible_lows = [pivot for pivot in records if pivot.kind == "low" and pivot.confirmed <= t0 and _valid(anchor) and pivot.price < anchor]
@@ -219,7 +231,15 @@ def event_flag_observations(
         raise ValueError("pivots require the public confirmed-pivot schema")
     bounded_pivots = pivots.loc[pivots["confirmation_index"] < stop]
     flags = event_flags(bounded, bounded_pivots, t0, support=support, lower=lower, confirmed_support=confirmed_support)
-    closes = bounded["Close"].to_numpy(dtype=float, na_value=np.nan)[t0:].tolist()
+    return _observations_from_flags(flags, bounded["Close"].to_numpy(dtype=float, na_value=np.nan)[t0:].tolist(), horizon_values, landmark_values)
+
+
+def _observations_from_flags(
+    flags: pd.DataFrame,
+    closes: list[float],
+    horizon_values: tuple[int, ...],
+    landmark_values: tuple[int, ...],
+) -> pd.DataFrame:
     vectors: dict[str, list[bool | None]] = {flag: [None, *[None if pd.isna(value) else bool(value) for value in flags[flag]]] for flag in FLAG_IDS}
     records: list[dict[str, Any]] = []
     for horizon in horizon_values:
@@ -259,3 +279,37 @@ def event_flag_observations(
                     "outcome_unknown_reason": outcome.reason,
                 })
     return pd.DataFrame(records)
+
+
+class _FollowupFlagPlan:
+    """Per-call plan for followup's already validated, immutable stock frame.
+
+    Parse newly visible pivots only when an event extends the observed prefix.
+    Future pivots are not validated early. A later shorter horizon uses a filtered
+    prefix, so preparation order cannot introduce future confirmations.
+    """
+
+    def __init__(self, frame: pd.DataFrame, pivots: pd.DataFrame) -> None:
+        self.frame = frame
+        self.pivots = pivots
+        self.stop = 0
+        self.records: tuple[_Pivot, ...] = ()
+
+    def daily(self, t0: int, stop: int, **levels: float | None) -> pd.DataFrame:
+        bounded = self.frame.iloc[:stop]
+        # Preserve the original level rejection before pivot validation.
+        for value in levels.values():
+            _level(value)
+        if stop > self.stop:
+            visible = self.pivots.loc[self.pivots["confirmation_index"].lt(stop)]
+            if self.stop:
+                visible = visible.loc[visible["confirmation_index"].ge(self.stop)]
+            added = _pivots(bounded, visible)
+            self.records = tuple(sorted((*self.records, *added), key=lambda pivot: (pivot.confirmed, pivot.extreme, pivot.kind)))
+            self.stop = stop
+        records = tuple(pivot for pivot in self.records if pivot.confirmed < stop)
+        return _flags_from_records(bounded, records, t0, **levels)
+
+    def observations(self, daily: pd.DataFrame, t0: int, stop: int, horizon: int, landmarks: tuple[int, ...]) -> pd.DataFrame:
+        closes = self.frame["Close"].iloc[t0:stop].to_numpy(dtype=float, na_value=np.nan).tolist()
+        return _observations_from_flags(daily, closes, (horizon,), landmarks)

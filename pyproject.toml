@@ -31,6 +31,13 @@ dev = [
   "pytest-xdist>=3.6",
 ]
 
+[tool.uv]
+# The primary checkout's .venv is the one environment shared by the desktop Dashboard
+# shortcut (which runs its interpreter directly) and the scheduled `uv run` tasks.
+# Installing viewer by default keeps a plain `uv sync` / `uv run` from dropping the
+# Dashboard's packages. CI still names its groups explicitly.
+default-groups = ["dev", "viewer"]
+
 [tool.mypy]
 ignore_missing_imports = true
 check_untyped_defs = true

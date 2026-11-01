@@ -80,13 +80,35 @@ this launcher's entry; use 5177 instead. Do not terminate unknown listeners.
 
 For a Windows desktop shortcut, use the existing environment's `pythonw.exe`
 with arguments `-B "<checkout>/scripts/start_research_web.py" --desktop` and set
-its working directory to that checkout. This is the supported hidden entry;
+its working directory to that checkout. A small native window immediately shows
+launch progress, then hides after the browser opens successfully. The **Cancel**
+button and window close button cancel startup, keep the window
+visible while cleanup finishes, and stop only this launch's build and services.
+Existing services remain running.
+Startup or later service failures reopen the window with an error and an
+**Open log** button. `--check` and `--no-browser` do not open this window.
+This is the supported desktop entry without a console window;
 no external adapter or private-function override is needed. It uses the selected
 interpreter directly for the API (no uv sync at launch), the same production
 build/preview path, configuration resolver and identity checks as the CLI.
 Diagnostics go to `.tmp/research-web-launcher/desktop-launcher.log` and the
 normal launcher/service logs. Keep that environment and Node/npm dependencies
 prepared before installing the shortcut.
+
+The shortcut's interpreter is the primary checkout's `.venv`, the same environment
+the `StockResearch-*` scheduled tasks use through `uv run`. Keep it the only
+maintained research environment. After any Python or dependency security update
+(`.python-version`, `uv.lock`):
+
+1. Close the Dashboard and any development preview started from it; they hold
+   files in `.venv`, and a rebuild that starts while they run can leave it half
+   deleted.
+2. In the primary checkout run `uv sync --locked` (the default groups include
+   `viewer`).
+3. Run `.venv\Scripts\python.exe -B scripts\start_research_web.py --check`, then
+   reopen the Dashboard.
+4. Remove interpreters nothing uses any more with `uv python uninstall <version>`,
+   then `uv cache prune`.
 
 All launches serialize inspection, build and startup with a checkout/port lock.
 Repeated desktop clicks verify and reuse services, refresh browser activity and

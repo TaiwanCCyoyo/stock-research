@@ -226,3 +226,100 @@ def test_censored_path_and_flag_window_preserve_effective_unknown() -> None:
     assert not _row(outputs.paths)["calendar_full"]
     assert _row(outputs.paths)["base_label"] == _row(outputs.paths)["effective_label"] == "unknown"
     assert _row(outputs.flags, "X6_10")["unknown_reason"] == "window_end"
+
+
+@pytest.mark.parametrize("rows", [45, 310])
+def test_prepared_followup_matches_public_flags_for_unsorted_prefixes(monkeypatch: pytest.MonkeyPatch, rows: int) -> None:
+    import research_core.pattern_scan_followup_v1 as module
+    from research_core.pattern_scan_flags_v1 import event_flag_observations, event_flags
+
+    frame = pd.DataFrame(
+        {"Close": 100.0, "SMA20": 99.0, "SMA60": 102.0, "BBLower": 95.0},
+        index=pd.bdate_range("2020-01-01", periods=rows),
+    )
+    frame.loc[frame.index[15], "Close"] = np.nan
+    frame.loc[frame.index[20], "SMA20"] = np.nan
+    frame.loc[frame.index[25], "Close"] = 90.0
+    pivots = _pivots(frame, [(1, 3, 110.0), (5, 8, 108.0), (6, 8, 107.0), (18, 21, 105.0), (22, 26, 104.0)])
+    lows = _pivots(frame, [(1, 3, 90.0), (5, 8, 95.0), (18, 21, 97.0)])
+    lows["kind"] = "low"
+    pivots = pd.concat([pivots, lows], ignore_index=True)
+    events = []
+    # Descending and then ascending prefix lengths exercise prepared reuse.
+    for index, (t0, horizon) in enumerate(((4, 252), (2, 126), (30, 252), (8, 126))):
+        event = _events(frame, t0=t0, horizon=horizon)
+        event.loc[0, "event_id"] = f"event-{index}"
+        event.loc[0, ["support", "lower", "confirmed_support"]] = [None, 95.0, None]
+        events.append(event)
+    supplied = pd.concat(events, ignore_index=True)
+    actual = module.followup_values(supplied, frame, pivots)
+
+    class PublicPlan:
+        def __init__(self, frame: pd.DataFrame, pivots: pd.DataFrame) -> None:
+            self.frame, self.pivots = frame, pivots
+            self.levels: dict[str, float | None] = {}
+
+        def daily(self, t0: int, stop: int, **levels: float | None) -> pd.DataFrame:
+            self.levels = levels
+            return event_flags(self.frame.iloc[:stop], self.pivots.loc[self.pivots.confirmation_index.lt(stop)], t0, **levels)
+
+        def observations(self, daily: pd.DataFrame, t0: int, stop: int, horizon: int, landmarks: tuple[int, ...]) -> pd.DataFrame:
+            return event_flag_observations(
+                self.frame.iloc[:stop],
+                self.pivots.loc[self.pivots.confirmation_index.lt(stop)],
+                t0,
+                horizons=(horizon,),
+                landmarks=landmarks,
+                **self.levels,
+            )
+
+    monkeypatch.setattr(module, "_FollowupFlagPlan", PublicPlan)
+    expected = module.followup_values(supplied, frame, pivots)
+    for name in ("paths", "flags", "landmarks", "first_flags"):
+        pd.testing.assert_frame_equal(getattr(actual, name), getattr(expected, name), check_exact=True)
+
+
+def test_prepared_pivots_validate_only_observed_prefix_and_preserve_attrs() -> None:
+    from research_core.pattern_scan_flags_v1 import _FollowupFlagPlan, event_flags
+
+    frame = _frame()
+    pivots = _pivots(frame, [(1, 3, 110.0), (2, 5, 109.0), (3, 7, 108.0)])
+    pivots.loc[2, "price"] = -1.0
+    plan = _FollowupFlagPlan(frame, pivots)
+    for stop in (6, 4, 7):
+        actual = plan.daily(2, stop, support=None, lower=None, confirmed_support=None)
+        expected = event_flags(frame.iloc[:stop], pivots.loc[pivots.confirmation_index.lt(stop)], 2)
+        pd.testing.assert_frame_equal(actual, expected, check_exact=True)
+        assert actual.attrs == expected.attrs
+    with pytest.raises(ValueError, match="pivot kind, price or k"):
+        plan.daily(2, 8)
+
+
+def test_prepared_pivots_reject_duplicate_confirmations() -> None:
+    from research_core.pattern_scan_flags_v1 import _FollowupFlagPlan
+
+    frame = _frame()
+    pivots = _pivots(frame, [(1, 3, 110.0), (1, 3, 110.0)])
+    with pytest.raises(ValueError, match="duplicate confirmed pivot"):
+        _FollowupFlagPlan(frame, pivots).daily(2, 6)
+
+
+def test_prepared_low_pivots_reselect_y3_across_prefix_order() -> None:
+    from research_core.pattern_scan_flags_v1 import _FollowupFlagPlan, event_flags
+
+    frame = _frame()
+    frame.loc[frame.index[7], "Close"] = 94.0
+    pivots = _pivots(frame, [(0, 1, 80.0), (1, 3, 90.0), (4, 6, 95.0), (5, 7, 97.0)])
+    pivots["kind"] = "low"
+    plan = _FollowupFlagPlan(frame, pivots)
+    for t0, stop, support in ((4, 8, 90.0), (2, 5, 80.0), (6, 9, 95.0)):
+        actual = plan.daily(t0, stop, support=None, lower=None, confirmed_support=None)
+        expected = event_flags(frame.iloc[:stop], pivots.loc[pivots.confirmation_index.lt(stop)], t0)
+        pd.testing.assert_frame_equal(actual, expected, check_exact=True)
+        assert actual.attrs == expected.attrs
+        assert actual.attrs["confirmed_support"] == support
+        assert actual.attrs["confirmed_support_source"] == "confirmed_nearest_pivot"
+        assert actual.attrs["confirmed_support_pivot"]["confirmed"] <= t0
+    # The 97-price low is visible in the final prefix but not yet confirmed at t0.
+    assert actual.attrs["confirmed_support_pivot"]["price"] == 95.0
+    assert bool(actual.loc[1, "Y3"])

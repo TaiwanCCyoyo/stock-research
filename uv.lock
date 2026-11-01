@@ -1966,6 +1966,7 @@ wheels = [
 name = "stock-research"
 version = "0.1.0"
 source = { virtual = "." }
+default-groups = ["dev", "viewer"]
 dependencies = [
     { name = "jsonschema" },
     { name = "mcp" },

@@ -68,8 +68,11 @@
 
 - 指令：`uv run python -m scripts.record_momentum_forward_day --workers 4`，每個交易日在 20:30 共用更新完成後人工執行；
   補記較早的日子加 `--date YYYY-MM-DD`。指令拒絕在平日 18:00–18:45 或任何 `StockProject-*` 執行中讀取，也拒絕從有未提交改動的程式執行。
-- 位置：primary checkout 的 `tasks/20261021-momentum-only-doubling/forward-log/days/<t0>.parquet`，一天一檔，no-replace；
-  已存在的日子不能被覆寫，更正只能另寫 correction 檔。每月經 task branch／PR 交付。
+- 位置（2026-10-31 起，見[位置修正](amendments/2026-10-31-forward-log-location.md)）：研究資料根目錄
+  `<STOCK_RESEARCH_SHARED_ROOT>/tasks/20261021-momentum-only-doubling/forward-log/days/<t0>.parquet`
+  （本機 `D:/StockData/stock-research/...`），一天一檔，no-replace；已存在的日子不能被覆寫，更正只能另寫 correction 檔。
+  日檔不進 repository。舊位置 primary checkout `tasks/20261021-momentum-only-doubling/forward-log/` 由新版程式第一次執行時
+  以 SHA-256 驗證複製過去（不覆寫、不一致就停），舊目錄保留到 owner 同意清理。
 - 一列一檔 PR17 宇宙股票：`t0`、`security_id`、`base_eligible` 與原因、原始與當代還原收盤、A1–A6 的值與 state（1／0／−1）、
   22 個集合的 state、`C-52w` 狀態、`generation`、`recorded_at_utc`、`code_commit`、`recorded_late`。
   A7、`LEAD_H1` 與型態狀態為 null，附 `pattern_null_reason`。
@@ -88,6 +91,6 @@
   `record_momentum_forward_day --scheduled --workers 4`。它等到共用世代的 as-of 等於當天且 producer 閒置才記錄，
   最多等 12 小時且不超過隔日 09:00，判定準時用執行完成時的時間；等不到（含休市，世代日曆不是交易所行事曆，所以不從舊世代推論休市）
   就寫一行 `not_recorded`，附最後看到的世代與缺漏日。每次執行恰好一行紀錄，讀不到世代也記 `failed`。
-  程式乾淨判定忽略 `stock-data-downloader` 子模組指標（前瞻紀錄不執行子模組程式）與 `forward-log/` 自身的輸出；
+  程式乾淨判定忽略 `stock-data-downloader` 子模組指標（前瞻紀錄不執行子模組程式）；`forward-log/` 已不在 checkout 內；
   不乾淨時寫一行 `refused` 後結束。紀錄寫到
   `D:/StockData/stock-research/logs/momentum-forward.log`。
