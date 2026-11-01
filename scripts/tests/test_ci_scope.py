@@ -1621,6 +1621,32 @@ def test_changed_node_consumer_test_retains_frontend_build() -> None:
     assert "opportunity" not in plan["domains"]
 
 
+@pytest.mark.parametrize("status", ["A", "M", "D", "R"])
+@pytest.mark.parametrize(
+    "path",
+    [
+        "research_core/report_reading.py",
+        "research_api/studies.py",
+        "tasks/20991231-new-study/reading.json",
+        "tasks/20991231-new-study/reading-report.md",
+    ],
+)
+def test_report_reading_changes_keep_reader_and_frontend_coverage(status: str, path: str) -> None:
+    plan = ci_scope.make_plan([(status, path)])
+    assert not plan["full"] and plan["frontend"]
+    assert "scripts/tests/test_report_reading.py" in plan["python_tests"]
+    assert "scripts/tests/test_study_cards.py" in plan["python_tests"]
+
+
+def test_report_reading_test_is_reviewed_without_reverse_domain_selection() -> None:
+    path = "scripts/tests/test_report_reading.py"
+    assert path in ci_scope.load_manifest()["reviewed_tests"]
+    plan = ci_scope.make_plan([("M", path)])
+    assert not plan["full"] and plan["frontend"]
+    assert path in plan["python_tests"]
+    assert "opportunity" not in plan["domains"]
+
+
 def test_importer_closure_retains_build_prerequisite_without_unrelated_consumers(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     sources = {
         "test_fixture.py": "def shared(): pass\n",

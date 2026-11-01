@@ -1,0 +1,26 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260824-value-chain-ignition",
+    "state": "ready",
+    "reason": "已核對保存的任務與報告，補上問題覆蓋、分母及後續修正；編輯可讀不代表策略或 owner 驗收。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "改用產業鏈節點分組後，集中上漲的「點火」事件能否預示成員或落後成員接下來的超額報酬？",
+    "answer": "產業鏈分組的不重疊比較中，訓練期 133 個事件的全體成員超額為 −1.95 ± 0.61pp，驗證期 128 個事件為 +0.12 ± 0.79pp；未支持這個點火定義帶來穩定正二十日超額。",
+    "limitation": "產業鏈使用 2026-08-23 成員快照回套歷史，存在前視限制，偏誤方向不能只靠推論保證；報告缺少完整窗口日期。這個固定點火定義未獲支持，不等於其他族群用途已被排除。",
+    "data_period": null,
+    "sources": [
+        {
+            "label": "原事件比較報告",
+            "path": "20260824-value-chain-ignition/report.md"
+        },
+        {
+            "label": "後續次要排序設計",
+            "path": "20260826-tail-selection/mission.md"
+        },
+        {
+            "label": "後續次要排序結果",
+            "path": "20260826-tail-selection/report.md"
+        }
+    ]
+}

@@ -1,0 +1,33 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260826-tail-selection",
+    "state": "ready",
+    "reason": "已核對保存的任務與報告，補上問題覆蓋、分母及後續修正；編輯可讀不代表策略或 owner 驗收。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "能否找到大幅上漲股票、在同樣合格的股票中做選擇，並避免增加交易？這與只問是否勝過 0050 不同。",
+    "answer": "十個次要排序在預先指定的前六十名、二十日主比較中，沒有形成三個連續門檻的合格區間；因此尚未找到能可靠改善集合內選擇、同時符合其他限制的次要排序。",
+    "limitation": "未通過不代表所有價格特徵完全沒有訊號；可偵測效果與日期樣本有限，驗證窗已多次使用。名單周轉只是策略交易負擔的代理，產業鏈快照也不是歷史逐日成員資料。",
+    "data_period": {
+        "from": "2019-01-02",
+        "to": "2026-08-14"
+    },
+    "sources": [
+        {
+            "label": "任務、修訂與主比較",
+            "path": "20260826-tail-selection/mission.md"
+        },
+        {
+            "label": "最終二十日結果表",
+            "path": "20260826-tail-selection/report.md"
+        },
+        {
+            "label": "沿用窗口的來源設計",
+            "path": "20260824-ranking-horizon/mission.md"
+        },
+        {
+            "label": "後續持有路徑研究",
+            "path": "20260826-runner-retention/report.md"
+        }
+    ]
+}

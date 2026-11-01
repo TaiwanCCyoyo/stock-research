@@ -1,0 +1,37 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260820-kline-archetype-extension",
+    "state": "ready",
+    "reason": "已核對保存的任務與報告，補上問題覆蓋、分母及後續修正；編輯可讀不代表策略或 owner 驗收。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "改用波動收縮、箱型或均值回歸機制，能否改善前作的訊號品質與同籃子買進持有比較？",
+    "answer": "15 個單一原型與產業組合，訊號品質與勝過買進持有的兩項主要規則均為 0/15 通過。Darvas 與 VCP 的單產業樣本不足；RSI-2 有較多交易，但沒有形成兩期皆正的合格組合。",
+    "limitation": "單產業 Darvas 與 VCP 的交易少，合併是看過結果後加入；文獻策略也有暖身、長均線與相對強弱排名的改寫。因此未證明原始文獻策略可交易，也未證明所有均值回歸都無效。",
+    "data_period": {
+        "from": "2019-01-02",
+        "to": "2026-08-14"
+    },
+    "sources": [
+        {
+            "label": "設計與預先規則",
+            "path": "20260820-kline-archetype-extension/mission.md"
+        },
+        {
+            "label": "原報告與修訂",
+            "path": "20260820-kline-archetype-extension/report.md"
+        },
+        {
+            "label": "MAE 補量及分母",
+            "path": "20260820-kline-archetype-extension/mae_retro.md"
+        },
+        {
+            "label": "停損隔離",
+            "path": "20260821-stop-mechanism-isolation/report.md"
+        },
+        {
+            "label": "棘輪泛化與風險修正",
+            "path": "20260822-ratchet-generalization/report.md"
+        }
+    ]
+}

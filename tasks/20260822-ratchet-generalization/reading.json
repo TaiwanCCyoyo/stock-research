@@ -1,0 +1,33 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260822-ratchet-generalization",
+    "state": "ready",
+    "reason": "已核對保存的任務與報告，補上問題覆蓋、分母及後續修正；編輯可讀不代表策略或 owner 驗收。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "箱底棘輪相對吊燈棘輪的優勢，能否從唐奇安移植到 K 線反轉與量能動能進場？",
+    "answer": "驗證期 C 相對 B 的每次進場損益，S1 勝 4/5 籃、S2 勝 3/5、S3 勝 5/5；S2 未達門檻且訓練期不一致，因此不支持通用移植。三種進場合併損益較高，不能取代逐籃規則。",
+    "limitation": "同一設定在不同進場下的持有期與停損距離不同；MAE 與持有期的關聯不能證明風險完全相同或必然無害。共同進場比較也不等於完整帳戶風險比較。",
+    "data_period": {
+        "from": "2019-01-02",
+        "to": "2026-08-14"
+    },
+    "sources": [
+        {
+            "label": "任務與比較規則",
+            "path": "20260822-ratchet-generalization/mission.md"
+        },
+        {
+            "label": "完整逐籃結果與修正",
+            "path": "20260822-ratchet-generalization/report.md"
+        },
+        {
+            "label": "原唐奇安停損隔離",
+            "path": "20260821-stop-mechanism-isolation/report.md"
+        },
+        {
+            "label": "後續不同帳戶的保留研究",
+            "path": "20260826-runner-retention/report.md"
+        }
+    ]
+}

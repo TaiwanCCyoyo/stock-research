@@ -1,0 +1,29 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260821-2b-entry-decomposition",
+    "state": "ready",
+    "reason": "已核對保存的任務與報告，補上問題覆蓋、分母及後續修正；編輯可讀不代表策略或 owner 驗收。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "原混合策略的效果來自底部 2B 還是均線動能？跌破均線減碼對損益與風險有何影響？",
+    "answer": "關閉減碼的純 2B 臂，兩期每次進場損益皆正，驗證期有 114 個部位，通過規則 1 的訊號品質門檻，但風險規則 2 未通過；已平倉部位的 B 對 A 差異信賴區間含零，尚未證明純 2B 優於動能。",
+    "limitation": "純 2B 優於動能尚未獲支持；114 個部位含未平倉，檢定使用其中 109 個已平倉部位。MAE 量價格逆行，不會反映同一持有期間內減碼造成的資金曝險差異。",
+    "data_period": {
+        "from": "2019-01-02",
+        "to": "2026-08-14"
+    },
+    "sources": [
+        {
+            "label": "任務、設定與規則變動",
+            "path": "20260821-2b-entry-decomposition/mission.md"
+        },
+        {
+            "label": "結果與配對分母",
+            "path": "20260821-2b-entry-decomposition/report.md"
+        },
+        {
+            "label": "後續 MAE 解釋修正",
+            "path": "20260822-ratchet-generalization/report.md"
+        }
+    ]
+}

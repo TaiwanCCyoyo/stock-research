@@ -1,0 +1,29 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260826-runner-retention",
+    "state": "history",
+    "reason": "後續研究揭露槽位量測及停牌持股缺陷，原配置影響未重新量化；保留歷史判定，不當成已修正的結果。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "既有篩選器找到且買進大幅上漲股票後，改用個股結構出場能否提高參與率，而不犧牲捕捉率、成本與回撤？",
+    "answer": "十三個配置沒有通過完整驗收；較寬回吐出場在訓練期提高持有過股票的參與率，卻降低捕捉率。這顯示本次固定十檔與部位大小下的取捨，不能推論保留大幅上漲股沒有價值。",
+    "limitation": "後續 book-size 指出同系列槽位占用多算買賣交接日，停牌持股也可能未被計入槽位；原滿倉比例不能當成已驗證機制證據。固定部位、重複使用驗證窗與結構停損沒有最低持有期，也限制結果的適用範圍。",
+    "data_period": {
+        "from": "2019-01-02",
+        "to": "2026-08-14"
+    },
+    "sources": [
+        {
+            "label": "任務、母體與驗收",
+            "path": "20260826-runner-retention/mission.md"
+        },
+        {
+            "label": "原報告",
+            "path": "20260826-runner-retention/report.md"
+        },
+        {
+            "label": "後續槽位缺陷與影響範圍",
+            "path": "20260904-book-size/report.md"
+        }
+    ]
+}

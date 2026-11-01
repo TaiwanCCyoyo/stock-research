@@ -1,0 +1,34 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260510-two-b-template-smoke",
+    "state": "history",
+    "reason": "原報告與後續診斷的版本、期間及績效尚未建立一致對照；保留歷史閱讀，未判定不可修復。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "2B 加均線匯聚模板能否完成指定台股池的回測與報告流程？這是模板 smoke test，不是全市場策略驗收。",
+    "answer": "nightly report 保存的策略報酬為 −8.624700%，同池買進持有為 88.334074%；另一份標示 2026-06-21 重跑的診斷卻報 +2.00%。兩者期間與版本不同，目前不能選一個當本任務的唯一結論。",
+    "limitation": "保存的報告沒有建立一致的執行期間與版本對照；任務預檢的資料最末日也不能替代實際回測結束日。因此不提供合併資料期間，也不據此判定 2B 型態有效或無效。",
+    "data_period": null,
+    "sources": [
+        {
+            "label": "任務與預檢",
+            "path": "20260510-two-b-template-smoke/mission.md"
+        },
+        {
+            "label": "保存的 nightly report",
+            "path": "20260510-two-b-template-smoke/nightly_report.md"
+        },
+        {
+            "label": "執行 walkthrough",
+            "path": "20260510-two-b-template-smoke/walkthrough.md"
+        },
+        {
+            "label": "另一版本的策略診斷",
+            "path": "20260510-two-b-template-smoke/strategy_diagnosis.md"
+        },
+        {
+            "label": "後續 2B 進場拆解",
+            "path": "20260821-2b-entry-decomposition/report.md"
+        }
+    ]
+}
