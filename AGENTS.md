@@ -26,6 +26,7 @@ never a place to read from or write to. See `docs/en/bootstrap-stock-research.md
 - When relationships carry the explanation, prefer tables, diagrams, timelines, or side-by-side comparisons. Use interactive HTML when filtering, parameter changes, or evidence drill-down materially improves understanding or decisions. Organize information around relationships and hierarchy; do not merely wrap prose in HTML or add decorative complexity.
 - Present the takeaway and overview first. Keep important findings, risks, uncertainty, and verification results with an output summary visible; make detailed evidence and implementation notes available on demand. If an artifact captures user decisions or edits, provide a copy or export path back to the conversation or canonical files.
 - For HTML communication artifacts, prefer a self-contained file that opens directly in a browser, with minimal dependencies and no build step. Keep durable repository documentation in its established Markdown or code format.
+- Write PR descriptions for a reader who has not seen the chat: explain the concrete problem and why it matters, the chosen direction and resulting behavior, scope and dependencies, and verification with remaining limitations. Keep the title and body aligned with the final diff; link multi-PR work to its decision record and report progress there. Follow [PR descriptions and decision records](docs/en/git-workflow.md#pr-descriptions-and-decision-records).
 
 ## Project Conventions
 

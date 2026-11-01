@@ -34,6 +34,34 @@ Worktrees belong to the session that created them, with ownership recorded in it
 - Use only the approved destination and identity across Git, CLI, and plugins. If unavailable or rejected, preserve the local result and report the blocker; do not switch credentials or broaden permissions. Platform permission controls still apply.
 - Agent-authored commits use the owner's configured Git identity. Mark agent work through the task branch name and the commit message instead; do not change the owner's global Git identity or rewrite existing commits solely to change attribution.
 
+## PR descriptions and decision records
+
+A PR must stand on its own for a reader who has not seen the originating chat.
+Explain the concrete user problem and why it matters, the selected direction and
+resulting behavior (a before/after example when useful), the actual scope and
+dependencies, and the verification performed with remaining limitations. Scale
+the length to the change: a small fix can cover these in a few sentences. A list
+of changed files or passing tests alone does not explain the change.
+
+For work spanning multiple PRs, keep one linked decision/delivery record in the
+repository's established documentation location. Record the agreed outcome,
+ownership boundaries, planned PR slices and dependencies, acceptance criteria,
+and actual PR links/status as they become available. Record decisions and their
+reasons, not a raw chat transcript. Planned slices are not opened PRs; do not
+create empty branches or placeholder diffs just to reserve PR numbers.
+
+Before delivery, reconcile the PR title/body with the final diff and actual
+validation. Update them when review materially changes the solution. Distinguish
+planned validation from completed checks and local review from hosted review;
+never imply acceptance from an older head. Batch coherent description updates
+because metadata edits trigger CI. The PR template is a writing aid, not another
+automated gate or permission to change reviewers, merge, or deploy.
+
+Apply this to new PRs and agent-owned open PRs being revised. Existing merged PRs
+remain historical records; do not bulk-rewrite their motivations or invent an
+original rationale. When an older PR is relevant, link its evidence and record
+what is known and unknown in the new change.
+
 ## Review and integration
 
 - A review request authorizes analysis and a report. Publishing review comments or a formal approval requires explicit authorization or an owner-enabled reviewer role scoped to the repository. Review authority does not include merge authority.
