@@ -27,7 +27,9 @@ export function StrategyComparePage() {
         [selected, setSelected] = useState<string[] | null>(null),
         [runs, setRuns] = useState<StudioRun[]>([]),
         [exposures, setExposures] = useState<StudioExposure[]>([]),
-        [detailError, setDetailError] = useState("");
+        [detailError, setDetailError] = useState(""),
+        [exposureError, setExposureError] = useState(""),
+        [detailAttempt, setDetailAttempt] = useState(0);
     const allRuns = resource.data?.runs ?? [];
     const ids =
         selected === null
@@ -39,6 +41,7 @@ export function StrategyComparePage() {
         if (!identity) return;
         const controller = new AbortController();
         setDetailError("");
+        setExposureError("");
         setRuns([]);
         setExposures([]);
         const runIds = studioSelectionIds(identity);
@@ -58,7 +61,7 @@ export function StrategyComparePage() {
             );
             if (results.some((result) => result.status === "rejected"))
                 setDetailError(
-                    "部分策略明細無法讀取；圖上只顯示已成功讀取的策略。",
+                    "部分策略帳戶明細無法讀取；僅採用已成功讀取的策略。",
                 );
         });
         void Promise.allSettled(
@@ -69,15 +72,19 @@ export function StrategyComparePage() {
                 ),
             ),
         ).then((results) => {
-            if (!controller.signal.aborted)
-                setExposures(
-                    results.flatMap((result) =>
-                        result.status === "fulfilled" ? [result.value] : [],
-                    ),
+            if (controller.signal.aborted) return;
+            setExposures(
+                results.flatMap((result) =>
+                    result.status === "fulfilled" ? [result.value] : [],
+                ),
+            );
+            if (results.some((result) => result.status === "rejected"))
+                setExposureError(
+                    "部分持股配置明細無法讀取；缺少的配置維持未知，不當成零。",
                 );
         });
         return () => controller.abort();
-    }, [identity, captureState]);
+    }, [identity, captureState, detailAttempt]);
     const aligned = useMemo(() => alignComparisons(runs), [runs]);
     const from = aligned.dates[0],
         through = aligned.dates.at(-1);
@@ -158,13 +165,29 @@ export function StrategyComparePage() {
                             </button>
                         ))}
                     </div>
+                    {(detailError || exposureError) && ids.length >= 2 && (
+                        <div className="ss-warning u-notice" role="alert">
+                            {detailError && <p>{detailError}</p>}
+                            {exposureError && <p>{exposureError}</p>}
+                            <button
+                                className="ss-button u-btn"
+                                onClick={() =>
+                                    setDetailAttempt((value) => value + 1)
+                                }
+                            >
+                                重新讀取所選策略
+                            </button>
+                        </div>
+                    )}
                     {ids.length < 2 ? (
                         <p className="ss-warning u-notice">
                             請至少選 2 個策略。
                         </p>
                     ) : runs.length < 2 ? (
-                        <div className="ss-loading">
-                            {detailError || "正在讀取策略的原始帳戶與交易…"}
+                        <div className="ss-loading" role="status">
+                            {detailError
+                                ? "成功讀取的策略不足兩個，暫時無法比較。"
+                                : "正在讀取策略的原始帳戶與交易…"}
                         </div>
                     ) : !aligned.dates.length ? (
                         <p className="ss-warning u-notice">
@@ -181,11 +204,6 @@ export function StrategyComparePage() {
                                 100，讓本金不同的策略也能比較。0050
                                 只比較股價，不含配息。
                             </p>
-                            {detailError && (
-                                <p className="ss-warning u-notice">
-                                    {detailError}
-                                </p>
-                            )}
                             <LineChart
                                 dates={aligned.dates}
                                 lines={[

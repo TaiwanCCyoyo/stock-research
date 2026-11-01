@@ -263,6 +263,18 @@
     outline: 3px solid var(--accent);
     outline-offset: 3px;
 }
+.fund-detail h2,
+.fund-compare-panel h2 {
+    scroll-margin-top: 100px;
+}
+.fund-detail h2:focus-visible,
+.fund-compare-panel h2:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
+}
+.fund-compare-card > button {
+    margin-bottom: 12px;
+}
 @media (max-width: 700px) {
     .fund-layout {
         grid-template-columns: minmax(0, 1fr);
