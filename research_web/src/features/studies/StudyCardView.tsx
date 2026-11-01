@@ -1,10 +1,7 @@
-import {
-    CompareBars,
-    SourceInfo,
-    VerdictBadge,
-} from "../../components/ui/primitives";
+import { SourceInfo, VerdictBadge } from "../../components/ui/primitives";
 import type { StudyCard, StudyDetails } from "./model";
 import { StudyCaveats } from "./StudyCaveats";
+import { readingDate, readingState } from "./reading";
 
 const UNIT: Record<StudyCard["keyNumbers"][number]["unit"], string> = {
     percent: "%",
@@ -31,11 +28,22 @@ export function StudyCardView({
                 <span>
                     {card.accountRun
                         ? card.accountRun.note
-                        : shortDate(card.date)}
+                        : `${card.reading?.updated_at ? "閱讀版更新 " : "建立 "}${shortDate(readingDate(card))}`}
                 </span>
                 {card.verdict && <VerdictBadge verdict={card.verdict} />}
             </div>
             <h3 className="st-question">{card.question}</h3>
+            <p className="st-identity">{card.id}</p>
+            {card.dataPeriod && (
+                <p className="st-period">
+                    研究資料：{card.dataPeriod.from} ～ {card.dataPeriod.to}
+                </p>
+            )}
+            {readingState(card) !== "ready" && (
+                <p className="u-notice">
+                    {card.reading?.reason ?? "原始紀錄尚未完成閱讀版核對。"}
+                </p>
+            )}
             {card.answer && (
                 <p className={`st-answer${compact ? " is-clamped" : ""}`}>
                     {card.answer}
@@ -44,27 +52,42 @@ export function StudyCardView({
             <StudyCaveats caveats={card.caveats} />
             {card.progress && <RunProgress progress={card.progress} />}
             {card.keyNumbers.length > 0 && (
-                <CompareBars
-                    stacked
-                    rows={card.keyNumbers.map((number) => ({
-                        label: number.label,
-                        value: number.value,
-                        display: `${number.value}${UNIT[number.unit]}`,
-                        highlight: number.highlight,
-                    }))}
-                />
+                <dl className="st-numbers">
+                    {card.keyNumbers.map((number) => (
+                        <div key={number.label}>
+                            <dt>{number.label}</dt>
+                            <dd>
+                                {number.value.toLocaleString("zh-TW", {
+                                    maximumFractionDigits: 2,
+                                })}
+                                {UNIT[number.unit]}
+                            </dd>
+                        </div>
+                    ))}
+                </dl>
             )}
-            {card.limitation && !compact && (
-                <p className="st-limit">{card.limitation}</p>
-            )}
+            {card.limitation && <p className="st-limit">{card.limitation}</p>}
             {(card.reportHref || card.accountRun) && (
                 <div className="u-actions">
                     {card.reportHref && (
                         <a
                             className="u-btn u-btn-primary"
-                            href={card.reportHref}
+                            href={(() => {
+                                const [base, query] =
+                                    card.reportHref.split("?");
+                                const params = new URLSearchParams(query);
+                                params.set(
+                                    "back",
+                                    window.location.hash.startsWith("#studies")
+                                        ? window.location.hash
+                                        : "#studies",
+                                );
+                                return `${base}?${params}`;
+                            })()}
                         >
-                            讀報告
+                            {readingState(card) === "ready"
+                                ? "讀報告"
+                                : "查看原文"}
                         </a>
                     )}
                     {card.accountRun && (

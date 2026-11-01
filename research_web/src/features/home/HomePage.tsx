@@ -13,6 +13,7 @@ import { StudiesRefreshNotice } from "../studies/StudiesRefreshNotice";
 import { useStudyCards } from "../studies/useStudyCards";
 import "../studies/studies.css";
 import "./home.css";
+import { readingDate, readingState } from "../studies/reading";
 
 function useLatestMarket() {
     const [frame, setFrame] = useState<HistoryFrame | null>(null),
@@ -72,9 +73,11 @@ export function HomePage() {
         studies = useStudyCards();
     const summary = market.frame ? latestMarketSummary(market.frame) : null;
     const recent = [...(studies.cards ?? [])]
-        .filter((card) => !card.accountRun)
+        .filter((card) => !card.accountRun && readingState(card) === "ready")
         .sort(
-            (a, b) => b.date.localeCompare(a.date) || a.id.localeCompare(b.id),
+            (a, b) =>
+                readingDate(b).localeCompare(readingDate(a)) ||
+                a.id.localeCompare(b.id),
         )
         .slice(0, 3);
     const leaders = summary?.industries.slice(0, 2).map((group) => group.label);

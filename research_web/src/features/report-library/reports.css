@@ -216,3 +216,48 @@
         justify-content: center;
     }
 }
+.reading-page {
+    max-width: 960px;
+}
+.reading-prose {
+    font-size: 16px;
+    line-height: 1.85;
+    overflow-wrap: anywhere;
+}
+.reading-prose h1 {
+    font-size: clamp(24px, 4vw, 36px);
+    line-height: 1.35;
+    margin: 24px 0;
+}
+.reading-prose h2 {
+    font-size: 23px;
+    margin-top: 36px;
+}
+.reading-prose table {
+    display: block;
+    overflow-x: auto;
+    border-collapse: collapse;
+    width: 100%;
+}
+.reading-prose th,
+.reading-prose td {
+    padding: 10px;
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+}
+.reading-prose pre {
+    overflow-x: auto;
+}
+.reading-sources {
+    margin: 32px 0;
+}
+.reading-sources .u-btn {
+    margin: 4px;
+}
+.reading-source-link {
+    color: var(--accent);
+    background: transparent;
+    border: 0;
+    text-decoration: underline;
+    font: inherit;
+}
