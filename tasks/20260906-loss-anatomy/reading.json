@@ -1,0 +1,26 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260906-loss-anatomy",
+    "state": "ready",
+    "reason": "已逐份對照保存的報告、可用研究契約與後續更正；閱讀版不代表策略批准。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "連續虧損是否主要來自重複買回同一檔？買進前的排名或其他可見資訊，能否區分迅速虧損與持有後獲利？",
+    "answer": "所選兩段舊虧損窗口各有二十檔不同股票，不能把它們歸因於反覆買回同一檔；但這不足以證明冷卻規則對真正的連續未命中問題無效。",
+    "limitation": "這是事後分組與兩個選定窗口的診斷，沒有重新跑冷卻策略；後來更正了連續未命中的定義，因此舊窗口不能代表修正後風險的完整成因。",
+    "data_period": null,
+    "sources": [
+        {
+            "label": "原始報告",
+            "path": "20260906-loss-anatomy/report.md"
+        },
+        {
+            "label": "基準設定",
+            "path": "20260906-five-slot-baseline/report.md"
+        },
+        {
+            "label": "風險窗口定義更正",
+            "path": "20260907-streak-correction/report.md"
+        }
+    ]
+}

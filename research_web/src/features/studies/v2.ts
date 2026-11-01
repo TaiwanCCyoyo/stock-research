@@ -1,6 +1,12 @@
 import { artifactMode } from "../../api/artifactMode.ts";
 import type { Verdict } from "../../components/ui/verdicts.ts";
 import type { StudyCard } from "./model.ts";
+import {
+    pendingCard,
+    readingLink,
+    withReading,
+    type ReadingRecord,
+} from "./reading.ts";
 
 /** One saved tasks/<task-id>/study.json as served by GET /studies
  *  (study-card.v2; docs/en/study-presentation.md), plus response-only run fields. */
@@ -41,6 +47,9 @@ export interface StudiesWarning {
 export interface StudiesResponse {
     cards: StudyCardV2[];
     warnings: StudiesWarning[];
+    readings?: ReadingRecord[];
+    reading_warnings?: StudiesWarning[];
+    original_reports?: string[];
 }
 
 /** Warning codes a reader must see on the card itself. Others (an unavailable
@@ -73,6 +82,15 @@ export async function readStudies(
     return {
         cards: value.cards.filter((card) => card?.schema === "study-card.v2"),
         warnings: value.warnings,
+        readings: Array.isArray(value.readings) ? value.readings : [],
+        reading_warnings: Array.isArray(value.reading_warnings)
+            ? value.reading_warnings
+            : [],
+        original_reports: Array.isArray(value.original_reports)
+            ? value.original_reports.filter(
+                  (id): id is string => typeof id === "string",
+              )
+            : [],
     };
 }
 
@@ -115,6 +133,18 @@ export function cardFromV2(
     ];
     return {
         id: card.task_id,
+        reading: {
+            state:
+                card.verdict === "running" ||
+                card.delivery_state === "code_merged"
+                    ? "in_progress"
+                    : "history",
+            reason:
+                card.verdict === "running" ||
+                card.delivery_state === "code_merged"
+                    ? "研究或報告尚在準備中。"
+                    : "原始紀錄保留，閱讀版尚未完成核對。",
+        },
         date: taskDate(card.task_id),
         question: card.question,
         answer: card.answer,
@@ -129,7 +159,9 @@ export function cardFromV2(
         limitation: card.limitation,
         reportHref: card.report.web_report
             ? `#report/${encodeURIComponent(card.task_id)}`
-            : null,
+            : card.report.markdown
+              ? readingLink(card.task_id)
+              : null,
         accountRun: card.account_run
             ? {
                   runId: card.account_run.run_id,
@@ -154,10 +186,40 @@ export function cardFromV2(
     };
 }
 
-/** The page's cards when /studies answered: exactly the cards it served.
- *  A task it omitted (invalid card, unverifiable source) stays omitted. */
+/** Original claims require a valid card; omitted identities remain as neutral history records. */
 export function cardsFromStudies(response: StudiesResponse): StudyCard[] {
-    return response.cards.map((card) => cardFromV2(card, response.warnings));
+    const records = new Map(
+        response.cards.map((card) => [
+            card.task_id,
+            cardFromV2(card, response.warnings),
+        ]),
+    );
+    for (const warning of [
+        ...response.warnings,
+        ...(response.reading_warnings ?? []),
+    ]) {
+        if (warning.task_id && !records.has(warning.task_id)) {
+            records.set(
+                warning.task_id,
+                pendingCard(warning.task_id, warning.message),
+            );
+        }
+    }
+    for (const reading of response.readings ?? []) {
+        records.set(
+            reading.task_id,
+            withReading(
+                records.get(reading.task_id) ??
+                    pendingCard(reading.task_id, reading.reason),
+                reading,
+            ),
+        );
+    }
+    for (const id of response.original_reports ?? []) {
+        const card = records.get(id);
+        if (card && !card.reportHref) card.reportHref = readingLink(id);
+    }
+    return [...records.values()];
 }
 
 /** Cards hidden by the reader (legacy source unavailable, invalid card). */

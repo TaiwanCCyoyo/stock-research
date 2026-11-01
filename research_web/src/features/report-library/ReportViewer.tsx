@@ -3,6 +3,9 @@ import { reportFrameSrc, statusLabel } from "./model";
 import { useReportIndex } from "./useReportIndex";
 import { SourceInfo } from "../../components/ui/primitives";
 import "./reports.css";
+import { MarkdownReport } from "./MarkdownReport";
+import { useStudyCards } from "../studies/useStudyCards";
+import { currentStudyHash, studiesBack } from "../studies/reading";
 
 /**
  * Shows one report in its own framed document, so its CSS cannot restyle the studio
@@ -29,6 +32,32 @@ export function ReportViewer({
     palette: string;
     appearance: string;
 }) {
+    const studies = useStudyCards();
+    const card = studies.cards?.find((item) => item.id === reportId);
+    const requested =
+        new URLSearchParams(currentStudyHash().split("?")[1] ?? "").get(
+            "view",
+        ) === "reading";
+    if (requested || card?.reading?.edition)
+        return <MarkdownReport reportId={reportId} />;
+    return (
+        <HtmlReportViewer
+            reportId={reportId}
+            palette={palette}
+            appearance={appearance}
+        />
+    );
+}
+
+function HtmlReportViewer({
+    reportId,
+    palette,
+    appearance,
+}: {
+    reportId: string;
+    palette: string;
+    appearance: string;
+}) {
     const { reports, error } = useReportIndex();
     const report = reports?.find((r) => r.id === reportId);
     const frame = useRef<HTMLIFrameElement>(null);
@@ -36,6 +65,13 @@ export function ReportViewer({
     // frame never reloads (and loses its state) when the viewer changes the theme.
     const [src] = useState(() => reportFrameSrc(reportId, palette, appearance));
     const [height, setHeight] = useState<number | null>(null);
+    const [loaded, setLoaded] = useState(false);
+    const [timedOut, setTimedOut] = useState(false);
+    const [attempt, setAttempt] = useState(0);
+    useEffect(() => {
+        const timer = setTimeout(() => setTimedOut(true), 20000);
+        return () => clearTimeout(timer);
+    }, [attempt]);
 
     useEffect(() => {
         const receive = (event: MessageEvent) => {
@@ -63,7 +99,10 @@ export function ReportViewer({
     return (
         <div className="rv-page">
             <div className="rv-bar u-card">
-                <a className="rv-back u-btn" href="#studies">
+                <a
+                    className="rv-back u-btn"
+                    href={studiesBack(currentStudyHash())}
+                >
                     ← 研究
                 </a>
                 <div className="rv-title">
@@ -86,7 +125,7 @@ export function ReportViewer({
                 </a>
             </div>
             <p className="u-notice">
-                歷史研究，不是買賣訊號。請留意報告中的研究限制。
+                歷史網頁原文；閱讀版尚未完成核對。請留意研究限制。
             </p>
             {error && (
                 <div role="alert" className="u-notice">
@@ -94,6 +133,12 @@ export function ReportViewer({
                     <SourceInfo>
                         <p>{error}</p>
                     </SourceInfo>
+                    <button
+                        className="u-btn"
+                        onClick={() => window.location.reload()}
+                    >
+                        重新讀取
+                    </button>
                 </div>
             )}
             {reports && !report && (
@@ -108,21 +153,45 @@ export function ReportViewer({
                 </div>
             )}
             {(!reports || report) && (
-                <iframe
-                    ref={frame}
-                    className="rv-frame"
-                    title={report?.title || reportId}
-                    src={src}
-                    sandbox="allow-scripts allow-same-origin allow-downloads"
-                    referrerPolicy="no-referrer"
-                    style={height ? { height } : undefined}
-                    onLoad={() =>
-                        frame.current?.contentWindow?.postMessage(
-                            { type: "rk:theme", palette, appearance },
-                            "*",
-                        )
-                    }
-                />
+                <>
+                    {!loaded && <p role="status">正在載入網頁報告…</p>}
+                    {!loaded && timedOut && (
+                        <div role="alert">
+                            <p>報告尚未載入，可能是服務暫時無法使用。</p>
+                            <button
+                                className="u-btn"
+                                onClick={() => {
+                                    setTimedOut(false);
+                                    setLoaded(false);
+                                    setAttempt((n) => n + 1);
+                                }}
+                            >
+                                重試報告
+                            </button>
+                        </div>
+                    )}
+                    <iframe
+                        key={attempt}
+                        ref={frame}
+                        className="rv-frame"
+                        title={report?.title || reportId}
+                        src={src}
+                        sandbox="allow-scripts allow-same-origin allow-downloads"
+                        referrerPolicy="no-referrer"
+                        style={height ? { height } : undefined}
+                        onLoad={() => {
+                            setLoaded(true);
+                            frame.current?.contentWindow?.postMessage(
+                                { type: "rk:theme", palette, appearance },
+                                "*",
+                            );
+                        }}
+                        onError={() => {
+                            setLoaded(false);
+                            setTimedOut(true);
+                        }}
+                    />
+                </>
             )}
         </div>
     );

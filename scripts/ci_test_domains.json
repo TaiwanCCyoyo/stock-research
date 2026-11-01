@@ -169,6 +169,7 @@
                 "research_core/saved_research_studio.py",
                 "research_core/study_presentation.py",
                 "research_core/study_cards.py",
+                "research_core/report_reading.py",
                 "research_api/studies.py",
                 "research_core/strategy_map_capture.py",
                 "scripts/*opportunity*",
@@ -201,6 +202,7 @@
                 "scripts/tests/test_dashboard_identity.py",
                 "scripts/tests/test_study_presentation.py",
                 "scripts/tests/test_study_cards.py",
+                "scripts/tests/test_report_reading.py",
                 "tests/test_*opportunity*.py",
                 "tests/test_research_api*.py",
                 "tests/test_development_previews.py",
@@ -601,10 +603,13 @@
         "study_card_records": {
             "paths": [
                 "tasks/*/study.json",
+                "tasks/*/reading.json",
+                "tasks/*/reading-report.md",
                 "tasks/20261024-data-homes-and-scratch/study-card-v2.schema.json"
             ],
             "tests": [
                 "scripts/tests/test_study_cards.py",
+                "scripts/tests/test_report_reading.py",
                 "scripts/tests/test_study_presentation.py",
                 "tests/test_dashboard_task_index.py",
                 "tests/test_dashboard_presentation.py",
@@ -846,6 +851,7 @@
         "scripts/tests/test_rebuild_saved_catalog_mutations.py",
         "scripts/tests/test_rebuild_saved_opportunity_catalog.py",
         "scripts/tests/test_registered_jobs.py",
+        "scripts/tests/test_report_reading.py",
         "scripts/tests/test_research_attempt_stress.py",
         "scripts/tests/test_research_attribution.py",
         "scripts/tests/test_research_attribution_inputs.py",

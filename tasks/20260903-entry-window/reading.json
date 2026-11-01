@@ -1,0 +1,29 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260903-entry-window",
+    "state": "ready",
+    "reason": "已逐份對照保存的報告、可用研究契約與後續更正；閱讀版不代表策略批准。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "離開幾天沒下單，是否會完全錯過後來大漲的股票？",
+    "answer": "這批事後確認大漲的股票通常有較長的在榜窗口；這只能說明價格機會尚在，不能證明延後操作的帳戶仍能獲利。",
+    "limitation": "只看2019-01-02至2023-12-31的訓練期與事後大漲股票；沒有測到事前辨識、資金競爭、錯過賣出或實際成交。",
+    "data_period": {
+        "from": "2019-01-02",
+        "to": "2023-12-31"
+    },
+    "sources": [
+        {
+            "label": "原始報告",
+            "path": "20260903-entry-window/report.md"
+        },
+        {
+            "label": "原始研究問題與規則",
+            "path": "20260903-entry-window/mission.md"
+        },
+        {
+            "label": "後續帳戶延遲比較",
+            "path": "20260904-execution-delay/report.md"
+        }
+    ]
+}

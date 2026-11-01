@@ -1,0 +1,34 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260904-book-size",
+    "state": "ready",
+    "reason": "已逐份對照保存的報告、可用研究契約與後續更正；閱讀版不代表策略批准。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "增加持股容量後，訓練期的報酬取捨會在另一段期間反轉嗎？",
+    "answer": "修正停牌持股漏佔名額後，這次驗證期的30檔版本仍比10檔版本有較高報酬與飆股份額；這沒有證明30檔最佳，也不符合目前最多五檔的操作範圍。",
+    "limitation": "這是1000萬元、同日收盤成交的舊模型；只能在同一資料、母體與版本內比較，不能用它取代200萬元五檔可執行帳戶。",
+    "data_period": null,
+    "sources": [
+        {
+            "label": "原始報告",
+            "path": "20260904-book-size/report.md"
+        },
+        {
+            "label": "原始研究問題與規則",
+            "path": "20260904-book-size/mission.md"
+        },
+        {
+            "label": "容量修正與V8表",
+            "path": "20260904-slot-accounting/report.md"
+        },
+        {
+            "label": "後續五檔需求決定",
+            "path": "20260906-execution-reality/report.md"
+        },
+        {
+            "label": "成交模型的後續限制",
+            "path": "20260908-executable-fills/report.md"
+        }
+    ]
+}

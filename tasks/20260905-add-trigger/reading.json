@@ -1,0 +1,30 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260905-add-trigger",
+    "state": "ready",
+    "reason": "已逐份對照保存的報告、可用研究契約與後續更正；閱讀版不代表策略批准。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "股票反覆符合條件時多配置資金，能否在加碼當下辨認後來較會上漲的持股？",
+    "answer": "五個價格／排名觀察量在兩個決策點都未通過既定條件；這次沒有建立可採用的早期加碼訊號，也沒有執行加碼帳戶回測。",
+    "limitation": "本卡使用既有30檔訓練期持倉，觀察窗口高度重疊；沒有獨立樣本確認，也未涵蓋所有加碼方式或部位配置方法。",
+    "data_period": null,
+    "sources": [
+        {
+            "label": "原始報告",
+            "path": "20260905-add-trigger/report.md"
+        },
+        {
+            "label": "原始研究問題與規則",
+            "path": "20260905-add-trigger/mission.md"
+        },
+        {
+            "label": "後續最低持有期比較",
+            "path": "20260905-min-hold/report.md"
+        },
+        {
+            "label": "後續等風險配置",
+            "path": "20260906-equal-risk-sizing/report.md"
+        }
+    ]
+}

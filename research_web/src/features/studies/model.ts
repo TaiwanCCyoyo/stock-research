@@ -8,6 +8,12 @@ import type {
 /** One research card. Mirrors the reader-facing part of study-card.v2 so the
  *  page can switch to GET /studies without changing its components. */
 export interface StudyCard {
+    reading?: {
+        state: "ready" | "in_progress" | "history";
+        reason: string;
+        updated_at?: string;
+        edition?: string | null;
+    };
     id: string;
     date: string;
     question: string;
@@ -215,9 +221,12 @@ export function filterStudies(
                     ? card.reportHref !== null
                     : card.verdict === filter)) &&
             (!search ||
-                [card.question, card.answer].some((value) =>
-                    value.toLocaleLowerCase().includes(search),
-                )),
+                [
+                    card.id,
+                    card.question,
+                    card.answer,
+                    card.details.reportPath ?? "",
+                ].some((value) => value.toLocaleLowerCase().includes(search))),
     );
 }
 
@@ -225,9 +234,12 @@ export function filterStudies(
 export function groupByMonth(cards: readonly StudyCard[]) {
     const groups = new Map<string, StudyCard[]>();
     for (const card of [...cards].sort(
-        (a, b) => b.date.localeCompare(a.date) || a.id.localeCompare(b.id),
+        (a, b) =>
+            (b.reading?.updated_at || b.date).localeCompare(
+                a.reading?.updated_at || a.date,
+            ) || a.id.localeCompare(b.id),
     )) {
-        const key = card.date.slice(0, 7);
+        const key = (card.reading?.updated_at || card.date).slice(0, 7);
         const list = groups.get(key);
         if (list) list.push(card);
         else groups.set(key, [card]);
