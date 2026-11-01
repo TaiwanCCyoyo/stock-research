@@ -1,0 +1,30 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260908-executable-fills",
+    "state": "ready",
+    "reason": "已逐份對照保存的報告、可用研究契約與後續更正；閱讀版不代表策略批准。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "五檔全特徵策略若不能在看到收盤訊號的同一價格成交，改成下一開盤、可用交易單位並計入滑價，原先的報酬還剩多少？",
+    "answer": "持有期零的歷史優勢對成交假設非常敏感；驗證期整張、每次 25 bps 滑價時報酬為 −38.5%。持有二十日同情境仍有 51.2%，但不足以批准策略。",
+    "limitation": "所有期間均已看過，零股開盤價是假設，模型未完整涵蓋排隊、部分成交與逐筆價格；保存報告另有一格執行錯誤尚無完成證據。",
+    "data_period": null,
+    "sources": [
+        {
+            "label": "原始報告",
+            "path": "20260908-executable-fills/report.md"
+        },
+        {
+            "label": "原始研究問題與規則",
+            "path": "20260908-executable-fills/mission.md"
+        },
+        {
+            "label": "舊五檔基準",
+            "path": "20260906-five-slot-baseline/report.md"
+        },
+        {
+            "label": "前次穩健性確認",
+            "path": "20260906-five-slot-confirmation/report.md"
+        }
+    ]
+}

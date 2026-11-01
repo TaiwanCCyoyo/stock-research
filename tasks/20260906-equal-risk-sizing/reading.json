@@ -1,0 +1,30 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260906-equal-risk-sizing",
+    "state": "ready",
+    "reason": "已逐份對照保存的報告、可用研究契約與後續更正；閱讀版不代表策略批准。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "依 ATR 調整每次投入金額，能否保留五檔策略的報酬，同時降低回撤、波動與連續未命中損失？",
+    "answer": "風險係數 0.006 在訓練期通過當時四項條件，但相鄰設定未形成三點通過區間，沒有足夠依據選定倉位規則。",
+    "limitation": "ATR 是風險代理，並不保證實際每筆損失相等；研究只測訓練期，且沒有獨立驗證或可成交模型支持。",
+    "data_period": null,
+    "sources": [
+        {
+            "label": "原始報告",
+            "path": "20260906-equal-risk-sizing/report.md"
+        },
+        {
+            "label": "原始研究問題與規則",
+            "path": "20260906-equal-risk-sizing/mission.md"
+        },
+        {
+            "label": "連續損失更正",
+            "path": "20260907-streak-correction/report.md"
+        },
+        {
+            "label": "後續三檔探索",
+            "path": "20260906-three-slot-equal-risk/report.md"
+        }
+    ]
+}

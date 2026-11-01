@@ -1,0 +1,34 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260906-five-slot-confirmation",
+    "state": "ready",
+    "reason": "已逐份對照保存的報告、可用研究契約與後續更正；閱讀版不代表策略批准。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "五檔全特徵基準是否能承受參數變動、移除單一特徵、不同年份、漏日與延遲成交，並控制連續未命中的壓力？",
+    "answer": "五檔基準沒有通過整體確認：參數未形成穩定區間，延遲一天只保留約 61% 訓練期報酬；修正後連續損失則是訓練期不過、驗證期通過當時界線。",
+    "limitation": "全部期間都已被探索或檢視，沒有新增未見資料；隨機漏日、延遲成交與連續嘗試診斷分別回答不同問題，不能互相代替。",
+    "data_period": null,
+    "sources": [
+        {
+            "label": "原始報告",
+            "path": "20260906-five-slot-confirmation/report.md"
+        },
+        {
+            "label": "原始研究問題與規則",
+            "path": "20260906-five-slot-confirmation/mission.md"
+        },
+        {
+            "label": "候選基準",
+            "path": "20260906-five-slot-baseline/report.md"
+        },
+        {
+            "label": "連續損失修正",
+            "path": "20260907-streak-correction/report.md"
+        },
+        {
+            "label": "後續可成交研究",
+            "path": "20260908-executable-fills/report.md"
+        }
+    ]
+}

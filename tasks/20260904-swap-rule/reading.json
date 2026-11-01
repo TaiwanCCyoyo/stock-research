@@ -1,0 +1,29 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260904-swap-rule",
+    "state": "ready",
+    "reason": "已逐份對照保存的報告、可用研究契約與後續更正；閱讀版不代表策略批准。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "能否用低標準保留持股，只有出現明顯更強候選時才換出較弱持股？",
+    "answer": "九個排名換股設定只有一格通過六項比較條件，未形成事前要求的連續三格；本次實作未晉級，並未否定所有低標準留倉、高標準換股的設計。",
+    "limitation": "只測十檔、固定排名分數與同收盤成交；V5後來發現持股容量缺陷，原數字保留為歷史結果，不能視為修正後或可交易成效。",
+    "data_period": {
+        "from": "2019-01-02",
+        "to": "2023-12-31"
+    },
+    "sources": [
+        {
+            "label": "原始報告",
+            "path": "20260904-swap-rule/report.md"
+        },
+        {
+            "label": "原始研究問題與規則",
+            "path": "20260904-swap-rule/mission.md"
+        },
+        {
+            "label": "後續容量缺陷說明",
+            "path": "20260904-slot-accounting/report.md"
+        }
+    ]
+}

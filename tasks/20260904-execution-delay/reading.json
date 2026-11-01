@@ -1,0 +1,33 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260904-execution-delay",
+    "state": "ready",
+    "reason": "已逐份對照保存的報告、可用研究契約與後續更正；閱讀版不代表策略批准。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "把每天使用的排名延後三個交易日，進出場都跟著延後，原策略還能保留足夠成果嗎？",
+    "answer": "三日延遲的飆股份額保留80.7%，低於事前90%要求；沒有連續三格通過，這個設定未晉級。",
+    "limitation": "只測2019–2023的十檔舊模型，且有後續發現的持股容量缺陷與同收盤成交限制；不等於所有手動缺席或晚下單方式都不可行。",
+    "data_period": {
+        "from": "2019-01-02",
+        "to": "2023-12-31"
+    },
+    "sources": [
+        {
+            "label": "原始報告",
+            "path": "20260904-execution-delay/report.md"
+        },
+        {
+            "label": "原始研究問題與規則",
+            "path": "20260904-execution-delay/mission.md"
+        },
+        {
+            "label": "後續容量缺陷範圍",
+            "path": "20260904-slot-accounting/report.md"
+        },
+        {
+            "label": "後續隔日開盤重測",
+            "path": "20260908-executable-fills/report.md"
+        }
+    ]
+}

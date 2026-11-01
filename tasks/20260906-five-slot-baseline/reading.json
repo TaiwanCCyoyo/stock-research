@@ -1,0 +1,34 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260906-five-slot-baseline",
+    "state": "ready",
+    "reason": "已逐份對照保存的報告、可用研究契約與後續更正；閱讀版不代表策略批准。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "在最多五檔、200 萬元資金的條件下，全特徵排名能否比動能排名更符合持有大機會、承受小損失的需求？本任務未保存 mission.md，問題依原報告與前一份操作需求整理。",
+    "answer": "全特徵五檔、最短持有期零的歷史結果較好，但驗證期最低淨值約 184 萬元、訓練期約 162 萬元，不能說從未跌破 200 萬元本金。",
+    "limitation": "這是已看過資料的基準探索，沿用同日收盤成交；平均虧損不能代表每次都小虧，後續穩健性與可成交研究也未支持直接採用。",
+    "data_period": null,
+    "sources": [
+        {
+            "label": "原始報告",
+            "path": "20260906-five-slot-baseline/report.md"
+        },
+        {
+            "label": "前一份操作需求",
+            "path": "20260906-execution-reality/report.md"
+        },
+        {
+            "label": "穩健性確認",
+            "path": "20260906-five-slot-confirmation/report.md"
+        },
+        {
+            "label": "連續損失更正",
+            "path": "20260907-streak-correction/report.md"
+        },
+        {
+            "label": "可成交模型",
+            "path": "20260908-executable-fills/report.md"
+        }
+    ]
+}

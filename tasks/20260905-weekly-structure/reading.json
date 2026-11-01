@@ -1,0 +1,22 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260905-weekly-structure",
+    "state": "ready",
+    "reason": "已逐份對照保存的報告、可用研究契約與後續更正；閱讀版不代表策略批准。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "週線結構是否提供既有排名以外的資訊，並能區分後續上漲與下跌的機會？本任務沒有保存 mission.md；這個問題依原報告整理，無法據此認證事前登記。",
+    "answer": "週線收斂在訓練期的股票日樣本中出現較好的長期兩端命中差，但樣本高度重疊，尚不能稱為經驗證的預測能力。",
+    "limitation": "這是訓練期條件分組研究，沒有獨立驗證、實際買進或加碼回測；不能把股票日統計直接轉成投資獲利機率。",
+    "data_period": null,
+    "sources": [
+        {
+            "label": "原始報告",
+            "path": "20260905-weekly-structure/report.md"
+        },
+        {
+            "label": "後續持倉層級研究",
+            "path": "20260905-add-trigger/report.md"
+        }
+    ]
+}

@@ -1,0 +1,30 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260905-wide-giveback",
+    "state": "ready",
+    "reason": "已逐份對照保存的報告、可用研究契約與後續更正；閱讀版不代表策略批准。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "放寬回吐出場，能否在降低交易成本的同時，保留既有策略對大波段的捕捉能力？",
+    "answer": "訓練期只有 30% 回吐通過當時全部條件，鄰近設定沒有形成三點通過區間，因此不足以選為穩健替代方案。",
+    "limitation": "研究只測訓練期，且排名出場受最短持有期限制、回吐出場不受同一限制；結果不能單獨歸因於回吐百分比，也不是下一開盤成交驗證。",
+    "data_period": null,
+    "sources": [
+        {
+            "label": "原始報告",
+            "path": "20260905-wide-giveback/report.md"
+        },
+        {
+            "label": "原始研究問題與規則",
+            "path": "20260905-wide-giveback/mission.md"
+        },
+        {
+            "label": "同期間比較",
+            "path": "20260906-exchange-rate/report.md"
+        },
+        {
+            "label": "操作需求與成本決策更新",
+            "path": "20260906-execution-reality/report.md"
+        }
+    ]
+}

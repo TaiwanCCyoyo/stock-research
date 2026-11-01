@@ -1,0 +1,30 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260905-min-hold",
+    "state": "ready",
+    "reason": "已逐份對照保存的報告、可用研究契約與後續更正；閱讀版不代表策略批准。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "最低持有20日是在保護整理中的持股，還是在延後處理輸家？延長或縮短它有何代價？",
+    "answer": "在這個30檔模型中，移除最低持有期沒有改善訓練結果；延長到40／60／80日雖形成訓練通過區，三格在驗證期都未達既定要求。",
+    "limitation": "僅有單一驗證視窗，較短設定沒有開啟驗證；舊週轉與成本上限是當時規則，不是現在仍有效的owner硬門檻。",
+    "data_period": null,
+    "sources": [
+        {
+            "label": "原始報告",
+            "path": "20260905-min-hold/report.md"
+        },
+        {
+            "label": "原始研究問題與規則",
+            "path": "20260905-min-hold/mission.md"
+        },
+        {
+            "label": "同窗配對更正",
+            "path": "20260906-exchange-rate/report.md"
+        },
+        {
+            "label": "owner後續需求",
+            "path": "20260906-execution-reality/report.md"
+        }
+    ]
+}

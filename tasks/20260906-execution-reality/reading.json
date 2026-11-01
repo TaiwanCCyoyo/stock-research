@@ -1,0 +1,37 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260906-execution-reality",
+    "state": "ready",
+    "reason": "已逐份對照保存的報告、可用研究契約與後續更正；閱讀版不代表策略批准。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "偶爾沒操作會差多少？實際連續虧損是否承受得住？扣成本後還有沒有價值？以 200 萬元操作時，部位數與交易單位是否可行？",
+    "answer": "舊三十檔模型對少量隨機漏日並未全面失效，但這不等於五檔人工操作已驗證；以 200 萬元跑舊五檔設定，驗證期報酬只有 17.6%，最大回撤達 46.6%。",
+    "limitation": "漏日模擬同時停止買賣與持有日數累計，且只用五個隨機種子；它不等同於真實日曆持續前進、恢復操作後再依最新訊息決策。",
+    "data_period": {
+        "from": "2024-01-01",
+        "to": "2026-08-14"
+    },
+    "sources": [
+        {
+            "label": "原始報告",
+            "path": "20260906-execution-reality/report.md"
+        },
+        {
+            "label": "原始研究問題與規則",
+            "path": "20260906-execution-reality/mission.md"
+        },
+        {
+            "label": "五檔全特徵基準",
+            "path": "20260906-five-slot-baseline/report.md"
+        },
+        {
+            "label": "五檔確認",
+            "path": "20260906-five-slot-confirmation/report.md"
+        },
+        {
+            "label": "下一開盤與交易單位",
+            "path": "20260908-executable-fills/report.md"
+        }
+    ]
+}

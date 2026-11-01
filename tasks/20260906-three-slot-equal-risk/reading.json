@@ -1,0 +1,30 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260906-three-slot-equal-risk",
+    "state": "ready",
+    "reason": "已逐份對照保存的報告、可用研究契約與後續更正；閱讀版不代表策略批准。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "把持股縮為三檔，再按 ATR 調整投入，能否改善三檔等額基準，或比五檔基準更符合報酬與連續損失需求？",
+    "answer": "五個風險係數沒有任何一個通過全部條件；也沒有設定同時在報酬、最大回撤與修正後連續損失上優於五檔基準。",
+    "limitation": "三檔與退出排名 15 都是在已看過的訓練資料上選出的設定，不能把結果當成獨立驗證，也不能單獨歸因於部位數或 50% 上限。",
+    "data_period": null,
+    "sources": [
+        {
+            "label": "原始報告",
+            "path": "20260906-three-slot-equal-risk/report.md"
+        },
+        {
+            "label": "原始研究問題與規則",
+            "path": "20260906-three-slot-equal-risk/mission.md"
+        },
+        {
+            "label": "五檔倉位研究",
+            "path": "20260906-equal-risk-sizing/report.md"
+        },
+        {
+            "label": "連續損失更正",
+            "path": "20260907-streak-correction/report.md"
+        }
+    ]
+}

@@ -1,0 +1,37 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260906-exchange-rate",
+    "state": "ready",
+    "reason": "已逐份對照保存的報告、可用研究契約與後續更正；閱讀版不代表策略批准。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "最短持有期與回吐出場的成本、波段捕捉差異，是出場機制造成，還是先前混用不同期間造成的錯覺？",
+    "answer": "在同一驗證期、周轉相近的三組比較中，最短持有期的 pool_capture 都高於回吐出場；這支持機制有差異，但不足以建立通用交換曲線。",
+    "limitation": "只有一個已看過的驗證期與三組比較；pool_capture 的比例不是報酬保留率，也不能推論未來固定成本能換得多少獲利。",
+    "data_period": {
+        "from": "2024-01-01",
+        "to": "2026-08-14"
+    },
+    "sources": [
+        {
+            "label": "原始報告",
+            "path": "20260906-exchange-rate/report.md"
+        },
+        {
+            "label": "原始研究問題與規則",
+            "path": "20260906-exchange-rate/mission.md"
+        },
+        {
+            "label": "被修正的最短持有期報告",
+            "path": "20260905-min-hold/report.md"
+        },
+        {
+            "label": "回吐出場研究",
+            "path": "20260905-wide-giveback/report.md"
+        },
+        {
+            "label": "後續操作需求",
+            "path": "20260906-execution-reality/report.md"
+        }
+    ]
+}
