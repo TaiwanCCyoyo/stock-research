@@ -83,7 +83,8 @@
                 strong.className = r.delta_pp > 0 ? "delta-up" : "delta-down";
                 strong.textContent = `${pct(r.rate)} 對 ${pct(control)}`;
                 const small = document.createElement("small");
-                small.textContent = `${sign} ${Math.abs(r.delta_pp).toFixed(1)} 個百分點 · 樣本 ${int(r.known_n)}`;
+                const size = Math.abs(r.delta_pp);
+                small.textContent = `${sign} ${size < 0.05 ? "不到 0.1" : size.toFixed(1)} 個百分點 · 樣本 ${int(r.known_n)}`;
                 plain.append(strong, small);
             }
             if (higher + lower < 10) {

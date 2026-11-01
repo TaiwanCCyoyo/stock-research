@@ -627,23 +627,23 @@ test("the headline summary matches the saved per-pattern numbers", () => {
             reader.includes(`${family}: [${values.join(", ")}]`),
             `reader.js condition counts for ${family}`,
         );
-    // Same classification rule as the headline sentence: both views agree in sign.
-    let high = 0;
-    let low = 0;
-    let flat = 0;
-    let top = 0;
-    for (const row of rows) {
-        const [higher, lower] = counts[row.target];
-        if (row.delta_pp >= 0.5 && higher > lower) high += 1;
-        else if (row.delta_pp <= -0.5 && lower > higher) low += 1;
-        else flat += 1;
-        top = Math.max(top, row.delta_pp);
-    }
-    assert.deepEqual([high, low, flat], [6, 4, 2]);
-    assert.ok(Math.round(top) === 5);
+    // Left column: unconditional differences only, signs as saved (no mixed rule).
+    const positive = rows.filter((row) => row.delta_pp > 0).length;
+    const negative = rows.filter((row) => row.delta_pp < 0).length;
+    const top = Math.max(...rows.map((row) => row.delta_pp));
+    assert.deepEqual([positive, negative], [7, 5]);
+    assert.equal(Math.round(top), 5);
     assert.match(
         html,
-        /六種的翻倍比例比一般合格日高（最多高約\s*5 個百分點），四種較低，兩種看不出差別/,
+        /七種的翻倍比例比一般合格日高（最多高約\s*5 個百分點），五種較低/,
+    );
+    assert.doesNotMatch(html, /兩種看不出差別|同一天也符合/);
+    // Right column: a separate comparison; per-pattern group counts as saved.
+    assert.match(html, /加上篩選條件後（另一個比較）/);
+    assert.match(html, /不是顯著性檢定/);
+    assert.ok(
+        reader.includes("size < 0.05"),
+        "near-zero differences must not print as a signed 0.0",
     );
     const evidenceTotal = evidence.candidate_totals.find(
         (row) => row.horizon === 252,
@@ -909,4 +909,14 @@ test("the actual page loads every final chunk in order and matches all displayed
             );
         }
     }
+});
+
+test("path categories are described by the implemented rule", () => {
+    const names = source.slice(source.indexOf("const pathNames"));
+    assert.match(
+        names,
+        /direct_failure: "先跌 10% 才漲 10%（或一直沒漲 10%）"/,
+    );
+    assert.doesNotMatch(names, /就沒再漲|後回落|緩慢下跌|大致盤整/);
+    assert.match(names, /rise_then_fall: "沒有先跌 10%，且曾漲 20% 以上"/);
 });

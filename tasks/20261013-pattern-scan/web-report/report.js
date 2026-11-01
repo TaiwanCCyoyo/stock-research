@@ -82,10 +82,10 @@
         unknown: "無法判斷",
     };
     const pathNames = {
-        direct_failure: "先跌 10% 就沒再漲 10%",
-        rise_then_fall: "曾漲 20% 以上後回落",
-        sideways: "大致盤整",
-        slow_decline: "緩慢下跌",
+        direct_failure: "先跌 10% 才漲 10%（或一直沒漲 10%）",
+        rise_then_fall: "沒有先跌 10%，且曾漲 20% 以上",
+        sideways: "沒有先跌 10%，最高未達 +20%、最低未跌破 −15%",
+        slow_decline: "先漲過 10%，之後跌破 −15%（最高未達 +20%）",
         unknown: "無法判斷",
     };
     const binNames = {
