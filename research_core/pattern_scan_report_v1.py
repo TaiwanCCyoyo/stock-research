@@ -1,12 +1,15 @@
-"""Export the stored PR17 Q1 tables for a truthful partial web report."""
+"""Export stored PR17 tables without recomputing research or asserting acceptance."""
 
 from __future__ import annotations
 
+import csv
+import gzip
 import hashlib
 import json
 import logging
+from copy import deepcopy
 from datetime import date
-from io import BytesIO
+from io import BytesIO, StringIO
 from numbers import Integral, Real
 from pathlib import Path
 from typing import Any
@@ -119,7 +122,7 @@ def _set_available_status(report: dict[str, Any], provided: dict[str, list[str]]
             "value": f"Q1 {len(PATTERNS)} 家族；Q2–Q3 {len(provided['Q2'])}；Q4 {len(provided['Q4'])}；Q5–Q6 {len(provided['Q5'])}",
             "note": "只根據同一讀表迴圈已取得的原終表；缺少 phase 收據的家族標為待完成。",
         },
-        {"label": "交付狀態", "value": "完整報告／final handoff 與 owner 驗收仍分開確認", "note": "終表齊備不自動釋放 hold；iframe 實際下載仍待人工驗收。"},
+        {"label": "交付狀態", "value": "完整報告／final handoff 與 owner 驗收仍分開確認", "note": "終表齊備不自動釋放 hold；實際下載驗證以交付證據為準。"},
     ]
 
 
@@ -259,7 +262,7 @@ def add_stored_comparisons(report: dict[str, Any], q1_root: Path, remaining_root
         "這是事件標籤率，不是投資組合報酬；價格與公司行動品質、reference industry 非 PIT 等原限制仍適用。",
         "Q4–Q6 為描述。未知與截尾可重疊；return bin 為價格比而非百分比，1.10 表示 +10%。",
         "Q2–Q6 附錄為 cross-check／全期／全市場切片；其他年代、市場、年度與敏感度列仍保留於原執行目錄，不另複製。",
-        "iframe 實際檔案下載仍待人工驗收，DOM／點擊／SSR 測試不作下載完成證據。",
+        "實際檔案下載驗證以交付證據為準，DOM／點擊／SSR 測試不作下載完成證據。",
     ]
     LOGGER.info("Report presentation reads completed condition families: %s", ", ".join(provided["Q2"]))
 
@@ -510,8 +513,112 @@ def build_q1_report_data(q1_root: Path, *, as_of: str) -> tuple[dict[str, Any], 
     return report, files
 
 
-def export_q1_report_data(q1_root: Path, output: Path, *, as_of: str, remaining_root: Path | None = None) -> dict[str, Any]:
+def split_report_scripts(report: dict[str, Any], *, max_bytes: int = 500 * 1024) -> dict[str, bytes]:
+    """Serialize ordered classic scripts, each strictly below the byte limit.
+
+    Only table rows move into continuation scripts. Load every manifest entry in
+    order before the renderer. Oversized metadata or rows fail before publishing.
+    """
+    head = deepcopy(report)
+    files: dict[str, bytes] = {}
+    chunk = bytearray()
+
+    def encode(value: Any) -> bytes:
+        return json.dumps(value, ensure_ascii=False, separators=(",", ":"), allow_nan=False).encode("utf-8")
+
+    def flush() -> None:
+        if chunk:
+            files[f"rows-{len(files) + 1:03d}.js"] = bytes(chunk)
+            chunk.clear()
+
+    for question_index, question in enumerate(head["questions"]):
+        for table_index, table in enumerate(question.get("tables", [])):
+            rows = table["rows"]
+            table["rows"] = []
+            target = f"window.REPORT_DATA.questions[{question_index}].tables[{table_index}].rows"
+            prefix = f"{target} = {target}.concat([".encode("ascii")
+            suffix = b"]);\n"
+            batch: list[bytes] = []
+            batch_size = len(prefix) + len(suffix)
+            for row in rows:
+                encoded = encode(row)
+                if len(prefix) + len(encoded) + len(suffix) >= max_bytes:
+                    raise ValueError("one report row exceeds the script byte limit")
+                extra = len(encoded) + bool(batch)
+                if len(chunk) + batch_size + extra >= max_bytes:
+                    if batch:
+                        chunk.extend(prefix + b",".join(batch) + suffix)
+                    flush()
+                    batch, batch_size = [], len(prefix) + len(suffix)
+                batch.append(encoded)
+                batch_size += len(encoded) + (len(batch) > 1)
+            if batch:
+                chunk.extend(prefix + b",".join(batch) + suffix)
+    flush()
+    scripts = ["summary.js", *files]
+    head["dataScripts"] = scripts
+    initial = b"window.REPORT_DATA = " + encode(head) + b";\n"
+    if len(initial) >= max_bytes:
+        raise ValueError("report metadata exceeds the script byte limit")
+    return {
+        "summary.js": initial,
+        **files,
+        "scripts-manifest.json": encode({"schema": "pattern-scan-report-scripts.v1", "scripts": scripts, "max_bytes_exclusive": max_bytes}) + b"\n",
+    }
+
+
+def _display_downloads(report: dict[str, Any], files: dict[str, bytes]) -> None:
+    for question in report["questions"]:
+        for index, table in enumerate(question.get("tables", [])):
+            columns = [column["key"] for column in table["columns"]]
+            stream = StringIO(newline="")
+            writer = csv.DictWriter(stream, fieldnames=columns, lineterminator="\n")
+            writer.writeheader()
+            writer.writerows(table["rows"])
+            name = f"display/{question['id']}-{index + 1:02d}.csv"
+            raw = stream.getvalue().encode("utf-8-sig")
+            compressed = len(raw) >= 500 * 1024
+            if compressed:
+                name += ".gz"
+                raw = gzip.compress(raw, mtime=0)
+                if len(raw) >= 500 * 1024:
+                    raise ValueError(f"compressed display CSV exceeds the file byte limit: {name}")
+            files[name] = raw
+            download = {
+                "label": f"{table['title']}（{'CSV.gz' if compressed else 'CSV'}；完整展示切片，空值保留空白）",
+                "href": f"data/{name}",
+                "bytes": len(raw),
+                "sha256": hashlib.sha256(raw).hexdigest(),
+            }
+            table.setdefault("downloads", []).append(download)
+            report["downloads"].append(download)
+
+
+def _data_links(value: Any, replacements: dict[str, str]) -> None:
+    if isinstance(value, dict):
+        if "href" in value:
+            value["href"] = replacements.get(value["href"], value["href"])
+        for child in value.values():
+            _data_links(child, replacements)
+    elif isinstance(value, list):
+        for child in value:
+            _data_links(child, replacements)
+
+
+def export_q1_report_data(
+    q1_root: Path,
+    output: Path,
+    *,
+    as_of: str,
+    remaining_root: Path | None = None,
+    split_scripts: bool = False,
+    display_csv: bool = False,
+    data_prefix: str = "data",
+) -> dict[str, Any]:
     """Build and publish a new report data directory without replacing an existing one."""
+    data_prefix = relative_name(data_prefix)
+    if data_prefix != "data" and not data_prefix.startswith("data/"):
+        raise ValueError("report data prefix must be data or a subdirectory of data")
     output = safe_path(Path(output))
     root = safe_path(Path(q1_root))
     if output.is_relative_to(root) or root.is_relative_to(output):
@@ -524,7 +631,14 @@ def export_q1_report_data(q1_root: Path, output: Path, *, as_of: str, remaining_
     report, files = build_q1_report_data(q1_root, as_of=as_of)
     if remaining is not None:
         add_stored_comparisons(report, root, remaining)
-        files["summary.js"] = ("window.REPORT_DATA = " + json.dumps(report, ensure_ascii=False, separators=(",", ":"), allow_nan=False) + ";\n").encode("utf-8")
+    if display_csv:
+        _display_downloads(report, files)
+    _data_links(report, {f"data/{name}": f"{data_prefix}/{name}" for name in files})
+    files["summary.js"] = ("window.REPORT_DATA = " + json.dumps(report, ensure_ascii=False, separators=(",", ":"), allow_nan=False) + ";\n").encode("utf-8")
+    if split_scripts:
+        script_files = split_report_scripts(report)
+        files.update(script_files)
+        report["dataScripts"] = json.loads(script_files["scripts-manifest.json"])["scripts"]
     publish_new_directory(output, files)
-    LOGGER.info("Published partial Q1 report data families=%d tables=%d output=%s", len(PATTERNS), 2 * len(PATTERNS), output)
+    LOGGER.info("Published report data families=%d scripts=%d output=%s", len(PATTERNS), len(report.get("dataScripts", ["summary.js"])), output)
     return report

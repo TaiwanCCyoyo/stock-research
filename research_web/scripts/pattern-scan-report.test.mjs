@@ -4,6 +4,7 @@ import { join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { runInNewContext } from "node:vm";
+import { gunzipSync } from "node:zlib";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createServer } from "vite";
@@ -389,7 +390,7 @@ test("the first-screen comparison keeps twelve Q1 families on one scope and swit
     );
     assert.match(
         readFileSync(join(folder, "index.html"), "utf8"),
-        /強動能候選與其控制差距另列於\s+Q2–Q3/,
+        /加上篩選條件的結果在問題\s+2、3/,
     );
     assert.match(
         page.elements.get("family-summary-status").textContent,
@@ -486,7 +487,9 @@ test("collapsible table definitions use native details without dropping paginate
     payload.questions[0].tables[0].collapsible = true;
     const page = render(payload);
     const q1 = questionById(page, "Q1");
-    const details = byTag(q1, "details")[0];
+    const details = byTag(q1, "details").find((item) =>
+        item.className.includes("question-table"),
+    );
     const tbody = byTag(details, "tbody")[0];
 
     assert.ok(details);
@@ -503,9 +506,34 @@ test("collapsible table definitions use native details without dropping paginate
 test("the overview and evidence disclosure preserve the current completion boundaries", () => {
     const html = readFileSync(join(folder, "index.html"), "utf8");
 
-    assert.match(html, /Q1 已涵蓋十二個家族/);
-    assert.match(html, /各題進度依實際已提供終表呈現/);
-    assert.match(html, /既定範圍核對已完成/);
+    assert.match(html, /看見型態之後，股票更容易翻倍嗎/);
+    assert.match(html, /三個主要發現/);
+    assert.ok(
+        html.indexOf("三個主要發現") < html.indexOf('id="family-summary"'),
+    );
+    assert.match(html, /完整成果與資料取得/);
+    // Answer first: the page opens with the question's answer and its denominator.
+    assert.ok(html.indexOf("432") < html.indexOf("三個主要發現"));
+    assert.ok(
+        html.indexOf('id="main-answer"') <
+            html.indexOf('id="research-lineage"'),
+    );
+    // Lineage: every other station is a clickable related-report link plus JSON-LD.
+    for (const id of [
+        "20261021-momentum-only-doubling",
+        "20261024-strength-weakening-flags",
+    ])
+        assert.match(html, new RegExp(`data-related-report="${id}"`));
+    const ld = JSON.parse(
+        html.match(
+            /<script type="application\/ld\+json">([\s\S]*?)<\/script>/,
+        )[1],
+    );
+    assert.equal(ld["@type"], "Report");
+    assert.equal(ld.identifier, "20261013-pattern-scan");
+    assert.equal(ld.citation, "../research-lineage.md");
+    // Reader tone: no warning slogans or disclaimers.
+    assert.doesNotMatch(html, /僅供參考|不要照做|不可外推|不構成策略通過/);
     assert.doesNotMatch(html, /獨立重建稽核尚未完成/);
     assert.match(html, /<details class="evidence-details">/);
     for (const id of [
@@ -569,6 +597,13 @@ test("missing Q2–Q6 and missing payload stay explicitly pending", () => {
         );
 });
 
+function readCsv(file) {
+    const bytes = readFileSync(file);
+    return (file.endsWith(".gz") ? gunzipSync(bytes) : bytes)
+        .toString("utf8")
+        .replace(/^\uFEFF/, "");
+}
+
 function csvRecords(text) {
     const records = [];
     let row = [];
@@ -601,16 +636,49 @@ function csvRecords(text) {
     return records;
 }
 
-test("the committed summary exists and matches its displayed rows and actual downloads", () => {
+test("the actual page loads every final chunk in order and matches all displayed rows and downloads", () => {
     // Required, not a conditional skip: a registered report must ship its data.
+    const html = readFileSync(join(folder, "index.html"), "utf8");
+    const tags = [...html.matchAll(/<script\b([^>]*)><\/script>/g)];
+    const scripts = tags.map((tag) => tag[1].match(/\bsrc="([^"]+)"/)?.[1]);
+    const manifest = JSON.parse(
+        readFileSync(
+            join(folder, "data/final-v1/scripts-manifest.json"),
+            "utf8",
+        ),
+    );
+    assert.equal(manifest.max_bytes_exclusive, 500 * 1024);
+    assert.deepEqual(scripts, [
+        "kit/report-kit.js",
+        ...manifest.scripts.map((name) => `data/final-v1/${name}`),
+        "conclusions.js",
+        "report.js",
+        "reader.js",
+    ]);
+    for (const [index, tag] of tags.entries()) {
+        assert.match(tag[1], /\bdefer\b/);
+        assert.doesNotMatch(tag[1], /\basync\b|\btype=/);
+        const stats = statSync(join(folder, scripts[index]));
+        assert.ok(stats.isFile());
+        assert.ok(stats.size < 500 * 1024, `${scripts[index]}: script budget`);
+    }
     const context = {};
     context.window = context;
-    runInNewContext(
-        readFileSync(join(folder, "data/summary.js"), "utf8"),
-        context,
-        {
+    for (const script of scripts.slice(1, -2)) {
+        runInNewContext(readFileSync(join(folder, script), "utf8"), context, {
             timeout: 5000,
-        },
+            filename: script,
+        });
+    }
+    assert.deepEqual(
+        Array.from(context.REPORT_DATA.dataScripts),
+        manifest.scripts,
+    );
+    assert.equal(
+        context.REPORT_DATA.questions
+            .flatMap((question) => question.tables)
+            .reduce((total, table) => total + table.rows.length, 0),
+        8268,
     );
     const data = context.REPORT_DATA;
     assert.ok(data && typeof data === "object");
@@ -632,7 +700,7 @@ test("the committed summary exists and matches its displayed rows and actual dow
     const page = render(data);
     const downloads = [...(data.downloads || [])];
     for (const question of data.questions) {
-        assert.ok(["complete", "partial", "pending"].includes(question.status));
+        assert.equal(question.status, "complete");
         const questionElement = questionById(page, question.id);
         assert.ok(questionElement.textContent.includes(question.title));
         assert.ok(questionElement.textContent.includes(question.conclusion));
@@ -669,6 +737,29 @@ test("the committed summary exists and matches its displayed rows and actual dow
                 }
             }
             downloads.push(...(table.downloads || []));
+            const csv = table.downloads.find((item) =>
+                /\.csv(?:\.gz)?$/.test(item.href),
+            );
+            assert.ok(
+                csv,
+                `${question.id}/${table.id}: complete displayed CSV`,
+            );
+            const records = csvRecords(readCsv(join(folder, csv.href)));
+            assert.deepEqual(records[0], Array.from(keys));
+            assert.equal(records.length - 1, table.rows.length);
+            for (const [index, row] of table.rows.entries()) {
+                for (const [columnIndex, column] of table.columns.entries()) {
+                    const value = row[column.key];
+                    const cell = records[index + 1][columnIndex];
+                    assert.equal(
+                        value === null || column.kind === "text"
+                            ? cell
+                            : Number(cell),
+                        value === null ? "" : value,
+                        `${csv.href}: row ${index}, ${column.key}`,
+                    );
+                }
+            }
         }
     }
     assert.ok(
@@ -686,15 +777,18 @@ test("the committed summary exists and matches its displayed rows and actual dow
         const stats = statSync(file);
         assert.ok(stats.isFile());
         assert.equal(stats.size, item.bytes, `${item.href}: advertised bytes`);
-        assert.ok(Number.isInteger(item.rows) && item.rows >= 0);
-        if (item.href.endsWith(".csv")) {
-            const records = csvRecords(readFileSync(file, "utf8"));
+        if (item.rows !== undefined)
+            assert.ok(Number.isInteger(item.rows) && item.rows >= 0);
+        if (/\.csv(?:\.gz)?$/.test(item.href)) {
+            assert.ok(stats.size < 500 * 1024, `${item.href}: download budget`);
+            const records = csvRecords(readCsv(file));
             assert.ok(records.length > 0, "CSV needs a header");
-            assert.equal(
-                records.length - 1,
-                item.rows,
-                `${item.href}: advertised row count`,
-            );
+            if (item.rows !== undefined)
+                assert.equal(
+                    records.length - 1,
+                    item.rows,
+                    `${item.href}: advertised row count`,
+                );
             assert.ok(
                 records
                     .slice(1)

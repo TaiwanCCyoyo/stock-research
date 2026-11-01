@@ -369,13 +369,7 @@
     byId("as-of").textContent =
         `資料更新時間：${present(report.asOf) ? report.asOf : "未提供"}`;
     if (report.status === "complete") {
-        byId("completion-banner").className = "rk-note";
-        byId("completion-banner").replaceChildren(
-            node("strong", "本頁提供的資料已彙整。"),
-            document.createTextNode(
-                " 全研究進度與稽核範圍依下方說明；此狀態不代表策略通過。",
-            ),
-        );
+        byId("completion-banner").hidden = true;
     }
     const study = report.study || {};
     const period = array(study.period);
@@ -407,11 +401,10 @@
         const title = question.title || "尚未提供研究結果";
         const link = node("a", null, "question-link");
         link.href = `#${id}`;
-        link.append(
-            node("span", id, "question-id"),
-            badge(status),
-            node("p", title),
-        );
+        const label = `問題 ${number}`;
+        link.append(node("span", label, "question-id"));
+        if (status !== "complete") link.append(badge(status));
+        link.append(node("p", title));
         byId("question-progress").append(link);
 
         const section = node("section", null, "rk-section");
@@ -421,8 +414,9 @@
         const heading = node("div");
         const h2 = node("h2", title);
         h2.id = `${id}-title`;
-        heading.append(node("span", id, "rk-q"), h2);
-        header.append(heading, badge(status));
+        heading.append(node("span", label, "rk-q"), h2);
+        header.append(heading);
+        if (status !== "complete") header.append(badge(status));
         section.append(
             header,
             node(
@@ -433,21 +427,24 @@
         );
         const notes = node("ul", null, "question-notes");
         list(notes, question.notes);
-        if (notes.childElementCount) section.append(notes);
+        const evidence = node("details", null, "question-evidence");
+        evidence.append(node("summary", "查看比較口徑、數據與下載"));
+        if (notes.childElementCount) evidence.append(notes);
         const tables = array(question.tables);
         tables.forEach((table, index) => {
             if (table && typeof table === "object")
-                section.append(renderTable(table, index, id));
+                evidence.append(renderTable(table, index, id));
         });
         if (!tables.length)
             section.append(node("p", "本題尚未提供成果表。", "rk-note"));
+        section.append(evidence);
         byId("questions").append(section);
     }
 
     const audit = report.audit || {};
     byId("audit-status").textContent =
         audit.status === "complete"
-            ? "既定範圍核對已完成；不代表全研究驗收。"
+            ? "既定範圍核對已完成。"
             : audit.status === "partial"
               ? "已完成固定範圍核對；其他研究階段仍未完成。"
               : "稽核狀態尚未提供；既定範圍核對不代表全研究驗收。";

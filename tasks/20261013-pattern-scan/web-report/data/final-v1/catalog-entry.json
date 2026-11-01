@@ -1,0 +1,68 @@
+{
+  "backup": {
+    "offsite_verified": false,
+    "restore_test": "ZIP reopen and CRC; source finals checked against saved receipt digests while streaming",
+    "status": "local_copy_only"
+  },
+  "coverage": {
+    "complete_label_period": {
+      "end": null,
+      "reason": "Per-row eligibility and censoring are retained in the final tables; no new coverage inference.",
+      "start": null
+    },
+    "raw_input_period": {
+      "end": "2026-10-12",
+      "reason": null,
+      "start": "2010-01-04"
+    },
+    "scope": "Q1 and Q2-Q6 retained final results for all 12 families",
+    "valid_indicator_period": {
+      "end": null,
+      "reason": "Per-row eligibility and censoring are retained in the final tables; no new coverage inference.",
+      "start": null
+    }
+  },
+  "data_id": "pattern-scan-d-results-v1",
+  "definition_version": "pattern-scan-local-remaining.v5",
+  "inputs": {
+    "input_id": "5c48eb999a81e42149c858331a601aff700a63af3c7f2fb8d642bf20b1370c05",
+    "policy": "Existing terminal receipts; no input copies or new input hashes.",
+    "source_id": "a3cfc677ef01547132ce5f3e5cd2a514201fecc02d65f4fa87aeb6fc69cc7ea4"
+  },
+  "kind": "patterns",
+  "limitations": [
+    "Exploratory exposed cross-check; not unseen validation or strategy approval.",
+    "Original receipt absolute paths are historical provenance; ZIP members resolve result-name keys.",
+    "Delivery does not release holds, mark scratch delivered, or delete original data."
+  ],
+  "manifest": {
+    "path": "tasks/20261013-pattern-scan/d-results-v1/e54f8fea56898863a3b94ca40057f4fb66f41e0aa22cd3cfbc49ae67a89fe708/manifest.json",
+    "scope": "data",
+    "sha256": "e54f8fea56898863a3b94ca40057f4fb66f41e0aa22cd3cfbc49ae67a89fe708"
+  },
+  "parameters": {
+    "cutoff": "2026-10-12",
+    "delivery_only": true,
+    "families": [
+      "H1",
+      "B1",
+      "B2",
+      "B3",
+      "B4",
+      "R1",
+      "R2",
+      "R3",
+      "P1",
+      "L1",
+      "L2",
+      "L3"
+    ],
+    "horizons": [
+      126,
+      252
+    ]
+  },
+  "reader": "bundle",
+  "status": "complete",
+  "version_id": "e54f8fea56898863a3b94ca40057f4fb66f41e0aa22cd3cfbc49ae67a89fe708"
+}

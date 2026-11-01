@@ -3,114 +3,291 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>2010 起全市場型態掃描</title>
-        <meta name="report:title" content="2010 起全市場型態掃描" />
+        <title>看見型態之後，股票更容易翻倍嗎？</title>
+        <meta name="report:title" content="看見型態之後，股票更容易翻倍嗎？" />
         <meta
             name="report:summary"
-            content="十二家族 Q1 比較與 Q2–Q6 既有終表切片；各題進度依實際已提供終表呈現。既定範圍核對已完成，完整交付另行確認。"
+            content="1,942 檔台股、十二種型態：追蹤約一年，加上相同篩選條件後，有型態的組合翻倍比例較高的有 432 組、較低的有 525 組；轉弱訊號同時碰到沒翻倍與後來翻倍的股票。"
         />
-        <meta name="report:date" content="2026-10-21" />
+        <meta name="report:date" content="2026-10-31" />
         <meta name="report:status" content="exploratory" />
         <meta name="report:period" content="2010-01-04 – 2026-10-12" />
         <meta name="report:tags" content="台股,型態,條件,描述性研究" />
         <meta name="report:kit" content="v1" />
+        <script type="application/ld+json">
+            {
+                "@context": "https://schema.org",
+                "@type": "Report",
+                "identifier": "20261013-pattern-scan",
+                "name": "看見型態之後，股票更容易翻倍嗎？",
+                "description": "系列起點，沒有前作。後續研究 20261021-momentum-only-doubling 與 20261024-strength-weakening-flags 以本作為基礎。",
+                "isBasedOn": [],
+                "citation": "../research-lineage.md"
+            }
+        </script>
         <link rel="stylesheet" href="kit/report-kit.css" />
         <link rel="stylesheet" href="report.css" />
         <script src="kit/report-kit.js" defer></script>
-        <script src="data/summary.js" defer></script>
+        <script src="data/final-v1/summary.js" defer></script>
+        <script src="data/final-v1/rows-001.js" defer></script>
+        <script src="data/final-v1/rows-002.js" defer></script>
+        <script src="data/final-v1/rows-003.js" defer></script>
+        <script src="data/final-v1/rows-004.js" defer></script>
+        <script src="data/final-v1/rows-005.js" defer></script>
+        <script src="data/final-v1/rows-006.js" defer></script>
+        <script src="data/final-v1/rows-007.js" defer></script>
+        <script src="data/final-v1/rows-008.js" defer></script>
+        <script src="data/final-v1/rows-009.js" defer></script>
+        <script src="data/final-v1/rows-010.js" defer></script>
+        <script src="data/final-v1/rows-011.js" defer></script>
+        <script src="data/final-v1/rows-012.js" defer></script>
+        <script src="conclusions.js" defer></script>
         <script src="report.js" defer></script>
+        <script src="reader.js" defer></script>
     </head>
     <body>
-        <a class="skip-link" href="#overview">跳到研究內容</a>
+        <a class="skip-link" href="#main-answer">跳到主要答案</a>
         <main class="rk-page">
             <header class="rk-hero">
-                <p class="rk-eyebrow">台股 · 描述性研究 · 階段成果</p>
-                <h1 id="report-title">2010 起全市場型態掃描</h1>
+                <p class="rk-eyebrow">台股 · 2010–2026 · 描述性研究</p>
+                <h1 id="report-title">看見型態之後，股票更容易翻倍嗎？</h1>
                 <p class="rk-lede">
-                    Q1 已涵蓋十二個家族；Q2–Q6
-                    的已提供家族與待完成範圍列於下方。
-                    既定範圍核對已完成，終表齊備仍不代表完整交付或策略驗收完成。
+                    不一定。平台突破、跳空突破等少數型態出現後，一年內翻倍的比例高於一般水準；但加上篩選條件後優勢並不一致，用「轉弱」訊號把股票排除，也會同時排掉許多後來翻倍的股票。
+                </p>
+                <div class="shared-example">
+                    <p>
+                        例：型態出現當天收盤 100 元，之後收盤曾到 200
+                        元，就算「翻倍」。本頁追蹤約半年（126
+                        個交易日）或約一年（252 個交易日），並一律用這個 100
+                        元當例子。
+                    </p>
+                    <div class="price-line is-short" aria-hidden="true">
+                        <span class="price-axis"></span>
+                        <span class="price-tick above is-start" style="left: 0%"
+                            ><b>100</b>起點</span
+                        >
+                        <span class="price-tick above is-end" style="left: 100%"
+                            ><b>200</b>翻倍</span
+                        >
+                    </div>
+                </div>
+                <nav class="lineage-crumb" aria-label="研究脈絡">
+                    本作：型態與條件
+                    <span aria-hidden="true">→</span>
+                    <a
+                        data-related-report="20261021-momentum-only-doubling"
+                        href="../../20261021-momentum-only-doubling/web-report/index.html"
+                        >只看強勢條件</a
+                    >
+                    <span aria-hidden="true">→</span>
+                    <a
+                        data-related-report="20261024-strength-weakening-flags"
+                        href="../../20261024-strength-weakening-flags/web-report/index.html"
+                        >再看轉弱訊號</a
+                    >
+                    <span aria-hidden="true">·</span>
+                    <a href="#research-lineage">完整脈絡</a>
+                </nav>
+                <p class="hero-links">
+                    <a href="data/final-v1/final-report.md">逐題結論</a> ·
+                    <a href="data/final-v1/final-delivery.md"
+                        >完整成果與資料取得</a
+                    >
+                    · <a href="/#data" target="_top">共用資料</a>
                 </p>
                 <div class="rk-meta" id="study-meta"></div>
             </header>
 
-            <section
-                class="family-summary rk-card"
-                id="family-summary"
-                aria-labelledby="family-summary-title"
-            >
-                <header class="family-summary-header">
-                    <div>
-                        <span class="rk-q">Q1 · 十二家族</span>
-                        <h2 id="family-summary-title">同一口徑的家族摘要</h2>
+            <div class="answer-layout">
+                <section id="main-answer" aria-labelledby="answer-title">
+                    <h2 id="answer-title">
+                        篩選條件相同時，有型態的組合不比沒有型態的更常翻倍：432
+                        組較高，525 組較低
+                    </h2>
+                    <p class="answer-note">
+                        一組＝一種型態搭配一組篩選條件（例如「收盤高於 20
+                        日平均價」）。每組都拿來和「同一天也符合這些條件、但沒有出現該型態」的股票比較翻倍比例。
+                    </p>
+                    <div
+                        class="headline-comparison"
+                        role="group"
+                        aria-label="追蹤約一年，有型態的翻倍比例較高與較低的組數"
+                    >
+                        <div class="headline-rate">
+                            <span class="headline-label"
+                                >有型態的翻倍比例較高的組合</span
+                            >
+                            <strong>432</strong>
+                        </div>
+                        <div class="headline-rate">
+                            <span class="headline-label"
+                                >有型態的翻倍比例較低的組合</span
+                            >
+                            <strong>525</strong>
+                        </div>
+                        <p class="headline-basis">
+                            追蹤約一年（252 個交易日）· 共 1,104 組（12 種型態 ×
+                            各 92 組事先固定的條件）· 另有 16 組比例相同、131
+                            組無法計算 · 留作交叉檢核的那一半股票 ·
+                            2010-01-04–2026-10-12
+                        </p>
                     </div>
-                    <label for="family-summary-horizon">
-                        期限
-                        <select id="family-summary-horizon">
-                            <option value="126" selected>H126</option>
-                            <option value="252">H252</option>
-                        </select>
-                    </label>
-                </header>
-                <p class="family-summary-scope" id="family-summary-scope">
-                    Q1 無額外條件 · split=all · era=all · mkt=all · cohort=union
-                </p>
-                <p
-                    class="family-summary-baseline"
-                    id="family-summary-baseline"
-                ></p>
-                <div class="family-summary-table-wrap">
-                    <table class="family-summary-table">
-                        <caption>
-                            所有家族使用同一個 Q1 全體口徑；強動能候選留在
-                            Q2–Q3。
-                        </caption>
-                        <thead>
-                            <tr>
-                                <th scope="col">家族</th>
-                                <th scope="col">× C-base-daily</th>
-                                <th scope="col">Δ vs C-base-all (pt)</th>
-                                <th scope="col">型態 K</th>
-                                <th scope="col">C-base-all K</th>
-                                <th scope="col">Loss rate</th>
-                            </tr>
-                        </thead>
-                        <tbody id="family-summary-rows"></tbody>
-                    </table>
+                    <details class="reader-explorer">
+                        <summary>改看約半年，或查看四種結果的完整分布</summary>
+                        <label for="reader-horizon"
+                            >觀察期限
+                            <select id="reader-horizon">
+                                <option value="252">
+                                    252 個交易日（約一年）
+                                </option>
+                                <option value="126">
+                                    126 個交易日（約半年）
+                                </option>
+                            </select></label
+                        >
+                        <p
+                            id="reader-comparison-answer"
+                            class="rk-answer"
+                            aria-live="polite"
+                        ></p>
+                        <div
+                            id="reader-comparison-bars"
+                            class="reader-bars"
+                        ></div>
+                        <p class="rk-foot">
+                            長條的分母都是全部 1,104
+                            組。各組的條件彼此重疊，這裡只呈現方向的分布。<span
+                                id="reader-sample-note"
+                            ></span>
+                        </p>
+                    </details>
+                </section>
+
+                <aside class="counter-note" aria-labelledby="counter-title">
+                    <h3 id="counter-title">
+                        轉弱訊號也常出現在最後翻倍的股票身上
+                    </h3>
+                    <p class="counter-population">
+                        另一批事件：追蹤約一年、最後確實翻倍的事件
+                    </p>
+                    <p class="counter-rate"><strong>88.32%–100%</strong></p>
+                    <p>
+                        在達標前，收盤就曾低於近 20 日平均收盤價（12
+                        種型態各自的範圍）。
+                    </p>
+                    <p class="muted">
+                        沒翻倍的事件中，這個訊號則全部都曾出現。
+                    </p>
+                </aside>
+            </div>
+
+            <p class="main-limit">
+                主要限制：型態、條件與結果取自同一段已看過的歷史，交叉檢核的那一半也不是獨立的驗證期；數字是事件之間的關聯，沒有模擬買賣。
+            </p>
+
+            <section
+                class="reader-findings"
+                aria-labelledby="reader-findings-title"
+            >
+                <h2 id="reader-findings-title">三個主要發現</h2>
+                <div class="reader-cards">
+                    <article class="rk-card">
+                        <h3>型態有高有低，加了條件也沒有一致的好處</h3>
+                        <p>
+                            追蹤約一年，<strong>平台突破</strong>（橫向整理
+                            25–65 天後放量突破）的翻倍比例是
+                            15.23%（1,197／7,862
+                            件），<strong>跳空突破</strong>（開盤直接跳空越過前一日最高價）是
+                            15.15%（1,801／11,891
+                            件）；全市場合格股票任一天起算約
+                            9.83%。但把所有條件組合放在一起看，低於「沒有型態」對照的組合比高於的更多。
+                        </p>
+                        <a href="#main-answer">看同條件比較</a>
+                    </article>
+                    <article class="rk-card">
+                        <h3>飆股裡常見的型態，不等於看見型態後常翻倍</h3>
+                        <p>
+                            在「翻倍段落」（一檔股票從低點起、126
+                            個交易日內漲到兩倍的一段）附近，12 種型態有 11
+                            種的出現比例高於同樣數量的隨機日期。這回答「飆股裡有沒有它」；要回答「看見它後多常翻倍」，分母得是所有出現過型態的事件，包括後來沒翻倍的。
+                        </p>
+                        <a href="#Q4">看這兩種分母的差別</a>
+                    </article>
+                    <article class="rk-card">
+                        <h3>轉弱訊號會同時碰到沒翻倍的與後來翻倍的</h3>
+                        <p>
+                            「收盤跌破 20
+                            日均線」幾乎無所不包：可判定的未翻倍事件全部觸發，後來翻倍的事件也有
+                            88.32%–100% 在達標前觸發。條件更嚴的「從起點跌
+                            10%」（100 元跌到 90
+                            元）較少碰到後來翻倍者，但也漏掉更多未翻倍者。
+                        </p>
+                        <a href="#Q6">看訊號的取捨</a>
+                    </article>
                 </div>
-                <p
-                    class="family-summary-status rk-foot"
-                    id="family-summary-status"
-                    aria-live="polite"
-                >
-                    尚未提供跨家族對照摘要；不以空白或零代替資料。
-                </p>
-                <p class="family-summary-units rk-foot">
-                    Δ 已是百分點，直接顯示 pt；倍數以 × 顯示。Rate
-                    由比例轉成百分比；K 是各自已知母數。 null 或零分母顯示
-                    N/A，真實零值仍保留。
-                </p>
-                <p class="family-summary-candidates rk-foot">
-                    這張表只用 Q1 無額外條件口徑；強動能候選與其控制差距另列於
-                    Q2–Q3，不混入此表。
-                </p>
             </section>
 
-            <div class="rk-banner" id="completion-banner" role="status">
-                <strong>階段成果，完整交付另行確認。</strong>
-                各題狀態只表示已提供的終表範圍，不推定程序正在執行，也不代表
-                owner 驗收、final handoff 或 hold 可釋放。
+            <section
+                class="rk-card reader-method"
+                aria-labelledby="reader-method-title"
+            >
+                <h2 id="reader-method-title">這些比例怎麼來？</h2>
+                <ol class="reader-timeline">
+                    <li>
+                        <strong>型態出現的那天，當作起點</strong
+                        ><span>以當天收盤價為基準，例如 100 元。</span>
+                    </li>
+                    <li>
+                        <strong>往後追蹤 126 或 252 個交易日</strong
+                        ><span
+                            >收盤曾到 200
+                            元就算翻倍；同時記錄途中最高到多少、曾跌到多少，以及轉弱訊號有沒有出現。</span
+                        >
+                    </li>
+                    <li>
+                        <strong>算出翻倍的比例</strong
+                        ><span
+                            >翻倍的事件數 ÷
+                            判斷得出結果的事件數。資料不全、無法判斷的事件不算進分母，也不當作
+                            0。</span
+                        >
+                    </li>
+                </ol>
+                <div class="price-line" aria-hidden="true">
+                    <span class="price-axis"></span>
+                    <span class="price-tick below" style="left: 16.7%"
+                        ><b>90</b>跌 10%</span
+                    >
+                    <span class="price-tick above is-start" style="left: 25%"
+                        ><b>100</b>起點</span
+                    >
+                    <span class="price-tick below" style="left: 41.7%"
+                        ><b>120</b>漲 20%</span
+                    >
+                    <span class="price-tick above is-end" style="left: 100%"
+                        ><b>200</b>翻倍</span
+                    >
+                </div>
+                <p class="rk-foot">
+                    以起點 100 元為例：問題 5、6 會用到「漲到 120 元」與「跌到
+                    90 元」這兩條線。
+                </p>
+            </section>
+            <div class="rk-banner" id="completion-banner" role="status" hidden>
+                <strong>尚未載入研究資料。</strong>
             </div>
 
             <nav class="report-nav" aria-label="研究內容">
                 <ul class="rk-toc">
-                    <li><a href="#overview">整體進度</a></li>
-                    <li><a href="#Q1">Q1</a></li>
-                    <li><a href="#Q2">Q2</a></li>
-                    <li><a href="#Q3">Q3</a></li>
-                    <li><a href="#Q4">Q4</a></li>
-                    <li><a href="#Q5">Q5</a></li>
-                    <li><a href="#Q6">Q6</a></li>
+                    <li><a href="#main-answer">主要答案</a></li>
+                    <li><a href="#overview">六個問題</a></li>
+                    <li><a href="#Q1">型態</a></li>
+                    <li><a href="#Q2">篩選條件</a></li>
+                    <li><a href="#Q3">同條件比較</a></li>
+                    <li><a href="#Q4">飆股覆蓋</a></li>
+                    <li><a href="#Q5">途中走勢</a></li>
+                    <li><a href="#Q6">轉弱訊號</a></li>
+                    <li><a href="#research-lineage">研究脈絡</a></li>
                     <li><a href="#evidence">來源與限制</a></li>
                 </ul>
             </nav>
@@ -123,19 +300,169 @@
                 <header>
                     <div>
                         <span class="rk-q">研究全貌</span>
-                        <h2 id="overview-title">目前能回答到哪裡？</h2>
+                        <h2 id="overview-title">六個問題，各自的答案</h2>
                     </div>
                     <p class="rk-foot" id="as-of">資料更新時間：未提供</p>
                 </header>
                 <ul class="rk-findings" id="overview-values"></ul>
                 <div class="question-progress" id="question-progress"></div>
-                <p class="rk-foot">
-                    「本題完成」表示該題已有可呈現的結果，不代表全研究的重建稽核已通過。
-                    未知、缺值與未完成項目均另外標示。
-                </p>
+                <p class="rk-foot">每題下方可展開比較口徑、原始表格與下載。</p>
             </section>
 
             <div id="questions"></div>
+            <details class="reader-family-details">
+                <summary>查看十二種型態的完整對照表（含代號）</summary>
+                <section
+                    class="family-summary rk-card"
+                    id="family-summary"
+                    aria-labelledby="family-summary-title"
+                >
+                    <header class="family-summary-header">
+                        <div>
+                            <span class="rk-q">不加額外條件</span>
+                            <h2 id="family-summary-title">
+                                十二種型態並排：翻倍比例與樣本數
+                            </h2>
+                        </div>
+                        <label for="family-summary-horizon">
+                            期限
+                            <select id="family-summary-horizon">
+                                <option value="126" selected>
+                                    H126（約半年）
+                                </option>
+                                <option value="252">H252（約一年）</option>
+                            </select>
+                        </label>
+                    </header>
+                    <p class="family-summary-codes">
+                        代號對照：H1 頭頭低 · B1 杯形突破（有柄／無柄）· B2
+                        布林通道收縮後突破 · B3 平台突破 · B4 跳空突破 · R1
+                        跌破支撐後收復 · R2 下跌後的反轉 K 線 · R3 RSI 背離 · P1
+                        突破後回測 · L1 突破 60 日高點 · L2 站上 60
+                        日均線後短線回檔 · L3 跌破 20 日低點後收復
+                    </p>
+                    <p class="family-summary-scope" id="family-summary-scope">
+                        Q1 無額外條件 · split=all · era=all · mkt=all ·
+                        cohort=union
+                    </p>
+                    <p
+                        class="family-summary-baseline"
+                        id="family-summary-baseline"
+                    ></p>
+                    <div class="family-summary-table-wrap">
+                        <table class="family-summary-table">
+                            <caption>
+                                十二種型態用同一個口徑並排；加上篩選條件的結果在問題
+                                2、3。
+                            </caption>
+                            <thead>
+                                <tr>
+                                    <th scope="col">型態</th>
+                                    <th scope="col">× C-base-daily</th>
+                                    <th scope="col">Δ vs C-base-all (pt)</th>
+                                    <th scope="col">型態 K</th>
+                                    <th scope="col">C-base-all K</th>
+                                    <th scope="col">Loss rate</th>
+                                </tr>
+                            </thead>
+                            <tbody id="family-summary-rows"></tbody>
+                        </table>
+                    </div>
+                    <p
+                        class="family-summary-status rk-foot"
+                        id="family-summary-status"
+                        aria-live="polite"
+                    >
+                        尚未提供跨型態對照摘要；不以空白或零代替資料。
+                    </p>
+                    <p class="family-summary-units rk-foot">
+                        C-base-daily、C-base-all
+                        是兩種「不看型態」的全市場基準；× 是型態的翻倍比例除以
+                        C-base-daily（不是投資報酬倍數），Δ 是與 C-base-all
+                        相差的百分點（pt）。K 是計入比例的樣本數；Loss rate
+                        是追蹤期滿仍未翻倍、且最後收盤低於起點的比例。null
+                        或零分母顯示 N/A，真實的零照實顯示。
+                    </p>
+                </section>
+            </details>
+
+            <section
+                class="rk-section research-lineage"
+                id="research-lineage"
+                aria-labelledby="lineage-title"
+            >
+                <header>
+                    <h2 id="lineage-title">
+                        這份研究是系列的起點：先看型態，再看強勢條件，最後看轉弱訊號
+                    </h2>
+                </header>
+                <ol class="lineage-steps">
+                    <li aria-current="step">
+                        <span class="rk-q">本作</span>
+                        <h3>型態與條件，和翻倍有什麼關係？</h3>
+                        <p>
+                            <strong>提供：</strong
+                            >十二種型態的事件、同條件比較、轉弱訊號的定義，以及「起點後追蹤多久」的觀察方式。
+                        </p>
+                        <p>
+                            <strong>答案：</strong
+                            >效果依型態與比較對象而異；全部條件組合沒有一致優勢，轉弱訊號也常先碰到後來翻倍者。
+                        </p>
+                        <a href="#main-answer">回到主要答案</a>
+                    </li>
+                    <li>
+                        <span class="rk-q">後續一</span>
+                        <h3>不要求型態，只看強勢條件呢？</h3>
+                        <p>
+                            <strong>沿用本作：</strong
+                            >起點加上追蹤是否達標的做法。<strong>新問題：</strong>只要股價已高於長期均價、又遠高於近一年低價，後來多常漲到
+                            2、3、5、10 倍？
+                        </p>
+                        <p>
+                            <strong>保存報告的答案：</strong
+                            >主要強勢條件組比一般合格股票日更常翻倍，但未翻倍且期末收低的比例也更高。
+                        </p>
+                        <a
+                            data-related-report="20261021-momentum-only-doubling"
+                            href="../../20261021-momentum-only-doubling/web-report/index.html"
+                            >〈只看強勢條件的翻倍機率〉</a
+                        >
+                    </li>
+                    <li>
+                        <span class="rk-q">後續二</span>
+                        <h3>強勢條件成立後，再看轉弱訊號呢？</h3>
+                        <p>
+                            <strong>沿用本作：</strong
+                            >轉弱訊號的定義與觀察方式，搭配後續一的強勢條件。<strong>新問題：</strong>先觀察一段時間，有訊號與沒有訊號、而且都還沒達標的事件，後續翻倍的比例是否不同？
+                        </p>
+                        <p class="rk-foot">這份報告仍在審閱中。</p>
+                        <a
+                            data-related-report="20261024-strength-weakening-flags"
+                            href="../../20261024-strength-weakening-flags/web-report/index.html"
+                            >〈已大漲的股票，接著轉弱，之後還會翻倍嗎？〉</a
+                        >
+                    </li>
+                </ol>
+                <p>
+                    三份研究的比例分母各不相同：本作從「型態出現的日子」出發，後續一從「符合強勢條件的股票日」出發，後續二還要再限縮成「觀察期結束時仍未達標」的事件，所以數字並排時不是同一群事件。
+                </p>
+                <details>
+                    <summary>查看研究範圍與時間先後</summary>
+                    <p>
+                        本作追蹤約半年與約一年內翻倍；後續一另外看 3、5、10
+                        倍與約兩年（504 個交易日）。
+                    </p>
+                    <p>
+                        後續研究設計時引用的是本作 2026-10-21
+                        的階段報告；完整結果在 2026-10-31
+                        完成。後續一的答案引用其 2026-10-22
+                        保存的報告，「型態額外貢獻多少」在那份研究中仍未評估。
+                    </p>
+                    <a href="data/final-v1/research-lineage.md"
+                        >完整研究承接紀錄</a
+                    >
+                </details>
+            </section>
 
             <section
                 class="rk-section"
@@ -145,34 +472,28 @@
                 <header>
                     <div>
                         <span class="rk-q">如何核對</span>
-                        <h2 id="evidence-title">稽核、來源與使用限制</h2>
+                        <h2 id="evidence-title">稽核、來源與資料限制</h2>
                     </div>
                 </header>
                 <details class="evidence-details">
-                    <summary>展開稽核紀錄、來源、下載與使用限制</summary>
+                    <summary>展開稽核紀錄、來源、下載與資料限制</summary>
                     <div class="evidence-content">
                         <div class="rk-grid-2">
                             <article class="rk-card">
                                 <h3>重建與驗證</h3>
-                                <p id="audit-status">
-                                    既定範圍核對已完成；不等於全研究驗收。
-                                </p>
+                                <p id="audit-status">既定範圍核對已完成。</p>
                                 <ul id="audit-notes"></ul>
                             </article>
                             <article class="rk-card">
-                                <h3>如何解讀</h3>
+                                <h3>資料限制</h3>
                                 <ul id="limitations"></ul>
-                                <p class="rk-foot">
-                                    歷史關聯與描述性統計不等於可交易策略，也不構成策略通過或獲利保證。
-                                </p>
                             </article>
                         </div>
                         <article class="rk-card provenance-card">
                             <h3>本次資料與程式紀錄</h3>
                             <dl id="provenance"></dl>
                             <p class="rk-foot">
-                                來源與世代紀錄用來說明本次讀了什麼，不表示永久保存每個歷史輸入快照。
-                                後續共用資料更新也不會改寫本頁既有的結果。
+                                來源與世代紀錄說明本次讀了什麼；後續共用資料更新不會改寫本頁既有的結果。
                             </p>
                         </article>
                         <article
@@ -182,14 +503,14 @@
                             <h3>可下載的成果</h3>
                             <div id="downloads"></div>
                             <p class="rk-foot">
-                                下載內容以實際列出的檔案為準。表格僅呈現已提供的資料，不會在瀏覽器重新執行研究。
+                                表格只呈現已提供的資料，不會在瀏覽器重新執行研究。
                             </p>
                         </article>
                     </div>
                 </details>
             </section>
             <footer class="report-footer">
-                <p>2010 起全市場型態掃描 · 可逐題查看進度、表格與來源。</p>
+                <p>2010 起全市場型態掃描 · 可逐題查看表格與來源。</p>
                 <a href="#report-title">回到頁首</a>
             </footer>
             <noscript>
