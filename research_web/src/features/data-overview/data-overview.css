@@ -90,6 +90,17 @@
 .do-updated {
     font-size: 13px;
 }
+.do-identity,
+.do-source-links {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+.do-identity {
+    font-size: 13px;
+    color: var(--muted);
+}
 .do-warnings {
     margin-top: 32px;
 }
