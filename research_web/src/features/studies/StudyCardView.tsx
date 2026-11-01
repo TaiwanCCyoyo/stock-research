@@ -1,7 +1,7 @@
 import { SourceInfo, VerdictBadge } from "../../components/ui/primitives";
 import type { StudyCard, StudyDetails } from "./model";
 import { StudyCaveats } from "./StudyCaveats";
-import { readingDate, readingState } from "./reading";
+import { currentStudyHash, readingDate, readingState } from "./reading";
 
 const UNIT: Record<StudyCard["keyNumbers"][number]["unit"], string> = {
     percent: "%",
@@ -78,8 +78,8 @@ export function StudyCardView({
                                 const params = new URLSearchParams(query);
                                 params.set(
                                     "back",
-                                    window.location.hash.startsWith("#studies")
-                                        ? window.location.hash
+                                    currentStudyHash().startsWith("#studies")
+                                        ? currentStudyHash()
                                         : "#studies",
                                 );
                                 return `${base}?${params}`;

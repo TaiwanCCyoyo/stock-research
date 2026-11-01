@@ -133,6 +133,23 @@ export function HomePage() {
                         <StudiesRefreshNotice onRetry={studies.retry} />
                     )}
                     <div className="hm-studies">
+                        {recent.length === 0 && (
+                            <div className="u-card hm-state">
+                                <p>目前尚無完成閱讀版核對的報告。</p>
+                                <a
+                                    className="u-btn"
+                                    href="#studies?collection=in_progress"
+                                >
+                                    查看進行中的研究
+                                </a>
+                                <a
+                                    className="u-btn"
+                                    href="#studies?collection=history"
+                                >
+                                    查看歷史與待整理
+                                </a>
+                            </div>
+                        )}
                         {recent.map((card) => (
                             <StudyCardView key={card.id} card={card} compact />
                         ))}
