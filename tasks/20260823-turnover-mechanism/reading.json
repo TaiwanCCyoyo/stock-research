@@ -1,0 +1,33 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260823-turnover-mechanism",
+    "state": "ready",
+    "reason": "已核對保存的任務與報告，補上問題覆蓋、分母及後續修正；編輯可讀不代表策略或 owner 驗收。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "放寬出場名次、加入最短持有或平滑分數，能否降低周轉而保留選股超額？",
+    "answer": "24 個驗證設定只有 momentum k10 加最短持有 20 根 K 棒通過全部四項門檻：部位加總報酬 +97.50%，周轉 9.28 次／槽／年，保留基準超額的 94%。這是該設定的通過，不是所有分數都適合延長持有。",
+    "limitation": "本次通過不等於勝過 0050、可執行成交或最終帳戶驗收；主要統計不是複利帳戶報酬。按進場年加總的部位貢獻，不能當成同年帳戶年度報酬。",
+    "data_period": {
+        "from": "2019-01-02",
+        "to": "2026-08-14"
+    },
+    "sources": [
+        {
+            "label": "設計、門檻與口徑",
+            "path": "20260823-turnover-mechanism/mission.md"
+        },
+        {
+            "label": "原結果",
+            "path": "20260823-turnover-mechanism/report.md"
+        },
+        {
+            "label": "帳戶口徑修正",
+            "path": "20260823-regime-overlay/report.md"
+        },
+        {
+            "label": "後續保留研究",
+            "path": "20260826-runner-retention/report.md"
+        }
+    ]
+}

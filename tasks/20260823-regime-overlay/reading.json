@@ -1,0 +1,33 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260823-regime-overlay",
+    "state": "ready",
+    "reason": "已核對保存的任務與報告，補上問題覆蓋、分母及後續修正；編輯可讀不代表策略或 owner 驗收。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "在 momentum k10 hold20 上加入市場狀態判斷，改持現金或 0050，或用個股均線限制進出場，能否改善回撤並保留報酬與低成本？",
+    "answer": "29 個變體沒有一個形成連續三個參數都滿足回撤、報酬與周轉要求的區間。部分單格改善驗證期回撤，但沒有通過本次完整規則，不能挑單格當作已驗證防禦方案。",
+    "limitation": "本次沒有合格參數區間，不代表所有市場狀態方法無效；較長偵測器歷史不等於較長策略績效。原周轉門檻未明確指定窗口，實作只讀驗證期，且報告的不同後續表使用不同報酬口徑，不能混為同一績效。",
+    "data_period": {
+        "from": "2019-01-02",
+        "to": "2026-08-14"
+    },
+    "sources": [
+        {
+            "label": "任務及修訂日期",
+            "path": "20260823-regime-overlay/mission.md"
+        },
+        {
+            "label": "結果、口徑與限制",
+            "path": "20260823-regime-overlay/report.md"
+        },
+        {
+            "label": "後續雙窗口周轉規則",
+            "path": "20260824-ranking-horizon/mission.md"
+        },
+        {
+            "label": "後續目標澄清",
+            "path": "20260826-tail-selection/mission.md"
+        }
+    ]
+}

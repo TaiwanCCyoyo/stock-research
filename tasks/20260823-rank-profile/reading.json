@@ -1,0 +1,29 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260823-rank-profile",
+    "state": "ready",
+    "reason": "已核對保存的任務與報告，補上問題覆蓋、分母及後續修正；編輯可讀不代表策略或 owner 驗收。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "排名前段是否比稍後名次帶有更高的未來報酬，足以支持狹窄的出場名次限制？",
+    "answer": "驗證期五個分數、四個名次帶相對前十名的比較，沒有一格達到 |t| ≥ 2；只能說此樣本沒有量出差異，不能說已證明名次 30 或 60 與前十名等效。",
+    "limitation": "驗證期只有 30 個不重疊日，檢定力有限；「當天排名較後的股票」與「原持股名次下降後繼續抱」不是同一問題，不能由本表推導更寬出場區間一定有利。",
+    "data_period": {
+        "from": "2019-01-02",
+        "to": "2026-08-14"
+    },
+    "sources": [
+        {
+            "label": "完整診斷",
+            "path": "20260823-rank-profile/report.md"
+        },
+        {
+            "label": "前作日期、股票池與方法",
+            "path": "20260823-selection-vs-random/mission.md"
+        },
+        {
+            "label": "後續周轉與持有路徑比較",
+            "path": "20260823-turnover-mechanism/report.md"
+        }
+    ]
+}

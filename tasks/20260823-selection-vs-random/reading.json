@@ -1,0 +1,37 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260823-selection-vs-random",
+    "state": "ready",
+    "reason": "已核對保存的任務與報告，補上問題覆蓋、分母及後續修正；編輯可讀不代表策略或 owner 驗收。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "在相同進場日、持有期間與周轉下，五種排序是否比隨機選股更好？",
+    "answer": "驗證期 30 格有 27 格超過配對隨機分配的第 80 百分位；加入相對周轉規則後剩 4 格，再依原每日固定期間檢查留下 3 格 finding。但其中 cohort 在不重疊檢查未達同一門檻，all 的高成本也不符合低周轉目標。",
+    "limitation": "配對隨機組沿用策略產生的持有期間，有條件化限制；每日二十日報酬大量重疊，不重疊驗證只有 31 個日子。贏過同樣高成本的隨機組，不等於達成可操作的絕對成本限制。",
+    "data_period": {
+        "from": "2019-01-02",
+        "to": "2026-08-14"
+    },
+    "sources": [
+        {
+            "label": "任務與統計口徑",
+            "path": "20260823-selection-vs-random/mission.md"
+        },
+        {
+            "label": "原報告",
+            "path": "20260823-selection-vs-random/report.md"
+        },
+        {
+            "label": "名次剖面修正",
+            "path": "20260823-rank-profile/report.md"
+        },
+        {
+            "label": "絕對周轉限制",
+            "path": "20260823-turnover-mechanism/report.md"
+        },
+        {
+            "label": "後續右尾問題重述",
+            "path": "20260826-tail-selection/mission.md"
+        }
+    ]
+}

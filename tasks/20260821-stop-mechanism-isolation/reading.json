@@ -1,0 +1,33 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260821-stop-mechanism-isolation",
+    "state": "ready",
+    "reason": "已核對保存的任務與報告，補上問題覆蓋、分母及後續修正；編輯可讀不代表策略或 owner 驗收。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "Darvas 的優勢是否來自箱底棘輪出場，而非其進場選擇？",
+    "answer": "箱底棘輪在驗證期五個產業的每次進場損益都較高，合併為 5.76% 對 3.73%；但帳戶報酬／回撤只在驗證期 3/5、訓練期 2/5 產業勝出，未達兩期各 4/5 的風險門檻。",
+    "limitation": "約三分之一進場沒有已確認箱型，採通道低點備援停損；本研究量到的是混合實作。僅固定一種進場，不能推論棘輪是可套用所有突破策略的通用元件。",
+    "data_period": {
+        "from": "2019-01-02",
+        "to": "2026-08-14"
+    },
+    "sources": [
+        {
+            "label": "任務與單變數設計",
+            "path": "20260821-stop-mechanism-isolation/mission.md"
+        },
+        {
+            "label": "原報告",
+            "path": "20260821-stop-mechanism-isolation/report.md"
+        },
+        {
+            "label": "MAE 補量",
+            "path": "20260821-2b-entry-decomposition/report.md"
+        },
+        {
+            "label": "泛化及後續修正",
+            "path": "20260822-ratchet-generalization/report.md"
+        }
+    ]
+}

@@ -1,0 +1,37 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260816-kline-strategy-category-fit",
+    "state": "ready",
+    "reason": "已核對保存的任務與報告，補上問題覆蓋、分母及後續修正；編輯可讀不代表策略或 owner 驗收。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "唐奇安突破、K 線反轉與量能動能進場，各自在哪些產業籃子呈現較好的大賺小賠形狀？它們是否也優於同籃子買進持有？",
+    "answer": "原資料版本下，15 個策略與產業組合中，只有動能突破 × 航運在兩個窗口的報酬／回撤都優於同籃子買進持有；唐奇安在電子產業的正每次進場損益，不等於穩定勝過買進持有。",
+    "limitation": "本報告使用公司行動回補之前的資料，不能與 2026-08-20 之後的數字直接並排；有限產業籃子、當日收盤成交與未平倉損益也限制了結論，不能據此宣告整個突破或金融股研究方向無效。",
+    "data_period": {
+        "from": "2019-01-02",
+        "to": "2026-08-14"
+    },
+    "sources": [
+        {
+            "label": "設計與限制",
+            "path": "20260816-kline-strategy-category-fit/mission.md"
+        },
+        {
+            "label": "原報告與資料版本註記",
+            "path": "20260816-kline-strategy-category-fit/report.md"
+        },
+        {
+            "label": "後續同版本原型比較",
+            "path": "20260820-kline-archetype-extension/report.md"
+        },
+        {
+            "label": "每部位風險補量",
+            "path": "20260820-kline-archetype-extension/mae_retro.md"
+        },
+        {
+            "label": "後續風險解釋修正",
+            "path": "20260822-ratchet-generalization/report.md"
+        }
+    ]
+}

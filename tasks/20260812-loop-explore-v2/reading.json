@@ -1,0 +1,26 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260812-loop-explore-v2",
+    "state": "ready",
+    "reason": "已核對保存的任務與報告，補上問題覆蓋、分母及後續修正；編輯可讀不代表策略或 owner 驗收。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "縮緊停損、放寬均線匯聚門檻，能否提高 2330 與 2454 的每筆期望損益？",
+    "answer": "8 次探索中，4 次通過報告內的兩窗口門檻、2 次未通過 holdout、2 次未通過 train；最後一次採 stop_loss_pct 7.5、convergence_pct 1.5。這支持保留該組合作為候選，不支持宣告完成獨立確認。",
+    "limitation": "同一 holdout 被評估 6 次，且報告未提供各窗口日期、交易分母與完整驗收門檻；「accepted」只是這次探索流程的標記，不能當成 owner 接受或未看過資料上的成功。",
+    "data_period": null,
+    "sources": [
+        {
+            "label": "原任務",
+            "path": "20260812-loop-explore-v2/mission.md"
+        },
+        {
+            "label": "八次探索紀錄",
+            "path": "20260812-loop-explore-v2/nightly_report.md"
+        },
+        {
+            "label": "後續進場與減碼拆解",
+            "path": "20260821-2b-entry-decomposition/report.md"
+        }
+    ]
+}

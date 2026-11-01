@@ -1,0 +1,30 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260824-ranking-horizon",
+    "state": "history",
+    "reason": "任務與正式表的共同訓練起點不同，尚未完成一致性核對；保留結果及差異，暫不進預設報告。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "拉長動能視窗或除以波動度，能否讓既有前十名策略持有較穩定的股票，並改善驗證期報酬？",
+    "answer": "八個候選沒有一個達到驗證期報酬至少為基準 1.5 倍的門檻，亦未形成合格參數區間。部分長視窗候選提高了持股成交金額，但沒有達成本次所要求的報酬改善。",
+    "limitation": "同一驗證窗已反覆使用；共同訓練起點的任務與結果文字未一致。少數候選未達門檻，不能推出所有報酬排序都不可能持有權值股，或只有持有指數才能達成研究目標。",
+    "data_period": null,
+    "sources": [
+        {
+            "label": "任務及共同期間修訂",
+            "path": "20260824-ranking-horizon/mission.md"
+        },
+        {
+            "label": "結果表與原解釋",
+            "path": "20260824-ranking-horizon/report.md"
+        },
+        {
+            "label": "後續加權解釋",
+            "path": "20260824-value-chain-ignition/report.md"
+        },
+        {
+            "label": "後續問題重述",
+            "path": "20260826-tail-selection/mission.md"
+        }
+    ]
+}
