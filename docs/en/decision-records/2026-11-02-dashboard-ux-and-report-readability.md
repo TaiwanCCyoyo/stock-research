@@ -44,6 +44,10 @@ Readiness is independent of research success, execution progress and provenance.
 
 ## Proposed delivery: eight PRs total
 
+P0 is [PR #136](https://github.com/TaiwanCCyoyo/stock-research/pull/136), open for
+review. Local hooks and independent document review passed; hosted current-head
+checks and review must be read from the PR. P1-P7 have no PR numbers yet.
+
 These are delivery identifiers, not GitHub PR numbers. Split further only when a
 slice cannot be reviewed or accepted coherently; update this record with the
 reason and actual count. Do not create all worktrees at once: at most five belong
