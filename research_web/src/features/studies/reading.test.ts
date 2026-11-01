@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+    currentStudyHash,
     pendingCard,
     readingState,
     readingLink,
@@ -10,6 +11,11 @@ import {
 } from "./reading.ts";
 import { cardsFromStudies } from "./v2.ts";
 import { filterStudies } from "./model.ts";
+
+test("server rendering has a safe default research route without window", () => {
+    assert.equal(currentStudyHash(), "");
+    assert.equal(studiesBack(currentStudyHash()), "#studies");
+});
 
 const record: ReadingRecord = {
     schema: "report-reading.v1",

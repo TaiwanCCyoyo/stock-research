@@ -5,7 +5,7 @@ import { SourceInfo } from "../../components/ui/primitives";
 import "./reports.css";
 import { MarkdownReport } from "./MarkdownReport";
 import { useStudyCards } from "../studies/useStudyCards";
-import { studiesBack } from "../studies/reading";
+import { currentStudyHash, studiesBack } from "../studies/reading";
 
 /**
  * Shows one report in its own framed document, so its CSS cannot restyle the studio
@@ -35,7 +35,7 @@ export function ReportViewer({
     const studies = useStudyCards();
     const card = studies.cards?.find((item) => item.id === reportId);
     const requested =
-        new URLSearchParams(window.location.hash.split("?")[1] ?? "").get(
+        new URLSearchParams(currentStudyHash().split("?")[1] ?? "").get(
             "view",
         ) === "reading";
     if (requested || card?.reading?.edition)
@@ -101,7 +101,7 @@ function HtmlReportViewer({
             <div className="rv-bar u-card">
                 <a
                     className="rv-back u-btn"
-                    href={studiesBack(window.location.hash)}
+                    href={studiesBack(currentStudyHash())}
                 >
                     ← 研究
                 </a>

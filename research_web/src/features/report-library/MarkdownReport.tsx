@@ -1,14 +1,54 @@
-import { useEffect, useState } from "react";
-import ReactMarkdown from "react-markdown";
+import {
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+    type ComponentProps,
+} from "react";
+import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { artifactMode } from "../../api/artifactMode";
-import { studiesBack, type ReadingRecord } from "../studies/reading";
+import {
+    currentStudyHash,
+    studiesBack,
+    type ReadingRecord,
+} from "../studies/reading";
 import {
     imageUnavailableLabel,
     markdownFragmentId,
     markdownHeadingIds,
     scrollMarkdownFragment,
 } from "./markdownNavigation";
+
+const REMARK_PLUGINS = [remarkGfm];
+type RehypePlugins = NonNullable<
+    ComponentProps<typeof ReactMarkdown>["rehypePlugins"]
+>;
+const EDITION_REHYPE_PLUGINS: RehypePlugins = [
+    [markdownHeadingIds, { prefix: "reading-edition-" }],
+];
+const SOURCE_REHYPE_PLUGINS: RehypePlugins = [
+    [markdownHeadingIds, { prefix: "reading-source-" }],
+];
+const SOURCE_COMPONENTS: Components = {
+    img: ({ alt }) => <span>{imageUnavailableLabel(alt)}</span>,
+    a: ({ href, children }) =>
+        markdownFragmentId(href, "reading-source-") ? (
+            <button
+                className="reading-source-link"
+                onClick={() =>
+                    scrollMarkdownFragment(href, "reading-source-", (id) =>
+                        document.getElementById(id),
+                    )
+                }
+            >
+                {children}
+            </button>
+        ) : (
+            <span>{children}</span>
+        ),
+};
 
 interface ReadingResponse {
     task_id: string;
@@ -30,8 +70,76 @@ export function MarkdownReport({ reportId }: { reportId: string }) {
     } | null>(null);
     const [sourceError, setSourceError] = useState("");
     const [sourceRetry, setSourceRetry] = useState(0);
+    const sourcePanel = useRef<HTMLElement>(null);
+    const focusSource = useCallback(() => {
+        sourcePanel.current?.scrollIntoView({ block: "start" });
+        sourcePanel.current?.focus({ preventScroll: true });
+    }, []);
+    const openSource = useCallback(
+        (index: number) => {
+            setSource(index);
+            focusSource();
+        },
+        [focusSource],
+    );
+    useEffect(() => {
+        if (source !== null) focusSource();
+    }, [source, focusSource]);
+    const editionComponents = useMemo<Components>(
+        () => ({
+            img: ({ alt }) => <span>{imageUnavailableLabel(alt)}</span>,
+            a: ({ href, children }) => {
+                if (markdownFragmentId(href, "reading-edition-"))
+                    return (
+                        <button
+                            className="reading-source-link"
+                            onClick={() =>
+                                scrollMarkdownFragment(
+                                    href,
+                                    "reading-edition-",
+                                    (id) => document.getElementById(id),
+                                )
+                            }
+                        >
+                            {children}
+                        </button>
+                    );
+                if (href?.startsWith("#")) return <span>{children}</span>;
+                if (href?.startsWith("https://"))
+                    return (
+                        <a href={href} target="_blank" rel="noreferrer">
+                            {children}
+                        </a>
+                    );
+                let path = "";
+                try {
+                    path = href
+                        ? new URL(
+                              href,
+                              `https://reading.invalid/tasks/${reportId}/${data?.reading?.edition ?? "report.md"}`,
+                          ).pathname.replace(/^\/tasks\//, "")
+                        : "";
+                } catch {
+                    /* An invalid legacy link remains readable text. */
+                }
+                const index =
+                    data?.sources.findIndex((item) => item.path === path) ?? -1;
+                return index >= 0 ? (
+                    <button
+                        className="reading-source-link"
+                        onClick={() => openSource(index)}
+                    >
+                        {children}
+                    </button>
+                ) : (
+                    <span>{children}</span>
+                );
+            },
+        }),
+        [data, reportId, openSource],
+    );
     const base = `/history-api/studies/${encodeURIComponent(reportId)}`;
-    const back = studiesBack(window.location.hash);
+    const back = studiesBack(currentStudyHash());
     useEffect(() => {
         const controller = new AbortController();
         let timeout = false;
@@ -149,83 +257,10 @@ export function MarkdownReport({ reportId }: { reportId: string }) {
                     )}
                     <div className="reading-prose">
                         <ReactMarkdown
-                            remarkPlugins={[remarkGfm]}
-                            rehypePlugins={[
-                                [
-                                    markdownHeadingIds,
-                                    { prefix: "reading-edition-" },
-                                ],
-                            ]}
+                            remarkPlugins={REMARK_PLUGINS}
+                            rehypePlugins={EDITION_REHYPE_PLUGINS}
                             skipHtml
-                            components={{
-                                img: ({ alt }) => (
-                                    <span>{imageUnavailableLabel(alt)}</span>
-                                ),
-                                a: ({ href, children }) => {
-                                    if (
-                                        markdownFragmentId(
-                                            href,
-                                            "reading-edition-",
-                                        )
-                                    )
-                                        return (
-                                            <button
-                                                className="reading-source-link"
-                                                onClick={() =>
-                                                    scrollMarkdownFragment(
-                                                        href,
-                                                        "reading-edition-",
-                                                        (id) =>
-                                                            document.getElementById(
-                                                                id,
-                                                            ),
-                                                    )
-                                                }
-                                            >
-                                                {children}
-                                            </button>
-                                        );
-                                    if (href?.startsWith("#"))
-                                        return <span>{children}</span>;
-                                    if (href?.startsWith("https://"))
-                                        return (
-                                            <a
-                                                href={href}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                            >
-                                                {children}
-                                            </a>
-                                        );
-                                    let path = "";
-                                    try {
-                                        path = href
-                                            ? new URL(
-                                                  href,
-                                                  `https://reading.invalid/tasks/${reportId}/${data.reading?.edition ?? "report.md"}`,
-                                              ).pathname.replace(
-                                                  /^\/tasks\//,
-                                                  "",
-                                              )
-                                            : "";
-                                    } catch {
-                                        /* An invalid legacy link remains readable text. */
-                                    }
-                                    const index = data.sources.findIndex(
-                                        (item) => item.path === path,
-                                    );
-                                    return index >= 0 ? (
-                                        <button
-                                            className="reading-source-link"
-                                            onClick={() => setSource(index)}
-                                        >
-                                            {children}
-                                        </button>
-                                    ) : (
-                                        <span>{children}</span>
-                                    );
-                                },
-                            }}
+                            components={editionComponents}
                         >
                             {data.markdown}
                         </ReactMarkdown>
@@ -244,7 +279,7 @@ export function MarkdownReport({ reportId }: { reportId: string }) {
                                     className="u-btn"
                                     key={item.path}
                                     aria-pressed={source === index}
-                                    onClick={() => setSource(index)}
+                                    onClick={() => openSource(index)}
                                 >
                                     {item.label}
                                 </button>
@@ -252,7 +287,12 @@ export function MarkdownReport({ reportId }: { reportId: string }) {
                         </section>
                     )}
                     {source !== null && (
-                        <section aria-label="來源原文" className="u-card">
+                        <section
+                            ref={sourcePanel}
+                            tabIndex={-1}
+                            aria-label="來源原文"
+                            className="u-card"
+                        >
                             <h2>
                                 {original?.label ?? data.sources[source]?.label}
                             </h2>
@@ -276,44 +316,10 @@ export function MarkdownReport({ reportId }: { reportId: string }) {
                             ) : original ? (
                                 <div className="reading-prose">
                                     <ReactMarkdown
-                                        remarkPlugins={[remarkGfm]}
-                                        rehypePlugins={[
-                                            [
-                                                markdownHeadingIds,
-                                                { prefix: "reading-source-" },
-                                            ],
-                                        ]}
+                                        remarkPlugins={REMARK_PLUGINS}
+                                        rehypePlugins={SOURCE_REHYPE_PLUGINS}
                                         skipHtml
-                                        components={{
-                                            img: ({ alt }) => (
-                                                <span>
-                                                    {imageUnavailableLabel(alt)}
-                                                </span>
-                                            ),
-                                            a: ({ href, children }) =>
-                                                markdownFragmentId(
-                                                    href,
-                                                    "reading-source-",
-                                                ) ? (
-                                                    <button
-                                                        className="reading-source-link"
-                                                        onClick={() =>
-                                                            scrollMarkdownFragment(
-                                                                href,
-                                                                "reading-source-",
-                                                                (id) =>
-                                                                    document.getElementById(
-                                                                        id,
-                                                                    ),
-                                                            )
-                                                        }
-                                                    >
-                                                        {children}
-                                                    </button>
-                                                ) : (
-                                                    <span>{children}</span>
-                                                ),
-                                        }}
+                                        components={SOURCE_COMPONENTS}
                                     >
                                         {original.markdown}
                                     </ReactMarkdown>

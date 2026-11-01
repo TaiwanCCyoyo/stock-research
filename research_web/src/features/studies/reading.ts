@@ -1,6 +1,10 @@
 import type { StudyCard } from "./model.ts";
 
 export type ReadingState = "ready" | "in_progress" | "history";
+
+export function currentStudyHash(): string {
+    return typeof window === "undefined" ? "" : window.location.hash;
+}
 export interface ReadingRecord {
     schema: "report-reading.v1";
     task_id: string;
