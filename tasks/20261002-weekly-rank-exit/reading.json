@@ -1,0 +1,22 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20261002-weekly-rank-exit",
+    "state": "ready",
+    "reason": "已依保存的完整文字結果整理問題、比較、分母、限制及後續資訊；屬閱讀就緒，不是策略或擁有者驗收。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "把排名退出改成每週檢查，能否減少操作並保留收益？",
+    "answer": "每週退出減少委託，卻使非命中淨現金轉負且已知損失窗口惡化，未通過固定篩選。",
+    "limitation": "只否定這個每週排名退出設定的晉級；非命中現金窗口不是帳戶回撤，也未證明所有週策略無效。",
+    "data_period": null,
+    "sources": [
+        {
+            "label": "主要結果來源",
+            "path": "20261002-weekly-rank-exit/execution-v2.md"
+        },
+        {
+            "label": "後續結果或口徑說明",
+            "path": "20261002-catalog-participation/report.md"
+        }
+    ]
+}

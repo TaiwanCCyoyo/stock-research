@@ -1,0 +1,26 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20261002-add-retry",
+    "state": "ready",
+    "reason": "已依保存的完整文字結果整理問題、比較、分母、限制及後續資訊；屬閱讀就緒，不是策略或擁有者驗收。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "加碼提案未成交後，只允許一次有界重試，能否改善原帳戶？",
+    "answer": "正常路徑淨利增加 34,908 元，但尚不能說延遲成交的問題已修復。",
+    "limitation": "只完成已暴露 2019–2023 的正常路徑；同規則 delay1、缺席與獨立證據尚未完成。",
+    "data_period": null,
+    "sources": [
+        {
+            "label": "主要結果來源",
+            "path": "20261002-add-retry/execution-normal-v1.md"
+        },
+        {
+            "label": "後續結果或口徑說明",
+            "path": "20261002-add-stage-diagnostic/report.md"
+        },
+        {
+            "label": "後續結果或口徑說明",
+            "path": "20261002-one-lot-delay-resumption/execution-v4.md"
+        }
+    ]
+}

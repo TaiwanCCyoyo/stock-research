@@ -1,0 +1,37 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20261013-annual-winner-rotation",
+    "state": "ready",
+    "reason": "已依保存的完整文字結果整理問題、比較、分母、限制及後續資訊；屬閱讀就緒，不是策略或擁有者驗收。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "台股買前一年報酬可計領先股、持有一年輪動，能否勝過 0050？",
+    "answer": "固定選股序列補全 15 年後，兩種認股權情境均落後連續持有 0050；這不是全市場冠軍的無偏檢驗。",
+    "limitation": "只補全 v1 已選股票，未重排未知候選；股息即時再投入與認股權情境是模型，完整實際每日回撤仍未知。",
+    "data_period": {
+        "from": "2011-01-03",
+        "to": "2026-01-02"
+    },
+    "sources": [
+        {
+            "label": "主要結果來源",
+            "path": "20261013-annual-winner-rotation/publications/completion-v2/report.md"
+        },
+        {
+            "label": "原始問題與規則",
+            "path": "20261013-annual-winner-rotation/mission.md"
+        },
+        {
+            "label": "後續結果或口徑說明",
+            "path": "20261013-annual-winner-rotation/report.md"
+        },
+        {
+            "label": "後續結果或口徑說明",
+            "path": "20261013-annual-winner-rotation/publications/completion-v2/preregistration.md"
+        },
+        {
+            "label": "後續結果或口徑說明",
+            "path": "20261013-annual-winner-rotation/publications/completion-v2/data-contract.md"
+        }
+    ]
+}

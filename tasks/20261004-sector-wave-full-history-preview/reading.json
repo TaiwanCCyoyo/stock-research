@@ -1,0 +1,29 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20261004-sector-wave-full-history-preview",
+    "state": "ready",
+    "reason": "已依保存的完整文字結果整理問題、比較、分母、限制及後續資訊；屬閱讀就緒，不是策略或擁有者驗收。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "如何把既有更長行情整理成可查的波段、階段及候選，而不是誤以為資料只從 2019 開始？",
+    "answer": "已完成 2010 起的連續歷史辨識；它是初步描述資料，沒有證明事前選股或交易能力。",
+    "limitation": "目前身分與分類參考不等於完整歷史母體；早期公司事件與分類有效日有缺口，展示漲幅不是含息或可成交報酬。",
+    "data_period": {
+        "from": "2010-01-04",
+        "to": "2026-10-02"
+    },
+    "sources": [
+        {
+            "label": "主要結果來源",
+            "path": "20261004-sector-wave-full-history-preview/report.md"
+        },
+        {
+            "label": "原始問題與規則",
+            "path": "20261004-sector-wave-full-history-preview/mission.md"
+        },
+        {
+            "label": "後續結果或口徑說明",
+            "path": "20261005-market-context-handoff/report.md"
+        }
+    ]
+}

@@ -13,6 +13,7 @@ import { StudiesRefreshNotice } from "../studies/StudiesRefreshNotice";
 import { useStudyCards } from "../studies/useStudyCards";
 import "../studies/studies.css";
 import "./home.css";
+import { readingDate, readingState } from "../studies/reading";
 
 function useLatestMarket() {
     const [frame, setFrame] = useState<HistoryFrame | null>(null),
@@ -72,9 +73,11 @@ export function HomePage() {
         studies = useStudyCards();
     const summary = market.frame ? latestMarketSummary(market.frame) : null;
     const recent = [...(studies.cards ?? [])]
-        .filter((card) => !card.accountRun)
+        .filter((card) => !card.accountRun && readingState(card) === "ready")
         .sort(
-            (a, b) => b.date.localeCompare(a.date) || a.id.localeCompare(b.id),
+            (a, b) =>
+                readingDate(b).localeCompare(readingDate(a)) ||
+                a.id.localeCompare(b.id),
         )
         .slice(0, 3);
     const date = market.frame?.date;
@@ -129,22 +132,28 @@ export function HomePage() {
                     {studies.stale && (
                         <StudiesRefreshNotice onRetry={studies.retry} />
                     )}
-                    {recent.length ? (
-                        <div className="hm-studies">
-                            {recent.map((card) => (
-                                <StudyCardView
-                                    key={card.id}
-                                    card={card}
-                                    compact
-                                />
-                            ))}
-                        </div>
-                    ) : (
-                        <p className="u-card hm-state" role="status">
-                            目前沒有可顯示的近期研究。
-                            <a href="#studies">前往研究總覽</a>
-                        </p>
-                    )}
+                    <div className="hm-studies">
+                        {recent.length === 0 && (
+                            <div className="u-card hm-state" role="status">
+                                <p>目前尚無完成閱讀版核對的報告。</p>
+                                <a
+                                    className="u-btn"
+                                    href="#studies?collection=in_progress"
+                                >
+                                    查看進行中的研究
+                                </a>
+                                <a
+                                    className="u-btn"
+                                    href="#studies?collection=history"
+                                >
+                                    查看歷史與待整理
+                                </a>
+                            </div>
+                        )}
+                        {recent.map((card) => (
+                            <StudyCardView key={card.id} card={card} compact />
+                        ))}
+                    </div>
                 </>
             ) : studies.error ? (
                 <div className="u-card hm-state" role="alert">

@@ -1,0 +1,29 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20261004-feature-discrimination-atlas",
+    "state": "ready",
+    "reason": "已依保存的完整文字結果整理問題、比較、分母、限制及後續資訊；屬閱讀就緒，不是策略或擁有者驗收。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "哪些既定特徵較常出現在後續大漲之前，又會選中多少未達標觀察？",
+    "answer": "60 日相對強度前五分之一的每日翻倍比例為 9.43%，同母體基準 5.46%；這是描述性關聯，不是已驗證策略。",
+    "limitation": "每日股票日期高度重疊，固定稀疏取樣仍不獨立；未翻倍不等於虧損，翻倍標籤也不是實際帳戶獲利。",
+    "data_period": {
+        "from": "2019-01-02",
+        "to": "2026-08-14"
+    },
+    "sources": [
+        {
+            "label": "主要結果來源",
+            "path": "20261004-feature-discrimination-atlas/report.md"
+        },
+        {
+            "label": "原始問題與規則",
+            "path": "20261004-feature-discrimination-atlas/mission.md"
+        },
+        {
+            "label": "後續結果或口徑說明",
+            "path": "20261005-method-environment-interactions/report.md"
+        }
+    ]
+}

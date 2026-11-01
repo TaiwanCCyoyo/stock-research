@@ -1,0 +1,34 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20261004-method-environment-map",
+    "state": "ready",
+    "reason": "已依保存的完整文字結果整理問題、比較、分母、限制及後續資訊；屬閱讀就緒，不是策略或擁有者驗收。",
+    "updated_at": "2026-11-02",
+    "edition": "reading-report.md",
+    "question": "有哪些方法與環境假設值得比較，怎樣銜接既有證據而不誤用事後分類？",
+    "answer": "這份任務完成來源與假設整理；後續子研究已有結果，但不能把文獻主張或元件比較當成完整方法通過。",
+    "limitation": "此任務本身沒有市場實驗；文獻與假設不是台股績效證據，完整理論、持有政策及歷史可知分類仍各有缺口。",
+    "data_period": null,
+    "sources": [
+        {
+            "label": "主要結果來源",
+            "path": "20261004-method-environment-map/report.md"
+        },
+        {
+            "label": "原始問題與規則",
+            "path": "20261004-method-environment-map/mission.md"
+        },
+        {
+            "label": "後續結果或口徑說明",
+            "path": "20261005-method-environment-interactions/report.md"
+        },
+        {
+            "label": "後續結果或口徑說明",
+            "path": "20261005-industry-role-comparison/report.md"
+        },
+        {
+            "label": "後續結果或口徑說明",
+            "path": "20261010-hhhl-v4-probability/report.md"
+        }
+    ]
+}

@@ -53,7 +53,7 @@ test("a v2 card keeps its plain question, verdict, numbers and limitation", () =
     assert.equal(view.progress, null);
 });
 
-test("a markdown-only report gets no web link and old account runs keep their note", () => {
+test("a markdown-only report gets a reading link and old account runs keep their note", () => {
     const view = cardFromV2(
         card({
             report: { web_report: null, markdown: "report.md" },
@@ -64,7 +64,10 @@ test("a markdown-only report gets no web link and old account runs keep their no
             verdict: "archived",
         }),
     );
-    assert.equal(view.reportHref, null);
+    assert.equal(
+        view.reportHref,
+        "#report/20261021-momentum-only-doubling?view=reading&back=%23studies",
+    );
     assert.deepEqual(view.accountRun, {
         runId: "stock:20261002-add-retry:normal-v1",
         note: "帳戶模擬 2019–2023（舊資料）",
@@ -163,7 +166,7 @@ test("studies are read with the data-mode header and other shapes are rejected",
     await assert.rejects(readStudies(new AbortController().signal, bad));
 });
 
-test("a task /studies omitted is not restored from another source", () => {
+test("an omitted task retains a neutral history placeholder without unverified claims", () => {
     const response = {
         cards: [],
         warnings: [
@@ -174,6 +177,11 @@ test("a task /studies omitted is not restored from another source", () => {
             },
         ],
     };
-    assert.deepEqual(cardsFromStudies(response), []);
+    const [view] = cardsFromStudies(response);
+    assert.equal(view?.id, "20261021-momentum-only-doubling");
+    assert.equal(view?.reading?.state, "history");
+    assert.equal(view?.verdict, null);
+    assert.equal(view?.reportHref, null);
+    assert.deepEqual(view?.keyNumbers, []);
     assert.equal(hiddenCount(response), 1);
 });
