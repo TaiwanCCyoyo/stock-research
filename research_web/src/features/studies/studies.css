@@ -25,16 +25,32 @@
     opacity: 0.86;
 }
 .st-answer {
-    display: -webkit-box;
-    -webkit-line-clamp: 5;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    white-space: normal;
 }
 .st-answer.is-clamped {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    white-space: normal;
+}
+.st-identity {
+    font-size: 12px;
+    overflow-wrap: anywhere;
+    color: var(--muted);
+}
+.st-period {
+    font-size: 14px;
+}
+.st-numbers {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+.st-numbers dt {
+    font-size: 13px;
+    color: var(--muted);
+}
+.st-numbers dd {
+    margin: 4px 0 0;
+    font-size: 19px;
+    font-variant-numeric: tabular-nums;
 }
 .st-limit {
     font-size: 13px;

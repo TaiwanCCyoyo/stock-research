@@ -1,0 +1,13 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20261027-entry-window",
+    "state": "in_progress",
+    "reason": "研究規劃或實作階段；尚未完成可核對的結果閱讀版。",
+    "updated_at": "2026-11-02",
+    "edition": null,
+    "question": "訊號後隔日開盤，固定價格帶會拒絕多少後來大漲的機會？",
+    "answer": "規劃中：先固定六個價格帶與比較方式，等待擁有者合併研究定義後，再依研究關卡決定後續實作。",
+    "limitation": "尚未執行研究；開盤報價落帶不保證成交，原訊號後來達標也不代表實際投資報酬。",
+    "data_period": null,
+    "sources": []
+}

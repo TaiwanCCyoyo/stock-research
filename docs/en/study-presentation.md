@@ -159,6 +159,10 @@ package or claim newer strategy results are represented there.
 
 ## Closeout deliverables
 
+Legacy studies can add a separate [reading edition](report-reading.md) without
+rewriting pinned reports. Reading readiness controls the Dashboard's default
+collection independently of the original research verdict and owner acceptance.
+
 A completed study provides a `web-report/` reading view, its `study.json`
 registration, and discoverable references to shared data, or explicitly records
 why an item cannot be provided. `report.md`, data contracts, catalog metadata and
