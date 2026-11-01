@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MarketPage } from "../features/market/MarketPage";
 import { OpportunityPage } from "../features/opportunities/OpportunityPage";
 import { FullHistoryPage } from "../features/full-history/FullHistoryPage";
@@ -32,7 +32,7 @@ const NAV: {
     label: string;
     icon: string;
     also?: StudioPage[];
-    /** Left out of the five-slot phone tab bar; reached from the home page. */
+    /** Left out of the phone tab bar; reached from the home page. */
     desktopOnly?: boolean;
 }[] = [
     { id: "home", label: "首頁", icon: "M4 11.5 12 5l8 6.5V20h-5v-5H9v5H4z" },
@@ -90,6 +90,8 @@ export default function Studio() {
         () => readSetting("atlas.ambient", "on") === "on",
     );
     const [settings, setSettings] = useState(false);
+    const themePanel = useRef<HTMLDialogElement>(null);
+    const mainContent = useRef<HTMLElement>(null);
     const [systemDark, setSystemDark] = useState(
         () => matchMedia("(prefers-color-scheme: dark)").matches,
     );
@@ -124,11 +126,21 @@ export default function Studio() {
     }, []);
     useEffect(() => {
         if (!settings) return;
-        const close = (event: KeyboardEvent) => {
-            if (event.key === "Escape") setSettings(false);
+        const panel = themePanel.current;
+        if (!panel) return;
+        const previous =
+            document.activeElement instanceof HTMLElement
+                ? document.activeElement
+                : null;
+        const overflow = document.body.style.overflow;
+        // A modal dialog keeps keyboard focus inside and makes the page inert.
+        panel.showModal();
+        document.body.style.overflow = "hidden";
+        return () => {
+            panel.close();
+            document.body.style.overflow = overflow;
+            if (previous?.isConnected) previous.focus();
         };
-        window.addEventListener("keydown", close);
-        return () => window.removeEventListener("keydown", close);
     }, [settings]);
     const navigate = (p: StudioPage) => {
         location.hash = p;
@@ -166,7 +178,15 @@ export default function Studio() {
                     dark={resolvedAppearance === "dark"}
                 />
             )}
-            <a className="skip-link" href="#main-content">
+            <a
+                className="skip-link"
+                href="#main-content"
+                onClick={(event) => {
+                    event.preventDefault();
+                    mainContent.current?.focus({ preventScroll: true });
+                    mainContent.current?.scrollIntoView({ block: "start" });
+                }}
+            >
                 跳到主要內容
             </a>
             <header className="shell-header">
@@ -190,6 +210,7 @@ export default function Studio() {
                     className="shell-theme-button"
                     aria-expanded={settings}
                     aria-controls="theme-panel"
+                    aria-haspopup="dialog"
                     onClick={() => setSettings((v) => !v)}
                 >
                     <span className="shell-theme-dot" />
@@ -198,81 +219,119 @@ export default function Studio() {
                 <DevelopmentPreviews />
             </header>
             {settings && (
-                <>
-                    <div
-                        className="shell-scrim"
-                        onClick={() => setSettings(false)}
-                    />
-                    <section
-                        id="theme-panel"
-                        className="shell-theme-panel"
-                        aria-label="主題設定"
-                    >
-                        <div className="shell-theme-head">
-                            <strong>挑一個你喜歡的樣子</strong>
+                <dialog
+                    id="theme-panel"
+                    className="shell-theme-panel"
+                    aria-label="主題設定"
+                    ref={themePanel}
+                    onKeyDown={(event) => {
+                        if (event.key !== "Tab") return;
+                        const buttons =
+                            event.currentTarget.querySelectorAll<HTMLButtonElement>(
+                                "button:not(:disabled)",
+                            );
+                        const first = buttons[0];
+                        const last = buttons[buttons.length - 1];
+                        if (
+                            event.shiftKey &&
+                            document.activeElement === first
+                        ) {
+                            event.preventDefault();
+                            last?.focus();
+                        } else if (
+                            !event.shiftKey &&
+                            document.activeElement === last
+                        ) {
+                            event.preventDefault();
+                            first?.focus();
+                        }
+                    }}
+                    onCancel={(event) => {
+                        event.preventDefault();
+                        setSettings(false);
+                    }}
+                    onClick={(event) => {
+                        if (event.target !== event.currentTarget) return;
+                        const bounds =
+                            event.currentTarget.getBoundingClientRect();
+                        if (
+                            event.clientX < bounds.left ||
+                            event.clientX > bounds.right ||
+                            event.clientY < bounds.top ||
+                            event.clientY > bounds.bottom
+                        )
+                            setSettings(false);
+                    }}
+                >
+                    <div className="shell-theme-head">
+                        <strong>主題設定</strong>
+                        <button
+                            className="u-icon-button"
+                            onClick={() => setSettings(false)}
+                            aria-label="關閉主題設定"
+                        >
+                            ×
+                        </button>
+                    </div>
+                    <div className="shell-theme-grid">
+                        {THEMES.map((theme) => (
                             <button
-                                className="u-icon-button"
-                                onClick={() => setSettings(false)}
-                                aria-label="關閉主題設定"
+                                key={theme.id}
+                                className="shell-theme-choice"
+                                aria-pressed={palette === theme.id}
+                                onClick={() => setPalette(theme.id)}
                             >
-                                ×
+                                <span className="shell-swatch">
+                                    {theme.swatch.map((color) => (
+                                        <span
+                                            key={color}
+                                            style={{ background: color }}
+                                        />
+                                    ))}
+                                </span>
+                                {theme.label}
                             </button>
-                        </div>
-                        <div className="shell-theme-grid">
-                            {THEMES.map((theme) => (
-                                <button
-                                    key={theme.id}
-                                    className="shell-theme-choice"
-                                    aria-pressed={palette === theme.id}
-                                    onClick={() => setPalette(theme.id)}
-                                >
-                                    <span className="shell-swatch">
-                                        {theme.swatch.map((color) => (
-                                            <span
-                                                key={color}
-                                                style={{ background: color }}
-                                            />
-                                        ))}
-                                    </span>
-                                    {theme.label}
-                                </button>
-                            ))}
-                        </div>
-                        <p className="shell-theme-label">明暗</p>
-                        <div className="u-segmented">
-                            {[
-                                ["system", "隨系統"],
-                                ["light", "日光"],
-                                ["dark", "夜色"],
-                            ].map(([id, label]) => (
-                                <button
-                                    key={id}
-                                    aria-pressed={appearance === id}
-                                    onClick={() => setAppearance(id)}
-                                >
-                                    {label}
-                                </button>
-                            ))}
-                        </div>
-                        <p className="shell-theme-label">背景動畫</p>
-                        <div className="u-segmented">
+                        ))}
+                    </div>
+                    <p className="shell-theme-label">明暗</p>
+                    <div className="u-segmented">
+                        {[
+                            ["system", "隨系統"],
+                            ["light", "日光"],
+                            ["dark", "夜色"],
+                        ].map(([id, label]) => (
                             <button
-                                aria-pressed={ambient}
-                                onClick={() => setAmbient(true)}
+                                key={id}
+                                aria-pressed={appearance === id}
+                                onClick={() => setAppearance(id)}
                             >
-                                開
+                                {label}
                             </button>
-                            <button
-                                aria-pressed={!ambient}
-                                onClick={() => setAmbient(false)}
-                            >
-                                關
-                            </button>
-                        </div>
-                    </section>
-                </>
+                        ))}
+                    </div>
+                    <p className="shell-theme-label">背景動畫</p>
+                    <div className="u-segmented">
+                        <button
+                            aria-pressed={ambient}
+                            onClick={() => setAmbient(true)}
+                        >
+                            開
+                        </button>
+                        <button
+                            aria-pressed={!ambient}
+                            onClick={() => setAmbient(false)}
+                        >
+                            關
+                        </button>
+                    </div>
+                </dialog>
             )}
-            <main id="main-content" className="studio-main shell-main">
+            <main
+                id="main-content"
+                className="studio-main shell-main"
+                tabIndex={-1}
+                ref={mainContent}
+            >
                 {page === "home" && <HomePage />}
                 {page === "studies" && <StudiesPage />}
                 {page === "overview" && (

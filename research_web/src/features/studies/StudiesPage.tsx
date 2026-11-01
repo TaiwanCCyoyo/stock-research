@@ -8,12 +8,15 @@ import { StudiesRefreshNotice } from "./StudiesRefreshNotice";
 import { StudyCardView } from "./StudyCardView";
 import { useStudyCards } from "./useStudyCards";
 import "./studies.css";
-import { READING_LABELS, readingState, type ReadingState } from "./reading";
+import {
+    currentStudyHash,
+    READING_LABELS,
+    readingState,
+    type ReadingState,
+} from "./reading";
 
 function selection() {
-    const params = new URLSearchParams(
-        window.location.hash.split("?")[1] ?? "",
-    );
+    const params = new URLSearchParams(currentStudyHash().split("?")[1] ?? "");
     const value = params.get("collection");
     return {
         collection: (value === "in_progress" || value === "history"
