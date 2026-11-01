@@ -41,11 +41,11 @@ flowchart LR
   G --> H{"Owner re-ticks the new shape<br/>(still shown with ▢)"} --> F
 ```
 
-| Role      | Responsibility                                                                                                                                                                                                                                                                                                                     |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Opus      | Ask for and record the owner's purpose first and write the steps remaining; log every fork in ⑪ in the same turn and turn "later" into a question in ⑫; before opening the PR have a cold-reading subagent state the purpose, main comparison, headline form and primary/secondary boundary from the draft alone; copy ticks back. |
-| Codex     | Open the market-computation work package only when `stage: agreed` and `fake_headline_approved` is a link; hold the headline on a fourth shape; at closeout fill ⑩ and put the owner's purpose verbatim into `report.md`; never write a title or card promising more than the main comparison.                                     |
-| The owner | Confirm the purpose, tick the fake headline and the choices C, merge to agree.                                                                                                                                                                                                                                                     |
+| Role      | Responsibility                                                                                                                                                                                                                                                                                                                                             |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Opus      | Ask for and record the owner's purpose first and write the steps remaining; log every fork in ⑪ in the same turn and turn "later" into a question in ⑫; before opening the PR have a cold-reading subagent state the purpose, main comparison, headline form and primary/secondary boundary from the draft alone; copy ticks back.                         |
+| Codex     | Open the market-computation work package only when `stage: agreed` and `fake_headline_approved` is a link; hold the headline on a fourth shape; at closeout write the promised-vs-delivered table and the owner's purpose verbatim into `report.md` (the frozen draft is not edited); never write a title or card promising more than the main comparison. |
+| The owner | Confirm the purpose, tick the fake headline and the choices C, merge to agree.                                                                                                                                                                                                                                                                             |
 
 ## Draft contents
 
@@ -76,7 +76,7 @@ Body sections, fixed order, headings `## ①` … `## ⑫`:
 | ⑦   | Not done / known traps         | Each "not done" that touches the purpose links to a Q in ⑫ or a step in ①.                                                                                   |
 | ⑧   | Owner choices                  | `- [ ] C1 …` with what changes if chosen; `- [x]` plus a link once ticked.                                                                                   |
 | ⑨   | Size limit                     | Work packages, longest computation.                                                                                                                          |
-| ⑩   | Promised vs delivered          | One row per promise in the title or card; delivered column filled at closeout.                                                                               |
+| ⑩   | Promises                       | One row per promise in the title or card (承諾, 主要／次要, 對應主格). Frozen with the draft; delivery is written in `report.md`, never here.                |
 | ⑪   | Fork log                       | One row per fork, kept even when dropped.                                                                                                                    |
 | ⑫   | Open questions                 | One row per question, with where it is stuck and how it closes.                                                                                              |
 
@@ -120,14 +120,14 @@ has no addressable questions; copy the question into this draft's ⑫ instead.
 Principle: the title and card promise no more than the main comparison, and secondary
 results are marked 次要. `scripts/tests/test_direction_drafts.py` implements this for drafts:
 
-| Rule | Check                                                                                                                                                                                                                                                                        |
-| ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| R1   | Extract outcome multiples from text (`N 倍`, lists with `／ / 、`, 一二兩三…十, 翻倍 = 2) after removing `condition_thresholds`. Ranges such as `2–10 倍` are rejected as ambiguous. Applies to `title`, same-folder `study.json` `question`/`answer`, and every ② headline. |
-| R1b  | 大漲 and 飆股 in the title or `question` need a definition in `title_outcome_terms`. The word list is short and known to be incomplete.                                                                                                                                      |
-| R2   | The title's extracted set equals `title_outcome_multiples`, which must be covered by `outcome_multiples`.                                                                                                                                                                    |
-| R3   | Extracted multiples must be primary, or sit inside one bracket that also says 次要 (a headline line may start with 次要) and be declared secondary.                                                                                                                          |
-| R4   | Every ⑩ row is 主要 or 次要; a 主要 row names a main cell; at least one row is 主要.                                                                                                                                                                                         |
-| R5   | At closeout (`agreed` plus `report.md`): `report.md` and `web-report/index.html` text contain `擁有者原話目的：` plus the verbatim `owner_purpose`, and no ⑩ delivered cell is empty.                                                                                        |
+| Rule | Check                                                                                                                                                                                                                                                                                     |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R1   | Extract outcome multiples from text (`N 倍`, lists with `／ / 、`, 一二兩三…十, 翻倍 = 2) after removing `condition_thresholds`. Ranges such as `2–10 倍` are rejected as ambiguous. Applies to `title`, same-folder `study.json` `question`/`answer`, and every ② headline.              |
+| R1b  | 大漲 and 飆股 in the title or `question` need a definition in `title_outcome_terms`. The word list is short and known to be incomplete.                                                                                                                                                   |
+| R2   | The title's extracted set equals `title_outcome_multiples`, which must be covered by `outcome_multiples`.                                                                                                                                                                                 |
+| R3   | Extracted multiples must be primary, or sit inside one bracket that also says 次要 (a headline line may start with 次要) and be declared secondary.                                                                                                                                       |
+| R4   | Every ⑩ row is 主要 or 次要; a 主要 row names a main cell; at least one row is 主要.                                                                                                                                                                                                      |
+| R5   | At closeout (`agreed` plus `report.md`): `report.md` and `web-report/index.html` text contain `擁有者原話目的：` plus the verbatim `owner_purpose`; `report.md` has a `## 承諾 vs 交付` table with a non-empty 實際交付 for every ⑩ promise; the draft itself carries no 實際交付 column. |
 
 Applied to PR113's real title, `…讓 2／3／5／10 倍機率下降？`, R3 fails (the main grid is 2x
 only); the accepted form is `…讓 2 倍機率下降？（另附 3／5／10 倍，次要）`. PR61's "大漲" is
@@ -155,7 +155,7 @@ published after it merges.
 | ------------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | ①, ②, ④                               | The mission's plain summary links the draft rather than rewriting it; decisions cite `← C2` / `← L4`. |
 | ②, ③                                  | `web-report/` uses one file: placeholders replaced by numbers, the draft banner removed.              |
-| ⑩                                     | The completed table at the end of `report.md` (R5).                                                   |
+| ⑩                                     | A `## 承諾 vs 交付` table in `report.md` (columns 承諾, 實際交付; one row per ⑩ promise) (R5).        |
 | ⑪, ⑫, `based_on`, `carries`, `closes` | `research-lineage.md` is generated from these instead of rebuilt after delivery.                      |
 
 ## Worked examples

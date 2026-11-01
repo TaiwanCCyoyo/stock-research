@@ -13,7 +13,8 @@ never to rewriting existing reports.
 A finished direction draft satisfies:
 
 - Its first section is the owner's own words, confirmed by the owner. Closeout shows it
-  verbatim in `report.md` and the web report.
+  verbatim in `report.md` and the web report. The draft is frozen once agreed: closeout
+  writes a `## 承諾 vs 交付` table in `report.md`, never in the draft.
 - It says what the owner does if the answer holds, does not hold, or cannot be told, and how
   many steps remain to the owner's final purpose.
 - Every fork raised in conversation is logged with a reason and a source, including dropped

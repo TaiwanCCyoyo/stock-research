@@ -46,7 +46,9 @@ LOG_RESULTS = {"採用", "放棄", "部分採用", "不承接"}
 OUTCOME_TERMS = ("大漲", "飆股")
 LOG_COLUMNS = ["ID", "日期", "提出者", "分岔", "結果", "理由", "來源", "待解"]
 QUESTION_COLUMNS = ["ID", "問題", "提出於", "卡在哪", "關閉路徑", "狀態"]
-PROMISE_COLUMNS = ["承諾", "主要／次要", "對應主格", "實際交付"]
+PROMISE_COLUMNS = ["承諾", "主要／次要", "對應主格"]
+DELIVERY_HEADING = "承諾 vs 交付"
+DELIVERY_COLUMNS = ["承諾", "實際交付"]
 CN_DIGITS = {"一": 1, "二": 2, "兩": 2, "三": 3, "四": 4, "五": 5, "六": 6, "七": 7, "八": 8, "九": 9, "十": 10}
 NUM = r"(?:\d+(?:\.\d+)?|[一二兩三四五六七八九十])"
 MULTIPLE_RE = re.compile(rf"(?P<body>{NUM}(?:\s*[／/、,，–~～-]\s*{NUM})*)\s*倍")
@@ -379,7 +381,21 @@ def visible_text(path: Path) -> str:
     return text
 
 
+def report_section(text: str, heading: str) -> str | None:
+    """Body of the ``## <heading>`` section of a report, or None when it is absent."""
+    lines: list[str] | None = None
+    for line in text.replace("\r\n", "\n").splitlines():
+        if line.startswith("## "):
+            if lines is not None:
+                break
+            lines = [] if line[3:].strip() == heading else None
+        elif lines is not None:
+            lines.append(line)
+    return None if lines is None else "\n".join(lines)
+
+
 def check_closeout(draft: Draft) -> list[str]:
+    """R5: the frozen draft keeps promises only; ``report.md`` carries the delivery comparison."""
     folder = draft.path.parent
     report = folder / "report.md"
     if draft.path.name != "direction-draft.md" or draft.front.get("stage") != "agreed" or not report.is_file():
@@ -391,8 +407,18 @@ def check_closeout(draft: Draft) -> list[str]:
             errors.append(f"R5: {target.name} is missing")
         elif marker not in visible_text(target):
             errors.append(f"R5: {target.name} lacks the verbatim owner purpose line")
-    rows = table_rows(draft.sections.get("⑩", ""), PROMISE_COLUMNS) or []
-    errors.extend(f"R5: ⑩ row '{row['承諾']}' has an empty 實際交付" for row in rows if not row["實際交付"].strip())
+    if any("實際交付" in header for header, _ in tables(draft.sections.get("⑩", ""))[0:1]):
+        errors.append("R5: the frozen draft must not carry 實際交付; write it in report.md")
+    section = report_section(report.read_text(encoding="utf-8"), DELIVERY_HEADING)
+    delivered = table_rows(section, DELIVERY_COLUMNS) if section is not None else None
+    if delivered is None:
+        return [*errors, f"R5: report.md lacks a '## {DELIVERY_HEADING}' table with columns {DELIVERY_COLUMNS}"]
+    by_promise = {row["承諾"]: row.get("實際交付", "").strip() for row in delivered}
+    for row in table_rows(draft.sections.get("⑩", ""), PROMISE_COLUMNS) or []:
+        if row["承諾"] not in by_promise:
+            errors.append(f"R5: report.md '{DELIVERY_HEADING}' has no row for promise '{row['承諾']}'")
+        elif not by_promise[row["承諾"]]:
+            errors.append(f"R5: report.md '{DELIVERY_HEADING}' row '{row['承諾']}' has an empty 實際交付")
     return errors
 
 
@@ -517,7 +543,7 @@ def test_undefined_outcome_term_is_blocked(tmp_path: Path) -> None:
     assert "R1b" not in codes(validate_draft(draft, root))
 
 
-def test_closeout_requires_verbatim_purpose(tmp_path: Path) -> None:
+def agreed_copy(tmp_path: Path) -> tuple[Path, Path, dict]:
     root = tmp_path / "root"
     shutil.copytree(FIXTURES / "agreed-without-approval", root)
     folder = root / "tasks" / "20261101-agreed-without-approval"
@@ -527,13 +553,70 @@ def test_closeout_requires_verbatim_purpose(tmp_path: Path) -> None:
     text = re.sub(r"^fake_headline_approved:.*$", "fake_headline_approved: https://example.invalid/pull/1#c2", text, flags=re.M)
     draft.write_text(text, encoding="utf-8")
     assert validate_draft(draft, root) == []
-    purpose = load_draft(draft).front["owner_purpose"]
+    return root, draft, load_draft(draft).front
+
+
+def write_report(folder: Path, front: dict, delivery: str | None, *, web: bool = True) -> None:
+    purpose = front["owner_purpose"]
+    body = f"報告\n\n擁有者原話目的：{purpose}\n"
+    if delivery is not None:
+        body += f"\n## {DELIVERY_HEADING}\n\n{delivery}\n"
+    (folder / "report.md").write_text(body, encoding="utf-8")
+    if web:
+        (folder / "web-report").mkdir(exist_ok=True)
+        (folder / "web-report" / "index.html").write_text(f"<p>擁有者原話目的：{html.escape(purpose)}</p>", encoding="utf-8")
+
+
+def delivery_table(draft: Path, *, drop: int | None = None, blank: int | None = None) -> str:
+    promises = [row["承諾"] for row in table_rows(load_draft(draft).sections["⑩"], PROMISE_COLUMNS) or []]
+    lines = ["| 承諾 | 實際交付 |", "| --- | --- |"]
+    for index, promise in enumerate(promises):
+        if index != drop:
+            lines.append(f"| {promise} | {'' if index == blank else '已交付'} |")
+    return "\n".join(lines)
+
+
+def test_closeout_requires_verbatim_purpose(tmp_path: Path) -> None:
+    root, draft, front = agreed_copy(tmp_path)
+    folder = draft.parent
     (folder / "report.md").write_text("報告\n", encoding="utf-8")
     assert "R5" in codes(validate_draft(draft, root))
-    (folder / "web-report").mkdir()
-    (folder / "report.md").write_text(f"擁有者原話目的：{purpose}\n", encoding="utf-8")
-    (folder / "web-report" / "index.html").write_text(f"<p>擁有者原話目的：{html.escape(purpose)}</p>", encoding="utf-8")
-    assert "R5" not in codes(validate_draft(draft, root))
+    write_report(folder, front, delivery_table(draft))
+    assert validate_draft(draft, root) == []
+
+
+def test_closeout_passes_only_with_frozen_draft_and_complete_report_section(tmp_path: Path) -> None:
+    root, draft, front = agreed_copy(tmp_path)
+    frozen = draft.read_text(encoding="utf-8")
+    write_report(draft.parent, front, delivery_table(draft))
+    assert validate_draft(draft, root) == []
+    assert draft.read_text(encoding="utf-8") == frozen
+    assert "實際交付" not in frozen
+
+
+def test_closeout_fails_without_delivery_section_or_rows(tmp_path: Path) -> None:
+    root, draft, front = agreed_copy(tmp_path)
+    folder = draft.parent
+    write_report(folder, front, None)
+    assert any("lacks" in e for e in validate_draft(draft, root))
+    write_report(folder, front, delivery_table(draft, drop=0))
+    assert any("has no row for promise" in e for e in validate_draft(draft, root))
+    write_report(folder, front, delivery_table(draft, blank=0))
+    assert any("empty 實際交付" in e for e in validate_draft(draft, root))
+    (folder / "web-report" / "index.html").unlink()
+    write_report(folder, front, delivery_table(draft), web=False)
+    assert any("index.html is missing" in e for e in validate_draft(draft, root))
+
+
+def test_closeout_rejects_delivery_column_inside_frozen_draft(tmp_path: Path) -> None:
+    root, draft, front = agreed_copy(tmp_path)
+    write_report(draft.parent, front, delivery_table(draft))
+    text = draft.read_text(encoding="utf-8")
+    head, mark, tail = text.partition("## ⑩")
+    edited = head + mark + re.sub(r"對應主格\s*\|", "對應主格 | 實際交付 |", tail, count=1)
+    assert edited != text
+    draft.write_text(edited, encoding="utf-8")
+    assert any("frozen draft" in e for e in validate_draft(draft, root))
 
 
 def test_fixture_drafts_are_text_files_without_python_modules() -> None:

@@ -18,8 +18,9 @@ without a draft are not retrofitted.
   secondary multiples sit in a bracket that says 次要. Define 大漲 or 飆股 in
   `title_outcome_terms` or drop them. Conditions are thresholds, outcomes are targets.
 - At closeout put `擁有者原話目的：` plus the verbatim `owner_purpose` in `report.md` and the
-  web report, fill every ⑩ delivered cell, and link any undelivered promise to its open
-  question in ⑫.
+  web report, and add a `## 承諾 vs 交付` table to `report.md` (columns 承諾, 實際交付; one row
+  per ⑩ promise, none empty), linking any undelivered promise to its open question in ⑫. The
+  frozen draft is not edited for closeout.
 - Unknown dates, proposers and sources stay `待確認`; never invent an owner quote. A frozen
   draft is not edited: later changes go through `carries`, `closes` or an amendment.
 

@@ -620,7 +620,10 @@
                 "tasks/*/direction-draft.md",
                 "docs/en/direction-drafts.md",
                 "docs/en/templates/direction-draft.md",
-                "docs/en/examples/direction-draft-*.md"
+                "docs/en/examples/direction-draft-*.md",
+                "tasks/*/report.md",
+                "tasks/*/web-report/index.html",
+                "scripts/tests/fixtures/direction_drafts/*"
             ],
             "tests": ["scripts/tests/test_direction_drafts.py"]
         },
