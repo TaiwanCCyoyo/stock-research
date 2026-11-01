@@ -12,8 +12,27 @@ import {
     qualityCounts,
     qualityReasonLabel,
     versionLabel,
+    compactVersionLabel,
     type SharedSeries,
 } from "./model.ts";
+
+test("version labels shorten hash tokens while preserving semantic identifiers", () => {
+    const hash = "abcdef0123456789".repeat(4);
+    assert.equal(compactVersionLabel(hash), "abcdef012345…");
+    assert.equal(
+        compactVersionLabel(`annual-v2-${hash}`),
+        "annual-v2-abcdef012345…",
+    );
+    assert.equal(
+        compactVersionLabel("annual-v2-20261022"),
+        "annual-v2-20261022",
+    );
+    assert.equal(
+        compactVersionLabel("releaseabcdef0123456789abcdef0123456789"),
+        "releaseabcdef0123456789abcdef0123456789",
+    );
+    assert.equal(hash.length, 64);
+});
 
 const fixture: SharedSeries = {
     code: "SYNTH",

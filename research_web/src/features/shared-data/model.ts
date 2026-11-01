@@ -35,6 +35,15 @@ export function qualityReasonLabel(reason: string | null | undefined): string {
         ),
     ].join("；");
 }
+/** Shorten hash tokens only; the original identity remains the lookup value. */
+export function compactVersionLabel(version: string): string {
+    return version.replace(
+        /(^|[^a-zA-Z0-9])([a-fA-F0-9]{32,})(?=$|[^a-zA-Z0-9])/g,
+        (_match, separator: string, hash: string) =>
+            `${separator}${hash.slice(0, 12)}…`,
+    );
+}
+
 export interface SharedSeries {
     code: string;
     basis: Basis;

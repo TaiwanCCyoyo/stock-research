@@ -16,6 +16,7 @@ import {
 import "./data-overview.css";
 import { InfoTip } from "../../components/ui/InfoTip";
 import { StockCoverageList } from "./CoveragePages";
+import { VersionIdentity } from "../shared-data/VersionIdentity";
 
 function useDataStatus() {
     const [data, setData] = useState<DataStatus | null>(null);
@@ -174,14 +175,13 @@ export function DataOverviewPage({ stocks = false }: { stocks?: boolean }) {
                                                             )!.dataId
                                                         }
                                                     </span>
-                                                    <span>
-                                                        版本：
-                                                        {
+                                                    <VersionIdentity
+                                                        version={
                                                             catalogIdentity(
                                                                 item,
                                                             )!.version
                                                         }
-                                                    </span>
+                                                    />
                                                 </div>
                                             )}
                                             <p className="do-period">
