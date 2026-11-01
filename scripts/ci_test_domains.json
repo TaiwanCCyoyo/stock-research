@@ -150,6 +150,7 @@
                 "research_api/saved_research_studio.py",
                 "research_api/private_artifacts.py",
                 "research_core/dashboard_identity.py",
+                "research_core/desktop_launch_feedback.py",
                 "research_core/development_previews.py",
                 "research_api/development_previews.py",
                 "scripts/development_preview.py",
@@ -196,6 +197,7 @@
                 "scripts/tests/test_strategy_map_capture.py",
                 "scripts/tests/test_shared_data_view.py",
                 "scripts/tests/test_start_research_web.py",
+                "scripts/tests/test_desktop_launch_feedback.py",
                 "scripts/tests/test_dashboard_identity.py",
                 "scripts/tests/test_study_presentation.py",
                 "scripts/tests/test_study_cards.py",
@@ -481,13 +483,15 @@
                 "research_core/momentum_only_v1.py",
                 "research_core/count_cube_v1.py",
                 "research_core/momentum_forward_v1.py",
+                "research_core/momentum_forward_paths.py",
                 "scripts/run_momentum_only.py",
                 "scripts/record_momentum_forward_day.py",
                 "tasks/20261021-momentum-only-doubling/*"
             ],
             "tests": [
                 "scripts/tests/test_momentum_only_v1.py",
-                "scripts/tests/test_momentum_forward_v1.py"
+                "scripts/tests/test_momentum_forward_v1.py",
+                "scripts/tests/test_momentum_forward_location.py"
             ],
             "consumers": [
                 "strength_flags",
@@ -655,6 +659,7 @@
         "scripts/tests/test_derived_features.py",
         "scripts/tests/test_derived_features_chunk_v2.py",
         "scripts/tests/test_derived_features_selective_v1.py",
+        "scripts/tests/test_desktop_launch_feedback.py",
         "scripts/tests/test_entry_window_bootstrap_v1.py",
         "scripts/tests/test_entry_window_inputs_v1.py",
         "scripts/tests/test_entry_window_v1.py",
@@ -719,6 +724,7 @@
         "scripts/tests/test_method_environment_publication.py",
         "scripts/tests/test_method_environment_runner.py",
         "scripts/tests/test_momentum_forward_attempts_v2.py",
+        "scripts/tests/test_momentum_forward_location.py",
         "scripts/tests/test_momentum_forward_publication_v3.py",
         "scripts/tests/test_momentum_forward_run_v2.py",
         "scripts/tests/test_momentum_forward_v1.py",
