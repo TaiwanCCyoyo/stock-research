@@ -3,114 +3,349 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>2010 起全市場型態掃描</title>
-        <meta name="report:title" content="2010 起全市場型態掃描" />
+        <title>看見型態之後，股票更容易翻倍嗎？</title>
+        <meta name="report:title" content="看見型態之後，股票更容易翻倍嗎？" />
         <meta
             name="report:summary"
-            content="十二家族 Q1 比較與 Q2–Q6 既有終表切片；各題進度依實際已提供終表呈現。既定範圍核對已完成，完整交付另行確認。"
+            content="1,942 檔台股、十二種型態：追蹤約一年，十二種型態裡七種的翻倍比例比一般合格日高、五種較低；加上篩選條件後整體並不一致變高（432 組較高、525 組較低）；轉弱訊號同時碰到沒翻倍與後來翻倍的股票。"
         />
-        <meta name="report:date" content="2026-10-21" />
+        <meta name="report:date" content="2026-10-31" />
         <meta name="report:status" content="exploratory" />
         <meta name="report:period" content="2010-01-04 – 2026-10-12" />
         <meta name="report:tags" content="台股,型態,條件,描述性研究" />
         <meta name="report:kit" content="v1" />
+        <script type="application/ld+json">
+            {
+                "@context": "https://schema.org",
+                "@type": "Report",
+                "identifier": "20261013-pattern-scan",
+                "name": "看見型態之後，股票更容易翻倍嗎？",
+                "description": "系列起點，沒有前作。後續研究 20261021-momentum-only-doubling 與 20261024-strength-weakening-flags 以本作為基礎。",
+                "isBasedOn": [],
+                "citation": "../research-lineage.md"
+            }
+        </script>
         <link rel="stylesheet" href="kit/report-kit.css" />
         <link rel="stylesheet" href="report.css" />
         <script src="kit/report-kit.js" defer></script>
-        <script src="data/summary.js" defer></script>
+        <script src="data/final-v1/summary.js" defer></script>
+        <script src="data/final-v1/rows-001.js" defer></script>
+        <script src="data/final-v1/rows-002.js" defer></script>
+        <script src="data/final-v1/rows-003.js" defer></script>
+        <script src="data/final-v1/rows-004.js" defer></script>
+        <script src="data/final-v1/rows-005.js" defer></script>
+        <script src="data/final-v1/rows-006.js" defer></script>
+        <script src="data/final-v1/rows-007.js" defer></script>
+        <script src="data/final-v1/rows-008.js" defer></script>
+        <script src="data/final-v1/rows-009.js" defer></script>
+        <script src="data/final-v1/rows-010.js" defer></script>
+        <script src="data/final-v1/rows-011.js" defer></script>
+        <script src="data/final-v1/rows-012.js" defer></script>
+        <script src="conclusions.js" defer></script>
         <script src="report.js" defer></script>
+        <script src="reader.js" defer></script>
     </head>
     <body>
-        <a class="skip-link" href="#overview">跳到研究內容</a>
+        <a class="skip-link" href="#main-answer">跳到主要答案</a>
         <main class="rk-page">
             <header class="rk-hero">
-                <p class="rk-eyebrow">台股 · 描述性研究 · 階段成果</p>
-                <h1 id="report-title">2010 起全市場型態掃描</h1>
+                <p class="rk-eyebrow">台股 · 2010–2026 · 描述性研究</p>
+                <h1 id="report-title">看見型態之後，股票更容易翻倍嗎？</h1>
                 <p class="rk-lede">
-                    Q1 已涵蓋十二個家族；Q2–Q6
-                    的已提供家族與待完成範圍列於下方。
-                    既定範圍核對已完成，終表齊備仍不代表完整交付或策略驗收完成。
+                    不一定。平台突破、跳空突破等型態出現後，一年內翻倍的比例約
+                    15%，高於所有合格日（全市場任一天符合基本資格的股票日）的
+                    9.83%；但加上篩選條件後優勢並不一致，用「轉弱」訊號（例如收盤跌破
+                    20 日均線）把股票排除，也會同時排掉許多後來翻倍的股票。
+                </p>
+                <div class="shared-example">
+                    <p>
+                        例：型態出現當天收盤 100 元，之後收盤曾到 200
+                        元，就算「翻倍」。本頁追蹤約半年（126
+                        個交易日）或約一年（252 個交易日），並一律用這個 100
+                        元當例子。追蹤期不足＝資料在走完追蹤期前就結束，還看不出有沒有翻倍，這類事件不計入比例。
+                    </p>
+                    <div class="price-line is-short" aria-hidden="true">
+                        <span class="price-axis"></span>
+                        <span class="price-tick above is-start" style="left: 0%"
+                            ><b>100</b>起點</span
+                        >
+                        <span class="price-tick above is-end" style="left: 100%"
+                            ><b>200</b>翻倍</span
+                        >
+                    </div>
+                </div>
+                <nav class="lineage-crumb" aria-label="研究脈絡">
+                    本作：型態與條件
+                    <span aria-hidden="true">→</span>
+                    <a
+                        data-related-report="20261021-momentum-only-doubling"
+                        href="../../20261021-momentum-only-doubling/web-report/index.html"
+                        >只看強勢條件</a
+                    >
+                    <span aria-hidden="true">→</span>
+                    <a
+                        data-related-report="20261024-strength-weakening-flags"
+                        href="../../20261024-strength-weakening-flags/web-report/index.html"
+                        >再看轉弱訊號</a
+                    >
+                    <span aria-hidden="true">·</span>
+                    <a href="#research-lineage">完整脈絡</a>
+                </nav>
+                <p class="hero-links">
+                    <a href="data/final-v1/final-report.md">逐題結論</a> ·
+                    <a href="data/final-v1/final-delivery.md"
+                        >完整成果與資料取得</a
+                    >
+                    · <a href="/#data" target="_top">共用資料</a>
                 </p>
                 <div class="rk-meta" id="study-meta"></div>
             </header>
 
-            <section
-                class="family-summary rk-card"
-                id="family-summary"
-                aria-labelledby="family-summary-title"
-            >
-                <header class="family-summary-header">
-                    <div>
-                        <span class="rk-q">Q1 · 十二家族</span>
-                        <h2 id="family-summary-title">同一口徑的家族摘要</h2>
+            <div class="answer-layout">
+                <section id="main-answer" aria-labelledby="answer-title">
+                    <h2 id="answer-title">
+                        十二種型態各有高低：追蹤約一年，七種的翻倍比例比一般合格日高（最多高約
+                        5 個百分點），五種較低
+                    </h2>
+                    <p class="answer-purpose">
+                        這份研究想找出：哪些型態與一年內翻倍有關，以及沒有出現型態的股票表現如何。
+                    </p>
+                    <div class="rank-view" id="rank-view">
+                        <div class="rank-tools">
+                            <p class="rank-head" id="rank-title"></p>
+                            <div
+                                class="rank-switch"
+                                id="rank-switch"
+                                role="group"
+                                aria-label="呈現方式"
+                                hidden
+                            >
+                                <button
+                                    type="button"
+                                    data-view="rank"
+                                    aria-pressed="true"
+                                >
+                                    排行
+                                </button>
+                                <button
+                                    type="button"
+                                    data-view="table"
+                                    aria-pressed="false"
+                                >
+                                    以表格檢視
+                                </button>
+                            </div>
+                        </div>
+                        <div class="rank-layout" id="rank-layout" hidden>
+                            <section class="rank-list">
+                                <div class="rank-axis" aria-hidden="true">
+                                    <span></span><span></span
+                                    ><span
+                                        class="rank-scale"
+                                        id="rank-axis"
+                                    ></span
+                                    ><span></span>
+                                </div>
+                                <ol
+                                    class="rank-ladder"
+                                    id="rank-ladder"
+                                    role="listbox"
+                                    aria-labelledby="rank-title"
+                                ></ol>
+                                <p class="rank-foot">
+                                    ● 高於基準　○
+                                    低於基準。點一列看詳情；方向鍵可上下移動。
+                                </p>
+                            </section>
+                            <section
+                                class="rank-pane"
+                                id="rank-pane"
+                                aria-live="polite"
+                            ></section>
+                        </div>
+                        <div
+                            class="headline-table-wrap"
+                            id="headline-table-wrap"
+                        >
+                            <table class="headline-table" id="headline-table">
+                                <caption>
+                                    追蹤約一年（252
+                                    個交易日）的翻倍比例，由高到低排列
+                                </caption>
+                                <thead>
+                                    <tr>
+                                        <th scope="col">型態</th>
+                                        <th scope="col">
+                                            不加條件<small
+                                                >有型態 對 所有合格日（隔 20
+                                                個交易日取一天）</small
+                                            >
+                                        </th>
+                                        <th scope="col">
+                                            加上篩選條件後（另一個比較）<small
+                                                >各 92
+                                                組裡，有型態比同條件、沒型態的事件較高／較低的組數</small
+                                            >
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="headline-rows"></tbody>
+                            </table>
+                        </div>
                     </div>
-                    <label for="family-summary-horizon">
-                        期限
-                        <select id="family-summary-horizon">
-                            <option value="126" selected>H126</option>
-                            <option value="252">H252</option>
-                        </select>
-                    </label>
-                </header>
-                <p class="family-summary-scope" id="family-summary-scope">
-                    Q1 無額外條件 · split=all · era=all · mkt=all · cohort=union
-                </p>
-                <p
-                    class="family-summary-baseline"
-                    id="family-summary-baseline"
-                ></p>
-                <div class="family-summary-table-wrap">
-                    <table class="family-summary-table">
-                        <caption>
-                            所有家族使用同一個 Q1 全體口徑；強動能候選留在
-                            Q2–Q3。
-                        </caption>
-                        <thead>
-                            <tr>
-                                <th scope="col">家族</th>
-                                <th scope="col">× C-base-daily</th>
-                                <th scope="col">Δ vs C-base-all (pt)</th>
-                                <th scope="col">型態 K</th>
-                                <th scope="col">C-base-all K</th>
-                                <th scope="col">Loss rate</th>
-                            </tr>
-                        </thead>
-                        <tbody id="family-summary-rows"></tbody>
-                    </table>
+                    <p class="answer-note">
+                        「不加條件」的對照包含有型態的日子，只是它們佔極少數。「組」＝一種型態搭配一組篩選條件（例如「收盤高於
+                        20
+                        日平均價」）；每組拿有型態的事件，和同條件、但沒有出現該型態的事件比較。右欄是另一個比較，只數各組的高低方向，不是顯著性檢定，也不一定和左欄同向。
+                    </p>
+                    <p class="answer-overall" id="headline-overall">
+                        整體來看，把十二種型態與各組篩選條件全部算進去，加上型態並沒有讓翻倍比例一致變高（432
+                        組較高、525 組較低；這是方向計數，不是 1,104
+                        次獨立檢定）。
+                    </p>
+                    <details class="reader-explorer">
+                        <summary>改看約半年，或查看四種結果的完整分布</summary>
+                        <label for="reader-horizon"
+                            >觀察期限
+                            <select id="reader-horizon">
+                                <option value="252">
+                                    252 個交易日（約一年）
+                                </option>
+                                <option value="126">
+                                    126 個交易日（約半年）
+                                </option>
+                            </select></label
+                        >
+                        <p
+                            id="reader-comparison-answer"
+                            class="rk-answer"
+                            aria-live="polite"
+                        ></p>
+                        <div
+                            id="reader-comparison-bars"
+                            class="reader-bars"
+                        ></div>
+                        <p class="rk-foot">
+                            長條的分母都是全部 1,104
+                            組。各組的條件彼此重疊，這裡只呈現方向的分布。<span
+                                id="reader-sample-note"
+                            ></span>
+                        </p>
+                    </details>
+                </section>
+
+                <aside class="counter-note" aria-labelledby="counter-title">
+                    <h3 id="counter-title">
+                        轉弱訊號也常出現在最後翻倍的股票身上
+                    </h3>
+                    <p class="counter-population">
+                        另一批事件：追蹤約一年、最後確實翻倍的事件
+                    </p>
+                    <p class="counter-rate"><strong>88.32%–100%</strong></p>
+                    <p>
+                        在翻倍前，收盤就曾低於近 20 日平均收盤價（12
+                        種型態各自的範圍）。
+                    </p>
+                    <p class="muted">
+                        沒翻倍的事件中，這個訊號則全部都曾出現。
+                    </p>
+                </aside>
+            </div>
+
+            <p class="main-limit">
+                兩半股票都來自已看過的歷史，不是新期間的驗證；各組條件彼此重疊，也沒有模擬買賣。條件組合怎麼選出來，與其他限制見頁尾「來源與限制」。
+            </p>
+
+            <section
+                class="reader-findings"
+                aria-labelledby="reader-findings-title"
+            >
+                <h2 id="reader-findings-title">另外兩個發現</h2>
+                <div class="reader-cards">
+                    <article class="rk-card">
+                        <h3>飆股裡常見的型態，不等於看見型態後常翻倍</h3>
+                        <p>
+                            在「翻倍段落」（一檔股票從低點起、126
+                            個交易日內漲到兩倍的一段）附近，12 種型態有 11
+                            種的出現比例高於同樣數量的隨機日期。這回答「飆股裡有沒有它」；要回答「看見它後多常翻倍」，分母得是所有出現過型態的事件，包括後來沒翻倍的。
+                        </p>
+                        <a href="#Q4">看問題 4</a>
+                    </article>
+                    <article class="rk-card">
+                        <h3>轉弱訊號會同時碰到沒翻倍的與後來翻倍的</h3>
+                        <p>
+                            「收盤跌破 20
+                            日均線」幾乎無所不包，後來翻倍的事件也多半在翻倍前觸發過；條件更嚴的「從起點跌
+                            10%」較少碰到後來翻倍者，但也漏掉更多沒翻倍者。
+                        </p>
+                        <a href="#Q6">看問題 6</a>
+                    </article>
                 </div>
-                <p
-                    class="family-summary-status rk-foot"
-                    id="family-summary-status"
-                    aria-live="polite"
-                >
-                    尚未提供跨家族對照摘要；不以空白或零代替資料。
-                </p>
-                <p class="family-summary-units rk-foot">
-                    Δ 已是百分點，直接顯示 pt；倍數以 × 顯示。Rate
-                    由比例轉成百分比；K 是各自已知母數。 null 或零分母顯示
-                    N/A，真實零值仍保留。
-                </p>
-                <p class="family-summary-candidates rk-foot">
-                    這張表只用 Q1 無額外條件口徑；強動能候選與其控制差距另列於
-                    Q2–Q3，不混入此表。
-                </p>
             </section>
 
-            <div class="rk-banner" id="completion-banner" role="status">
-                <strong>階段成果，完整交付另行確認。</strong>
-                各題狀態只表示已提供的終表範圍，不推定程序正在執行，也不代表
-                owner 驗收、final handoff 或 hold 可釋放。
+            <section
+                class="rk-card reader-method"
+                aria-labelledby="reader-method-title"
+            >
+                <h2 id="reader-method-title">這些比例怎麼來？</h2>
+                <ol class="reader-timeline">
+                    <li>
+                        <strong>型態出現的那天，當作起點</strong
+                        ><span>以當天收盤價為基準，例如 100 元。</span>
+                    </li>
+                    <li>
+                        <strong>往後追蹤 126 或 252 個交易日</strong
+                        ><span
+                            >收盤曾到 200
+                            元就算翻倍；同時記錄途中最高到多少、曾跌到多少，以及轉弱訊號有沒有出現。</span
+                        >
+                    </li>
+                    <li>
+                        <strong>算出翻倍的比例</strong
+                        ><span
+                            >翻倍的事件數 ÷
+                            判斷得出結果的事件數。資料不全、無法判斷的事件不算進分母，也不當作
+                            0。</span
+                        >
+                    </li>
+                </ol>
+                <div class="price-line" aria-hidden="true">
+                    <span class="price-axis"></span>
+                    <span class="price-tick below" style="left: 16.7%"
+                        ><b>90</b>跌 10%</span
+                    >
+                    <span class="price-tick above is-start" style="left: 25%"
+                        ><b>100</b>起點</span
+                    >
+                    <span class="price-tick below" style="left: 41.7%"
+                        ><b>120</b>漲 20%</span
+                    >
+                    <span class="price-tick above is-end" style="left: 100%"
+                        ><b>200</b>翻倍</span
+                    >
+                </div>
+                <p class="rk-foot">
+                    以起點 100 元為例：問題 5、6 會用到「漲到 120 元」（漲
+                    20%）與「跌到 90 元」（跌
+                    10%）這兩條線。翻倍與否看的是收盤有沒有到 200
+                    元，和最後賺或賠是兩件事：沒翻倍的事件包含最後虧損與小幅獲利。無法判斷的事件與追蹤期不足的事件可能重疊，兩者的件數不能相加。
+                </p>
+            </section>
+            <div class="rk-banner" id="completion-banner" role="status" hidden>
+                <strong>尚未載入研究資料。</strong>
             </div>
 
             <nav class="report-nav" aria-label="研究內容">
                 <ul class="rk-toc">
-                    <li><a href="#overview">整體進度</a></li>
-                    <li><a href="#Q1">Q1</a></li>
-                    <li><a href="#Q2">Q2</a></li>
-                    <li><a href="#Q3">Q3</a></li>
-                    <li><a href="#Q4">Q4</a></li>
-                    <li><a href="#Q5">Q5</a></li>
-                    <li><a href="#Q6">Q6</a></li>
+                    <li><a href="#main-answer">主要答案</a></li>
+                    <li><a href="#overview">六個問題</a></li>
+                    <li><a href="#Q1">型態</a></li>
+                    <li><a href="#Q2">篩選條件</a></li>
+                    <li><a href="#Q3">同條件比較</a></li>
+                    <li><a href="#Q4">飆股覆蓋</a></li>
+                    <li><a href="#Q5">途中走勢</a></li>
+                    <li><a href="#Q6">轉弱訊號</a></li>
+                    <li><a href="#research-lineage">研究脈絡</a></li>
                     <li><a href="#evidence">來源與限制</a></li>
                 </ul>
             </nav>
@@ -123,19 +358,1090 @@
                 <header>
                     <div>
                         <span class="rk-q">研究全貌</span>
-                        <h2 id="overview-title">目前能回答到哪裡？</h2>
+                        <h2 id="overview-title">六個問題，各自的答案</h2>
                     </div>
-                    <p class="rk-foot" id="as-of">資料更新時間：未提供</p>
+                    <p class="rk-foot" id="as-of" hidden></p>
                 </header>
                 <ul class="rk-findings" id="overview-values"></ul>
                 <div class="question-progress" id="question-progress"></div>
-                <p class="rk-foot">
-                    「本題完成」表示該題已有可呈現的結果，不代表全研究的重建稽核已通過。
-                    未知、缺值與未完成項目均另外標示。
+                <p class="rk-foot">每題下方可展開比較口徑、原始表格與下載。</p>
+            </section>
+
+            <section
+                class="rk-section pattern-guide"
+                id="pattern-guide"
+                aria-labelledby="pattern-guide-title"
+            >
+                <header>
+                    <div>
+                        <span class="rk-q">先認識型態</span>
+                        <h2 id="pattern-guide-title">十二個型態是什麼</h2>
+                    </div>
+                </header>
+                <p class="pattern-guide-lead">
+                    十二種大致分三類：<strong>向上突破</strong>（HHHL v4
+                    突破型態 H1、杯形突破 B1、布林通道收縮後突破 B2、平台突破
+                    B3、跳空突破 B4、突破 60 日高點 L1、突破後回測
+                    P1）、<strong>跌破後收復或反轉</strong>（跌破區間支撐後收復
+                    R1、跌深近低的看漲 K 棒 R2、RSI 背離 R3、跌破 20
+                    日低點後收復
+                    L3）、<strong>上升途中的回檔</strong>（季線上拉回
+                    L2）。下列範例盡量以「型態出現當天收盤 100
+                    元」為起點，價格皆為示意。
                 </p>
+                <details class="pattern-guide-details">
+                    <summary>展開每個型態怎麼判定（含示意圖）</summary>
+                    <div class="pattern-grid">
+                        <article
+                            class="pattern-item"
+                            id="pg-H1"
+                            data-pattern="H1"
+                            tabindex="-1"
+                        >
+                            <h3>
+                                <span class="pattern-code">H1</span>HHHL v4
+                                突破型態<small class="pattern-aside"
+                                    >含墊高、築底與區間結構</small
+                                >
+                            </h3>
+                            <svg
+                                viewBox="0 0 240 124"
+                                class="shape"
+                                role="img"
+                                focusable="false"
+                            >
+                                <title>
+                                    示意圖：HHHL v4
+                                    突破型態的其中一種成立結構（墊高）：前低 84
+                                    元、高點 96 元、回檔低點 90 元，收盤 100 元
+                                </title>
+                                <line
+                                    class="lv"
+                                    x1="104"
+                                    y1="46"
+                                    x2="226"
+                                    y2="46"
+                                />
+                                <polyline
+                                    class="ln"
+                                    points="14,62 56,94 104,46 150,70 206,30"
+                                />
+                                <circle class="hit" cx="206" cy="30" r="4" />
+                                <text x="56" y="110" text-anchor="middle">
+                                    前低 84
+                                </text>
+                                <text x="104" y="38" text-anchor="middle">
+                                    高點 96
+                                </text>
+                                <text x="150" y="86" text-anchor="middle">
+                                    回檔低點 90
+                                </text>
+                                <text x="232" y="20" text-anchor="end">
+                                    收盤 100
+                                </text>
+                            </svg>
+                            <p class="pattern-eg">其中一種成立結構（示意）</p>
+                            <p>
+                                股價的轉折形成墊高、築底或區間結構，再依既有突破、量能及壓力線規則確認。這裡的
+                                HHHL v4
+                                比「每個高低點都比前一個高」的字面規則更廣。
+                            </p>
+                            <details class="pattern-precise">
+                                <summary>精確定義</summary>
+                                <p>
+                                    轉折以「從高點回落 1.5
+                                    倍平均真實波幅（ATR，近 14
+                                    日平均每天的波動幅度）」辨認。新轉折與同類別（高點對高點區、低點對低點區）上一區域的參考價比較：g
+                                    =（新轉折價 − 該區參考價）÷ 新轉折極值日的
+                                    ATR。−0.5 ≤ g ≤ +0.75
+                                    算同一區（含兩端，上下不對稱；同區後續點不更新參考價，所以同區不等於價格相等）；g
+                                    &gt; +0.75 為較高，g &lt; −0.5
+                                    為較低。這個門檻與轉折辨認的 1.5 ATR 不同。
+                                </p>
+                            </details>
+                            <p class="pattern-eg">
+                                例（墊高結構）：前低 84 元、反彈高點 96
+                                元、回檔低點 90 元；某天收盤 100 元，高過 96
+                                元，是 20 日新高，量達前 20 日均量的 1.5
+                                倍（漲停日免量）。上方近期有壓力線擋著，或前 20
+                                日平均成交額不到 100
+                                萬元，都不算。價格僅為示意，實際以個股波動幅度換算。
+                            </p>
+                        </article>
+                        <article
+                            class="pattern-item"
+                            id="pg-B1"
+                            data-pattern="B1"
+                            tabindex="-1"
+                        >
+                            <h3>
+                                <span class="pattern-code">B1</span
+                                >杯形突破（有柄／無柄）
+                            </h3>
+                            <svg
+                                viewBox="0 0 240 124"
+                                class="shape"
+                                role="img"
+                                focusable="false"
+                            >
+                                <title>
+                                    示意圖：有柄杯形突破：杯緣 104 元、杯底 74
+                                    元、柄 92–98 元，收盤 100 元
+                                </title>
+                                <line
+                                    class="lv"
+                                    x1="150"
+                                    y1="42"
+                                    x2="226"
+                                    y2="42"
+                                />
+                                <path
+                                    class="ln"
+                                    d="M14 27 C30 110 130 110 150 42 L176 57 L214 37"
+                                />
+                                <circle class="hit" cx="214" cy="37" r="4" />
+                                <text x="14" y="16">杯緣 104</text>
+                                <text x="84" y="118" text-anchor="middle">
+                                    杯底 74
+                                </text>
+                                <text x="176" y="74" text-anchor="middle">
+                                    柄 92–98
+                                </text>
+                                <text x="232" y="20" text-anchor="end">
+                                    收盤 100
+                                </text></svg
+                            ><svg
+                                viewBox="0 0 240 124"
+                                class="shape"
+                                role="img"
+                                focusable="false"
+                            >
+                                <title>
+                                    示意圖：無柄杯形突破：杯緣 98 元、杯底 70
+                                    元，收盤 100 元高過杯緣
+                                </title>
+                                <line
+                                    class="lv"
+                                    x1="14"
+                                    y1="42"
+                                    x2="226"
+                                    y2="42"
+                                />
+                                <path
+                                    class="ln"
+                                    d="M14 42 C30 118 150 118 214 37"
+                                />
+                                <circle class="hit" cx="214" cy="37" r="4" />
+                                <text x="14" y="34">杯緣 98</text>
+                                <text x="110" y="118" text-anchor="middle">
+                                    杯底 70
+                                </text>
+                                <text x="232" y="20" text-anchor="end">
+                                    收盤 100
+                                </text>
+                            </svg>
+                            <p>
+                                先漲過一段，形成左杯緣，回落成杯底（深
+                                12–35%）再爬回杯緣附近。有柄：杯緣旁再小幅整理
+                                5–15 日；無柄：直接收盤站上左杯緣最高價。
+                            </p>
+                            <p class="pattern-eg">
+                                有柄例：杯緣 104 元、杯底 74 元（深約
+                                29%）；柄的高點 98 元、低點 92 元；收盤 100
+                                元高過柄的高點，量達前 50 日均量 1.4
+                                倍。無柄例：杯緣 98 元、杯底 70 元，收盤 100
+                                元高過杯緣最高價（無柄不另設量能門檻）。杯緣收盤至少是之前
+                                120 日最低收盤的 1.3 倍，杯長 30–250 日。
+                            </p>
+                            <details class="pattern-precise">
+                                <summary>精確定義</summary>
+                                <p>
+                                    有限搜尋，依固定順序取第一個成立的結構，不是挑最漂亮或事後最好的。有柄（B1a）：柄長
+                                    5–15
+                                    日由短到長，第一個整套條件成立就取；左緣搜尋區間為柄起點前
+                                    250–30
+                                    日，取收盤最高的一天，平手取較近的日期。無柄（B1b）：杯長
+                                    30–250
+                                    日由短到長，第一個整套條件成立就取；左緣固定在突破日往前杯長那天，杯尾到突破日前一天。
+                                </p>
+                            </details>
+                        </article>
+                        <article
+                            class="pattern-item"
+                            id="pg-B2"
+                            data-pattern="B2"
+                            tabindex="-1"
+                        >
+                            <h3>
+                                <span class="pattern-code">B2</span
+                                >布林通道收縮後突破
+                            </h3>
+                            <svg
+                                viewBox="0 0 240 124"
+                                class="shape"
+                                role="img"
+                                focusable="false"
+                            >
+                                <title>
+                                    示意圖：布林通道近 5 日內收縮到前 125
+                                    日最窄，收盤 100 元站上通道上緣 99 元
+                                </title>
+                                <polyline
+                                    class="bd"
+                                    points="14,30 60,44 110,54 160,58 190,60 206,34"
+                                />
+                                <polyline
+                                    class="bd"
+                                    points="14,104 60,90 110,80 160,76 190,74 206,82"
+                                />
+                                <polyline
+                                    class="ln"
+                                    points="14,66 40,58 70,72 100,62 130,70 160,66 190,66 206,30"
+                                />
+                                <circle class="hit" cx="206" cy="30" r="4" />
+                                <text x="14" y="20">布林通道</text>
+                                <text x="176" y="92" text-anchor="middle">
+                                    近 5 日內最窄
+                                </text>
+                                <text x="232" y="60" text-anchor="end">
+                                    上緣 99
+                                </text>
+                                <text x="232" y="20" text-anchor="end">
+                                    收盤 100
+                                </text>
+                            </svg>
+                            <p class="pattern-eg">其中一種成立結構（示意）</p>
+                            <p>
+                                布林通道（20 日均線上下 2 倍標準差）的寬度，近 5
+                                個交易日內曾縮到前 125
+                                日最窄；當天收盤站上通道上緣。B2b
+                                另加量能：成交量達前 20 日均量 1.5 倍。
+                            </p>
+                            <p class="pattern-eg">
+                                例：通道上緣 99 元，收盤 100 元。
+                            </p>
+                        </article>
+                        <article
+                            class="pattern-item"
+                            id="pg-B3"
+                            data-pattern="B3"
+                            tabindex="-1"
+                        >
+                            <h3>
+                                <span class="pattern-code">B3</span>平台突破
+                            </h3>
+                            <svg
+                                viewBox="0 0 240 124"
+                                class="shape"
+                                role="img"
+                                focusable="false"
+                            >
+                                <title>
+                                    示意圖：先漲 25% 以上，平台 86–99
+                                    元橫向整理，收盤 100 元高過平台最高價
+                                </title>
+                                <line
+                                    class="lv"
+                                    x1="44"
+                                    y1="34"
+                                    x2="226"
+                                    y2="34"
+                                />
+                                <line
+                                    class="lv"
+                                    x1="44"
+                                    y1="86"
+                                    x2="226"
+                                    y2="86"
+                                />
+                                <polyline
+                                    class="ln"
+                                    points="14,114 30,80 44,40 64,80 86,44 108,82 130,42 152,80 174,46 192,74 206,30"
+                                />
+                                <circle class="hit" cx="206" cy="30" r="4" />
+                                <text x="14" y="20">先漲 25% 以上</text>
+                                <text x="110" y="28" text-anchor="middle">
+                                    平台高 99
+                                </text>
+                                <text x="120" y="100" text-anchor="middle">
+                                    平台低 86
+                                </text>
+                                <text x="232" y="20" text-anchor="end">
+                                    收盤 100
+                                </text>
+                            </svg>
+                            <p class="pattern-eg">其中一種成立結構（示意）</p>
+                            <p>
+                                股價在 25–65
+                                個交易日的平台內橫向整理，高低差不超過最高價的
+                                15%，且平台開始前已從低點漲過 25%
+                                以上；某天收盤高過平台最高價，量達前 50 日均量
+                                1.5 倍。子型：量縮（平台最後 10
+                                日均量不超過平台均量的 0.8
+                                倍）、振幅收斂（最後三分之一的振幅小於最前三分之一的
+                                0.6 倍）。
+                            </p>
+                            <details class="pattern-precise">
+                                <summary>精確定義</summary>
+                                <p>
+                                    平台長 25–65
+                                    日由短到長搜尋；三個子型（一般、量縮、振幅收斂）各自把第一次成立的平台保存下來，不再覆寫，也不共用同一段平台。這是固定順序的選取，不是挑最漂亮或事後最好的平台。
+                                </p>
+                            </details>
+                            <p class="pattern-eg">
+                                例：平台最高 99 元、最低 86 元（高低差約
+                                13%）；收盤 100 元站上 99 元。
+                            </p>
+                        </article>
+                        <article
+                            class="pattern-item"
+                            id="pg-B4"
+                            data-pattern="B4"
+                            tabindex="-1"
+                        >
+                            <h3>
+                                <span class="pattern-code">B4</span>跳空突破
+                            </h3>
+                            <svg
+                                viewBox="0 0 240 124"
+                                class="shape"
+                                role="img"
+                                focusable="false"
+                            >
+                                <title>
+                                    示意圖：前一日最高 96 元；今天開盤 98
+                                    元、最低價仍高於 96 元，缺口未補，收盤 100
+                                    元
+                                </title>
+                                <line
+                                    class="lv"
+                                    x1="160"
+                                    y1="46"
+                                    x2="226"
+                                    y2="46"
+                                />
+                                <polyline
+                                    class="ln"
+                                    points="14,72 50,64 90,76 130,62 152,58"
+                                />
+                                <line
+                                    class="k"
+                                    x1="172"
+                                    y1="46"
+                                    x2="172"
+                                    y2="62"
+                                />
+                                <rect
+                                    class="k"
+                                    x="167"
+                                    y="50"
+                                    width="10"
+                                    height="8"
+                                />
+                                <line
+                                    class="k"
+                                    x1="200"
+                                    y1="26"
+                                    x2="200"
+                                    y2="39.6"
+                                />
+                                <rect
+                                    class="k"
+                                    x="195"
+                                    y="30"
+                                    width="10"
+                                    height="8"
+                                />
+                                <text x="164" y="40" text-anchor="end">
+                                    前一日最高 96
+                                </text>
+                                <text x="232" y="62" text-anchor="end">
+                                    缺口未補
+                                </text>
+                                <text x="232" y="20" text-anchor="end">
+                                    收盤 100
+                                </text>
+                            </svg>
+                            <p class="pattern-eg">成立結構示意</p>
+                            <p>
+                                開盤直接跳空越過前一日最高價 2%
+                                以上，全天最低價仍高於前一日最高價（缺口沒補），收盤是前
+                                60 日最高收盤，量達前 20 日均量 2 倍。
+                            </p>
+                            <p class="pattern-eg">
+                                例：前一日最高 96 元；今天開盤 98
+                                元以上、最低價高於 96 元，收盤 100 元。
+                            </p>
+                        </article>
+                        <article
+                            class="pattern-item"
+                            id="pg-R1"
+                            data-pattern="R1"
+                            tabindex="-1"
+                        >
+                            <h3>
+                                <span class="pattern-code">R1</span
+                                >跌破區間支撐後收復（含回測確認）
+                            </h3>
+                            <svg
+                                viewBox="0 0 240 124"
+                                class="shape"
+                                role="img"
+                                focusable="false"
+                            >
+                                <title>
+                                    示意圖：R1a，低點兩次碰到支撐 98
+                                    元，某天收盤跌破到 95 元，兩天後收盤 100
+                                    元收復
+                                </title>
+                                <line
+                                    class="lv"
+                                    x1="14"
+                                    y1="38"
+                                    x2="226"
+                                    y2="38"
+                                />
+                                <polyline
+                                    class="ln"
+                                    points="14,20 40,36 70,18 100,36 128,22 160,50 183,46 206,30"
+                                />
+                                <circle class="hit" cx="206" cy="30" r="4" />
+                                <text x="14" y="50">支撐 98</text>
+                                <text x="84" y="52" text-anchor="middle">
+                                    兩次碰支撐
+                                </text>
+                                <text x="160" y="66" text-anchor="middle">
+                                    跌破收 95
+                                </text>
+                                <text x="232" y="20" text-anchor="end">
+                                    收盤 100
+                                </text>
+                            </svg>
+                            <svg
+                                viewBox="0 0 240 124"
+                                class="shape"
+                                role="img"
+                                focusable="false"
+                            >
+                                <title>
+                                    示意圖：R1b，收復後回測，收盤可落在支撐下方但不收破前低，之後收盤高於開盤的
+                                    K 棒確認
+                                </title>
+                                <line
+                                    class="lv"
+                                    x1="14"
+                                    y1="38"
+                                    x2="226"
+                                    y2="38"
+                                />
+                                <line
+                                    class="lv"
+                                    x1="14"
+                                    y1="58"
+                                    x2="226"
+                                    y2="58"
+                                />
+                                <polyline
+                                    class="ln"
+                                    points="14,50 36,24 64,16 92,20 120,24 146,42"
+                                />
+                                <line
+                                    class="k"
+                                    x1="176"
+                                    y1="28.0"
+                                    x2="176"
+                                    y2="44.0"
+                                />
+                                <rect
+                                    class="k"
+                                    x="171"
+                                    y="30"
+                                    width="10"
+                                    height="10.0"
+                                />
+                                <text x="176" y="16" text-anchor="middle">
+                                    收盤高於開盤：確認
+                                </text>
+                                <text x="120" y="54" text-anchor="middle">
+                                    回測可收在支撐下
+                                </text>
+                                <text x="232" y="50" text-anchor="end">
+                                    支撐 98
+                                </text>
+                                <text x="14" y="72">前低：收盤不可跌破</text>
+                            </svg>
+                            <p class="pattern-eg">
+                                上圖：R1a 跌破後收復；下圖：R1b
+                                之後的回測與確認（示意）
+                            </p>
+                            <p>
+                                前 60 日高低差不超過最低價的
+                                35%，且至少兩次低點碰到支撐（支撐 ×1.03
+                                以內，相隔 10
+                                日以上）；某天收盤跌破支撐、最低價只比支撐低不超過
+                                1.5 倍 ATR，之後 1–5
+                                日內第一次收盤回到支撐上方。R1b：收復後第 3–15
+                                個交易日，第一次收盤回到支撐 ×1.03
+                                以下就算回測，包含收在支撐下方；但從收復後直到確認日，收盤都不能跌破
+                                R1a
+                                保存的前低（破底期間的最低價）。回測後再等第一根收盤高於開盤的紅
+                                K 確認。
+                            </p>
+                            <p class="pattern-eg">
+                                例：支撐 98 元；破底日收盤 95 元；兩天後收盤 100
+                                元，收復。
+                            </p>
+                        </article>
+                        <article
+                            class="pattern-item"
+                            id="pg-R2"
+                            data-pattern="R2"
+                            tabindex="-1"
+                        >
+                            <h3>
+                                <span class="pattern-code">R2</span
+                                >跌深近低的看漲 K 棒（含次日確認）
+                            </h3>
+                            <svg
+                                viewBox="0 0 240 124"
+                                class="shape"
+                                role="img"
+                                focusable="false"
+                            >
+                                <title>
+                                    示意圖：其中一種成立結構（看漲吞噬 R2a）：20
+                                    日前收盤 100 元，前一天收盤 88 元且低於 20
+                                    日均線，當天的陽線吞噬前一天的陰線
+                                </title>
+                                <polyline
+                                    class="bd"
+                                    points="14,24 80,34 140,48 200,56"
+                                />
+                                <line
+                                    class="lv"
+                                    x1="160"
+                                    y1="88"
+                                    x2="226"
+                                    y2="88"
+                                />
+                                <polyline
+                                    class="ln"
+                                    points="14,30 46,40 78,50 110,56 150,72"
+                                />
+                                <line
+                                    class="kd"
+                                    x1="172"
+                                    y1="62"
+                                    x2="172"
+                                    y2="82"
+                                />
+                                <rect
+                                    class="kd"
+                                    x="167"
+                                    y="66"
+                                    width="10"
+                                    height="12"
+                                />
+                                <line
+                                    class="k"
+                                    x1="194"
+                                    y1="60.0"
+                                    x2="194"
+                                    y2="84.0"
+                                />
+                                <rect
+                                    class="k"
+                                    x="189"
+                                    y="62"
+                                    width="10"
+                                    height="18.0"
+                                />
+                                <text x="14" y="18">20 日前收 100</text>
+                                <text x="232" y="46" text-anchor="end">
+                                    20 日均線
+                                </text>
+                                <text x="120" y="96" text-anchor="middle">
+                                    前日收 88
+                                </text>
+                                <text x="232" y="102" text-anchor="end">
+                                    前 60 日低點附近
+                                </text>
+                                <text x="183" y="118" text-anchor="middle">
+                                    看漲吞噬
+                                </text>
+                            </svg>
+                            <p class="pattern-eg">
+                                其中一種成立結構：看漲吞噬
+                                R2a（示意）；刺透、看漲孕線、錘子與次日確認 R2e
+                                的形狀不同
+                            </p>
+                            <p>
+                                前一天收盤比 20 日前低 10% 以上且低於 20
+                                日均線，K 線最低價不高於前 60 日最低價的 1.03
+                                倍，當天出現看漲 K
+                                線：看漲吞噬（R2a）、刺透（R2b）、看漲孕線（R2c）或錘子（R2d）。R2e
+                                是另一個子型：上述 a–d
+                                事件完成日的隔天，收盤高過該 K
+                                線組合的最高價；a–d 各自保存，不是每個 R2
+                                都要等次日確認。
+                            </p>
+                            <p class="pattern-eg">
+                                例：20 日前收盤 100 元，前一天收盤 88 元（跌
+                                12%）、低於 20 日均線，當天出現看漲吞噬。
+                            </p>
+                        </article>
+                        <article
+                            class="pattern-item"
+                            id="pg-R3"
+                            data-pattern="R3"
+                            tabindex="-1"
+                        >
+                            <h3>
+                                <span class="pattern-code">R3</span>RSI 背離
+                            </h3>
+                            <svg
+                                viewBox="0 0 240 124"
+                                class="shape"
+                                role="img"
+                                focusable="false"
+                            >
+                                <title>
+                                    示意圖：R3a，第一低點 80 元（RSI
+                                    25）、第二低點 76 元（RSI 31），價格更低而
+                                    RSI 更高，第二低點後第 3 日確認
+                                </title>
+                                <polyline
+                                    class="ln"
+                                    points="14,20 40,34 60,48 90,30 120,38 160,62 175,52 190,46"
+                                />
+                                <line
+                                    class="lv"
+                                    x1="60"
+                                    y1="48"
+                                    x2="160"
+                                    y2="62"
+                                />
+                                <line
+                                    class="lv"
+                                    x1="14"
+                                    y1="104"
+                                    x2="226"
+                                    y2="104"
+                                />
+                                <polyline
+                                    class="bd"
+                                    points="14,88 40,100 60,112 90,92 120,96 160,102.4 175,96 190,90"
+                                />
+                                <line
+                                    class="lv"
+                                    x1="60"
+                                    y1="112"
+                                    x2="160"
+                                    y2="102.4"
+                                />
+                                <circle class="hit" cx="190" cy="46" r="4" />
+                                <text x="14" y="10">價格</text>
+                                <text x="14" y="80">RSI14</text>
+                                <text x="60" y="62" text-anchor="middle">
+                                    低點一 80
+                                </text>
+                                <text x="150" y="76" text-anchor="middle">
+                                    低點二 76
+                                </text>
+                                <text x="232" y="40" text-anchor="end">
+                                    確認日
+                                </text>
+                                <text x="60" y="122" text-anchor="middle">
+                                    RSI 25
+                                </text>
+                                <text x="160" y="116" text-anchor="middle">
+                                    RSI 31
+                                </text>
+                                <text x="232" y="116" text-anchor="end">
+                                    RSI 30
+                                </text>
+                            </svg>
+                            <p class="pattern-eg">
+                                畫的是 R3a（示意）；R3b 另等 RSI
+                                高過兩低點間的最高 RSI
+                            </p>
+                            <p>
+                                兩個相隔 10–60 日的低點（各是前 5 日到後 3
+                                日內的最低點，第 3
+                                日後才確認），第二個價格更低但 RSI14
+                                更高，且第一個低點的 RSI 在 30
+                                以下。R3a：確認日收盤高過第二低點當天的收盤。R3b：確認後
+                                20 日內，RSI 第一次高過兩低點之間的最高 RSI。
+                            </p>
+                            <p class="pattern-eg">
+                                例：第一低點 80 元（RSI 25），第二低點 76
+                                元（RSI 31），間隔 25 日。
+                            </p>
+                        </article>
+                        <article
+                            class="pattern-item"
+                            id="pg-P1"
+                            data-pattern="P1"
+                            tabindex="-1"
+                        >
+                            <h3>
+                                <span class="pattern-code">P1</span>突破後回測
+                            </h3>
+                            <svg
+                                viewBox="0 0 240 124"
+                                class="shape"
+                                role="img"
+                                focusable="false"
+                            >
+                                <title>
+                                    示意圖：收盤突破壓力 94
+                                    元且放量，之後回測收在 91.2–96.8
+                                    元之間，再以收盤 100 元高過前一日最高價
+                                </title>
+                                <rect
+                                    class="zone"
+                                    x="150"
+                                    y="42.8"
+                                    width="76"
+                                    height="22.4"
+                                />
+                                <line
+                                    class="lv"
+                                    x1="14"
+                                    y1="54"
+                                    x2="226"
+                                    y2="54"
+                                />
+                                <polyline
+                                    class="ln"
+                                    points="14,74 40,62 70,70 100,60 124,42 142,36 160,38 178,58 192,56 206,30"
+                                />
+                                <circle class="hit" cx="206" cy="30" r="4" />
+                                <text x="14" y="50">壓力 94</text>
+                                <text x="124" y="30" text-anchor="middle">
+                                    突破（量 1.5 倍）
+                                </text>
+                                <text x="188" y="80" text-anchor="middle">
+                                    回測 ±3%
+                                </text>
+                                <text x="232" y="20" text-anchor="end">
+                                    收盤 100
+                                </text>
+                            </svg>
+                            <p class="pattern-eg">成立結構示意</p>
+                            <p>
+                                先收盤高過前 60 日最高價且量達前 20 日均量 1.5
+                                倍；3–20 日後，收盤第一次回到該價位 ±3%
+                                內，途中沒有收破 −3%；其後 5
+                                日內，第一個收盤高過前一日最高價的日子。
+                            </p>
+                            <p class="pattern-eg">
+                                例：壓力 94 元；突破後回測，收盤落在 91.2–96.8
+                                元；再突破日收盤 100 元。
+                            </p>
+                        </article>
+                        <article
+                            class="pattern-item"
+                            id="pg-L1"
+                            data-pattern="L1"
+                            tabindex="-1"
+                        >
+                            <h3>
+                                <span class="pattern-code">L1</span>突破 60
+                                日高點
+                            </h3>
+                            <svg
+                                viewBox="0 0 240 124"
+                                class="shape"
+                                role="img"
+                                focusable="false"
+                            >
+                                <title>
+                                    示意圖：收盤 100 元高過前 60 日最高價 95 元
+                                </title>
+                                <line
+                                    class="lv"
+                                    x1="14"
+                                    y1="50"
+                                    x2="226"
+                                    y2="50"
+                                />
+                                <polyline
+                                    class="ln"
+                                    points="14,82 44,64 72,54 100,72 130,60 160,68 186,56 206,30"
+                                />
+                                <circle class="hit" cx="206" cy="30" r="4" />
+                                <text x="100" y="44" text-anchor="middle">
+                                    前 60 日最高 95
+                                </text>
+                                <text x="232" y="20" text-anchor="end">
+                                    收盤 100
+                                </text>
+                            </svg>
+                            <p class="pattern-eg">成立結構示意</p>
+                            <p>收盤高過前 60 日最高價。</p>
+                            <p class="pattern-eg">
+                                例：前 60 日最高價 95 元，收盤 100 元。
+                            </p>
+                        </article>
+                        <article
+                            class="pattern-item"
+                            id="pg-L2"
+                            data-pattern="L2"
+                            tabindex="-1"
+                        >
+                            <h3>
+                                <span class="pattern-code">L2</span
+                                >近五日回落、收盤仍高於 60 日均線
+                            </h3>
+                            <svg
+                                viewBox="0 0 240 124"
+                                class="shape"
+                                role="img"
+                                focusable="false"
+                            >
+                                <title>
+                                    示意圖：收盤 100 元在 60 日均線 96
+                                    元之上，且比 5 個交易日前的收盤 104 元低
+                                </title>
+                                <line
+                                    class="bd"
+                                    x1="14"
+                                    y1="46"
+                                    x2="226"
+                                    y2="46"
+                                />
+                                <polyline
+                                    class="ln"
+                                    points="14,40 50,34 90,28 125,22 160,14 169,22 178,18 187,28 196,24 206,30"
+                                />
+                                <circle class="hit" cx="206" cy="30" r="4" />
+                                <text x="14" y="60">60 日均線 96</text>
+                                <text x="150" y="10" text-anchor="middle">
+                                    5 日前 104
+                                </text>
+                                <text x="232" y="20" text-anchor="end">
+                                    收盤 100
+                                </text>
+                            </svg>
+                            <p class="pattern-eg">成立結構示意</p>
+                            <p>
+                                收盤在 60 日均線之上，且比 5
+                                個交易日前的收盤低（簡稱「季線上拉回」）；不要求剛站上均線、均線上彎，也不要求五天每天都跌。
+                            </p>
+                            <p class="pattern-eg">
+                                例：60 日均線 96 元，收盤 100 元，5 日前收盤 104
+                                元。
+                            </p>
+                        </article>
+                        <article
+                            class="pattern-item"
+                            id="pg-L3"
+                            data-pattern="L3"
+                            tabindex="-1"
+                        >
+                            <h3>
+                                <span class="pattern-code">L3</span>跌破 20
+                                日低點後收復
+                            </h3>
+                            <svg
+                                viewBox="0 0 240 124"
+                                class="shape"
+                                role="img"
+                                focusable="false"
+                            >
+                                <title>
+                                    示意圖：某天最低價 92 元跌破前 20 日最低價
+                                    95 元，兩天後收盤 100 元回到 95 元之上
+                                </title>
+                                <line
+                                    class="lv"
+                                    x1="14"
+                                    y1="50"
+                                    x2="226"
+                                    y2="50"
+                                />
+                                <polyline
+                                    class="ln"
+                                    points="14,30 40,40 70,34 100,44 130,38 160,54 183,52 206,30"
+                                />
+                                <line
+                                    class="kd"
+                                    x1="160"
+                                    y1="44.0"
+                                    x2="160"
+                                    y2="62"
+                                />
+                                <rect
+                                    class="kd"
+                                    x="155"
+                                    y="46"
+                                    width="10"
+                                    height="8"
+                                />
+                                <circle class="hit" cx="206" cy="30" r="4" />
+                                <text x="14" y="64">前 20 日最低 95</text>
+                                <text x="160" y="76" text-anchor="middle">
+                                    最低 92
+                                </text>
+                                <text x="232" y="20" text-anchor="end">
+                                    收盤 100
+                                </text>
+                            </svg>
+                            <p class="pattern-eg">成立結構示意</p>
+                            <p>
+                                破前 20 日低點後，等待後續五根內的非新低 K
+                                棒收復；期間缺價則放棄這次等待，重新累積資料。
+                            </p>
+                            <details class="pattern-precise">
+                                <summary>精確定義</summary>
+                                <p>
+                                    某天最低價跌破前 20 日最低價；之後 5
+                                    個交易日內，第一個收盤回到原低點上方、且當天沒有再創更低低點的日子。每天判斷需要含當日的
+                                    21
+                                    根完整價格；中途有缺價，等待中的這次跌破即作廢，缺價之後要先有
+                                    20 根新的連續前史，才會恢復判斷。
+                                </p>
+                            </details>
+                            <p class="pattern-eg">
+                                例：前 20 日最低價 95 元；某天最低價 92
+                                元；兩天後收盤 100 元，回到 95 元之上。
+                            </p>
+                        </article>
+                    </div>
+                </details>
             </section>
 
             <div id="questions"></div>
+            <details class="reader-family-details" id="family-details">
+                <summary>查看十二種型態的完整對照表</summary>
+                <section
+                    class="family-summary rk-card"
+                    id="family-summary"
+                    aria-labelledby="family-summary-title"
+                >
+                    <header class="family-summary-header">
+                        <div>
+                            <span class="rk-q">不加額外條件</span>
+                            <h2 id="family-summary-title">
+                                十二種型態並排：翻倍比例與樣本數
+                            </h2>
+                        </div>
+                        <label for="family-summary-horizon">
+                            期限
+                            <select id="family-summary-horizon">
+                                <option value="126" selected>
+                                    126 個交易日（約半年）
+                                </option>
+                                <option value="252">
+                                    252 個交易日（約一年）
+                                </option>
+                            </select>
+                        </label>
+                    </header>
+                    <p class="family-summary-codes">
+                        各型態怎麼判定，見上方「<a href="#pattern-guide"
+                            >十二個型態是什麼</a
+                        >」。
+                    </p>
+                    <p class="family-summary-scope" id="family-summary-scope">
+                        不加額外條件 · 全部股票 · 全部年份 · 全部市場
+                    </p>
+                    <p
+                        class="family-summary-baseline"
+                        id="family-summary-baseline"
+                    ></p>
+                    <div class="family-summary-table-wrap">
+                        <table class="family-summary-table">
+                            <caption>
+                                十二種型態用同一個口徑並排；加上篩選條件的結果在問題
+                                2、3。
+                            </caption>
+                            <thead>
+                                <tr>
+                                    <th scope="col">型態</th>
+                                    <th scope="col">
+                                        翻倍比例是所有合格日的幾倍
+                                    </th>
+                                    <th scope="col">
+                                        比間隔取樣合格日高（百分點）
+                                    </th>
+                                    <th scope="col">型態樣本數</th>
+                                    <th scope="col">對照樣本數</th>
+                                    <th scope="col">期滿仍虧損比例</th>
+                                </tr>
+                            </thead>
+                            <tbody id="family-summary-rows"></tbody>
+                        </table>
+                    </div>
+                    <p
+                        class="family-summary-status rk-foot"
+                        id="family-summary-status"
+                        aria-live="polite"
+                    >
+                        尚未提供跨型態對照摘要；不以空白或零代替資料。
+                    </p>
+                    <p class="family-summary-units rk-foot">
+                        「所有合格日」是每個符合基本資格的股票日，每天各算一筆；「間隔取樣合格日」是每檔股票留下一筆後，接下來
+                        20
+                        個交易日不再記（仍包含有型態的日子）。倍數是型態的翻倍比例除以所有合格日的翻倍比例，不是投資報酬倍數；百分點是型態比例減去間隔取樣合格日的比例，兩欄的對照不同。這張表不加篩選條件，用全部股票、全期、全市場；問題
+                        2–6
+                        主要用另一半股票，兩者不是同一批樣本。樣本數是計入比例的件數；期滿仍虧損比例是追蹤期滿仍未翻倍、且最後收盤低於起點的比例。無資料顯示
+                        N/A，真實的零照實顯示。（研究內部代號：所有合格日＝C-base-daily，間隔取樣合格日＝C-base-all。）
+                    </p>
+                </section>
+            </details>
+
+            <section
+                class="rk-section research-lineage"
+                id="research-lineage"
+                aria-labelledby="lineage-title"
+            >
+                <header>
+                    <h2 id="lineage-title">前作與後續研究</h2>
+                </header>
+                <ol class="lineage-steps">
+                    <li aria-current="step">
+                        <span class="rk-q">本作</span>
+                        <h3>型態與條件，和翻倍有什麼關係？</h3>
+                        <p>
+                            <strong>提供：</strong
+                            >十二種型態的事件、同條件比較、轉弱訊號的定義，以及「起點後追蹤多久」的觀察方式。
+                        </p>
+                        <a href="#main-answer">回到主要答案</a>
+                    </li>
+                    <li>
+                        <span class="rk-q">後續一</span>
+                        <h3>不要求型態，只看強勢條件呢？</h3>
+                        <p>
+                            <strong>提供：</strong
+                            >股價已高於長期均價、又遠高於近一年低價時，後來多常漲到
+                            2、3、5、10 倍。
+                        </p>
+                        <a
+                            data-related-report="20261021-momentum-only-doubling"
+                            href="../../20261021-momentum-only-doubling/web-report/index.html"
+                            >〈只看強勢條件的翻倍機率〉</a
+                        >
+                    </li>
+                    <li>
+                        <span class="rk-q">後續二</span>
+                        <h3>強勢條件成立後，再看轉弱訊號呢？</h3>
+                        <p>
+                            <strong>提供：</strong
+                            >有轉弱訊號與沒有訊號、而且都還沒翻倍的事件，後續翻倍的比例是否不同。
+                        </p>
+                        <a
+                            data-related-report="20261024-strength-weakening-flags"
+                            href="../../20261024-strength-weakening-flags/web-report/index.html"
+                            >〈已大漲的股票，接著轉弱，之後還會翻倍嗎？〉</a
+                        >
+                    </li>
+                </ol>
+                <p>
+                    三份研究的比例分母各不相同：本作從「型態出現的日子」出發，後續一從「符合強勢條件的股票日」出發，後續二還要再限縮成「觀察期結束時仍未翻倍」的事件，所以數字並排時不是同一群事件，也不能直接相減。
+                </p>
+            </section>
 
             <section
                 class="rk-section"
@@ -145,34 +1451,63 @@
                 <header>
                     <div>
                         <span class="rk-q">如何核對</span>
-                        <h2 id="evidence-title">稽核、來源與使用限制</h2>
+                        <h2 id="evidence-title">來源與限制</h2>
                     </div>
                 </header>
+                <p>
+                    結果已完整保存，下載見下方展開區的「可下載的成果」，或
+                    <a href="data/final-v1/final-delivery.md"
+                        >完整成果與資料取得</a
+                    >。資料截止日 2026-10-12，是最後一個有價格資料的交易日。
+                </p>
                 <details class="evidence-details">
-                    <summary>展開稽核紀錄、來源、下載與使用限制</summary>
+                    <summary>展開選法、限制、稽核紀錄與下載</summary>
                     <div class="evidence-content">
+                        <article class="rk-card">
+                            <h3>條件與前十名怎麼選</h3>
+                            <p>
+                                股票依代碼固定分成兩半。每個型態先在一半股票上，用追蹤約半年、結果已完整的事件，挑出表現最好的最多
+                                8
+                                個單項條件，再列出單項、兩兩、三項的全部組合（最多
+                                92
+                                組）；條件固定後，才看另一半股票。表中的「前十名」依另一半股票追蹤約一年的結果排序，問題
+                                4–6
+                                也沿用這十組，所以它不是事先由第一半選出的前十名，也不是對前十名的獨立驗證。
+                            </p>
+                            <p class="rk-foot">
+                                兩半股票都來自已看過的歷史。2026-10-31
+                                是報告整理完成的日期；2026-10-12
+                                是價格資料的最後一天，兩者不是同一件事。
+                            </p>
+                        </article>
                         <div class="rk-grid-2">
                             <article class="rk-card">
                                 <h3>重建與驗證</h3>
-                                <p id="audit-status">
-                                    既定範圍核對已完成；不等於全研究驗收。
-                                </p>
+                                <p id="audit-status">既定範圍核對已完成。</p>
                                 <ul id="audit-notes"></ul>
                             </article>
                             <article class="rk-card">
-                                <h3>如何解讀</h3>
+                                <h3>資料限制</h3>
                                 <ul id="limitations"></ul>
-                                <p class="rk-foot">
-                                    歷史關聯與描述性統計不等於可交易策略，也不構成策略通過或獲利保證。
-                                </p>
                             </article>
                         </div>
+                        <article class="rk-card">
+                            <h3>後續研究的時間先後</h3>
+                            <p>
+                                後續研究設計時引用的是本作 2026-10-21
+                                的階段報告；完整結果在 2026-10-31
+                                完成。後續一的答案引用其 2026-10-22
+                                保存的報告，「型態額外貢獻多少」在那份研究中仍未評估。
+                            </p>
+                            <a href="data/final-v1/research-lineage.md"
+                                >完整研究承接紀錄</a
+                            >
+                        </article>
                         <article class="rk-card provenance-card">
                             <h3>本次資料與程式紀錄</h3>
                             <dl id="provenance"></dl>
                             <p class="rk-foot">
-                                來源與世代紀錄用來說明本次讀了什麼，不表示永久保存每個歷史輸入快照。
-                                後續共用資料更新也不會改寫本頁既有的結果。
+                                來源與世代紀錄說明本次讀了什麼；後續共用資料更新不會改寫本頁既有的結果。
                             </p>
                         </article>
                         <article
@@ -182,14 +1517,14 @@
                             <h3>可下載的成果</h3>
                             <div id="downloads"></div>
                             <p class="rk-foot">
-                                下載內容以實際列出的檔案為準。表格僅呈現已提供的資料，不會在瀏覽器重新執行研究。
+                                表格只呈現已提供的資料，不會在瀏覽器重新執行研究。
                             </p>
                         </article>
                     </div>
                 </details>
             </section>
             <footer class="report-footer">
-                <p>2010 起全市場型態掃描 · 可逐題查看進度、表格與來源。</p>
+                <p>2010 起全市場型態掃描 · 可逐題查看表格與來源。</p>
                 <a href="#report-title">回到頁首</a>
             </footer>
             <noscript>

@@ -4,6 +4,7 @@ import { join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { runInNewContext } from "node:vm";
+import { gunzipSync } from "node:zlib";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createServer } from "vite";
@@ -69,6 +70,7 @@ class Element {
     constructor(tag) {
         this.tagName = tag.toUpperCase();
         this.children = [];
+        this.parentElement = null;
         this.attributes = new Map();
         this.listeners = new Map();
         this.className = "";
@@ -99,7 +101,10 @@ class Element {
     append(...children) {
         for (const child of children) {
             if (child.tagName === "#FRAGMENT") this.append(...child.children);
-            else this.children.push(child);
+            else {
+                child.parentElement = this;
+                this.children.push(child);
+            }
         }
     }
     replaceChildren(...children) {
@@ -143,7 +148,7 @@ function render(payload) {
     page.window = page;
     if (payload !== undefined) page.REPORT_DATA = payload;
     runInNewContext(source, page, { timeout: 5000 });
-    return { elements, document };
+    return { elements, document, page };
 }
 
 function descendants(root, predicate) {
@@ -283,7 +288,7 @@ test("the actual renderer preserves zero, null, fraction, pp and multiple units 
             "0",
             "—",
             "12.5%",
-            "+1.25 pt",
+            "+1.25 百分點",
             "1.5×",
             "<img src=x onerror=alert(1)>",
         ],
@@ -372,28 +377,28 @@ test("the first-screen comparison keeps twelve Q1 families on one scope and swit
     assert.equal(selector.value, "126");
     assert.equal(rows.children.length, 12);
     assert.deepEqual(rowCells(rows.children[0]), [
-        "H1",
+        "HHHL v4 突破型態（H1）",
         "1.25×",
-        "+1.25 pt",
+        "+1.25 百分點",
         "100",
         "200",
         "20%",
     ]);
     assert.match(
         page.elements.get("family-summary-baseline").textContent,
-        /C-base-daily 命中率 40%（K=1,000）/,
+        /所有合格日的翻倍比例 40%（樣本 1,000）/,
     );
     assert.match(
         page.elements.get("family-summary-scope").textContent,
-        /Q1 固定口徑.*split=all.*era=all.*mkt=all.*cohort=union/,
+        /不加額外條件.*全部股票.*全部年份.*全部市場/,
     );
     assert.match(
         readFileSync(join(folder, "index.html"), "utf8"),
-        /強動能候選與其控制差距另列於\s+Q2–Q3/,
+        /加上篩選條件的結果在問題\s+2、3/,
     );
     assert.match(
         page.elements.get("family-summary-status").textContent,
-        /十二家族/,
+        /十二種型態/,
     );
 
     selector.value = "252";
@@ -401,16 +406,16 @@ test("the first-screen comparison keeps twelve Q1 families on one scope and swit
 
     assert.equal(rows.children.length, 12);
     assert.deepEqual(rowCells(rows.children[0]), [
-        "H1",
+        "HHHL v4 突破型態（H1）",
         "0.75×",
-        "−1.25 pt",
+        "−1.25 百分點",
         "80",
         "180",
         "25%",
     ]);
     assert.match(
         page.elements.get("family-summary-baseline").textContent,
-        /C-base-daily 命中率 50%（K=900）/,
+        /所有合格日的翻倍比例 50%（樣本 900）/,
     );
 });
 
@@ -453,19 +458,33 @@ test("summary denominators show N/A while real zero counts and rates remain zero
     const rows = page.elements.get("family-summary-rows").children;
     const rowCells = (row) => row.children.map((cell) => cell.textContent);
 
-    assert.deepEqual(rowCells(rows[0]), ["H1", "N/A", "N/A", "0", "0", "N/A"]);
-    assert.deepEqual(rowCells(rows[1]), ["B1", "N/A", "N/A", "9", "0", "N/A"]);
-    assert.deepEqual(rowCells(rows[2]), [
-        "B2",
+    assert.deepEqual(rowCells(rows[0]), [
+        "HHHL v4 突破型態（H1）",
         "N/A",
-        "0 pt",
+        "N/A",
+        "0",
+        "0",
+        "N/A",
+    ]);
+    assert.deepEqual(rowCells(rows[1]), [
+        "杯形突破（B1）",
+        "N/A",
+        "N/A",
+        "9",
+        "0",
+        "N/A",
+    ]);
+    assert.deepEqual(rowCells(rows[2]), [
+        "布林通道收縮後突破（B2）",
+        "N/A",
+        "0 百分點",
         "10",
         "12",
         "0%",
     ]);
     assert.match(
         page.elements.get("family-summary-baseline").textContent,
-        /N\/A（K=0）/,
+        /N\/A（樣本 0）/,
     );
 });
 
@@ -486,7 +505,9 @@ test("collapsible table definitions use native details without dropping paginate
     payload.questions[0].tables[0].collapsible = true;
     const page = render(payload);
     const q1 = questionById(page, "Q1");
-    const details = byTag(q1, "details")[0];
+    const details = byTag(q1, "details").find((item) =>
+        item.className.includes("question-table"),
+    );
     const tbody = byTag(details, "tbody")[0];
 
     assert.ok(details);
@@ -503,11 +524,88 @@ test("collapsible table definitions use native details without dropping paginate
 test("the overview and evidence disclosure preserve the current completion boundaries", () => {
     const html = readFileSync(join(folder, "index.html"), "utf8");
 
-    assert.match(html, /Q1 已涵蓋十二個家族/);
-    assert.match(html, /各題進度依實際已提供終表呈現/);
-    assert.match(html, /既定範圍核對已完成/);
+    assert.match(html, /看見型態之後，股票更容易翻倍嗎/);
+    assert.match(html, /另外兩個發現/);
+    assert.ok(
+        html.indexOf("另外兩個發現") < html.indexOf('id="family-summary"'),
+    );
+    assert.match(html, /完整成果與資料取得/);
+    // Answer first: the page opens with the question's answer and its denominator.
+    // The per-pattern answer leads; the 432/525 direction count is a later supplement.
+    const answer = html.indexOf('id="main-answer"');
+    const supplement = html.indexOf("432", answer);
+    assert.ok(html.indexOf('id="headline-table"') < supplement);
+    assert.ok(supplement < html.indexOf("另外兩個發現"));
+    assert.doesNotMatch(html, /先在一半股票上挑出表現最好的幾個再組合/);
+    assert.match(html, /這份研究想找出：哪些型態與一年內翻倍有關/);
+    assert.match(html, /不是 1,104\s*次獨立檢定/);
+    assert.ok(
+        html.indexOf('id="main-answer"') <
+            html.indexOf('id="research-lineage"'),
+    );
+    // Lineage: every other station is a clickable related-report link plus JSON-LD.
+    for (const id of [
+        "20261021-momentum-only-doubling",
+        "20261024-strength-weakening-flags",
+    ])
+        assert.match(html, new RegExp(`data-related-report="${id}"`));
+    const ld = JSON.parse(
+        html.match(
+            /<script type="application\/ld\+json">([\s\S]*?)<\/script>/,
+        )[1],
+    );
+    assert.equal(ld["@type"], "Report");
+    assert.equal(ld.identifier, "20261013-pattern-scan");
+    assert.equal(ld.citation, "../research-lineage.md");
+    // Reader tone: no warning slogans or disclaimers.
+    assert.doesNotMatch(html, /僅供參考|不要照做|不可外推|不構成策略通過/);
     assert.doesNotMatch(html, /獨立重建稽核尚未完成/);
     assert.match(html, /<details class="evidence-details">/);
+    // Pattern guide: names plus codes, defined before the first question, no bare code legend.
+    assert.ok(
+        html.indexOf('id="pattern-guide"') < html.indexOf('id="questions"'),
+    );
+    assert.doesNotMatch(html, /代號對照/);
+    const guide = html.slice(
+        html.indexOf('id="pattern-guide"'),
+        html.indexOf('id="questions"'),
+    );
+    for (const code of [
+        "H1",
+        "B1",
+        "B2",
+        "B3",
+        "B4",
+        "R1",
+        "R2",
+        "R3",
+        "P1",
+        "L1",
+        "L2",
+        "L3",
+    ])
+        assert.match(guide, new RegExp(`pattern-code">${code}<`));
+    // Every pattern carries at least one sketch, each an image with a title
+    // that says it is a sketch; the detail pane clones these, never its own copy.
+    const articles = guide.split('class="pattern-item"').slice(1);
+    assert.equal(articles.length, 12);
+    for (const article of articles) {
+        const code = article.match(/data-pattern="([A-Z]\d)"/)[1];
+        const svgs = article.match(/<svg[\s\S]*?<\/svg>/g) ?? [];
+        assert.ok(svgs.length >= 1, `${code} has no sketch`);
+        for (const svg of svgs) {
+            assert.match(svg, /role="img"/, code);
+            assert.match(
+                svg,
+                /^<svg[^>]*>\s*<title>\s*示意圖：[^<]+<\/title>/,
+                code,
+            );
+            assert.doesNotMatch(svg, /\sid="/, code);
+        }
+    }
+    const reader = readFileSync(join(folder, "reader.js"), "utf8");
+    assert.doesNotMatch(reader, /示意圖未帶入/);
+    assert.doesNotMatch(html, /示意圖未帶入/);
     for (const id of [
         "audit-status",
         "audit-notes",
@@ -516,6 +614,196 @@ test("the overview and evidence disclosure preserve the current completion bound
         "downloads",
     ])
         assert.match(html, new RegExp(`id="${id}"`));
+});
+
+test("the headline summary matches the saved per-pattern numbers", () => {
+    const html = readFileSync(join(folder, "index.html"), "utf8");
+    const context = {};
+    context.window = context;
+    runInNewContext(
+        readFileSync(join(folder, "data/final-v1/summary.js"), "utf8"),
+        context,
+        { timeout: 5000 },
+    );
+    const rows = context.REPORT_DATA.comparisonSummary.rows.filter(
+        (row) => row.horizon === 252,
+    );
+    assert.equal(rows.length, 12);
+    const evidence = JSON.parse(
+        readFileSync(
+            join(folder, "data/final-v1/interpretation-evidence.json"),
+            "utf8",
+        ),
+    );
+    const counts = Object.fromEntries(
+        evidence.candidate_by_family
+            .filter((row) => row.horizon === 252)
+            .map((row) => [
+                row.family,
+                [row.higher_n, row.lower_n, row.incomparable_n],
+            ]),
+    );
+    const reader = readFileSync(join(folder, "reader.js"), "utf8");
+    for (const [family, values] of Object.entries(counts))
+        assert.ok(
+            reader.includes(`${family}: [${values.join(", ")}]`),
+            `reader.js condition counts for ${family}`,
+        );
+    // Left column: unconditional differences only, signs as saved (no mixed rule).
+    const positive = rows.filter((row) => row.delta_pp > 0).length;
+    const negative = rows.filter((row) => row.delta_pp < 0).length;
+    const top = Math.max(...rows.map((row) => row.delta_pp));
+    assert.deepEqual([positive, negative], [7, 5]);
+    assert.equal(Math.round(top), 5);
+    assert.match(
+        html,
+        /七種的翻倍比例比一般合格日高（最多高約\s*5 個百分點），五種較低/,
+    );
+    assert.doesNotMatch(html, /兩種看不出差別|同一天也符合/);
+    // Right column: a separate comparison; per-pattern group counts as saved.
+    assert.match(html, /加上篩選條件後（另一個比較）/);
+    assert.match(html, /不是顯著性檢定/);
+    assert.ok(
+        reader.includes("size < 0.05"),
+        "near-zero differences must not print as a signed 0.0",
+    );
+    const evidenceTotal = evidence.candidate_totals.find(
+        (row) => row.horizon === 252,
+    );
+    assert.match(html, new RegExp(`${evidenceTotal.higher_n}\\s*組較高`));
+    assert.match(html, new RegExp(`${evidenceTotal.lower_n}\\s*組較低`));
+    // Reader tone and no mixed-up comparison wording in the headline block.
+    const block = html.slice(
+        html.indexOf('id="main-answer"'),
+        html.indexOf('class="reader-explorer"'),
+    );
+    assert.doesNotMatch(block, /先在一半股票|不要照做|僅供參考/);
+});
+
+test("the ranking view shows 12 rows, 7 high and 5 low, and every detail link has a target", () => {
+    const html = readFileSync(join(folder, "index.html"), "utf8");
+    const context = {};
+    context.window = context;
+    for (const name of [
+        "data/final-v1/summary.js",
+        ...Array.from(
+            { length: 12 },
+            (_, i) => `data/final-v1/rows-${String(i + 1).padStart(3, "0")}.js`,
+        ),
+    ])
+        runInNewContext(readFileSync(join(folder, name), "utf8"), context, {
+            timeout: 5000,
+        });
+    // reader.js only needs a DOM-less surface to publish its pure model.
+    context.location = { protocol: "file:" };
+    context.parent = context;
+    context.document = {
+        querySelectorAll: () => [],
+        getElementById: () => null,
+    };
+    runInNewContext(readFileSync(join(folder, "reader.js"), "utf8"), context, {
+        timeout: 5000,
+    });
+    const model = context.patternRank.patternModel();
+    assert.equal(model.length, 12);
+    assert.equal(model.filter((row) => row.delta > 0).length, 7);
+    assert.equal(model.filter((row) => row.delta < 0).length, 5);
+    assert.deepEqual(
+        Array.from(model, (row) => row.delta),
+        [...model.map((row) => row.delta)].sort((a, b) => b - a),
+    );
+    // One shared baseline (9.9%) and the same numbers as the saved summary.
+    const baseline = context.REPORT_DATA.comparisonSummary.baselines.find(
+        (row) => row.horizon === 252,
+    );
+    const saved = Object.fromEntries(
+        context.REPORT_DATA.comparisonSummary.rows
+            .filter((row) => row.horizon === 252)
+            .map((row) => [row.target, row]),
+    );
+    for (const row of model) {
+        assert.equal((row.control * 100).toFixed(1), "9.9", row.code);
+        assert.equal(row.delta, saved[row.code].delta_pp);
+        assert.equal(
+            row.rate,
+            saved[row.code].baseline_multiple * baseline.hit_rate,
+        );
+        assert.equal(row.higher + row.lower + row.incomparable + row.same, 92);
+        assert.ok(row.same >= 0);
+    }
+    assert.equal(
+        model.reduce((total, row) => total + row.same, 0),
+        16,
+        "the 16 equal groups of the 252-day total",
+    );
+    // Detail links: static anchors exist, and every question table has rows.
+    for (const row of model) {
+        assert.match(html, new RegExp(`id="pg-${row.code}"`));
+        assert.match(html, new RegExp(`data-pattern="${row.code}"`));
+        assert.deepEqual(Array.from(row.links), ["Q2", "Q3", "Q4", "Q5", "Q6"]);
+    }
+    for (const id of [
+        "rank-view",
+        "rank-layout",
+        "rank-ladder",
+        "rank-pane",
+        "rank-switch",
+        "rank-axis",
+        "headline-table",
+        "headline-table-wrap",
+        "family-details",
+    ])
+        assert.match(html, new RegExp(`id="${id}"`), id);
+    // Runtime anchors are created by report.js: family rows and table jumps.
+    const family = render(context.REPORT_DATA).elements.get(
+        "family-summary-rows",
+    );
+    const familyIds = family.children.map((row) => row.id).sort();
+    assert.deepEqual(
+        familyIds,
+        Array.from(model, (row) => `fs-row-${row.code}`).sort(),
+    );
+    const rendered = render(context.REPORT_DATA);
+    for (const question of ["Q2", "Q3", "Q4", "Q5", "Q6"]) {
+        const jump = rendered.page.reportTableJump[`${question}-table-1`];
+        assert.equal(typeof jump, "function", question);
+        for (const row of model)
+            assert.ok(
+                jump((r) => context.patternRank.rowCode(r) === row.code),
+                `${question} ${row.code}`,
+            );
+    }
+    // A jump target must be visible: every details ancestor open, none hidden.
+    const ancestors = (root, target, path = []) => {
+        if (root === target) return path;
+        for (const child of root.children) {
+            const found = ancestors(child, target, [...path, root]);
+            if (found) return found;
+        }
+        return null;
+    };
+    let wasClosed = 0;
+    for (const question of ["Q2", "Q3", "Q4", "Q5", "Q6"]) {
+        const jump = rendered.page.reportTableJump[`${question}-table-1`];
+        const article = jump((r) => context.patternRank.rowCode(r) === "B4");
+        const path = ancestors(rendered.elements.get("questions"), article);
+        assert.ok(path, `${question}: target is inside the questions`);
+        const details = path.filter((el) => el.tagName === "DETAILS");
+        wasClosed += details.filter((el) => !el.open).length;
+        context.patternRank.openAncestors(article);
+        for (const el of [...path, article])
+            assert.ok(!el.hidden, `${question}: ancestor not hidden`);
+        for (const el of details)
+            assert.ok(el.open, `${question}: details ancestor is open`);
+    }
+    assert.ok(wasClosed > 0, "the wrapped evidence starts collapsed");
+    const reader = readFileSync(join(folder, "reader.js"), "utf8");
+    // Detail and list history entries are told apart.
+    assert.match(reader, /detail === true/);
+    // The hash keeps the kit's palette/appearance parameters next to pattern=.
+    assert.match(reader, /new URLSearchParams\(raw\.includes\("="\)/);
+    assert.match(reader, /params\.set\("pattern", code\)/);
+    assert.match(reader, /params\.delete\("pattern"\)/);
 });
 
 test("downloads accept report-local data files and refuse traversal or URLs", () => {
@@ -569,6 +857,13 @@ test("missing Q2–Q6 and missing payload stay explicitly pending", () => {
         );
 });
 
+function readCsv(file) {
+    const bytes = readFileSync(file);
+    return (file.endsWith(".gz") ? gunzipSync(bytes) : bytes)
+        .toString("utf8")
+        .replace(/^\uFEFF/, "");
+}
+
 function csvRecords(text) {
     const records = [];
     let row = [];
@@ -601,16 +896,49 @@ function csvRecords(text) {
     return records;
 }
 
-test("the committed summary exists and matches its displayed rows and actual downloads", () => {
+test("the actual page loads every final chunk in order and matches all displayed rows and downloads", () => {
     // Required, not a conditional skip: a registered report must ship its data.
+    const html = readFileSync(join(folder, "index.html"), "utf8");
+    const tags = [...html.matchAll(/<script\b([^>]*)><\/script>/g)];
+    const scripts = tags.map((tag) => tag[1].match(/\bsrc="([^"]+)"/)?.[1]);
+    const manifest = JSON.parse(
+        readFileSync(
+            join(folder, "data/final-v1/scripts-manifest.json"),
+            "utf8",
+        ),
+    );
+    assert.equal(manifest.max_bytes_exclusive, 500 * 1024);
+    assert.deepEqual(scripts, [
+        "kit/report-kit.js",
+        ...manifest.scripts.map((name) => `data/final-v1/${name}`),
+        "conclusions.js",
+        "report.js",
+        "reader.js",
+    ]);
+    for (const [index, tag] of tags.entries()) {
+        assert.match(tag[1], /\bdefer\b/);
+        assert.doesNotMatch(tag[1], /\basync\b|\btype=/);
+        const stats = statSync(join(folder, scripts[index]));
+        assert.ok(stats.isFile());
+        assert.ok(stats.size < 500 * 1024, `${scripts[index]}: script budget`);
+    }
     const context = {};
     context.window = context;
-    runInNewContext(
-        readFileSync(join(folder, "data/summary.js"), "utf8"),
-        context,
-        {
+    for (const script of scripts.slice(1, -2)) {
+        runInNewContext(readFileSync(join(folder, script), "utf8"), context, {
             timeout: 5000,
-        },
+            filename: script,
+        });
+    }
+    assert.deepEqual(
+        Array.from(context.REPORT_DATA.dataScripts),
+        manifest.scripts,
+    );
+    assert.equal(
+        context.REPORT_DATA.questions
+            .flatMap((question) => question.tables)
+            .reduce((total, table) => total + table.rows.length, 0),
+        8268,
     );
     const data = context.REPORT_DATA;
     assert.ok(data && typeof data === "object");
@@ -632,7 +960,7 @@ test("the committed summary exists and matches its displayed rows and actual dow
     const page = render(data);
     const downloads = [...(data.downloads || [])];
     for (const question of data.questions) {
-        assert.ok(["complete", "partial", "pending"].includes(question.status));
+        assert.equal(question.status, "complete");
         const questionElement = questionById(page, question.id);
         assert.ok(questionElement.textContent.includes(question.title));
         assert.ok(questionElement.textContent.includes(question.conclusion));
@@ -669,6 +997,29 @@ test("the committed summary exists and matches its displayed rows and actual dow
                 }
             }
             downloads.push(...(table.downloads || []));
+            const csv = table.downloads.find((item) =>
+                /\.csv(?:\.gz)?$/.test(item.href),
+            );
+            assert.ok(
+                csv,
+                `${question.id}/${table.id}: complete displayed CSV`,
+            );
+            const records = csvRecords(readCsv(join(folder, csv.href)));
+            assert.deepEqual(records[0], Array.from(keys));
+            assert.equal(records.length - 1, table.rows.length);
+            for (const [index, row] of table.rows.entries()) {
+                for (const [columnIndex, column] of table.columns.entries()) {
+                    const value = row[column.key];
+                    const cell = records[index + 1][columnIndex];
+                    assert.equal(
+                        value === null || column.kind === "text"
+                            ? cell
+                            : Number(cell),
+                        value === null ? "" : value,
+                        `${csv.href}: row ${index}, ${column.key}`,
+                    );
+                }
+            }
         }
     }
     assert.ok(
@@ -686,15 +1037,18 @@ test("the committed summary exists and matches its displayed rows and actual dow
         const stats = statSync(file);
         assert.ok(stats.isFile());
         assert.equal(stats.size, item.bytes, `${item.href}: advertised bytes`);
-        assert.ok(Number.isInteger(item.rows) && item.rows >= 0);
-        if (item.href.endsWith(".csv")) {
-            const records = csvRecords(readFileSync(file, "utf8"));
+        if (item.rows !== undefined)
+            assert.ok(Number.isInteger(item.rows) && item.rows >= 0);
+        if (/\.csv(?:\.gz)?$/.test(item.href)) {
+            assert.ok(stats.size < 500 * 1024, `${item.href}: download budget`);
+            const records = csvRecords(readCsv(file));
             assert.ok(records.length > 0, "CSV needs a header");
-            assert.equal(
-                records.length - 1,
-                item.rows,
-                `${item.href}: advertised row count`,
-            );
+            if (item.rows !== undefined)
+                assert.equal(
+                    records.length - 1,
+                    item.rows,
+                    `${item.href}: advertised row count`,
+                );
             assert.ok(
                 records
                     .slice(1)
@@ -703,4 +1057,19 @@ test("the committed summary exists and matches its displayed rows and actual dow
             );
         }
     }
+});
+
+test("path categories are described by the implemented rule", () => {
+    const names = source.slice(source.indexOf("const pathNames"));
+    assert.match(
+        names,
+        /direct_failure: "先跌 10% 才漲 10%（或一直沒漲 10%）"/,
+    );
+    assert.doesNotMatch(names, /就沒再漲|後回落|緩慢下跌|大致盤整/);
+    assert.match(names, /rise_then_fall: "沒有先跌 10%，且曾漲 20% 以上"/);
+    // Exactly -15% is slow_decline (sideways needs a strictly smaller drop);
+    // scripts/tests/test_pattern_scan_events_v1.py pins [100, 110, 85].
+    assert.match(names, /sideways: "[^"]*跌幅未達 15%"/);
+    assert.match(names, /slow_decline: "[^"]*跌幅達 15% 或以上[^"]*"/);
+    assert.doesNotMatch(names, /跌破 −15%|未跌破/);
 });
