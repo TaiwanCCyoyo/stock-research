@@ -126,6 +126,9 @@ def test_forward_v3_dependencies_keep_shared_and_unknown_full_fallback(status: s
         "tasks/20261027-entry-window/assembly-handoff.md",
         "research_core/entry_window_raw_quotes_v1.py",
         "tasks/20261027-entry-window/raw-reader-handoff.md",
+        "research_core/entry_window_price_inputs_v1.py",
+        "research_core/entry_window_canonical_v1.py",
+        "tasks/20261027-entry-window/canonical-reader-handoff.md",
     ],
 )
 def test_entry_window_owned_paths_select_exact_domain(status: str, source: str) -> None:
@@ -137,10 +140,41 @@ def test_entry_window_owned_paths_select_exact_domain(status: str, source: str) 
         "scripts/tests/test_entry_window_assembly_v1.py",
         "scripts/tests/test_entry_window_raw_quotes_v1.py",
         "scripts/tests/test_entry_window_raw_reader_v1.py",
+        "scripts/tests/test_entry_window_canonical_v1.py",
+        "scripts/tests/test_entry_window_canonical_reader_v1.py",
     }
     assert not plan["full"] and not plan["frontend"]
     assert plan["domains"] == ["entry_window"]
     assert set(plan["python_tests"]) == expected
+
+
+@pytest.mark.parametrize("status", ["A", "M"])
+@pytest.mark.parametrize(
+    "source",
+    [
+        "research_core/pattern_scan_inputs_v1.py",
+        "research_core/pattern_scan_indicators_v1.py",
+        "research_core/pattern_scan_controls_v1.py",
+        "research_core/pattern_scan_daily_values_v1.py",
+        "research_core/pattern_scan_conditions_v1.py",
+        "research_core/patterns/scan_contract_v1.py",
+        "research_core/feature_atlas_features.py",
+        "research_core/feature_atlas_legacy.py",
+        "research_core/hhhl_variants_daily.py",
+        "research_core/hhhl_variants_features.py",
+        "research_core/hhhl_variants_selection.py",
+    ],
+)
+def test_canonical_calculation_dependencies_select_actual_e1_consumers(status: str, source: str) -> None:
+    plan = ci_scope.make_plan([(status, source)])
+    assert not plan["full"]
+    assert "entry_window" in plan["domains"]
+    assert {
+        "scripts/tests/test_entry_window_canonical_v1.py",
+        "scripts/tests/test_entry_window_canonical_reader_v1.py",
+        "scripts/tests/test_entry_window_raw_quotes_v1.py",
+        "scripts/tests/test_entry_window_raw_reader_v1.py",
+    } <= set(plan["python_tests"])
 
 
 @pytest.mark.parametrize("status", ["A", "M"])
@@ -383,7 +417,7 @@ def test_tenbagger_domain_registers_its_sources(status: str, path: str) -> None:
             "research_core/scratch_runs.py",
             {"research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3", "scratch_card_consumer"},
         ),
-        ("research_core/pattern_scan_inputs_v1.py", {"pattern_scan", "tenbagger_drivers"}),
+        ("research_core/pattern_scan_inputs_v1.py", {"entry_window", "pattern_scan", "tenbagger_drivers"}),
         (
             "research_core/hhhl_variants_run.py",
             {"hhhl", "opportunity", "research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3"},
