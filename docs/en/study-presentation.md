@@ -169,3 +169,25 @@ Existing `presentation.json` registrations remain readable through the v1
 reader and history projection above. Keep them and old packages unchanged
 during v2 registration. A known stale v1 registration can continue to show its
 warning while the independently verified v2 card cites the current report.
+
+## PR preview of a report (label-triggered)
+
+For a PR that changes `tasks/<id>/web-report/`, add the `preview` label to publish
+a static copy at `https://<owner>.github.io/<repo>/pr-<number>/_preview/`
+(workflow `.github/workflows/report-preview.yml`, packaging in
+`research_core/report_preview.py`). Without the label nothing runs.
+
+- Scope: report PRs only. Dashboard PRs that need `research_api` cannot be previewed this way.
+  Report pages must stay self-contained inside their `web-report/` folder.
+- Content: only files that `git ls-files` lists for the changed report, read from the git object
+  store; the report bytes are unchanged inside an iframe under a "PR preview" shell page.
+  `manifest.json` records the PR, commit and each file's git blob id.
+- Gate (any hit fails the run and names file and rule only): file not tracked or a link, path under
+  `derived/ catalog/ archive/ scratch/ stock-data-downloader/data`, `.env*` or key file names,
+  private-key block or common token patterns, a file over 25 MiB, a total over 50 MB, or a
+  `local-private` artifact marker. It catches mistakes, not a malicious author with write access.
+- Removal: closing the PR or removing the label deletes `pr-<number>/` and updates the comment.
+- Limits: the URL is public and hard to guess, not access control. Only the shell page carries
+  `noindex`; GitHub Pages does not support a `_headers` file, so the report pages themselves do not.
+- One-time owner setup: Settings > Pages > "Deploy from a branch" > `gh-pages` / root; create the
+  `preview` label; allow the Actions bot to push (and force-push) `gh-pages` if a ruleset covers it.
