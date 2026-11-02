@@ -125,7 +125,18 @@
             };
         });
     }
-    window.patternRank = { rowCode, patternModel, questionLinks, tableId };
+    // Opens every collapsed <details> that wraps el so a jump target is visible.
+    const openAncestors = (el) => {
+        for (let p = el && el.parentElement; p; p = p.parentElement)
+            if (p.tagName === "DETAILS" && !p.open) p.open = true;
+    };
+    window.patternRank = {
+        rowCode,
+        patternModel,
+        questionLinks,
+        tableId,
+        openAncestors,
+    };
 
     function renderHeadlineTable() {
         const body = document.getElementById("headline-rows");
@@ -491,11 +502,13 @@
             const text = params.toString();
             return text ? `#${text}` : `${location.pathname}${location.search}`;
         };
-        const writeHash = (code, push) => {
+        // Each history entry says whether it is the ranking ("list") or a
+        // detail page, so going back never re-enters a detail from a list entry.
+        const writeHash = (code, push, detail = false) => {
+            const state = code ? { pattern: code, detail } : null;
             try {
-                if (push)
-                    history.pushState({ pattern: code }, "", hashFor(code));
-                else history.replaceState(history.state, "", hashFor(code));
+                if (push) history.pushState(state, "", hashFor(code));
+                else history.replaceState(state, "", hashFor(code));
             } catch {
                 /* some sandboxes refuse history updates; the view still works */
             }
@@ -519,7 +532,7 @@
             if (!inDetail) listScroll = window.scrollY;
             inDetail = true;
             document.body.classList.add("rank-open");
-            writeHash(code, push);
+            writeHash(code, push, true);
             pushed = pushed || push;
             window.scrollTo(0, 0);
             document
@@ -576,6 +589,7 @@
         };
         const reveal = (el) => {
             if (!el) return;
+            openAncestors(el);
             el.classList.add("is-target");
             el.scrollIntoView({ block: "center", behavior: "instant" });
         };
@@ -617,7 +631,8 @@
         }
         pane.addEventListener("click", (event) => {
             if (event.target.closest("[data-act=back]")) {
-                if (pushed) history.back();
+                if (pushed && history.state && history.state.detail === true)
+                    history.back();
                 else {
                     writeHash(null, false);
                     leaveDetail(true);
@@ -646,9 +661,16 @@
         });
         function syncFromHash() {
             const code = readCode();
-            if (code) {
-                if (stacked) enterDetail(code, false);
-                else if (code !== sel) select(code);
+            const state = history.state;
+            // No state means a pasted or reloaded link: show the detail.
+            const detail = !state || state.detail === true;
+            if (code && stacked && detail) enterDetail(code, false);
+            else if (code && inDetail) {
+                // Back from a detail to the ranking: keep the row just read.
+                leaveDetail(true);
+                writeHash(sel, false);
+            } else if (code) {
+                if (code !== sel) select(code);
             } else if (inDetail) {
                 leaveDetail(true);
             }

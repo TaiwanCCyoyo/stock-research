@@ -70,6 +70,7 @@ class Element {
     constructor(tag) {
         this.tagName = tag.toUpperCase();
         this.children = [];
+        this.parentElement = null;
         this.attributes = new Map();
         this.listeners = new Map();
         this.className = "";
@@ -100,7 +101,10 @@ class Element {
     append(...children) {
         for (const child of children) {
             if (child.tagName === "#FRAGMENT") this.append(...child.children);
-            else this.children.push(child);
+            else {
+                child.parentElement = this;
+                this.children.push(child);
+            }
         }
     }
     replaceChildren(...children) {
@@ -769,7 +773,33 @@ test("the ranking view shows 12 rows, 7 high and 5 low, and every detail link ha
                 `${question} ${row.code}`,
             );
     }
+    // A jump target must be visible: every details ancestor open, none hidden.
+    const ancestors = (root, target, path = []) => {
+        if (root === target) return path;
+        for (const child of root.children) {
+            const found = ancestors(child, target, [...path, root]);
+            if (found) return found;
+        }
+        return null;
+    };
+    let wasClosed = 0;
+    for (const question of ["Q2", "Q3", "Q4", "Q5", "Q6"]) {
+        const jump = rendered.page.reportTableJump[`${question}-table-1`];
+        const article = jump((r) => context.patternRank.rowCode(r) === "B4");
+        const path = ancestors(rendered.elements.get("questions"), article);
+        assert.ok(path, `${question}: target is inside the questions`);
+        const details = path.filter((el) => el.tagName === "DETAILS");
+        wasClosed += details.filter((el) => !el.open).length;
+        context.patternRank.openAncestors(article);
+        for (const el of [...path, article])
+            assert.ok(!el.hidden, `${question}: ancestor not hidden`);
+        for (const el of details)
+            assert.ok(el.open, `${question}: details ancestor is open`);
+    }
+    assert.ok(wasClosed > 0, "the wrapped evidence starts collapsed");
     const reader = readFileSync(join(folder, "reader.js"), "utf8");
+    // Detail and list history entries are told apart.
+    assert.match(reader, /detail === true/);
     // The hash keeps the kit's palette/appearance parameters next to pattern=.
     assert.match(reader, /new URLSearchParams\(raw\.includes\("="\)/);
     assert.match(reader, /params\.set\("pattern", code\)/);
@@ -1037,4 +1067,9 @@ test("path categories are described by the implemented rule", () => {
     );
     assert.doesNotMatch(names, /就沒再漲|後回落|緩慢下跌|大致盤整/);
     assert.match(names, /rise_then_fall: "沒有先跌 10%，且曾漲 20% 以上"/);
+    // Exactly -15% is slow_decline (sideways needs a strictly smaller drop);
+    // scripts/tests/test_pattern_scan_events_v1.py pins [100, 110, 85].
+    assert.match(names, /sideways: "[^"]*跌幅未達 15%"/);
+    assert.match(names, /slow_decline: "[^"]*跌幅達 15% 或以上[^"]*"/);
+    assert.doesNotMatch(names, /跌破 −15%|未跌破/);
 });

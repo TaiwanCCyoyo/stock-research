@@ -84,8 +84,8 @@
     const pathNames = {
         direct_failure: "先跌 10% 才漲 10%（或一直沒漲 10%）",
         rise_then_fall: "沒有先跌 10%，且曾漲 20% 以上",
-        sideways: "沒有先跌 10%，最高未達 +20%、最低未跌破 −15%",
-        slow_decline: "先漲過 10%，之後跌破 −15%（最高未達 +20%）",
+        sideways: "沒有先跌 10%，最高未達 +20%，且跌幅未達 15%",
+        slow_decline: "先漲過 10%，之後跌幅達 15% 或以上（最高未達 +20%）",
         unknown: "無法判斷",
     };
     const binNames = {
