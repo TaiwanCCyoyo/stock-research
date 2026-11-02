@@ -26,7 +26,6 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import zipfile
-import zlib
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
@@ -44,8 +43,8 @@ MAX_ARCHIVE_MEMBERS = 1000
 MAX_ARCHIVE_UNPACKED = 100 * 1024 * 1024
 MAX_ARCHIVE_RATIO = 200
 MAX_PARQUET_UNPACKED = 256 * 1024 * 1024
-MAX_DATA_URI_BYTES = 25 * 1024 * 1024  # decoded bytes (data URI + gzip output) per top-level file
-MAX_EMBED_DEPTH = 2  # data URI / gzip / zip levels below the file itself
+MAX_IMAGE_URI_BYTES = 256 * 1024  # decoded bytes of one embedded raster image
+MAX_IMAGE_URI_TOTAL_BYTES = 1024 * 1024  # decoded bytes of all embedded images in one file
 MAX_PULL_PAGES = 20
 SYMLINK_MODE = "120000"
 GITLINK_MODE = "160000"
@@ -92,8 +91,17 @@ TEXT_RULES: tuple[tuple[str, re.Pattern[str]], ...] = (
 BYTE_RULES: tuple[tuple[str, re.Pattern[bytes]], ...] = tuple(
     (name, re.compile(pattern.pattern.encode("ascii"), pattern.flags & re.IGNORECASE)) for name, pattern in TEXT_RULES
 )
-DATA_URI = re.compile(r"(?<![A-Za-z0-9])data:(?P<head>[^,\"'\s<>)]{0,200}),(?P<payload>(?:[A-Za-z0-9+/=_%.~!*:@&$;-]|\s(?=[A-Za-z0-9+/=\s]))*)")
-BASE64_HEAD = re.compile(r";\s*base64\s*$", re.IGNORECASE)
+_MEDIA = r"[A-Za-z0-9!#$&^_.+-]+"
+# ``data:`` in any letter case (tab/newline may split it, as browsers strip them) followed by a media-type head.
+# JS object keys such as ``data:rows,`` have no ``/`` and do not match; ``data:foo,x`` (plain text) is not gated.
+DATA_URI = re.compile(
+    r"(?<![A-Za-z0-9])d[\t\r\n]*a[\t\r\n]*t[\t\r\n]*a[\t\r\n]*:"
+    rf"(?P<head>(?:{_MEDIA}/{_MEDIA})?(?:\s*;\s*{_MEDIA}(?:=[^,;\s\"'<>)]*)?)*\s*),"
+    r"(?P<payload>(?:[A-Za-z0-9+/=_%.~!*:@&$;-]|\s(?=[A-Za-z0-9+/=\s]))*)",
+    re.IGNORECASE,
+)
+IMAGE_URI_HEAD = re.compile(r"image/(?P<kind>png|jpeg|gif|webp)\s*;\s*base64\s*", re.IGNORECASE)
+IMAGE_URI_EXT = {"png": "png", "jpeg": "jpg", "gif": "gif", "webp": "webp"}
 
 
 # ---------------------------------------------------------------------------- masking
@@ -284,15 +292,14 @@ def _extension(name: str) -> str:
     return suffix[1:] if suffix else ""
 
 
-def check_text_content(ext: str, data: bytes, depth: int = 0, budget: _Budget | None = None) -> list[str]:
-    budget = budget or _Budget()
+def check_text_content(ext: str, data: bytes) -> list[str]:
     text = decode_text(data)
     if text is None:
         return ["text-decode-failed"]
     rules = set(scan_text(text))
     if "\0" in text:
         rules.add("text-contains-nul")  # BOM-less UTF-16 decodes as "valid" UTF-8 with NULs
-    json_text = ""
+    scan_target = text
     if ext in JSON_EXTENSIONS:
         try:
             json_text = "\n".join(_json_strings(json.loads(text)))
@@ -300,91 +307,54 @@ def check_text_content(ext: str, data: bytes, depth: int = 0, budget: _Budget | 
             rules.add("json-invalid")
         else:
             rules.update(scan_text(json_text))
-    if json_text:
-        rules.update(_scan_uris(json_text, depth, budget))
-    rules.update(_scan_uris(text, depth, budget))
+            scan_target = json_text  # parsed strings: JSON escapes (\/, \uXXXX) are resolved
+    rules.update(_scan_data_uris(scan_target))
     return sorted(rules)
 
 
-class _Budget:
-    """Decoded bytes still allowed for embedded payloads of one top-level file."""
+def _scan_data_uris(text: str) -> set[str]:
+    """Reject every ``data:`` URI except a small base64 raster image whose bytes match its declared type.
 
-    def __init__(self) -> None:
-        self.remaining = MAX_DATA_URI_BYTES
-
-    def take(self, count: int) -> bool:
-        self.remaining -= count
-        return self.remaining >= 0
-
-
-def _scan_uris(text: str, depth: int, budget: _Budget) -> set[str]:
-    """Run every ``data:`` URI in ``text`` through the same gate as a file (declared MIME is ignored)."""
+    The scheme is found case-insensitively, tolerating tab/newline splits, HTML entities and percent
+    encoding. A URI that only appears after decoding is obfuscated and never allowed.
+    """
     rules: set[str] = set()
+    allowed: set[tuple[str, str]] = set()
+    total = 0
     for match in DATA_URI.finditer(text):
-        payload = match.group("payload")
-        if not payload.strip():
+        rule, size = _image_uri_rule(match.group("head"), match.group("payload"))
+        if rule:
+            rules.add(rule)
             continue
-        if depth + 1 > MAX_EMBED_DEPTH:
-            rules.add("data-uri-too-deep")
-            break
-        if BASE64_HEAD.search(match.group("head")):
-            compact = re.sub(r"\s+", "", payload)
-            if len(compact) * 3 // 4 > budget.remaining:
-                rules.add("data-uri-over-limit")
-                break
-            try:
-                decoded = base64.b64decode(compact, validate=True)
-            except (binascii.Error, ValueError):
-                rules.add("data-uri-invalid-base64")
-                continue
-        else:
-            decoded = urllib.parse.unquote_to_bytes(payload)
-        if not budget.take(len(decoded)):
-            rules.add("data-uri-over-limit")
-            break
-        rules.update(_scan_embedded(decoded, depth + 1, budget))
+        allowed.add((match.group("head"), match.group("payload")))
+        total += size
+    if total > MAX_IMAGE_URI_TOTAL_BYTES:
+        rules.add("data-uri-image-total-over-limit")
+    unquoted = urllib.parse.unquote(text)
+    for variant in {html.unescape(text), unquoted, html.unescape(unquoted), urllib.parse.unquote(html.unescape(text))}:
+        if variant != text and any((m.group("head"), m.group("payload")) not in allowed for m in DATA_URI.finditer(variant)):
+            rules.add("data-uri-obfuscated")
     return rules
 
 
-def _known_binary(data: bytes) -> bool:
-    if any(data.startswith(sig) for sigs in BINARY_SIGNATURES.values() for sig in sigs):
-        return True
-    return len(data) >= 12 and data[:4] == b"RIFF" and data[8:12] == b"WEBP"
-
-
-def _scan_embedded(data: bytes, depth: int, budget: _Budget) -> set[str]:
-    """Gate decoded data-URI bytes by their actual signature; unknown binary fails closed."""
-    rules = set(scan_raw(data))
-    if data[:4] in (b"PK\x03\x04", b"PK\x05\x06"):
-        rules.update(v.rule for v in check_zip_content(data, "", depth, budget))
-    elif data[:2] == b"\x1f\x8b":
-        if depth + 1 > MAX_EMBED_DEPTH:
-            rules.add("data-uri-too-deep")
-            return rules
-        inflater = zlib.decompressobj(31)
-        try:
-            out = inflater.decompress(data, max(budget.remaining, 0) + 1)
-        except zlib.error:
-            rules.add("embedded-gzip-invalid")
-            return rules
-        if inflater.unused_data or not inflater.eof and not inflater.unconsumed_tail:
-            rules.add("embedded-gzip-invalid")
-        if not budget.take(len(out)) or inflater.unconsumed_tail:
-            rules.add("data-uri-over-limit")
-        else:
-            rules.update(_scan_embedded(out, depth + 1, budget))
-    elif data[:4] == b"PAR1":
-        rules.update(check_parquet_content(data))
-    elif not _known_binary(data):
-        text = decode_text(data)
-        if text is None:
-            rules.add("embedded-unknown-binary")
-        else:
-            rules.update(scan_text(text))
-            if "\x00" in text:
-                rules.add("text-contains-nul")
-            rules.update(_scan_uris(text, depth, budget))
-    return rules
+def _image_uri_rule(head: str, payload: str) -> tuple[str | None, int]:
+    """(rule, decoded size): rule is None when the URI is an allowed small raster image."""
+    match = IMAGE_URI_HEAD.fullmatch(head)
+    if match is None:
+        return "data-uri-not-allowed", 0
+    kind = match.group("kind").lower()
+    compact = re.sub(r"\s+", "", payload)
+    if len(compact) * 3 // 4 > MAX_IMAGE_URI_BYTES + 3:
+        return "data-uri-image-over-limit", 0
+    try:
+        image = base64.b64decode(compact, validate=True)
+    except (binascii.Error, ValueError):
+        return "data-uri-invalid-base64", 0
+    if len(image) > MAX_IMAGE_URI_BYTES:
+        return "data-uri-image-over-limit", 0
+    if not _signature_ok(IMAGE_URI_EXT[kind], image):
+        return "data-uri-signature-mismatch", 0
+    return None, len(image)
 
 
 def _arrow_has_text(arrow_type: Any) -> bool:
@@ -445,9 +415,8 @@ def check_parquet_content(data: bytes) -> list[str]:
     return sorted(rules)
 
 
-def check_zip_content(data: bytes, display: str, depth: int = 0, budget: _Budget | None = None) -> list[Violation]:
+def check_zip_content(data: bytes, display: str) -> list[Violation]:
     """Bounded archive check: plain members only, every member gated like a report file."""
-    budget = budget or _Budget()
     try:
         archive = zipfile.ZipFile(io.BytesIO(data))
         infos = archive.infolist()
@@ -488,17 +457,17 @@ def check_zip_content(data: bytes, display: str, depth: int = 0, budget: _Budget
         if len(member) > MAX_FILE_BYTES or unpacked > MAX_ARCHIVE_UNPACKED:
             found.append(Violation("zip-over-limit", where))
             break
-        found.extend(Violation(rule, where) for rule in content_rules(name, member, depth, budget))
+        found.extend(Violation(rule, where) for rule in content_rules(name, member))
     return found
 
 
-def content_rules(name: str, data: bytes, depth: int = 0, budget: _Budget | None = None) -> list[str]:
+def content_rules(name: str, data: bytes) -> list[str]:
     """Rules for a non-archive file decided by its extension; unknown formats fail closed."""
     ext = _extension(name)
     if ext not in ALLOWED_EXTENSIONS or ext in ARCHIVE_EXTENSIONS:
         return sorted({"extension-not-allowed", *scan_raw(data)})
     if ext in TEXT_EXTENSIONS:
-        return check_text_content(ext, data, depth, budget)
+        return check_text_content(ext, data)
     if not _signature_ok(ext, data):
         return ["signature-mismatch"]
     rules = set(scan_raw(data))

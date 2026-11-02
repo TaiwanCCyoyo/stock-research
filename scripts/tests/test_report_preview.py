@@ -153,7 +153,7 @@ def test_missing_index_html_fails(tmp_path: Path) -> None:
         # BOM-less UTF-16 decodes as "valid" UTF-8 full of NULs
         ({f"{BASE}/notes.txt": FAKE_KEY_TEXT.encode("utf-16-le")}, "text-contains-nul"),
         ({f"{BASE}/mode.json": b'{"artifact\\u004dode": "local-private"}'}, "local-private-artifact"),
-        ({f"{BASE}/a.html": b'<img src="data:text/plain;base64,' + __import__("base64").b64encode(FAKE_KEY) + b'">'}, "private-key-block"),
+        ({f"{BASE}/a.html": b'<img src="data:text/plain;base64,' + __import__("base64").b64encode(FAKE_KEY) + b'">'}, "data-uri-not-allowed"),
         ({f"{BASE}/img.png": PNG + FAKE_KEY_TEXT.encode("utf-16-le")}, "private-key-block"),
         ({f"{BASE}/img.png": b"GIF89a not a png"}, "signature-mismatch"),
         ({f"{BASE}/table.parquet": b"PK\x03\x04 not parquet"}, "signature-mismatch"),
@@ -482,7 +482,7 @@ def test_cli_check_exit_codes(tmp_path: Path, caplog: LogCaptureFixture) -> None
     assert run(make_repo(tmp_path / "c", {})) == 3
 
 
-# ---- data: URIs go through the same format-aware gate as files (dot's P1 on PR #149) ----
+# ---- data: URIs: only small base64 raster images are allowed (owner decision on PR #149) ----
 
 
 def _b64(data: bytes) -> str:
@@ -493,47 +493,115 @@ def _uri_rules(page: bytes, name: str = "index.html") -> set[str]:
     return {v.rule for v in rp.check_file(name, f"{BASE}/{name}", "100644", page)}
 
 
-def _link(data: bytes, mime: str = "application/zip") -> bytes:
-    return f'<a download="notes.zip" href="data:{mime};base64,{_b64(data)}">x</a>'.encode()
+def _wrapped(kind: str, uri: str) -> tuple[bytes, str]:
+    if kind == "html":
+        return f'<a href="{uri}">x</a>'.encode(), "index.html"
+    if kind == "css":
+        return f"a{{background:url({uri})}}".encode(), "s.css"
+    if kind == "js":
+        return f'var d="{uri}";'.encode(), "a.js"
+    return json.dumps({"k": uri}).encode(), "d.json"
 
 
-def test_direct_and_embedded_zip_are_rejected_alike() -> None:
-    archive = zip_bytes({"notes.txt": FAKE_KEY})
-    direct = {v.rule for v in rp.check_file("x.zip", f"{BASE}/x.zip", "100644", archive)}
-    assert "private-key-block" in direct
-    assert "private-key-block" in _uri_rules(_link(archive))
-    assert "private-key-block" in _uri_rules(_link(archive, "image/png"))  # declared MIME is not trusted
+ZIP_KEY = zip_bytes({"n.txt": FAKE_KEY})
+SVG = b'<svg xmlns="http://www.w3.org/2000/svg"><script>1</script></svg>'
+PAYLOADS = {
+    "application/zip": ZIP_KEY,
+    "text/plain": FAKE_KEY,
+    "image/svg+xml": SVG,
+    "application/gzip": gzip.compress(FAKE_KEY),
+}
 
 
-def test_embedded_formats_and_encodings() -> None:
-    assert "private-key-block" in _uri_rules(_link(gzip.compress(FAKE_KEY), "text/plain"))
-    assert "private-key-block" in _uri_rules(_link(FAKE_KEY_TEXT.encode("utf-16"), "text/plain"))
-    assert "private-key-block" in _uri_rules(f'<a href="data:text/plain,{quote(FAKE_KEY_TEXT)}">x</a>'.encode())
-    css = f"a{{background:url(data:application/zip;base64,{_b64(zip_bytes({'n.txt': FAKE_KEY}))})}}".encode()
-    assert "private-key-block" in _uri_rules(css, "s.css")
-    js = f'var d="data:application/zip;base64,{_b64(zip_bytes({"n.txt": FAKE_KEY}))}";'.encode()
-    assert "private-key-block" in _uri_rules(js, "a.js")
-    assert "data-uri-invalid-base64" in _uri_rules(b'<a href="data:text/plain;base64,@@@@not base64@@@@">x</a>')
-    assert "embedded-unknown-binary" in _uri_rules(_link(b"\x7fELF\x00\xff\xfe binary"))
+@pytest.mark.parametrize("kind", ["html", "css", "js", "json"])
+@pytest.mark.parametrize("scheme", ["data:", "DATA:", "Data:", "dAtA:"])
+@pytest.mark.parametrize("marker", [";base64", ";BASE64", "; Base64"])
+@pytest.mark.parametrize("mime", sorted(PAYLOADS))
+def test_non_raster_data_uris_are_rejected_in_any_case(kind: str, scheme: str, marker: str, mime: str) -> None:
+    page, name = _wrapped(kind, f"{scheme}{mime}{marker},{_b64(PAYLOADS[mime])}")
+    assert "data-uri-not-allowed" in _uri_rules(page, name)
 
 
-def test_embedded_depth_and_size_limits() -> None:
-    page = FAKE_KEY
-    for _ in range(rp.MAX_EMBED_DEPTH + 1):
-        page = f"data:text/html;base64,{_b64(page)}".encode()
-    assert "data-uri-too-deep" in _uri_rules(b'<a href="' + page + b'">x</a>')
-    shallow = b'<a href="data:text/html;base64,' + _b64(b'<a href="data:text/plain;base64,' + _b64(FAKE_KEY).encode() + b'">').encode() + b'">x</a>'
-    assert "private-key-block" in _uri_rules(shallow)  # within the limit it is still scanned
+def test_plain_text_and_non_base64_data_uris_are_rejected() -> None:
+    assert "data-uri-not-allowed" in _uri_rules(f'<a href="data:text/plain,{quote(FAKE_KEY_TEXT)}">x</a>'.encode())
+    assert "data-uri-not-allowed" in _uri_rules(b'<a href="data:text/plain;base64,@@@@not base64@@@@">x</a>')
+    assert "data-uri-not-allowed" in _uri_rules(b'<a href="data:image/png,%89PNG">x</a>')  # image but not base64
 
 
-def test_embedded_decoded_size_is_capped(monkeypatch: MonkeyPatch) -> None:
-    monkeypatch.setattr(rp, "MAX_DATA_URI_BYTES", 1024)
-    assert "data-uri-over-limit" in _uri_rules(_link(b"A" * 2048, "text/plain"))
-    assert "data-uri-over-limit" in _uri_rules(_link(gzip.compress(b"A" * 100_000), "application/gzip"))  # decompression bomb
-    two = _link(b"A" * 700, "text/plain") * 2  # the cap is cumulative per file
-    assert "data-uri-over-limit" in _uri_rules(two)
+@pytest.mark.parametrize(
+    "spelling",
+    ["&#100;ata:", "&#x64;ata:", "&#68;ATA:", "%64ata:", "da\nta:", "d\ta\nta:", "data&colon;"],
+)
+def test_obfuscated_scheme_is_rejected(spelling: str) -> None:
+    uri = f"{spelling}application/zip;base64,{_b64(ZIP_KEY)}"
+    page = f'<a href="{uri}">x</a>'.encode()
+    assert _uri_rules(page) & {"data-uri-not-allowed", "data-uri-obfuscated"}
 
 
-def test_small_embedded_image_still_passes() -> None:
-    page = f'<img src="data:image/png;base64,{_b64(PNG)}"><p style="background:url(data:image/png;base64,{_b64(PNG)})">'.encode()
-    assert _uri_rules(page) == set()
+def test_surrounding_whitespace_does_not_hide_a_data_uri() -> None:
+    assert "data-uri-not-allowed" in _uri_rules(f'<a href="  \tdata:application/zip;base64,{_b64(ZIP_KEY)}  ">x</a>'.encode())
+    assert "data-uri-not-allowed" in _uri_rules(f'<a href="data:application/zip ; base64 ,{_b64(ZIP_KEY)}">x</a>'.encode())
+
+
+def test_json_escaped_data_uri_is_rejected() -> None:
+    uri = f"data:application/zip;base64,{_b64(ZIP_KEY)}"
+    slashes = json.dumps({"k": uri}).replace("/", "\\/").encode()
+    assert b"\\/" in slashes and "data-uri-not-allowed" in _uri_rules(slashes, "d.json")
+    unicode_escaped = json.dumps({"k": uri}).replace("data", "\\u0064ata").encode()
+    assert b"\\u0064ata" in unicode_escaped
+    assert "data-uri-not-allowed" in _uri_rules(unicode_escaped, "d.json")
+
+
+def test_data_uri_inside_an_archive_member_is_rejected() -> None:
+    member = _wrapped("html", f"data:application/zip;base64,{_b64(ZIP_KEY)}")[0]
+    rules = {v.rule for v in rp.check_zip_content(zip_bytes({"p.html": member}), "x.zip")}
+    assert "data-uri-not-allowed" in rules
+
+
+WEBP = b"RIFF\x00\x00\x00\x00WEBP" + b"\0" * 8
+GIF = b"GIF89a" + b"\0" * 8
+JPEG = b"\xff\xd8\xff\xe0" + b"\0" * 8
+IMAGES = {"png": PNG, "jpeg": JPEG, "gif": GIF, "webp": WEBP}
+
+
+@pytest.mark.parametrize("kind", ["html", "css", "js", "json"])
+@pytest.mark.parametrize("scheme", ["data:", "DATA:"])
+@pytest.mark.parametrize("fmt", sorted(IMAGES))
+def test_small_raster_images_pass(kind: str, scheme: str, fmt: str) -> None:
+    page, name = _wrapped(kind, f"{scheme}image/{fmt.upper()};BASE64,{_b64(IMAGES[fmt])}")
+    assert _uri_rules(page, name) == set()
+
+
+def test_javascript_data_keys_are_not_data_uris() -> None:
+    assert _uri_rules(b"var o={data:[1,2],data:rows,n:1};f({data: x, y: 2});", "a.js") == set()
+
+
+def test_image_size_limits(monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.setattr(rp, "MAX_IMAGE_URI_BYTES", 64)
+    monkeypatch.setattr(rp, "MAX_IMAGE_URI_TOTAL_BYTES", 100)
+    one = PNG + b"\0" * 20  # 44 bytes
+    assert _uri_rules(_wrapped("html", f"data:image/png;base64,{_b64(one)}")[0]) == set()
+    assert "data-uri-image-over-limit" in _uri_rules(_wrapped("html", f"data:image/png;base64,{_b64(PNG + bytes(100))}")[0])
+    three = _wrapped("html", f"data:image/png;base64,{_b64(one)}")[0] * 3  # 132 bytes in total
+    assert "data-uri-image-total-over-limit" in _uri_rules(three)
+
+
+def test_image_size_defaults() -> None:
+    assert rp.MAX_IMAGE_URI_BYTES == 256 * 1024 and rp.MAX_IMAGE_URI_TOTAL_BYTES == 1024 * 1024
+    big = PNG + bytes(rp.MAX_IMAGE_URI_BYTES)
+    assert "data-uri-image-over-limit" in _uri_rules(_wrapped("html", f"data:image/png;base64,{_b64(big)}")[0])
+
+
+def test_declared_image_type_must_match_signature() -> None:
+    assert "data-uri-signature-mismatch" in _uri_rules(_wrapped("html", f"data:image/png;base64,{_b64(ZIP_KEY)}")[0])
+    assert "data-uri-signature-mismatch" in _uri_rules(_wrapped("html", f"data:image/png;base64,{_b64(GIF)}")[0])
+    assert "data-uri-invalid-base64" in _uri_rules(b'<img src="data:image/png;base64,@@@@">')
+    assert "data-uri-not-allowed" in _uri_rules(_wrapped("html", f"data:image/svg+xml;base64,{_b64(SVG)}")[0])
+
+
+def test_published_reports_use_no_disallowed_data_uris() -> None:
+    root = Path(__file__).resolve().parents[2]
+    for report in sorted(root.glob("tasks/*/web-report")):
+        for path in sorted(p for p in report.rglob("*") if p.is_file() and p.suffix.lower() in rp.TEXT_EXTENSIONS):
+            rel = path.relative_to(report).as_posix()
+            assert _uri_rules(path.read_bytes(), rel) == set(), path
