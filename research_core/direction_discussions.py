@@ -320,7 +320,9 @@ class DirectionDiscussionReader:
                     self._directory(entry)
                 except (OSError, ValueError, _UnsafeArtifact):
                     continue
-            items.append({key: detail[key] for key in ("taskId", "status", "revision", "message")})
+            item = {key: detail[key] for key in ("taskId", "status", "revision", "message")}
+            item["title"] = detail["model"]["ownerPurpose"] if detail["model"] is not None else "方向草稿"
+            items.append(item)
         return sorted(items, key=lambda item: item["taskId"])
 
     def detail(self, task_id: str) -> dict[str, Any]:

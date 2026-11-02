@@ -351,6 +351,24 @@ test("rendered states distinguish loading, errors, private-empty and synthetic m
             renderList({ status: "loaded", data: index }),
             new RegExp(`#direction/${taskId}`),
         );
+        const titled = readDirectionIndex(
+            {
+                ...index,
+                items: [{ ...index.items[0], title: "找出值得研究的停損方法" }],
+            },
+            "local-private",
+        );
+        const titledList = renderList({ status: "loaded", data: titled });
+        assert.match(titledList, /<h2>找出值得研究的停損方法<\/h2>/);
+        assert.match(
+            titledList,
+            new RegExp(`<p class="u-muted direction-task-id">${taskId}</p>`),
+        );
+        assert.ok(!titledList.includes(`<h2>${taskId}</h2>`));
+        assert.equal(
+            readDirectionIndex(index, "local-private").items[0].title,
+            "方向草稿",
+        );
         const raw = renderToStaticMarkup(
             createElement(DirectionDetailContent, {
                 detail: { ...detail, status: "draft-only", model: null },

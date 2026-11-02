@@ -81,7 +81,10 @@ export function DirectionListContent({
                         <span className="direction-status">
                             {directionStatusLabel[item.status]}
                         </span>
-                        <h2>{item.taskId}</h2>
+                        <h2>{item.title || "方向草稿"}</h2>
+                        <p className="u-muted direction-task-id">
+                            {item.taskId}
+                        </p>
                         <p>
                             {item.message ||
                                 (item.status === "ready"

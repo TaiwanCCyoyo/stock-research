@@ -3,6 +3,7 @@ import type { ArtifactMode } from "../../api/artifactMode.ts";
 export type DirectionStatus = "ready" | "draft-only" | "unavailable";
 export interface DirectionItem {
     taskId: string;
+    title?: string;
     status: DirectionStatus;
     revision: string | null;
     message: string | null;
@@ -40,7 +41,11 @@ function readItem(value: unknown): DirectionItem {
             (typeof value.revision === "string" &&
                 /^[a-f0-9]{40}$/i.test(value.revision))
         ) ||
-        !(value.message === null || typeof value.message === "string")
+        !(value.message === null || typeof value.message === "string") ||
+        !(
+            value.title === undefined ||
+            (typeof value.title === "string" && value.title.trim())
+        )
     )
         throw new Error(
             "方向草稿的識別資訊不完整，請重新整理或請作者檢查來源。",
@@ -49,6 +54,8 @@ function readItem(value: unknown): DirectionItem {
         throw new Error("互動草稿沒有可核對的版本，暫時無法開啟。");
     return {
         taskId: value.taskId,
+        title:
+            typeof value.title === "string" ? value.title.trim() : "方向草稿",
         status: value.status as DirectionStatus,
         revision: value.revision as string | null,
         message: value.message as string | null,

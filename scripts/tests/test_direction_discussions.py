@@ -157,6 +157,7 @@ def test_missing_model_returns_draft_only_and_discovery(tmp_path: Path, monkeypa
         "items": [
             {
                 "taskId": TASK_ID,
+                "title": "方向草稿",
                 "status": "draft-only",
                 "revision": None,
                 "message": "尚無可對照此草稿版本的互動模型；可先閱讀原始方向草稿。",
@@ -186,6 +187,7 @@ def test_matching_committed_model_is_ready_and_listing_is_sorted(tmp_path: Path,
     assert detail.json()["mode"] == "local-private"
     assert [item["taskId"] for item in listing.json()["items"]] == ["20261101-older-draft", TASK_ID]
     assert listing.json()["items"][1]["revision"] == revision
+    assert listing.json()["items"][1]["title"] == model["ownerPurpose"]
 
 
 def test_dirty_draft_mismatch_hides_model_but_keeps_safe_raw_draft(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

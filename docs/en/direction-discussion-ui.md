@@ -86,6 +86,9 @@ Frontend 的 `features/direction-discussion/` 直接掛載同一份 discussion k
 它不表示研究已批准。`draft-only` 代表有原文、尚無互動 model；`unavailable` 代表讀取或版本核對不通過。
 此時不提供失配 model，能安全讀到的原文仍可查看；找不到指定草稿則回 404。
 
+清單另帶 `title`，優先顯示版本相符 model 的研究目的；尚無可用 model 時顯示「方向草稿」，
+task ID 保留為次要來源資訊，不從未確認的 model 取標題。
+
 正式 model 的 `taskId` 與 `draftPath` 必須精確指向該草稿；`demo` 必須是 false。
 讀取器檢查完整 commit SHA，並逐位元組比較該 revision 的草稿與目前草稿。
 Git 來源無法確認、路徑不安全、檔案過大或版本不符時拒絕掛載；不猜測最新版本，

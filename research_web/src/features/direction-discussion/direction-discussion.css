@@ -32,6 +32,10 @@
     font-size: 13px;
     font-weight: 700;
 }
+.direction-task-id {
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
 .direction-empty {
     margin-top: 24px;
 }
