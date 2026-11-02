@@ -24,11 +24,30 @@
     color: var(--ink);
     opacity: 0.86;
 }
-.st-answer {
-    display: -webkit-box;
-    -webkit-line-clamp: 5;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+.st-numbers {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+    gap: 12px;
+    margin: 0;
+}
+.st-numbers > div {
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow-wrap: anywhere;
+}
+.st-numbers dt {
+    font-size: 13px;
+    color: var(--muted);
+}
+.st-numbers dd {
+    margin: 6px 0 0;
+    font-size: 20px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+.st-numbers .is-highlighted {
+    border-color: var(--accent);
 }
 .st-answer.is-clamped {
     display: -webkit-box;

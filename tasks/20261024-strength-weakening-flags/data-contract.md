@@ -129,3 +129,31 @@ scratch 保存逐股對齊 totals；若只有 PR61 公開的彙總可用，不�
 正式執行不自動標 delivered 或釋放 hold；資源探測在所有讀取完成且 holder、generation、run reason 都吻合後釋放自己的 hold。
 D 經正式移交後用既有 `scratch_runs` API 登記保存位置，
 再只 release `strength-weakening-flags`，最後依 scratch 規則處理本研究暫存。
+
+## D：保存結果的閱讀投影
+
+[研究報告](report.md)、[完整切片附錄](appendix/index.md)、`web-report/` 與 `study.json`
+只讀 C 已完成的終表，不重新取得價格、產生訊號或 bootstrap。
+C 的正式結果與收據由 [PR #111](https://github.com/TaiwanCCyoyo/stock-research/pull/111) 保存；
+小表的正式位置仍是本任務 Git `results/`，讀者不需要原執行 worktree。
+原收據的來源狀態未觀測限制完整保留，D 不補造當時資訊或改寫 C 結果。
+
+合併 C 後可用下列指令重建閱讀資料（不是重跑研究）：
+
+```text
+uv run python tasks/20261024-strength-weakening-flags/build_report_data.py
+```
+
+此任務專用 builder 的 `--results-root` 可明確指向既有 C 終表，預設為本任務 `results/`。
+它保留原始 scalar、null 與欄名，將 13,824 summary rows、10,368 intervals rows 與
+24,600 rise-strata rows 分成24個 classic-script chunks；每個小於500 KiB，
+並逐值核對序列化投影，沒有對來源／中間檔計算新雜湊。
+`data/manifest.js` 依序載入 `data/meta.js` 與 chunks，`REPORT_READY` 完成後供頁面讀取。
+切片 CSV 按組別／期限分檔，保留全部 summary 欄；比率是0–1，差乘100才是百分點。
+只有合併／全期／full 的1,728格有保存判讀與區間；主要28格另要求 `primary=true`。
+其他列雖可能 `primary=true`，不能把年代、分半或 drop-best 切片混入主表，亦不能借用全期區間。
+
+研究卡片為 v2，直接引用本次報告的連續原文；不改舊 studio package 或其他研究登錄。
+卡片記 `research_complete`，完成 run 不需再引用可清理的 scratch 進度。
+共用資料沿用 `adjusted-daily-v1`，從 dashboard `/#data` 可瀏覽目前共用家族，
+但目前圖表不代表本研究固定截止日的資訊；本研究沒有新增維護型家族或另造資料副本。

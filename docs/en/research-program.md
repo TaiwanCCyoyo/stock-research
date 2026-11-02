@@ -1,5 +1,14 @@
 # 研究總覽與跨 session 交接
 
+## 強勢條件研究的承接脈絡
+
+[型態與條件研究（PR17）](../../tasks/20261013-pattern-scan/mission.md) →
+[不要求型態、只看強勢條件（PR61）](../../tasks/20261021-momentum-only-doubling/report.md) →
+[條件成立後再比較有／無轉弱訊號](../../tasks/20261024-strength-weakening-flags/report.md)。
+前者提供背景與訊號方法，PR61 提供直接的條件基線；本研究新增條件成立後的訊號觀察與後續達標比較。
+來源版本、額外問題、分母差異與前作發布狀態見[研究承接紀錄](../../tasks/20261024-strength-weakening-flags/research-lineage.md)。
+此索引不把 PR17 尚在整理的完整重跑報告視為已發布，也不以後來重跑結果替換本研究原始依據。
+
 > Current public-export availability (2026-10-09): source-data packages containing
 > real quote vectors, anchor-close samples or corporate-action factors are retained
 > locally, not distributed in the public repository. Historical receipts and fixed
@@ -331,10 +340,11 @@ primary 本機位置、查詢／重算與未知／相依／current-reference 限
 
 ## 已做研究的定位表：非完整清單
 
-| 資產                                            | 契約                                      | 取得與邊界                                                                                                                                                                                                                                                                                                              |
-| ----------------------------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `shared-data-viewer.v1`                         | [共用資料唯讀檢視](shared-data-viewer.md) | `research_core.shared_data_view`、`research_api.shared_data`，local-private `/#data` 與 `/#data/<code>`；現行世代的日價／技術指標及既有 catalog 原位讀取，不下載、重算或發布資料。                                                                                                                                      |
-| `security-coverage.v1` / `security-coverage-v1` | [Coverage contract](security-coverage.md) | `research_core.security_coverage_store.CoverageStore`; maintain through `scripts.maintain_security_coverage`; single metadata family under the shared root `derived/security-coverage-v1/`; source-observed universe, presence and known limits, identity ambiguity retained; no acquisition or PIT-completeness claim. |
+| 資產                                            | 契約                                                                                                                                                                                                                     | 取得與邊界                                                                                                                                                                                                                                                                                                              |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 強勢後轉弱訊號與倍數達標比例                    | [報告](../../tasks/20261024-strength-weakening-flags/report.md)、[完整切片](../../tasks/20261024-strength-weakening-flags/appendix/index.md)、[讀取契約](../../tasks/20261024-strength-weakening-flags/data-contract.md) | 2010-01-04..2026-10-12，1,942檔；1,728 pooled格、28主格。C正式表／收據在任務 `results/`（PR #111），D提供 report-kit 網頁與 v2 卡片；已看過歷史的描述，來源起始狀態觀測限制保留，非停損批准。                                                                                                                           |
+| `shared-data-viewer.v1`                         | [共用資料唯讀檢視](shared-data-viewer.md)                                                                                                                                                                                | `research_core.shared_data_view`、`research_api.shared_data`，local-private `/#data` 與 `/#data/<code>`；現行世代的日價／技術指標及既有 catalog 原位讀取，不下載、重算或發布資料。                                                                                                                                      |
+| `security-coverage.v1` / `security-coverage-v1` | [Coverage contract](security-coverage.md)                                                                                                                                                                                | `research_core.security_coverage_store.CoverageStore`; maintain through `scripts.maintain_security_coverage`; single metadata family under the shared root `derived/security-coverage-v1/`; source-observed universe, presence and known limits, identity ambiguity retained; no acquisition or PIT-completeness claim. |
 
 波段的時間調整展示：[`wave-growth-display.v1` 契約](opportunity-presentation.md#time-adjusted-wave-display)、[預先記錄的規則](../../tasks/20261005-opportunity-growth-display/mission.md)、[共享計算](../../research_core/wave_growth.py)、[CLI](../../scripts/score_wave_growth.py)。滿一年採 CAGR，未滿一年採實際漲幅，初始門檻 100%；完整事後波段不刪除。此為同一保存波段的查詢日投影，非新回測、PIT 訊號或完整市場認證；程式／契約可由 Git 取得，原價格快照仍沿用原取得限制。
 

@@ -1,0 +1,1381 @@
+(function () {
+    "use strict";
+
+    const $ = (selector) => document.querySelector(selector);
+    const kit = () => window.ReportKit;
+    // Labels follow the selected target multiple: 2x keeps the plain
+    // "翻倍" wording, 3x/5x/10x say "達到N倍" so no row is mislabelled.
+    const reachWords = (target) => {
+        const n = Number(target);
+        const doubled = n === 2 || !Number.isFinite(n);
+        const ev = doubled ? "翻倍" : `達到${n}倍`;
+        return {
+            ev,
+            neg: doubled ? "未翻倍" : `未達到${n}倍`,
+            rate: doubled ? "翻倍率" : `達到${n}倍的比例`,
+            ratio: doubled ? "翻倍率比" : `達到${n}倍的比例比`,
+            first: doubled ? "首次翻倍" : `首次達到${n}倍`,
+            last: doubled ? "最後翻倍" : `最後達到${n}倍`,
+        };
+    };
+    const labelMap = (name) =>
+        (window.REPORT_META && window.REPORT_META[name]) || {};
+    const FIELD_ALIASES = {
+        group: ["group_id"],
+        flag: ["flag_id"],
+        primary: ["is_primary", "primary_cell"],
+        triggered_rate: [
+            "rate_triggered",
+            "flagged_rate",
+            "triggered_hit_rate",
+        ],
+        not_triggered_rate: [
+            "rate_not_triggered",
+            "unflagged_rate",
+            "not_triggered_hit_rate",
+            "untriggered_hit_rate",
+        ],
+        triggered_known_n: [
+            "known_triggered_n",
+            "triggered_n",
+            "triggered_known",
+        ],
+        not_triggered_known_n: [
+            "known_not_triggered_n",
+            "not_triggered_n",
+            "not_triggered_known",
+            "untriggered_known_n",
+            "all_false_known_n",
+        ],
+        pooled_difference: ["difference_pooled", "pooled_diff"],
+        standardized_difference: [
+            "difference_standardized",
+            "standardized_diff",
+        ],
+        false_alarm_cost: ["fa_cost", "false_alarm_rate"],
+    };
+    const val = (row, ...names) => {
+        for (const name of names) {
+            const expanded = [name, ...(FIELD_ALIASES[name] || [])];
+            for (const alias of expanded)
+                if (row && row[alias] !== undefined) return row[alias];
+        }
+        return null;
+    };
+    const text = (value) =>
+        value === null || value === undefined || value === ""
+            ? "—"
+            : String(value);
+    const human = (kind, value) => {
+        if (value === null || value === undefined) return "—";
+        const maps = {
+            group: labelMap("groupLabels"),
+            flag: labelMap("flagLabels"),
+            verdict: labelMap("verdictLabels"),
+            era: labelMap("eraLabels"),
+            split: labelMap("splitLabels"),
+            row: labelMap("rowKindLabels"),
+            basis: labelMap("basisLabels"),
+            rise: labelMap("riseLabels"),
+        };
+        const map = maps[kind] || {};
+        const key = String(value);
+        if (kind === "group" && key === "CORE") return "強勢股";
+        if (kind === "group" && key === "LEAD_B1") return "強勢股＋大漲日";
+        if (Object.prototype.hasOwnProperty.call(map, key)) return map[key];
+        if (kind === "horizon") return `${key.replace(/^H/, "")} 日`;
+        if (kind === "landmark") return `第 ${key.replace(/^L/, "")} 日`;
+        if (kind === "split" && key === "all") return "合併切片";
+        const simple = {
+            CORE: "強勢股",
+            LEAD_B1: "強勢股＋大漲日",
+            "C-base": "全市場基準",
+            "C-base-daily": "一般股票日",
+            "C-52w": "相對 52 週高點基準",
+            "C-52w-daily": "一年新高且放量",
+            Y1: "不適用",
+            Y2: "不適用",
+            Y3: "跌破起點固定支撐低點",
+            X5_MA20: "收盤低於 20 日均線",
+            X5_MA60: "收盤低於 60 日均線",
+            X6_10: "較起點下跌至少 10%",
+            X6_15: "較起點下跌至少 15%",
+            X7: "收盤低於布林下軌",
+            X8: "新確認較低高點",
+            daily: "每日（未去重）",
+            cooled: "去重後",
+            all: "整體期間／合併",
+            development: "固定股票半部一",
+            "cross-check": "固定股票半部二",
+            full: "整體資料",
+            drop_best_year: "移除本格翻倍事件最多的年份",
+            drop_best_stock: "移除本格翻倍事件最多的股票",
+            lt1: "低於 1 倍",
+            b1_1p10: "1.00–1.10 倍",
+            b1p10_1p25: "1.10–1.25 倍",
+            ge1p25: "至少 1.25 倍",
+            unknown: "未知",
+            H126: "126 日",
+            H252: "252 日",
+            H504: "504 日",
+            L5: "第 5 日",
+            L10: "第 10 日",
+            L20: "第 20 日",
+            L40: "第 40 日",
+            2: "2 倍",
+            3: "3 倍",
+            5: "5 倍",
+            10: "10 倍",
+            triggered: "有訊號",
+            not_triggered: "無訊號",
+            untriggered: "無訊號",
+            all_false: "無訊號",
+            not_applicable: "不適用",
+            pooled: "原始差",
+            pooled_difference: "原始差",
+            standardized: "調整後差",
+            standardized_difference: "調整後差",
+            stock: "依股票重新抽樣",
+            two_way: "依股票與年份重新抽樣",
+            two_way_cluster: "依股票與年份重新抽樣",
+            hit_rate_ratio: "翻倍率比",
+            difference_pooled: "原始差",
+            difference_standardized: "調整後差",
+            "2010-2012": "2010–2012 年",
+            "2013-2018": "2013–2018 年",
+            "2019+": "2019 年起",
+        };
+        if (kind === "state" && key === "unknown") return "訊號狀態未知";
+        if (kind === "era" && key === "all") return "整體期間";
+        if (kind === "era" && /^\d{4}$/.test(key)) return `${key} 年`;
+        return (
+            simple[key] ||
+            (kind === "verdict"
+                ? "未提供判讀"
+                : kind === "state"
+                  ? "未知狀態"
+                  : "未分類")
+        );
+    };
+    const horizonLabel = (value) =>
+        value == null ? "—" : `${String(value).replace(/^H/, "")} 日`;
+    const landmarkLabel = (value) =>
+        value == null ? "—" : `第 ${String(value).replace(/^L/, "")} 日`;
+    const fmtPct = (v) => kit().fmt.pct(typeof v === "number" ? v : null);
+    const fmtPp = (v) => kit().fmt.pp(typeof v === "number" ? v : null);
+    const fmtRatio = (v) => {
+        const ratio = typeof v === "number" ? kit().fmt.ratio(v, 1) : null;
+        return ratio === null ? "—" : `${ratio.toFixed(2)}×`;
+    };
+    // "No gap" when the unknown-signal bounds coincide with the estimate.
+    const rangeNote = (row, open, close) => {
+        const lo = val(row, "false_abandonment_lower");
+        const hi = val(row, "false_abandonment_upper");
+        if (typeof lo !== "number" || typeof hi !== "number") return "";
+        if (lo === hi) return `${open}無資料缺漏${close}`;
+        return `${open}${fmtPct(lo)}–${fmtPct(hi)}${close}`;
+    };
+    const fmtInt = (v) => kit().fmt.int(typeof v === "number" ? v : null);
+    const sumStored = (row, names) => {
+        const values = names
+            .map((name) => val(row, name))
+            .filter((value) => typeof value === "number");
+        return values.length
+            ? values.reduce((sum, value) => sum + value, 0)
+            : null;
+    };
+    const make = (tag, cls, content) => {
+        const node = document.createElement(tag);
+        if (cls) node.className = cls;
+        if (content !== undefined) node.textContent = content;
+        return node;
+    };
+    const appendCell = (row, value, className) => {
+        const cell = document.createElement("td");
+        if (className) cell.className = className;
+        cell.textContent = text(value);
+        row.append(cell);
+        return cell;
+    };
+    const table = (element, columns, rows, onPick) => {
+        const thead = element.querySelector("thead");
+        const tbody = element.querySelector("tbody");
+        thead.replaceChildren();
+        tbody.replaceChildren();
+        const hr = document.createElement("tr");
+        columns.forEach((c) => {
+            const th = make("th", "", c.label);
+            th.scope = "col";
+            hr.append(th);
+        });
+        thead.append(hr);
+        if (!rows.length) {
+            const tr = document.createElement("tr");
+            const td = make("td", "muted", "沒有符合條件的保存資料。");
+            td.colSpan = columns.length;
+            tr.append(td);
+            tbody.append(tr);
+            return;
+        }
+        rows.forEach((row) => {
+            const tr = document.createElement("tr");
+            if (onPick) {
+                tr.tabIndex = 0;
+                tr.className = "selectable";
+                tr.setAttribute("role", "button");
+                tr.addEventListener("click", () => onPick(row));
+                tr.addEventListener("keydown", (event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        onPick(row);
+                    }
+                });
+            }
+            columns.forEach((c) =>
+                appendCell(
+                    tr,
+                    c.render ? c.render(row) : text(val(row, ...c.keys)),
+                    c.className,
+                ),
+            );
+            tbody.append(tr);
+        });
+    };
+    const key = (row, field) => String(val(row, field) ?? "");
+    const splitAll = (row) => key(row, "split") === "all";
+    const eraAll = (row) => key(row, "era") === "all";
+    const full = (row) => key(row, "row_kind") === "full";
+    const yes = (v) => v === true || v === 1 || v === "1" || v === "true";
+    const chunkRecords = (chunks) =>
+        (chunks || []).flatMap((chunk) => kit().records(chunk));
+    const summaryRows = () => chunkRecords(window.REPORT_TABLES.summary);
+    let selected = null;
+    let rows = [];
+
+    const guidedState = {
+        group: "CORE",
+        flag: "X5_MA60",
+        horizon: "252",
+        row: null,
+    };
+
+    const flagExplanations = {
+        Y3: "觀察收盤是否跌破起點時已確認的固定支撐價。",
+        X5_MA20:
+            "20 日均線是近期 20 個交易日的平均收盤價；觀察期間內收盤曾低於它，不要求當天剛跌破。",
+        X5_MA60:
+            "60 日均線是近期 60 個交易日的平均收盤價；觀察期間內收盤曾低於它，不要求當天剛跌破。",
+        X6_10: "觀察收盤是否比起點價格低至少 10%。",
+        X6_15: "觀察收盤是否比起點價格低至少 15%。",
+        X7: "布林下軌是依近期價格波動估出的下方界線；觀察收盤是否低於它。",
+        X8: "觀察新的波段高點是否低於前一個已確認高點。",
+    };
+
+    function verdictExplanation(row) {
+        const verdict = key(row, "verdict");
+        const explanations = {
+            weakens_beyond_drop:
+                "把觀察點時漲跌幅相近的事件分組比較後，出現訊號組的翻倍比例仍較低。",
+            weakens_with_drop:
+                "直接比較時，出現訊號組的翻倍比例較低；考慮觀察點時的漲跌幅後，差異還不夠明確。",
+            inseparable: "可比較的資料不足，無法清楚區分兩組。",
+            opposite: "這一格的直接比較沒有顯示出現訊號組的比例較低。",
+            unresolved: "這一格的資料還沒有給出明確方向。",
+            not_applicable: "此訊號在研究中不適用。",
+        };
+        return explanations[verdict] || "此格沒有保存判讀。";
+    }
+
+    function guidedSelect(labelText, options, value, onChange) {
+        const labelNode = make("label", "filter-label", labelText);
+        const select = document.createElement("select");
+        options.forEach(([optionValue, optionLabel]) => {
+            const option = document.createElement("option");
+            option.value = optionValue;
+            option.textContent = optionLabel;
+            option.selected = optionValue === value;
+            select.append(option);
+        });
+        select.addEventListener("change", () => onChange(select.value));
+        labelNode.append(select);
+        return labelNode;
+    }
+
+    function groupDescription(group) {
+        return group === "LEAD_B1"
+            ? "強勢股＋大漲日（起點當天漲至少 9.5%）的股票"
+            : "強勢股";
+    }
+
+    function guidedPopulationDescription(group) {
+        return group === "LEAD_B1"
+            ? "符合上述兩項漲幅條件，且起點當日原始漲幅至少 9.5% 的股票"
+            : "符合上述兩項漲幅條件的股票";
+    }
+
+    function flagDescription(flag) {
+        const descriptions = {
+            Y3: "收盤跌破起點時已確認的固定支撐價",
+            X5_MA20: "收盤曾低於 20 日均線",
+            X5_MA60: "收盤曾低於 60 日均線",
+            X6_10: "收盤比起點價低至少 10%",
+            X6_15: "收盤比起點價低至少 15%",
+            X7: "收盤低於布林下軌",
+            X8: "新確認高點低於前一個已確認高點",
+        };
+        return descriptions[flag] || human("flag", flag);
+    }
+
+    function mainFindingRow() {
+        return rows.find(
+            (row) =>
+                baseFull(row) &&
+                key(row, "group") === "CORE" &&
+                Number(val(row, "target_multiple")) === 2 &&
+                String(val(row, "horizon")).replace(/^H/, "") === "252" &&
+                String(val(row, "landmark")).replace(/^L/, "") === "20" &&
+                key(row, "flag") === "X5_MA60",
+        );
+    }
+
+    const GAP_SCALE_PP = 15;
+    function setGap(name, value) {
+        const fill = $(`#gap-${name}-fill`);
+        const label = $(`#gap-${name}-value`);
+        if (typeof value !== "number") {
+            fill.style.width = "0%";
+            label.textContent = "—";
+            return;
+        }
+        const size = Math.abs(value) * 100;
+        fill.style.width = `${Math.min(100, (size / GAP_SCALE_PP) * 100)}%`;
+        label.textContent = `${size.toFixed(1)} 個百分點`;
+    }
+
+    function renderMainFinding() {
+        const row = mainFindingRow();
+        if (!row) {
+            $("#main-triggered-rate").textContent = "—";
+            $("#main-not-triggered-rate").textContent = "—";
+            $("#main-triggered-count").textContent = "沒有可用的已知事件數";
+            $("#main-not-triggered-count").textContent = "沒有可用的已知事件數";
+            $("#gap-title").textContent = "此比較目前沒有可用的保存結果。";
+            $("#main-adjusted-difference").textContent = "";
+            setGap("direct", null);
+            setGap("adjusted", null);
+            $("#main-cost-rate").textContent = "—";
+            return;
+        }
+        $("#main-triggered-rate").textContent = fmtPct(
+            val(row, "triggered_rate"),
+        );
+        $("#main-not-triggered-rate").textContent = fmtPct(
+            val(row, "not_triggered_rate"),
+        );
+        $("#main-triggered-count").textContent =
+            `結果已知的 ${fmtInt(val(row, "triggered_known_n"))} 筆觀察`;
+        $("#main-not-triggered-count").textContent =
+            `結果已知的 ${fmtInt(val(row, "not_triggered_known_n"))} 筆觀察`;
+        const difference = val(row, "pooled_difference");
+        const adjusted = val(row, "standardized_difference");
+        const pp = (v) => (Math.abs(v) * 100).toFixed(1);
+        const word = (v) => (v < 0 ? "低" : "高");
+        const same =
+            typeof difference === "number" &&
+            typeof adjusted === "number" &&
+            Math.sign(difference) === Math.sign(adjusted);
+        $("#gap-title").textContent =
+            typeof difference === "number" && typeof adjusted === "number"
+                ? `原始差 ${pp(difference)} 個百分點；調整後${same ? "仍" : ""}${word(adjusted) === "低" ? "差" : "反向差"} ${pp(adjusted)} 個百分點`
+                : "兩種差距目前沒有可用的保存數值。";
+        $("#main-adjusted-difference").textContent =
+            typeof adjusted === "number"
+                ? `調整後：只和「起點到第20日漲跌幅相近」的事件比（例如都漲了約10%的放在一起），有訊號組${same ? "仍" : ""}${word(adjusted)} ${pp(adjusted)} 個百分點。`
+                : "調整後的差值目前沒有可用的保存數值。";
+        setGap("direct", difference);
+        setGap("adjusted", adjusted);
+        $("#main-cost-rate").textContent = fmtPct(
+            val(row, "false_abandonment_rate"),
+        );
+    }
+
+    function renderGuidedExplorer() {
+        const controls = $("#guided-controls");
+        controls.replaceChildren();
+        controls.append(
+            guidedSelect(
+                "比較哪一組",
+                [
+                    ["CORE", "強勢股"],
+                    ["LEAD_B1", "強勢股＋大漲日"],
+                ],
+                guidedState.group,
+                (value) => {
+                    guidedState.group = value;
+                    updateGuidedComparison(true);
+                },
+            ),
+            guidedSelect(
+                "轉弱訊號",
+                [
+                    ["Y3", human("flag", "Y3")],
+                    ["X5_MA20", human("flag", "X5_MA20")],
+                    ["X5_MA60", human("flag", "X5_MA60")],
+                    ["X6_10", human("flag", "X6_10")],
+                    ["X6_15", human("flag", "X6_15")],
+                    ["X7", human("flag", "X7")],
+                    ["X8", human("flag", "X8")],
+                ],
+                guidedState.flag,
+                (value) => {
+                    guidedState.flag = value;
+                    updateGuidedComparison(true);
+                },
+            ),
+            guidedSelect(
+                "翻倍期限",
+                [
+                    ["126", "半年（126 個交易日）"],
+                    ["252", "一年（252 個交易日）"],
+                ],
+                guidedState.horizon,
+                (value) => {
+                    guidedState.horizon = value;
+                    updateGuidedComparison(true);
+                },
+            ),
+        );
+        $("#guided-evidence-button").addEventListener("click", () => {
+            if (guidedState.row) pickRow(guidedState.row);
+        });
+        renderScreenNote();
+        updateGuidedComparison();
+    }
+
+    // Counts the main comparisons from the saved rows: 2 groups x 7 signals
+    // x 2 horizons, and how many keep a lower rate among similar-move events.
+    function renderScreenNote() {
+        const node = $("#explorer-screen-note");
+        const scope = $("#main-scope");
+        if (!node) return;
+        const flags = [
+            "Y3",
+            "X5_MA20",
+            "X5_MA60",
+            "X6_10",
+            "X6_15",
+            "X7",
+            "X8",
+        ];
+        const main = rows.filter(
+            (r) =>
+                baseFull(r) &&
+                Number(val(r, "target_multiple")) === 2 &&
+                String(val(r, "landmark")).replace(/^L/, "") === "20" &&
+                ["126", "252"].includes(
+                    String(val(r, "horizon")).replace(/^H/, ""),
+                ) &&
+                ["CORE", "LEAD_B1"].includes(key(r, "group")) &&
+                flags.includes(key(r, "flag")),
+        );
+        const still = main.filter(
+            (r) => key(r, "verdict") === "weakens_beyond_drop",
+        );
+        if (!main.length || !still.length) {
+            node.textContent = "";
+            if (scope) scope.textContent = "";
+            return;
+        }
+        const combos = new Set(
+            still.map(
+                (r) =>
+                    `${human("flag", key(r, "flag"))}、${String(val(r, "horizon")).replace(/^H/, "") === "252" ? "看一年" : "看半年"}`,
+            ),
+        );
+        const kinds = new Set(still.map((r) => key(r, "group")));
+        if (scope)
+            scope.textContent =
+                combos.size === 1
+                    ? `七種轉弱訊號、兩個期限共 ${main.length} 種比較，扣掉第20日漲跌幅差異後，只有「${[...combos][0]}」在${kinds.size === 2 ? "兩種強勢股都" : groupDescription([...kinds][0])}仍較低（其餘 ${main.length - still.length} 種已不明確）。`
+                    : `${main.length} 種比較中，扣掉第20日漲跌幅差異後仍較低的有 ${still.length} 種（${[...combos].join("、")}）。`;
+        node.textContent =
+            combos.size === 1
+                ? `七種轉弱訊號和兩個期限裡，只有「${[...combos][0]}」這一種在漲幅相近時仍較低（${kinds.size === 2 ? "兩種強勢股都是如此" : groupDescription([...kinds][0])}；共 ${main.length} 格比較中的 ${still.length} 格）。`
+                : `共 ${main.length} 格主要比較中，有 ${still.length} 格在漲幅相近時仍較低（${[...combos].join("、")}）。`;
+    }
+
+    // One fixed 0-based scale for every comparison: the next 10% above the
+    // highest stored rate, so switching comparisons never rescales the bars.
+    let cachedScaleMax = null;
+    function scaleMaxPct() {
+        if (cachedScaleMax === null) {
+            let top = 0;
+            for (const candidate of rows.filter(
+                (r) =>
+                    baseFull(r) &&
+                    Number(val(r, "target_multiple")) === 2 &&
+                    String(val(r, "landmark")).replace(/^L/, "") === "20" &&
+                    ["126", "252"].includes(
+                        String(val(r, "horizon")).replace(/^H/, ""),
+                    ) &&
+                    ["CORE", "LEAD_B1"].includes(key(r, "group")),
+            ))
+                for (const name of ["triggered_rate", "not_triggered_rate"]) {
+                    const rate = val(candidate, name);
+                    if (typeof rate === "number" && rate > top) top = rate;
+                }
+            cachedScaleMax = Math.max(10, Math.ceil((top * 100) / 10) * 10);
+        }
+        return cachedScaleMax;
+    }
+
+    function updateGuidedComparison(animate) {
+        const row = rows.find(
+            (candidate) =>
+                baseFull(candidate) &&
+                key(candidate, "group") === guidedState.group &&
+                Number(val(candidate, "target_multiple")) === 2 &&
+                String(val(candidate, "horizon")).replace(/^H/, "") ===
+                    guidedState.horizon &&
+                String(val(candidate, "landmark")).replace(/^L/, "") === "20" &&
+                key(candidate, "flag") === guidedState.flag,
+        );
+        guidedState.row = row || null;
+        const host = $("#guided-comparison");
+        host.replaceChildren();
+        const evidenceButton = $("#guided-evidence-button");
+        evidenceButton.disabled = !row;
+        if (!row) {
+            host.append(
+                make(
+                    "p",
+                    "load-error",
+                    "這個組合沒有可用的保存結果；沒有可比較的比例。",
+                ),
+            );
+            $("#false-abandonment-card").replaceChildren();
+            return;
+        }
+
+        const triggered = val(row, "triggered_rate");
+        const notTriggered = val(row, "not_triggered_rate");
+        const difference = val(row, "pooled_difference");
+        const standardizedDifference = val(row, "standardized_difference");
+        const comparison = make(
+            "div",
+            animate ? "rate-comparison is-fresh" : "rate-comparison",
+        );
+        const horizonText = guidedState.horizon === "126" ? "半年" : "一年";
+        const signalText = flagDescription(guidedState.flag).replace(
+            /^收盤曾?/,
+            "收盤",
+        );
+        comparison.append(
+            make(
+                "p",
+                "comparison-heading",
+                `在${guidedPopulationDescription(guidedState.group)}中，依條件成立後第1至20個交易日內是否曾出現「${signalText}」分組。比較兩組起點後${horizonText}內，收盤價曾達到起點收盤價兩倍的比例。`,
+            ),
+            make(
+                "p",
+                "signal-explanation",
+                flagExplanations[guidedState.flag] ||
+                    "此訊號的定義請見完整研究細節。",
+            ),
+        );
+        comparison.append(
+            make(
+                "p",
+                "scale-caption",
+                `刻度 0–${scaleMaxPct()}%（兩組共用，從 0 起算）`,
+            ),
+        );
+        const bars = make("div", "rate-bars");
+        [
+            [
+                "前20個交易日內曾出現訊號",
+                triggered,
+                "triggered",
+                "triggered_known_n",
+            ],
+            [
+                "前20個交易日內未出現訊號",
+                notTriggered,
+                "not-triggered",
+                "not_triggered_known_n",
+            ],
+        ].forEach(([labelText, rate, stateClass, knownField]) => {
+            const item = make("div", `rate-item ${stateClass}`);
+            const heading = make("div", "rate-label");
+            heading.append(
+                make("span", "", labelText),
+                make("strong", "", fmtPct(rate)),
+            );
+            const track = make("div", "rate-track");
+            track.setAttribute("role", "img");
+            track.setAttribute(
+                "aria-label",
+                typeof rate === "number"
+                    ? `${labelText}翻倍比例 ${fmtPct(rate)}`
+                    : `${labelText}沒有可用的翻倍比例數值`,
+            );
+            const fill = make("span", "rate-fill");
+            if (typeof rate === "number") {
+                fill.style.width = `${Math.max(0, Math.min(100, (rate * 100 * 100) / scaleMaxPct()))}%`;
+                track.append(fill);
+            } else {
+                track.className = "rate-track is-missing";
+                track.textContent = "沒有可用比例，不能視為 0%";
+            }
+            const axis = make("div", "rate-axis");
+            axis.append(
+                make("span", "", "0%"),
+                make("span", "", `${scaleMaxPct() / 2}%`),
+                make("span", "", `${scaleMaxPct()}%`),
+            );
+            item.append(
+                heading,
+                track,
+                axis,
+                make(
+                    "p",
+                    "muted",
+                    `比例依結果已知的 ${fmtInt(val(row, knownField))} 筆事件計算。`,
+                ),
+            );
+            bars.append(item);
+        });
+        comparison.append(bars);
+        comparison.append(
+            make("p", "muted", "尚無法判定結果者另列，未計入上述比例。"),
+        );
+        const delta = make("p", "difference-callout");
+        if (typeof difference === "number") {
+            const direction =
+                difference < 0 ? "低" : difference > 0 ? "高" : "相同";
+            delta.textContent =
+                direction === "相同"
+                    ? "直接比較時，兩組翻倍比例相同。"
+                    : `直接比較時，前20個交易日內曾出現訊號組的翻倍比例比未出現組${direction} ${(Math.abs(difference) * 100).toFixed(2)} 個百分點。`;
+        } else {
+            delta.textContent = "沒有可用的兩組翻倍比例差值。";
+        }
+        comparison.append(
+            delta,
+            make(
+                "p",
+                "standardized-readout",
+                typeof standardizedDifference === "number"
+                    ? standardizedDifference === 0
+                        ? "按第20日漲跌幅相近的觀察分組後，兩組翻倍比例相同。"
+                        : `按第20日漲跌幅相近的觀察分組後，出現訊號組的翻倍比例比未出現組${standardizedDifference < 0 ? "低" : "高"} ${(Math.abs(standardizedDifference) * 100).toFixed(2)} 個百分點。`
+                    : "按第20日漲跌幅相近的觀察分組後，兩組差異沒有可用的保存估計。",
+            ),
+            make("p", "saved-verdict", verdictExplanation(row)),
+        );
+        host.append(comparison);
+
+        const costCard = $("#false-abandonment-card");
+        costCard.replaceChildren();
+        const costDetails = make("details", "cost-details");
+        costDetails.append(
+            make("summary", "", "查看計算方式、計數與資料不明時的範圍"),
+            make(
+                "p",
+                "",
+                "計算方式：第一次翻倍前已出現訊號的事件數，除以訊號狀態已知的最終翻倍事件數。訊號不明的事件另列，不當作未出現。",
+            ),
+            make(
+                "p",
+                "",
+                `第一次翻倍前出現訊號：${fmtInt(val(row, "hit_triggered_n"))}；訊號已知但未出現：${fmtInt(val(row, "hit_not_triggered_n"))}；訊號狀態不明：${fmtInt(val(row, "hit_flag_unknown_n"))}。`,
+            ),
+            make(
+                "p",
+                "",
+                rangeNote(row, "", "") === "無資料缺漏"
+                    ? "無資料缺漏：沒有訊號不明的事件，比例不受缺漏影響。"
+                    : `若訊號不明者都當作未出現，比例最低為 ${fmtPct(val(row, "false_abandonment_lower"))}；都當作曾出現，最高為 ${fmtPct(val(row, "false_abandonment_upper"))}。這是邏輯上的範圍。`,
+            ),
+        );
+        costCard.append(
+            make(
+                "h3",
+                "",
+                "最後真的翻倍的事件中，也有多少之前出現過這個訊號？",
+            ),
+            make("p", "cost-rate", fmtPct(val(row, "false_abandonment_rate"))),
+            make(
+                "p",
+                "",
+                `這裡只看資料觀察完整、而且在期限內確實翻倍的事件。訊號可以在起點後第 20 個交易日之後才出現，只要早於第一次翻倍。`,
+            ),
+            make(
+                "p",
+                "muted",
+                "這張卡看的時間更長、對象也不同：上方比較只看前 20 個交易日內的訊號，並排除到第 20 日（含當日）已翻倍的觀察；這張卡看到翻倍為止的整段期間，且只含最後翻倍的事件。",
+            ),
+            make(
+                "p",
+                "cost-sowhat",
+                typeof val(row, "false_abandonment_rate") === "number"
+                    ? `這批最後翻倍的事件中有 ${fmtPct(val(row, "false_abandonment_rate"))} 在翻倍前曾出現這個訊號（觀察整段期間，不限第20日）。`
+                    : "這個組合沒有可用的比例。",
+            ),
+            costDetails,
+        );
+    }
+
+    function baseFull(row) {
+        return splitAll(row) && eraAll(row) && full(row);
+    }
+    function isPrimary(row) {
+        return (
+            baseFull(row) &&
+            yes(val(row, "primary", "is_primary", "primary_cell"))
+        );
+    }
+    function label(row, field, kind) {
+        return human(kind, val(row, field));
+    }
+    function pickRow(row) {
+        selected = row;
+        renderDetail();
+        const disclosure = $("#evidence-disclosure");
+        disclosure.open = true;
+        const title = $("#detail-title");
+        title.focus({ preventScroll: true });
+        if (window.parent !== window) {
+            window.parent.postMessage(
+                {
+                    type: "rk:reveal",
+                    target: "detail-title",
+                    height: document.documentElement.scrollHeight,
+                },
+                "*",
+            );
+        } else {
+            title.scrollIntoView({ block: "start", behavior: "auto" });
+        }
+    }
+
+    function renderPrimary() {
+        const mainRows = rows
+            .filter(isPrimary)
+            .sort(
+                (a, b) =>
+                    ["group", "horizon", "flag"]
+                        .map((f) => key(a, f).localeCompare(key(b, f)))
+                        .find((x) => x !== 0) || 0,
+            );
+        table(
+            $("#primary-table"),
+            [
+                { label: "組別", render: (r) => label(r, "group", "group") },
+                {
+                    label: "期限",
+                    render: (r) => horizonLabel(val(r, "horizon")),
+                },
+                {
+                    label: "觀察點",
+                    render: (r) => landmarkLabel(val(r, "landmark")),
+                },
+                { label: "訊號", render: (r) => label(r, "flag", "flag") },
+                {
+                    label: "有訊號：翻倍率／事件數",
+                    render: (r) =>
+                        `${fmtPct(val(r, "triggered_rate", "rate_triggered", "flagged_rate"))}／${fmtInt(val(r, "triggered_known_n", "known_triggered_n", "triggered_n"))}`,
+                },
+                {
+                    label: "無訊號：翻倍率／事件數",
+                    render: (r) =>
+                        `${fmtPct(val(r, "not_triggered_rate", "rate_not_triggered", "unflagged_rate"))}／${fmtInt(val(r, "not_triggered_known_n", "known_not_triggered_n", "not_triggered_n"))}`,
+                },
+                {
+                    label: "原始差",
+                    render: (r) =>
+                        fmtPp(
+                            val(
+                                r,
+                                "pooled_difference",
+                                "difference_pooled",
+                                "pooled_diff",
+                            ),
+                        ),
+                    className: "numeric",
+                },
+                {
+                    label: "調整後差",
+                    render: (r) =>
+                        fmtPp(
+                            val(
+                                r,
+                                "standardized_difference",
+                                "difference_standardized",
+                                "standardized_diff",
+                            ),
+                        ),
+                    className: "numeric",
+                },
+                {
+                    label: "最後翻倍者中，翻倍前曾出現訊號的比例",
+                    render: (r) =>
+                        fmtPct(
+                            val(
+                                r,
+                                "false_abandonment_rate",
+                                "false_alarm_cost",
+                            ),
+                        ),
+                    className: "numeric",
+                },
+                {
+                    label: "訊號不明時的範圍",
+                    render: (r) => rangeNote(r, "", "") || "—",
+                },
+                {
+                    label: "判讀",
+                    render: (r) => label(r, "verdict", "verdict"),
+                },
+            ],
+            mainRows,
+            pickRow,
+        );
+        if (mainRows.length) {
+            selected = mainRows[0];
+            renderDetail();
+        }
+    }
+
+    function renderGrid() {
+        const controls = $("#grid-controls");
+        controls.replaceChildren();
+        const fields = [
+            [
+                "group",
+                "組別",
+                ["CORE", "LEAD_B1", "C-base-daily", "C-52w-daily"],
+                "group",
+            ],
+            ["target_multiple", "目標倍數", ["2", "3", "5", "10"], "target"],
+            ["horizon", "期限", ["126", "252", "504"], "horizon"],
+            ["landmark", "觀察點", ["5", "10", "20", "40"], "landmark"],
+            [
+                "flag",
+                "轉弱訊號",
+                [
+                    "Y1",
+                    "Y2",
+                    "Y3",
+                    "X5_MA20",
+                    "X5_MA60",
+                    "X6_10",
+                    "X6_15",
+                    "X7",
+                    "X8",
+                ],
+                "flag",
+            ],
+        ];
+        const selects = {};
+        fields.forEach(([field, title, options, kind]) => {
+            const labelNode = make("label", "filter-label", title);
+            const select = document.createElement("select");
+            select.setAttribute("aria-label", title);
+            const all = document.createElement("option");
+            all.value = "*";
+            all.textContent = "全部";
+            all.selected = true;
+            select.append(all);
+            options.forEach((v) => {
+                const op = document.createElement("option");
+                op.value = v;
+                op.textContent = human(kind, v);
+                select.append(op);
+            });
+            select.addEventListener("change", renderGridTable);
+            labelNode.append(select);
+            controls.append(labelNode);
+            selects[field] = select;
+        });
+        function selectedValue(field) {
+            return selects[field].value;
+        }
+        function normalize(value, type) {
+            if (type === "horizon") return String(value).replace(/^H/, "");
+            if (type === "landmark") return String(value).replace(/^L/, "");
+            return String(value);
+        }
+        function renderGridTable() {
+            let candidates = rows.filter((r) => baseFull(r));
+            const matching = (r, f) =>
+                selectedValue(f) === "*" ||
+                normalize(key(r, f), f) === normalize(selectedValue(f), f);
+            candidates = candidates.filter((r) =>
+                fields.every(([field]) => matching(r, field)),
+            );
+            const gridTarget =
+                selectedValue("target_multiple") === "*"
+                    ? null
+                    : selectedValue("target_multiple");
+            const gw = gridTarget === null ? null : reachWords(gridTarget);
+            table(
+                $("#grid-table"),
+                [
+                    {
+                        label: "組別",
+                        render: (r) => label(r, "group", "group"),
+                    },
+                    {
+                        label: "倍數",
+                        render: (r) => `${text(val(r, "target_multiple"))} 倍`,
+                    },
+                    {
+                        label: "期限",
+                        render: (r) => horizonLabel(val(r, "horizon")),
+                    },
+                    {
+                        label: "觀察點",
+                        render: (r) => landmarkLabel(val(r, "landmark")),
+                    },
+                    { label: "訊號", render: (r) => label(r, "flag", "flag") },
+                    {
+                        label: gw ? `有訊號：${gw.rate}` : "有訊號：達標比例",
+                        render: (r) => fmtPct(val(r, "triggered_rate")),
+                        className: "numeric",
+                    },
+                    {
+                        label: gw ? `無訊號：${gw.rate}` : "無訊號：達標比例",
+                        render: (r) =>
+                            fmtPct(
+                                val(
+                                    r,
+                                    "not_triggered_rate",
+                                    "rate_not_triggered",
+                                    "unflagged_rate",
+                                ),
+                            ),
+                        className: "numeric",
+                    },
+                    {
+                        label: "原始差",
+                        render: (r) =>
+                            fmtPp(
+                                val(
+                                    r,
+                                    "pooled_difference",
+                                    "difference_pooled",
+                                    "pooled_diff",
+                                ),
+                            ),
+                        className: "numeric",
+                    },
+                    {
+                        label: gw
+                            ? `${gw.last}者中，${gw.first}前曾有訊號的比例`
+                            : "最後達標者中，首次達標前曾有訊號的比例",
+                        render: (r) => fmtPct(val(r, "false_abandonment_rate")),
+                        className: "numeric",
+                    },
+                    {
+                        label: "判讀",
+                        render: (r) => label(r, "verdict", "verdict"),
+                    },
+                ],
+                candidates,
+                pickRow,
+            );
+        }
+        renderGridTable();
+    }
+
+    function renderDetail() {
+        if (!selected) return;
+        const title = `${groupDescription(key(selected, "group"))} · 截至起點後第 ${text(val(selected, "horizon"))} 個交易日（${horizonLabel(val(selected, "horizon"))}）內，收盤價曾達到起點收盤價的 ${text(val(selected, "target_multiple"))} 倍 · 第 1–${text(val(selected, "landmark"))} 日${flagDescription(key(selected, "flag"))}`;
+        $("#detail-title").textContent = title;
+        const host = $("#detail-content");
+        host.replaceChildren();
+        const summary = make("div", "detail-block");
+        summary.append(make("h3", "", "所選比較的數字、不確定範圍與樣本量"));
+        const base = {
+            group: key(selected, "group"),
+            target: key(selected, "target_multiple"),
+            horizon: key(selected, "horizon"),
+            landmark: key(selected, "landmark"),
+            flag: key(selected, "flag"),
+        };
+        const intervals = chunkRecords(window.REPORT_TABLES.intervals)
+            .filter(
+                (r) =>
+                    key(r, "group") === base.group &&
+                    key(r, "target_multiple") === base.target &&
+                    key(r, "horizon") === base.horizon &&
+                    key(r, "landmark") === base.landmark &&
+                    key(r, "flag") === base.flag,
+            )
+            .filter((r) =>
+                [
+                    "pooled_difference",
+                    "hit_rate_ratio",
+                    "standardized_difference",
+                ].includes(key(r, "metric")),
+            );
+        const w = reachWords(val(selected, "target_multiple"));
+        const detailStats = [
+            [
+                `有訊號／無訊號：${w.rate}`,
+                `${fmtPct(val(selected, "triggered_hit_rate"))}／${fmtPct(val(selected, "untriggered_hit_rate"))}`,
+            ],
+            [w.ratio, fmtRatio(val(selected, "hit_rate_ratio"))],
+            [
+                "原始差／調整後差",
+                `${fmtPp(val(selected, "pooled_difference"))}／${fmtPp(val(selected, "standardized_difference"))}`,
+            ],
+            [
+                "有訊號：去重後事件數／股票數",
+                `${fmtInt(val(selected, "triggered_cooled_known_n"))}／${fmtInt(val(selected, "triggered_cooled_stock_n"))}`,
+            ],
+            [
+                "無訊號：去重後事件數／股票數",
+                `${fmtInt(val(selected, "all_false_cooled_known_n"))}／${fmtInt(val(selected, "all_false_cooled_stock_n"))}`,
+            ],
+            [
+                "有訊號／無訊號：結果不明數",
+                `${fmtInt(val(selected, "triggered_unknown_n"))}／${fmtInt(val(selected, "all_false_unknown_n"))}`,
+            ],
+            [
+                "有訊號／無訊號：追蹤不足數",
+                `${fmtInt(val(selected, "triggered_censored_n"))}／${fmtInt(val(selected, "all_false_censored_n"))}`,
+            ],
+            ["訊號狀態未知事件數", fmtInt(val(selected, "unknown_event_n"))],
+            [
+                "訊號不明者：結果不明／追蹤不足數",
+                `${fmtInt(val(selected, "unknown_unknown_n"))}／${fmtInt(val(selected, "unknown_censored_n"))}`,
+            ],
+            [
+                `${w.last}者中，${w.first}前曾有訊號的比例（含訊號不明時的範圍）`,
+                `${fmtPct(val(selected, "false_abandonment_rate"))}${rangeNote(selected, "（", "）")}`,
+            ],
+            [
+                `${w.first}前：有訊號／無訊號／訊號不明`,
+                `${fmtInt(val(selected, "hit_triggered_n"))}／${fmtInt(val(selected, "hit_not_triggered_n"))}／${fmtInt(val(selected, "hit_flag_unknown_n"))}`,
+            ],
+        ];
+        const statsList = make("dl", "stats-list");
+        detailStats.forEach(([k, v]) => {
+            statsList.append(make("dt", "", k), make("dd", "", v));
+        });
+        summary.append(statsList);
+        tableIn(summary, intervals, [
+            {
+                label: "不確定範圍的算法",
+                render: (r) => human("method", val(r, "method", "bootstrap")),
+            },
+            {
+                label: "指標",
+                render: (r) =>
+                    key(r, "metric") === "hit_rate_ratio"
+                        ? w.ratio
+                        : human("measure", val(r, "metric")),
+            },
+            {
+                label: "下限",
+                render: (r) =>
+                    key(r, "metric") === "hit_rate_ratio"
+                        ? fmtRatio(val(r, "lower"))
+                        : fmtPp(val(r, "lower")),
+            },
+            {
+                label: "上限",
+                render: (r) =>
+                    key(r, "metric") === "hit_rate_ratio"
+                        ? fmtRatio(val(r, "upper"))
+                        : fmtPp(val(r, "upper")),
+            },
+            {
+                label: "有效／總模擬次數",
+                render: (r) =>
+                    `${fmtInt(val(r, "defined_replicates"))}／${fmtInt(val(r, "replicates"))}`,
+            },
+        ]);
+        host.append(summary);
+
+        const slices = rows.filter(
+            (r) =>
+                key(r, "group") === base.group &&
+                key(r, "target_multiple") === base.target &&
+                key(r, "horizon") === base.horizon &&
+                key(r, "landmark") === base.landmark &&
+                key(r, "flag") === base.flag &&
+                (key(r, "row_kind") !== "full" ||
+                    key(r, "era") !== "all" ||
+                    key(r, "split") !== "all"),
+        );
+        const sliceBlock = make("div", "detail-block");
+        sliceBlock.append(
+            make(
+                "h3",
+                "",
+                `不同年代、股票分半與移除${w.ev}事件最多的年份或股票`,
+            ),
+        );
+        sliceBlock.append(
+            make(
+                "p",
+                "muted",
+                "直接顯示保存結果。移除的年份或股票依各格分別決定；這些列沒有不確定範圍或判讀。",
+            ),
+        );
+        tableIn(sliceBlock, slices, [
+            {
+                label: "切片",
+                render: (r) =>
+                    `${human("era", val(r, "era"))} · ${human("split", val(r, "split"))} · ${human("row", val(r, "row_kind")).replace("翻倍事件", `${w.ev}事件`)}`,
+            },
+            {
+                label: "移除標的",
+                keys: [
+                    "dropped",
+                    "removed_label",
+                    "dropped_label",
+                    "removed_value",
+                    "dropped_value",
+                ],
+            },
+            {
+                label: `有訊號：${w.rate}`,
+                render: (r) =>
+                    fmtPct(
+                        val(
+                            r,
+                            "triggered_rate",
+                            "rate_triggered",
+                            "flagged_rate",
+                        ),
+                    ),
+            },
+            {
+                label: `無訊號：${w.rate}`,
+                render: (r) =>
+                    fmtPct(
+                        val(
+                            r,
+                            "not_triggered_rate",
+                            "rate_not_triggered",
+                            "unflagged_rate",
+                        ),
+                    ),
+            },
+            {
+                label: "有訊號／無訊號事件數",
+                render: (r) =>
+                    `${fmtInt(val(r, "triggered_known_n"))}／${fmtInt(val(r, "all_false_known_n"))}`,
+            },
+            {
+                label: "原始差",
+                render: (r) =>
+                    fmtPp(
+                        val(
+                            r,
+                            "pooled_difference",
+                            "difference_pooled",
+                            "pooled_diff",
+                        ),
+                    ),
+            },
+            {
+                label: "調整後差",
+                render: (r) => fmtPp(val(r, "standardized_difference")),
+            },
+            {
+                label: "結果不明／追蹤不足（各狀態加總）",
+                render: (r) =>
+                    `${fmtInt(sumStored(r, ["triggered_unknown_n", "all_false_unknown_n", "unknown_unknown_n", "not_applicable_unknown_n"]))}／${fmtInt(sumStored(r, ["triggered_censored_n", "all_false_censored_n", "unknown_censored_n", "not_applicable_censored_n"]))}`,
+            },
+        ]);
+        host.append(sliceBlock);
+
+        const strataRows = chunkRecords(window.REPORT_TABLES.strata).filter(
+            (r) =>
+                key(r, "group") === base.group &&
+                key(r, "target_multiple") === base.target &&
+                key(r, "horizon") === base.horizon &&
+                key(r, "landmark") === base.landmark &&
+                key(r, "flag") === base.flag,
+        );
+        const strata = make("div", "detail-block");
+        strata.append(make("h3", "", "依起點後漲幅分層"));
+        strata.append(
+            make(
+                "p",
+                "muted",
+                "顯示保存的每日與去重後計數；去重＝同一股票20個交易日內只留最早一筆。不從事件原始列重算。",
+            ),
+        );
+        tableIn(strata, strataRows, [
+            {
+                label: "計數方式",
+                render: (r) => human("basis", val(r, "basis")),
+            },
+            {
+                label: "訊號狀態",
+                render: (r) => human("state", val(r, "flag_state")),
+            },
+            {
+                label: "漲幅分層",
+                render: (r) => human("rise", val(r, "rise_bin", "rise")),
+            },
+            { label: "事件數", render: (r) => fmtInt(val(r, "event_n")) },
+            {
+                label: "已知／結果不明／追蹤不足",
+                render: (r) =>
+                    `${fmtInt(val(r, "known_n"))}／${fmtInt(val(r, "unknown_n"))}／${fmtInt(val(r, "censored_n"))}`,
+            },
+            {
+                label: `${w.ev}／${w.neg}且收低／${w.neg}但未收低`,
+                render: (r) =>
+                    `${fmtInt(val(r, "hit_n"))}／${fmtInt(val(r, "loss_n"))}／${fmtInt(val(r, "flat_win_n"))}`,
+            },
+        ]);
+        host.append(strata);
+    }
+
+    function tableIn(host, data, columns) {
+        const wrap = make("div", "rk-table-wrap");
+        const t = document.createElement("table");
+        t.className = "rk-table";
+        t.createTHead();
+        t.createTBody();
+        wrap.append(t);
+        host.append(wrap);
+        table(t, columns, data);
+    }
+
+    function linkMeta() {
+        const meta = window.REPORT_META || {};
+        if (meta.sourceUrl) $("#source-link").href = meta.sourceUrl;
+        if (meta.reportUrl) $("#report-link").href = meta.reportUrl;
+    }
+    function relatedReportLinks() {
+        const hosted = ["http:", "https:"].includes(
+            window.location && window.location.protocol,
+        );
+        const links = document.querySelectorAll
+            ? Array.from(document.querySelectorAll("a[data-related-report]"))
+            : [];
+        for (const link of links) {
+            const reportId =
+                (link.dataset && link.dataset.relatedReport) ||
+                (link.getAttribute && link.getAttribute("data-related-report"));
+            if (!reportId) continue;
+            if (hosted) link.href = `../${reportId}/index.html`;
+            link.addEventListener("click", (event) => {
+                if (window.parent === window) return;
+                event.preventDefault();
+                window.parent.postMessage(
+                    { type: "rk:navigate", href: `#report/${reportId}` },
+                    "*",
+                );
+            });
+        }
+    }
+    function foldTablesOnPhone() {
+        const narrow =
+            typeof window.matchMedia === "function" &&
+            window.matchMedia("(max-width: 680px)").matches;
+        if (!narrow) return;
+        for (const id of ["#primary-table-fold", "#grid-table-fold"]) {
+            const fold = $(id);
+            if (fold) fold.open = false;
+        }
+    }
+    function revealTimeline() {
+        const timeline = $("#study-timeline");
+        const reduced =
+            typeof window.matchMedia === "function" &&
+            window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (!timeline || reduced || typeof IntersectionObserver !== "function")
+            return;
+        const steps = Array.from(timeline.children);
+        timeline.className += " js-reveal";
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries
+                    .filter((entry) => entry.isIntersecting)
+                    .forEach((entry, order) => {
+                        observer.unobserve(entry.target);
+                        setTimeout(() => {
+                            entry.target.className += " is-lit";
+                        }, order * 140);
+                    });
+            },
+            { threshold: 0.4 },
+        );
+        steps.forEach((step) => observer.observe(step));
+    }
+    // Nodes whose text comes from the saved data; they start as "loading" in
+    // the HTML and say so plainly if the data never arrives.
+    const PENDING_IDS = [
+        "main-triggered-count",
+        "main-not-triggered-count",
+        "main-scope",
+        "gap-title",
+        "main-adjusted-difference",
+        "gap-direct-value",
+        "gap-adjusted-value",
+        "explorer-screen-note",
+        "guided-comparison",
+        "false-abandonment-card",
+    ];
+    async function start() {
+        revealTimeline();
+        relatedReportLinks();
+        $("#shared-data-link").addEventListener("click", (event) => {
+            if (window.parent === window) return;
+            event.preventDefault();
+            window.parent.postMessage(
+                { type: "rk:navigate", href: "#data" },
+                "*",
+            );
+        });
+        $("#load-retry").addEventListener("click", () => {
+            window.location.reload();
+        });
+        try {
+            if (!window.ReportKit || !window.REPORT_READY)
+                throw new Error("報告元件未初始化");
+            await window.REPORT_READY;
+            if (
+                !window.REPORT_TABLES ||
+                !window.REPORT_TABLES.summary ||
+                !window.REPORT_TABLES.intervals ||
+                !window.REPORT_TABLES.strata
+            )
+                throw new Error("摘要資料不完整");
+            rows = summaryRows();
+            if (!rows.length) throw new Error("摘要資料為空");
+            linkMeta();
+            renderMainFinding();
+            renderGuidedExplorer();
+            renderPrimary();
+            renderGrid();
+            foldTablesOnPhone();
+        } catch (error) {
+            $("#load-error").hidden = false;
+            for (const id of PENDING_IDS) {
+                const node = $(`#${id}`);
+                if (node) node.textContent = "無法載入";
+            }
+            $("#primary-table tbody").replaceChildren();
+            const tr = document.createElement("tr");
+            const td = make(
+                "td",
+                "",
+                `載入失敗：${error && error.message ? error.message : "資料不可用"}`,
+            );
+            tr.append(td);
+            $("#primary-table tbody").append(tr);
+        }
+    }
+    document.addEventListener("DOMContentLoaded", start, { once: true });
+})();

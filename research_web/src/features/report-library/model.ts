@@ -17,6 +17,44 @@ export type ReportIndex = {
     reports: ReportEntry[];
 };
 
+export type ReportIndexIssue =
+    "version_mismatch" | "invalid_index" | "http" | "network";
+
+export class ReportIndexError extends Error {
+    readonly code: ReportIndexIssue;
+    constructor(code: ReportIndexIssue, message: string) {
+        super(message);
+        this.name = "ReportIndexError";
+        this.code = code;
+    }
+}
+
+export async function readReportIndex(
+    signal: AbortSignal,
+    expectedVersion?: string,
+    fetcher: typeof fetch = fetch,
+): Promise<ReportIndex> {
+    const response = await fetcher("/reports/index.json", {
+        signal,
+        cache: "no-store",
+    });
+    if (!response.ok)
+        throw new ReportIndexError(
+            "http",
+            `報告清單讀取失敗（HTTP ${response.status}）`,
+        );
+    let value: unknown;
+    try {
+        value = await response.json();
+    } catch {
+        throw new ReportIndexError(
+            "invalid_index",
+            "報告清單回傳的內容不是有效 JSON。",
+        );
+    }
+    return validateReportIndex(value, expectedVersion);
+}
+
 const STATUS_LABELS: Record<string, string> = {
     exploratory: "探索中",
     descriptive: "描述性結果",
@@ -40,12 +78,18 @@ export function validateReportIndex(
         (value as { schema?: unknown }).schema !== "research-reports.v1" ||
         !Array.isArray((value as { reports?: unknown }).reports)
     )
-        throw new Error("報告清單格式不符，無法讀取。");
+        throw new ReportIndexError(
+            "invalid_index",
+            "報告清單格式不符，無法讀取。",
+        );
     if (
         expectedVersion !== undefined &&
         (value as { version?: unknown }).version !== expectedVersion
     )
-        throw new Error("報告索引版本與目前頁面不一致，請重新載入頁面。");
+        throw new ReportIndexError(
+            "version_mismatch",
+            "報告索引版本與目前頁面不一致，請重新載入頁面。",
+        );
     return value as ReportIndex;
 }
 
@@ -76,12 +120,113 @@ export function filterReports(
     });
 }
 
-/** First-paint theme travels in the frame URL hash; later changes use postMessage. */
-export function reportFrameSrc(
-    id: string,
-    palette: string,
-    appearance: string,
-): string {
-    const params = new URLSearchParams({ palette, appearance });
+/** Standalone fallback travels in the frame URL hash; host tokens are injected
+ * separately. */
+export function reportFrameSrc(id: string, appearance: string): string {
+    const params = new URLSearchParams({ palette: "forest", appearance });
     return `/reports/${encodeURIComponent(id)}/index.html#${params}`;
+}
+
+/** Accept only routes requested by this viewer's own frame and loaded index. */
+export function reportNavigationHash(
+    source: unknown,
+    frameWindow: unknown,
+    data: unknown,
+    reportIds: readonly string[] | null,
+): "#data" | `#report/${string}` | null {
+    if (
+        !frameWindow ||
+        source !== frameWindow ||
+        !data ||
+        typeof data !== "object"
+    )
+        return null;
+    const message = data as { type?: unknown; href?: unknown };
+    if (message.type !== "rk:navigate" || typeof message.href !== "string")
+        return null;
+    if (message.href === "#data") return "#data";
+    if (!message.href.startsWith("#report/")) return null;
+
+    const encodedId = message.href.slice("#report/".length);
+    let reportId: string;
+    try {
+        reportId = decodeURIComponent(encodedId);
+    } catch {
+        return null;
+    }
+    if (
+        !/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(reportId) ||
+        encodeURIComponent(reportId) !== encodedId ||
+        !reportIds?.includes(reportId)
+    )
+        return null;
+    return `#report/${encodedId}`;
+}
+
+/** Reveal only the fixed evidence heading, from the currently mounted frame. */
+export function reportRevealRequest(
+    source: unknown,
+    frameWindow: unknown,
+    data: unknown,
+): { target: "detail-title"; height: number | null } | null {
+    if (
+        !frameWindow ||
+        source !== frameWindow ||
+        !data ||
+        typeof data !== "object"
+    )
+        return null;
+    const message = data as {
+        type?: unknown;
+        target?: unknown;
+        height?: unknown;
+    };
+    if (message.type !== "rk:reveal" || message.target !== "detail-title")
+        return null;
+    return {
+        target: "detail-title",
+        height: reportFrameHeight(message.height),
+    };
+}
+
+export function reportFrameHeight(value: unknown): number | null {
+    return typeof value === "number" && Number.isFinite(value) && value > 0
+        ? Math.min(Math.ceil(value), 200_000)
+        : null;
+}
+
+/** Run after React commits the frame height; stale documents cannot move the page. */
+export function revealReportEvidence(
+    frame: HTMLIFrameElement,
+    source: Window,
+    expectedDocument: Document,
+): boolean {
+    try {
+        if (
+            frame.contentWindow !== source ||
+            frame.contentDocument !== expectedDocument
+        )
+            return false;
+        const heading = expectedDocument.getElementById("detail-title");
+        if (!heading) return false;
+        const host = frame.ownerDocument.defaultView;
+        if (!host) return false;
+        const header = frame.ownerDocument.querySelector(".shell-header");
+        const clearance =
+            Math.max(0, header?.getBoundingClientRect().bottom ?? 0) + 16;
+        heading.focus({ preventScroll: true });
+        host.scrollTo({
+            top: Math.max(
+                0,
+                host.scrollY +
+                    frame.getBoundingClientRect().top +
+                    heading.getBoundingClientRect().top -
+                    clearance,
+            ),
+            behavior: "instant",
+        });
+        return true;
+    } catch {
+        return false;
+    }
 }

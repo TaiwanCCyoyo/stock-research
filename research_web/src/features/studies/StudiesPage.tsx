@@ -32,9 +32,13 @@ export function StudiesPage() {
     const groups = groupByMonth(filterStudies(all, filter, query));
     return (
         <div className="u-page st-page">
-            <div className="u-eyebrow">研究</div>
-            <h1 className="u-title">問過的問題，和得到的答案。</h1>
-            <p className="u-lede">包含行不通的。最新的在最上面。</p>
+            <h1 className="u-title">研究報告</h1>
+            <p className="u-lede">
+                查看各項研究的問題、結果與限制，也保留未通過或尚未有結論的研究。
+            </p>
+            <p className="u-muted">
+                依研究紀錄日期由新到舊排列。選擇「查看報告」閱讀完整內容。
+            </p>
             {!studies.cards ? (
                 studies.error ? (
                     <StudioState
@@ -83,13 +87,15 @@ export function StudiesPage() {
                             className="st-search"
                             type="search"
                             aria-label="搜尋研究"
-                            placeholder="搜尋研究"
+                            placeholder="搜尋研究主題或結論"
                             value={query}
                             onChange={(event) => setQuery(event.target.value)}
                         />
                     </div>
                     {groups.length === 0 && (
-                        <p className="u-skeleton">沒有符合的研究。</p>
+                        <p className="u-skeleton">
+                            沒有符合的研究，請更換關鍵字或選擇「全部」。
+                        </p>
                     )}
                     {groups.map((group) => (
                         <section key={group.month} className="st-month">

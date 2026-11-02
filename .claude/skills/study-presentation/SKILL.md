@@ -9,6 +9,10 @@ Read [the closeout contract](../../../docs/en/research-program.md#收尾條件)
 and [study-presentation.v1](../../../docs/en/study-presentation.md).
 Deliver a reading view of saved evidence, not new study conclusions.
 
+For reader-first writing, predecessor links and visual aids, follow the Codex version:
+`../../../.codex/skills/study-presentation/SKILL.md` and its `references/reader-first-reports.md` and
+`references/writing-and-visual-aids.md`.
+
 - Identify the current report/publication, formal outcome and data contract.
   Quote the report exactly in history registration; do not infer an outcome from
   metrics or replace an unknown result with a favorable label.

@@ -122,7 +122,7 @@ export function HomePage() {
                 </div>
             )}
             <h2 className="u-section-title">
-                最近的研究 <a href="#studies">全部研究 →</a>
+                近期研究紀錄 <a href="#studies">查看全部研究 →</a>
             </h2>
             {studies.cards ? (
                 <>
