@@ -353,11 +353,13 @@
             title.id = "rank-ptitle";
             title.tabIndex = -1;
             const stage = h("div", "stage");
-            const shapes = h("div", "stage-shapes");
-            shapes.setAttribute("aria-hidden", "true");
-            if (g.svgs.length) for (const svg of g.svgs) shapes.append(svg);
-            else shapes.append(h("div", "stage-none", "示意圖未帶入"));
-            stage.append(shapes);
+            // Reuse the guide's own sketches; the pane copy is decorative.
+            if (g.svgs.length) {
+                const shapes = h("div", "stage-shapes");
+                shapes.setAttribute("aria-hidden", "true");
+                for (const svg of g.svgs) shapes.append(svg);
+                stage.append(shapes);
+            }
             if (g.captions.length)
                 stage.append(h("p", "stage-cap", g.captions.join(" ")));
             stage.append(h("hr", "stage-sep"));

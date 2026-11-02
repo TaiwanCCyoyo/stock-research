@@ -891,6 +891,28 @@ body {
 .shape .hit {
     fill: var(--gain);
 }
+/* Secondary series (bands, moving averages, RSI): solid and thinner than the price line. */
+.shape .bd {
+    fill: none;
+    stroke: var(--muted);
+    stroke-width: 1.25;
+    stroke-linejoin: round;
+}
+/* Candles: rising bodies hollow, falling bodies filled, so colour is never the only cue. */
+.shape .k {
+    fill: var(--surface-2);
+    stroke: var(--accent);
+    stroke-width: 1.5;
+}
+.shape .kd {
+    fill: var(--muted);
+    stroke: var(--muted);
+    stroke-width: 1.5;
+}
+.shape .zone {
+    fill: var(--muted);
+    opacity: 0.16;
+}
 .shape text {
     fill: var(--muted);
     font-size: 10px;
@@ -1170,7 +1192,7 @@ body {
 }
 .stage-shapes {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
     gap: 8px;
 }
 .stage-shapes svg {
@@ -1192,13 +1214,20 @@ body {
 .stage .shape text {
     fill: var(--stage-muted);
 }
-.stage-none {
-    padding: 14px 10px;
-    border: 1px dashed var(--stage-edge);
-    border-radius: 10px;
-    color: var(--stage-muted);
-    font-size: 13px;
-    text-align: center;
+.stage .shape .bd {
+    stroke: var(--stage-s2);
+}
+.stage .shape .k {
+    fill: var(--stage-bg);
+    stroke: var(--stage-s1);
+}
+.stage .shape .kd,
+.stage .shape .zone {
+    fill: var(--stage-muted);
+    stroke: var(--stage-muted);
+}
+.stage .shape .zone {
+    stroke: none;
 }
 .stage-cap,
 .stage-foot {

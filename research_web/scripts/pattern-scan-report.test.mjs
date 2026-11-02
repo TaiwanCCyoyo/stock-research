@@ -581,9 +581,27 @@ test("the overview and evidence disclosure preserve the current completion bound
         "L3",
     ])
         assert.match(guide, new RegExp(`pattern-code">${code}<`));
-    const svgs = guide.match(/<svg[^>]*>/g) ?? [];
-    assert.equal(svgs.length, 3);
-    assert.ok(svgs.every((tag) => /aria-hidden="true"/.test(tag)));
+    // Every pattern carries at least one sketch, each an image with a title
+    // that says it is a sketch; the detail pane clones these, never its own copy.
+    const articles = guide.split('class="pattern-item"').slice(1);
+    assert.equal(articles.length, 12);
+    for (const article of articles) {
+        const code = article.match(/data-pattern="([A-Z]\d)"/)[1];
+        const svgs = article.match(/<svg[\s\S]*?<\/svg>/g) ?? [];
+        assert.ok(svgs.length >= 1, `${code} has no sketch`);
+        for (const svg of svgs) {
+            assert.match(svg, /role="img"/, code);
+            assert.match(
+                svg,
+                /^<svg[^>]*>\s*<title>\s*示意圖：[^<]+<\/title>/,
+                code,
+            );
+            assert.doesNotMatch(svg, /\sid="/, code);
+        }
+    }
+    const reader = readFileSync(join(folder, "reader.js"), "utf8");
+    assert.doesNotMatch(reader, /示意圖未帶入/);
+    assert.doesNotMatch(html, /示意圖未帶入/);
     for (const id of [
         "audit-status",
         "audit-notes",
