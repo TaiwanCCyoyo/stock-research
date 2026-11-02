@@ -74,6 +74,12 @@ uv run pytest scripts/tests/test_entry_window_assembly_v1.py scripts/tests/test_
 672 passed in 87.50s (0:01:27)
 ```
 
+After replacing direct pandas date access with the existing typed date helpers,
+the new assembly suite passed again: **39 passed in 3.25s**. Implementation
+commit `170799376feebb5d02cd42f947858571040300da` passed every applicable normal
+commit hook, including Mypy, Pyright and Ruff. Delivery is
+[draft PR #146](https://github.com/TaiwanCCyoyo/stock-research/pull/146).
+
 The new artificial-packet tests cover the full matrix, direct public B1/selected
 bootstrap oracles, cross-year stock unions and cooldown, zero/null cells,
 provenance, exact weights reuse, input immutability, deterministic order and

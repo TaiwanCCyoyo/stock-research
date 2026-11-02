@@ -1,8 +1,14 @@
 # 長期研究工程接續與 UX 依賴對齊
 
-日期：2026-11-02。狀態：有限工程範圍已授權；交付擬共用同一個 draft PR，尚未建立。
-PR 建立後由主 session 在此補上實際連結與 current-head 驗證，不預造 PR 編號。
+日期：2026-11-02。狀態：有限工程範圍已授權；兩條工作線共同交付於
+[draft PR #146](https://github.com/TaiwanCCyoyo/stock-research/pull/146)，尚未合併。
 本紀錄追加當日範圍與依賴，不改寫歷史 mission、決策、結果或其接受狀態。
+
+本機驗證：新整合器、既有 E1 三層與 CI selector 共 **672 passed in 87.50s**；
+沿用既有日期 helper 解決型別相容問題後，新整合 suite 再驗 **39 passed in 3.25s**。
+實作提交 `170799376feebb5d02cd42f947858571040300da` 的正常 hooks 全過，含 Mypy、Pyright、Ruff。
+三個 SOL 子代理分別負責程式、合成測試與依賴文件；Terra 獨立審查八檔及最後增量，無可操作 findings。
+以上是本機證據；hosted CI 與 review 以 PR 最新 HEAD 為準，不代表本人接受或市場 admission。
 
 ## Owner 意圖與本次範圍
 
