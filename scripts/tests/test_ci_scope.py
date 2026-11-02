@@ -1657,3 +1657,42 @@ def test_prettier_uses_an_exact_node_runtime_for_reusable_hook_cache() -> None:
     version = prettier.get("language_version") or config["default_language_version"]["node"]
     parts = version.split(".")
     assert len(parts) == 3 and all(part.isascii() and part.isdigit() for part in parts), version
+
+
+DIRECTION_DRAFT_TEST = "scripts/tests/test_direction_drafts.py"
+
+
+@pytest.mark.parametrize("status", ["A", "M"])
+@pytest.mark.parametrize(
+    "path",
+    [
+        "tasks/20991231-new-study/report.md",
+        "tasks/20991231-new-study/web-report/index.html",
+        "tasks/20991231-new-study/results/summary.parquet",
+        "tasks/20991231-new-study/runs/run-1/summary.parquet",
+        "tasks/20991231-new-study/run_receipt.json",
+        "tasks/20991231-new-study/run-receipt.json",
+        "docs/en/templates/direction-draft-pr.md",
+        "scripts/tests/fixtures/direction_drafts/ok-minimal/tasks/20261101-ok-minimal/direction-draft.md",
+    ],
+)
+def test_direction_draft_closeout_and_fixture_inputs_select_the_validator(status: str, path: str) -> None:
+    plan = ci_scope.make_plan([(status, path)])
+    assert not plan["full"]
+    assert "direction_drafts" in plan["domains"]
+    assert DIRECTION_DRAFT_TEST in plan["python_tests"]
+
+
+def test_direction_draft_closeout_selection_adds_only_the_validator() -> None:
+    """A report-only change must not widen the plan beyond the new validator."""
+    baseline = ci_scope.make_plan([("M", "tasks/20991231-new-study/notes.md")])
+    for path in (
+        "tasks/20991231-new-study/report.md",
+        "tasks/20991231-new-study/web-report/index.html",
+        "tasks/20991231-new-study/results/summary.parquet",
+        "tasks/20991231-new-study/runs/run-1/summary.parquet",
+        "tasks/20991231-new-study/run_receipt.json",
+        "tasks/20991231-new-study/run-receipt.json",
+    ):
+        plan = ci_scope.make_plan([("M", path)])
+        assert set(plan["python_tests"]) - set(baseline["python_tests"]) <= {DIRECTION_DRAFT_TEST}

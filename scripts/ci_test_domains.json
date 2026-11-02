@@ -612,10 +612,30 @@
                 "tests/test_dashboard_task_index.py",
                 "tests/test_dashboard_presentation.py",
                 "tests/test_research_api.py",
-                "tests/test_research_api_security.py"
+                "tests/test_research_api_security.py",
+                "scripts/tests/test_direction_drafts.py"
             ],
             "consumers": ["task_records"],
             "frontend": true
+        },
+        "direction_drafts": {
+            "paths": [
+                "tasks/*/direction-draft.md",
+                "docs/en/direction-drafts.md",
+                "docs/en/direction-discussion-ui.md",
+                "docs/en/decision-records/2026-11-02-interactive-direction-discussion.md",
+                "docs/en/templates/direction-draft.md",
+                "docs/en/templates/direction-draft-pr.md",
+                "docs/en/examples/direction-draft-*.md",
+                "tasks/*/report.md",
+                "tasks/*/web-report/index.html",
+                "tasks/*/results/**",
+                "tasks/*/runs/**",
+                "tasks/*/run_receipt.json",
+                "tasks/*/run-receipt.json",
+                "scripts/tests/fixtures/direction_drafts/*"
+            ],
+            "tests": ["scripts/tests/test_direction_drafts.py"]
         },
         "scratch_card_consumer": {
             "paths": ["research_core/scratch_runs.py"],
@@ -663,6 +683,7 @@
         "scripts/tests/test_derived_features_chunk_v2.py",
         "scripts/tests/test_derived_features_selective_v1.py",
         "scripts/tests/test_desktop_launch_feedback.py",
+        "scripts/tests/test_direction_drafts.py",
         "scripts/tests/test_entry_window_assembly_v1.py",
         "scripts/tests/test_entry_window_bootstrap_v1.py",
         "scripts/tests/test_entry_window_inputs_v1.py",

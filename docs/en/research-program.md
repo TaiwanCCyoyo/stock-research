@@ -138,6 +138,10 @@ Owner 2026-10-13已定沿用handoff清單、不新增另一套「低過低」；
 
 ## Reusable research artifacts
 
+| Asset                     | Definition / contract                                                          | Access and interpretation                                                                                                                                                                                                                                                                    |
+| ------------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `direction-discussion.v1` | [Interactive view and proposed feedback contracts](direction-discussion-ui.md) | [Standalone example and shared renderer](../../research_web/discussion-kit/v1/index.html); outcome exploration, scope choices, predecessor questions and versioned feedback export. Demonstrator only until paired with a reviewed draft; no market API, approval or dashboard registration. |
+
 | Asset                                   | Definition / contract                                        | Access and interpretation                                                                                                                                                                                                                                                                                                                                   |
 | --------------------------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Data overview and stored chart overlays | [HTTP contract, units and measured coverage](data-status.md) | `GET /data-status` reads saved producer, derived and catalog metadata only. `GET /data-series/v1/institutional/{code}` and `/monthly-revenue/{code}` project stored daily shares and monthly revenue with availability timing preserved. Both have `/api` aliases; busy producers return `updating`. No acquisition, feature calculation or data migration. |
@@ -265,7 +269,7 @@ primary 本機位置、查詢／重算與未知／相依／current-reference 限
 
 ### 開始前查既有資產
 
-先從本頁定位表、方法／假設登記與既有 task catalog，依研究問題、資料用途、欄位／特徵、方法別名及來源尋找可用資料與共用計算。讀取對應資料說明並確認版本、覆蓋、取得方式與限制，再決定直接重用、延伸或新建；在新 task 記錄採用或不採用的理由。catalog 的檔案存在狀態不代表資料已完整、可取得或適用。
+先從本頁定位表、方法／假設登記與既有 task catalog，依研究問題、資料用途、欄位／特徵、方法別名及來源尋找可用資料與共用計算。讀取對應資料說明並確認版本、覆蓋、取得方式與限制，再決定直接重用、延伸或新建；在新 task 記錄採用或不採用的理由。catalog 的檔案存在狀態不代表資料已完整、可取得或適用。新研究先寫[方向草稿](direction-drafts.md)（原話目的、假頭條、分岔紀錄、待解問題），並承接前作未關閉的問題。
 
 計算特徵、標籤或還原價格前，查[型態字典](pattern-definitions.md)及[stock-research 衍生資料](research-derived-data.md)的定義與共用實作。適用時直接引用；公式、參數或缺值政策有差異時登記新版本及差異，不以同名副本默默替換，亦不自動改接已封存結果。
 
