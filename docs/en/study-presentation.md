@@ -197,12 +197,12 @@ stock-data-downloader/data`, a hidden path, `.env*` or key file names, or contro
   characters in a name; a file over 25 MiB, a PR over 50 MB, or a site over 500 MB. Content is
   allowed by extension only: text (`html htm js mjs cjs css json map svg txt md csv tsv`) must
   decode as UTF-8 or BOM-marked UTF-16, contain no NUL, and JSON must parse (strings are scanned
-  after unescaping); every `data:` URI in any text file (`src`, `href`, CSS `url()`, JS
-  strings; base64 or percent-encoded) is decoded and gated by its real signature, not its declared
-  MIME: zip, gzip and Parquet get the same checks as a file, text is scanned, and unknown binary or
-  malformed base64 is rejected. Embedding is limited to 2 levels and 25 MiB decoded per file.
-  Binaries (`png jpg jpeg gif ico
-woff woff2 webp parquet`) must match their signature and are scanned raw and with NULs removed;
+  after unescaping, each string on its own); any `data:` URI in a text file (`src`, `href`, CSS
+  `url()`, JS or JSON strings, any letter case) is rejected with no exception, including images;
+  a scheme that only appears after entity or percent decoding is rejected as obfuscated. A report
+  references images and other assets as separate files by relative path, and those files get the
+  normal content checks for their extension. Plain text such as the JS key `data:rows,` is not a URI.
+  Binaries (`png jpg jpeg gif ico woff woff2 webp parquet`) must match their signature and are scanned raw and with NULs removed;
   Parquet text columns and metadata are decompressed and scanned; `zip` gets a bounded check
   (member count, size and ratio caps, no encryption, no nested archive, safe names, every member
   gated by the same rules). Any other extension fails. Scans look for private-key blocks, common

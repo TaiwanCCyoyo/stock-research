@@ -5,8 +5,10 @@ import gzip
 import io
 import json
 import os
+import struct
 import subprocess
 import zipfile
+import zlib
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
@@ -482,7 +484,7 @@ def test_cli_check_exit_codes(tmp_path: Path, caplog: LogCaptureFixture) -> None
     assert run(make_repo(tmp_path / "c", {})) == 3
 
 
-# ---- data: URIs: only small base64 raster images are allowed (owner decision on PR #149) ----
+# ---- data: URIs are never allowed in a preview bundle (owner decision on PR #149) ----
 
 
 def _b64(data: bytes) -> str:
@@ -558,45 +560,50 @@ def test_data_uri_inside_an_archive_member_is_rejected() -> None:
     assert "data-uri-not-allowed" in rules
 
 
-WEBP = b"RIFF\x00\x00\x00\x00WEBP" + b"\0" * 8
-GIF = b"GIF89a" + b"\0" * 8
-JPEG = b"\xff\xd8\xff\xe0" + b"\0" * 8
-IMAGES = {"png": PNG, "jpeg": JPEG, "gif": GIF, "webp": WEBP}
+def _png_with_text(text: bytes) -> bytes:
+    def chunk(kind: bytes, body: bytes) -> bytes:
+        return struct.pack(">I", len(body)) + kind + body + struct.pack(">I", zlib.crc32(kind + body))
+
+    header = struct.pack(">IIBBBBB", 1, 1, 8, 2, 0, 0, 0)
+    pixel = zlib.compress(b"\0\0\0\0")
+    return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", header) + chunk(b"tEXt", b"k\0" + text) + chunk(b"IDAT", pixel) + chunk(b"IEND", b"")
+
+
+IMAGES = {"plain": _png_with_text(b"hello"), "private-key text": _png_with_text(FAKE_KEY)}
 
 
 @pytest.mark.parametrize("kind", ["html", "css", "js", "json"])
-@pytest.mark.parametrize("scheme", ["data:", "DATA:"])
-@pytest.mark.parametrize("fmt", sorted(IMAGES))
-def test_small_raster_images_pass(kind: str, scheme: str, fmt: str) -> None:
-    page, name = _wrapped(kind, f"{scheme}image/{fmt.upper()};BASE64,{_b64(IMAGES[fmt])}")
-    assert _uri_rules(page, name) == set()
+@pytest.mark.parametrize("scheme", ["data:", "DATA:", "dAtA:"])
+@pytest.mark.parametrize("image", sorted(IMAGES))
+def test_image_data_uris_are_rejected(kind: str, scheme: str, image: str) -> None:
+    page, name = _wrapped(kind, f"{scheme}image/png;base64,{_b64(IMAGES[image])}")
+    assert "data-uri-not-allowed" in _uri_rules(page, name)
+
+
+def test_png_file_with_secret_text_is_still_rejected_directly() -> None:
+    assert "private-key-block" in _uri_rules(IMAGES["private-key text"], "x.png")
+
+
+def test_json_data_uris_are_found_in_every_field_position() -> None:
+    uri = f"data:image/png;base64,{_b64(IMAGES['plain'])}"
+    for value in (
+        {"src": uri, "caption": "after"},
+        {"caption": "before", "src": uri},
+        {"images": [uri, uri]},
+        {"nested": {"deep": [{"a": uri}]}},
+        [uri],
+    ):
+        assert "data-uri-not-allowed" in _uri_rules(json.dumps(value).encode(), "d.json")
+
+
+def test_json_strings_are_not_joined_into_a_false_uri() -> None:
+    assert _uri_rules(json.dumps({"a": "data:", "b": "image/png;base64,AAAA", "caption": "x,y"}).encode(), "d.json") == set()
+    assert _uri_rules(json.dumps({"label": "data", "caption": "a, b"}).encode(), "d.json") == set()
 
 
 def test_javascript_data_keys_are_not_data_uris() -> None:
     assert _uri_rules(b"var o={data:[1,2],data:rows,n:1};f({data: x, y: 2});", "a.js") == set()
-
-
-def test_image_size_limits(monkeypatch: MonkeyPatch) -> None:
-    monkeypatch.setattr(rp, "MAX_IMAGE_URI_BYTES", 64)
-    monkeypatch.setattr(rp, "MAX_IMAGE_URI_TOTAL_BYTES", 100)
-    one = PNG + b"\0" * 20  # 44 bytes
-    assert _uri_rules(_wrapped("html", f"data:image/png;base64,{_b64(one)}")[0]) == set()
-    assert "data-uri-image-over-limit" in _uri_rules(_wrapped("html", f"data:image/png;base64,{_b64(PNG + bytes(100))}")[0])
-    three = _wrapped("html", f"data:image/png;base64,{_b64(one)}")[0] * 3  # 132 bytes in total
-    assert "data-uri-image-total-over-limit" in _uri_rules(three)
-
-
-def test_image_size_defaults() -> None:
-    assert rp.MAX_IMAGE_URI_BYTES == 256 * 1024 and rp.MAX_IMAGE_URI_TOTAL_BYTES == 1024 * 1024
-    big = PNG + bytes(rp.MAX_IMAGE_URI_BYTES)
-    assert "data-uri-image-over-limit" in _uri_rules(_wrapped("html", f"data:image/png;base64,{_b64(big)}")[0])
-
-
-def test_declared_image_type_must_match_signature() -> None:
-    assert "data-uri-signature-mismatch" in _uri_rules(_wrapped("html", f"data:image/png;base64,{_b64(ZIP_KEY)}")[0])
-    assert "data-uri-signature-mismatch" in _uri_rules(_wrapped("html", f"data:image/png;base64,{_b64(GIF)}")[0])
-    assert "data-uri-invalid-base64" in _uri_rules(b'<img src="data:image/png;base64,@@@@">')
-    assert "data-uri-not-allowed" in _uri_rules(_wrapped("html", f"data:image/svg+xml;base64,{_b64(SVG)}")[0])
+    assert _uri_rules(b"var o={data:rows, caption:'x'};", "a.js") == set()
 
 
 def test_published_reports_use_no_disallowed_data_uris() -> None:

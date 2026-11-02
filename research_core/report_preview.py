@@ -11,8 +11,6 @@ Gate output names a rule and a masked path, never the matched content.
 
 from __future__ import annotations
 
-import base64
-import binascii
 import html
 import io
 import json
@@ -43,8 +41,6 @@ MAX_ARCHIVE_MEMBERS = 1000
 MAX_ARCHIVE_UNPACKED = 100 * 1024 * 1024
 MAX_ARCHIVE_RATIO = 200
 MAX_PARQUET_UNPACKED = 256 * 1024 * 1024
-MAX_IMAGE_URI_BYTES = 256 * 1024  # decoded bytes of one embedded raster image
-MAX_IMAGE_URI_TOTAL_BYTES = 1024 * 1024  # decoded bytes of all embedded images in one file
 MAX_PULL_PAGES = 20
 SYMLINK_MODE = "120000"
 GITLINK_MODE = "160000"
@@ -96,12 +92,9 @@ _MEDIA = r"[A-Za-z0-9!#$&^_.+-]+"
 # JS object keys such as ``data:rows,`` have no ``/`` and do not match; ``data:foo,x`` (plain text) is not gated.
 DATA_URI = re.compile(
     r"(?<![A-Za-z0-9])d[\t\r\n]*a[\t\r\n]*t[\t\r\n]*a[\t\r\n]*:"
-    rf"(?P<head>(?:{_MEDIA}/{_MEDIA})?(?:\s*;\s*{_MEDIA}(?:=[^,;\s\"'<>)]*)?)*\s*),"
-    r"(?P<payload>(?:[A-Za-z0-9+/=_%.~!*:@&$;-]|\s(?=[A-Za-z0-9+/=\s]))*)",
+    rf"(?:{_MEDIA}/{_MEDIA})?(?:\s*;\s*{_MEDIA}(?:=[^,;\s\"'<>)]*)?)*\s*,",
     re.IGNORECASE,
 )
-IMAGE_URI_HEAD = re.compile(r"image/(?P<kind>png|jpeg|gif|webp)\s*;\s*base64\s*", re.IGNORECASE)
-IMAGE_URI_EXT = {"png": "png", "jpeg": "jpg", "gif": "gif", "webp": "webp"}
 
 
 # ---------------------------------------------------------------------------- masking
@@ -299,62 +292,35 @@ def check_text_content(ext: str, data: bytes) -> list[str]:
     rules = set(scan_text(text))
     if "\0" in text:
         rules.add("text-contains-nul")  # BOM-less UTF-16 decodes as "valid" UTF-8 with NULs
-    scan_target = text
+    uri_targets: list[str] = [text]
     if ext in JSON_EXTENSIONS:
         try:
-            json_text = "\n".join(_json_strings(json.loads(text)))
+            strings = list(_json_strings(json.loads(text)))
         except ValueError:
             rules.add("json-invalid")
         else:
-            rules.update(scan_text(json_text))
-            scan_target = json_text  # parsed strings: JSON escapes (\/, \uXXXX) are resolved
-    rules.update(_scan_data_uris(scan_target))
+            rules.update(scan_text("\n".join(strings)))
+            uri_targets = strings  # parsed strings: JSON escapes (\/, \uXXXX) are resolved
+    rules.update(_scan_data_uris(uri_targets))
     return sorted(rules)
 
 
-def _scan_data_uris(text: str) -> set[str]:
-    """Reject every ``data:`` URI except a small base64 raster image whose bytes match its declared type.
+def _scan_data_uris(texts: Iterable[str]) -> set[str]:
+    """Reject every ``data:`` URI; each string is scanned on its own so neighbouring fields never join.
 
-    The scheme is found case-insensitively, tolerating tab/newline splits, HTML entities and percent
-    encoding. A URI that only appears after decoding is obfuscated and never allowed.
+    The scheme is found case-insensitively, tolerating tab/newline splits. A URI that only appears after
+    HTML-entity or percent decoding is reported as obfuscated.
     """
     rules: set[str] = set()
-    allowed: set[tuple[str, str]] = set()
-    total = 0
-    for match in DATA_URI.finditer(text):
-        rule, size = _image_uri_rule(match.group("head"), match.group("payload"))
-        if rule:
-            rules.add(rule)
+    for text in texts:
+        if DATA_URI.search(text):
+            rules.add("data-uri-not-allowed")
             continue
-        allowed.add((match.group("head"), match.group("payload")))
-        total += size
-    if total > MAX_IMAGE_URI_TOTAL_BYTES:
-        rules.add("data-uri-image-total-over-limit")
-    unquoted = urllib.parse.unquote(text)
-    for variant in {html.unescape(text), unquoted, html.unescape(unquoted), urllib.parse.unquote(html.unescape(text))}:
-        if variant != text and any((m.group("head"), m.group("payload")) not in allowed for m in DATA_URI.finditer(variant)):
+        unquoted = urllib.parse.unquote(text)
+        variants = {html.unescape(text), unquoted, html.unescape(unquoted), urllib.parse.unquote(html.unescape(text))}
+        if any(variant != text and DATA_URI.search(variant) for variant in variants):
             rules.add("data-uri-obfuscated")
     return rules
-
-
-def _image_uri_rule(head: str, payload: str) -> tuple[str | None, int]:
-    """(rule, decoded size): rule is None when the URI is an allowed small raster image."""
-    match = IMAGE_URI_HEAD.fullmatch(head)
-    if match is None:
-        return "data-uri-not-allowed", 0
-    kind = match.group("kind").lower()
-    compact = re.sub(r"\s+", "", payload)
-    if len(compact) * 3 // 4 > MAX_IMAGE_URI_BYTES + 3:
-        return "data-uri-image-over-limit", 0
-    try:
-        image = base64.b64decode(compact, validate=True)
-    except (binascii.Error, ValueError):
-        return "data-uri-invalid-base64", 0
-    if len(image) > MAX_IMAGE_URI_BYTES:
-        return "data-uri-image-over-limit", 0
-    if not _signature_ok(IMAGE_URI_EXT[kind], image):
-        return "data-uri-signature-mismatch", 0
-    return None, len(image)
 
 
 def _arrow_has_text(arrow_type: Any) -> bool:
