@@ -111,3 +111,8 @@ P1-A 本機驗證：核心／CLI、既有 S7 core／week 與 CI selector 首跑 
 一個 dataset 與來源限制，沒有輸出檔案。Terra 審查的兩項 MEDIUM 已修正並覆蓋回歸：
 移除純核心 logging callback；讀取重用嚴格 JSON parser，拒絕重複欄位。最後唯讀審查
 沒有其他可操作 findings。正常 hooks 與 hosted CI 以交付提交及 PR 證據為準。
+
+交付為 [draft PR #150](https://github.com/TaiwanCCyoyo/stock-research/pull/150)。
+工程提交 `0614ad736c524e2af653c4e276352b3d1b6e1d38` 的正常 hooks 全過，含 Mypy、
+Pyright、Ruff；Terra 已對同一不可變提交確認無未解可操作 findings。本工作樹保留供
+open PR 跟進；hosted CI／review 以 PR 最新 HEAD 為準，不代表報告本人接受或產品啟用。
