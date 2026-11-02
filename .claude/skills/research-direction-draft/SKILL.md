@@ -27,9 +27,17 @@ A finished direction draft satisfies:
   in the later report/lineage. Inspect old reports without drafts manually.
 - The title and card promise only the main comparison; secondary results say 次要.
   Condition numbers are thresholds, outcome numbers are targets, using the fixed legend.
-- Discuss in a GitHub draft PR using the [PR body template](../../../docs/en/templates/direction-draft-pr.md),
-  with purpose, fake headlines and choices visible on a phone. The optional fake report lives
-  at `preview/index.html` for desktop viewing, not in the dashboard.
+- GitHub preserves the draft and confirmation record; it is not the only discussion surface.
+  When choices, comparisons or outcome branches benefit from exploration, proactively use the
+  [interactive discussion kit](../../../docs/en/direction-discussion-ui.md). Deliver a working
+  standalone view first, reusable by the later dashboard. Simple questions can stay conversational.
+  In ③ record what can be operated, what changes, and how the feedback returns; HTML-wrapped
+  prose is not sufficient. Show overview first, exploration next, evidence/details on demand.
+- The [PR body template](../../../docs/en/templates/direction-draft-pr.md) keeps purpose,
+  fake headlines and choices readable on a phone and links the same-revision interactive view.
+  Invite one concrete interaction; verify controls and export. Reconcile exported choices/notes
+  with the current draft, show changes and then obtain confirmation. Stale feedback is a proposal
+  to reconcile, never an approval; clicks and downloads must not set `agreed`.
 - Market computation is forbidden before owner confirmation of purpose, fake headlines
   (numbers as `▢▢%`) and choices. Verify the owner and approved revision behind both approval
   links, `stage: agreed` and the merged direction PR before opening a work package; record the
@@ -42,6 +50,6 @@ A finished direction draft satisfies:
   as documented, preserving source versions and publication status. Do not extend study-card.v2.
 
 Record `待確認` for dates, proposers and sources you cannot find; never invent an owner quote.
-Before opening the draft PR, have a subagent read only the draft and state the purpose, main
+Before opening the draft PR, have a subagent read the draft, exercise the view and state the purpose, main
 comparison, headline form and primary/secondary boundary. Copy the owner's PR ticks and links
 into the file before merge. This skill authorizes no backtest, download or recomputation.

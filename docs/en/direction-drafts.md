@@ -23,10 +23,14 @@ the examples below are retrospective demonstrations. A study with a draft keeps 
 `tasks/<task-id>/direction-draft.md`. The file is the only record: the PR body collects the
 owner's ticks, and the agent copies each one (with its link) into the file before merge.
 The owner merges only after those confirmations; merge alone is not evidence of approval.
-Discussion happens in a GitHub draft PR, readable on a phone. The optional fake report is a
-desktop preview under `tasks/<task-id>/preview/index.html`, visibly labelled as a draft with
-placeholder numbers. It is not registered in the dashboard. This page changes no study-card, report-kit
-or dashboard contract; `study-card.v2` is unchanged (see
+GitHub keeps the reviewable direction and confirmation record. It is not the only discussion
+surface: when comparing choices, exploring outcome branches or understanding scope benefits
+from interaction, the author must provide an interactive discussion view, not just prose.
+Use the [discussion kit and its data contract](direction-discussion-ui.md); an optional fake
+report can accompany it. Both keep placeholder numbers and visible draft status. The shared
+renderer works standalone now and is reusable by a later dashboard adapter; this PR does not
+add that dashboard entry. This follows the [2026-11-02 owner clarification](decision-records/2026-11-02-interactive-direction-discussion.md).
+This page changes no study-card or report-kit contract; `study-card.v2` is unchanged (see
 [study-presentation](study-presentation.md#study-cards-v2) for how a `not_evaluated` card may
 point at a draft).
 
@@ -34,7 +38,9 @@ point at a draft).
 
 ```mermaid
 flowchart LR
-  A["Draft PR: direction-draft.md<br/>stage: discussing"] --> B{"Owner ticks in the PR body:<br/>purpose is right / this is the headline I want"}
+  A["Draft PR: direction-draft.md<br/>stage: discussing"] --> I["Explore the same revision interactively<br/>compare choices, branches and questions"]
+  I --> J["Export preferences and notes<br/>agent reconciles them into the draft"]
+  J --> B{"Owner confirms the resulting revision:<br/>purpose is right / this is the headline I want"}
   B -- changes --> A
   B -- ticked --> C["Agent verifies owner evidence and copies links<br/>stage: agreed; owner merges"]
   C --> D["Write the mission, then market computation"]
@@ -58,7 +64,12 @@ flowchart LR
 2. Open a **draft PR** and append the [direction discussion body](templates/direction-draft-pr.md)
    to the normal PR description. Link the rendered draft at the exact commit being discussed.
    The body exposes purpose, the three fake headlines, choices and predecessor dispositions
-   directly on the phone; the optional desktop preview is supplementary.
+   directly on the phone. For a discussion that benefits from interaction, also link a working
+   interactive view and say what the owner can try and what changes as they do. Do not wait for
+   a dashboard route: provide the standalone view first. A diagram or short conversational
+   answer remains appropriate for a simpler question; record the presentation choice in ③.
+   Interaction exports preferences and notes tied to the source revision. Reconcile them into
+   the draft and show the resulting change before asking for confirmation; clicks are not approval.
 3. The owner checks the purpose, headline and C choices in the PR body, or posts an explicit
    confirmation comment if editing the body is unavailable. The agent must verify who confirmed
    which revision, and record a comment permalink or the PR link plus confirming edit/revision
@@ -84,6 +95,11 @@ Repository-visible output checks cover non-empty `results/` and `runs/`, `run_re
 `run-receipt.json`, `report.md` and `web-report/index.html` within a task that has a draft.
 Use `preview/index.html` for the fake report. Existing tasks without drafts are not retrofitted.
 These checks are safeguards at review time, not an execution lock or proof of authorization.
+
+The shared discussion kit is a presentation layer, not a second approval store. A study-specific
+view must identify its actual task, draft path and exact revision; a demonstrator must say it is
+a demo. Recheck a view against the draft when either changes. The same source and proposed
+feedback contracts apply standalone and in a future dashboard; neither surface may start a run.
 
 ## Draft contents
 
@@ -218,8 +234,9 @@ Use the existing report-link conventions without adding fields to `study-card.v2
 
 - In HTML, link a readable predecessor with
   `<a data-related-report="<prior-task-id>" href="../../<prior-task-id>/web-report/index.html">…</a>`.
-  Keep the real relative `href` for standalone reading. Dashboard-aware navigation uses the
-  existing `rk:navigate` integration; the data attribute alone does not implement navigation.
+  Keep the real relative `href` for standalone reading. Some report work emits `rk:navigate`,
+  but this branch's dashboard has no handler yet; the data attribute alone does not implement
+  navigation. Verify the actual host adapter before claiming embedded cross-report navigation.
 - In the report's JSON-LD `Report`, list actual dependencies under `isBasedOn`, with
   `identifier`, `name`, `description` (role and limits) and stable `url`. Link the lineage record
   using `citation: "../research-lineage.md"`. Future follow-ups are navigation links, not bases.
@@ -237,7 +254,9 @@ this review or owner acceptance.
 
 This aligns with the lineage conventions in the PR113/PR138 report work. It does not claim
 their presentation has been accepted or modify those studies. Dashboard direction labels remain
-a separate follow-up after the UX branch merges (D6).
+a separate follow-up after the UX branch merges (D6). The reusable interactive discussion
+layer belongs to this PR; the dashboard follow-up consumes it rather than inventing a second
+discussion or approval flow.
 
 ## Worked examples
 

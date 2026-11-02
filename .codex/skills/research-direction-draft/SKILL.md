@@ -9,11 +9,19 @@ Rules and fields are in [direction-drafts](../../../docs/en/direction-drafts.md)
 template is [direction-draft](../../../docs/en/templates/direction-draft.md). Existing studies
 without a draft are not retrofitted.
 
-- Author the draft in a GitHub draft PR using the linked workflow and
-  [PR body template](../../../docs/en/templates/direction-draft-pr.md). Keep the purpose,
-  fake headlines and choices readable on a phone; the optional `preview/index.html` is a
-  desktop fake report, not a dashboard entry. Before opening the PR, have a subagent read only
-  the draft and state purpose, main comparison, headline form and primary/secondary boundary.
+- GitHub preserves the draft and confirmation record; discussion need not be text-only.
+  For comparisons, outcome branches or choices that benefit from exploration, proactively
+  provide a working [interactive discussion view](../../../docs/en/direction-discussion-ui.md).
+  Use the shared kit standalone first; a future dashboard consumes the same model and feedback
+  contract. Simple questions may stay conversational. Record in ③ what the owner can operate,
+  what changes and how feedback returns; do not merely wrap prose in panels.
+- Use the [PR body template](../../../docs/en/templates/direction-draft-pr.md), keeping purpose,
+  headlines and choices readable on a phone and linking the view at its source revision.
+  Give one concrete exploration invitation, verify the controls and export, and reconcile
+  returned choices/notes into the current draft before showing the change for confirmation.
+  A stale export needs reconciliation; page clicks or downloads never set `agreed`.
+  Before opening the PR, have a subagent read the draft and exercise the view to state purpose,
+  main comparison, headline form and primary/secondary boundary.
 - Every unresolved predecessor question, including inherited questions, must be in `carries`
   or explicitly declined in ⑪ with an exact reference and reason. `closes` is planned work,
   must also be carried, and needs delivery evidence before it counts as answered. Inspect

@@ -619,6 +619,8 @@
             "paths": [
                 "tasks/*/direction-draft.md",
                 "docs/en/direction-drafts.md",
+                "docs/en/direction-discussion-ui.md",
+                "docs/en/decision-records/2026-11-02-interactive-direction-discussion.md",
                 "docs/en/templates/direction-draft.md",
                 "docs/en/templates/direction-draft-pr.md",
                 "docs/en/examples/direction-draft-*.md",
