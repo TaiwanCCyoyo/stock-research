@@ -1,5 +1,7 @@
 """Gate, packaging, reconcile state machine and comments of the label-driven report preview."""
 
+import base64
+import gzip
 import io
 import json
 import os
@@ -8,6 +10,7 @@ import zipfile
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
 import pytest
 from _pytest.logging import LogCaptureFixture
@@ -477,3 +480,60 @@ def test_cli_check_exit_codes(tmp_path: Path, caplog: LogCaptureFixture) -> None
     assert "secret-file-name" in caplog.text
     assert run(make_repo(tmp_path / "b", GOOD)) == 0
     assert run(make_repo(tmp_path / "c", {})) == 3
+
+
+# ---- data: URIs go through the same format-aware gate as files (dot's P1 on PR #149) ----
+
+
+def _b64(data: bytes) -> str:
+    return base64.b64encode(data).decode("ascii")
+
+
+def _uri_rules(page: bytes, name: str = "index.html") -> set[str]:
+    return {v.rule for v in rp.check_file(name, f"{BASE}/{name}", "100644", page)}
+
+
+def _link(data: bytes, mime: str = "application/zip") -> bytes:
+    return f'<a download="notes.zip" href="data:{mime};base64,{_b64(data)}">x</a>'.encode()
+
+
+def test_direct_and_embedded_zip_are_rejected_alike() -> None:
+    archive = zip_bytes({"notes.txt": FAKE_KEY})
+    direct = {v.rule for v in rp.check_file("x.zip", f"{BASE}/x.zip", "100644", archive)}
+    assert "private-key-block" in direct
+    assert "private-key-block" in _uri_rules(_link(archive))
+    assert "private-key-block" in _uri_rules(_link(archive, "image/png"))  # declared MIME is not trusted
+
+
+def test_embedded_formats_and_encodings() -> None:
+    assert "private-key-block" in _uri_rules(_link(gzip.compress(FAKE_KEY), "text/plain"))
+    assert "private-key-block" in _uri_rules(_link(FAKE_KEY_TEXT.encode("utf-16"), "text/plain"))
+    assert "private-key-block" in _uri_rules(f'<a href="data:text/plain,{quote(FAKE_KEY_TEXT)}">x</a>'.encode())
+    css = f"a{{background:url(data:application/zip;base64,{_b64(zip_bytes({'n.txt': FAKE_KEY}))})}}".encode()
+    assert "private-key-block" in _uri_rules(css, "s.css")
+    js = f'var d="data:application/zip;base64,{_b64(zip_bytes({"n.txt": FAKE_KEY}))}";'.encode()
+    assert "private-key-block" in _uri_rules(js, "a.js")
+    assert "data-uri-invalid-base64" in _uri_rules(b'<a href="data:text/plain;base64,@@@@not base64@@@@">x</a>')
+    assert "embedded-unknown-binary" in _uri_rules(_link(b"\x7fELF\x00\xff\xfe binary"))
+
+
+def test_embedded_depth_and_size_limits() -> None:
+    page = FAKE_KEY
+    for _ in range(rp.MAX_EMBED_DEPTH + 1):
+        page = f"data:text/html;base64,{_b64(page)}".encode()
+    assert "data-uri-too-deep" in _uri_rules(b'<a href="' + page + b'">x</a>')
+    shallow = b'<a href="data:text/html;base64,' + _b64(b'<a href="data:text/plain;base64,' + _b64(FAKE_KEY).encode() + b'">').encode() + b'">x</a>'
+    assert "private-key-block" in _uri_rules(shallow)  # within the limit it is still scanned
+
+
+def test_embedded_decoded_size_is_capped(monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.setattr(rp, "MAX_DATA_URI_BYTES", 1024)
+    assert "data-uri-over-limit" in _uri_rules(_link(b"A" * 2048, "text/plain"))
+    assert "data-uri-over-limit" in _uri_rules(_link(gzip.compress(b"A" * 100_000), "application/gzip"))  # decompression bomb
+    two = _link(b"A" * 700, "text/plain") * 2  # the cap is cumulative per file
+    assert "data-uri-over-limit" in _uri_rules(two)
+
+
+def test_small_embedded_image_still_passes() -> None:
+    page = f'<img src="data:image/png;base64,{_b64(PNG)}"><p style="background:url(data:image/png;base64,{_b64(PNG)})">'.encode()
+    assert _uri_rules(page) == set()

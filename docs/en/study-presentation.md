@@ -197,12 +197,20 @@ stock-data-downloader/data`, a hidden path, `.env*` or key file names, or contro
   characters in a name; a file over 25 MiB, a PR over 50 MB, or a site over 500 MB. Content is
   allowed by extension only: text (`html htm js mjs cjs css json map svg txt md csv tsv`) must
   decode as UTF-8 or BOM-marked UTF-16, contain no NUL, and JSON must parse (strings are scanned
-  after unescaping; base64 `data:` URIs are decoded and scanned); binaries (`png jpg jpeg gif ico
+  after unescaping); every `data:` URI in any text file (`src`, `href`, CSS `url()`, JS
+  strings; base64 or percent-encoded) is decoded and gated by its real signature, not its declared
+  MIME: zip, gzip and Parquet get the same checks as a file, text is scanned, and unknown binary or
+  malformed base64 is rejected. Embedding is limited to 2 levels and 25 MiB decoded per file.
+  Binaries (`png jpg jpeg gif ico
 woff woff2 webp parquet`) must match their signature and are scanned raw and with NULs removed;
   Parquet text columns and metadata are decompressed and scanned; `zip` gets a bounded check
   (member count, size and ratio caps, no encryption, no nested archive, safe names, every member
   gated by the same rules). Any other extension fails. Scans look for private-key blocks, common
   token prefixes and `local-private` artifact markers. It catches mistakes, not a malicious author.
+  `local-private` markers are matched as one phrase in text and JSON; a Parquet column name and
+  a value scanned separately do not form that phrase, so structured markers are not fully covered.
+  A preview whose removal comment could not be posted (GitHub API error right after the
+  deployment) is not retried next run.
 - Local check before pushing: `uv run python -m scripts.report_preview check --base origin/main`.
 - Limits: the URL is public and hard to guess, not access control. `robots.txt` and the shell
   pages ask crawlers not to index; GitHub Pages cannot set headers. PR descriptions, comments and
