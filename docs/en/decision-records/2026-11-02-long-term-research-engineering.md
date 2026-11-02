@@ -154,3 +154,37 @@ SOL workers 分別負責核心接入、純邊界合成測試與真實 public rea
 工程提交 `ad33afeeae4618fc93c3f9ebd729a0f211abdb6a` 的正常 hooks 全過；Terra 已核對
 同一不可變提交，無未解可操作 findings。`entry-window-raw-reader` 工作樹保留供 open PR
 跟進；hosted CI／review 以最新 HEAD 的 GitHub 紀錄為準。
+
+## 2026-11-02 接續：E1 canonical reader
+
+#151 已核實 squash merge，merge SHA 為
+`3355be44583d0cee5fea9fa7b560d79098e65ffb`。Ready Windows CI
+[41404718170](https://github.com/TaiwanCCyoyo/stock-research/actions/runs/41404718170)
+成功，890 tests；[父端獨立審查](https://github.com/TaiwanCCyoyo/stock-research/pull/151#issuecomment-6571302717)
+與 hosted review 均覆蓋最終 HEAD，無未解重要缺陷。Primary main 已同步；舊 raw-reader
+工作樹與本地分支在確認乾淨、只有測試快取、無連結／子模組／使用中程序後正常移除。
+沒有本 session 的研究 scratch run，其他 session 資料與工作樹保留原狀。
+
+依既有續辦授權再次盤點 roadmap、工作樹、open PR 與既有實作，選定 **E1 canonical
+reader → 原 PR61 stock_daily → CanonicalPacket**。上包已補 RawQuotePacket；此包補
+同一 staging consumer 的另一個必要輸入，有明確用途。原始計算公開且固定，不需要
+代選方法；人工 generation 足以驗證接線。相較之下，interval packet 尚缺完整事件
+來源；P1/P2 尚需卡片規則與持股契約；S7 首次／跨週確認、O2 事件 gate 保持未決。
+
+實作前記錄[契約](../../../tasks/20261027-entry-window/canonical-reader-handoff.md)，
+從上述 main 建立本 session 的 `entry-window-canonical-reader` 工作樹與
+`codex/entry-window-canonical-reader` 分支。三位 SOL workers 分別獨寫核心接入、純合成
+測試及真 public reader 人工世代整合；Terra 獨立審查。主線擁有文件、CI 與 Git index。
+兩個 reader 共用必要檢查，不複製 task 計算。股票資格必須明示，不能預設全股合格。
+
+契約審查發現既有 stock_daily 下游有診斷 logging，因此精確限定純接線不自行開檔、
+連網或讀資料來源；宿主 logging handler 的副作用不在保證內。不停用全域 logging，
+也不改原計算。只做人工資料驗證，沒有正式市場 generation／新結論／runner／報告。
+原始 labels admission、PR61 真資料 parity、完整 interval coverage、官方 bounds 與
+市場資源／運算授權仍是後續 gate；#137、報告本人確認、E2/E3、S7、O2 邊界未改。
+
+本機實跑：既有 raw adapter／reader **133 passed in 14.85s**；新 public-reader
+人工世代整合與第一輪 CI selector **380 passed in 43.43s**；canonical 邊界、既有 E1
+inputs／count／bootstrap／assembly 與補齊依賴傳播的 selector **816 passed in 27.64s**。
+Terra 最終唯讀審查無可操作 findings。新測試會隨原計算的十一個已知上游改動一起選取；
+`derived_features.py` 保留既有 full fallback。沒有變更原計算或任何已發布結果讀取程式。

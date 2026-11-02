@@ -377,3 +377,15 @@ labels、interval event／quote quality、官方日曆與 bounds、資料／資�
 
 P1 卡片生成與 P2 持股對帳不由本包代選規則；P2 尚需 F1 及確定的昨日卡片／持股輸入契約。
 已有 account、lifecycle 與 ledger API 應重用，避免增造尚無消費用途的平行實作。
+
+### 2026-11-02 接續：E1 canonical 計算接入
+
+原始報價接入 [#151](https://github.com/TaiwanCCyoyo/stock-research/pull/151) 已合併至
+`3355be4`。本包將固定世代的 adjusted reader 接到既有 PR61 `stock_daily`，再輸出
+`CanonicalPacket`；[契約](../../tasks/20261027-entry-window/canonical-reader-handoff.md)
+要求明確股票資格與可得性說明，沿用原本全部訊號、標籤與分母計算。原始與調整價接入
+共用身分／日曆／來源檢查，人工世代驗證兩種 packet 可一起進入 E1 staging/count。
+
+這項接線不放行市場 labels，也不證明舊 PR61 結果完全重現。完整 interval event
+coverage／quote quality、官方來源認證／bounds、資源及市場計算仍未完成；不因單日品質
+正常就推論跨日區間乾淨。P1/P2、S7、O2 的研究決策與報告本人驗收界線維持。
