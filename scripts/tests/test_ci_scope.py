@@ -54,7 +54,7 @@ def test_forward_v3_owned_paths_select_exact_candidate_suite(status: str, source
         ("scripts/record_momentum_forward_day_v2.py", {"momentum_forward_v2", "momentum_forward_v3"}),
         (
             "research_core/maintained_adjusted_daily.py",
-            {"research_data", "annual", "pattern_scan", "strength_flags", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3"},
+            {"entry_window", "research_data", "annual", "pattern_scan", "strength_flags", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3"},
         ),
         (
             "research_core/live_producer.py",
@@ -124,6 +124,8 @@ def test_forward_v3_dependencies_keep_shared_and_unknown_full_fallback(status: s
         "tasks/20261027-entry-window/reader-staging-handoff.md",
         "research_core/entry_window_assembly_v1.py",
         "tasks/20261027-entry-window/assembly-handoff.md",
+        "research_core/entry_window_raw_quotes_v1.py",
+        "tasks/20261027-entry-window/raw-reader-handoff.md",
     ],
 )
 def test_entry_window_owned_paths_select_exact_domain(status: str, source: str) -> None:
@@ -133,6 +135,8 @@ def test_entry_window_owned_paths_select_exact_domain(status: str, source: str) 
         "scripts/tests/test_entry_window_bootstrap_v1.py",
         "scripts/tests/test_entry_window_inputs_v1.py",
         "scripts/tests/test_entry_window_assembly_v1.py",
+        "scripts/tests/test_entry_window_raw_quotes_v1.py",
+        "scripts/tests/test_entry_window_raw_reader_v1.py",
     }
     assert not plan["full"] and not plan["frontend"]
     assert plan["domains"] == ["entry_window"]
@@ -201,6 +205,8 @@ def test_entry_window_canonical_dependencies_preserve_exact_existing_consumers(s
     assert "scripts/tests/test_entry_window_bootstrap_v1.py" in expected
     assert "scripts/tests/test_entry_window_inputs_v1.py" in expected
     assert "scripts/tests/test_entry_window_assembly_v1.py" in expected
+    assert "scripts/tests/test_entry_window_raw_quotes_v1.py" in expected
+    assert "scripts/tests/test_entry_window_raw_reader_v1.py" in expected
 
 
 def test_unknown_entry_window_sources_keep_full_fallback() -> None:
@@ -219,7 +225,7 @@ def test_unknown_entry_window_sources_keep_full_fallback() -> None:
         ),
         (
             "research_core/maintained_adjusted_daily.py",
-            {"research_data", "annual", "pattern_scan", "tenbagger_drivers", "strength_flags", "momentum_forward_v2", "momentum_forward_v3"},
+            {"entry_window", "research_data", "annual", "pattern_scan", "tenbagger_drivers", "strength_flags", "momentum_forward_v2", "momentum_forward_v3"},
         ),
         (
             "research_core/live_producer.py",
@@ -371,7 +377,7 @@ def test_tenbagger_domain_registers_its_sources(status: str, path: str) -> None:
         ("research_core/live_producer.py", {"research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3"}),
         (
             "research_core/maintained_adjusted_daily.py",
-            {"research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3"},
+            {"entry_window", "research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3"},
         ),
         (
             "research_core/scratch_runs.py",
