@@ -470,6 +470,8 @@
         return "0";
     }
 
+    const tableJumps = (window.reportTableJump = window.reportTableJump || {});
+
     function renderTable(definition, index, questionId) {
         const collapsible = definition.collapsible === true;
         const article = node(
@@ -528,6 +530,7 @@
 
         let page = 0;
         let pageSize = 50;
+        let highlight = null;
         const controls = node("div", null, "table-pagination");
         const summary = node("p", null, "table-summary");
         summary.setAttribute("aria-live", "polite");
@@ -559,7 +562,13 @@
             const end = Math.min(rows.length, start + pageSize);
             const fragment = document.createDocumentFragment();
             for (let rowIndex = start; rowIndex < end; rowIndex += 1) {
-                const tr = node("tr");
+                const tr = node(
+                    "tr",
+                    null,
+                    highlight && highlight(rows[rowIndex] || {})
+                        ? "is-target"
+                        : undefined,
+                );
                 for (const column of columns)
                     tr.append(
                         tableCell(
@@ -607,6 +616,16 @@
             view?.downloadLabel,
         );
         renderRows();
+        // Lets the reader summary jump to (and mark) the rows of one pattern.
+        tableJumps[headingId] = (match) => {
+            const index = rows.findIndex((row) => match(row || {}));
+            if (index < 0) return null;
+            highlight = match;
+            page = Math.floor(index / pageSize);
+            if (collapsible) article.open = true;
+            renderRows();
+            return article;
+        };
         return article;
     }
 
@@ -661,6 +680,7 @@
                 const known = row.known_n;
                 const controlKnown = row.control_known_n;
                 const tr = node("tr");
+                if (present(row.target)) tr.id = `fs-row-${row.target}`;
                 tr.append(
                     cell(
                         present(row.target) ? familyLabel(row.target) : "N/A",

@@ -110,31 +110,88 @@
                     <p class="answer-purpose">
                         這份研究想找出：哪些型態與一年內翻倍有關，以及沒有出現型態的股票表現如何。
                     </p>
-                    <div class="headline-table-wrap">
-                        <table class="headline-table" id="headline-table">
-                            <caption>
-                                追蹤約一年（252
-                                個交易日）的翻倍比例，由高到低排列
-                            </caption>
-                            <thead>
-                                <tr>
-                                    <th scope="col">型態</th>
-                                    <th scope="col">
-                                        不加條件<small
-                                            >有型態 對 所有合格日（隔 20
-                                            個交易日取一天）</small
-                                        >
-                                    </th>
-                                    <th scope="col">
-                                        加上篩選條件後（另一個比較）<small
-                                            >各 92
-                                            組裡，有型態比同條件、沒型態的事件較高／較低的組數</small
-                                        >
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody id="headline-rows"></tbody>
-                        </table>
+                    <div class="rank-view" id="rank-view">
+                        <div class="rank-tools">
+                            <p class="rank-head" id="rank-title"></p>
+                            <div
+                                class="rank-switch"
+                                id="rank-switch"
+                                role="group"
+                                aria-label="呈現方式"
+                                hidden
+                            >
+                                <button
+                                    type="button"
+                                    data-view="rank"
+                                    aria-pressed="true"
+                                >
+                                    排行
+                                </button>
+                                <button
+                                    type="button"
+                                    data-view="table"
+                                    aria-pressed="false"
+                                >
+                                    以表格檢視
+                                </button>
+                            </div>
+                        </div>
+                        <div class="rank-layout" id="rank-layout" hidden>
+                            <section class="rank-list">
+                                <div class="rank-axis" aria-hidden="true">
+                                    <span></span><span></span
+                                    ><span
+                                        class="rank-scale"
+                                        id="rank-axis"
+                                    ></span
+                                    ><span></span>
+                                </div>
+                                <ol
+                                    class="rank-ladder"
+                                    id="rank-ladder"
+                                    role="listbox"
+                                    aria-labelledby="rank-title"
+                                ></ol>
+                                <p class="rank-foot">
+                                    ● 高於基準　○
+                                    低於基準。點一列看詳情；方向鍵可上下移動。
+                                </p>
+                            </section>
+                            <section
+                                class="rank-pane"
+                                id="rank-pane"
+                                aria-live="polite"
+                            ></section>
+                        </div>
+                        <div
+                            class="headline-table-wrap"
+                            id="headline-table-wrap"
+                        >
+                            <table class="headline-table" id="headline-table">
+                                <caption>
+                                    追蹤約一年（252
+                                    個交易日）的翻倍比例，由高到低排列
+                                </caption>
+                                <thead>
+                                    <tr>
+                                        <th scope="col">型態</th>
+                                        <th scope="col">
+                                            不加條件<small
+                                                >有型態 對 所有合格日（隔 20
+                                                個交易日取一天）</small
+                                            >
+                                        </th>
+                                        <th scope="col">
+                                            加上篩選條件後（另一個比較）<small
+                                                >各 92
+                                                組裡，有型態比同條件、沒型態的事件較高／較低的組數</small
+                                            >
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="headline-rows"></tbody>
+                            </table>
+                        </div>
                     </div>
                     <p class="answer-note">
                         「不加條件」的對照包含有型態的日子，只是它們佔極少數。「組」＝一種型態搭配一組篩選條件（例如「收盤高於
@@ -335,7 +392,12 @@
                 <details class="pattern-guide-details">
                     <summary>展開每個型態怎麼判定（含示意圖）</summary>
                     <div class="pattern-grid">
-                        <article class="pattern-item">
+                        <article
+                            class="pattern-item"
+                            id="pg-H1"
+                            data-pattern="H1"
+                            tabindex="-1"
+                        >
                             <h3>
                                 <span class="pattern-code">H1</span>HHHL v4
                                 突破型態<small class="pattern-aside"
@@ -401,7 +463,12 @@
                                 萬元，都不算。價格僅為示意，實際以個股波動幅度換算。
                             </p>
                         </article>
-                        <article class="pattern-item">
+                        <article
+                            class="pattern-item"
+                            id="pg-B1"
+                            data-pattern="B1"
+                            tabindex="-1"
+                        >
                             <h3>
                                 <span class="pattern-code">B1</span
                                 >杯形突破（有柄／無柄）
@@ -486,7 +553,12 @@
                                 </p>
                             </details>
                         </article>
-                        <article class="pattern-item">
+                        <article
+                            class="pattern-item"
+                            id="pg-B2"
+                            data-pattern="B2"
+                            tabindex="-1"
+                        >
                             <h3>
                                 <span class="pattern-code">B2</span
                                 >布林通道收縮後突破
@@ -502,7 +574,12 @@
                                 例：通道上緣 99 元，收盤 100 元。
                             </p>
                         </article>
-                        <article class="pattern-item">
+                        <article
+                            class="pattern-item"
+                            id="pg-B3"
+                            data-pattern="B3"
+                            tabindex="-1"
+                        >
                             <h3>
                                 <span class="pattern-code">B3</span>平台突破
                             </h3>
@@ -529,7 +606,12 @@
                                 13%）；收盤 100 元站上 99 元。
                             </p>
                         </article>
-                        <article class="pattern-item">
+                        <article
+                            class="pattern-item"
+                            id="pg-B4"
+                            data-pattern="B4"
+                            tabindex="-1"
+                        >
                             <h3>
                                 <span class="pattern-code">B4</span>跳空突破
                             </h3>
@@ -544,7 +626,12 @@
                                 元以上、最低價高於 96 元，收盤 100 元。
                             </p>
                         </article>
-                        <article class="pattern-item">
+                        <article
+                            class="pattern-item"
+                            id="pg-R1"
+                            data-pattern="R1"
+                            tabindex="-1"
+                        >
                             <h3>
                                 <span class="pattern-code">R1</span
                                 >跌破區間支撐後收復（含回測確認）
@@ -568,7 +655,12 @@
                                 元，收復。
                             </p>
                         </article>
-                        <article class="pattern-item">
+                        <article
+                            class="pattern-item"
+                            id="pg-R2"
+                            data-pattern="R2"
+                            tabindex="-1"
+                        >
                             <h3>
                                 <span class="pattern-code">R2</span
                                 >跌深近低的看漲 K 棒（含次日確認）
@@ -589,7 +681,12 @@
                                 12%）、低於 20 日均線，當天出現看漲吞噬。
                             </p>
                         </article>
-                        <article class="pattern-item">
+                        <article
+                            class="pattern-item"
+                            id="pg-R3"
+                            data-pattern="R3"
+                            tabindex="-1"
+                        >
                             <h3>
                                 <span class="pattern-code">R3</span>RSI 背離
                             </h3>
@@ -607,7 +704,12 @@
                                 元（RSI 31），間隔 25 日。
                             </p>
                         </article>
-                        <article class="pattern-item">
+                        <article
+                            class="pattern-item"
+                            id="pg-P1"
+                            data-pattern="P1"
+                            tabindex="-1"
+                        >
                             <h3>
                                 <span class="pattern-code">P1</span>突破後回測
                             </h3>
@@ -623,7 +725,12 @@
                                 元；再突破日收盤 100 元。
                             </p>
                         </article>
-                        <article class="pattern-item">
+                        <article
+                            class="pattern-item"
+                            id="pg-L1"
+                            data-pattern="L1"
+                            tabindex="-1"
+                        >
                             <h3>
                                 <span class="pattern-code">L1</span>突破 60
                                 日高點
@@ -634,7 +741,12 @@
                                 例：前 60 日最高價 95 元，收盤 100 元。
                             </p>
                         </article>
-                        <article class="pattern-item">
+                        <article
+                            class="pattern-item"
+                            id="pg-L2"
+                            data-pattern="L2"
+                            tabindex="-1"
+                        >
                             <h3>
                                 <span class="pattern-code">L2</span
                                 >近五日回落、收盤仍高於 60 日均線
@@ -649,7 +761,12 @@
                                 元。
                             </p>
                         </article>
-                        <article class="pattern-item">
+                        <article
+                            class="pattern-item"
+                            id="pg-L3"
+                            data-pattern="L3"
+                            tabindex="-1"
+                        >
                             <h3>
                                 <span class="pattern-code">L3</span>跌破 20
                                 日低點後收復
@@ -679,7 +796,7 @@
             </section>
 
             <div id="questions"></div>
-            <details class="reader-family-details">
+            <details class="reader-family-details" id="family-details">
                 <summary>查看十二種型態的完整對照表</summary>
                 <section
                     class="family-summary rk-card"

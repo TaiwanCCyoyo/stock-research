@@ -144,7 +144,7 @@ function render(payload) {
     page.window = page;
     if (payload !== undefined) page.REPORT_DATA = payload;
     runInNewContext(source, page, { timeout: 5000 });
-    return { elements, document };
+    return { elements, document, page };
 }
 
 function descendants(root, predicate) {
@@ -656,6 +656,106 @@ test("the headline summary matches the saved per-pattern numbers", () => {
         html.indexOf('class="reader-explorer"'),
     );
     assert.doesNotMatch(block, /先在一半股票|不要照做|僅供參考/);
+});
+
+test("the ranking view shows 12 rows, 7 high and 5 low, and every detail link has a target", () => {
+    const html = readFileSync(join(folder, "index.html"), "utf8");
+    const context = {};
+    context.window = context;
+    for (const name of [
+        "data/final-v1/summary.js",
+        ...Array.from(
+            { length: 12 },
+            (_, i) => `data/final-v1/rows-${String(i + 1).padStart(3, "0")}.js`,
+        ),
+    ])
+        runInNewContext(readFileSync(join(folder, name), "utf8"), context, {
+            timeout: 5000,
+        });
+    // reader.js only needs a DOM-less surface to publish its pure model.
+    context.location = { protocol: "file:" };
+    context.parent = context;
+    context.document = {
+        querySelectorAll: () => [],
+        getElementById: () => null,
+    };
+    runInNewContext(readFileSync(join(folder, "reader.js"), "utf8"), context, {
+        timeout: 5000,
+    });
+    const model = context.patternRank.patternModel();
+    assert.equal(model.length, 12);
+    assert.equal(model.filter((row) => row.delta > 0).length, 7);
+    assert.equal(model.filter((row) => row.delta < 0).length, 5);
+    assert.deepEqual(
+        Array.from(model, (row) => row.delta),
+        [...model.map((row) => row.delta)].sort((a, b) => b - a),
+    );
+    // One shared baseline (9.9%) and the same numbers as the saved summary.
+    const baseline = context.REPORT_DATA.comparisonSummary.baselines.find(
+        (row) => row.horizon === 252,
+    );
+    const saved = Object.fromEntries(
+        context.REPORT_DATA.comparisonSummary.rows
+            .filter((row) => row.horizon === 252)
+            .map((row) => [row.target, row]),
+    );
+    for (const row of model) {
+        assert.equal((row.control * 100).toFixed(1), "9.9", row.code);
+        assert.equal(row.delta, saved[row.code].delta_pp);
+        assert.equal(
+            row.rate,
+            saved[row.code].baseline_multiple * baseline.hit_rate,
+        );
+        assert.equal(row.higher + row.lower + row.incomparable + row.same, 92);
+        assert.ok(row.same >= 0);
+    }
+    assert.equal(
+        model.reduce((total, row) => total + row.same, 0),
+        16,
+        "the 16 equal groups of the 252-day total",
+    );
+    // Detail links: static anchors exist, and every question table has rows.
+    for (const row of model) {
+        assert.match(html, new RegExp(`id="pg-${row.code}"`));
+        assert.match(html, new RegExp(`data-pattern="${row.code}"`));
+        assert.deepEqual(Array.from(row.links), ["Q2", "Q3", "Q4", "Q5", "Q6"]);
+    }
+    for (const id of [
+        "rank-view",
+        "rank-layout",
+        "rank-ladder",
+        "rank-pane",
+        "rank-switch",
+        "rank-axis",
+        "headline-table",
+        "headline-table-wrap",
+        "family-details",
+    ])
+        assert.match(html, new RegExp(`id="${id}"`), id);
+    // Runtime anchors are created by report.js: family rows and table jumps.
+    const family = render(context.REPORT_DATA).elements.get(
+        "family-summary-rows",
+    );
+    const familyIds = family.children.map((row) => row.id).sort();
+    assert.deepEqual(
+        familyIds,
+        Array.from(model, (row) => `fs-row-${row.code}`).sort(),
+    );
+    const rendered = render(context.REPORT_DATA);
+    for (const question of ["Q2", "Q3", "Q4", "Q5", "Q6"]) {
+        const jump = rendered.page.reportTableJump[`${question}-table-1`];
+        assert.equal(typeof jump, "function", question);
+        for (const row of model)
+            assert.ok(
+                jump((r) => context.patternRank.rowCode(r) === row.code),
+                `${question} ${row.code}`,
+            );
+    }
+    const reader = readFileSync(join(folder, "reader.js"), "utf8");
+    // The hash keeps the kit's palette/appearance parameters next to pattern=.
+    assert.match(reader, /new URLSearchParams\(raw\.includes\("="\)/);
+    assert.match(reader, /params\.set\("pattern", code\)/);
+    assert.match(reader, /params\.delete\("pattern"\)/);
 });
 
 test("downloads accept report-local data files and refuse traversal or URLs", () => {
