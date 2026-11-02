@@ -30,7 +30,8 @@ A finished direction draft satisfies:
 - GitHub preserves the draft and confirmation record; it is not the only discussion surface.
   When choices, comparisons or outcome branches benefit from exploration, proactively use the
   [interactive discussion kit](../../../docs/en/direction-discussion-ui.md). Deliver a working
-  standalone view first, reusable by the later dashboard. Simple questions can stay conversational.
+  view standalone or in the Dashboard's direction entry with the same version-matched model.
+  Simple questions can stay conversational.
   In ③ record what can be operated, what changes, and how the feedback returns; HTML-wrapped
   prose is not sufficient. Show overview first, exploration next, evidence/details on demand.
 - The [PR body template](../../../docs/en/templates/direction-draft-pr.md) keeps purpose,

@@ -12,8 +12,8 @@ without a draft are not retrofitted.
 - GitHub preserves the draft and confirmation record; discussion need not be text-only.
   For comparisons, outcome branches or choices that benefit from exploration, proactively
   provide a working [interactive discussion view](../../../docs/en/direction-discussion-ui.md).
-  Use the shared kit standalone first; a future dashboard consumes the same model and feedback
-  contract. Simple questions may stay conversational. Record in ③ what the owner can operate,
+  Use the shared kit standalone or through the Dashboard's direction entry, using the same
+  version-matched model and feedback contract. Simple questions may stay conversational. Record in ③ what the owner can operate,
   what changes and how feedback returns; do not merely wrap prose in panels.
 - Use the [PR body template](../../../docs/en/templates/direction-draft-pr.md), keeping purpose,
   headlines and choices readable on a phone and linking the view at its source revision.

@@ -390,7 +390,7 @@
         "research_api_app": {
             "paths": ["research_api/main.py", "research_api/__main__.py"],
             "tests": ["scripts/tests/test_windows_viewer_launcher.py"],
-            "consumers": ["opportunity"]
+            "consumers": ["opportunity", "direction_discussions"]
         },
         "annual": {
             "paths": [
@@ -632,6 +632,21 @@
             "consumers": ["task_records"],
             "frontend": true
         },
+        "direction_discussions": {
+            "paths": [
+                "research_core/direction_discussions.py",
+                "research_api/direction_discussions.py",
+                "research_core/artifact_store.py",
+                "tasks/*/direction-draft.md",
+                "tasks/*/preview/direction-discussion.json",
+                "docs/en/direction-discussion-ui.md"
+            ],
+            "tests": [
+                "scripts/tests/test_direction_discussions.py",
+                "tests/test_research_api.py"
+            ],
+            "frontend": true
+        },
         "direction_drafts": {
             "paths": [
                 "tasks/*/direction-draft.md",
@@ -697,6 +712,7 @@
         "scripts/tests/test_derived_features_chunk_v2.py",
         "scripts/tests/test_derived_features_selective_v1.py",
         "scripts/tests/test_desktop_launch_feedback.py",
+        "scripts/tests/test_direction_discussions.py",
         "scripts/tests/test_direction_drafts.py",
         "scripts/tests/test_entry_window_assembly_v1.py",
         "scripts/tests/test_entry_window_bootstrap_v1.py",

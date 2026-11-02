@@ -28,8 +28,9 @@ surface: when comparing choices, exploring outcome branches or understanding sco
 from interaction, the author must provide an interactive discussion view, not just prose.
 Use the [discussion kit and its data contract](direction-discussion-ui.md); an optional fake
 report can accompany it. Both keep placeholder numbers and visible draft status. The shared
-renderer works standalone now and is reusable by a later dashboard adapter; this PR does not
-add that dashboard entry. This follows the [2026-11-02 owner clarification](decision-records/2026-11-02-interactive-direction-discussion.md).
+renderer works standalone and in the Dashboard's dedicated `#directions` / `#direction/<task-id>`
+views. The read-only adapter consumes a reviewed, version-matched model; it does not create a
+research direction. This follows the [2026-11-02 owner clarification](decision-records/2026-11-02-interactive-direction-discussion.md).
 This page changes no study-card or report-kit contract; `study-card.v2` is unchanged (see
 [study-presentation](study-presentation.md#study-cards-v2) for how a `not_evaluated` card may
 point at a draft).
@@ -65,8 +66,8 @@ flowchart LR
    to the normal PR description. Link the rendered draft at the exact commit being discussed.
    The body exposes purpose, the three fake headlines, choices and predecessor dispositions
    directly on the phone. For a discussion that benefits from interaction, also link a working
-   interactive view and say what the owner can try and what changes as they do. Do not wait for
-   a dashboard route: provide the standalone view first. A diagram or short conversational
+   interactive view and say what the owner can try and what changes as they do. Use the Dashboard
+   entry when a version-matched model is available, or the standalone view. A diagram or short conversational
    answer remains appropriate for a simpler question; record the presentation choice in ③.
    Interaction exports preferences and notes tied to the source revision. Reconcile them into
    the draft and show the resulting change before asking for confirmation; clicks are not approval.
@@ -99,7 +100,7 @@ These checks are safeguards at review time, not an execution lock or proof of au
 The shared discussion kit is a presentation layer, not a second approval store. A study-specific
 view must identify its actual task, draft path and exact revision; a demonstrator must say it is
 a demo. Recheck a view against the draft when either changes. The same source and proposed
-feedback contracts apply standalone and in a future dashboard; neither surface may start a run.
+feedback contracts apply standalone and in the Dashboard; neither surface may start a run.
 
 ## Draft contents
 
@@ -253,10 +254,10 @@ the truth of delivery, link availability or adequacy of an answer. Passing it ca
 this review or owner acceptance.
 
 This aligns with the lineage conventions in the PR113/PR138 report work. It does not claim
-their presentation has been accepted or modify those studies. Dashboard direction labels remain
-a separate follow-up after the UX branch merges (D6). The reusable interactive discussion
-layer belongs to this PR; the dashboard follow-up consumes it rather than inventing a second
-discussion or approval flow.
+their presentation has been accepted or modify those studies. The Dashboard direction entry
+uses a separate read-only discovery and the shared renderer, preserving the report index and
+study-card contract. With no actual task draft, it shows an empty state; it never promotes the
+retrospective examples into real study directions or invents another approval flow.
 
 ## Worked examples
 

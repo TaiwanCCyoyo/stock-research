@@ -43,6 +43,7 @@ export function sourceVersion(root = repoRoot) {
     const web = join(root, "research_web");
     for (const path of [
         join(web, "src"),
+        join(web, "discussion-kit"),
         join(web, "public"),
         join(web, "scripts", "build-dashboard.mjs"),
         join(web, "scripts", "research-reports.mjs"),

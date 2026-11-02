@@ -13,7 +13,9 @@ GitHub 的確認紀錄與互動頁互補；不以大量文字取代本來可以�
 
 共用程式位於 `research_web/discussion-kit/v1/`，`discussion.js` 與 `discussion.css`
 負責互動與呈現，`index.html` 是可操作的 authoring 範例。來源契約與回饋契約定義在本頁。
-獨立頁與未來 dashboard 使用同一份 model 與 renderer，不維護兩套問題或批准狀態。
+獨立頁與 Dashboard 使用同一份 model 與 renderer，不維護兩套問題或批准狀態。
+Dashboard 的研究頁可進入「討論研究方向」；`#directions` 列出目前 checkout 的草稿，
+`#direction/<task-id>` 開啟指定草稿。現在沒有真實 task 草稿時，顯示空狀態，不能把示例充作正式研究。
 
 ## 作者如何準備一次討論
 
@@ -23,6 +25,8 @@ GitHub 的確認紀錄與互動頁互補；不以大量文字取代本來可以�
    記錄 task、草稿相對路徑與確切 Git revision。相同 C／Q 保持相同 ID。
    畫面可增加白話解釋與選項影響，不能擅自改變研究承諾或捏造擁有者原話。
 3. 在新的研究 `preview/` 使用共用 renderer，或由開發環境載入同一版本資源。
+   Dashboard 使用 `tasks/<task-id>/preview/direction-discussion.json`。先提交方向草稿，再把
+   包含該草稿的完整 commit SHA 寫入 model 的 `source.revision`；草稿修改後須重新核對並更新 model。
    不改已凍結草稿，不覆寫既有 report-kit，不把 preview 塞入正式 web-report discovery。
    當前沒有 Markdown→model 自動產生器；作者與 reviewer 必須人工核對來源一致性。
 4. 對使用者給一個具體操作邀請，例如「切換這兩個研究範圍，看看哪個真正回答你的停損問題」。
@@ -66,15 +70,32 @@ GitHub 的確認紀錄與互動頁互補；不以大量文字取代本來可以�
 使用者主動複製／下載後再送回對話或 PR。此版不自動外送、不自動保存、不直接改檔，也不啟動計算。
 重新載入或切換版本會清除未匯出的選擇，頁面需明示這項限制。
 
-## 後續 dashboard 接點
+## Dashboard 唯讀接入
 
-Dashboard 的後續切片應新增草稿專用 discovery／route，再將已核對 model 交給同一 renderer，
-或承載同一 standalone page。保持正式 report discovery 只讀已交付報告，不能靠假 study-card 欄位混入草稿。
-`study-card.v2` 和 report-kit v1 都不需要加欄位。
+`research_core.direction_discussions` 只讀目前 repository 的 `tasks`；
+`research_api.direction_discussions` 提供下列 GET 路由，另有 `/api`、`/history-api` aliases。
+Frontend 的 `features/direction-discussion/` 直接掛載同一份 discussion kit，沒有額外 iframe 協定。
+正式 report discovery、`study-card.v2` 與 frozen report-kit v1 維持原契約。
 
-目前 `ReportViewer` 的 iframe 契約只有來源 frame 的 `rk:height` 與發送 `rk:theme`；
-本分支沒有 `rk:navigate` handler，也尚無 discussion route。未來 adapter 若增加高度、主題或導航，
-須實作來源與訊息驗證及解除 listener，不能只在文件宣稱已有支援。
-此版 mount／destroy 與 feedback 契約是已交付接點；dashboard 註冊和完整 iframe adapter 是後續工作。
+| 路由                          | 回應                                                                                                      |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `/direction-drafts`           | `schema: direction-drafts.v1`、`mode` 與 `items`；每列有 `taskId`、`status`、`revision`、`message`        |
+| `/direction-drafts/<task-id>` | `schema: direction-draft.v1`、`mode`、`taskId`、`status`、`revision`、`draftMarkdown`、`model`、`message` |
+
+`ready` 代表來源版本核對可用，仍須 renderer 驗證 model 並由人核對內容是否忠於草稿；
+它不表示研究已批准。`draft-only` 代表有原文、尚無互動 model；`unavailable` 代表讀取或版本核對不通過。
+此時不提供失配 model，能安全讀到的原文仍可查看；找不到指定草稿則回 404。
+
+正式 model 的 `taskId` 與 `draftPath` 必須精確指向該草稿；`demo` 必須是 false。
+讀取器檢查完整 commit SHA，並逐位元組比較該 revision 的草稿與目前草稿。
+Git 來源無法確認、路徑不安全、檔案過大或版本不符時拒絕掛載；不猜測最新版本，
+也不把原文中的勾選解析成新的批准狀態。
+
+`local-private` 才建立草稿 reader。`public-synthetic` 回空列表，detail 回 404，不碰私人路徑；
+未知模式或 `X-Research-Data-Mode` 不符時回 503。前端也核對模式、task 和 source revision，
+任務切換或元件卸載時清掉舊請求／renderer，避免沿用另一份草稿的選項。
+
+沒有 POST／批准 API、不自動回寫草稿、不載入市場資料。收到匯出後仍由代理核對版本、回填並展示差異。
+真實草稿尚未建立時，只能驗收空狀態與合成 fixture 的流程；不能宣稱真實研究已接入或取得 owner 接受。
 
 來源規則見 [direction drafts](direction-drafts.md)；本次需求見 [決策紀錄](decision-records/2026-11-02-interactive-direction-discussion.md)。

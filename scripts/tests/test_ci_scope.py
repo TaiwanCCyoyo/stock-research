@@ -1691,6 +1691,23 @@ def test_prettier_uses_an_exact_node_runtime_for_reusable_hook_cache() -> None:
 DIRECTION_DRAFT_TEST = "scripts/tests/test_direction_drafts.py"
 
 
+@pytest.mark.parametrize(
+    "path",
+    [
+        "research_core/direction_discussions.py",
+        "research_api/direction_discussions.py",
+        "research_api/main.py",
+        "tasks/20991231-new-study/preview/direction-discussion.json",
+    ],
+)
+def test_direction_discussion_sources_select_the_reader_and_frontend(path: str) -> None:
+    plan = ci_scope.make_plan([("M", path)])
+    assert not plan["full"]
+    assert plan["frontend"]
+    assert "scripts/tests/test_direction_discussions.py" in plan["python_tests"]
+    assert "tests/test_research_api.py" in plan["python_tests"]
+
+
 @pytest.mark.parametrize("status", ["A", "M"])
 @pytest.mark.parametrize(
     "path",
