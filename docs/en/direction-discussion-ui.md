@@ -46,7 +46,9 @@ GitHub 的確認紀錄與互動頁互補；不以大量文字取代本來可以�
 | `choices`                                | `{id,question,options}`，穩定 C ID；每個 option 為 `{id,label,impact}`，說明選了會改變什麼      |
 | `questions`                              | `{reference,question,status,reason,source}`；完整 `task-id#Qn`、狀態、卡點與來源說明            |
 
-`DirectionDiscussion.validateModel(model)` 檢查結構與 ID；無法驗證文字是否忠於來源。
+`DirectionDiscussion.validateModel(model)` 檢查結構與 ID；正式 model 要求完整 40 位 Git commit，
+拒絕 `main` 等會變動的別名。百分比只能寫成 `▢▢%`（或全形百分號），不能換成中文數字規避。
+這仍無法驗證文字是否忠於來源，或任意自然語言是否暗藏結果，需 reviewer 核對。
 `DirectionDiscussion.mount(element, model)` 建立同一套 view，回傳 `destroy()` 與
 `exportFeedback()`。容器卸載、切換研究或草稿版本時先 destroy 再 mount，新實例不恢復舊選擇。
 資料以 DOM textContent 呈現；不把內容當 HTML 執行。此版不使用 localStorage、遠端服務或市場 API。

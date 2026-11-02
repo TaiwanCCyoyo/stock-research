@@ -23,6 +23,10 @@
             throw new Error("請明確標示這是示例或實際草稿。");
         for (const key of ["taskId", "draftPath", "revision"])
             requireText(model.source?.[key], `來源 ${key}`);
+        if (!model.demo && !/^[a-f0-9]{40}$/i.test(model.source.revision))
+            throw new Error(
+                "正式討論須指定完整 Git commit，不能使用會變動的分支名稱。",
+            );
         requireText(model.ownerPurpose, "研究目的");
         if (!["pending", "confirmed"].includes(model.purposeStatus))
             throw new Error("目的確認狀態無法辨識。");
@@ -37,7 +41,7 @@
                 throw new Error("結果分支的識別碼無法辨識。");
             for (const key of ["title", "headline", "decision", "limitation"])
                 requireText(item[key], `結果分支 ${key}`);
-            if (/\d+(?:\.\d+)?\s*%/.test(item.headline))
+            if (/[%％]|百分之/.test(item.headline.replace(/▢▢\s*[%％]/g, "")))
                 throw new Error("假頭條請用 ▢▢% 佔位，不可填入研究結果。");
         }
         if (!Array.isArray(model.choices) || !Array.isArray(model.questions))

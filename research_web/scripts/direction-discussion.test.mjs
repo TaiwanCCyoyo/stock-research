@@ -77,6 +77,42 @@ test("new revision starts unanswered and rejects old feedback when formatting", 
     );
 });
 
+test("formal views require a fixed commit and reject feedback from another commit", () => {
+    const model = copy(example);
+    model.demo = false;
+    for (const revision of ["main", "HEAD", "v1", "b0c562d"]) {
+        model.source.revision = revision;
+        assert.throws(() => kit.createSession(model), /Git commit/);
+    }
+    model.source.revision = "a".repeat(40);
+    const feedback = kit.createSession(model).exportFeedback();
+    assert.ok(kit.toMarkdown(model, feedback).includes("尚未選擇"));
+    model.source.revision = "b".repeat(40);
+    assert.throws(() => kit.toMarkdown(model, feedback), /版本不同/);
+});
+
+test("headline percentages only use placeholders regardless of numeral or percent glyph", () => {
+    const model = copy(example);
+    for (const value of [
+        "42%",
+        "４２％",
+        "四十二%",
+        "百分之四十二",
+        "▢▢% 與 10％",
+    ]) {
+        model.outcomes[0].headline = `錯殺比例為 ${value}。`;
+        assert.throws(() => kit.validateModel(model), /佔位/);
+    }
+    for (const value of [
+        "2 倍目標的錯殺比例為 ▢▢%。",
+        "比例為 ▢▢％。",
+        "目前無法判斷。",
+    ]) {
+        model.outcomes[0].headline = value;
+        kit.validateModel(model);
+    }
+});
+
 test("feedback retains multiline notes without turning them into approval markup", () => {
     const session = kit.createSession(example);
     const notes =
