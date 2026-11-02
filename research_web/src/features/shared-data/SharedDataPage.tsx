@@ -3,6 +3,10 @@ import { artifactMode } from "../../api/artifactMode";
 import { readShared, recoverSymbolNames } from "./api";
 import {
     MA_PERIODS,
+    BASIS_LABELS,
+    BASIS_EXPLANATIONS,
+    qualityReasonLabel,
+    symbolDisplayIdentity,
     resolveSymbolInput,
     formatNumber as fmt,
     formatFeature,
@@ -34,9 +38,15 @@ import "./shared-data.css";
 export function SharedDataPage({
     code,
     theme,
+    knownName,
+    knownMarket,
+    embedded = false,
 }: {
     code?: string;
     theme: string;
+    knownName?: string;
+    knownMarket?: string;
+    embedded?: boolean;
 }) {
     const privateMode =
         artifactMode(import.meta.env.VITE_ARTIFACT_MODE) === "local-private";
@@ -111,14 +121,14 @@ export function SharedDataPage({
             setNamesNotice(
                 data.namesAvailable
                     ? ""
-                    : "每 60 秒自動重試名稱，最多 60 次；仍可用代號查詢。",
+                    : "名稱搜尋清單尚未完整載入；仍可用代號查詢，背景會自動重試。",
             );
         })
             .then((result) => {
                 if (controller.signal.aborted) return;
                 if (result === "exhausted")
                     setNamesNotice(
-                        "名稱自動重試已達 60 次上限；可手動重新啟動。",
+                        "名稱搜尋清單暫時無法補齊；可用代號查詢或手動重試。",
                     );
                 if (result === "generation-changed")
                     setNamesNotice("股票名稱資料已更新，請重新載入頁面。");
@@ -158,6 +168,13 @@ export function SharedDataPage({
     const current =
         series?.code === selected && series.basis === basis ? series : null;
     const symbol = symbols.find((item) => item.code === selected);
+    const { name: displayName, market: displayMarket } = symbolDisplayIdentity(
+        selected,
+        symbol,
+        { code, name: knownName, market: knownMarket },
+    );
+    const Heading = embedded ? "h2" : "h1";
+    const StockHeading = embedded ? "h3" : "h2";
     const institutional = useOverlay<InstitutionalRow>(
         "institutional",
         current?.code ?? null,
@@ -208,7 +225,9 @@ export function SharedDataPage({
         <section className="u-page u-wide shared-data">
             <header className="shared-heading">
                 <div>
-                    <h1 className="u-title">個股</h1>
+                    <Heading className="u-title">
+                        {embedded ? "價格與指標" : "個股檢視"}
+                    </Heading>
                 </div>
                 <div
                     className="shared-controls u-chips"
@@ -274,7 +293,9 @@ export function SharedDataPage({
                             <div className="shared-generation">
                                 {current ? (
                                     <>
-                                        <span>截至 {current.asof}</span>
+                                        <span>
+                                            圖表共用資料截至 {current.asof}
+                                        </span>
                                         <SourceInfo>
                                             <p>資料家族：adjusted-daily-v1</p>
                                             <p>
@@ -299,10 +320,14 @@ export function SharedDataPage({
                                 <div className="shared-card shared-chart-card">
                                     <div className="shared-controls shared-chart-toolbar">
                                         <div className="shared-stock-title">
-                                            <h2>{symbol?.name || selected}</h2>
+                                            <StockHeading>
+                                                {displayName}
+                                            </StockHeading>
                                             <small>
-                                                {symbol?.name ? selected : ""}{" "}
-                                                {symbol?.market}
+                                                {displayName !== selected
+                                                    ? selected
+                                                    : ""}{" "}
+                                                {displayMarket}
                                             </small>
                                         </div>
                                         <form
@@ -343,6 +368,7 @@ export function SharedDataPage({
                                         <label>
                                             價格基準{" "}
                                             <select
+                                                aria-describedby="shared-basis-description"
                                                 value={basis}
                                                 onChange={(event) =>
                                                     setBasis(
@@ -372,10 +398,17 @@ export function SharedDataPage({
                                                     setNamesRetry((n) => n + 1)
                                                 }
                                             >
-                                                重試股票名稱
+                                                重試名稱清單
                                             </button>
                                         </p>
                                     )}
+                                    <p
+                                        id="shared-basis-description"
+                                        className="shared-note"
+                                    >
+                                        {BASIS_LABELS[basis]}：
+                                        {BASIS_EXPLANATIONS[basis]}
+                                    </p>
                                     <div
                                         className="shared-controls shared-range"
                                         aria-label="顯示區間"
@@ -401,7 +434,8 @@ export function SharedDataPage({
                                     </div>
                                     {!reference && (
                                         <p className="shared-note">
-                                            技術指標與高低點僅定義於參考因子還原基準；此基準只顯示價格與成交量。
+                                            目前選擇「{BASIS_LABELS[basis]}
+                                            」，只顯示價格與成交量；技術指標與高低點請切換至「參考因子還原」。
                                         </p>
                                     )}
                                     {error ? (
@@ -477,9 +511,12 @@ export function SharedDataPage({
                                                 {!validPrice(current, day) && (
                                                     <strong>
                                                         當日資料無效：
-                                                        {current.quality_reason[
-                                                            day
-                                                        ] || "缺少 OHLC"}
+                                                        {qualityReasonLabel(
+                                                            current
+                                                                .quality_reason[
+                                                                day
+                                                            ],
+                                                        )}
                                                         （圖上留白）
                                                     </strong>
                                                 )}
@@ -717,9 +754,15 @@ export function SharedDataPage({
                                                 <div>
                                                     <dt>品質</dt>
                                                     <dd>
-                                                        {current.quality_reason[
-                                                            day
-                                                        ] ||
+                                                        {(current
+                                                            .quality_reason[day]
+                                                            ? qualityReasonLabel(
+                                                                  current
+                                                                      .quality_reason[
+                                                                      day
+                                                                  ],
+                                                              )
+                                                            : "") ||
                                                             (validPrice(
                                                                 current,
                                                                 day,
@@ -777,7 +820,11 @@ export function SharedDataPage({
                                                 {reasons.map(
                                                     ([reason, count]) => (
                                                         <div key={reason}>
-                                                            <dt>{reason}</dt>
+                                                            <dt>
+                                                                {qualityReasonLabel(
+                                                                    reason,
+                                                                )}
+                                                            </dt>
                                                             <dd>{count}</dd>
                                                         </div>
                                                     ),
@@ -787,6 +834,17 @@ export function SharedDataPage({
                                                 <p>
                                                     均線、布林與轉折全部來自共用資料，瀏覽器不重新計算。
                                                 </p>
+                                                {reasons.map(
+                                                    ([reason, count]) => (
+                                                        <p key={reason}>
+                                                            品質代碼：
+                                                            <code>
+                                                                {reason}
+                                                            </code>{" "}
+                                                            · {count} 天
+                                                        </p>
+                                                    ),
+                                                )}
                                             </SourceInfo>
                                         </div>
                                     )}

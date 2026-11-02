@@ -1,5 +1,5 @@
 import { CaveatChip, InfoTip } from "../../components/ui/InfoTip";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { SourceInfo } from "../../components/ui/primitives.tsx";
 import "./FundsPage.css";
 
@@ -178,6 +178,17 @@ export function FundsPage() {
     const [query, setQuery] = useState("");
     const [selected, setSelected] = useState("0050");
     const [compare, setCompare] = useState<string[]>([]);
+    const detailHeading = useRef<HTMLHeadingElement>(null);
+    const searchInput = useRef<HTMLInputElement>(null);
+    const selectionButton = useRef<HTMLButtonElement | null>(null);
+    const focusDetail = useRef(false);
+    const basketHeading = useRef<HTMLHeadingElement>(null);
+    useEffect(() => {
+        if (focusDetail.current) {
+            detailHeading.current?.focus();
+            focusDetail.current = false;
+        }
+    }, [selected]);
     const visible = useMemo(
         () =>
             FUNDS.filter((fund) =>
@@ -190,6 +201,9 @@ export function FundsPage() {
     const fund = FUNDS.find((item) => item.symbol === selected) ?? FUNDS[0];
     const performance = PERFORMANCE[fund.symbol];
     const compared = FUNDS.filter((item) => compare.includes(item.symbol));
+    const selectionOutsideSearch = !visible.some(
+        (item) => item.symbol === fund.symbol,
+    );
     function toggle(symbol: string) {
         setCompare((current) =>
             current.includes(symbol)
@@ -220,6 +234,7 @@ export function FundsPage() {
                 </label>
                 <input
                     id="fund-search"
+                    ref={searchInput}
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
                     placeholder="代號、名稱、市場或角色"
@@ -234,9 +249,18 @@ export function FundsPage() {
             <div className="fund-layout">
                 <section className="fund-list" aria-label="ETF 候選列表">
                     {visible.length === 0 ? (
-                        <p className="u-card u-muted">
-                            沒有符合的 ETF，請試試代號或市場名稱。
-                        </p>
+                        <div className="u-card u-muted" role="status">
+                            <p>沒有符合的 ETF，請試試代號或市場名稱。</p>
+                            <button
+                                className="u-btn"
+                                onClick={() => {
+                                    setQuery("");
+                                    searchInput.current?.focus();
+                                }}
+                            >
+                                清除搜尋
+                            </button>
+                        </div>
                     ) : (
                         visible.map((item) => (
                             <article
@@ -246,8 +270,18 @@ export function FundsPage() {
                                 <button
                                     type="button"
                                     className="fund-select"
-                                    onClick={() => setSelected(item.symbol)}
+                                    onClick={(event) => {
+                                        selectionButton.current =
+                                            event.currentTarget;
+                                        if (selected === item.symbol) {
+                                            detailHeading.current?.focus();
+                                        } else {
+                                            focusDetail.current = true;
+                                            setSelected(item.symbol);
+                                        }
+                                    }}
                                     aria-pressed={item.symbol === fund.symbol}
+                                    aria-controls="fund-detail"
                                 >
                                     <strong>{item.symbol}</strong>
                                     <span>{item.name}</span>
@@ -256,6 +290,7 @@ export function FundsPage() {
                                 <label className="fund-compare u-chip">
                                     <input
                                         type="checkbox"
+                                        aria-label={`比較 ${item.symbol} ${item.name}`}
                                         checked={compare.includes(item.symbol)}
                                         onChange={() => toggle(item.symbol)}
                                         disabled={
@@ -269,11 +304,37 @@ export function FundsPage() {
                         ))
                     )}
                 </section>
-                <section className="fund-detail u-card">
+                <section
+                    id="fund-detail"
+                    className="fund-detail u-card"
+                    aria-labelledby="fund-detail-title"
+                >
+                    {selectionOutsideSearch && (
+                        <p className="u-notice" role="status">
+                            以下保留目前查看的 {fund.symbol} {fund.name}
+                            ，不在這次搜尋結果內。
+                        </p>
+                    )}
+                    <button
+                        type="button"
+                        className="u-btn"
+                        onClick={() => {
+                            const target = selectionButton.current?.isConnected
+                                ? selectionButton.current
+                                : searchInput.current;
+                            target?.focus();
+                        }}
+                    >
+                        返回 ETF 列表
+                    </button>
                     <div className="fund-title">
                         <div>
                             <p>{fund.market}</p>
-                            <h2>
+                            <h2
+                                id="fund-detail-title"
+                                ref={detailHeading}
+                                tabIndex={-1}
+                            >
                                 {fund.symbol} {fund.name}
                             </h2>
                             <span>{fund.role}</span>
@@ -367,7 +428,21 @@ export function FundsPage() {
             <section className="fund-compare-panel u-card">
                 <div>
                     <p>比較籃</p>
-                    <h2>{compare.length ? compare.join(" · ") : "尚未選擇"}</h2>
+                    <h2 ref={basketHeading} tabIndex={-1}>
+                        {compare.length ? compare.join(" · ") : "尚未選擇"}
+                    </h2>
+                    {compare.length > 0 && (
+                        <button
+                            type="button"
+                            className="u-btn"
+                            onClick={() => {
+                                setCompare([]);
+                                basketHeading.current?.focus();
+                            }}
+                        >
+                            清空比較籃
+                        </button>
+                    )}
                 </div>
                 <button type="button" className="u-btn" disabled>
                     比較曲線（資料不足）
@@ -390,6 +465,17 @@ export function FundsPage() {
                                         {item.symbol}
                                         <small>{item.name}</small>
                                     </h3>
+                                    <button
+                                        type="button"
+                                        className="u-btn"
+                                        aria-label={`從比較籃移除 ${item.symbol} ${item.name}`}
+                                        onClick={() => {
+                                            toggle(item.symbol);
+                                            basketHeading.current?.focus();
+                                        }}
+                                    >
+                                        移除 {item.symbol}
+                                    </button>
                                     <dl>
                                         <dt>市場與用途</dt>
                                         <dd>

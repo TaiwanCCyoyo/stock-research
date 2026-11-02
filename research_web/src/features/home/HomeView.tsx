@@ -16,6 +16,16 @@ export function MarketOverview({
 }) {
     const gain = (pct: number | null | undefined) =>
         percentage((pct ?? 0) / 100, 0);
+    if (!summary.count) {
+        return (
+            <div className="u-card hm-state" role="status">
+                <p>這個日期沒有符合首頁門檻的股票。</p>
+                <a className="u-btn" href={marketCaptureLink(date)}>
+                    到地圖選其他日期或調整門檻
+                </a>
+            </div>
+        );
+    }
     return (
         <div className="hm-grid">
             <div className="u-stack">
@@ -23,7 +33,7 @@ export function MarketOverview({
                     <Kpi
                         value={summary.count}
                         unit="檔"
-                        label="正在大漲"
+                        label="符合波段門檻"
                         feature
                     />
                     <Kpi
@@ -52,7 +62,7 @@ export function MarketOverview({
                 </div>
             </div>
             <div className="u-card">
-                <h2 className="hm-card-title">漲最兇的幾檔</h2>
+                <h2 className="hm-card-title">波段漲幅指標較高的股票</h2>
                 <ul className="u-list">
                     {summary.strongest.slice(0, 7).map((row) => (
                         <li key={row.securityId}>

@@ -77,7 +77,6 @@ export function HomePage() {
             (a, b) => b.date.localeCompare(a.date) || a.id.localeCompare(b.id),
         )
         .slice(0, 3);
-    const leaders = summary?.industries.slice(0, 2).map((group) => group.label);
     const date = market.frame?.date;
     return (
         <div className="u-page hm-page">
@@ -85,17 +84,18 @@ export function HomePage() {
                 <p className="u-notice">示範資料，不是真實研究結果。</p>
             )}
             <div className="u-eyebrow">
-                市場現況{date ? ` · ${date.replaceAll("-", "/")}` : ""}
+                歷史回看{date ? ` · 截至 ${date.replaceAll("-", "/")}` : ""}
             </div>
-            <h1 className="u-title">
-                {summary
-                    ? `${summary.count} 檔股票正在大漲${leaders?.length ? `，${leaders.join("與")}領頭。` : "。"}`
-                    : "先看市場，再看研究。"}
-            </h1>
+            <h1 className="u-title">歷史行情總覽</h1>
+            <p className="u-lede">
+                回看歷史辨識的波段，不是當時已知的選股訊號。
+                首頁列出已出現起漲候選、尚未確認結束且漲幅指標達 100% 的股票；
+                滿一年採年化，未滿一年採實際漲幅。
+            </p>
             {summary && date ? (
                 <MarketOverview summary={summary} date={date} />
             ) : market.error ? (
-                <div className="u-card hm-state">
+                <div className="u-card hm-state" role="alert">
                     <p>市場資料暫時讀不到。</p>
                     <button
                         className="u-btn u-btn-primary"
@@ -129,14 +129,25 @@ export function HomePage() {
                     {studies.stale && (
                         <StudiesRefreshNotice onRetry={studies.retry} />
                     )}
-                    <div className="hm-studies">
-                        {recent.map((card) => (
-                            <StudyCardView key={card.id} card={card} compact />
-                        ))}
-                    </div>
+                    {recent.length ? (
+                        <div className="hm-studies">
+                            {recent.map((card) => (
+                                <StudyCardView
+                                    key={card.id}
+                                    card={card}
+                                    compact
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="u-card hm-state" role="status">
+                            目前沒有可顯示的近期研究。
+                            <a href="#studies">前往研究總覽</a>
+                        </p>
+                    )}
                 </>
             ) : studies.error ? (
-                <div className="u-card hm-state">
+                <div className="u-card hm-state" role="alert">
                     <p>研究資料暫時讀不到。</p>
                     <button
                         className="u-btn u-btn-primary"
@@ -154,7 +165,7 @@ export function HomePage() {
             )}
             <h2 className="u-section-title">其他工具</h2>
             <div className="hm-doors">
-                <a className="u-card" href="#overview">
+                <a className="u-card" href="#overview/stocks">
                     <b>個股</b>
                     <span className="u-muted">任一檔股票的價格與指標</span>
                 </a>

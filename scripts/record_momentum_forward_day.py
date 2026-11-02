@@ -18,7 +18,9 @@ from __future__ import annotations
 import argparse
 import logging
 import os
+import signal
 import subprocess
+import sys
 from pathlib import Path
 
 from research_core.live_producer import ProducerBusyError, assert_producer_idle
@@ -44,6 +46,39 @@ def _code_identity(repo: Path = REPO_ROOT) -> dict[str, str | bool]:
 
     dirty = bool(git("status", "--porcelain", "--untracked-files=no", "--ignore-submodules=all", "--", "."))
     return {"commit": git("rev-parse", "HEAD"), "dirty": dirty}
+
+
+def _log_stop_signals() -> None:
+    """Name the signal that stops a run.
+
+    Task Scheduler reported 0xC000013A (STATUS_CONTROL_C_EXIT) for a 2026-10-30 run whose log
+    ended normally, and nothing recorded who sent the Ctrl-C. A signal now leaves a log line
+    before the run stops. A console-window close is not a Python signal and stays unnamed.
+    """
+
+    def stop(number: int, _frame: object) -> None:
+        LOGGER.error("received signal %s (%d): stopping the run", signal.Signals(number).name, number)
+        raise KeyboardInterrupt
+
+    for name in ("SIGINT", "SIGBREAK", "SIGTERM"):
+        if (number := getattr(signal, name, None)) is not None:
+            signal.signal(number, stop)
+
+
+def run() -> int:
+    """Run `main` and return the process exit status, logging it so the log pairs with Task Scheduler's result."""
+    _log_stop_signals()
+    status = 0
+    try:
+        main()
+    except SystemExit as stop:
+        status = stop.code if isinstance(stop.code, int) else 1
+        if not isinstance(stop.code, int) and stop.code is not None:
+            LOGGER.error("%s", stop.code)
+    except KeyboardInterrupt:
+        status = 130
+    LOGGER.info("exiting record_momentum_forward_day pid=%d exit_code=%d", os.getpid(), status)
+    return status
 
 
 def main() -> None:
@@ -89,4 +124,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(run())

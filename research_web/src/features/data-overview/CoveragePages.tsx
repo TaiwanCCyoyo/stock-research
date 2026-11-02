@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { apiUrl } from "../../api/base";
 import { CaveatChip, InfoTip } from "../../components/ui/InfoTip";
-import { ProgressLine, SkeletonCards } from "../../components/ui/primitives";
+import { SkeletonCards } from "../../components/ui/primitives";
 import { SharedDataPage } from "../shared-data/SharedDataPage";
 import { restoreCoverageScroll } from "./coverageScroll";
 import {
@@ -22,7 +22,12 @@ import "./coverage.css";
 function CoverageLoading({ label }: { label: string }) {
     return (
         <div className="coverage-loading">
-            <ProgressLine label={label} done={0} total={1} />
+            <div className="u-progress" aria-hidden="true">
+                <span>{label}</span>
+                <span className="u-track">
+                    <span />
+                </span>
+            </div>
             <SkeletonCards
                 count={2}
                 className="coverage-skeleton-grid"
@@ -185,6 +190,10 @@ export function StockCoverageList() {
     };
     return (
         <section className="coverage-list">
+            <h1 className="u-title">股票資料涵蓋</h1>
+            <p className="u-lede">
+                搜尋證券，確認各資料的涵蓋期間與缺口，再開啟個股檢視。
+            </p>
             <form
                 className="coverage-filters"
                 onSubmit={(e) => {
@@ -315,11 +324,17 @@ export function StockCoverageList() {
             {data && data.status !== "unavailable" && (
                 <>
                     <p className="coverage-counts">
-                        {data.total.toLocaleString()} 檔 · 缺漏{" "}
-                        {data.confirmed_missing} · 尚待確認 {data.unknown}
+                        目前篩選：{data.total.toLocaleString()}{" "}
+                        個證券身分；其中有已知缺漏{" "}
+                        {data.confirmed_missing.toLocaleString()}{" "}
+                        個、有未確認資料 {data.unknown.toLocaleString()} 個
                         <InfoTip>
-                            依目前篩選計算；有資料不等於歷史完整。近期有資料不等於已確認上市中，歷史觀察也不等於已下市。
+                            以證券身分計數，不是資料列數；同一身分可能同時有缺漏與未確認資料，兩個數字不能相加。有資料不等於歷史完整，近期有資料也不等於已確認上市中。
                         </InfoTip>
+                    </p>
+                    <p className="u-muted">
+                        摘要建立時間：{data.built_at ?? "未提供"}
+                        。以下狀態數保留其他篩選，但不套用「範圍」；各狀態可能重疊。
                     </p>
                     <div className="coverage-hidden">
                         <button
@@ -673,6 +688,9 @@ export function StockCoverageDetail({
                             ? " · 已確認下市"
                             : ""}
                     </p>
+                    <p className="u-notice">
+                        以下是上次檢查保存的涵蓋摘要；圖表另讀共用行情，更新時間可能不同。各卡標示涵蓋到哪一天，檢查時間在卡片下方。
+                    </p>
                     {stock.identity_status === "unresolved" && (
                         <p className="u-notice">
                             歷史身分待確認 ·{" "}
@@ -722,6 +740,9 @@ export function StockCoverageDetail({
                                               " 筆"}{" "}
                                         · {cell.period.from ?? "?"} ～{" "}
                                         {cell.period.to ?? "?"}
+                                    </p>
+                                    <p className="u-muted coverage-checked-at">
+                                        摘要檢查：{cell.checked_at ?? "未確認"}
                                     </p>
                                     <InfoTip>
                                         {cell.reasons.map((reason) => (
@@ -821,6 +842,14 @@ export function StockCoverageDetail({
                                                     <SharedDataPage
                                                         key={stock.key}
                                                         code={stock.code}
+                                                        knownName={
+                                                            stock.name ??
+                                                            undefined
+                                                        }
+                                                        knownMarket={
+                                                            stock.market
+                                                        }
+                                                        embedded
                                                         theme={theme}
                                                     />
                                                 )}

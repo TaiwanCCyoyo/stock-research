@@ -102,6 +102,7 @@ export function HistoryRanking({
                             <button
                                 key={row.securityId}
                                 className={`fh-rank-row u-card ${selectedId === row.securityId ? "is-selected" : ""}`}
+                                aria-pressed={selectedId === row.securityId}
                                 onClick={() => onSelect(row.securityId)}
                             >
                                 <span className="fh-rank-name">
@@ -138,27 +139,38 @@ export function HistoryRanking({
                                         {growthBasisLabel(row.growth)}
                                     </small>
                                     <small>起漲日 {row.start}</small>
-                                    {comparisons.map((comparison, i) => {
-                                        const stock = comparison.stocks.find(
-                                            (s) =>
-                                                s.securityId === row.securityId,
-                                        );
-                                        return (
-                                            <small
-                                                key={comparison.portfolio.id}
-                                                style={{
-                                                    color: `var(--compare-${i + 1})`,
-                                                }}
-                                            >
-                                                {stock?.held === "held"
-                                                    ? "有持有"
-                                                    : stock?.held === "not-held"
-                                                      ? "未持有"
-                                                      : "持股未知"}
-                                            </small>
-                                        );
-                                    })}
                                 </span>
+                                {comparisons.length > 0 && (
+                                    <span className="fh-rank-holdings">
+                                        {comparisons.map((comparison, i) => {
+                                            const stock =
+                                                comparison.stocks.find(
+                                                    (s) =>
+                                                        s.securityId ===
+                                                        row.securityId,
+                                                );
+                                            return (
+                                                <small
+                                                    key={
+                                                        comparison.portfolio.id
+                                                    }
+                                                    style={{
+                                                        color: `var(--compare-${i + 1})`,
+                                                    }}
+                                                >
+                                                    {comparison.portfolio.name}
+                                                    ：
+                                                    {stock?.held === "held"
+                                                        ? "有持有"
+                                                        : stock?.held ===
+                                                            "not-held"
+                                                          ? "未持有"
+                                                          : "持股未知"}
+                                                </small>
+                                            );
+                                        })}
+                                    </span>
+                                )}
                             </button>
                         ))}
                         {!shown.length && (
