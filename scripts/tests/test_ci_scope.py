@@ -122,6 +122,8 @@ def test_forward_v3_dependencies_keep_shared_and_unknown_full_fallback(status: s
         "tasks/20261027-entry-window/bootstrap-handoff.md",
         "research_core/entry_window_inputs_v1.py",
         "tasks/20261027-entry-window/reader-staging-handoff.md",
+        "research_core/entry_window_assembly_v1.py",
+        "tasks/20261027-entry-window/assembly-handoff.md",
     ],
 )
 def test_entry_window_owned_paths_select_exact_domain(status: str, source: str) -> None:
@@ -130,6 +132,7 @@ def test_entry_window_owned_paths_select_exact_domain(status: str, source: str) 
         "scripts/tests/test_entry_window_v1.py",
         "scripts/tests/test_entry_window_bootstrap_v1.py",
         "scripts/tests/test_entry_window_inputs_v1.py",
+        "scripts/tests/test_entry_window_assembly_v1.py",
     }
     assert not plan["full"] and not plan["frontend"]
     assert plan["domains"] == ["entry_window"]
@@ -197,6 +200,7 @@ def test_entry_window_canonical_dependencies_preserve_exact_existing_consumers(s
     assert "scripts/tests/test_entry_window_v1.py" in expected
     assert "scripts/tests/test_entry_window_bootstrap_v1.py" in expected
     assert "scripts/tests/test_entry_window_inputs_v1.py" in expected
+    assert "scripts/tests/test_entry_window_assembly_v1.py" in expected
 
 
 def test_unknown_entry_window_sources_keep_full_fallback() -> None:
@@ -1533,6 +1537,7 @@ def test_multi_timeframe_counts_actual_upstreams_preserve_suites(status: str, so
         "scripts/tests/test_entry_window_v1.py",
         "scripts/tests/test_entry_window_bootstrap_v1.py",
         "scripts/tests/test_entry_window_inputs_v1.py",
+        "scripts/tests/test_entry_window_assembly_v1.py",
     } <= set(plan["python_tests"])
 
 
