@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { SourceInfo } from "../../components/ui/primitives";
+import { VersionIdentity } from "./VersionIdentity";
 import {
     groupCatalog,
     selectedCatalogVersion,
     metadataText,
     versionLabel,
+    compactVersionLabel,
     type CatalogEntry,
     type Families,
 } from "./model";
@@ -27,12 +29,13 @@ function CatalogCard({ entries }: { entries: CatalogEntry[] }) {
                         value={entry.version_id}
                         onChange={(event) => setVersion(event.target.value)}
                     >
-                        {entries.map((item, i) => (
+                        {entries.map((item, index) => (
                             <option
                                 key={item.version_id}
                                 value={item.version_id}
                             >
-                                資料 {i + 1}
+                                {index + 1}.{" "}
+                                {compactVersionLabel(item.version_id)}
                                 {item.recommended === true ? " · 建議選用" : ""}
                             </option>
                         ))}
@@ -43,6 +46,11 @@ function CatalogCard({ entries }: { entries: CatalogEntry[] }) {
                 {entry.coverage?.raw_input_period?.start ?? "期間未提供"} –{" "}
                 {entry.coverage?.raw_input_period?.end ?? "未提供"}
             </p>
+            <div className="shared-note shared-catalog-identity">
+                資料集：{entry.data_id}
+                <br />
+                <VersionIdentity version={entry.version_id} />
+            </div>
             <p>
                 涵蓋股票：
                 {entry.viewer_metadata?.security_count != null
