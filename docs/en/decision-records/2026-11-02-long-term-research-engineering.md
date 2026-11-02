@@ -188,3 +188,9 @@ reader → 原 PR61 stock_daily → CanonicalPacket**。上包已補 RawQuotePac
 inputs／count／bootstrap／assembly 與補齊依賴傳播的 selector **816 passed in 27.64s**。
 Terra 最終唯讀審查無可操作 findings。新測試會隨原計算的十一個已知上游改動一起選取；
 `derived_features.py` 保留既有 full fallback。沒有變更原計算或任何已發布結果讀取程式。
+
+交付為 [draft PR #152](https://github.com/TaiwanCCyoyo/stock-research/pull/152)。
+工程提交 `f8fbfa237ce147de478855743819e9412ad4bc80` 的正常 hooks 全過；Terra 已核對
+同一不可變提交，無新增可操作 findings。`entry-window-canonical-reader` 是本 session
+唯一保留的工程工作樹，供 open PR 後續 CI／審查使用；#146、#150、#151 工作樹已移除。
+Draft 的 hosted CI／review 依最新 HEAD 的 GitHub 紀錄判定，不替代市場或報告驗收。
