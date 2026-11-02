@@ -54,7 +54,7 @@ def test_forward_v3_owned_paths_select_exact_candidate_suite(status: str, source
         ("scripts/record_momentum_forward_day_v2.py", {"momentum_forward_v2", "momentum_forward_v3"}),
         (
             "research_core/maintained_adjusted_daily.py",
-            {"research_data", "annual", "pattern_scan", "strength_flags", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3"},
+            {"entry_window", "research_data", "annual", "pattern_scan", "strength_flags", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3"},
         ),
         (
             "research_core/live_producer.py",
@@ -124,6 +124,8 @@ def test_forward_v3_dependencies_keep_shared_and_unknown_full_fallback(status: s
         "tasks/20261027-entry-window/reader-staging-handoff.md",
         "research_core/entry_window_assembly_v1.py",
         "tasks/20261027-entry-window/assembly-handoff.md",
+        "research_core/entry_window_raw_quotes_v1.py",
+        "tasks/20261027-entry-window/raw-reader-handoff.md",
     ],
 )
 def test_entry_window_owned_paths_select_exact_domain(status: str, source: str) -> None:
@@ -133,6 +135,8 @@ def test_entry_window_owned_paths_select_exact_domain(status: str, source: str) 
         "scripts/tests/test_entry_window_bootstrap_v1.py",
         "scripts/tests/test_entry_window_inputs_v1.py",
         "scripts/tests/test_entry_window_assembly_v1.py",
+        "scripts/tests/test_entry_window_raw_quotes_v1.py",
+        "scripts/tests/test_entry_window_raw_reader_v1.py",
     }
     assert not plan["full"] and not plan["frontend"]
     assert plan["domains"] == ["entry_window"]
@@ -201,6 +205,8 @@ def test_entry_window_canonical_dependencies_preserve_exact_existing_consumers(s
     assert "scripts/tests/test_entry_window_bootstrap_v1.py" in expected
     assert "scripts/tests/test_entry_window_inputs_v1.py" in expected
     assert "scripts/tests/test_entry_window_assembly_v1.py" in expected
+    assert "scripts/tests/test_entry_window_raw_quotes_v1.py" in expected
+    assert "scripts/tests/test_entry_window_raw_reader_v1.py" in expected
 
 
 def test_unknown_entry_window_sources_keep_full_fallback() -> None:
@@ -219,7 +225,7 @@ def test_unknown_entry_window_sources_keep_full_fallback() -> None:
         ),
         (
             "research_core/maintained_adjusted_daily.py",
-            {"research_data", "annual", "pattern_scan", "tenbagger_drivers", "strength_flags", "momentum_forward_v2", "momentum_forward_v3"},
+            {"entry_window", "research_data", "annual", "pattern_scan", "tenbagger_drivers", "strength_flags", "momentum_forward_v2", "momentum_forward_v3"},
         ),
         (
             "research_core/live_producer.py",
@@ -371,7 +377,7 @@ def test_tenbagger_domain_registers_its_sources(status: str, path: str) -> None:
         ("research_core/live_producer.py", {"research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3"}),
         (
             "research_core/maintained_adjusted_daily.py",
-            {"research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3"},
+            {"entry_window", "research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3"},
         ),
         (
             "research_core/scratch_runs.py",
@@ -1482,14 +1488,43 @@ def test_checkout_identity_consumer_is_selected_for_test_and_eol_policy(change: 
 def test_multi_timeframe_ma_owned_paths(status: str, source: str) -> None:
     plan = ci_scope.make_plan([(status, source)])
     assert not plan["full"] and not plan["frontend"]
-    assert plan["domains"] == ["multi_timeframe_ma"]
+    is_calendar_dependency = source in {"research_core/multi_timeframe_ma_core_v1.py", "research_core/multi_timeframe_ma_weeks_v1.py"}
+    assert set(plan["domains"]) == {"multi_timeframe_ma"} | ({"order_card_freshness"} if is_calendar_dependency else set())
     expected = {
         "scripts/tests/test_multi_timeframe_ma_core_v1.py",
         "scripts/tests/test_multi_timeframe_ma_panel_v1.py",
         "scripts/tests/test_multi_timeframe_ma_weeks_v1.py",
         "scripts/tests/test_multi_timeframe_ma_counts_v1.py",
     }
+    if is_calendar_dependency:
+        expected |= {"scripts/tests/test_order_card_freshness_v1.py", "scripts/tests/test_order_card_freshness_cli.py"}
     assert set(plan["python_tests"]) == expected
+
+
+@pytest.mark.parametrize("status", ["A", "M"])
+@pytest.mark.parametrize(
+    "source",
+    [
+        "research_core/order_card_freshness_v1.py",
+        "research_core/order_card_freshness_json_v1.py",
+        "scripts/check_order_card_freshness.py",
+        "tasks/20261102-order-card-freshness/data-contract.md",
+        "tasks/20261102-order-card-freshness/implementation-handoff.md",
+        "tasks/20261102-order-card-freshness/synthetic-packet.json",
+    ],
+)
+def test_order_card_freshness_owned_paths(status: str, source: str) -> None:
+    plan = ci_scope.make_plan([(status, source)])
+    assert not plan["full"] and not plan["frontend"]
+    assert plan["domains"] == ["order_card_freshness"]
+    assert set(plan["python_tests"]) == {"scripts/tests/test_order_card_freshness_v1.py", "scripts/tests/test_order_card_freshness_cli.py"}
+
+
+@pytest.mark.parametrize("status", ["A", "M"])
+def test_unknown_order_card_freshness_keeps_full_fallback(status: str) -> None:
+    plan = ci_scope.make_plan([(status, "research_core/order_card_freshness_unreviewed_v2.py")])
+    assert plan["full"] and plan["frontend"]
+    assert plan["python_tests"] == ci_scope.test_inventory(ci_scope.ROOT, ci_scope.load_manifest())
 
 
 @pytest.mark.parametrize("status", ["A", "M"])
@@ -1657,3 +1692,59 @@ def test_prettier_uses_an_exact_node_runtime_for_reusable_hook_cache() -> None:
     version = prettier.get("language_version") or config["default_language_version"]["node"]
     parts = version.split(".")
     assert len(parts) == 3 and all(part.isascii() and part.isdigit() for part in parts), version
+
+
+DIRECTION_DRAFT_TEST = "scripts/tests/test_direction_drafts.py"
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "research_core/direction_discussions.py",
+        "research_api/direction_discussions.py",
+        "research_api/main.py",
+        "tasks/20991231-new-study/preview/direction-discussion.json",
+    ],
+)
+def test_direction_discussion_sources_select_the_reader_and_frontend(path: str) -> None:
+    plan = ci_scope.make_plan([("M", path)])
+    assert not plan["full"]
+    assert plan["frontend"]
+    assert "scripts/tests/test_direction_discussions.py" in plan["python_tests"]
+    assert "tests/test_research_api.py" in plan["python_tests"]
+
+
+@pytest.mark.parametrize("status", ["A", "M"])
+@pytest.mark.parametrize(
+    "path",
+    [
+        "tasks/20991231-new-study/report.md",
+        "tasks/20991231-new-study/web-report/index.html",
+        "tasks/20991231-new-study/results/summary.parquet",
+        "tasks/20991231-new-study/runs/run-1/summary.parquet",
+        "tasks/20991231-new-study/run_receipt.json",
+        "tasks/20991231-new-study/run-receipt.json",
+        "docs/en/templates/direction-draft-pr.md",
+        "scripts/tests/fixtures/direction_drafts/ok-minimal/tasks/20261101-ok-minimal/direction-draft.md",
+    ],
+)
+def test_direction_draft_closeout_and_fixture_inputs_select_the_validator(status: str, path: str) -> None:
+    plan = ci_scope.make_plan([(status, path)])
+    assert not plan["full"]
+    assert "direction_drafts" in plan["domains"]
+    assert DIRECTION_DRAFT_TEST in plan["python_tests"]
+
+
+def test_direction_draft_closeout_selection_adds_only_the_validator() -> None:
+    """A report-only change must not widen the plan beyond the new validator."""
+    baseline = ci_scope.make_plan([("M", "tasks/20991231-new-study/notes.md")])
+    for path in (
+        "tasks/20991231-new-study/report.md",
+        "tasks/20991231-new-study/web-report/index.html",
+        "tasks/20991231-new-study/results/summary.parquet",
+        "tasks/20991231-new-study/runs/run-1/summary.parquet",
+        "tasks/20991231-new-study/run_receipt.json",
+        "tasks/20991231-new-study/run-receipt.json",
+    ):
+        plan = ci_scope.make_plan([("M", path)])
+        assert set(plan["python_tests"]) - set(baseline["python_tests"]) <= {DIRECTION_DRAFT_TEST}

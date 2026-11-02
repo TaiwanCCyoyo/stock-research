@@ -348,3 +348,32 @@ S7 的首次確認、延遲確認、多週同日確認與空週接續尚待方�
 與 [week handoff](../../tasks/20261027-multi-timeframe-ma/week-calendar-handoff.md) 的限制保留，
 universal scale-invariance 仍為 **UNSATISFIED**。O2 的 finite G／receipt event 限制、部署 gate 及首個未來準時日確認
 均未解除；本次不重新核實或更動正式 root、服務、排程、資料與市場結果。
+
+### 2026-11-02 接續：P1 的資料新鮮度前置檢查
+
+E1 整合 [#146](https://github.com/TaiwanCCyoyo/stock-research/pull/146) 已合併，
+merge commit 為 `3d4378a49e80c25c6d59e50bd9f53334bf56b5f7`。Owner 後續指示可繼續的
+工程先繼續，報告最後頁面保留本人確認；這不新增市場運算或研究參數授權。
+
+下一包選 P1-A `order-card-freshness.v1`：沿用 P1「未到最新交易日就不出卡」的規則，
+先做顯式輸入的純檢查與 JSON CLI。它重用既有日曆證據，要求預期交易日至決策日每天有
+已知狀態，逐源比對日期、可得時間、定義、世代與股票池；未知或落後都拒絕繼續。
+這不依賴報告外觀、新策略、S7 跨週方法或 O2 發布事件決策，因此可獨立交付。
+入口為[契約](../../tasks/20261102-order-card-freshness/data-contract.md)及
+[實作交接](../../tasks/20261102-order-card-freshness/implementation-handoff.md)。
+
+本包不產生卡片、不連真實資料、不選策略必要資料清單；通過只證明宣告的一致性。
+正式來源認證、策略及卡片生成、產品使用與 F1 起算仍須各自的後續工程與授權。
+#137 的互動討論／JSON 下載整合由原 owner 處理，本包不改該範圍。
+
+### 2026-11-02 再接續：E1 原始報價接入
+
+P1-A [#150](https://github.com/TaiwanCCyoyo/stock-research/pull/150) 已合併至
+`4355d11`。下一包接合 maintained adjusted-daily 的既有 raw reader 與 E1 `RawQuotePacket`，
+詳見[接入契約與交接](../../tasks/20261027-entry-window/raw-reader-handoff.md)。
+單股、世代、cutoff、日曆與 provenance 固定；缺價和品質理由保留，重複來源不默選第一筆。
+只以人工 generation 驗證，不開真實市場研究。這不是完整 E1 reader／runner：canonical
+labels、interval event／quote quality、官方日曆與 bounds、資料／資源／計算 gates 仍待接續。
+
+P1 卡片生成與 P2 持股對帳不由本包代選規則；P2 尚需 F1 及確定的昨日卡片／持股輸入契約。
+已有 account、lifecycle 與 ledger API 應重用，避免增造尚無消費用途的平行實作。

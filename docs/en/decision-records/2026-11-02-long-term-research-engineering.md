@@ -80,3 +80,77 @@ O2 的 finite G／receipt event 限制保留；內容發布、receipt 可讀與 
 [發布契約分支](https://github.com/TaiwanCCyoyo/stock-research/blob/codex/forward-publication-contract/tasks/20261027-forward-publication-deadline/data-contract.md)
 及[既有恢復交接](../../../tasks/20261027-forward-attempt-recovery/codex-handoff.md)的缺口、部署 gate 與
 首個未來準時日確認仍由原負責工作處理。本次不改變 G 的有限邊界或重新核實 production 狀態。
+
+## 2026-11-02 後續工程：P1-A
+
+本段追加較晚狀態，上方 draft 交付與依賴表保留為當時紀錄。#146 已核實合併，merge SHA
+`3d4378a49e80c25c6d59e50bd9f53334bf56b5f7`；其 Windows CI 共 739 tests 通過，
+並有[合併前獨立工程審查](https://github.com/TaiwanCCyoyo/stock-research/pull/146#issuecomment-6567647373)。
+Primary main 已快轉至該提交；原 session 的 `entry-window-assembly` 工作樹及本地分支，
+在確認 clean、無獨有資料／scratch run 或使用中的程序後移除。其他工作樹保持原狀。
+
+Owner 於 06:12 UTC 的新指示允許可繼續的工程先繼續，只有報告最後頁面需要本人確認。
+主線重新盤點 roadmap、open PR、工作樹與目前工作，未發現 P1 同範圍實作；#137 的互動
+討論及 JSON 下載整合仍由原 owner 負責。本次另建隔離工作樹 `order-card-freshness`，
+分支 `codex/order-card-freshness`，從上述 main 開始。
+
+選定里程碑是 **P1-A 純資料新鮮度前置檢查與顯式 JSON CLI**。P1 已要求「不是最新交易日
+就不出卡」，這個必要條件可先落實，不需選擇新研究方法、策略／停損／部位參數或卡片外觀。
+既有 Dashboard 顯示容許較寬鬆的日期差，不能替代每日卡片檢查；既有前瞻 cohort 規則也
+不能直接當成通用 P1。實作前先記錄[資料契約](../../../tasks/20261102-order-card-freshness/data-contract.md)，
+重用既有日曆證據原語，只新增公開日期範圍檢查，不改 S7 的週線評估與未定跨週方法。
+
+三個 `gpt-6.1-sol` 子代理分別負責純核心／日曆擴充、合成驗證、JSON／CLI；
+`gpt-6.1-terra` 獨立審查，主線獨佔 CI、正式文件與 Git index。各檔案維持唯一 writer。
+實際 API、完整人工封包與未完成接口見[交接](../../../tasks/20261102-order-card-freshness/implementation-handoff.md)。
+本包不讀市場、不計算結果、不部署，不解除報告本人接受、E2/E3、S7 或 O2 邊界。
+
+P1-A 本機驗證：核心／CLI、既有 S7 core／week 與 CI selector 首跑 **706 passed**，
+另 1 項發現新測試清單排序錯誤；只修正 manifest 排序後，受影響 selector 的
+**35 tests passed in 0.52s**。交接的完整人工封包 CLI 實跑 exit 0，保留三個日曆日、
+一個 dataset 與來源限制，沒有輸出檔案。Terra 審查的兩項 MEDIUM 已修正並覆蓋回歸：
+移除純核心 logging callback；讀取重用嚴格 JSON parser，拒絕重複欄位。最後唯讀審查
+沒有其他可操作 findings。正常 hooks 與 hosted CI 以交付提交及 PR 證據為準。
+
+交付為 [draft PR #150](https://github.com/TaiwanCCyoyo/stock-research/pull/150)。
+工程提交 `0614ad736c524e2af653c4e276352b3d1b6e1d38` 的正常 hooks 全過，含 Mypy、
+Pyright、Ruff；Terra 已對同一不可變提交確認無未解可操作 findings。本工作樹保留供
+open PR 跟進；hosted CI／review 以 PR 最新 HEAD 為準，不代表報告本人接受或產品啟用。
+
+## 2026-11-02 再接續：E1 raw quote 接入
+
+#150 已由父協調依既有授權 squash merge，merge SHA 為
+`4355d11fccdbc0a509aa7cc4b5c6d4305f1d272a`。Ready 後 Windows CI
+[41401331545](https://github.com/TaiwanCCyoyo/stock-research/actions/runs/41401331545)
+成功，1122 tests；[父端獨立審查](https://github.com/TaiwanCCyoyo/stock-research/pull/150#issuecomment-6570818064)
+及 hosted review 覆蓋最終 HEAD，無未解重要缺陷。Primary main 已快轉，原
+`order-card-freshness` 工作樹及本地分支經保存／使用狀態核對後移除，遠端分支已不存在。
+
+重新讀取 #98／#99、最新 roadmap、open PR 與工作狀態後，選擇 **E1 maintained raw quote
+adapter**，從上述 main 建立 `codex/entry-window-raw-reader`／同名工作樹。它接合既有
+`read_adjusted_daily` 與 `RawQuotePacket`，是 staging handoff 已列出的實際來源缺口。
+實作前記錄[接入契約](../../../tasks/20261027-entry-window/raw-reader-handoff.md)。
+
+本輪未接續 P1／P2：P1 尚需可產卡的規則，P2 位於 F1 之後且缺昨日卡片與成本／多批買進日
+語義；現有 `AccountState`、order lifecycle、ledger 與 decision API 已可重用，不再另造
+通用帳戶骨架。#137 與報告介面仍由既有 owner 處理。
+
+新 adapter 固定單股、世代、cutoff 與 caller calendar，保留 Raw OHLC、日別品質與來源紀錄；
+不從 masked OHLC 還原、不排序或補價。來源重複報價已失去另一筆真值時，整個呼叫失敗，
+不能默默刪股而改變研究分母。原始資料精度、官方日曆、完整事件覆蓋與 labels 仍不能由
+宣告一致性自證。Reader 功能只在人工 temporary generation 驗證，未開啟真實市場資料。
+
+SOL workers 分別負責核心接入、純邊界合成測試與真實 public reader 的人工 generation
+整合；Terra 獨立核對契約與最終實作。主線獨佔正式文件、CI 與 Git index。後續執行仍須
+資料 admission、generation retention／hold 協調、原 labels／parity、完整 interval quality、
+資源量測與計算授權。本包不產結果、不啟動 F1、不部署，也不解除報告本人確認。
+
+本機實跑：人工 generation reader／CI selector **384 passed in 63.18s**；
+原生 dtype 檢查完成後，pure adapter 與既有 E1 inputs／count／assembly
+**382 passed in 5.28s**。兩輪都只使用人工輸入。Terra 最終獨立唯讀審查無可操作 findings；
+正常 hooks／hosted CI 與正式 PR 連結在交付後記錄，不把工程通過當研究完成。
+
+交付為 [draft PR #151](https://github.com/TaiwanCCyoyo/stock-research/pull/151)。
+工程提交 `ad33afeeae4618fc93c3f9ebd729a0f211abdb6a` 的正常 hooks 全過；Terra 已核對
+同一不可變提交，無未解可操作 findings。`entry-window-raw-reader` 工作樹保留供 open PR
+跟進；hosted CI／review 以最新 HEAD 的 GitHub 紀錄為準。
