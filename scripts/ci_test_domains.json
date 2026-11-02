@@ -625,7 +625,8 @@
             "paths": [
                 "research_core/report_preview.py",
                 "scripts/report_preview.py",
-                ".github/workflows/report-preview.yml"
+                ".github/workflows/report-preview.yml",
+                ".github/workflows/report-preview-trigger.yml"
             ],
             "tests": ["scripts/tests/test_report_preview.py"]
         }
