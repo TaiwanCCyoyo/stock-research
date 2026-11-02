@@ -575,6 +575,20 @@
                 "scripts/tests/test_multi_timeframe_ma_counts_v1.py"
             ]
         },
+        "order_card_freshness": {
+            "paths": [
+                "research_core/order_card_freshness_v1.py",
+                "research_core/order_card_freshness_json_v1.py",
+                "scripts/check_order_card_freshness.py",
+                "tasks/20261102-order-card-freshness/*",
+                "research_core/multi_timeframe_ma_core_v1.py",
+                "research_core/multi_timeframe_ma_weeks_v1.py"
+            ],
+            "tests": [
+                "scripts/tests/test_order_card_freshness_v1.py",
+                "scripts/tests/test_order_card_freshness_cli.py"
+            ]
+        },
         "entry_window": {
             "paths": [
                 "research_core/entry_window_v1.py",
@@ -755,6 +769,8 @@
         "scripts/tests/test_opportunity_snapshot_wal.py",
         "scripts/tests/test_opportunity_startup_cache.py",
         "scripts/tests/test_optional_research_dependencies.py",
+        "scripts/tests/test_order_card_freshness_cli.py",
+        "scripts/tests/test_order_card_freshness_v1.py",
         "scripts/tests/test_owner_hhhl_labels.py",
         "scripts/tests/test_pattern_scan_analysis_v1.py",
         "scripts/tests/test_pattern_scan_audit_v1.py",

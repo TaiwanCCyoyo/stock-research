@@ -80,3 +80,34 @@ O2 的 finite G／receipt event 限制保留；內容發布、receipt 可讀與 
 [發布契約分支](https://github.com/TaiwanCCyoyo/stock-research/blob/codex/forward-publication-contract/tasks/20261027-forward-publication-deadline/data-contract.md)
 及[既有恢復交接](../../../tasks/20261027-forward-attempt-recovery/codex-handoff.md)的缺口、部署 gate 與
 首個未來準時日確認仍由原負責工作處理。本次不改變 G 的有限邊界或重新核實 production 狀態。
+
+## 2026-11-02 後續工程：P1-A
+
+本段追加較晚狀態，上方 draft 交付與依賴表保留為當時紀錄。#146 已核實合併，merge SHA
+`3d4378a49e80c25c6d59e50bd9f53334bf56b5f7`；其 Windows CI 共 739 tests 通過，
+並有[合併前獨立工程審查](https://github.com/TaiwanCCyoyo/stock-research/pull/146#issuecomment-6567647373)。
+Primary main 已快轉至該提交；原 session 的 `entry-window-assembly` 工作樹及本地分支，
+在確認 clean、無獨有資料／scratch run 或使用中的程序後移除。其他工作樹保持原狀。
+
+Owner 於 06:12 UTC 的新指示允許可繼續的工程先繼續，只有報告最後頁面需要本人確認。
+主線重新盤點 roadmap、open PR、工作樹與目前工作，未發現 P1 同範圍實作；#137 的互動
+討論及 JSON 下載整合仍由原 owner 負責。本次另建隔離工作樹 `order-card-freshness`，
+分支 `codex/order-card-freshness`，從上述 main 開始。
+
+選定里程碑是 **P1-A 純資料新鮮度前置檢查與顯式 JSON CLI**。P1 已要求「不是最新交易日
+就不出卡」，這個必要條件可先落實，不需選擇新研究方法、策略／停損／部位參數或卡片外觀。
+既有 Dashboard 顯示容許較寬鬆的日期差，不能替代每日卡片檢查；既有前瞻 cohort 規則也
+不能直接當成通用 P1。實作前先記錄[資料契約](../../../tasks/20261102-order-card-freshness/data-contract.md)，
+重用既有日曆證據原語，只新增公開日期範圍檢查，不改 S7 的週線評估與未定跨週方法。
+
+三個 `gpt-6.1-sol` 子代理分別負責純核心／日曆擴充、合成驗證、JSON／CLI；
+`gpt-6.1-terra` 獨立審查，主線獨佔 CI、正式文件與 Git index。各檔案維持唯一 writer。
+實際 API、完整人工封包與未完成接口見[交接](../../../tasks/20261102-order-card-freshness/implementation-handoff.md)。
+本包不讀市場、不計算結果、不部署，不解除報告本人接受、E2/E3、S7 或 O2 邊界。
+
+P1-A 本機驗證：核心／CLI、既有 S7 core／week 與 CI selector 首跑 **706 passed**，
+另 1 項發現新測試清單排序錯誤；只修正 manifest 排序後，受影響 selector 的
+**35 tests passed in 0.52s**。交接的完整人工封包 CLI 實跑 exit 0，保留三個日曆日、
+一個 dataset 與來源限制，沒有輸出檔案。Terra 審查的兩項 MEDIUM 已修正並覆蓋回歸：
+移除純核心 logging callback；讀取重用嚴格 JSON parser，拒絕重複欄位。最後唯讀審查
+沒有其他可操作 findings。正常 hooks 與 hosted CI 以交付提交及 PR 證據為準。
