@@ -365,3 +365,15 @@ merge commit 為 `3d4378a49e80c25c6d59e50bd9f53334bf56b5f7`。Owner 後續指示
 本包不產生卡片、不連真實資料、不選策略必要資料清單；通過只證明宣告的一致性。
 正式來源認證、策略及卡片生成、產品使用與 F1 起算仍須各自的後續工程與授權。
 #137 的互動討論／JSON 下載整合由原 owner 處理，本包不改該範圍。
+
+### 2026-11-02 再接續：E1 原始報價接入
+
+P1-A [#150](https://github.com/TaiwanCCyoyo/stock-research/pull/150) 已合併至
+`4355d11`。下一包接合 maintained adjusted-daily 的既有 raw reader 與 E1 `RawQuotePacket`，
+詳見[接入契約與交接](../../tasks/20261027-entry-window/raw-reader-handoff.md)。
+單股、世代、cutoff、日曆與 provenance 固定；缺價和品質理由保留，重複來源不默選第一筆。
+只以人工 generation 驗證，不開真實市場研究。這不是完整 E1 reader／runner：canonical
+labels、interval event／quote quality、官方日曆與 bounds、資料／資源／計算 gates 仍待接續。
+
+P1 卡片生成與 P2 持股對帳不由本包代選規則；P2 尚需 F1 及確定的昨日卡片／持股輸入契約。
+已有 account、lifecycle 與 ledger API 應重用，避免增造尚無消費用途的平行實作。

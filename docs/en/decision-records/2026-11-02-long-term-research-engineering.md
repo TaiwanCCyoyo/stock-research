@@ -116,3 +116,41 @@ P1-A 本機驗證：核心／CLI、既有 S7 core／week 與 CI selector 首跑 
 工程提交 `0614ad736c524e2af653c4e276352b3d1b6e1d38` 的正常 hooks 全過，含 Mypy、
 Pyright、Ruff；Terra 已對同一不可變提交確認無未解可操作 findings。本工作樹保留供
 open PR 跟進；hosted CI／review 以 PR 最新 HEAD 為準，不代表報告本人接受或產品啟用。
+
+## 2026-11-02 再接續：E1 raw quote 接入
+
+#150 已由父協調依既有授權 squash merge，merge SHA 為
+`4355d11fccdbc0a509aa7cc4b5c6d4305f1d272a`。Ready 後 Windows CI
+[41401331545](https://github.com/TaiwanCCyoyo/stock-research/actions/runs/41401331545)
+成功，1122 tests；[父端獨立審查](https://github.com/TaiwanCCyoyo/stock-research/pull/150#issuecomment-6570818064)
+及 hosted review 覆蓋最終 HEAD，無未解重要缺陷。Primary main 已快轉，原
+`order-card-freshness` 工作樹及本地分支經保存／使用狀態核對後移除，遠端分支已不存在。
+
+重新讀取 #98／#99、最新 roadmap、open PR 與工作狀態後，選擇 **E1 maintained raw quote
+adapter**，從上述 main 建立 `codex/entry-window-raw-reader`／同名工作樹。它接合既有
+`read_adjusted_daily` 與 `RawQuotePacket`，是 staging handoff 已列出的實際來源缺口。
+實作前記錄[接入契約](../../../tasks/20261027-entry-window/raw-reader-handoff.md)。
+
+本輪未接續 P1／P2：P1 尚需可產卡的規則，P2 位於 F1 之後且缺昨日卡片與成本／多批買進日
+語義；現有 `AccountState`、order lifecycle、ledger 與 decision API 已可重用，不再另造
+通用帳戶骨架。#137 與報告介面仍由既有 owner 處理。
+
+新 adapter 固定單股、世代、cutoff 與 caller calendar，保留 Raw OHLC、日別品質與來源紀錄；
+不從 masked OHLC 還原、不排序或補價。來源重複報價已失去另一筆真值時，整個呼叫失敗，
+不能默默刪股而改變研究分母。原始資料精度、官方日曆、完整事件覆蓋與 labels 仍不能由
+宣告一致性自證。Reader 功能只在人工 temporary generation 驗證，未開啟真實市場資料。
+
+SOL workers 分別負責核心接入、純邊界合成測試與真實 public reader 的人工 generation
+整合；Terra 獨立核對契約與最終實作。主線獨佔正式文件、CI 與 Git index。後續執行仍須
+資料 admission、generation retention／hold 協調、原 labels／parity、完整 interval quality、
+資源量測與計算授權。本包不產結果、不啟動 F1、不部署，也不解除報告本人確認。
+
+本機實跑：人工 generation reader／CI selector **384 passed in 63.18s**；
+原生 dtype 檢查完成後，pure adapter 與既有 E1 inputs／count／assembly
+**382 passed in 5.28s**。兩輪都只使用人工輸入。Terra 最終獨立唯讀審查無可操作 findings；
+正常 hooks／hosted CI 與正式 PR 連結在交付後記錄，不把工程通過當研究完成。
+
+交付為 [draft PR #151](https://github.com/TaiwanCCyoyo/stock-research/pull/151)。
+工程提交 `ad33afeeae4618fc93c3f9ebd729a0f211abdb6a` 的正常 hooks 全過；Terra 已核對
+同一不可變提交，無未解可操作 findings。`entry-window-raw-reader` 工作樹保留供 open PR
+跟進；hosted CI／review 以最新 HEAD 的 GitHub 紀錄為準。
