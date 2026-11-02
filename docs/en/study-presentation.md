@@ -77,6 +77,8 @@ recorded verdict or delivery state. Old account links use `account_run` and
 explicitly label the saved 2019–2023 period. A new card never creates or
 refreshes an account simulation.
 
+A `not_evaluated` card for a study still in direction-draft discussion may set `report.markdown` to its `direction-draft.md` ([direction drafts](direction-drafts.md)).
+
 ## Retained v1 registrations
 
 `study-presentation.v1` adds current, source-backed report cards to the private
