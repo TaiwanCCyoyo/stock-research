@@ -1,33 +1,41 @@
-import { useEffect, useState } from "react";
-import { validateReportIndex, type ReportEntry } from "./model";
+import { useCallback, useEffect, useState } from "react";
+import {
+    readReportIndex,
+    ReportIndexError,
+    type ReportEntry,
+    type ReportIndexIssue,
+} from "./model";
 
 /** Reads /reports/index.json, which the Vite plugin builds from report meta tags. */
 export function useReportIndex() {
     const [reports, setReports] = useState<ReportEntry[] | null>(null);
     const [error, setError] = useState("");
+    const [issue, setIssue] = useState<ReportIndexIssue | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [attempt, setAttempt] = useState(0);
+    const retry = useCallback(() => setAttempt((value) => value + 1), []);
     useEffect(() => {
         const control = new AbortController();
+        setLoading(true);
         const expectedVersion = document.querySelector<HTMLMetaElement>(
             'meta[name="research-web-version"]',
         )?.content;
-        fetch("/reports/index.json", {
-            signal: control.signal,
-            cache: "no-store",
-        })
-            .then((response) => {
-                if (!response.ok)
-                    throw new Error(
-                        `報告清單讀取失敗（HTTP ${response.status}）`,
-                    );
-                return response.json();
+        readReportIndex(control.signal, expectedVersion)
+            .then((value) => {
+                if (control.signal.aborted) return;
+                setReports(value.reports);
+                setError("");
+                setIssue(null);
             })
-            .then((value) =>
-                setReports(validateReportIndex(value, expectedVersion).reports),
-            )
-            .catch((e) => {
-                if (e.name !== "AbortError") setError(e.message);
+            .catch((e: unknown) => {
+                if (control.signal.aborted) return;
+                setError(e instanceof Error ? e.message : String(e));
+                setIssue(e instanceof ReportIndexError ? e.code : "network");
+            })
+            .finally(() => {
+                if (!control.signal.aborted) setLoading(false);
             });
         return () => control.abort();
-    }, []);
-    return { reports, error };
+    }, [attempt]);
+    return { reports, error, issue, loading, retry };
 }
