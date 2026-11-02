@@ -58,6 +58,10 @@ URL_RE = re.compile(r"https?://\S+")
 DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
 CONVERSATION_RE = re.compile(r"^對話 \d{4}-\d{2}-\d{2}：.+")
 PERCENT_RE = re.compile(r"\d+(?:\.\d+)?\s*%")
+QUESTION_REFERENCE_FULL_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*#Q\d+")
+QUESTION_REFERENCE_IN_TEXT_RE = re.compile(r"(?<![A-Za-z0-9_.-])(?P<task_id>[A-Za-z0-9][A-Za-z0-9._-]*)#(?P<question>Q\d+)(?![A-Za-z0-9_])")
+CARRIED_STATUS_RE = re.compile(r"carried → [A-Za-z0-9][A-Za-z0-9._-]*")
+CLOSED_STATUS_RE = re.compile(r"closed by ([A-Za-z0-9][A-Za-z0-9._-]*)")
 
 
 @dataclass(frozen=True)
@@ -208,6 +212,24 @@ def split_reference(reference: str) -> tuple[str, str]:
     return task_id, question
 
 
+def question_status_kind(status: str) -> str | None:
+    if status == "open":
+        return "open"
+    if CARRIED_STATUS_RE.fullmatch(status):
+        return "carried"
+    if CLOSED_STATUS_RE.fullmatch(status):
+        return "closed"
+    return None
+
+
+def question_reference(task_id: str, question_id: str) -> str:
+    return question_id if "#" in question_id else f"{task_id}#{question_id}"
+
+
+def question_references_in_text(text: str) -> set[str]:
+    return {f"{match.group('task_id')}#{match.group('question')}" for match in QUESTION_REFERENCE_IN_TEXT_RE.finditer(text)}
+
+
 def check_structure(draft: Draft) -> list[str]:
     errors = [f"FIELD: front matter lacks '{key}'" for key in REQUIRED_KEYS if key not in draft.front]
     errors.extend(f"SECTION: heading {mark} is missing" for mark in SECTION_MARKS if mark not in draft.sections)
@@ -241,6 +263,9 @@ def check_log_and_questions(draft: Draft) -> list[str]:
         for column in ("卡在哪", "關閉路徑"):
             if not row.get(column, "").strip():
                 errors.append(f"QUESTION: {row['ID']} has an empty {column}")
+        status = row.get("狀態", "").strip()
+        if question_status_kind(status) is None:
+            errors.append(f"QUESTION: {row['ID']} has an invalid status '{status}'")
     log = table_rows(draft.sections.get("⑪", ""), LOG_COLUMNS)
     if not log:
         return [*errors, "LOG: ⑪ needs at least one row"]
@@ -348,29 +373,78 @@ def check_predecessors(draft: Draft, root: Path) -> list[str]:
         task_id = (entry or {}).get("task_id", "")
         if not task_id or not (root / "tasks" / task_id).is_dir():
             errors.append(f"PRIOR: based_on task '{task_id}' does not exist")
-    carried = {str(r) for r in (front.get("carries") or []) + (front.get("closes") or [])}
-    for reference in sorted(carried):
+    carries = {str(r) for r in (front.get("carries") or [])}
+    closes = {str(r) for r in (front.get("closes") or [])}
+    for reference in sorted(closes - carries):
+        errors.append(f"QUESTION-LIFECYCLE: closes reference {reference} must also appear in carries")
+
+    def resolve_reference(reference: str, source: str) -> tuple[str, Draft] | None:
+        if QUESTION_REFERENCE_FULL_RE.fullmatch(reference) is None:
+            errors.append(f"PRIOR: {source} '{reference}' is not an exact <task-id>#Q<n> reference")
+            return None
         task_id, question = split_reference(reference)
         if not (root / "tasks" / task_id).is_dir():
             errors.append(f"PRIOR: {reference} points to a task that does not exist")
-            continue
-        prior = draft_path(root, task_id)
-        if prior is None:
+            return None
+        prior_path = draft_path(root, task_id)
+        if prior_path is None:
             errors.append(f"PRIOR: {reference} has no direction draft; copy the question into this draft's ⑫ instead")
-        elif question not in {row["ID"] for row in own_questions(load_draft(prior))}:
+            return None
+        prior = load_draft(prior_path)
+        if question not in {row["ID"] for row in own_questions(prior)}:
             errors.append(f"PRIOR: {reference} is not in the predecessor's ⑫")
-    declined = " ".join(row.get("分岔", "") for row in table_rows(draft.sections.get("⑪", ""), LOG_COLUMNS) or [] if row.get("結果") == "不承接")
+            return None
+        return task_id, prior
+
+    resolved: dict[str, tuple[str, Draft]] = {}
+    inherited_references: set[str] = set()
     for entry in front.get("based_on") or []:
         task_id = (entry or {}).get("task_id", "")
-        prior = draft_path(root, task_id) if task_id else None
-        if prior is None:
+        prior_path = draft_path(root, task_id) if task_id else None
+        if prior_path is not None:
+            prior = load_draft(prior_path)
+            inherited_references.update(str(r) for r in (prior.front.get("carries") or []))
+    for reference in sorted(carries | closes | inherited_references):
+        result = resolve_reference(reference, "question reference")
+        if result is not None:
+            resolved[reference] = result
+
+    log_rows = table_rows(draft.sections.get("⑪", ""), LOG_COLUMNS) or []
+    declined_rows: dict[str, list[dict[str, str]]] = {}
+    for row in log_rows:
+        if row.get("結果") == "不承接":
+            for reference in question_references_in_text(row.get("分岔", "")):
+                declined_rows.setdefault(reference, []).append(row)
+    for reference in sorted(set(declined_rows) - set(resolved)):
+        result = resolve_reference(reference, "不承接 reference")
+        if result is not None:
+            resolved[reference] = result
+
+    declined = set(declined_rows)
+
+    for entry in front.get("based_on") or []:
+        task_id = (entry or {}).get("task_id", "")
+        prior_path = draft_path(root, task_id) if task_id else None
+        if prior_path is None:
             continue
-        for row in own_questions(load_draft(prior)):
-            if not row["狀態"].startswith(("open", "carried")):
+        prior = load_draft(prior_path)
+        inherited_references = {str(r) for r in (prior.front.get("carries") or [])}
+        for row in own_questions(prior):
+            status = row.get("狀態", "").strip()
+            kind = question_status_kind(status)
+            key = question_reference(task_id, row["ID"])
+            if kind is None:
+                errors.append(f"PRIOR: predecessor question {key} has an invalid status '{status}'")
+            if kind == "closed":
                 continue
-            key = row["ID"] if "#" in row["ID"] else f"{task_id}#{row['ID']}"
-            if key not in carried and key not in declined:
-                errors.append(f"ORPHAN: predecessor question {key} is neither carried, closed nor declined in ⑪")
+            if key not in carries and key not in declined:
+                errors.append(f"ORPHAN: predecessor question {key} is neither carried nor declined with an exact reference in ⑪")
+
+        for reference in sorted(inherited_references):
+            if reference in carries:
+                continue
+            if reference not in declined:
+                errors.append(f"ORPHAN: inherited predecessor question {reference} is not carried or declined with an exact reference in ⑪")
     return errors
 
 
@@ -379,6 +453,27 @@ def visible_text(path: Path) -> str:
     if path.suffix == ".html":
         text = html.unescape(re.sub(r"<[^>]+>", "", text))
     return text
+
+
+def check_execution_outputs(draft: Draft) -> list[str]:
+    """D2: official task outputs require an agreed draft and both approval links."""
+    if draft.path.name != "direction-draft.md":
+        return []
+    if draft.front.get("stage") == "agreed" and has_url(draft.front.get("owner_purpose_confirmed")) and has_url(draft.front.get("fake_headline_approved")):
+        return []
+
+    folder = draft.path.parent
+    outputs: set[Path] = set()
+    for directory in (folder / "results", folder / "runs"):
+        if directory.is_dir():
+            outputs.update(path for path in directory.rglob("*") if path.is_file())
+    for receipt in ("run_receipt.json", "run-receipt.json"):
+        outputs.update(path for path in folder.rglob(receipt) if path.is_file())
+    for relative in ("report.md", "web-report/index.html"):
+        path = folder / relative
+        if path.is_file():
+            outputs.add(path)
+    return [f"D2: official output {path.relative_to(folder).as_posix()} exists before stage is agreed with both approval links" for path in sorted(outputs)]
 
 
 def report_section(text: str, heading: str) -> str | None:
@@ -427,7 +522,7 @@ def validate_draft(path: Path, root: Path = ROOT) -> list[str]:
     errors = check_structure(draft)
     if errors and any(error.startswith(("FIELD", "SECTION")) for error in errors):
         return errors
-    for check in (check_log_and_questions, check_promises, check_gate, check_multiples, check_closeout):
+    for check in (check_log_and_questions, check_promises, check_gate, check_multiples, check_execution_outputs, check_closeout):
         errors.extend(check(draft))
     errors.extend(check_predecessors(draft, root))
     return errors
@@ -484,6 +579,146 @@ def test_fixture_outcomes(case: str) -> None:
         assert FIXTURE_EXPECTATIONS[case] <= codes(errors), errors
     else:
         assert errors == []
+
+
+@pytest.mark.parametrize(
+    "relative",
+    [
+        "results/summary.json",
+        "runs/run-1/summary.json",
+        "run_receipt.json",
+        "run-receipt.json",
+        "preview/run_receipt.json",
+        "report.md",
+        "web-report/index.html",
+    ],
+)
+def test_unapproved_draft_rejects_official_outputs(tmp_path: Path, relative: str) -> None:
+    root = tmp_path / "root"
+    shutil.copytree(FIXTURES / "ok-minimal", root)
+    folder = root / "tasks" / "20261101-ok-minimal"
+    (folder / "preview").mkdir()
+    (folder / "preview" / "index.html").write_text("draft preview", encoding="utf-8")
+    output = folder / relative
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text("synthetic output", encoding="utf-8")
+
+    errors = validate_draft(folder / "direction-draft.md", root)
+    assert any(error.startswith("D2:") and relative in error for error in errors), errors
+
+
+def test_unapproved_draft_allows_preview_and_empty_output_directories(tmp_path: Path) -> None:
+    root = tmp_path / "root"
+    shutil.copytree(FIXTURES / "ok-minimal", root)
+    folder = root / "tasks" / "20261101-ok-minimal"
+    (folder / "results").mkdir()
+    (folder / "runs").mkdir()
+    (folder / "preview").mkdir()
+    (folder / "preview" / "index.html").write_text("draft preview", encoding="utf-8")
+
+    assert validate_draft(folder / "direction-draft.md", root) == []
+
+
+def test_agreed_draft_with_both_approval_links_may_have_execution_outputs(tmp_path: Path) -> None:
+    root, draft, _ = agreed_copy(tmp_path)
+    folder = draft.parent
+    (folder / "results").mkdir()
+    (folder / "results" / "summary.json").write_text("{}", encoding="utf-8")
+    (folder / "runs").mkdir()
+    (folder / "runs" / "summary.json").write_text("{}", encoding="utf-8")
+    (folder / "run_receipt.json").write_text("{}", encoding="utf-8")
+
+    assert validate_draft(draft, root) == []
+
+
+def test_agreed_draft_without_approval_links_cannot_have_outputs(tmp_path: Path) -> None:
+    root = tmp_path / "root"
+    shutil.copytree(FIXTURES / "agreed-without-approval", root)
+    folder = root / "tasks" / "20261101-agreed-without-approval"
+    (folder / "results").mkdir()
+    (folder / "results" / "summary.json").write_text("{}", encoding="utf-8")
+
+    assert any(error.startswith("D2:") for error in validate_draft(folder / "direction-draft.md", root))
+
+
+def test_closes_alone_cannot_discharge_an_open_predecessor_question(tmp_path: Path) -> None:
+    root = tmp_path / "root"
+    shutil.copytree(FIXTURES / "orphaned-predecessor-question", root)
+    folder = root / "tasks" / "20261101-orphaned-predecessor-question"
+    draft = folder / "direction-draft.md"
+    text = draft.read_text(encoding="utf-8").replace("closes: []", "closes: [20261031-ok-prior#Q1]", 1)
+    draft.write_text(text, encoding="utf-8")
+
+    errors = validate_draft(draft, root)
+    assert any(error.startswith("QUESTION-LIFECYCLE:") and "must also appear in carries" in error for error in errors)
+    assert any(error.startswith("ORPHAN:") and "20261031-ok-prior#Q1" in error for error in errors)
+
+
+def test_planned_close_is_valid_when_the_unresolved_question_is_carried(tmp_path: Path) -> None:
+    root = tmp_path / "root"
+    shutil.copytree(FIXTURES / "ok-minimal", root)
+    folder = root / "tasks" / "20261101-ok-minimal"
+    draft = folder / "direction-draft.md"
+    text = draft.read_text(encoding="utf-8").replace("closes: []", "closes: [20261031-ok-prior#Q1]", 1)
+    draft.write_text(text, encoding="utf-8")
+
+    assert validate_draft(draft, root) == []
+
+
+def test_noncarry_matches_exact_question_id_not_a_q1_substring_of_q10(tmp_path: Path) -> None:
+    root = tmp_path / "root"
+    shutil.copytree(FIXTURES / "orphaned-predecessor-question", root)
+    prior = root / "tasks" / "20261031-ok-prior" / "direction-draft.md"
+    prior_text = prior.read_text(encoding="utf-8")
+    q1_row = re.search(r"^\| Q1\s+\|.*\| open \|$", prior_text, flags=re.M)
+    assert q1_row is not None
+    prior_text = prior_text[: q1_row.end()] + "\n| Q10 | 另一個問題 | L2 | 未評估 | 另立研究 | open |" + prior_text[q1_row.end() :]
+    prior.write_text(prior_text, encoding="utf-8")
+
+    draft = root / "tasks" / "20261101-orphaned-predecessor-question" / "direction-draft.md"
+    text = draft.read_text(encoding="utf-8")
+    marker = "\n## ⑫"
+    head, separator, tail = text.partition(marker)
+    assert separator
+    declined = "\n| L2 | 2026-10-25 | Codex | 不承接 20261031-ok-prior#Q10 | 不承接 | 本稿不處理 Q10 | 對話 2026-10-25：「本次不處理」 | 否 |\n"
+    draft.write_text(head.rstrip() + declined + separator + tail, encoding="utf-8")
+
+    errors = validate_draft(draft, root)
+    assert any(error.startswith("ORPHAN:") and "20261031-ok-prior#Q1" in error for error in errors), errors
+    assert not any(error.startswith("ORPHAN:") and "20261031-ok-prior#Q10" in error for error in errors), errors
+
+
+def test_invalid_predecessor_question_status_is_reported_and_not_ignored(tmp_path: Path) -> None:
+    root = tmp_path / "root"
+    shutil.copytree(FIXTURES / "ok-minimal", root)
+    prior = root / "tasks" / "20261031-ok-prior" / "direction-draft.md"
+    prior_text = prior.read_text(encoding="utf-8")
+    prior.write_text(prior_text.replace("| open |", "| opne |", 1), encoding="utf-8")
+
+    draft = root / "tasks" / "20261101-ok-minimal" / "direction-draft.md"
+    text = draft.read_text(encoding="utf-8").replace("carries: [20261031-ok-prior#Q1]", "carries: []", 1)
+    draft.write_text(text, encoding="utf-8")
+
+    errors = validate_draft(draft, root)
+    assert any("predecessor question 20261031-ok-prior#Q1 has an invalid status 'opne'" in error for error in errors)
+    assert any(error.startswith("ORPHAN:") and "20261031-ok-prior#Q1" in error for error in errors)
+
+
+def test_inherited_predecessor_carry_cannot_disappear_in_a_later_draft(tmp_path: Path) -> None:
+    root = tmp_path / "root"
+    shutil.copytree(FIXTURES / "ok-minimal", root)
+    older_id = "20261030-older"
+    older_folder = root / "tasks" / older_id
+    older_folder.mkdir(parents=True)
+    prior = root / "tasks" / "20261031-ok-prior" / "direction-draft.md"
+    prior_text = prior.read_text(encoding="utf-8").replace("task_id: 20261031-ok-prior", f"task_id: {older_id}", 1)
+    (older_folder / "direction-draft.md").write_text(prior_text, encoding="utf-8")
+    parent_text = prior.read_text(encoding="utf-8").replace("carries: []", f"carries: [{older_id}#Q1]", 1)
+    prior.write_text(parent_text, encoding="utf-8")
+
+    draft = root / "tasks" / "20261101-ok-minimal" / "direction-draft.md"
+    errors = validate_draft(draft, root)
+    assert any(error.startswith("ORPHAN:") and f"{older_id}#Q1" in error for error in errors), errors
 
 
 def test_pr113_title_is_caught_and_its_fix_passes() -> None:

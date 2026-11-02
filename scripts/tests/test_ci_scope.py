@@ -1663,6 +1663,11 @@ DIRECTION_DRAFT_TEST = "scripts/tests/test_direction_drafts.py"
     [
         "tasks/20991231-new-study/report.md",
         "tasks/20991231-new-study/web-report/index.html",
+        "tasks/20991231-new-study/results/summary.parquet",
+        "tasks/20991231-new-study/runs/run-1/summary.parquet",
+        "tasks/20991231-new-study/run_receipt.json",
+        "tasks/20991231-new-study/run-receipt.json",
+        "docs/en/templates/direction-draft-pr.md",
         "scripts/tests/fixtures/direction_drafts/ok-minimal/tasks/20261101-ok-minimal/direction-draft.md",
     ],
 )
@@ -1676,6 +1681,13 @@ def test_direction_draft_closeout_and_fixture_inputs_select_the_validator(status
 def test_direction_draft_closeout_selection_adds_only_the_validator() -> None:
     """A report-only change must not widen the plan beyond the new validator."""
     baseline = ci_scope.make_plan([("M", "tasks/20991231-new-study/notes.md")])
-    for path in ("tasks/20991231-new-study/report.md", "tasks/20991231-new-study/web-report/index.html"):
+    for path in (
+        "tasks/20991231-new-study/report.md",
+        "tasks/20991231-new-study/web-report/index.html",
+        "tasks/20991231-new-study/results/summary.parquet",
+        "tasks/20991231-new-study/runs/run-1/summary.parquet",
+        "tasks/20991231-new-study/run_receipt.json",
+        "tasks/20991231-new-study/run-receipt.json",
+    ):
         plan = ci_scope.make_plan([("M", path)])
         assert set(plan["python_tests"]) - set(baseline["python_tests"]) <= {DIRECTION_DRAFT_TEST}

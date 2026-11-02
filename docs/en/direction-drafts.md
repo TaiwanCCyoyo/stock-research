@@ -22,7 +22,10 @@ New studies only. Existing `tasks/*` reports, `study.json` cards and PR113 are n
 the examples below are retrospective demonstrations. A study with a draft keeps the draft in
 `tasks/<task-id>/direction-draft.md`. The file is the only record: the PR body collects the
 owner's ticks, and the agent copies each one (with its link) into the file before merge.
-Merging the draft PR means the direction is agreed. This page changes no study-card, report-kit
+The owner merges only after those confirmations; merge alone is not evidence of approval.
+Discussion happens in a GitHub draft PR, readable on a phone. The optional fake report is a
+desktop preview under `tasks/<task-id>/preview/index.html`, visibly labelled as a draft with
+placeholder numbers. It is not registered in the dashboard. This page changes no study-card, report-kit
 or dashboard contract; `study-card.v2` is unchanged (see
 [study-presentation](study-presentation.md#study-cards-v2) for how a `not_evaluated` card may
 point at a draft).
@@ -33,35 +36,70 @@ point at a draft).
 flowchart LR
   A["Draft PR: direction-draft.md<br/>stage: discussing"] --> B{"Owner ticks in the PR body:<br/>purpose is right / this is the headline I want"}
   B -- changes --> A
-  B -- ticked --> C["Agent copies ticks + links into the file<br/>stage: agreed, merge"]
+  B -- ticked --> C["Agent verifies owner evidence and copies links<br/>stage: agreed; owner merges"]
   C --> D["Write the mission, then market computation"]
   D --> E{"Result fits one of the<br/>three headline shapes?"}
   E -- yes --> F["Fill the numbers, publish"]
   E -- "no: a fourth shape" --> G["Hold the headline; write<br/>amendments/YYYY-MM-DD-headline-shape.md"]
-  G --> H{"Owner re-ticks the new shape<br/>(still shown with ▢)"} --> F
+  G --> H{"Owner re-ticks and merges the amendment<br/>(still shown with ▢)"} --> F
 ```
 
-| Role      | Responsibility                                                                                                                                                                                                                                                                                                                                             |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Opus      | Ask for and record the owner's purpose first and write the steps remaining; log every fork in ⑪ in the same turn and turn "later" into a question in ⑫; before opening the PR have a cold-reading subagent state the purpose, main comparison, headline form and primary/secondary boundary from the draft alone; copy ticks back.                         |
-| Codex     | Open the market-computation work package only when `stage: agreed` and `fake_headline_approved` is a link; hold the headline on a fourth shape; at closeout write the promised-vs-delivered table and the owner's purpose verbatim into `report.md` (the frozen draft is not edited); never write a title or card promising more than the main comparison. |
-| The owner | Confirm the purpose, tick the fake headline and the choices C, merge to agree.                                                                                                                                                                                                                                                                             |
+| Role                           | Responsibility                                                                                                                                                                                                                                                                                       |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Draft author (Codex or Claude) | Record the owner's purpose and steps remaining; log forks in ⑪ and turn "later" into ⑫ questions. Have a cold-reading subagent state the purpose, main comparison, headline form and primary/secondary boundary from the draft alone. Verify and copy owner confirmations.                           |
+| Executing agent                | Before any market command, verify the agreed draft, owner evidence and merged direction PR. Before publishing, assess the actual result against the agreed shapes; hold any fourth shape for the owner. At closeout write delivery and verbatim purpose in the reports, preserving the frozen draft. |
+| The owner                      | Confirm the purpose, tick the fake headline and the choices C, merge to agree.                                                                                                                                                                                                                       |
+
+### GitHub discussion and confirmation
+
+1. Create `direction-draft.md` from the template with `stage: discussing`. Inventory the
+   predecessor reports and their open questions before proposing scope. Mark unavailable
+   wording or evidence `待確認`; a retrospective example does not authorize a new study.
+2. Open a **draft PR** and append the [direction discussion body](templates/direction-draft-pr.md)
+   to the normal PR description. Link the rendered draft at the exact commit being discussed.
+   The body exposes purpose, the three fake headlines, choices and predecessor dispositions
+   directly on the phone; the optional desktop preview is supplementary.
+3. The owner checks the purpose, headline and C choices in the PR body, or posts an explicit
+   confirmation comment if editing the body is unavailable. The agent must verify who confirmed
+   which revision, and record a comment permalink or the PR link plus confirming edit/revision
+   in the PR record. An agent-created checkbox or a URL alone is not owner consent.
+4. Copy the evidence links into `owner_purpose_confirmed`, `fake_headline_approved` and the
+   checked ⑧ choices; set `stage: agreed` only when all are confirmed. Changes to purpose,
+   scope or fake headlines invalidate the affected confirmation and go back to the owner.
+   The owner decides when to leave draft and merge. Freeze the agreed file after merge.
+5. Before opening a computation package, the executing agent reads that evidence again and
+   records the agreed draft commit and confirmation links in the work package. The ordinary
+   mission/preregistration and execution authorization still apply. The process PR itself
+   and the direction approval do not authorize a market run.
+
+### Hard gates and their limits
+
+| Decision | Required behavior                                                                                    | Automatic evidence                                                                                                                                        | Human responsibility                                                                                                                                                                                                                                                                 |
+| -------- | ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| D2       | No market computation before the owner confirms the fake headlines and purpose.                      | An agreed draft requires approval links and resolved choices. A task with repository-visible results, run receipts or formal reports must pass that gate. | The executing agent verifies the owner, approved revision, merged direction PR and run authority immediately before launching any market command. Tests cannot observe earlier executions or external/ignored results absent from CI.                                                |
+| D3       | A result outside the three agreed shapes must go back to the owner before any headline is published. | Placeholder/number and title consistency checks catch some wording errors; they cannot classify the result's meaning.                                     | Before publishing report, card or headline, the executing agent records the shape and supporting main-cell evidence in the report's `## 頭條發布確認`; the reviewer checks it. For a fourth shape, both require the owner-confirmed, merged amendment. No self-approved relabelling. |
+| D5       | Every unresolved predecessor question must be carried or explicitly declined with a reason.          | Exact question references, known question states and predecessor dispositions are checked. `closes` alone cannot bypass carrying an unresolved question.  | The draft author inventories actual predecessors and checks closing evidence; the reviewer verifies completeness before owner confirmation. Missing predecessors, old reports without drafts and semantic adequacy of reasons require manual inspection.                             |
+
+Repository-visible output checks cover non-empty `results/` and `runs/`, `run_receipt.json`,
+`run-receipt.json`, `report.md` and `web-report/index.html` within a task that has a draft.
+Use `preview/index.html` for the fake report. Existing tasks without drafts are not retrofitted.
+These checks are safeguards at review time, not an execution lock or proof of authorization.
 
 ## Draft contents
 
 Front matter is YAML (the repository already depends on PyYAML). Tables stay in the body
 because they read well on a phone and are parsed row by row.
 
-| Key                                             | Meaning                                                                                                                |
-| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `schema`, `task_id`, `stage`                    | `direction-draft.v1`; the task directory; `discussing` or `agreed`.                                                    |
-| `owner_purpose`, `owner_purpose_source`         | The owner's own words, one sentence, and where they said it. Never a paraphrase presented as a quote.                  |
-| `owner_purpose_confirmed`                       | `null` until the owner confirms; a link when `agreed`.                                                                 |
-| `fake_headline_approved`                        | `null` until the owner ticks "this is what I want"; a link when `agreed`.                                              |
-| `title`, `title_outcome_multiples`              | The title and the outcome multiples it promises.                                                                       |
-| `outcome_multiples`, `condition_thresholds`     | Outcome targets (`primary`, `secondary`) and look-back condition thresholds, declared apart so thresholds never count. |
-| `title_outcome_terms`                           | Definitions of outcome words such as 大漲 or 飆股 when the title or card uses them.                                    |
-| `based_on`, `carries`, `closes`, `open_choices` | Predecessors; predecessor questions (`<task-id>#Q<n>`) carried or closed; owner choices C1… awaiting a tick.           |
+| Key                                             | Meaning                                                                                                                                                                |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `schema`, `task_id`, `stage`                    | `direction-draft.v1`; the task directory; `discussing` or `agreed`.                                                                                                    |
+| `owner_purpose`, `owner_purpose_source`         | The owner's own words, one sentence, and where they said it. Never a paraphrase presented as a quote.                                                                  |
+| `owner_purpose_confirmed`                       | `null` until the owner confirms; a link when `agreed`.                                                                                                                 |
+| `fake_headline_approved`                        | `null` until the owner ticks "this is what I want"; a link when `agreed`.                                                                                              |
+| `title`, `title_outcome_multiples`              | The title and the outcome multiples it promises.                                                                                                                       |
+| `outcome_multiples`, `condition_thresholds`     | Outcome targets (`primary`, `secondary`) and look-back condition thresholds, declared apart so thresholds never count.                                                 |
+| `title_outcome_terms`                           | Definitions of outcome words such as 大漲 or 飆股 when the title or card uses them.                                                                                    |
+| `based_on`, `carries`, `closes`, `open_choices` | Predecessors; questions (`<task-id>#Q<n>`) carried or intended to close; owner choices C1… awaiting a tick. `closes` must also be carried and is not closing evidence. |
 
 Body sections, fixed order, headings `## ①` … `## ⑫`:
 
@@ -110,10 +148,15 @@ Columns of ⑪: `ID | 日期 | 提出者 | 分岔 | 結果 | 理由 | 來源 | �
   row (result 不承接, with the `<task-id>#Q<n>` named in the fork text and a reason).
 
 Columns of ⑫: `ID | 問題 | 提出於 | 卡在哪 | 關閉路徑 | 狀態` with state `open`, `carried → <task>`
-or `closed by <task>`. A frozen draft is never edited; the latest state of a question is derived
-from later drafts' `carries` and `closes`. A predecessor's open question cannot disappear: the
-next draft carries it, closes it, or logs 不承接 with a reason. A predecessor without a draft
-has no addressable questions; copy the question into this draft's ⑫ instead.
+or `closed by <task>`. A frozen draft is never edited. `closes` declares a planned answer,
+not a delivered one: keep the reference in `carries` as well, then record the answer and
+closing evidence in the later report's delivery table and `research-lineage.md`. A question
+without verified closing evidence remains unresolved, including one inherited by a predecessor.
+The next draft **must** carry it or log 不承接 with its exact `<task-id>#Q<n>` and a reason.
+Do not confuse `#Q1` with `#Q10`. The conservative validator keeps inherited questions visible;
+when declining to carry an already answered question, cite its closing evidence in ⑪.
+A predecessor without a draft has no addressable draft questions: inspect its report/lineage,
+copy unresolved questions into this draft's ⑫, and record carry or decline with reason in ⑪.
 
 ## Title and headline consistency
 
@@ -136,10 +179,11 @@ fails and is worded into a bracket.
 
 ## Fake headline gate
 
-Before any market computation, ② holds one headline per outcome branch with every number as
+Before any market computation, ② must hold one headline per outcome branch with every number as
 `▢▢%` (no digits before `%`). The owner ticks "this is what I want". Only then is `stage` set
 to `agreed` and the computation package opened. A headline that is a real percentage fails the
-check.
+check. Both confirmation links, resolved choices and the manual D2 check above are mandatory;
+a checked box copied by an agent is not sufficient on its own.
 
 A **fourth shape** is a result that fits none of the three branches, for example the direction
 reverses, only a secondary cell moves, one of two conditions holds, samples are too small, or the
@@ -147,16 +191,53 @@ signal is so common that "has signal" is almost everyone. The headline is held, 
 `amendments/YYYY-MM-DD-headline-shape.md` names the shape, why three branches cannot hold it, and
 the new fake headline (still `▢`). It changes presentation only, never the preregistered reading
 of the main cell. The owner re-ticks in a draft PR containing only the amendment; the headline is
-published after it merges.
+published only after the owner confirms and merges it. Until then the report, card and PR
+description must hold the proposed public headline. In `report.md`'s `## 頭條發布確認`, record
+the chosen shape, supporting result location, and the amendment/owner-confirmation links when
+applicable. A reviewer checks this before publication. Semantic fit is a manual gate; passing
+the wording validator is not proof that the result fits an agreed shape.
 
 ## From draft to mission and report
 
-| Draft                                 | Goes to                                                                                               |
-| ------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| ①, ②, ④                               | The mission's plain summary links the draft rather than rewriting it; decisions cite `← C2` / `← L4`. |
-| ②, ③                                  | `web-report/` uses one file: placeholders replaced by numbers, the draft banner removed.              |
-| ⑩                                     | A `## 承諾 vs 交付` table in `report.md` (columns 承諾, 實際交付; one row per ⑩ promise) (R5).        |
-| ⑪, ⑫, `based_on`, `carries`, `closes` | `research-lineage.md` is generated from these instead of rebuilt after delivery.                      |
+| Draft                                 | Goes to                                                                                                                                             |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ①, ②, ④                               | The mission's plain summary links the draft rather than rewriting it; decisions cite `← C2` / `← L4`.                                               |
+| ②, ③                                  | After the publication gate, promote the optional `preview/index.html` to `web-report/index.html`, replace placeholders and remove the draft banner. |
+| ⑩                                     | A `## 承諾 vs 交付` table in `report.md` (columns 承諾, 實際交付; one row per ⑩ promise) (R5).                                                      |
+| ⑪, ⑫, `based_on`, `carries`, `closes` | The author maintains `research-lineage.md` from these and verified delivery evidence; no generator is provided by this PR.                          |
+
+### Report links and delivery records
+
+For a new study, keep `tasks/<task-id>/research-lineage.md` beside its report. For each predecessor,
+record its question, established answer/limits, role (direct baseline or method source), reused
+definition/data, additional question, denominator/clock differences, source version and publication
+status. Link it from `report.md` and the research index. A partial or unpublished report stays labelled;
+a later rerun does not become an earlier study's design basis. Missing sources stay unknown.
+
+Use the existing report-link conventions without adding fields to `study-card.v2`:
+
+- In HTML, link a readable predecessor with
+  `<a data-related-report="<prior-task-id>" href="../../<prior-task-id>/web-report/index.html">…</a>`.
+  Keep the real relative `href` for standalone reading. Dashboard-aware navigation uses the
+  existing `rk:navigate` integration; the data attribute alone does not implement navigation.
+- In the report's JSON-LD `Report`, list actual dependencies under `isBasedOn`, with
+  `identifier`, `name`, `description` (role and limits) and stable `url`. Link the lineage record
+  using `citation: "../research-lineage.md"`. Future follow-ups are navigation links, not bases.
+- Do not use preview ports, another session's worktree, or a pending report as a published source.
+  When a web report is unavailable, link its stable mission/report record and label the status.
+- In `report.md`, use each ⑩ promise verbatim as the `承諾` key. `實際交付` links to delivered
+  evidence; an undelivered promise says `未交付` and links to its ⑫ question or a later amendment.
+  Keep the original owner purpose verbatim in both report forms. None of these records changes
+  the frozen draft, stored results, source pins or historical missions.
+
+Before closeout, the reviewer must follow every delivery/evidence or unanswered-question link
+and compare the claim with its source. R5 checks the table's coverage and non-empty cells, not
+the truth of delivery, link availability or adequacy of an answer. Passing it cannot replace
+this review or owner acceptance.
+
+This aligns with the lineage conventions in the PR113/PR138 report work. It does not claim
+their presentation has been accepted or modify those studies. Dashboard direction labels remain
+a separate follow-up after the UX branch merges (D6).
 
 ## Worked examples
 

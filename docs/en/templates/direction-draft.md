@@ -13,13 +13,17 @@ title_outcome_multiples: [2] # 標題與卡片上出現的結果倍數
 # title_outcome_terms: {大漲: "定義"} # 標題或 question 用到「大漲」「飆股」時必填
 based_on: [] # 例：[{task_id: 2026…, role: baseline, supplies: 母體與標籤}]
 carries: [] # 例：[2026…#Q1] 延續前作的待解問題
-closes: [] # 本研究會關閉的前作待解問題
+closes: [] # 本研究預定回答的前作問題，也必須列在 carries；實際結案證據在 report.md
 open_choices: [] # 例：[C1, C2]
 ---
 
 # 方向草稿：待確認
 
 > 這是方向草稿，不是研究結果。下列頭條的數字全部用 `▢` 佔位。流程見 [direction-drafts.md](../direction-drafts.md)。
+
+討論在 GitHub draft PR，搭配 [PR 描述模板](direction-draft-pr.md)。手機直接看草稿與 PR
+表格；假報告只在桌機 `preview/index.html` 預覽，不登錄 dashboard。
+擁有者確認原話、假頭條與選擇前不得開始市場計算；代理核對確認者與版本後才回填連結。
 
 ## ① 擁有者原話目的與決定
 
@@ -47,6 +51,9 @@ open_choices: [] # 例：[C1, C2]
 
 □ 這就是我要的（擁有者在 PR body 勾選；agreed 前抄入 `fake_headline_approved`）
 
+若實際結果放不進三種形狀，必須先暫停頭條發布，用獨立 amendment PR 交給擁有者確認並
+合併；不得自行換標籤。收尾在 `report.md` 的 `## 頭條發布確認` 記下形狀、結果證據與確認來源。
+
 ## ③ 報告骨架
 
 3–5 個主面板；每個寫一句要說的話、用什麼圖、分母、期間，並標出主要或次要。
@@ -69,6 +76,10 @@ open_choices: [] # 例：[C1, C2]
 
 待確認（Mermaid 或表；寫明分母是否與前作相同）。
 
+逐項盤點前作未解問題，必須列入 `carries` 或在 ⑪ 用完整 `<task-id>#Q<n>` 寫不承接理由；
+只列 `closes` 不算承接或已結案。沒有草稿的前作，從報告與承接紀錄補到本作 ⑫。
+收尾維護 `research-lineage.md`，區分直接基線、方法來源、未發布與已發布版本。
+
 ## ⑥ 會用到的資料
 
 待確認（共用資料 ID；這段期間是否已經看過）。
@@ -88,6 +99,7 @@ open_choices: [] # 例：[C1, C2]
 ## ⑩ 承諾（交付對照在收尾 report.md）
 
 只列承諾；定案後凍結，不在此填交付。收尾時在 `report.md` 的 `## 承諾 vs 交付` 逐列對照。
+承諾逐字保留；未交付的列必須寫明並連到待解問題。報告及 web report 都附擁有者原話目的。
 
 | 承諾   | 主要／次要 | 對應主格 |
 | ------ | ---------- | -------- |
