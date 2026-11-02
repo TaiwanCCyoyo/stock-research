@@ -313,3 +313,38 @@ mission 的驗證須涵蓋除權跨窗、未完成週線、暖機與休市日合
 | 大量市場疊加搜尋                            | 舊研究 29 種疊加 0 種通過；S6 只看少數事先固定的狀態                                                           |
 | S3 之前新增型態家族                         | 先回答「型態有沒有額外貢獻」，再決定要不要更多型態                                                             |
 | 為了通知通道先做 Gmail、推播                | 卡片格式與規則還沒定；先存檔與 dashboard（P3）                                                                 |
+
+## 9. 2026-11-02 補充：工程接續與閱讀依賴
+
+本節追加後續狀態，前述 10-27 決策、佇列與歷史結果原樣保留。這次的 owner 意圖摘要是：
+接續可獨立推進的長期研究工程，並使研究進度、報告閱讀與討論流程的依賴容易理解；
+互動介面應幫助理解與溝通。這不是新的方法、門檻或市場運算授權。具體範圍、gates 與交付見
+[本次決策紀錄](decision-records/2026-11-02-long-term-research-engineering.md)。
+
+本次只有兩條有限工作線：
+
+| 工作線               | 接續內容                                                                                                                                                                                                                           | 停止邊界                                                                         |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| E1 純記憶體整合      | 串接既有 staging、stock counts、整數聚合及 paired bootstrap；依[既有資料契約](../../tasks/20261027-entry-window/data-contract.md)與[整合交接](../../tasks/20261027-entry-window/assembly-handoff.md)，只用明確記憶體輸入與合成案例 | 沒有真實 reader／runner、原 labels admission、研究結果或市場計算；不碰來源與排程 |
+| roadmap／UX 依賴對齊 | 以本節與研究總覽連結既有工程、閱讀及討論契約，保留各負責 session 的介面                                                                                                                                                            | 不另實作 #137 討論介面、不改既有報告與 frozen evidence                           |
+
+### UX 與討論流程的目前位置
+
+- #139–141 的 UI 工作已合併；#142 的 reading/readiness 契約及 #143–145 的閱讀版本仍待本人接受。
+  P5–P7 依賴 #142；`ready` 只表示編輯核對，不表示研究通過、本人接受或產品可用。
+  尚未合併的正式契約見 [reading branch](https://github.com/TaiwanCCyoyo/stock-research/blob/codex/report-reading-readiness/docs/en/report-reading.md)
+  與其 [UX 交接](https://github.com/TaiwanCCyoyo/stock-research/blob/codex/report-reading-readiness/docs/en/decision-records/2026-11-02-dashboard-ux-and-report-readability.md)。
+- #137 仍由原 active session 負責，互動理解與溝通的架構介面為 pending contract；GitHub 可保留確認紀錄，
+  不指定純文字 PR 為唯一討論介面。其 D1–D6 目前只有 agent 敘述，尚未獨立取得使用者原文；
+  不把流程草案或合併當成新市場運算授權。參照 [direction branch](https://github.com/TaiwanCCyoyo/stock-research/blob/claude/direction-draft-process/docs/en/direction-drafts.md)。
+- #113 的報告呈現與本人接受不阻止本次獨立工程；#113 保留 #128 先合併條件。
+  E2／E3 新市場研究仍須滿足各自前置報告、mission 與運算 gates；不因 UI 合併或報告可讀而解除。
+
+### 尚未解決的研究與營運 gates
+
+S7 的首次確認、延遲確認、多週同日確認與空週接續尚待方法規格；下一步只能先明定合成案例的輸入、
+確認時點與預期狀態，不在本次加 assembler。E1 既有原訊號不含 S7；上方歷史依賴圖不使 S7 成為
+本次純記憶體整合的資料前置。[counts handoff](../../tasks/20261027-multi-timeframe-ma/counts-handoff.md)
+與 [week handoff](../../tasks/20261027-multi-timeframe-ma/week-calendar-handoff.md) 的限制保留，
+universal scale-invariance 仍為 **UNSATISFIED**。O2 的 finite G／receipt event 限制、部署 gate 及首個未來準時日確認
+均未解除；本次不重新核實或更動正式 root、服務、排程、資料與市場結果。

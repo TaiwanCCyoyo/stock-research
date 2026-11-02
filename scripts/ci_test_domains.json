@@ -580,10 +580,12 @@
                 "research_core/entry_window_v1.py",
                 "research_core/entry_window_bootstrap_v1.py",
                 "research_core/entry_window_inputs_v1.py",
+                "research_core/entry_window_assembly_v1.py",
                 "research_core/count_cube_v1.py",
                 "tasks/20261027-entry-window/implementation-handoff.md",
                 "tasks/20261027-entry-window/bootstrap-handoff.md",
                 "tasks/20261027-entry-window/reader-staging-handoff.md",
+                "tasks/20261027-entry-window/assembly-handoff.md",
                 "tasks/20261027-entry-window/mission.md",
                 "tasks/20261027-entry-window/data-contract.md",
                 "research_core/momentum_only_v1.py",
@@ -595,7 +597,8 @@
             "tests": [
                 "scripts/tests/test_entry_window_v1.py",
                 "scripts/tests/test_entry_window_bootstrap_v1.py",
-                "scripts/tests/test_entry_window_inputs_v1.py"
+                "scripts/tests/test_entry_window_inputs_v1.py",
+                "scripts/tests/test_entry_window_assembly_v1.py"
             ]
         },
         "study_card_records": {
@@ -681,6 +684,7 @@
         "scripts/tests/test_derived_features_selective_v1.py",
         "scripts/tests/test_desktop_launch_feedback.py",
         "scripts/tests/test_direction_drafts.py",
+        "scripts/tests/test_entry_window_assembly_v1.py",
         "scripts/tests/test_entry_window_bootstrap_v1.py",
         "scripts/tests/test_entry_window_inputs_v1.py",
         "scripts/tests/test_entry_window_v1.py",
