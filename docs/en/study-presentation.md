@@ -208,5 +208,5 @@ woff woff2 webp parquet`) must match their signature and are scanned raw and wit
   pages ask crawlers not to index; GitHub Pages cannot set headers. PR descriptions, comments and
   attachments are not checked by this gate.
 - One-time owner setup: Settings > Pages > Source: "GitHub Actions"; create the `preview` label.
-  The `github-pages` environment GitHub creates by default allows deployments from `main` only,
-  which this design relies on.
+  Keep the default `github-pages` environment that GitHub creates (deployments from `main`
+  only); do not widen it, and do not add required reviewers or every deployment waits for approval.

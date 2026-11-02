@@ -66,7 +66,7 @@ jobs:
                   uv run --no-sync python -m scripts.report_preview reconcile --repository "$REPO" \
                       --repo . --site "$RUNNER_TEMP/site" --state "$RUNNER_TEMP/state.json" \
                       --base-ref "origin/main" --gate-commit "$GATE_COMMIT" \
-                      --previous-url "${page_url%/}/previews.json"
+                      --previous-url "${page_url%/}/previews.json?run=$GITHUB_RUN_ID"
                   echo "state=$(jq -c . "$RUNNER_TEMP/state.json")" >> "$GITHUB_OUTPUT"
             - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
               with:
