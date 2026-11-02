@@ -1482,14 +1482,43 @@ def test_checkout_identity_consumer_is_selected_for_test_and_eol_policy(change: 
 def test_multi_timeframe_ma_owned_paths(status: str, source: str) -> None:
     plan = ci_scope.make_plan([(status, source)])
     assert not plan["full"] and not plan["frontend"]
-    assert plan["domains"] == ["multi_timeframe_ma"]
+    is_calendar_dependency = source in {"research_core/multi_timeframe_ma_core_v1.py", "research_core/multi_timeframe_ma_weeks_v1.py"}
+    assert set(plan["domains"]) == {"multi_timeframe_ma"} | ({"order_card_freshness"} if is_calendar_dependency else set())
     expected = {
         "scripts/tests/test_multi_timeframe_ma_core_v1.py",
         "scripts/tests/test_multi_timeframe_ma_panel_v1.py",
         "scripts/tests/test_multi_timeframe_ma_weeks_v1.py",
         "scripts/tests/test_multi_timeframe_ma_counts_v1.py",
     }
+    if is_calendar_dependency:
+        expected |= {"scripts/tests/test_order_card_freshness_v1.py", "scripts/tests/test_order_card_freshness_cli.py"}
     assert set(plan["python_tests"]) == expected
+
+
+@pytest.mark.parametrize("status", ["A", "M"])
+@pytest.mark.parametrize(
+    "source",
+    [
+        "research_core/order_card_freshness_v1.py",
+        "research_core/order_card_freshness_json_v1.py",
+        "scripts/check_order_card_freshness.py",
+        "tasks/20261102-order-card-freshness/data-contract.md",
+        "tasks/20261102-order-card-freshness/implementation-handoff.md",
+        "tasks/20261102-order-card-freshness/synthetic-packet.json",
+    ],
+)
+def test_order_card_freshness_owned_paths(status: str, source: str) -> None:
+    plan = ci_scope.make_plan([(status, source)])
+    assert not plan["full"] and not plan["frontend"]
+    assert plan["domains"] == ["order_card_freshness"]
+    assert set(plan["python_tests"]) == {"scripts/tests/test_order_card_freshness_v1.py", "scripts/tests/test_order_card_freshness_cli.py"}
+
+
+@pytest.mark.parametrize("status", ["A", "M"])
+def test_unknown_order_card_freshness_keeps_full_fallback(status: str) -> None:
+    plan = ci_scope.make_plan([(status, "research_core/order_card_freshness_unreviewed_v2.py")])
+    assert plan["full"] and plan["frontend"]
+    assert plan["python_tests"] == ci_scope.test_inventory(ci_scope.ROOT, ci_scope.load_manifest())
 
 
 @pytest.mark.parametrize("status", ["A", "M"])
