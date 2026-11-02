@@ -1,0 +1,183 @@
+name: Report preview
+
+# Static PR preview of changed tasks/<id>/web-report/ folders, published only while a PR carries the
+# `preview` label. Uses `pull_request` (never `pull_request_target`): fork PRs get a read-only
+# token and are skipped by the same-repository condition below.
+# Every job is gated by a job-level `if`, so unlabeled PRs show "skipped" and wait for no approval.
+# Pages must be set to "Deploy from a branch" (gh-pages, / root); see docs/en/study-presentation.md.
+
+on:
+    pull_request:
+        branches: [main]
+        types: [labeled, unlabeled, synchronize, reopened, closed]
+
+permissions: {}
+
+jobs:
+    build:
+        name: build-preview
+        if: >-
+            github.event.pull_request.head.repo.full_name == github.repository &&
+            github.event.action != 'closed' && github.event.action != 'unlabeled' &&
+            (github.event.action == 'labeled' && github.event.label.name == 'preview' ||
+            github.event.action != 'labeled' && contains(github.event.pull_request.labels.*.name, 'preview'))
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        # Reads PR code, so it gets no write permission and no persisted credentials.
+        permissions:
+            contents: read
+        concurrency:
+            group: report-preview-build-${{ github.event.pull_request.number }}
+            cancel-in-progress: true
+        outputs:
+            packaged: ${{ steps.package.outputs.packaged }}
+        steps:
+            - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+              with:
+                  ref: ${{ github.event.pull_request.head.sha }}
+                  fetch-depth: 0
+                  persist-credentials: false
+            - name: Gate and package reports
+              id: package
+              env:
+                  PR_NUMBER: ${{ github.event.pull_request.number }}
+                  BASE_SHA: ${{ github.event.pull_request.base.sha }}
+                  HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+                  HEAD_REF: ${{ github.event.pull_request.head.ref }}
+              run: |
+                  set +e
+                  python3 -m scripts.report_preview --base "$BASE_SHA" --head "$HEAD_SHA" \
+                      --pr "$PR_NUMBER" --branch "$HEAD_REF" --out "$RUNNER_TEMP/preview"
+                  code=$?
+                  if [ "$code" -eq 3 ]; then
+                      echo "No web-report changes in this PR; nothing to publish."
+                      echo "packaged=false" >> "$GITHUB_OUTPUT"
+                      exit 0
+                  fi
+                  if [ "$code" -ne 0 ]; then exit "$code"; fi
+                  echo "packaged=true" >> "$GITHUB_OUTPUT"
+            - name: Upload preview artifact
+              if: steps.package.outputs.packaged == 'true'
+              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+              with:
+                  name: report-preview
+                  path: ${{ runner.temp }}/preview
+                  retention-days: 1
+                  if-no-files-found: error
+
+    publish:
+        name: publish-preview
+        needs: build
+        if: needs.build.outputs.packaged == 'true'
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        # Never checks out or runs PR code: it only moves the already-gated artifact to gh-pages.
+        # contents: write cannot be limited to one branch, hence the build/publish split.
+        permissions:
+            contents: write
+            pull-requests: write
+        concurrency:
+            group: report-preview-pages
+            cancel-in-progress: false
+        env:
+            GH_TOKEN: ${{ github.token }}
+            REPO: ${{ github.repository }}
+            OWNER: ${{ github.repository_owner }}
+            PR_NUMBER: ${{ github.event.pull_request.number }}
+            HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        steps:
+            - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+              with:
+                  name: report-preview
+                  path: ${{ runner.temp }}/preview
+            - name: Publish to gh-pages
+              run: |
+                  set -euo pipefail
+                  site="$RUNNER_TEMP/site"
+                  header="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+                  echo "::add-mask::$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+                  if git ls-remote --exit-code --heads "https://github.com/$REPO.git" gh-pages >/dev/null 2>&1; then
+                      git -c "http.https://github.com/.extraheader=$header" clone --depth 1 --branch gh-pages "https://github.com/$REPO.git" "$site"
+                  else
+                      mkdir "$site"
+                  fi
+                  cd "$site"
+                  rm -rf .git "pr-$PR_NUMBER"
+                  mkdir -p "pr-$PR_NUMBER"
+                  cp -R "$RUNNER_TEMP/preview/." "pr-$PR_NUMBER/"
+                  touch .nojekyll
+                  # One orphan commit per publish keeps superseded report bytes out of the public history.
+                  git init -q -b gh-pages
+                  git config user.name "github-actions[bot]"
+                  git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+                  git add -A
+                  git commit -q -m "Publish PR #$PR_NUMBER preview at ${HEAD_SHA:0:7}"
+                  git -c "http.https://github.com/.extraheader=$header" push --force "https://github.com/$REPO.git" gh-pages
+            - name: Update PR comment
+              run: |
+                  set -euo pipefail
+                  url="https://${OWNER,,}.github.io/${REPO#*/}/pr-${PR_NUMBER}/_preview/"
+                  {
+                      echo '<!-- report-preview -->'
+                      echo "PR 預覽已更新：$url"
+                      echo
+                      echo "- commit：\`${HEAD_SHA:0:7}\`"
+                      echo "- 時間：$(date -u '+%Y-%m-%d %H:%M UTC')"
+                      echo "- Pages 部署通常再等約 1 分鐘才會生效；網址公開但不易猜，不是存取控制。"
+                  } > "$RUNNER_TEMP/comment.md"
+                  id=$(gh api "repos/$REPO/issues/$PR_NUMBER/comments" --paginate --jq '[.[] | select(.body | startswith("<!-- report-preview -->"))][0].id // empty' | head -n1)
+                  if [ -n "$id" ]; then
+                      gh api -X PATCH "repos/$REPO/issues/comments/$id" -F body=@"$RUNNER_TEMP/comment.md" >/dev/null
+                  else
+                      gh api -X POST "repos/$REPO/issues/$PR_NUMBER/comments" -F body=@"$RUNNER_TEMP/comment.md" >/dev/null
+                  fi
+
+    remove:
+        name: remove-preview
+        if: >-
+            github.event.pull_request.head.repo.full_name == github.repository &&
+            (github.event.action == 'closed' && contains(github.event.pull_request.labels.*.name, 'preview') ||
+            github.event.action == 'unlabeled' && github.event.label.name == 'preview')
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        permissions:
+            contents: write
+            pull-requests: write
+        concurrency:
+            group: report-preview-pages
+            cancel-in-progress: false
+        env:
+            GH_TOKEN: ${{ github.token }}
+            REPO: ${{ github.repository }}
+            PR_NUMBER: ${{ github.event.pull_request.number }}
+        steps:
+            - name: Remove pr directory from gh-pages
+              run: |
+                  set -euo pipefail
+                  site="$RUNNER_TEMP/site"
+                  header="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+                  echo "::add-mask::$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+                  if ! git ls-remote --exit-code --heads "https://github.com/$REPO.git" gh-pages >/dev/null 2>&1; then
+                      echo "No gh-pages branch; nothing to remove."
+                      exit 0
+                  fi
+                  git -c "http.https://github.com/.extraheader=$header" clone --depth 1 --branch gh-pages "https://github.com/$REPO.git" "$site"
+                  cd "$site"
+                  if [ ! -d "pr-$PR_NUMBER" ]; then
+                      echo "pr-$PR_NUMBER is not published."
+                      exit 0
+                  fi
+                  rm -rf "pr-$PR_NUMBER"
+                  git config user.name "github-actions[bot]"
+                  git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+                  git add -A
+                  git commit -q -m "Remove PR #$PR_NUMBER preview"
+                  git -c "http.https://github.com/.extraheader=$header" push "https://github.com/$REPO.git" gh-pages
+            - name: Mark PR comment as removed
+              run: |
+                  set -euo pipefail
+                  id=$(gh api "repos/$REPO/issues/$PR_NUMBER/comments" --paginate --jq '[.[] | select(.body | startswith("<!-- report-preview -->"))][0].id // empty' | head -n1)
+                  if [ -n "$id" ]; then
+                      printf '%s\n%s\n' '<!-- report-preview -->' 'PR 預覽已撤下（PR 關閉或移除 preview 標籤），網址不再有效。' > "$RUNNER_TEMP/comment.md"
+                      gh api -X PATCH "repos/$REPO/issues/comments/$id" -F body=@"$RUNNER_TEMP/comment.md" >/dev/null
+                  fi

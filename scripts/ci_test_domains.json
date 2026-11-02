@@ -620,6 +620,14 @@
         "scratch_card_consumer": {
             "paths": ["research_core/scratch_runs.py"],
             "tests": ["scripts/tests/test_study_cards.py"]
+        },
+        "report_preview": {
+            "paths": [
+                "research_core/report_preview.py",
+                "scripts/report_preview.py",
+                ".github/workflows/report-preview.yml"
+            ],
+            "tests": ["scripts/tests/test_report_preview.py"]
         }
     },
     "reviewed_tests": [
@@ -850,6 +858,7 @@
         "scripts/tests/test_rebuild_saved_catalog_mutations.py",
         "scripts/tests/test_rebuild_saved_opportunity_catalog.py",
         "scripts/tests/test_registered_jobs.py",
+        "scripts/tests/test_report_preview.py",
         "scripts/tests/test_research_attempt_stress.py",
         "scripts/tests/test_research_attribution.py",
         "scripts/tests/test_research_attribution_inputs.py",
