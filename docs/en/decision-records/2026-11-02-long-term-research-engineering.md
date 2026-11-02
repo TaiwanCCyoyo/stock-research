@@ -149,3 +149,8 @@ SOL workers 分別負責核心接入、純邊界合成測試與真實 public rea
 原生 dtype 檢查完成後，pure adapter 與既有 E1 inputs／count／assembly
 **382 passed in 5.28s**。兩輪都只使用人工輸入。Terra 最終獨立唯讀審查無可操作 findings；
 正常 hooks／hosted CI 與正式 PR 連結在交付後記錄，不把工程通過當研究完成。
+
+交付為 [draft PR #151](https://github.com/TaiwanCCyoyo/stock-research/pull/151)。
+工程提交 `ad33afeeae4618fc93c3f9ebd729a0f211abdb6a` 的正常 hooks 全過；Terra 已核對
+同一不可變提交，無未解可操作 findings。`entry-window-raw-reader` 工作樹保留供 open PR
+跟進；hosted CI／review 以最新 HEAD 的 GitHub 紀錄為準。
