@@ -1073,3 +1073,40 @@ test("path categories are described by the implemented rule", () => {
     assert.match(names, /slow_decline: "[^"]*跌幅達 15% 或以上[^"]*"/);
     assert.doesNotMatch(names, /跌破 −15%|未跌破/);
 });
+
+test("layout switches normalise history so one back always returns to the ranking", () => {
+    const context = {};
+    context.window = context;
+    context.location = { protocol: "file:" };
+    context.parent = context;
+    context.document = {
+        querySelectorAll: () => [],
+        getElementById: () => null,
+    };
+    runInNewContext(readFileSync(join(folder, "reader.js"), "utf8"), context, {
+        timeout: 5000,
+    });
+    const normalize = context.patternRank.normalizeHistoryForLayout;
+    const detail = { pattern: "B4", detail: true };
+    const list = { pattern: "B4", detail: false };
+    // Narrow -> wide: the wide layout shows no detail page, so the entry
+    // left from the narrow detail becomes a list entry.
+    assert.deepEqual({ ...normalize(detail, "B4", false) }, list);
+    // Wide -> narrow: the narrow layout opens on the ranking; a pasted link
+    // (no state) or stale detail entry must not re-open a detail on back.
+    assert.deepEqual({ ...normalize(null, "B4", false) }, list);
+    assert.deepEqual({ ...normalize(detail, "B4", false) }, list);
+    // Narrow layout showing the detail keeps a detail entry.
+    assert.deepEqual({ ...normalize(list, "B4", true) }, detail);
+    // Already consistent: same object, so no replaceState is issued.
+    assert.equal(normalize(list, "B4", false), list);
+    assert.equal(normalize(detail, "B4", true), detail);
+    // No pattern in the hash: nothing to normalise.
+    assert.equal(normalize(null, null, false), null);
+    // Repeated switching is stable (idempotent in both directions).
+    let state = detail;
+    for (const shows of [false, false, false]) {
+        state = normalize(state, "B4", shows);
+        assert.deepEqual({ ...state }, list);
+    }
+});

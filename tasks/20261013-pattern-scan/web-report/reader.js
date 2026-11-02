@@ -130,7 +130,17 @@
         for (let p = el && el.parentElement; p; p = p.parentElement)
             if (p.tagName === "DETAILS" && !p.open) p.open = true;
     };
+    // The history entry must describe what the layout shows: a "detail" entry
+    // left behind by a layout change would re-open a detail on the next back.
+    // Returns the same object when nothing needs to change.
+    const normalizeHistoryForLayout = (state, code, showsDetail) => {
+        if (!code) return state;
+        if (state && state.pattern === code && state.detail === showsDetail)
+            return state;
+        return { pattern: code, detail: showsDetail };
+    };
     window.patternRank = {
+        normalizeHistoryForLayout,
         rowCode,
         patternModel,
         questionLinks,
@@ -706,6 +716,14 @@
             stacked = next;
             view.classList.toggle("is-stacked", stacked);
             if (!stacked && inDetail) leaveDetail(false);
+            // Entries from the other layout must not survive the switch.
+            const code = readCode();
+            const fixed = normalizeHistoryForLayout(
+                history.state,
+                code,
+                inDetail,
+            );
+            if (fixed !== history.state) writeHash(code, false, inDetail);
         }
         layout.hidden = false;
         tableWrap.hidden = true;
