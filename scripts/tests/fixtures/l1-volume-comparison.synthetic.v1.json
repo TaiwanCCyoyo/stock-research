@@ -1,0 +1,1284 @@
+{
+    "schema_version": "l1-volume-comparison.v1",
+    "synthetic": true,
+    "provenance": {
+        "scope": "synthetic",
+        "data_id": "synthetic-eight-event-contract-example",
+        "definition_id": "synthetic-preserved-L1-union",
+        "code_commit": "synthetic-example-not-market-code-lineage",
+        "source_id": "synthetic-only-no-market-source",
+        "generation": "synthetic-generation-v1",
+        "actual_selected_stocks": [
+            "SYNTH-A",
+            "SYNTH-B",
+            "SYNTH-C",
+            "SYNTH-ZERO-EVENT"
+        ],
+        "historical_exposed": true,
+        "validation_scope": {
+            "input_structure_verified": true,
+            "full_q1_parity": false,
+            "marginal_parity": false,
+            "unseen_validation": false
+        },
+        "input_id": "SYNTH-input-id-v1",
+        "base_label_version_id": "SYNTH-base-label-version-v1"
+    },
+    "cohort": {
+        "pattern_id": "L1",
+        "cohort_id": "union",
+        "horizons": [126, 252],
+        "event_n": 8
+    },
+    "semantics": {
+        "outcome_source": "research_core.pattern_scan_projection_v1.project_outcomes",
+        "summary_source": "research_core.pattern_scan_rates_v1.summarize_events",
+        "classification_source": "saved common_values via pattern_scan_conditions_v1.classify_column",
+        "partition": "Fix L1 union event IDs before conditions; same classification at both horizons.",
+        "boundaries": "VOL_a <= 0.7 / > 0.7; G >= 1.5 / < 1.5.",
+        "count_overlap": "unknown_n and censored_n overlap; eligibility exclusions can overlap both. None is loss.",
+        "stock_counts": "distinct_stock_n counts event-bearing stocks within this summary; do not add across cells or years.",
+        "zero_denominator": "Rates and bounds are null when their denominator is zero.",
+        "rate_denominators": {
+            "hit_rate": "known_n",
+            "loss_rate": "known_n",
+            "censored_hit_lower_bound": "censored_potential_n",
+            "censored_hit_upper_bound": "censored_potential_n",
+            "full_calendar_hit_lower_bound": "full_main_potential_n",
+            "full_calendar_hit_upper_bound": "full_main_potential_n"
+        },
+        "references": "At most three deterministic input event references per cell; not a representative sample or a file/URL locator.",
+        "provenance": "Caller assertions only. input_structure_verified means in-memory contract checks, not authentic-market-input certification.",
+        "research_scope": "Synthetic and pilot cells are not evaluated research conclusions; historical exposure never becomes unseen validation."
+    },
+    "horizons": [
+        {
+            "horizon": 126,
+            "cohort": {
+                "event_n": 8,
+                "distinct_stock_n": 3,
+                "per_stock_event_count_median": 2.0,
+                "per_stock_event_count_max": 4,
+                "known_n": 4,
+                "unknown_n": 4,
+                "censored_n": 2,
+                "excluded_known_n": 0,
+                "hit_n": 1,
+                "loss_n": 2,
+                "flat_win_n": 1,
+                "hit_rate": 0.25,
+                "loss_rate": 0.5,
+                "observed_hit_n": 1,
+                "full_calendar_n": 6,
+                "full_calendar_unknown_n": 2,
+                "full_calendar_observed_hit_n": 1,
+                "censored_unknown_n": 2,
+                "censored_observed_hit_n": 0,
+                "full_main_potential_n": 5,
+                "full_eligibility_excluded_n": 1,
+                "censored_eligibility_excluded_n": 0,
+                "censored_potential_n": 2,
+                "censored_hit_lower_bound": 0.0,
+                "censored_hit_upper_bound": 1.0,
+                "full_calendar_hit_lower_bound": 0.2,
+                "full_calendar_hit_upper_bound": 0.4
+            },
+            "cells": [
+                {
+                    "cell_id": "vol_le_0_7__g_ge_1_5",
+                    "vol_a_group": "vol_le_0_7",
+                    "g_group": "g_ge_1_5",
+                    "summary": {
+                        "event_n": 1,
+                        "distinct_stock_n": 1,
+                        "per_stock_event_count_median": 1.0,
+                        "per_stock_event_count_max": 1,
+                        "known_n": 1,
+                        "unknown_n": 0,
+                        "censored_n": 0,
+                        "excluded_known_n": 0,
+                        "hit_n": 1,
+                        "loss_n": 0,
+                        "flat_win_n": 0,
+                        "hit_rate": 1.0,
+                        "loss_rate": 0.0,
+                        "observed_hit_n": 1,
+                        "full_calendar_n": 1,
+                        "full_calendar_unknown_n": 0,
+                        "full_calendar_observed_hit_n": 1,
+                        "censored_unknown_n": 0,
+                        "censored_observed_hit_n": 0,
+                        "full_main_potential_n": 1,
+                        "full_eligibility_excluded_n": 0,
+                        "censored_eligibility_excluded_n": 0,
+                        "censored_potential_n": 0,
+                        "censored_hit_lower_bound": null,
+                        "censored_hit_upper_bound": null,
+                        "full_calendar_hit_lower_bound": 1.0,
+                        "full_calendar_hit_upper_bound": 1.0
+                    },
+                    "evaluation_status": {
+                        "status": "not_evaluated",
+                        "reason": "synthetic_only"
+                    },
+                    "references": [
+                        {
+                            "event_id": "SYNTH-e1",
+                            "security_id": "SYNTH-A",
+                            "t0": "2020-01-02",
+                            "horizon": 126
+                        }
+                    ]
+                },
+                {
+                    "cell_id": "vol_le_0_7__g_lt_1_5",
+                    "vol_a_group": "vol_le_0_7",
+                    "g_group": "g_lt_1_5",
+                    "summary": {
+                        "event_n": 1,
+                        "distinct_stock_n": 1,
+                        "per_stock_event_count_median": 1.0,
+                        "per_stock_event_count_max": 1,
+                        "known_n": 1,
+                        "unknown_n": 0,
+                        "censored_n": 0,
+                        "excluded_known_n": 0,
+                        "hit_n": 0,
+                        "loss_n": 1,
+                        "flat_win_n": 0,
+                        "hit_rate": 0.0,
+                        "loss_rate": 1.0,
+                        "observed_hit_n": 0,
+                        "full_calendar_n": 1,
+                        "full_calendar_unknown_n": 0,
+                        "full_calendar_observed_hit_n": 0,
+                        "censored_unknown_n": 0,
+                        "censored_observed_hit_n": 0,
+                        "full_main_potential_n": 1,
+                        "full_eligibility_excluded_n": 0,
+                        "censored_eligibility_excluded_n": 0,
+                        "censored_potential_n": 0,
+                        "censored_hit_lower_bound": null,
+                        "censored_hit_upper_bound": null,
+                        "full_calendar_hit_lower_bound": 0.0,
+                        "full_calendar_hit_upper_bound": 0.0
+                    },
+                    "evaluation_status": {
+                        "status": "not_evaluated",
+                        "reason": "synthetic_only"
+                    },
+                    "references": [
+                        {
+                            "event_id": "SYNTH-e2",
+                            "security_id": "SYNTH-A",
+                            "t0": "2021-01-04",
+                            "horizon": 126
+                        }
+                    ]
+                },
+                {
+                    "cell_id": "vol_gt_0_7__g_ge_1_5",
+                    "vol_a_group": "vol_gt_0_7",
+                    "g_group": "g_ge_1_5",
+                    "summary": {
+                        "event_n": 1,
+                        "distinct_stock_n": 1,
+                        "per_stock_event_count_median": 1.0,
+                        "per_stock_event_count_max": 1,
+                        "known_n": 0,
+                        "unknown_n": 1,
+                        "censored_n": 1,
+                        "excluded_known_n": 0,
+                        "hit_n": 0,
+                        "loss_n": 0,
+                        "flat_win_n": 0,
+                        "hit_rate": null,
+                        "loss_rate": null,
+                        "observed_hit_n": 0,
+                        "full_calendar_n": 0,
+                        "full_calendar_unknown_n": 0,
+                        "full_calendar_observed_hit_n": 0,
+                        "censored_unknown_n": 1,
+                        "censored_observed_hit_n": 0,
+                        "full_main_potential_n": 0,
+                        "full_eligibility_excluded_n": 0,
+                        "censored_eligibility_excluded_n": 0,
+                        "censored_potential_n": 1,
+                        "censored_hit_lower_bound": 0.0,
+                        "censored_hit_upper_bound": 1.0,
+                        "full_calendar_hit_lower_bound": null,
+                        "full_calendar_hit_upper_bound": null
+                    },
+                    "evaluation_status": {
+                        "status": "not_evaluated",
+                        "reason": "synthetic_only"
+                    },
+                    "references": [
+                        {
+                            "event_id": "SYNTH-e3",
+                            "security_id": "SYNTH-B",
+                            "t0": "2020-01-02",
+                            "horizon": 126
+                        }
+                    ]
+                },
+                {
+                    "cell_id": "vol_gt_0_7__g_lt_1_5",
+                    "vol_a_group": "vol_gt_0_7",
+                    "g_group": "g_lt_1_5",
+                    "summary": {
+                        "event_n": 1,
+                        "distinct_stock_n": 1,
+                        "per_stock_event_count_median": 1.0,
+                        "per_stock_event_count_max": 1,
+                        "known_n": 0,
+                        "unknown_n": 1,
+                        "censored_n": 0,
+                        "excluded_known_n": 0,
+                        "hit_n": 0,
+                        "loss_n": 0,
+                        "flat_win_n": 0,
+                        "hit_rate": null,
+                        "loss_rate": null,
+                        "observed_hit_n": 0,
+                        "full_calendar_n": 1,
+                        "full_calendar_unknown_n": 1,
+                        "full_calendar_observed_hit_n": 0,
+                        "censored_unknown_n": 0,
+                        "censored_observed_hit_n": 0,
+                        "full_main_potential_n": 0,
+                        "full_eligibility_excluded_n": 1,
+                        "censored_eligibility_excluded_n": 0,
+                        "censored_potential_n": 0,
+                        "censored_hit_lower_bound": null,
+                        "censored_hit_upper_bound": null,
+                        "full_calendar_hit_lower_bound": null,
+                        "full_calendar_hit_upper_bound": null
+                    },
+                    "evaluation_status": {
+                        "status": "not_evaluated",
+                        "reason": "synthetic_only"
+                    },
+                    "references": [
+                        {
+                            "event_id": "SYNTH-e4",
+                            "security_id": "SYNTH-B",
+                            "t0": "2021-01-04",
+                            "horizon": 126
+                        }
+                    ]
+                }
+            ],
+            "unavailable": [
+                {
+                    "G_status": "known",
+                    "VOL_a_status": "feature_unknown",
+                    "summary": {
+                        "event_n": 0,
+                        "distinct_stock_n": 0,
+                        "per_stock_event_count_median": null,
+                        "per_stock_event_count_max": 0,
+                        "known_n": 0,
+                        "unknown_n": 0,
+                        "censored_n": 0,
+                        "excluded_known_n": 0,
+                        "hit_n": 0,
+                        "loss_n": 0,
+                        "flat_win_n": 0,
+                        "hit_rate": null,
+                        "loss_rate": null,
+                        "observed_hit_n": 0,
+                        "full_calendar_n": 0,
+                        "full_calendar_unknown_n": 0,
+                        "full_calendar_observed_hit_n": 0,
+                        "censored_unknown_n": 0,
+                        "censored_observed_hit_n": 0,
+                        "full_main_potential_n": 0,
+                        "full_eligibility_excluded_n": 0,
+                        "censored_eligibility_excluded_n": 0,
+                        "censored_potential_n": 0,
+                        "censored_hit_lower_bound": null,
+                        "censored_hit_upper_bound": null,
+                        "full_calendar_hit_lower_bound": null,
+                        "full_calendar_hit_upper_bound": null
+                    },
+                    "reason_counts": {
+                        "G": [],
+                        "VOL_a": []
+                    },
+                    "evaluation_status": {
+                        "status": "not_evaluated",
+                        "reason": "synthetic_only"
+                    },
+                    "references": []
+                },
+                {
+                    "G_status": "known",
+                    "VOL_a_status": "not_applicable",
+                    "summary": {
+                        "event_n": 1,
+                        "distinct_stock_n": 1,
+                        "per_stock_event_count_median": 1.0,
+                        "per_stock_event_count_max": 1,
+                        "known_n": 1,
+                        "unknown_n": 0,
+                        "censored_n": 0,
+                        "excluded_known_n": 0,
+                        "hit_n": 0,
+                        "loss_n": 0,
+                        "flat_win_n": 1,
+                        "hit_rate": 0.0,
+                        "loss_rate": 0.0,
+                        "observed_hit_n": 0,
+                        "full_calendar_n": 1,
+                        "full_calendar_unknown_n": 0,
+                        "full_calendar_observed_hit_n": 0,
+                        "censored_unknown_n": 0,
+                        "censored_observed_hit_n": 0,
+                        "full_main_potential_n": 1,
+                        "full_eligibility_excluded_n": 0,
+                        "censored_eligibility_excluded_n": 0,
+                        "censored_potential_n": 0,
+                        "censored_hit_lower_bound": null,
+                        "censored_hit_upper_bound": null,
+                        "full_calendar_hit_lower_bound": 0.0,
+                        "full_calendar_hit_upper_bound": 0.0
+                    },
+                    "reason_counts": {
+                        "G": [],
+                        "VOL_a": [
+                            {
+                                "reason": "outside_condition_cohort",
+                                "event_n": 1
+                            }
+                        ]
+                    },
+                    "evaluation_status": {
+                        "status": "not_evaluated",
+                        "reason": "synthetic_only"
+                    },
+                    "references": [
+                        {
+                            "event_id": "SYNTH-e6",
+                            "security_id": "SYNTH-C",
+                            "t0": "2021-01-04",
+                            "horizon": 126
+                        }
+                    ]
+                },
+                {
+                    "G_status": "feature_unknown",
+                    "VOL_a_status": "known",
+                    "summary": {
+                        "event_n": 1,
+                        "distinct_stock_n": 1,
+                        "per_stock_event_count_median": 1.0,
+                        "per_stock_event_count_max": 1,
+                        "known_n": 0,
+                        "unknown_n": 1,
+                        "censored_n": 0,
+                        "excluded_known_n": 0,
+                        "hit_n": 0,
+                        "loss_n": 0,
+                        "flat_win_n": 0,
+                        "hit_rate": null,
+                        "loss_rate": null,
+                        "observed_hit_n": 0,
+                        "full_calendar_n": 1,
+                        "full_calendar_unknown_n": 1,
+                        "full_calendar_observed_hit_n": 0,
+                        "censored_unknown_n": 0,
+                        "censored_observed_hit_n": 0,
+                        "full_main_potential_n": 1,
+                        "full_eligibility_excluded_n": 0,
+                        "censored_eligibility_excluded_n": 0,
+                        "censored_potential_n": 0,
+                        "censored_hit_lower_bound": null,
+                        "censored_hit_upper_bound": null,
+                        "full_calendar_hit_lower_bound": 0.0,
+                        "full_calendar_hit_upper_bound": 1.0
+                    },
+                    "reason_counts": {
+                        "G": [
+                            {
+                                "reason": "synthetic_missing_G",
+                                "event_n": 1
+                            }
+                        ],
+                        "VOL_a": []
+                    },
+                    "evaluation_status": {
+                        "status": "not_evaluated",
+                        "reason": "synthetic_only"
+                    },
+                    "references": [
+                        {
+                            "event_id": "SYNTH-e5",
+                            "security_id": "SYNTH-C",
+                            "t0": "2020-01-02",
+                            "horizon": 126
+                        }
+                    ]
+                },
+                {
+                    "G_status": "feature_unknown",
+                    "VOL_a_status": "feature_unknown",
+                    "summary": {
+                        "event_n": 1,
+                        "distinct_stock_n": 1,
+                        "per_stock_event_count_median": 1.0,
+                        "per_stock_event_count_max": 1,
+                        "known_n": 0,
+                        "unknown_n": 1,
+                        "censored_n": 1,
+                        "excluded_known_n": 0,
+                        "hit_n": 0,
+                        "loss_n": 0,
+                        "flat_win_n": 0,
+                        "hit_rate": null,
+                        "loss_rate": null,
+                        "observed_hit_n": 0,
+                        "full_calendar_n": 0,
+                        "full_calendar_unknown_n": 0,
+                        "full_calendar_observed_hit_n": 0,
+                        "censored_unknown_n": 1,
+                        "censored_observed_hit_n": 0,
+                        "full_main_potential_n": 0,
+                        "full_eligibility_excluded_n": 0,
+                        "censored_eligibility_excluded_n": 0,
+                        "censored_potential_n": 1,
+                        "censored_hit_lower_bound": 0.0,
+                        "censored_hit_upper_bound": 1.0,
+                        "full_calendar_hit_lower_bound": null,
+                        "full_calendar_hit_upper_bound": null
+                    },
+                    "reason_counts": {
+                        "G": [
+                            {
+                                "reason": "synthetic_missing_G",
+                                "event_n": 1
+                            }
+                        ],
+                        "VOL_a": [
+                            {
+                                "reason": "synthetic_missing_VOL_a",
+                                "event_n": 1
+                            }
+                        ]
+                    },
+                    "evaluation_status": {
+                        "status": "not_evaluated",
+                        "reason": "synthetic_only"
+                    },
+                    "references": [
+                        {
+                            "event_id": "SYNTH-e7",
+                            "security_id": "SYNTH-C",
+                            "t0": "2022-01-03",
+                            "horizon": 126
+                        }
+                    ]
+                },
+                {
+                    "G_status": "feature_unknown",
+                    "VOL_a_status": "not_applicable",
+                    "summary": {
+                        "event_n": 0,
+                        "distinct_stock_n": 0,
+                        "per_stock_event_count_median": null,
+                        "per_stock_event_count_max": 0,
+                        "known_n": 0,
+                        "unknown_n": 0,
+                        "censored_n": 0,
+                        "excluded_known_n": 0,
+                        "hit_n": 0,
+                        "loss_n": 0,
+                        "flat_win_n": 0,
+                        "hit_rate": null,
+                        "loss_rate": null,
+                        "observed_hit_n": 0,
+                        "full_calendar_n": 0,
+                        "full_calendar_unknown_n": 0,
+                        "full_calendar_observed_hit_n": 0,
+                        "censored_unknown_n": 0,
+                        "censored_observed_hit_n": 0,
+                        "full_main_potential_n": 0,
+                        "full_eligibility_excluded_n": 0,
+                        "censored_eligibility_excluded_n": 0,
+                        "censored_potential_n": 0,
+                        "censored_hit_lower_bound": null,
+                        "censored_hit_upper_bound": null,
+                        "full_calendar_hit_lower_bound": null,
+                        "full_calendar_hit_upper_bound": null
+                    },
+                    "reason_counts": {
+                        "G": [],
+                        "VOL_a": []
+                    },
+                    "evaluation_status": {
+                        "status": "not_evaluated",
+                        "reason": "synthetic_only"
+                    },
+                    "references": []
+                },
+                {
+                    "G_status": "not_applicable",
+                    "VOL_a_status": "known",
+                    "summary": {
+                        "event_n": 0,
+                        "distinct_stock_n": 0,
+                        "per_stock_event_count_median": null,
+                        "per_stock_event_count_max": 0,
+                        "known_n": 0,
+                        "unknown_n": 0,
+                        "censored_n": 0,
+                        "excluded_known_n": 0,
+                        "hit_n": 0,
+                        "loss_n": 0,
+                        "flat_win_n": 0,
+                        "hit_rate": null,
+                        "loss_rate": null,
+                        "observed_hit_n": 0,
+                        "full_calendar_n": 0,
+                        "full_calendar_unknown_n": 0,
+                        "full_calendar_observed_hit_n": 0,
+                        "censored_unknown_n": 0,
+                        "censored_observed_hit_n": 0,
+                        "full_main_potential_n": 0,
+                        "full_eligibility_excluded_n": 0,
+                        "censored_eligibility_excluded_n": 0,
+                        "censored_potential_n": 0,
+                        "censored_hit_lower_bound": null,
+                        "censored_hit_upper_bound": null,
+                        "full_calendar_hit_lower_bound": null,
+                        "full_calendar_hit_upper_bound": null
+                    },
+                    "reason_counts": {
+                        "G": [],
+                        "VOL_a": []
+                    },
+                    "evaluation_status": {
+                        "status": "not_evaluated",
+                        "reason": "synthetic_only"
+                    },
+                    "references": []
+                },
+                {
+                    "G_status": "not_applicable",
+                    "VOL_a_status": "feature_unknown",
+                    "summary": {
+                        "event_n": 0,
+                        "distinct_stock_n": 0,
+                        "per_stock_event_count_median": null,
+                        "per_stock_event_count_max": 0,
+                        "known_n": 0,
+                        "unknown_n": 0,
+                        "censored_n": 0,
+                        "excluded_known_n": 0,
+                        "hit_n": 0,
+                        "loss_n": 0,
+                        "flat_win_n": 0,
+                        "hit_rate": null,
+                        "loss_rate": null,
+                        "observed_hit_n": 0,
+                        "full_calendar_n": 0,
+                        "full_calendar_unknown_n": 0,
+                        "full_calendar_observed_hit_n": 0,
+                        "censored_unknown_n": 0,
+                        "censored_observed_hit_n": 0,
+                        "full_main_potential_n": 0,
+                        "full_eligibility_excluded_n": 0,
+                        "censored_eligibility_excluded_n": 0,
+                        "censored_potential_n": 0,
+                        "censored_hit_lower_bound": null,
+                        "censored_hit_upper_bound": null,
+                        "full_calendar_hit_lower_bound": null,
+                        "full_calendar_hit_upper_bound": null
+                    },
+                    "reason_counts": {
+                        "G": [],
+                        "VOL_a": []
+                    },
+                    "evaluation_status": {
+                        "status": "not_evaluated",
+                        "reason": "synthetic_only"
+                    },
+                    "references": []
+                },
+                {
+                    "G_status": "not_applicable",
+                    "VOL_a_status": "not_applicable",
+                    "summary": {
+                        "event_n": 1,
+                        "distinct_stock_n": 1,
+                        "per_stock_event_count_median": 1.0,
+                        "per_stock_event_count_max": 1,
+                        "known_n": 1,
+                        "unknown_n": 0,
+                        "censored_n": 0,
+                        "excluded_known_n": 0,
+                        "hit_n": 0,
+                        "loss_n": 1,
+                        "flat_win_n": 0,
+                        "hit_rate": 0.0,
+                        "loss_rate": 1.0,
+                        "observed_hit_n": 0,
+                        "full_calendar_n": 1,
+                        "full_calendar_unknown_n": 0,
+                        "full_calendar_observed_hit_n": 0,
+                        "censored_unknown_n": 0,
+                        "censored_observed_hit_n": 0,
+                        "full_main_potential_n": 1,
+                        "full_eligibility_excluded_n": 0,
+                        "censored_eligibility_excluded_n": 0,
+                        "censored_potential_n": 0,
+                        "censored_hit_lower_bound": null,
+                        "censored_hit_upper_bound": null,
+                        "full_calendar_hit_lower_bound": 0.0,
+                        "full_calendar_hit_upper_bound": 0.0
+                    },
+                    "reason_counts": {
+                        "G": [
+                            {
+                                "reason": "outside_condition_cohort",
+                                "event_n": 1
+                            }
+                        ],
+                        "VOL_a": [
+                            {
+                                "reason": "outside_condition_cohort",
+                                "event_n": 1
+                            }
+                        ]
+                    },
+                    "evaluation_status": {
+                        "status": "not_evaluated",
+                        "reason": "synthetic_only"
+                    },
+                    "references": [
+                        {
+                            "event_id": "SYNTH-e8",
+                            "security_id": "SYNTH-C",
+                            "t0": "2023-01-03",
+                            "horizon": 126
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "horizon": 252,
+            "cohort": {
+                "event_n": 8,
+                "distinct_stock_n": 3,
+                "per_stock_event_count_median": 2.0,
+                "per_stock_event_count_max": 4,
+                "known_n": 4,
+                "unknown_n": 3,
+                "censored_n": 3,
+                "excluded_known_n": 0,
+                "hit_n": 0,
+                "loss_n": 2,
+                "flat_win_n": 2,
+                "hit_rate": 0.0,
+                "loss_rate": 0.5,
+                "observed_hit_n": 1,
+                "full_calendar_n": 5,
+                "full_calendar_unknown_n": 1,
+                "full_calendar_observed_hit_n": 0,
+                "censored_unknown_n": 2,
+                "censored_observed_hit_n": 1,
+                "full_main_potential_n": 5,
+                "full_eligibility_excluded_n": 0,
+                "censored_eligibility_excluded_n": 0,
+                "censored_potential_n": 3,
+                "censored_hit_lower_bound": 0.3333333333333333,
+                "censored_hit_upper_bound": 1.0,
+                "full_calendar_hit_lower_bound": 0.0,
+                "full_calendar_hit_upper_bound": 0.2
+            },
+            "cells": [
+                {
+                    "cell_id": "vol_le_0_7__g_ge_1_5",
+                    "vol_a_group": "vol_le_0_7",
+                    "g_group": "g_ge_1_5",
+                    "summary": {
+                        "event_n": 1,
+                        "distinct_stock_n": 1,
+                        "per_stock_event_count_median": 1.0,
+                        "per_stock_event_count_max": 1,
+                        "known_n": 1,
+                        "unknown_n": 0,
+                        "censored_n": 0,
+                        "excluded_known_n": 0,
+                        "hit_n": 0,
+                        "loss_n": 1,
+                        "flat_win_n": 0,
+                        "hit_rate": 0.0,
+                        "loss_rate": 1.0,
+                        "observed_hit_n": 0,
+                        "full_calendar_n": 1,
+                        "full_calendar_unknown_n": 0,
+                        "full_calendar_observed_hit_n": 0,
+                        "censored_unknown_n": 0,
+                        "censored_observed_hit_n": 0,
+                        "full_main_potential_n": 1,
+                        "full_eligibility_excluded_n": 0,
+                        "censored_eligibility_excluded_n": 0,
+                        "censored_potential_n": 0,
+                        "censored_hit_lower_bound": null,
+                        "censored_hit_upper_bound": null,
+                        "full_calendar_hit_lower_bound": 0.0,
+                        "full_calendar_hit_upper_bound": 0.0
+                    },
+                    "evaluation_status": {
+                        "status": "not_evaluated",
+                        "reason": "synthetic_only"
+                    },
+                    "references": [
+                        {
+                            "event_id": "SYNTH-e1",
+                            "security_id": "SYNTH-A",
+                            "t0": "2020-01-02",
+                            "horizon": 252
+                        }
+                    ]
+                },
+                {
+                    "cell_id": "vol_le_0_7__g_lt_1_5",
+                    "vol_a_group": "vol_le_0_7",
+                    "g_group": "g_lt_1_5",
+                    "summary": {
+                        "event_n": 1,
+                        "distinct_stock_n": 1,
+                        "per_stock_event_count_median": 1.0,
+                        "per_stock_event_count_max": 1,
+                        "known_n": 1,
+                        "unknown_n": 0,
+                        "censored_n": 0,
+                        "excluded_known_n": 0,
+                        "hit_n": 0,
+                        "loss_n": 0,
+                        "flat_win_n": 1,
+                        "hit_rate": 0.0,
+                        "loss_rate": 0.0,
+                        "observed_hit_n": 0,
+                        "full_calendar_n": 1,
+                        "full_calendar_unknown_n": 0,
+                        "full_calendar_observed_hit_n": 0,
+                        "censored_unknown_n": 0,
+                        "censored_observed_hit_n": 0,
+                        "full_main_potential_n": 1,
+                        "full_eligibility_excluded_n": 0,
+                        "censored_eligibility_excluded_n": 0,
+                        "censored_potential_n": 0,
+                        "censored_hit_lower_bound": null,
+                        "censored_hit_upper_bound": null,
+                        "full_calendar_hit_lower_bound": 0.0,
+                        "full_calendar_hit_upper_bound": 0.0
+                    },
+                    "evaluation_status": {
+                        "status": "not_evaluated",
+                        "reason": "synthetic_only"
+                    },
+                    "references": [
+                        {
+                            "event_id": "SYNTH-e2",
+                            "security_id": "SYNTH-A",
+                            "t0": "2021-01-04",
+                            "horizon": 252
+                        }
+                    ]
+                },
+                {
+                    "cell_id": "vol_gt_0_7__g_ge_1_5",
+                    "vol_a_group": "vol_gt_0_7",
+                    "g_group": "g_ge_1_5",
+                    "summary": {
+                        "event_n": 1,
+                        "distinct_stock_n": 1,
+                        "per_stock_event_count_median": 1.0,
+                        "per_stock_event_count_max": 1,
+                        "known_n": 0,
+                        "unknown_n": 1,
+                        "censored_n": 1,
+                        "excluded_known_n": 0,
+                        "hit_n": 0,
+                        "loss_n": 0,
+                        "flat_win_n": 0,
+                        "hit_rate": null,
+                        "loss_rate": null,
+                        "observed_hit_n": 0,
+                        "full_calendar_n": 0,
+                        "full_calendar_unknown_n": 0,
+                        "full_calendar_observed_hit_n": 0,
+                        "censored_unknown_n": 1,
+                        "censored_observed_hit_n": 0,
+                        "full_main_potential_n": 0,
+                        "full_eligibility_excluded_n": 0,
+                        "censored_eligibility_excluded_n": 0,
+                        "censored_potential_n": 1,
+                        "censored_hit_lower_bound": 0.0,
+                        "censored_hit_upper_bound": 1.0,
+                        "full_calendar_hit_lower_bound": null,
+                        "full_calendar_hit_upper_bound": null
+                    },
+                    "evaluation_status": {
+                        "status": "not_evaluated",
+                        "reason": "synthetic_only"
+                    },
+                    "references": [
+                        {
+                            "event_id": "SYNTH-e3",
+                            "security_id": "SYNTH-B",
+                            "t0": "2020-01-02",
+                            "horizon": 252
+                        }
+                    ]
+                },
+                {
+                    "cell_id": "vol_gt_0_7__g_lt_1_5",
+                    "vol_a_group": "vol_gt_0_7",
+                    "g_group": "g_lt_1_5",
+                    "summary": {
+                        "event_n": 1,
+                        "distinct_stock_n": 1,
+                        "per_stock_event_count_median": 1.0,
+                        "per_stock_event_count_max": 1,
+                        "known_n": 0,
+                        "unknown_n": 0,
+                        "censored_n": 1,
+                        "excluded_known_n": 0,
+                        "hit_n": 0,
+                        "loss_n": 0,
+                        "flat_win_n": 0,
+                        "hit_rate": null,
+                        "loss_rate": null,
+                        "observed_hit_n": 1,
+                        "full_calendar_n": 0,
+                        "full_calendar_unknown_n": 0,
+                        "full_calendar_observed_hit_n": 0,
+                        "censored_unknown_n": 0,
+                        "censored_observed_hit_n": 1,
+                        "full_main_potential_n": 0,
+                        "full_eligibility_excluded_n": 0,
+                        "censored_eligibility_excluded_n": 0,
+                        "censored_potential_n": 1,
+                        "censored_hit_lower_bound": 1.0,
+                        "censored_hit_upper_bound": 1.0,
+                        "full_calendar_hit_lower_bound": null,
+                        "full_calendar_hit_upper_bound": null
+                    },
+                    "evaluation_status": {
+                        "status": "not_evaluated",
+                        "reason": "synthetic_only"
+                    },
+                    "references": [
+                        {
+                            "event_id": "SYNTH-e4",
+                            "security_id": "SYNTH-B",
+                            "t0": "2021-01-04",
+                            "horizon": 252
+                        }
+                    ]
+                }
+            ],
+            "unavailable": [
+                {
+                    "G_status": "known",
+                    "VOL_a_status": "feature_unknown",
+                    "summary": {
+                        "event_n": 0,
+                        "distinct_stock_n": 0,
+                        "per_stock_event_count_median": null,
+                        "per_stock_event_count_max": 0,
+                        "known_n": 0,
+                        "unknown_n": 0,
+                        "censored_n": 0,
+                        "excluded_known_n": 0,
+                        "hit_n": 0,
+                        "loss_n": 0,
+                        "flat_win_n": 0,
+                        "hit_rate": null,
+                        "loss_rate": null,
+                        "observed_hit_n": 0,
+                        "full_calendar_n": 0,
+                        "full_calendar_unknown_n": 0,
+                        "full_calendar_observed_hit_n": 0,
+                        "censored_unknown_n": 0,
+                        "censored_observed_hit_n": 0,
+                        "full_main_potential_n": 0,
+                        "full_eligibility_excluded_n": 0,
+                        "censored_eligibility_excluded_n": 0,
+                        "censored_potential_n": 0,
+                        "censored_hit_lower_bound": null,
+                        "censored_hit_upper_bound": null,
+                        "full_calendar_hit_lower_bound": null,
+                        "full_calendar_hit_upper_bound": null
+                    },
+                    "reason_counts": {
+                        "G": [],
+                        "VOL_a": []
+                    },
+                    "evaluation_status": {
+                        "status": "not_evaluated",
+                        "reason": "synthetic_only"
+                    },
+                    "references": []
+                },
+                {
+                    "G_status": "known",
+                    "VOL_a_status": "not_applicable",
+                    "summary": {
+                        "event_n": 1,
+                        "distinct_stock_n": 1,
+                        "per_stock_event_count_median": 1.0,
+                        "per_stock_event_count_max": 1,
+                        "known_n": 1,
+                        "unknown_n": 0,
+                        "censored_n": 0,
+                        "excluded_known_n": 0,
+                        "hit_n": 0,
+                        "loss_n": 0,
+                        "flat_win_n": 1,
+                        "hit_rate": 0.0,
+                        "loss_rate": 0.0,
+                        "observed_hit_n": 0,
+                        "full_calendar_n": 1,
+                        "full_calendar_unknown_n": 0,
+                        "full_calendar_observed_hit_n": 0,
+                        "censored_unknown_n": 0,
+                        "censored_observed_hit_n": 0,
+                        "full_main_potential_n": 1,
+                        "full_eligibility_excluded_n": 0,
+                        "censored_eligibility_excluded_n": 0,
+                        "censored_potential_n": 0,
+                        "censored_hit_lower_bound": null,
+                        "censored_hit_upper_bound": null,
+                        "full_calendar_hit_lower_bound": 0.0,
+                        "full_calendar_hit_upper_bound": 0.0
+                    },
+                    "reason_counts": {
+                        "G": [],
+                        "VOL_a": [
+                            {
+                                "reason": "outside_condition_cohort",
+                                "event_n": 1
+                            }
+                        ]
+                    },
+                    "evaluation_status": {
+                        "status": "not_evaluated",
+                        "reason": "synthetic_only"
+                    },
+                    "references": [
+                        {
+                            "event_id": "SYNTH-e6",
+                            "security_id": "SYNTH-C",
+                            "t0": "2021-01-04",
+                            "horizon": 252
+                        }
+                    ]
+                },
+                {
+                    "G_status": "feature_unknown",
+                    "VOL_a_status": "known",
+                    "summary": {
+                        "event_n": 1,
+                        "distinct_stock_n": 1,
+                        "per_stock_event_count_median": 1.0,
+                        "per_stock_event_count_max": 1,
+                        "known_n": 0,
+                        "unknown_n": 1,
+                        "censored_n": 0,
+                        "excluded_known_n": 0,
+                        "hit_n": 0,
+                        "loss_n": 0,
+                        "flat_win_n": 0,
+                        "hit_rate": null,
+                        "loss_rate": null,
+                        "observed_hit_n": 0,
+                        "full_calendar_n": 1,
+                        "full_calendar_unknown_n": 1,
+                        "full_calendar_observed_hit_n": 0,
+                        "censored_unknown_n": 0,
+                        "censored_observed_hit_n": 0,
+                        "full_main_potential_n": 1,
+                        "full_eligibility_excluded_n": 0,
+                        "censored_eligibility_excluded_n": 0,
+                        "censored_potential_n": 0,
+                        "censored_hit_lower_bound": null,
+                        "censored_hit_upper_bound": null,
+                        "full_calendar_hit_lower_bound": 0.0,
+                        "full_calendar_hit_upper_bound": 1.0
+                    },
+                    "reason_counts": {
+                        "G": [
+                            {
+                                "reason": "synthetic_missing_G",
+                                "event_n": 1
+                            }
+                        ],
+                        "VOL_a": []
+                    },
+                    "evaluation_status": {
+                        "status": "not_evaluated",
+                        "reason": "synthetic_only"
+                    },
+                    "references": [
+                        {
+                            "event_id": "SYNTH-e5",
+                            "security_id": "SYNTH-C",
+                            "t0": "2020-01-02",
+                            "horizon": 252
+                        }
+                    ]
+                },
+                {
+                    "G_status": "feature_unknown",
+                    "VOL_a_status": "feature_unknown",
+                    "summary": {
+                        "event_n": 1,
+                        "distinct_stock_n": 1,
+                        "per_stock_event_count_median": 1.0,
+                        "per_stock_event_count_max": 1,
+                        "known_n": 0,
+                        "unknown_n": 1,
+                        "censored_n": 1,
+                        "excluded_known_n": 0,
+                        "hit_n": 0,
+                        "loss_n": 0,
+                        "flat_win_n": 0,
+                        "hit_rate": null,
+                        "loss_rate": null,
+                        "observed_hit_n": 0,
+                        "full_calendar_n": 0,
+                        "full_calendar_unknown_n": 0,
+                        "full_calendar_observed_hit_n": 0,
+                        "censored_unknown_n": 1,
+                        "censored_observed_hit_n": 0,
+                        "full_main_potential_n": 0,
+                        "full_eligibility_excluded_n": 0,
+                        "censored_eligibility_excluded_n": 0,
+                        "censored_potential_n": 1,
+                        "censored_hit_lower_bound": 0.0,
+                        "censored_hit_upper_bound": 1.0,
+                        "full_calendar_hit_lower_bound": null,
+                        "full_calendar_hit_upper_bound": null
+                    },
+                    "reason_counts": {
+                        "G": [
+                            {
+                                "reason": "synthetic_missing_G",
+                                "event_n": 1
+                            }
+                        ],
+                        "VOL_a": [
+                            {
+                                "reason": "synthetic_missing_VOL_a",
+                                "event_n": 1
+                            }
+                        ]
+                    },
+                    "evaluation_status": {
+                        "status": "not_evaluated",
+                        "reason": "synthetic_only"
+                    },
+                    "references": [
+                        {
+                            "event_id": "SYNTH-e7",
+                            "security_id": "SYNTH-C",
+                            "t0": "2022-01-03",
+                            "horizon": 252
+                        }
+                    ]
+                },
+                {
+                    "G_status": "feature_unknown",
+                    "VOL_a_status": "not_applicable",
+                    "summary": {
+                        "event_n": 0,
+                        "distinct_stock_n": 0,
+                        "per_stock_event_count_median": null,
+                        "per_stock_event_count_max": 0,
+                        "known_n": 0,
+                        "unknown_n": 0,
+                        "censored_n": 0,
+                        "excluded_known_n": 0,
+                        "hit_n": 0,
+                        "loss_n": 0,
+                        "flat_win_n": 0,
+                        "hit_rate": null,
+                        "loss_rate": null,
+                        "observed_hit_n": 0,
+                        "full_calendar_n": 0,
+                        "full_calendar_unknown_n": 0,
+                        "full_calendar_observed_hit_n": 0,
+                        "censored_unknown_n": 0,
+                        "censored_observed_hit_n": 0,
+                        "full_main_potential_n": 0,
+                        "full_eligibility_excluded_n": 0,
+                        "censored_eligibility_excluded_n": 0,
+                        "censored_potential_n": 0,
+                        "censored_hit_lower_bound": null,
+                        "censored_hit_upper_bound": null,
+                        "full_calendar_hit_lower_bound": null,
+                        "full_calendar_hit_upper_bound": null
+                    },
+                    "reason_counts": {
+                        "G": [],
+                        "VOL_a": []
+                    },
+                    "evaluation_status": {
+                        "status": "not_evaluated",
+                        "reason": "synthetic_only"
+                    },
+                    "references": []
+                },
+                {
+                    "G_status": "not_applicable",
+                    "VOL_a_status": "known",
+                    "summary": {
+                        "event_n": 0,
+                        "distinct_stock_n": 0,
+                        "per_stock_event_count_median": null,
+                        "per_stock_event_count_max": 0,
+                        "known_n": 0,
+                        "unknown_n": 0,
+                        "censored_n": 0,
+                        "excluded_known_n": 0,
+                        "hit_n": 0,
+                        "loss_n": 0,
+                        "flat_win_n": 0,
+                        "hit_rate": null,
+                        "loss_rate": null,
+                        "observed_hit_n": 0,
+                        "full_calendar_n": 0,
+                        "full_calendar_unknown_n": 0,
+                        "full_calendar_observed_hit_n": 0,
+                        "censored_unknown_n": 0,
+                        "censored_observed_hit_n": 0,
+                        "full_main_potential_n": 0,
+                        "full_eligibility_excluded_n": 0,
+                        "censored_eligibility_excluded_n": 0,
+                        "censored_potential_n": 0,
+                        "censored_hit_lower_bound": null,
+                        "censored_hit_upper_bound": null,
+                        "full_calendar_hit_lower_bound": null,
+                        "full_calendar_hit_upper_bound": null
+                    },
+                    "reason_counts": {
+                        "G": [],
+                        "VOL_a": []
+                    },
+                    "evaluation_status": {
+                        "status": "not_evaluated",
+                        "reason": "synthetic_only"
+                    },
+                    "references": []
+                },
+                {
+                    "G_status": "not_applicable",
+                    "VOL_a_status": "feature_unknown",
+                    "summary": {
+                        "event_n": 0,
+                        "distinct_stock_n": 0,
+                        "per_stock_event_count_median": null,
+                        "per_stock_event_count_max": 0,
+                        "known_n": 0,
+                        "unknown_n": 0,
+                        "censored_n": 0,
+                        "excluded_known_n": 0,
+                        "hit_n": 0,
+                        "loss_n": 0,
+                        "flat_win_n": 0,
+                        "hit_rate": null,
+                        "loss_rate": null,
+                        "observed_hit_n": 0,
+                        "full_calendar_n": 0,
+                        "full_calendar_unknown_n": 0,
+                        "full_calendar_observed_hit_n": 0,
+                        "censored_unknown_n": 0,
+                        "censored_observed_hit_n": 0,
+                        "full_main_potential_n": 0,
+                        "full_eligibility_excluded_n": 0,
+                        "censored_eligibility_excluded_n": 0,
+                        "censored_potential_n": 0,
+                        "censored_hit_lower_bound": null,
+                        "censored_hit_upper_bound": null,
+                        "full_calendar_hit_lower_bound": null,
+                        "full_calendar_hit_upper_bound": null
+                    },
+                    "reason_counts": {
+                        "G": [],
+                        "VOL_a": []
+                    },
+                    "evaluation_status": {
+                        "status": "not_evaluated",
+                        "reason": "synthetic_only"
+                    },
+                    "references": []
+                },
+                {
+                    "G_status": "not_applicable",
+                    "VOL_a_status": "not_applicable",
+                    "summary": {
+                        "event_n": 1,
+                        "distinct_stock_n": 1,
+                        "per_stock_event_count_median": 1.0,
+                        "per_stock_event_count_max": 1,
+                        "known_n": 1,
+                        "unknown_n": 0,
+                        "censored_n": 0,
+                        "excluded_known_n": 0,
+                        "hit_n": 0,
+                        "loss_n": 1,
+                        "flat_win_n": 0,
+                        "hit_rate": 0.0,
+                        "loss_rate": 1.0,
+                        "observed_hit_n": 0,
+                        "full_calendar_n": 1,
+                        "full_calendar_unknown_n": 0,
+                        "full_calendar_observed_hit_n": 0,
+                        "censored_unknown_n": 0,
+                        "censored_observed_hit_n": 0,
+                        "full_main_potential_n": 1,
+                        "full_eligibility_excluded_n": 0,
+                        "censored_eligibility_excluded_n": 0,
+                        "censored_potential_n": 0,
+                        "censored_hit_lower_bound": null,
+                        "censored_hit_upper_bound": null,
+                        "full_calendar_hit_lower_bound": 0.0,
+                        "full_calendar_hit_upper_bound": 0.0
+                    },
+                    "reason_counts": {
+                        "G": [
+                            {
+                                "reason": "outside_condition_cohort",
+                                "event_n": 1
+                            }
+                        ],
+                        "VOL_a": [
+                            {
+                                "reason": "outside_condition_cohort",
+                                "event_n": 1
+                            }
+                        ]
+                    },
+                    "evaluation_status": {
+                        "status": "not_evaluated",
+                        "reason": "synthetic_only"
+                    },
+                    "references": [
+                        {
+                            "event_id": "SYNTH-e8",
+                            "security_id": "SYNTH-C",
+                            "t0": "2023-01-03",
+                            "horizon": 252
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
