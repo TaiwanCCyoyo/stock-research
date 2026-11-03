@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { SourceNotice } from "../../components/SourceNotice";
 import { VERDICT_LABELS } from "../../components/ui/verdicts";
 import { StudioState } from "../strategies/shared";
@@ -12,8 +12,35 @@ import "./studies.css";
 
 export function StudiesPage() {
     const studies = useStudyCards();
-    const [filter, setFilter] = useState<StudyFilter>("all");
-    const [query, setQuery] = useState("");
+    const params = new URLSearchParams(
+        globalThis.location?.hash.split("?")[1] ?? "",
+    );
+    const rawFilter = params.get("filter") ?? "all";
+    const filter = (
+        ["all", "report", ...Object.keys(VERDICT_LABELS)].includes(rawFilter)
+            ? rawFilter
+            : "all"
+    ) as StudyFilter;
+    const query = params.get("q") ?? "";
+    const [searchDraft, setSearchDraft] = useState(query);
+    useEffect(() => setSearchDraft(query), [query]);
+    const study = params.get("study");
+    const update = (key: string, value: string) => {
+        const next = new URLSearchParams(params);
+        next.set(key, value);
+        next.delete("study");
+        location.hash = "studies?" + next;
+    };
+    const setFilter = (value: StudyFilter) => update("filter", value);
+    const setQuery = (value: string) => update("q", value);
+    useEffect(() => {
+        if (!study || !studies.cards) return;
+        const element = document.getElementById("study-" + study);
+        if (element) {
+            element.focus({ preventScroll: true });
+            element.scrollIntoView({ block: "center" });
+        }
+    }, [study, studies.cards]);
     const all = useMemo(() => studies.cards ?? [], [studies.cards]);
     const filters = useMemo(() => {
         const options: { id: StudyFilter; label: string; count: number }[] = [
@@ -81,14 +108,27 @@ export function StudiesPage() {
                                 </button>
                             ))}
                         </div>
-                        <input
-                            className="st-search"
-                            type="search"
-                            aria-label="搜尋研究"
-                            placeholder="搜尋研究"
-                            value={query}
-                            onChange={(event) => setQuery(event.target.value)}
-                        />
+                        <form
+                            role="search"
+                            onSubmit={(event) => {
+                                event.preventDefault();
+                                setQuery(searchDraft.trim());
+                            }}
+                        >
+                            <input
+                                className="st-search"
+                                type="search"
+                                aria-label="搜尋研究"
+                                placeholder="搜尋研究"
+                                value={searchDraft}
+                                onChange={(event) =>
+                                    setSearchDraft(event.target.value)
+                                }
+                            />
+                            <button className="u-btn" type="submit">
+                                搜尋
+                            </button>
+                        </form>
                     </div>
                     {groups.length === 0 && (
                         <p className="u-skeleton">沒有符合的研究。</p>

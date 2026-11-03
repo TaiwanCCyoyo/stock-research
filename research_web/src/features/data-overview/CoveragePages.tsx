@@ -4,6 +4,7 @@ import { CaveatChip, InfoTip } from "../../components/ui/InfoTip";
 import { SkeletonCards } from "../../components/ui/primitives";
 import { SharedDataPage } from "../shared-data/SharedDataPage";
 import { restoreCoverageScroll } from "./coverageScroll";
+import { safeDatasetBack } from "./datasetJourney";
 import {
     canUseCodeSeries,
     legacyHasNoMatch,
@@ -190,6 +191,14 @@ export function StockCoverageList() {
     };
     return (
         <section className="coverage-list">
+            {safeDatasetBack(query.get("context")) && (
+                <a
+                    className="u-btn"
+                    href={safeDatasetBack(query.get("context"))!}
+                >
+                    返回來源資料集
+                </a>
+            )}
             <h1 className="u-title">股票資料涵蓋</h1>
             <p className="u-lede">
                 搜尋證券，確認各資料的涵蓋期間與缺口，再開啟個股檢視。

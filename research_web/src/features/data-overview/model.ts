@@ -1,3 +1,4 @@
+import { datasetDetailHref } from "./datasetJourney.ts";
 /** GET /data-status (research-data-status.v1), see docs/en/data-status.md. */
 export interface DataStatus {
     schema: "research-data-status.v1";
@@ -126,6 +127,7 @@ export function datasetUpdatedLabel(item: DatasetStatus): string {
     return updatedLabel(item.last_updated);
 }
 export function datasetHref(item: DatasetStatus): string | null {
+    if (catalogIdentity(item)) return datasetDetailHref(item.id, "#overview");
     if (item.source === "producer") {
         const query = new URLSearchParams({ kind: "", status: "all" });
         if (

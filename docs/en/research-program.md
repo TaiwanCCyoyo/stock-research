@@ -1,5 +1,8 @@
 # 研究總覽與跨 session 交接
 
+Navigation UX: [research → dataset → stock contract and acceptance matrix](research-navigation.md).
+This is the maintained route/return entry point; data contracts remain with their owning assets.
+
 > Current public-export availability (2026-10-09): source-data packages containing
 > real quote vectors, anchor-close samples or corporate-action factors are retained
 > locally, not distributed in the public repository. Historical receipts and fixed
