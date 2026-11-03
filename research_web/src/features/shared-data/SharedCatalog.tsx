@@ -67,6 +67,8 @@ export function CatalogCard({ entries }: { entries: CatalogEntry[] }) {
             )}
             <SourceInfo>
                 <p>用途：{entry.purpose || "未提供"}</p>
+                <p>資料格式：{entry.viewer_metadata?.schema ?? "未提供"}</p>
+                <p>粒度與單位：摘要未提供，請核對資料契約。</p>
                 <p>
                     資料欄位：
                     {entry.viewer_metadata?.columns?.join("、") ||

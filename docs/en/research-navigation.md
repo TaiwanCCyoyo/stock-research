@@ -14,9 +14,11 @@ start market calculations.
 
 The owner approved parallel implementation on 2026-11-03. The discussion input is
 Library file `libfile_c2578f2e75bc8191b5b9dac04f555d70`, version 1.
-Its transfer failed in this executor; the implementation uses the parent's
-explicit G1/G2 objectives and must still be reconciled with the complete input.
-This is an acceptance gap, not evidence that the discussion was implemented.
+Its direct transfer failed in this executor. On 2026-11-03 the parent supplied
+the verified v1 full text, which was reconciled against this slice. The draft's
+historical "not yet approved" header describes its creation state; the later
+owner approval governs this implementation. The full proposal is not copied here.
+G1/G2 are this slice; G3/G4 and report-section return remain separate follow-ups.
 
 ## Current journey
 
@@ -40,6 +42,9 @@ same-ID references across both sources are ambiguous, even if versions match.
 Dataset source links, browser Back/Forward and refresh use URL state. Study
 selection focuses the original card after data loads. Return URLs are reconstructed
 from bounded local route/parameter allowlists; no external return URL is accepted.
+Search text stays a local draft until form submission; typing does not add history
+entries. Enter or the search button commits the query, while filter selection
+adds a navigation entry. This preserves the discussion's state-lifecycle rule.
 
 Each dataset request has an AbortController and instance-specific cancellation
 check, including A → B → A. Matching a textual key alone is insufficient:
@@ -51,19 +56,42 @@ unknown.
 
 ## Operation / verification matrix
 
-| Status     | Concern                                   | Implementation / evidence                                                       | Remaining acceptance                                                       |
-| ---------- | ----------------------------------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| current    | G1 exact dataset destination              | datasetJourney, DatasetDetailPage, routes; identity and return unit tests       | Browser direct URL / refresh / Back / Forward                              |
-| current    | G2 study references and return            | StudyCardView, StudiesPage URL filters and focused study                        | Keyboard focus, mobile tap targets and full browser round trip             |
-| current    | No fake catalog stock entry               | CatalogCard reused with one version; summary notice                             | Real catalog metadata smoke test                                           |
-| current    | Version loss / ambiguity                  | resolveDataset tests                                                            | Browser error/recovery rendering                                           |
-| current    | Related-study provenance                  | Exact recorded reference only; no name matching                                 | Private API integration                                                    |
-| current    | Obsolete response isolation               | Per-effect abort and aborted checks                                             | Delayed A → B → A browser test                                             |
-| current    | Public synthetic isolation                | Private-mode guard on both reads                                                | Browser request interception                                               |
-| proposed   | G3 map segment context                    | Carry opaque security identity, interval, basis, source/version and safe return | Existing map route and chart API do not yet enforce this complete contract |
-| proposed   | Historical generation member/price reader | Need an API capable of honoring exact generation/version throughout             | Do not silently attach current coverage/chart to a historical claim        |
-| superseded | Every study reference opens overview      | Replaced by exact reference resolution                                          | None                                                                       |
-| superseded | Canonical routes are #data / #data/code   | Overview / coverage / opaque stock routes own current navigation                | Legacy routes remain compatibility resolvers                               |
+| Status     | Concern                                   | Implementation / evidence                                                       | Remaining acceptance                                                             |
+| ---------- | ----------------------------------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| current    | G1 exact dataset destination              | datasetJourney, DatasetDetailPage, routes; identity and return unit tests       | Synthetic Edge direct URL, refresh and Back/Forward passed; real catalog pending |
+| current    | G2 study references and return            | StudyCardView, StudiesPage URL filters and focused study                        | Synthetic round trip, query and focus passed; physical touch pending             |
+| current    | No fake catalog stock entry               | CatalogCard reused with one version; summary notice                             | Synthetic catalog summary passed; real metadata pending                          |
+| current    | Version loss / ambiguity                  | resolveDataset tests                                                            | Unit tests passed; real generation-change integration pending                    |
+| current    | Related-study provenance                  | Exact recorded reference only; no name matching                                 | Synthetic exact-reference relation passed; private API integration pending       |
+| current    | Obsolete response isolation               | Per-effect abort and aborted checks                                             | Synthetic 20-second delayed A/B/A passed; latest response remained visible       |
+| current    | Public synthetic isolation                | Private-mode guard on both reads                                                | Public-mode notice verified in Edge; private-read guard retained                 |
+| proposed   | G3 map segment context                    | Carry opaque security identity, interval, basis, source/version and safe return | Existing map route and chart API do not yet enforce this complete contract       |
+| proposed   | Historical generation member/price reader | Need an API capable of honoring exact generation/version throughout             | Do not silently attach current coverage/chart to a historical claim              |
+| superseded | Every study reference opens overview      | Replaced by exact reference resolution                                          | None                                                                             |
+| superseded | Canonical routes are #data / #data/code   | Overview / coverage / opaque stock routes own current navigation                | Legacy routes remain compatibility resolvers                                     |
+
+## Verification record (2026-11-03)
+
+Edge on the Windows host exercised synthetic study search (typing left URL
+unchanged; Enter submitted), study source disclosure, explicit family generation
+selection, refresh, coverage, opaque-key stock, and the complete reverse path.
+The return preserved the submitted query and focused the original study card.
+Catalog v1 showed its identity and summary-only boundary without a stock link.
+Browser Back/Forward returned to the study and then that same catalog version.
+A 390px viewport showed no horizontal document overflow (375px content width);
+keyboard Enter activated the return link. This is not physical-device touch QA.
+
+For race validation, the first two family responses were delayed 20 seconds.
+After A → B → A, the page displayed response 4 and retained it after both older
+responses were released. The diagnostic server used only clearly labelled
+synthetic fixtures, intercepted API endpoints, and had no producer/shared-data
+reader or proxy. Public-mode notice was separately checked on the normal dev app.
+The initial timeout was isolated to sandbox-host reachability: a formally approved
+host-local dev server resolved it. No firewall or security setting changed.
+
+Frontend tests: 568 passed; TypeScript passed. The earlier build's final dist
+rename EPERM was not retried. Owner acceptance, physical touch, real catalog/API
+integration, and integration with the separate reading PRs remain pending.
 
 ## G3 shared context contract (proposed)
 

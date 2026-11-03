@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { SourceNotice } from "../../components/SourceNotice";
 import { VERDICT_LABELS } from "../../components/ui/verdicts";
 import { StudioState } from "../strategies/shared";
@@ -22,6 +22,8 @@ export function StudiesPage() {
             : "all"
     ) as StudyFilter;
     const query = params.get("q") ?? "";
+    const [searchDraft, setSearchDraft] = useState(query);
+    useEffect(() => setSearchDraft(query), [query]);
     const study = params.get("study");
     const update = (key: string, value: string) => {
         const next = new URLSearchParams(params);
@@ -106,14 +108,27 @@ export function StudiesPage() {
                                 </button>
                             ))}
                         </div>
-                        <input
-                            className="st-search"
-                            type="search"
-                            aria-label="搜尋研究"
-                            placeholder="搜尋研究"
-                            value={query}
-                            onChange={(event) => setQuery(event.target.value)}
-                        />
+                        <form
+                            role="search"
+                            onSubmit={(event) => {
+                                event.preventDefault();
+                                setQuery(searchDraft.trim());
+                            }}
+                        >
+                            <input
+                                className="st-search"
+                                type="search"
+                                aria-label="搜尋研究"
+                                placeholder="搜尋研究"
+                                value={searchDraft}
+                                onChange={(event) =>
+                                    setSearchDraft(event.target.value)
+                                }
+                            />
+                            <button className="u-btn" type="submit">
+                                搜尋
+                            </button>
+                        </form>
                     </div>
                     {groups.length === 0 && (
                         <p className="u-skeleton">沒有符合的研究。</p>

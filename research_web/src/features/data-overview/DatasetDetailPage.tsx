@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { artifactMode } from "../../api/artifactMode";
 import { readShared } from "../shared-data/api";
 import type { Families } from "../shared-data/model";
+import { metadataText } from "../shared-data/model";
+import { SourceInfo } from "../../components/ui/primitives";
 import { CatalogCard } from "../shared-data/SharedCatalog";
 import {
     datasetDetailHref,
@@ -160,6 +162,14 @@ export function DatasetDetailPage() {
                 <>
                     <h2>{match.family.display_title || match.family.family}</h2>
                     <p>{match.family.purpose}</p>
+                    <SourceInfo>
+                        <p>定義：{metadataText(match.family.definition)}</p>
+                        <p>價格基礎：{metadataText(match.family.bases)}</p>
+                        <p>技術欄位：{metadataText(match.family.technical)}</p>
+                        <p>
+                            粒度與單位須依資料定義核對；此頁不是歷史當時可知資料重建。
+                        </p>
+                    </SourceInfo>
                     <p style={{ overflowWrap: "anywhere" }}>
                         generation：{match.family.generation}
                     </p>
