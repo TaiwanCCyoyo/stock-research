@@ -74,6 +74,8 @@ export function resolveDataset(
     // catalog also prevents us from ruling out a cross-source collision.
     if (source !== "derived" && (!data.catalog || data.catalogError))
         return { kind: "unavailable" };
+    if (source !== "catalog" && data.familyError)
+        return { kind: "unavailable" };
     const entries = (data.catalog?.entries ?? []).filter(
         (entry) => source !== "derived" && entry.data_id === id,
     );

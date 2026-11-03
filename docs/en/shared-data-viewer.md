@@ -14,8 +14,7 @@ displays a local-data requirement.
 
 `/shared-data/v1` and `/api/shared-data/v1` expose the same router:
 
-- `families`: current generation/status summary plus verified catalog discovery
-  metadata. A missing catalog is explicit and does not hide the maintained family.
+- `families`: current generation/status summary plus verified catalog discovery. The private response reports independent `familyError` and `catalogError` states; an unavailable maintained family returns an empty `families` list without discarding a readable catalog. Explicit catalog references remain usable, while unqualified references cannot rule out identity collisions until both sources are readable. A missing catalog is explicit and does not hide the maintained family.
 - `adjusted-daily-v1/symbols`: code, optional name/market and first/last stored dates.
   Live producer names use idle-window guards and a stable read-only SQLite read;
   unavailable/busy metadata falls back to codes. Names arrive independently of

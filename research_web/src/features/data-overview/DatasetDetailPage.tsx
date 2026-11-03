@@ -203,7 +203,7 @@ export function DatasetDetailPage() {
                     {match.kind === "ambiguous"
                         ? "資料身分有歧義，請核對引用；不自動選取。"
                         : match.kind === "unavailable"
-                          ? "資料目錄暫時不可讀，無法判定引用是否存在。"
+                          ? "此引用所需的資料來源暫時不可讀，無法判斷引用是否存在。"
                           : "找不到指定資料或版本已失效；不改用最新版本。"}
                 </p>
             )}

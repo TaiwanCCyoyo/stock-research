@@ -135,6 +135,11 @@ export function SharedCatalog({
                     </button>
                 ))}
             </div>
+            {data.familyError && (
+                <p role="alert">
+                    Maintained data unavailable: {data.familyError}
+                </p>
+            )}
             {data.catalogError && (
                 <div role="alert" className="u-notice">
                     <p>研究資料包暫時無法讀取；仍可查看持續維護的資料。</p>

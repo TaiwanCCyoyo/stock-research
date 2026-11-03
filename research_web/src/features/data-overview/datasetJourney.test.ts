@@ -211,3 +211,28 @@ test("a family requires explicit generation selection and rejects expired genera
         "family",
     );
 });
+
+test("family failure preserves explicit catalog versions but cannot exclude bare identity collisions", () => {
+    const partial = { ...data, familyError: "generation unavailable" };
+    assert.equal(
+        resolveDataset(partial, "catalog:events:old", null).kind,
+        "catalog",
+    );
+    assert.equal(
+        resolveDataset(partial, "catalog:events:gone", null).kind,
+        "missing",
+    );
+    assert.equal(
+        resolveDataset(partial, "derived:events", "old").kind,
+        "unavailable",
+    );
+    assert.equal(resolveDataset(partial, "events", "old").kind, "unavailable");
+    assert.equal(
+        resolveDataset(
+            { ...partial, catalog: null, catalogError: "offline" },
+            "catalog:events:old",
+            null,
+        ).kind,
+        "unavailable",
+    );
+});
