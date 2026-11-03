@@ -9,13 +9,22 @@ import pytest
 
 from research_core import pattern_scan_barrier_v1 as barrier
 from research_core import pattern_scan_recovery_v1 as recovery
-from research_core.artifact_store import describe_file, file_digest, read_json
+from research_core.artifact_store import describe_file, file_digest, object_digest, read_json
 from research_core.pattern_scan_event_outcomes_v1 import EventIdentity
 from research_core.pattern_scan_parquet_v1 import read_frame, write_frame
 from research_core.pattern_scan_projection_v1 import project_outcomes
 from research_core.pattern_scan_stock_v1 import EVENT_COLUMNS
 
-SOURCE = {"source_id": "SYNTH-source", "schema": "synthetic"}
+SOURCE_BODY: dict[str, Any] = {
+    "schema": "pattern-scan-source.git.v2",
+    "code": {"commit": "a" * 40, "dirty": True},
+    "runtime": {"python": "3.11.9", "numpy": "1.26.4", "pandas": "2.2.3", "pyarrow": "17.0.0"},
+    "platform": "win32",
+    "numerical_thread_limits": {
+        name: "1" for name in ("OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS", "MKL_NUM_THREADS", "BLIS_NUM_THREADS", "NUMEXPR_NUM_THREADS")
+    },
+}
+SOURCE = {**SOURCE_BODY, "source_id": object_digest(SOURCE_BODY)}
 INPUT_ID = "SYNTH-input"
 
 
@@ -72,8 +81,7 @@ def _stock_receipts(root: Path) -> dict[str, Any]:
 
 
 @pytest.fixture
-def checkpoint(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    monkeypatch.setattr(barrier, "verify_source", lambda source: None)
+def checkpoint(tmp_path: Path) -> Path:
     root = tmp_path / "synthetic-retained-run"
     directory = root / "parts" / "0001"
     calendar = pd.bdate_range("2020-01-06", periods=310)
@@ -123,18 +131,26 @@ def checkpoint(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 
 def _load(root: Path, **kwargs: Any) -> recovery.RecoveryInventory:
-    labels = barrier.checkpoint_label_entry({"0001": root / "parts" / "0001"}, source=SOURCE, input_id=INPUT_ID)
+    label_version = _label_version(root)
     arguments = {
         "requested_codes": ("0001",),
         "expected_input_id": INPUT_ID,
         "expected_source_id": SOURCE["source_id"],
-        "expected_label_version_id": labels["version_id"],
+        "expected_label_version_id": label_version,
         "expected_calendar_n": 310,
         "expected_stock_n": 1,
         "expected_retained_n": 0,
     }
     arguments.update(kwargs)
     return recovery.load_recovery_inventory(root, **arguments)
+
+
+def _label_version(root: Path) -> str:
+    """Independent oracle for the unchanged historical checkpoint label body."""
+    receipt = read_json(root / "parts" / "0001" / "receipt.json")
+    descriptor = next(row for row in receipt["artifacts"] if row["path"] == "base_labels.parquet")
+    body = {"schema": "pattern-scan-label-checkpoints.v3", "source_id": SOURCE["source_id"], "input_id": INPUT_ID, "labels": {"0001": descriptor}}
+    return f"checkpoint-only:{object_digest(body)}"
 
 
 def _retained(root: Path) -> Path:
@@ -373,3 +389,52 @@ def test_selected_zero_event_stock_is_not_a_missing_stock(checkpoint: Path) -> N
     result = recovery.recover_stock(_load(checkpoint), "0001")
     assert result.events.empty and result.conditions.empty and result.memberships.empty
     assert result.audit["event_count"] == result.audit["projection_row_count"] == 0
+
+
+def test_historical_runtime_differs_without_weakening_active_source_validation(checkpoint: Path) -> None:
+    # Keep the active-execution barrier strict: only the historical read adapter
+    # may accept a recorded runtime that differs from the current interpreter.
+    with pytest.raises(ValueError, match="runtime"):
+        barrier.checkpoint_label_entry({"0001": checkpoint / "parts" / "0001"}, source=SOURCE, input_id=INPUT_ID)
+    pin = _label_version(checkpoint)
+    before = {str(path): path.read_bytes() for path in checkpoint.rglob("*") if path.is_file()}
+    inventory = _load(checkpoint, expected_label_version_id=pin)
+    assert inventory.label_pin["version_id"] == pin
+    assert inventory.label_pin["manifest_sha256"] == pin.removeprefix("checkpoint-only:")
+    assert inventory.runtime_audit["original_runtime"] == SOURCE["runtime"]
+    assert inventory.runtime_audit["runtime_differs"] is True
+    assert inventory.runtime_audit["original_runtime_reexecuted"] is False
+    result = recovery.recover_stock(inventory, "0001")
+    assert result.events.base_label_version_id.eq(pin).all()
+    assert before == {str(path): path.read_bytes() for path in checkpoint.rglob("*") if path.is_file()}
+
+
+@pytest.mark.parametrize("field", ["runtime", "code", "platform"])
+def test_historical_source_body_cannot_change_under_unchanged_id(checkpoint: Path, field: str) -> None:
+    path = checkpoint / "derived-preparation.json"
+    prepared = read_json(path)
+    if field == "runtime":
+        prepared["source"]["runtime"]["numpy"] = "different-runtime"
+    elif field == "code":
+        prepared["source"]["code"]["commit"] = "b" * 40
+    else:
+        prepared["source"]["platform"] = "different-platform"
+    write_json(path, prepared)
+    with pytest.raises(ValueError, match="source|identity"):
+        _load(checkpoint)
+
+
+def test_changed_label_descriptor_cannot_reuse_expected_historical_pin(checkpoint: Path) -> None:
+    pinned = _label_version(checkpoint)
+    receipt_path = checkpoint / "parts" / "0001" / "receipt.json"
+    receipt = read_json(receipt_path)
+    descriptor = next(row for row in receipt["artifacts"] if row["path"] == "base_labels.parquet")
+    descriptor["sha256"] = "b" * 64
+    write_json(receipt_path, receipt)
+    pool_path = checkpoint / "phase-stock-result.json"
+    pool = read_json(pool_path)
+    pool["pool"]["results"] = [receipt]
+    write_json(pool_path, pool)
+    assert _label_version(checkpoint) != pinned
+    with pytest.raises(ValueError, match="label.*identity|label.*pin"):
+        _load(checkpoint, expected_label_version_id=pinned)

@@ -53,6 +53,13 @@ three, saved cohort IDs, base labels, quality and calendar drive the same shared
 projection; there is no surviving per-event golden result to claim parity with.
 The fixed L1 event cohort precedes all volume grouping. No arm is recooled.
 
+Historical checkpoint identity is reconstructed using the original v3 label
+descriptor. The original writer's runtime-equality check remains unchanged;
+the recovery reader validates the saved Git-source body digest and fixed label
+pin, while recording both historical and current runtimes. Reading saved labels
+does not claim that the original runtime has been executed again. Selected saved
+events and conditions still require exact numerical parity under today's reader.
+
 ## Execution and evidence boundary
 
 One Windows child job, one stock in flight, numerical-library threads set to one,

@@ -43,6 +43,7 @@ def worker(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
         _reads=reads,
         rows={"0001": {"output_path": str(stock_dir)}},
         barrier={"global_files": {"0001": {"path": str(global_path)}}},
+        runtime_audit={"runtime_differs": True, "original_runtime_reexecuted": False, "synthetic": True},
     )
     events = pd.DataFrame([
         {
@@ -105,6 +106,7 @@ def test_worker_preserves_selected_rows_and_does_not_claim_full_parity(worker: S
     assert worker.calls == ["0001", "unchanged", "unchanged"]
     assert audit["selected_codes"] == ["0001"]
     assert audit["full_q1_parity"] == audit["full_marginal_parity"] == "not_run"
+    assert audit["runtime_provenance"] == {"runtime_differs": True, "original_runtime_reexecuted": False, "synthetic": True}
     assert set(audit["input_fingerprint"]["inputs"]) == {
         "stock_index",
         "preparation",

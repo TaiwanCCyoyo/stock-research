@@ -3,14 +3,15 @@
 from __future__ import annotations
 
 import logging
+import re
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, cast
 
 import pandas as pd
 
-from research_core.artifact_store import read_json, verify_files
-from research_core.pattern_scan_barrier_v1 import checkpoint_label_entry
+from research_core.artifact_store import object_digest, read_json, verify_files
 from research_core.pattern_scan_conditions_v1 import classify_column
 from research_core.pattern_scan_parquet_v1 import read_frame
 from research_core.pattern_scan_projection_v1 import project_outcomes
@@ -18,8 +19,43 @@ from research_core.pattern_scan_receipt_io_v2 import read_scan_receipt
 from research_core.pattern_scan_stock_v1 import EVENT_COLUMNS
 from research_core.research_data_paths import checked_path
 from research_core.research_measurement_v1 import phase_receipt, resource_sample
+from research_core.stock_feature_pool_v1 import runtime_identity
 
 LOGGER = logging.getLogger(__name__)
+
+
+def _legacy_checkpoint_label_pin(source: dict[str, Any], rows: dict[str, dict[str, Any]], input_id: str) -> dict[str, str]:
+    """Match barrier_v1.checkpoint_label_entry's legacy v3 descriptor, not a new label definition."""
+    required = {"schema", "code", "runtime", "platform", "numerical_thread_limits", "source_id"}
+    body = {key: value for key, value in source.items() if key != "source_id"}
+    code = source.get("code")
+    if (
+        set(source) != required
+        or source.get("schema") != "pattern-scan-source.git.v2"
+        or object_digest(body) != source.get("source_id")
+        or not isinstance(code, dict)
+        or set(code) != {"commit", "dirty"}
+        or not isinstance(code.get("commit"), str)
+        or re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", code["commit"]) is None
+        or type(code.get("dirty")) is not bool
+        or not isinstance(source.get("runtime"), dict)
+        or set(source["runtime"]) != {"python", "numpy", "pandas", "pyarrow"}
+        or any(not isinstance(value, str) or not value for value in source["runtime"].values())
+        or not isinstance(source.get("platform"), str)
+        or not source["platform"]
+        or not isinstance(source.get("numerical_thread_limits"), dict)
+        or set(source["numerical_thread_limits"]) != {"OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS", "MKL_NUM_THREADS", "BLIS_NUM_THREADS", "NUMEXPR_NUM_THREADS"}
+        or any(not isinstance(value, str) or not value for value in source["numerical_thread_limits"].values())
+    ):
+        raise ValueError("invalid historical Git source identity")
+    labels = {}
+    for stock_code, row in sorted(rows.items()):
+        matches = [record for record in row["artifacts"] if record.get("path") == "base_labels.parquet"]
+        if len(matches) != 1:
+            raise ValueError("checkpoint requires exactly one base-label descriptor")
+        labels[stock_code] = matches[0]
+    digest = object_digest({"schema": "pattern-scan-label-checkpoints.v3", "source_id": source["source_id"], "input_id": input_id, "labels": labels})
+    return {"version_id": f"checkpoint-only:{digest}", "manifest_sha256": digest}
 
 
 def _stamp(path: Path) -> tuple[int, int, int, int]:
@@ -75,6 +111,7 @@ class RecoveryInventory:
     label_pin: dict[str, str]
     retained: dict[str, tuple[Path, dict[str, Any]]]
     measurement: dict[str, Any]
+    runtime_audit: dict[str, Any]
     _reads: _Reads
 
 
@@ -144,7 +181,6 @@ def load_recovery_inventory(
         or any(x != x.normalize() for x in calendar)
     ):
         raise ValueError("invalid fixed calendar")
-    parts: dict[str, Path] = {}
     for code, row in rows.items():
         directory = checked_path(Path(row["output_path"]))
         if (
@@ -155,11 +191,9 @@ def load_recovery_inventory(
             or row["input_id"] != expected_input_id
         ):
             raise ValueError("stock receipt ancestry differs")
-        parts[code] = directory
-    labels = checkpoint_label_entry(parts, source=source, input_id=expected_input_id)
-    if labels["version_id"] != expected_label_version_id:
+    pin = _legacy_checkpoint_label_pin(source, rows, expected_input_id)
+    if pin["version_id"] != expected_label_version_id:
         raise ValueError("checkpoint label identity differs")
-    pin = {"version_id": labels["version_id"], "manifest_sha256": labels["manifest"]["sha256"]}
     retained: dict[str, tuple[Path, dict[str, Any]]] = {}
     for path in sorted((root / "analysis" / "event-parts").glob("*/receipt.json")):
         receipt = reads.json(path)
@@ -192,7 +226,18 @@ def load_recovery_inventory(
     reads.unchanged()
     measurement = phase_receipt("recovery_inventory", before, resource_sample())
     LOGGER.info("Verified recovery inventory stocks=%d retained_l1=%d", len(rows), len(retained))
-    return RecoveryInventory(root, requested_codes, calendar, rows, barrier, expected_source_id, expected_input_id, pin, retained, measurement, reads)
+    current_runtime = runtime_identity()
+    runtime_audit = {
+        "original_runtime": source["runtime"],
+        "current_runtime": current_runtime,
+        "original_platform": source["platform"],
+        "current_platform": sys.platform,
+        "runtime_differs": source["runtime"] != current_runtime or source["platform"] != sys.platform,
+        "original_runtime_reexecuted": False,
+    }
+    return RecoveryInventory(
+        root, requested_codes, calendar, rows, barrier, expected_source_id, expected_input_id, pin, retained, measurement, runtime_audit, reads
+    )
 
 
 def recover_stock(inventory: RecoveryInventory, code: str) -> RecoveryStock:

@@ -195,6 +195,7 @@ def run_pilot_worker(
         "full_q1_parity": "not_run",
         "full_marginal_parity": "not_run",
         "inventory_measurement": inventory.measurement,
+        "runtime_provenance": inventory.runtime_audit,
         "retained_l1_payloads_verified": len(inventory.retained),
         "stocks": audits,
         "aggregation": reductions,
