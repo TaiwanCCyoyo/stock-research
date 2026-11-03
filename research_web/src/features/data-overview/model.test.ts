@@ -47,7 +47,11 @@ test("same-title catalog versions keep distinct complete identities without infe
     );
     assert.equal(catalogIdentity(dataset()), null);
     assert.equal(catalogIdentity({ ...entry, id: "catalog:incomplete" }), null);
-    assert.equal(datasetHref(entry), null);
+    assert.match(datasetHref(entry)!, /^#dataset\?/);
+    assert.equal(
+        new URLSearchParams(datasetHref(entry)!.split("?")[1]).get("ref"),
+        entry.id,
+    );
 });
 
 test("unknown counts stay unknown while zero stays a measured zero", () => {

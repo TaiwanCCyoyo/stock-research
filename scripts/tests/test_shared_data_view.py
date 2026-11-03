@@ -571,3 +571,28 @@ def test_symbol_names_expired_probe_budget_prevents_sqlite_read(tmp_path: Path, 
     monkeypatch.setattr(live_producer, "read_stable", lambda path, read: read(path))
     monkeypatch.setattr(live_producer, "readonly_sqlite", forbidden)
     assert shared_data_view.symbol_names() == {}
+
+
+@pytest.mark.parametrize("family_available", [True, False])
+@pytest.mark.parametrize("catalog_available", [True, False])
+def test_families_preserves_independent_source_availability(
+    viewer: SharedDataView, monkeypatch: pytest.MonkeyPatch, family_available: bool, catalog_available: bool
+) -> None:
+    from research_api import shared_data
+
+    monkeypatch.setenv("STOCK_RESEARCH_DATA_MODE", "local-private")
+    catalog = {"version_id": "saved-index", "entries": [{"data_id": "events", "version_id": "saved-v1"}], "retired": []}
+    monkeypatch.setattr(shared_data, "catalog_summary", lambda: (catalog, None) if catalog_available else (None, "catalog offline"))
+    if not family_available:
+
+        def unavailable_status() -> dict[str, Any]:
+            raise shared_data_view.ViewUnavailable("generation unavailable")
+
+        monkeypatch.setattr(viewer, "status", unavailable_status)
+    response = _client(viewer).get("/shared-data/v1/families")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["catalog"] == (catalog if catalog_available else None)
+    assert data["catalogError"] == (None if catalog_available else "catalog offline")
+    assert bool(data["families"]) is family_available
+    assert data["familyError"] == (None if family_available else "generation unavailable")

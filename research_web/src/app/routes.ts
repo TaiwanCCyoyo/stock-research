@@ -1,4 +1,5 @@
 export type StudioPage =
+    | "dataset"
     | "home"
     | "market"
     | "strategies"
@@ -28,6 +29,7 @@ export function studioRoute(hash: string): {
     overviewTab?: "stocks";
 } {
     const value = hash.replace(/^#/, "").split("?")[0];
+    if (value === "dataset") return { page: "dataset", runId: null };
     if (value === "direction") return { page: "directions", runId: null };
     if (value.startsWith("direction/")) {
         try {

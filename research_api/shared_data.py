@@ -40,8 +40,8 @@ def create_shared_data_router(view: SharedDataView | None = None) -> APIRouter:
         try:
             family = family_summary(store.status())
         except ViewUnavailable as exc:
-            raise unavailable(exc) from exc
-        return {"families": [family], "catalog": catalog, "catalogError": error}
+            return {"families": [], "familyError": str(exc), "catalog": catalog, "catalogError": error}
+        return {"families": [family], "familyError": None, "catalog": catalog, "catalogError": error}
 
     @router.get("/adjusted-daily-v1/symbols")
     def symbols() -> dict:

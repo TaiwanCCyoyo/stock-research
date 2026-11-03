@@ -23,6 +23,7 @@ import {
     StockSearch,
 } from "../features/data-overview/CoveragePages";
 import { DataOverviewPage } from "../features/data-overview/DataOverviewPage";
+import { DatasetDetailPage } from "../features/data-overview/DatasetDetailPage";
 import { studioRoute, type StudioPage } from "./routes";
 import { themeId, THEMES, type ThemeId } from "./themes";
 import { ThemeAtmosphere } from "./ThemeAtmosphere";
@@ -61,7 +62,7 @@ const NAV: {
     {
         id: "overview",
         label: "資料總覽",
-        also: ["data", "stock"],
+        also: ["data", "stock", "dataset"],
         icon: "M5 6c0-1.1 3.1-2 7-2s7 .9 7 2-3.1 2-7 2-7-.9-7-2zM5 6v12c0 1.1 3.1 2 7 2s7-.9 7-2V6M5 12c0 1.1 3.1 2 7 2s7-.9 7-2",
     },
     {
@@ -345,6 +346,7 @@ export default function Studio() {
             >
                 {page === "home" && <HomePage />}
                 {page === "studies" && <StudiesPage />}
+                {page === "dataset" && <DatasetDetailPage />}
                 {page === "directions" && <DirectionListPage />}
                 {page === "direction" && route.directionId && (
                     <DirectionDetailPage

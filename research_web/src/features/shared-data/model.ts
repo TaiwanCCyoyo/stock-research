@@ -143,6 +143,7 @@ export interface CatalogEntry {
     metadata_error?: string | null;
 }
 export interface Families {
+    familyError?: string | null;
     families: Family[];
     catalog: {
         version_id: string;
