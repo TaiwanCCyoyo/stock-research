@@ -216,8 +216,27 @@ test("saved report supports guided choices and full evidence without changing de
     );
     assert.match(
         ids.get("main-adjusted-difference").textContent,
-        /起點到第20日漲跌幅相近.*有訊號組仍低 4\.8 個百分點/,
+        /為什麼要調整.*第 20 日漲跌幅差不多.*都漲了約 10%.*有訊號組仍低 4\.8 個百分點.*扣掉「已經先跌了」之後剩下的差.*12\.3 是沒有扣掉的原始差/,
     );
+    assert.match(
+        ids.get("findings-title").textContent,
+        /前 20 天跌破過 60 日均線的強勢股，一年內翻倍的比例是 10\.2%；沒跌破過的是 22\.5%/,
+    );
+    assert.equal(
+        ids.get("main-triggered-count").textContent,
+        "每 100 次約 10 次翻倍",
+    );
+    assert.equal(
+        ids.get("main-not-triggered-count").textContent,
+        "每 100 次約 23 次翻倍",
+    );
+    assert.match(
+        ids.get("main-basis").textContent,
+        /回測區間 2010-01-04–2026-10-12.*符合條件共 72,391 筆/,
+    );
+    assert.match(html, /60 日均線＝近 60\s+個交易日的平均收盤價/);
+    assert(!html.includes("不要求當天剛跌破") || html.includes("count-note"));
+    assert(!/rate-axis|刻度 0–/.test(html.split("gap-axis")[0]));
     assert.match(
         ids.get("gap-title").textContent,
         /原始差 12\.3 個百分點；調整後仍差 4\.8 個百分點/,
@@ -226,7 +245,6 @@ test("saved report supports guided choices and full evidence without changing de
         ids.get("main-scope").textContent,
         /七種轉弱訊號、兩個期限共 28 種比較，扣掉第20日漲跌幅差異後，只有「收盤低於60日均線、看一年」在兩種強勢股都仍較低/,
     );
-    assert.match(html, /起點到第20日漲跌幅相近|起點到第20日/);
     assert.match(html, /100 ÷\s*1\.6/);
     // The full-horizon share must not be turned into a day-20 exclusion claim.
     assert.match(html, /觀察整段期間，不限第20日/);
@@ -243,6 +261,7 @@ test("saved report supports guided choices and full evidence without changing de
     // First paint carries the final headline figures; the data-driven nodes
     // show a plain loading state, never an empty gap.
     assert.match(html, /id="main-cost-rate">66\.0%</);
+    assert.match(html, /id="findings-title">[\s\S]*?10\.2%[\s\S]*?22\.5%/);
     for (const id of ["main-scope", "gap-title", "main-adjusted-difference"])
         assert.match(
             html,
@@ -269,7 +288,7 @@ test("saved report supports guided choices and full evidence without changing de
         );
     assert.match(
         guidedHeading().textContent,
-        /在符合上述兩項漲幅條件的股票中，依條件成立後第1至20個交易日內是否曾出現「收盤低於\s*60\s*日均線」分組。比較兩組起點後一年內，收盤價曾達到起點收盤價兩倍的比例。/,
+        /回測區間 2010-01-04–2026-10-12。條件：符合上述兩項漲幅條件的股票，依條件成立後第 1–20 個交易日內是否曾出現「收盤低於 60 日均線」分成兩組，比較兩組起點後一年內，收盤價是否曾達起點收盤價的 2 倍。/,
     );
     const standardized = () =>
         descendants(ids.get("guided-comparison")).find(
@@ -287,17 +306,96 @@ test("saved report supports guided choices and full evidence without changing de
     );
     assert.match(
         ids.get("guided-comparison").textContent,
-        /結果已知的 28,483 筆事件/,
+        /符合條件共 72,391 筆（有訊號 28,483 筆、無訊號 43,908 筆）。/,
+    );
+    assert.doesNotMatch(
+        ids.get("guided-comparison").textContent,
+        /比例依結果已知的/,
+    );
+    // The technical wording about known/unknown outcomes sits in a collapsed <details>.
+    const countNote = descendants(ids.get("guided-comparison")).find(
+        (e) => e.className === "count-note",
+    );
+    assert.equal(countNote.tagName, "details");
+    assert.equal(countNote.open, false);
+    assert.match(countNote.textContent, /尚無法判定/);
+    assert.match(
+        ids.get("guided-comparison").textContent,
+        /每 100 次約 10 次翻倍/,
     );
     assert.match(
         ids.get("guided-comparison").textContent,
-        /結果已知的 43,908 筆事件/,
+        /每 100 次約 23 次翻倍/,
+    );
+    assert(
+        !descendants(ids.get("guided-comparison")).some(
+            (e) => e.className === "rate-axis",
+        ),
+        "no per-bar axis",
+    );
+    // Card 3 names the signal, explains the opposite direction, and never says 這個訊號.
+    assert.match(
+        ids.get("false-abandonment-card").textContent,
+        /最後真的翻倍的強勢股，翻倍前有多少曾出現「收盤低於 60 日均線」？/,
     );
     assert.match(
-        ids.get("guided-comparison").textContent,
-        /尚無法判定結果者另列/,
+        ids.get("false-abandonment-card").textContent,
+        /這張卡看反方向.*從起點到第一次翻倍為止，不限前 20 日/,
     );
+    // Every dropdown option carries a plain-language definition that follows the choice.
+    const definitionOf = (i) =>
+        ids
+            .get("guided-controls")
+            .children[i].children.find((e) => e.className === "option-def");
+    const timelineText = () => ids.get("signal-timeline").textContent;
+    const seenDefinitions = new Set();
+    for (const [i, select] of guided.entries()) {
+        for (const option of select.children) {
+            select.value = option.value;
+            select.listeners.change();
+            const def = definitionOf(i).textContent;
+            assert(def.length > 10, `definition for ${option.value}`);
+            assert(!seenDefinitions.has(def), `distinct definition ${def}`);
+            seenDefinitions.add(def);
+            if (i === 0)
+                assert.match(
+                    def,
+                    option.value === "CORE"
+                        ? /強勢股＝.*60%.*2\.5 倍/
+                        : /9\.5%/,
+                );
+            if (i === 1) assert.match(def, /前 20 個交易日|反彈的高點/);
+        }
+    }
+    guided[0].value = "CORE";
+    guided[0].listeners.change();
+    guided[1].value = "X5_MA20";
+    guided[1].listeners.change();
+    guided[2].value = "252";
+    guided[2].listeners.change();
+    // The timeline follows the selected signal and keeps the two ranges apart.
+    assert.match(timelineText(), /起點日/);
+    assert.match(
+        timelineText(),
+        /看訊號第 1–20 個交易日.*任何一天收盤低於 20 日均線.*第 20 日.*看翻倍第 21 日到第 252 個交易日.*不是從第 20 日再往後算/,
+    );
+    guided[1].value = "X7";
+    guided[1].listeners.change();
+    assert.match(timelineText(), /任何一天收盤低於布林下軌/);
+    assert.doesNotMatch(timelineText(), /20 日均線/);
+    guided[2].value = "126";
+    guided[2].listeners.change();
+    assert.match(timelineText(), /第 21 日到第 126 個交易日/);
+    guided[1].value = "X5_MA60";
+    guided[1].listeners.change();
+    guided[2].value = "252";
+    guided[2].listeners.change();
     assert.match(ids.get("false-abandonment-card").textContent, /66\.0%/);
+    // No causal wording and no vague pronoun anywhere on the page.
+    const pageText = () =>
+        [body, ...[...ids.values()].map((e) => e.textContent)].join("\n");
+    assert.doesNotMatch(pageText(), /這個訊號/);
+    assert.doesNotMatch(pageText(), /導致|造成|會讓|少賺|損失|停損|應該/);
     assert.equal(ids.get("evidence-disclosure").open, false);
     assert.equal(ids.get("full-results-disclosure").open, false);
     const evidence = html.slice(
@@ -360,6 +458,34 @@ test("saved report supports guided choices and full evidence without changing de
     guided[2].value = "126";
     guided[2].listeners.change();
     assert.match(ids.get("guided-comparison").textContent, /7\.7%/);
+    {
+        const lead126 = page.REPORT_TABLES.summary.flatMap((chunk) =>
+            chunk.rows
+                .map((row) =>
+                    Object.fromEntries(
+                        chunk.columns.map((column, i) => [column, row[i]]),
+                    ),
+                )
+                .filter(
+                    (r) =>
+                        r.group_id === "LEAD_B1" &&
+                        r.flag_id === "X5_MA60" &&
+                        r.horizon === 126 &&
+                        r.landmark === 20 &&
+                        r.target_multiple === 2 &&
+                        r.row_kind === "full" &&
+                        r.era === "all" &&
+                        r.split === "all",
+                ),
+        )[0];
+        const total =
+            lead126.triggered_known_n +
+            (lead126.all_false_known_n ?? lead126.untriggered_known_n);
+        assert.match(
+            ids.get("guided-comparison").textContent,
+            new RegExp(`符合條件共 ${total.toLocaleString("en-US")} 筆`),
+        );
+    }
     assert.match(ids.get("false-abandonment-card").textContent, /34\.4%/);
     assert.match(guidedHeading().textContent, /起點後半年內/);
     // Every guided choice must use the selected stored row, including a different cost population.

@@ -127,13 +127,16 @@
                     aria-labelledby="findings-title"
                 >
                     <header>
+                        <p class="rate-kicker">一年內翻倍的比例</p>
+                        <p class="answer-note">
+                            60 日均線＝近 60
+                            個交易日的平均收盤價；強勢股的條件見頁首。
+                        </p>
                         <h2 id="findings-title">
-                            前20個交易日跌破60日均線的強勢股，一年內翻倍的比例不到未跌破者的一半
+                            前 20 天跌破過 60 日均線的強勢股，一年內翻倍的比例是
+                            10.2%；沒跌破過的是 22.5%
                         </h2>
                         <p class="answer-scope" id="main-scope">載入中…</p>
-                        <p class="answer-note">
-                            60日均線＝近60個交易日的平均收盤價；收盤低於它，代表股價落到近三個月的平均之下。
-                        </p>
                     </header>
                     <div
                         class="headline-comparison"
@@ -160,9 +163,10 @@
                                 >載入中…</span
                             >
                         </div>
-                        <p class="headline-basis">
-                            一年內翻倍的比例 · 2010-01-04–2026-10-12 ·
-                            上述兩條件的強勢股
+                        <p class="headline-basis" id="main-basis">
+                            回測區間 2010-01-04–2026-10-12 ·
+                            條件：強勢股，起點後第 1–20 個交易日內有沒有跌破 60
+                            日均線
                         </p>
                     </div>
                     <div
@@ -172,7 +176,9 @@
                     >
                         <p class="gap-title" id="gap-title">載入中…</p>
                         <div class="gap-row">
-                            <span class="gap-name">原始差</span>
+                            <span class="gap-name"
+                                >原始差：兩個比例直接相減</span
+                            >
                             <span class="gap-track"
                                 ><span
                                     class="gap-fill"
@@ -184,7 +190,9 @@
                             >
                         </div>
                         <div class="gap-row">
-                            <span class="gap-name">調整後</span>
+                            <span class="gap-name"
+                                >調整後：只比第 20 日漲跌幅差不多的事件</span
+                            >
                             <span class="gap-track"
                                 ><span
                                     class="gap-fill"
@@ -196,15 +204,23 @@
                             >
                         </div>
                         <p class="gap-axis">
-                            刻度 0–15 個百分點，同一刻度從 0 起算
+                            兩條用同一把尺：0–15 個百分點，從 0 起算
                         </p>
                     </div>
                     <p class="adjusted-note" id="main-adjusted-difference">
                         載入中…
                     </p>
-                    <p class="footnote">
-                        訊號是符合條件後第1–20個交易日內收盤曾低於60日均線。只計入截至第20日尚未翻倍、且一年內結果已知的事件（到第20日已翻倍者，結果在觀察點時已經定了，不屬於「看過前20日走勢、再看之後」的比較）；同一股票不同起點日可形成多筆觀察。
-                    </p>
+                    <details class="count-note">
+                        <summary>計算細節：哪些事件計入、尺度怎麼畫</summary>
+                        <p>
+                            訊號是符合條件後第1–20個交易日內，任何一天收盤低於60日均線，不要求當天剛跌破。只計入截至第20日尚未翻倍、且一年內結果已知的事件（到第20日已翻倍者，結果在觀察點時已經定了，不屬於「看過前20日走勢、再看之後」的比較）。同一檔股票不同起點日可形成多筆，所以用「次」計。
+                        </p>
+                        <p>
+                            每個數字下方的「每 100 次約 N
+                            次翻倍」是比例四捨五入後的換算。互動比較區的長條共用同一把尺，從
+                            0 起算，切換比較時不重新縮放。
+                        </p>
+                    </details>
                 </section>
 
                 <aside
@@ -212,18 +228,18 @@
                     id="counter-note"
                     aria-labelledby="counter-title"
                 >
-                    <h3 id="counter-title">同一訊號也常出現在最後翻倍的股票</h3>
-                    <p class="counter-population">
-                        另一批事件：觀察期限完整、最後確實翻倍的強勢股
-                    </p>
+                    <h3 id="counter-title">
+                        最後真的翻倍的強勢股，翻倍前有多少曾收盤低於 60 日均線？
+                    </h3>
                     <p class="counter-rate">
                         <strong id="main-cost-rate">66.0%</strong>
                     </p>
                     <p>
-                        這批最後翻倍的股票中，有這個比例在第一次翻倍前曾收盤低於60日均線（觀察整段期間，不限第20日）。
+                        這張卡看反方向：只看觀察期限完整、最後真的翻倍的強勢股，回頭數其中有上面這個比例，在翻倍前曾收盤低於60日均線（觀察整段期間，不限第20日）。
                     </p>
                     <p class="muted">
-                        這張卡看的時間更長、對象也不同：看到翻倍為止的整段期間，訊號可能在第20日之後才出現，且只含最後翻倍的事件。
+                        和左邊的比較不同：左邊只看前 20
+                        日內有沒有出現，這裡看到第一次翻倍為止的整段期間，訊號可能在第20日之後才出現。
                     </p>
                 </aside>
             </div>
@@ -294,9 +310,13 @@
                     aria-label="比較條件"
                 ></div>
                 <p class="explorer-context">
-                    切換條件，看兩組翻倍比例怎麼變。第二組「強勢股＋大漲日」是在強勢股之外，再要求起點當天漲幅至少
-                    9.5%，用來另外看起點本身就是大漲日時，結果是否不同。
+                    切換條件，看兩組翻倍比例怎麼變。每個選單下方有該選項的白話說明，下面的時間軸會顯示訊號與翻倍各看哪一段。
                 </p>
+                <ol
+                    class="signal-timeline"
+                    id="signal-timeline"
+                    aria-label="所選訊號的觀察時間軸"
+                ></ol>
                 <p class="explorer-screen" id="explorer-screen-note"></p>
                 <div
                     id="guided-comparison"

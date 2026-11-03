@@ -259,17 +259,43 @@
         row: null,
     };
 
-    const flagExplanations = {
-        Y3: "觀察收盤是否跌破起點時已確認的固定支撐價。",
-        X5_MA20:
-            "20 日均線是近期 20 個交易日的平均收盤價；觀察期間內收盤曾低於它，不要求當天剛跌破。",
-        X5_MA60:
-            "60 日均線是近期 60 個交易日的平均收盤價；觀察期間內收盤曾低於它，不要求當天剛跌破。",
-        X6_10: "觀察收盤是否比起點價格低至少 10%。",
-        X6_15: "觀察收盤是否比起點價格低至少 15%。",
-        X7: "布林下軌是依近期價格波動估出的下方界線；觀察收盤是否低於它。",
-        X8: "觀察新的波段高點是否低於前一個已確認高點。",
+    // Plain-language wording for each choice. The name reads after
+    // "任何一天" in the timeline and inside quotes in the cards.
+    const flagNames = {
+        Y3: "收盤跌破起點固定支撐價",
+        X5_MA20: "收盤低於 20 日均線",
+        X5_MA60: "收盤低於 60 日均線",
+        X6_10: "收盤比起點價低至少 10%",
+        X6_15: "收盤比起點價低至少 15%",
+        X7: "收盤低於布林下軌",
+        X8: "新確認高點低於前一個已確認高點",
     };
+    const flagExplanations = {
+        Y3: "起點時已確認、且低於起點收盤的波段低點中最高的一個，叫起點固定支撐價；前 20 個交易日內任何一天收盤跌破它，就算有訊號。",
+        X5_MA20:
+            "20 日均線＝近 20 個交易日的平均收盤價；前 20 個交易日內任何一天收盤低於它，就算有訊號。",
+        X5_MA60:
+            "60 日均線＝近 60 個交易日的平均收盤價；前 20 個交易日內任何一天收盤低於它，就算有訊號。",
+        X6_10: "前 20 個交易日內任何一天收盤比起點價低至少 10%（不是比前一天），就算有訊號。",
+        X6_15: "前 20 個交易日內任何一天收盤比起點價低至少 15%（不是比前一天），就算有訊號。",
+        X7: "布林下軌是依近期價格波動估出的下方界線；前 20 個交易日內任何一天收盤低於它，就算有訊號。",
+        X8: "反彈的高點一次比一次低：新確認的波段高點低於前一個已確認高點，就算有訊號。",
+    };
+    const groupExplanations = {
+        CORE: "強勢股＝起點收盤比近 240 日平均收盤高 60% 以上，且是前 250 日最低收盤的 2.5 倍以上。",
+        LEAD_B1:
+            "強勢股＋大漲日＝符合上面的強勢股條件，且起點當天原始漲幅至少 9.5%（接近台股單日漲停 10% 的大漲日；2015 年 6 月起才能判斷）。",
+    };
+    const horizonExplanations = {
+        126: "半年＝從起點日算起 126 個交易日內，收盤價曾達起點收盤價的 2 倍就算翻倍。",
+        252: "一年＝從起點日算起 252 個交易日內，收盤價曾達起點收盤價的 2 倍就算翻倍。",
+    };
+    const groupName = (group) =>
+        group === "LEAD_B1" ? "強勢股＋大漲日" : "強勢股";
+    const periodText = () =>
+        String((window.REPORT_META && window.REPORT_META.period) || "")
+            .replace("～", "–")
+            .trim() || "2010-01-04–2026-10-12";
 
     function verdictExplanation(row) {
         const verdict = key(row, "verdict");
@@ -286,7 +312,7 @@
         return explanations[verdict] || "此格沒有保存判讀。";
     }
 
-    function guidedSelect(labelText, options, value, onChange) {
+    function guidedSelect(labelText, options, value, onChange, describe) {
         const labelNode = make("label", "filter-label", labelText);
         const select = document.createElement("select");
         options.forEach(([optionValue, optionLabel]) => {
@@ -296,8 +322,12 @@
             option.selected = optionValue === value;
             select.append(option);
         });
-        select.addEventListener("change", () => onChange(select.value));
-        labelNode.append(select);
+        const definition = make("span", "option-def", describe(value));
+        select.addEventListener("change", () => {
+            definition.textContent = describe(select.value);
+            onChange(select.value);
+        });
+        labelNode.append(select, definition);
         return labelNode;
     }
 
@@ -352,13 +382,18 @@
         label.textContent = `${size.toFixed(1)} 個百分點`;
     }
 
+    const per100 = (rate) =>
+        typeof rate === "number"
+            ? `每 100 次約 ${Math.round(rate * 100)} 次翻倍`
+            : "沒有可用比例，不能視為 0%";
+
     function renderMainFinding() {
         const row = mainFindingRow();
         if (!row) {
             $("#main-triggered-rate").textContent = "—";
             $("#main-not-triggered-rate").textContent = "—";
-            $("#main-triggered-count").textContent = "沒有可用的已知事件數";
-            $("#main-not-triggered-count").textContent = "沒有可用的已知事件數";
+            $("#main-triggered-count").textContent = "沒有可用的結果";
+            $("#main-not-triggered-count").textContent = "沒有可用的結果";
             $("#gap-title").textContent = "此比較目前沒有可用的保存結果。";
             $("#main-adjusted-difference").textContent = "";
             setGap("direct", null);
@@ -366,16 +401,21 @@
             $("#main-cost-rate").textContent = "—";
             return;
         }
-        $("#main-triggered-rate").textContent = fmtPct(
-            val(row, "triggered_rate"),
-        );
-        $("#main-not-triggered-rate").textContent = fmtPct(
-            val(row, "not_triggered_rate"),
-        );
-        $("#main-triggered-count").textContent =
-            `結果已知的 ${fmtInt(val(row, "triggered_known_n"))} 筆觀察`;
-        $("#main-not-triggered-count").textContent =
-            `結果已知的 ${fmtInt(val(row, "not_triggered_known_n"))} 筆觀察`;
+        const triggered = val(row, "triggered_rate");
+        const notTriggered = val(row, "not_triggered_rate");
+        $("#main-triggered-rate").textContent = fmtPct(triggered);
+        $("#main-not-triggered-rate").textContent = fmtPct(notTriggered);
+        $("#main-triggered-count").textContent = per100(triggered);
+        $("#main-not-triggered-count").textContent = per100(notTriggered);
+        $("#findings-title").textContent =
+            `前 20 天跌破過 60 日均線的強勢股，一年內翻倍的比例是 ${fmtPct(triggered)}；沒跌破過的是 ${fmtPct(notTriggered)}`;
+        const knownA = val(row, "triggered_known_n");
+        const knownB = val(row, "not_triggered_known_n");
+        $("#main-basis").textContent =
+            `回測區間 ${periodText()} · 條件：強勢股，起點後第 1–20 個交易日內有沒有跌破 60 日均線` +
+            (typeof knownA === "number" && typeof knownB === "number"
+                ? ` · 符合條件共 ${fmtInt(knownA + knownB)} 筆`
+                : "");
         const difference = val(row, "pooled_difference");
         const adjusted = val(row, "standardized_difference");
         const pp = (v) => (Math.abs(v) * 100).toFixed(1);
@@ -389,8 +429,8 @@
                 ? `原始差 ${pp(difference)} 個百分點；調整後${same ? "仍" : ""}${word(adjusted) === "低" ? "差" : "反向差"} ${pp(adjusted)} 個百分點`
                 : "兩種差距目前沒有可用的保存數值。";
         $("#main-adjusted-difference").textContent =
-            typeof adjusted === "number"
-                ? `調整後：只和「起點到第20日漲跌幅相近」的事件比（例如都漲了約10%的放在一起），有訊號組${same ? "仍" : ""}${word(adjusted)} ${pp(adjusted)} 個百分點。`
+            typeof adjusted === "number" && typeof difference === "number"
+                ? `為什麼要調整：前 20 日內跌破均線的股票，到第 20 日時漲跌幅通常本來就比較低（已經先跌了一段）。所以另外只拿「第 20 日漲跌幅差不多」的事件互相比（例如都漲了約 10%）：這樣有訊號組${same ? "仍" : ""}${word(adjusted)} ${pp(adjusted)} 個百分點，這 ${pp(adjusted)} 才是扣掉「已經先跌了」之後剩下的差；${pp(difference)} 是沒有扣掉的原始差。兩個數字用同一把尺並列在上面。`
                 : "調整後的差值目前沒有可用的保存數值。";
         setGap("direct", difference);
         setGap("adjusted", adjusted);
@@ -414,6 +454,7 @@
                     guidedState.group = value;
                     updateGuidedComparison(true);
                 },
+                (value) => groupExplanations[value] || "",
             ),
             guidedSelect(
                 "轉弱訊號",
@@ -431,6 +472,7 @@
                     guidedState.flag = value;
                     updateGuidedComparison(true);
                 },
+                (value) => flagExplanations[value] || "",
             ),
             guidedSelect(
                 "翻倍期限",
@@ -443,6 +485,7 @@
                     guidedState.horizon = value;
                     updateGuidedComparison(true);
                 },
+                (value) => horizonExplanations[value] || "",
             ),
         );
         $("#guided-evidence-button").addEventListener("click", () => {
@@ -529,6 +572,54 @@
         return cachedScaleMax;
     }
 
+    // Two separate stretches: days 1-20 decide the signal, and the horizon
+    // (126 or 252 days from the start) only sets how long doubling is watched.
+    function renderSignalTimeline(row) {
+        const host = $("#signal-timeline");
+        if (!host) return;
+        host.replaceChildren();
+        const horizonDays =
+            String((row && val(row, "horizon")) || guidedState.horizon).replace(
+                /^H/,
+                "",
+            ) || guidedState.horizon;
+        const horizonText = horizonDays === "126" ? "半年" : "一年";
+        const signalName = flagNames[guidedState.flag];
+        const step = (cls, tag, when, what) => {
+            const li = make("li", `tl-step ${cls}`);
+            if (tag) li.append(make("span", "tl-tag", tag));
+            li.append(
+                make("b", "tl-when", when),
+                make("span", "tl-what", what),
+            );
+            host.append(li);
+        };
+        step(
+            "tl-point",
+            "",
+            "起點日",
+            `條件成立：股票符合「${groupName(guidedState.group)}」。`,
+        );
+        step(
+            "tl-range tl-signal",
+            "看訊號",
+            "第 1–20 個交易日",
+            `這段期間只要有任何一天${signalName}，就算「有訊號」；全程都沒有，就算「無訊號」。`,
+        );
+        step(
+            "tl-point",
+            "",
+            "第 20 日",
+            "訊號到這天為止判定；到這天已經翻倍的事件，不放進兩組比較。",
+        );
+        step(
+            "tl-range tl-double",
+            "看翻倍",
+            `第 21 日到第 ${horizonDays} 個交易日`,
+            `從起點日算起共 ${horizonDays} 個交易日（${horizonText}）；這段期間收盤價曾達起點收盤價的 2 倍，就算翻倍。${horizonText}是從起點日起算，不是從第 20 日再往後算。`,
+        );
+    }
+
     function updateGuidedComparison(animate) {
         const row = rows.find(
             (candidate) =>
@@ -541,6 +632,7 @@
                 key(candidate, "flag") === guidedState.flag,
         );
         guidedState.row = row || null;
+        renderSignalTimeline(row);
         const host = $("#guided-comparison");
         host.replaceChildren();
         const evidenceButton = $("#guided-evidence-button");
@@ -561,50 +653,25 @@
         const notTriggered = val(row, "not_triggered_rate");
         const difference = val(row, "pooled_difference");
         const standardizedDifference = val(row, "standardized_difference");
+        const horizonText = guidedState.horizon === "126" ? "半年" : "一年";
+        const signalName = flagNames[guidedState.flag];
         const comparison = make(
             "div",
-            animate ? "rate-comparison is-fresh" : "rate-comparison",
-        );
-        const horizonText = guidedState.horizon === "126" ? "半年" : "一年";
-        const signalText = flagDescription(guidedState.flag).replace(
-            /^收盤曾?/,
-            "收盤",
+            animate ? "comparison-body is-fresh" : "comparison-body",
         );
         comparison.append(
             make(
                 "p",
                 "comparison-heading",
-                `在${guidedPopulationDescription(guidedState.group)}中，依條件成立後第1至20個交易日內是否曾出現「${signalText}」分組。比較兩組起點後${horizonText}內，收盤價曾達到起點收盤價兩倍的比例。`,
-            ),
-            make(
-                "p",
-                "signal-explanation",
-                flagExplanations[guidedState.flag] ||
-                    "此訊號的定義請見完整研究細節。",
+                `回測區間 ${periodText()}。條件：${guidedPopulationDescription(guidedState.group)}，依條件成立後第 1–20 個交易日內是否曾出現「${signalName}」分成兩組，比較兩組起點後${horizonText}內，收盤價是否曾達起點收盤價的 2 倍。`,
             ),
         );
-        comparison.append(
-            make(
-                "p",
-                "scale-caption",
-                `刻度 0–${scaleMaxPct()}%（兩組共用，從 0 起算）`,
-            ),
-        );
+        const stage = make("div", "rate-comparison");
         const bars = make("div", "rate-bars");
         [
-            [
-                "前20個交易日內曾出現訊號",
-                triggered,
-                "triggered",
-                "triggered_known_n",
-            ],
-            [
-                "前20個交易日內未出現訊號",
-                notTriggered,
-                "not-triggered",
-                "not_triggered_known_n",
-            ],
-        ].forEach(([labelText, rate, stateClass, knownField]) => {
+            ["前20個交易日內曾出現訊號", triggered, "triggered"],
+            ["前20個交易日內未出現訊號", notTriggered, "not-triggered"],
+        ].forEach(([labelText, rate, stateClass]) => {
             const item = make("div", `rate-item ${stateClass}`);
             const heading = make("div", "rate-label");
             heading.append(
@@ -627,28 +694,37 @@
                 track.className = "rate-track is-missing";
                 track.textContent = "沒有可用比例，不能視為 0%";
             }
-            const axis = make("div", "rate-axis");
-            axis.append(
-                make("span", "", "0%"),
-                make("span", "", `${scaleMaxPct() / 2}%`),
-                make("span", "", `${scaleMaxPct()}%`),
-            );
-            item.append(
-                heading,
-                track,
-                axis,
-                make(
-                    "p",
-                    "muted",
-                    `比例依結果已知的 ${fmtInt(val(row, knownField))} 筆事件計算。`,
-                ),
-            );
+            item.append(heading, track, make("p", "rate-per100", per100(rate)));
             bars.append(item);
         });
-        comparison.append(bars);
+        stage.append(bars);
+        comparison.append(stage);
+        const knownA = val(row, "triggered_known_n");
+        const knownB = val(row, "not_triggered_known_n");
         comparison.append(
-            make("p", "muted", "尚無法判定結果者另列，未計入上述比例。"),
+            make(
+                "p",
+                "match-count",
+                typeof knownA === "number" && typeof knownB === "number"
+                    ? `符合條件共 ${fmtInt(knownA + knownB)} 筆（有訊號 ${fmtInt(knownA)} 筆、無訊號 ${fmtInt(knownB)} 筆）。`
+                    : "符合條件的筆數沒有可用的保存數值。",
+            ),
         );
+        const countNote = make("details", "count-note");
+        countNote.append(
+            make("summary", "", "筆數與比例的計算細節"),
+            make(
+                "p",
+                "",
+                "「結果已知」＝這筆事件已追蹤到期限結束，或在期限內已經翻倍，可以確定有沒有翻倍；「尚無法判定」＝追蹤時間不足或資料不明，另列，不計入上面的筆數與比例，也不當成沒翻倍。同一檔股票在不同起點日可以各算一筆，所以用「筆」「次」計。",
+            ),
+            make(
+                "p",
+                "",
+                `兩條長條共用同一把尺，從 0 起算到 ${scaleMaxPct()}%，切換比較時尺度不變。`,
+            ),
+        );
+        comparison.append(countNote);
         const delta = make("p", "difference-callout");
         if (typeof difference === "number") {
             const direction =
@@ -683,7 +759,7 @@
             make(
                 "p",
                 "",
-                "計算方式：第一次翻倍前已出現訊號的事件數，除以訊號狀態已知的最終翻倍事件數。訊號不明的事件另列，不當作未出現。",
+                `計算方式：第一次翻倍前已出現「${signalName}」的事件數，除以訊號狀態已知的最終翻倍事件數。訊號不明的事件另列，不當作未出現。`,
             ),
             make(
                 "p",
@@ -698,28 +774,24 @@
                     : `若訊號不明者都當作未出現，比例最低為 ${fmtPct(val(row, "false_abandonment_lower"))}；都當作曾出現，最高為 ${fmtPct(val(row, "false_abandonment_upper"))}。這是邏輯上的範圍。`,
             ),
         );
+        const costRate = val(row, "false_abandonment_rate");
         costCard.append(
             make(
                 "h3",
                 "",
-                "最後真的翻倍的事件中，也有多少之前出現過這個訊號？",
+                `最後真的翻倍的${groupName(guidedState.group)}，翻倍前有多少曾出現「${signalName}」？`,
             ),
-            make("p", "cost-rate", fmtPct(val(row, "false_abandonment_rate"))),
+            make("p", "cost-rate", fmtPct(costRate)),
             make(
                 "p",
                 "",
-                `這裡只看資料觀察完整、而且在期限內確實翻倍的事件。訊號可以在起點後第 20 個交易日之後才出現，只要早於第一次翻倍。`,
-            ),
-            make(
-                "p",
-                "muted",
-                "這張卡看的時間更長、對象也不同：上方比較只看前 20 個交易日內的訊號，並排除到第 20 日（含當日）已翻倍的觀察；這張卡看到翻倍為止的整段期間，且只含最後翻倍的事件。",
+                `這張卡看反方向：不是先分有沒有訊號，而是只看最後真的翻倍的${groupName(guidedState.group)}事件，回頭數其中有多少在翻倍前曾出現「${signalName}」。時間範圍是從起點到第一次翻倍為止，不限前 20 日。`,
             ),
             make(
                 "p",
                 "cost-sowhat",
-                typeof val(row, "false_abandonment_rate") === "number"
-                    ? `這批最後翻倍的事件中有 ${fmtPct(val(row, "false_abandonment_rate"))} 在翻倍前曾出現這個訊號（觀察整段期間，不限第20日）。`
+                typeof costRate === "number"
+                    ? `這批最後翻倍的事件中有 ${fmtPct(costRate)} 在翻倍前曾出現「${signalName}」（觀察整段期間，不限第20日）。`
                     : "這個組合沒有可用的比例。",
             ),
             costDetails,
