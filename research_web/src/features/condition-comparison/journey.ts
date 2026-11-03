@@ -37,6 +37,9 @@ export function comparisonSourceHref(back: string): string {
     const target = comparisonBack(back);
     return target + (target.includes("?") ? "&" : "?") + "focus=comparison";
 }
+export function comparisonRequestsSourceFocus(hash: string): boolean {
+    return hash === comparisonSourceHref(comparisonBack(hash));
+}
 export function restoreComparisonEntrance(
     hash: string,
     back: string,

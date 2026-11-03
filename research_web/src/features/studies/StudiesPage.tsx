@@ -9,6 +9,7 @@ import { StudyCardView } from "./StudyCardView";
 import { useStudyCards } from "./useStudyCards";
 import { DirectionEntrance } from "../direction-discussion/DirectionDiscussionPage";
 import { ComparisonEntrance } from "../condition-comparison/ComparisonPage";
+import { comparisonRequestsSourceFocus } from "../condition-comparison/journey";
 import "./studies.css";
 
 export function StudiesPage() {
@@ -26,22 +27,27 @@ export function StudiesPage() {
     const [searchDraft, setSearchDraft] = useState(query);
     useEffect(() => setSearchDraft(query), [query]);
     const study = params.get("study");
+    const comparisonFocus = comparisonRequestsSourceFocus(
+        globalThis.location?.hash ?? "",
+    );
     const update = (key: string, value: string) => {
         const next = new URLSearchParams(params);
         next.set(key, value);
         next.delete("study");
+        next.delete("focus");
         location.hash = "studies?" + next;
     };
     const setFilter = (value: StudyFilter) => update("filter", value);
     const setQuery = (value: string) => update("q", value);
     useEffect(() => {
-        if (!study || !studies.cards) return;
+        // Explicit comparison return owns focus, including delayed card refreshes.
+        if (comparisonFocus || !study || !studies.cards) return;
         const element = document.getElementById("study-" + study);
         if (element) {
             element.focus({ preventScroll: true });
             element.scrollIntoView({ block: "center" });
         }
-    }, [study, studies.cards]);
+    }, [comparisonFocus, study, studies.cards]);
     const all = useMemo(() => studies.cards ?? [], [studies.cards]);
     const filters = useMemo(() => {
         const options: { id: StudyFilter; label: string; count: number }[] = [

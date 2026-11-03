@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
     comparisonBack,
+    comparisonRequestsSourceFocus,
     comparisonSourceHref,
     restoreComparisonEntrance,
     comparisonEntryHref,
@@ -202,4 +203,19 @@ test("source focus markers preserve bounded destinations", () => {
         comparisonSourceHref("#studies?q=test&evil=1"),
         "#studies?q=test&focus=comparison",
     );
+});
+
+test("explicit comparison focus takes precedence only for the bounded marked source", () => {
+    assert.equal(
+        comparisonRequestsSourceFocus(
+            "#studies?study=synthetic-focus&focus=comparison",
+        ),
+        true,
+    );
+    for (const hash of [
+        "#studies?study=synthetic-focus",
+        "#studies?study=synthetic-focus&focus=other",
+        "#studies?study=synthetic-focus&focus=comparison&focus=other",
+    ])
+        assert.equal(comparisonRequestsSourceFocus(hash), false);
 });

@@ -153,3 +153,15 @@ the bounded navigation above; it does not import the unmerged L1 recovery pilot.
 Existing unmerged reading PRs and owner acceptance restrictions remain separate.
 No deployment, scheduling, permission, producer or research-data changes are
 part of this work.
+
+Comparison source focus takes precedence over a preserved `study` card target,
+including cached cards, delayed initial loading and later refreshes. Ordinary
+study returns still focus the selected card. Changing search/filter clears the
+return-focus intent along with the selected study.
+
+Mounted browser regression: from `research_web`, run
+`node scripts/comparison-focus-browser.mjs` and open the printed localhost URL.
+It mounts the actual StudiesPage and replaces only the data hook with a labelled
+synthetic fixture. In Edge, all 11 focus assertions passed for cached/delayed
+cards, two response generations and ordinary study navigation. This browser
+harness is a manual regression and is not included in `npm test` or hosted CI.
