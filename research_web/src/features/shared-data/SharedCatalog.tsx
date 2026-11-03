@@ -15,7 +15,7 @@ const contract = `${repository}docs/en/research-derived-data.md`;
 const catalogGuide = `${repository}tasks/20261012-research-data-entry/data-contract.md`;
 const assetIndex = `${repository}docs/en/research-program.md`;
 
-function CatalogCard({ entries }: { entries: CatalogEntry[] }) {
+export function CatalogCard({ entries }: { entries: CatalogEntry[] }) {
     const [version, setVersion] = useState<string>();
     const entry = selectedCatalogVersion(entries, version);
     return (
