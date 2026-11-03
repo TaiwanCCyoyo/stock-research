@@ -22,6 +22,7 @@ const PARAMETERS = [
 
 /** Only research-list and report destinations; no arbitrary route or URL. */
 export function comparisonBack(value: string | null): string {
+    value = value?.replace(/\?focus=comparison$/, "") ?? null;
     if (
         value &&
         /^#report\/[A-Za-z0-9][A-Za-z0-9._-]*$/.test(value) &&
@@ -30,6 +31,20 @@ export function comparisonBack(value: string | null): string {
         return value;
     const study = safeStudyBack(value);
     return study === "#overview" ? "#studies" : study;
+}
+/** Persistent, bounded return intent survives reload/history without storage. */
+export function comparisonSourceHref(back: string): string {
+    const target = comparisonBack(back);
+    return target + (target.includes("?") ? "&" : "?") + "focus=comparison";
+}
+export function restoreComparisonEntrance(
+    hash: string,
+    back: string,
+    entrance: Pick<HTMLElement, "focus" | "scrollIntoView"> | null,
+): void {
+    if (hash !== comparisonSourceHref(back)) return;
+    entrance?.focus({ preventScroll: true });
+    entrance?.scrollIntoView({ block: "center" });
 }
 export function comparisonHref(
     selection: Selection,

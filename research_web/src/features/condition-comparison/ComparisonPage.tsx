@@ -3,6 +3,8 @@ import { ConditionComparison } from "./ConditionComparison";
 import { syntheticComparison } from "./fixture";
 import {
     comparisonBack,
+    comparisonSourceHref,
+    restoreComparisonEntrance,
     comparisonEntryHref,
     comparisonHref,
     parseComparisonLocation,
@@ -12,40 +14,32 @@ import type { ComparisonLocation } from "./journey";
 import type { ComparisonView, QuestionRequest, SavedCase } from "./model";
 import { readRegisteredComparison } from "./registry";
 
-let pendingSourceFocus: string | null = null;
-const RETURN_FOCUS_KEY = "research.comparison.return-focus";
 export function ComparisonEntrance({ back }: { back: string }) {
     const entrance = useRef<HTMLAnchorElement>(null);
     const target = comparisonBack(back);
     useEffect(() => {
-        let saved = pendingSourceFocus;
-        try {
-            saved = sessionStorage.getItem(RETURN_FOCUS_KEY) ?? saved;
-        } catch {
-            /* Storage is optional. */
-        }
-        if (saved !== target) return;
-        pendingSourceFocus = null;
-        try {
-            sessionStorage.removeItem(RETURN_FOCUS_KEY);
-        } catch {
-            /* Storage is optional. */
-        }
-        entrance.current?.focus({ preventScroll: true });
-        entrance.current?.scrollIntoView({ block: "center" });
+        restoreComparisonEntrance(location.hash, target, entrance.current);
     }, [target]);
     return (
         <a
             ref={entrance}
             className="u-card direction-entrance"
             href={comparisonEntryHref(syntheticComparison, back)}
-            onClick={() => {
-                pendingSourceFocus = target;
-                try {
-                    sessionStorage.setItem(RETURN_FOCUS_KEY, target);
-                } catch {
-                    /* URL state remains authoritative. */
-                }
+            onClick={(event) => {
+                if (
+                    event.button !== 0 ||
+                    event.metaKey ||
+                    event.ctrlKey ||
+                    event.shiftKey ||
+                    event.altKey
+                )
+                    return;
+                // Keep the original history entry focusable on every Back/Forward visit.
+                history.replaceState(
+                    history.state,
+                    "",
+                    comparisonSourceHref(target),
+                );
             }}
         >
             <strong>試用條件比較流程（合成示例） →</strong>
@@ -137,7 +131,7 @@ export function ComparisonPage() {
     };
     return (
         <div className="u-page" ref={region}>
-            <a className="u-btn" href={route.back}>
+            <a className="u-btn" href={comparisonSourceHref(route.back)}>
                 返回來源研究頁
             </a>
             <p className="u-notice">

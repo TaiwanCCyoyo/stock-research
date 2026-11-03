@@ -119,7 +119,7 @@ Opening a case replaces the current comparison entry with its selected event,
 then pushes one case entry. Refresh, Back/Forward and the explicit return retain
 the same comparison and restore focus to its case button. Return targets reuse
 the bounded study-list context (query/filter/study) or an allowlisted report ID.
-The original entrance receives focus on return; optional session storage supports
+The original entrance receives focus on return; a bounded URL focus marker supports
 this after reload, while missing storage never affects semantic URL state.
 Report-section positioning is not claimed: the entrance is in the report shell.
 

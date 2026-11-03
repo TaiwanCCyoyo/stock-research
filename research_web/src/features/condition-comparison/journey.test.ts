@@ -2,6 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
     comparisonBack,
+    comparisonSourceHref,
+    restoreComparisonEntrance,
     comparisonEntryHref,
     comparisonHref,
     parseComparisonLocation,
@@ -124,5 +126,80 @@ test("safe return never accepts external or arbitrary internal navigation", () =
     assert.equal(
         comparisonBack("#report/20261013-pattern-scan"),
         "#report/20261013-pattern-scan",
+    );
+});
+
+test("source focus survives direct entry, refresh and repeated returns without storage", () => {
+    const original = Object.getOwnPropertyDescriptor(
+        globalThis,
+        "sessionStorage",
+    );
+    Object.defineProperty(globalThis, "sessionStorage", {
+        configurable: true,
+        get() {
+            throw new Error("Storage unavailable");
+        },
+    });
+    try {
+        for (const back of [
+            "#studies?q=volume&filter=all",
+            "#report/20261013-pattern-scan",
+        ]) {
+            let focused = 0;
+            let scrolled = 0;
+            const entrance = {
+                focus(options: FocusOptions) {
+                    assert.equal(options.preventScroll, true);
+                    focused++;
+                },
+                scrollIntoView(options: ScrollIntoViewOptions) {
+                    assert.equal(options.block, "center");
+                    scrolled++;
+                },
+            };
+            // Direct comparison entry has no entrance-click or stored marker.
+            const direct = comparisonEntryHref(view, back);
+            for (let visit = 1; visit <= 3; visit++) {
+                const route = parseComparisonLocation(direct);
+                const returned = comparisonSourceHref(route.back);
+                restoreComparisonEntrance(
+                    returned,
+                    comparisonBack(returned),
+                    entrance,
+                );
+                assert.equal(focused, visit);
+                assert.equal(scrolled, visit);
+                assert.equal(comparisonBack(returned), comparisonBack(back));
+            }
+            restoreComparisonEntrance(back, back, entrance);
+            restoreComparisonEntrance("#studies?focus=other", back, entrance);
+            assert.equal(
+                focused,
+                3,
+                "ordinary source visits do not steal focus",
+            );
+        }
+    } finally {
+        if (original)
+            Object.defineProperty(globalThis, "sessionStorage", original);
+        else Reflect.deleteProperty(globalThis, "sessionStorage");
+    }
+});
+test("source focus markers preserve bounded destinations", () => {
+    assert.equal(
+        comparisonSourceHref("https://example.com"),
+        "#studies?focus=comparison",
+    );
+    assert.equal(
+        comparisonBack("#report/../private?focus=comparison"),
+        "#studies",
+    );
+    assert.equal(
+        comparisonBack("#report/20261013-pattern-scan?focus=comparison&evil=1"),
+        "#studies",
+    );
+    assert.equal(
+        comparisonSourceHref("#studies?q=test&evil=1"),
+        "#studies?q=test&focus=comparison",
     );
 });
