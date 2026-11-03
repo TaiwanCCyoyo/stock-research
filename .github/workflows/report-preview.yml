@@ -1,0 +1,141 @@
+name: Report preview
+
+# Static preview site of changed tasks/<id>/web-report/ folders for PRs that carry the `preview`
+# label. Stateless reconcile: every run lists the open, same-repository, labelled PRs as they are
+# *now*, reads each head commit as git objects (never checked out or executed), gates it with the
+# gate code of the default branch, and deploys the whole site with actions/deploy-pages. A PR that
+# is not eligible at listing time is absent from the deployment, which is how a preview comes down.
+#
+# PR events only run report-preview-trigger.yml, which has no permissions and does nothing. This
+# workflow runs in default-branch context (workflow_run / workflow_dispatch / schedule) because
+# the github-pages environment accepts deployments from the default branch only, and so a PR can
+# never weaken the gate that decides its own preview. The workflow_run payload is not used beyond
+# the job condition. Pages source must be "GitHub Actions"; see docs/en/study-presentation.md.
+
+on:
+    workflow_run:
+        workflows: [Report preview trigger]
+        types: [completed]
+    workflow_dispatch:
+    schedule:
+        - cron: "23 */6 * * *"
+
+permissions: {}
+
+# Runs are serialized. A superseded pending run is harmless: the run that does start reads the
+# newer state, and the deploy job re-checks that state right before deploying.
+concurrency:
+    group: report-preview-pages
+    cancel-in-progress: false
+
+jobs:
+    build:
+        name: build-preview-site
+        if: >-
+            github.ref == 'refs/heads/main' &&
+            (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' ||
+            github.event_name == 'workflow_run' && github.event.workflow_run.event == 'pull_request' &&
+            github.event.workflow_run.conclusion == 'success')
+        runs-on: ubuntu-latest
+        timeout-minutes: 20
+        # Read-only: lists PRs, reads the Pages URL, fetches PR heads anonymously as objects.
+        permissions:
+            contents: read
+            pull-requests: read
+            pages: read
+        outputs:
+            state: ${{ steps.reconcile.outputs.state }}
+        steps:
+            - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+              with:
+                  ref: ${{ github.sha }}
+                  fetch-depth: 0
+                  persist-credentials: false
+            - uses: astral-sh/setup-uv@f0ec1fc3b38f5e7cd731bb6ce540c5af426746bb # v6.1.0
+            - name: Install gate dependencies
+              run: uv sync --locked --no-default-groups
+            - name: Reconcile preview site
+              id: reconcile
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  REPO: ${{ github.repository }}
+                  GATE_COMMIT: ${{ github.sha }}
+              run: |
+                  set -euo pipefail
+                  page_url=$(gh api "repos/$REPO/pages" --jq .html_url)
+                  uv run --no-sync python -m scripts.report_preview reconcile --repository "$REPO" \
+                      --repo . --site "$RUNNER_TEMP/site" --state "$RUNNER_TEMP/state.json" \
+                      --base-ref "origin/main" --gate-commit "$GATE_COMMIT" \
+                      --previous-url "${page_url%/}/previews.json?run=$GITHUB_RUN_ID"
+                  echo "state=$(jq -c . "$RUNNER_TEMP/state.json")" >> "$GITHUB_OUTPUT"
+            - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+              with:
+                  path: ${{ runner.temp }}/site
+
+    deploy:
+        name: deploy-preview-site
+        needs: build
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        # Checks out only the default branch's own code (same commit as build) for the re-check;
+        # never PR code.
+        permissions:
+            contents: read
+            pull-requests: read
+            pages: write
+            id-token: write
+        environment:
+            name: github-pages
+            url: ${{ steps.deployment.outputs.page_url }}
+        outputs:
+            page_url: ${{ steps.deployment.outputs.page_url }}
+        steps:
+            - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+              with:
+                  ref: ${{ github.sha }}
+                  persist-credentials: false
+                  sparse-checkout: |
+                      research_core
+                      scripts
+            - name: Re-check PR state against the built site
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  REPO: ${{ github.repository }}
+                  STATE: ${{ needs.build.outputs.state }}
+              run: |
+                  set -euo pipefail
+                  printf '%s' "$STATE" > "$RUNNER_TEMP/state.json"
+                  python3 -m scripts.report_preview verify --repository "$REPO" --state "$RUNNER_TEMP/state.json"
+            - name: Deploy to GitHub Pages
+              id: deployment
+              uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+
+    comment:
+        name: comment-preview-status
+        needs: [build, deploy]
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        # Runs only after deploy-pages reported the deployment complete.
+        permissions:
+            contents: read
+            pull-requests: write
+        steps:
+            - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+              with:
+                  ref: ${{ github.sha }}
+                  persist-credentials: false
+                  sparse-checkout: |
+                      research_core
+                      scripts
+            - name: Update PR comments
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  REPO: ${{ github.repository }}
+                  STATE: ${{ needs.build.outputs.state }}
+                  PAGE_URL: ${{ needs.deploy.outputs.page_url }}
+                  RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+              run: |
+                  set -euo pipefail
+                  printf '%s' "$STATE" > "$RUNNER_TEMP/state.json"
+                  python3 -m scripts.report_preview comment --repository "$REPO" --state "$RUNNER_TEMP/state.json" \
+                      --page-url "$PAGE_URL" --run-url "$RUN_URL"
