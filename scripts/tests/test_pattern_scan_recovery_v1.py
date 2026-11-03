@@ -147,10 +147,55 @@ def _load(root: Path, **kwargs: Any) -> recovery.RecoveryInventory:
 
 def _label_version(root: Path) -> str:
     """Independent oracle for the unchanged historical checkpoint label body."""
-    receipt = read_json(root / "parts" / "0001" / "receipt.json")
-    descriptor = next(row for row in receipt["artifacts"] if row["path"] == "base_labels.parquet")
-    body = {"schema": "pattern-scan-label-checkpoints.v3", "source_id": SOURCE["source_id"], "input_id": INPUT_ID, "labels": {"0001": descriptor}}
+    rows = read_json(root / "phase-stock-result.json")["pool"]["results"]
+    labels = {}
+    for row in rows:
+        receipt = read_json(Path(row["output_path"]) / "receipt.json")
+        labels[row["code"]] = next(record for record in receipt["artifacts"] if record["path"] == "base_labels.parquet")
+    body = {"schema": "pattern-scan-label-checkpoints.v3", "source_id": SOURCE["source_id"], "input_id": INPUT_ID, "labels": labels}
     return f"checkpoint-only:{object_digest(body)}"
+
+
+def _add_synthetic_stock(root: Path, code: str) -> None:
+    """Extend only this test's hand-built checkpoint pool; never read real inputs."""
+    directory = root / "parts" / code
+    for path in sorted((root / "parts" / "0001").glob("*.parquet")):
+        frame = read_frame(path)
+        if "security_id" in frame:
+            frame["security_id"] = f"TW:{code}"
+        if "event_id" in frame:
+            frame["event_id"] = [
+                EventIdentity(f"TW:{code}", t0, pattern_id, subtype_id, SOURCE["source_id"], INPUT_ID).event_id
+                for t0, pattern_id, subtype_id in frame[["t0", "pattern_id", "subtype_id"]].itertuples(index=False, name=None)
+            ]
+        _write(directory / path.name, frame)
+    row = {
+        "code": code,
+        "complete": True,
+        "source_id": SOURCE["source_id"],
+        "input_id": INPUT_ID,
+        "request_id": f"SYNTH-stock-request-{code}",
+        "output_path": str(directory),
+        "rows": {"cohort_events": len(read_frame(directory / "cohort_events.parquet"))},
+        "artifacts": [describe_file(directory, path) for path in sorted(directory.glob("*.parquet"))],
+    }
+    write_json(directory / "receipt.json", row)
+    pool_path = root / "phase-stock-result.json"
+    pool = read_json(pool_path)
+    pool["pool"]["results"].append(row)
+    write_json(pool_path, pool)
+    global_path = root / "global" / f"{code}.parquet"
+    global_frame = read_frame(root / "global" / "0001.parquet")
+    global_frame["security_id"] = f"TW:{code}"
+    _write(global_path, global_frame)
+    barrier_path = root / "global" / "receipt.json"
+    global_receipt = read_json(barrier_path)
+    global_receipt["global_files"][code] = {"path": str(global_path), "sha256": file_digest(global_path)}
+    write_json(barrier_path, global_receipt)
+    preparation_path = root / "derived-preparation.json"
+    preparation = read_json(preparation_path)
+    preparation["ordinary_reference_n"] = len(pool["pool"]["results"])
+    write_json(preparation_path, preparation)
 
 
 def _retained(root: Path) -> Path:
@@ -438,3 +483,57 @@ def test_changed_label_descriptor_cannot_reuse_expected_historical_pin(checkpoin
     assert _label_version(checkpoint) != pinned
     with pytest.raises(ValueError, match="label.*identity|label.*pin"):
         _load(checkpoint, expected_label_version_id=pinned)
+
+
+def test_unselected_observed_mutation_between_stocks_is_caught_at_global_gate(checkpoint: Path) -> None:
+    _add_synthetic_stock(checkpoint, "0002")
+    inventory = _load(checkpoint, requested_codes=("0001", "0002"), expected_stock_n=2)
+    unselected = checkpoint / "unselected-observed.bin"
+    unselected.write_bytes(b"saved unselected payload")
+    inventory._reads.observe(unselected)
+    first = recovery.recover_stock(inventory, "0001")
+    unselected.write_bytes(b"changed unselected payload")
+    second = recovery.recover_stock(inventory, "0002")
+    assert first.events.security_id.eq("TW:0001").all()
+    assert second.events.security_id.eq("TW:0002").all()
+    assert inventory._reads.metrics["scoped_sweeps"] == 4
+    assert inventory._reads.metrics["full_sweeps"] == 1
+    with pytest.raises(ValueError, match="input changed"):
+        inventory._reads.unchanged()
+
+
+def test_scoped_schedule_preserves_events_q1_and_marginal_results(checkpoint: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from research_core import pattern_scan_recovery_pilot_v1 as pilot
+    from research_core.pattern_scan_q1_counts_v1 import Q1Counts
+
+    _add_synthetic_stock(checkpoint, "0002")
+
+    def run(global_schedule: bool) -> tuple[list[recovery.RecoveryStock], tuple[pd.DataFrame, pd.DataFrame], tuple[pd.DataFrame, pd.DataFrame]]:
+        inventory = _load(checkpoint, requested_codes=("0001", "0002"), expected_stock_n=2)
+        if global_schedule:
+            original = inventory._reads.unchanged
+            monkeypatch.setattr(inventory._reads, "unchanged", lambda paths=None: original())
+        q1 = Q1Counts("L1", ("pattern:union",))
+        marginal = pilot._marginal_cells()
+        recovered = []
+        for code in inventory.requested_codes:
+            stock = recovery.recover_stock(inventory, code)
+            recovered.append(stock)
+            q1.add_stock(code, stock.events, stock.memberships, markets=stock.markets)
+            pilot._marginal_add(marginal, stock.events, stock.conditions, stock.markets)
+        inventory._reads.unchanged()
+        inventory._reads.unchanged()
+        if not global_schedule:
+            assert inventory._reads.metrics["full_sweeps"] == 3
+            assert inventory._reads.metrics["scoped_sweeps"] == 4
+        return recovered, q1.finalize(), pilot._marginal_finalize(marginal)
+
+    scoped, scoped_q1, scoped_marginal = run(False)
+    global_result, global_q1, global_marginal = run(True)
+    for actual, expected in zip(scoped, global_result, strict=True):
+        pd.testing.assert_frame_equal(actual.events, expected.events, check_exact=True)
+        pd.testing.assert_frame_equal(actual.conditions, expected.conditions, check_exact=True)
+        pd.testing.assert_frame_equal(actual.memberships, expected.memberships, check_exact=True)
+        pd.testing.assert_series_equal(actual.markets, expected.markets, check_exact=True)
+    for actual, expected in zip((*scoped_q1, *scoped_marginal), (*global_q1, *global_marginal), strict=True):
+        pd.testing.assert_frame_equal(actual, expected, check_exact=True)

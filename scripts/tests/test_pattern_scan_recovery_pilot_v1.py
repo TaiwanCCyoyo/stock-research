@@ -1,6 +1,10 @@
 """Synthetic bounded-worker and owned-process lifecycle checks; no market IO."""
 
+import hashlib
 import json
+import os
+import shutil
+import stat
 import subprocess
 import sys
 from pathlib import Path
@@ -11,6 +15,7 @@ import pandas as pd
 import pytest
 
 from research_core import pattern_scan_recovery_pilot_v1 as pilot
+from research_core.artifact_store import canonical
 from research_core.pattern_scan_parquet_v1 import read_frame
 from research_core.scratch_runs import ScratchRunError
 from scripts import run_l1_recovery_pilot as cli
@@ -20,7 +25,23 @@ EXECUTOR = {"commit": "a" * 40, "dirty": False}
 
 def _json(path: Path, body: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(body), encoding="utf-8")
+    path.write_bytes(canonical(body))
+
+
+def _descriptor(path: Path, *, name: str | None = None) -> dict[str, Any]:
+    body = path.read_bytes()
+    return {"path": str(path) if name is None else name, "bytes": len(body), "sha256": hashlib.sha256(body).hexdigest()}
+
+
+def _tamper_same_length(path: Path) -> None:
+    """Change bytes while preserving size and mtime, so stamps alone cannot win."""
+    before = path.stat()
+    body = path.read_bytes()
+    assert body
+    path.write_bytes(bytes([body[0] ^ 1]) + body[1:])
+    os.utime(path, ns=(before.st_atime_ns, before.st_mtime_ns))
+    assert path.stat().st_size == before.st_size
+    assert path.stat().st_mtime_ns == before.st_mtime_ns
 
 
 @pytest.fixture
@@ -36,7 +57,15 @@ def worker(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
     global_path = stock / "global" / "0001.parquet"
     global_path.write_bytes(b"synthetic fingerprint-only global; reader is mocked")
     calls: list[str] = []
-    reads = SimpleNamespace(unchanged=lambda: calls.append("unchanged"))
+    metrics = {"full_sweeps": 1, "scoped_sweeps": 0, "file_observations": 0, "directory_observations": 0, "ancestor_observations": 0}
+
+    def unchanged() -> None:
+        # load_recovery_inventory owns the first global gate; this mock starts
+        # after that gate and records the two worker-level gates.
+        calls.append("unchanged")
+        metrics["full_sweeps"] += 1
+
+    reads = SimpleNamespace(unchanged=unchanged, metrics=metrics)
     inventory = SimpleNamespace(
         measurement={"synthetic": True},
         retained={},
@@ -97,7 +126,7 @@ def worker(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
         "run_id": "synthetic-pilot",
         "expected_code": EXECUTOR,
     }
-    return SimpleNamespace(stock=stock, repo=repo, output=output, calls=calls, arguments=arguments)
+    return SimpleNamespace(stock=stock, repo=repo, output=output, calls=calls, arguments=arguments, inventory=inventory)
 
 
 def test_worker_preserves_selected_rows_and_does_not_claim_full_parity(worker: SimpleNamespace) -> None:
@@ -119,6 +148,19 @@ def test_worker_preserves_selected_rows_and_does_not_claim_full_parity(worker: S
         "0001:global",
     }
     assert audit["stocks"] == [{"code": "0001", "event_count": 1, "historical_parity_verified": False}]
+    assert audit["stability_checks"]["full_sweeps"] == 3
+    assert audit["stability_checks"] == worker.inventory._reads.metrics
+    assert audit["stability_checks"] is not worker.inventory._reads.metrics
+    assert {item["path"] for item in audit["payload_descriptors"]} == {
+        "0001-events.parquet",
+        "0001-conditions.parquet",
+        "q1-summary.parquet",
+        "q1-annual.parquet",
+        "marginal-summary.parquet",
+        "marginal-annual.parquet",
+    }
+    for descriptor in audit["payload_descriptors"]:
+        assert descriptor == _descriptor(worker.output / descriptor["path"], name=descriptor["path"])
     assert {path.name for path in worker.output.iterdir()} == {
         "0001-events.parquet",
         "0001-conditions.parquet",
@@ -169,6 +211,81 @@ def test_serialized_output_budget_fails_before_publication(worker: SimpleNamespa
     assert not worker.output.exists()
 
 
+@pytest.mark.parametrize("target", ["0001-events.parquet", "audit.json"])
+def test_worker_rejects_same_length_tamper_after_shared_publication(worker: SimpleNamespace, monkeypatch: pytest.MonkeyPatch, target: str) -> None:
+    publish = pilot.publish_generated_bytes
+    attacked: list[Path] = []
+
+    def corrupt(path: Path, body: bytes, **kwargs: Any) -> None:
+        publish(path, body, **kwargs)
+        if path.name == target:
+            _tamper_same_length(path)
+            attacked.append(path)
+
+    monkeypatch.setattr(pilot, "publish_generated_bytes", corrupt)
+    with pytest.raises(ValueError, match="hash/size mismatch"):
+        pilot.run_pilot_worker(worker.stock, worker.output, **worker.arguments)
+    assert attacked == [worker.output / target]
+    if target != "audit.json":
+        assert not (worker.output / "audit.json").exists()
+
+
+@pytest.mark.parametrize("replacement", ["directory", "symlink", "junction"])
+def test_worker_rejects_output_directory_replacement_after_first_publication(
+    worker: SimpleNamespace, monkeypatch: pytest.MonkeyPatch, replacement: str
+) -> None:
+    publish, lstat = pilot.publish_generated_bytes, Path.lstat
+    attacked: list[Path] = []
+
+    def replaced_lstat(path: Path, *args: Any, **kwargs: Any) -> Any:
+        info = lstat(path, *args, **kwargs)
+        if attacked and path == worker.output and replacement != "directory":
+            # Native Windows junction coverage lives with the path-guard tests;
+            # these two cases inject its actual lstat contract at the pilot gate.
+            fields = {name: getattr(info, name) for name in dir(info) if name.startswith("st_")}
+            if replacement == "symlink":
+                fields["st_mode"] = stat.S_IFLNK | 0o777
+            else:
+                fields["st_file_attributes"] = getattr(info, "st_file_attributes", 0) | stat.FILE_ATTRIBUTE_REPARSE_POINT
+            return SimpleNamespace(**fields)
+        return info
+
+    def replace(path: Path, body: bytes, **kwargs: Any) -> None:
+        publish(path, body, **kwargs)
+        if not attacked:
+            if replacement == "directory":
+                original = worker.output.with_name("preserved-original-output")
+                worker.output.rename(original)
+                shutil.copytree(original, worker.output)
+            attacked.append(path)
+
+    monkeypatch.setattr(Path, "lstat", replaced_lstat)
+    monkeypatch.setattr(pilot, "publish_generated_bytes", replace)
+    with pytest.raises(ValueError, match="changed|linked|reparse|symlink"):
+        pilot.run_pilot_worker(worker.stock, worker.output, **worker.arguments)
+    assert len(attacked) == 1
+    assert not (worker.output / "audit.json").exists()
+
+
+@pytest.mark.parametrize("gate", ["before_output", "after_output"])
+def test_worker_input_consistency_gates_prevent_audit_publication(worker: SimpleNamespace, monkeypatch: pytest.MonkeyPatch, gate: str) -> None:
+    original = pilot.assert_inputs_unchanged
+    observations = []
+
+    def check(fingerprint: dict[str, Any]) -> None:
+        exists = worker.output.exists()
+        observations.append(exists)
+        if exists == (gate == "after_output"):
+            raise ValueError("synthetic global input stability rejection")
+        original(fingerprint)
+
+    monkeypatch.setattr(pilot, "assert_inputs_unchanged", check)
+    with pytest.raises(ValueError, match="global input stability"):
+        pilot.run_pilot_worker(worker.stock, worker.output, **worker.arguments)
+    assert observations == ([False] if gate == "before_output" else [False, True])
+    assert not (worker.output / "audit.json").exists()
+
+
 @pytest.fixture
 def supervisor(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
     stock, repo, scratch = tmp_path / "stock", tmp_path / "repo", tmp_path / "scratch"
@@ -188,6 +305,8 @@ def supervisor(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> SimpleNamespa
         marks=[],
         seconds=0.0,
         sleep_step=0.5,
+        after_receipt=None,
+        after_start=None,
     )
     target = scratch / pilot.TASK / "synthetic-pilot"
 
@@ -241,16 +360,30 @@ def supervisor(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> SimpleNamespa
             request = json.loads(Path(command[-1]).read_text(encoding="utf-8"))
             state.request = request
             if state.mode not in ("timeout", "failed"):
+                output = Path(request["output"])
+                output.mkdir()
+                names = {f"{code}-{kind}.parquet" for code in request["codes"] for kind in ("events", "conditions")} | {
+                    "q1-summary.parquet",
+                    "q1-annual.parquet",
+                    "marginal-summary.parquet",
+                    "marginal-annual.parquet",
+                }
+                for name in sorted(names):
+                    (output / name).write_bytes(b"synthetic supervisor-only serialized output: " + name.encode())
                 _json(
-                    Path(request["output"]) / "audit.json",
+                    output / "audit.json",
                     {
                         "selected_codes": request["codes"],
                         "expected_code": EXECUTOR,
-                        "input_fingerprint": [],
+                        "input_fingerprint": {"inputs": {}},
                         "full_q1_parity": "not_run",
                         "full_marginal_parity": "not_run",
+                        "payload_descriptors": [_descriptor(output / name, name=name) for name in sorted(names)],
+                        "stability_checks": {"full_sweeps": 3},
                     },
                 )
+                if state.after_start is not None:
+                    state.after_start(output)
             return Process()
 
         def memory_receipt(self) -> dict[str, Any]:
@@ -270,8 +403,11 @@ def supervisor(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> SimpleNamespa
 
     def receipt(path: Path, **kwargs: Any) -> dict[str, Any]:
         state.receipt = kwargs
-        _json(path, {"complete": True})
-        return {"complete": True}
+        body = {"complete": True, "results": {name: _descriptor(result) for name, result in sorted(kwargs["results"].items())}}
+        path.write_bytes(canonical(body))
+        if state.after_receipt is not None:
+            state.after_receipt(path, body, kwargs)
+        return body
 
     monkeypatch.setattr(pilot, "sys", SimpleNamespace(platform="win32", executable=sys.executable))
     monkeypatch.setattr(pilot, "time", SimpleNamespace(monotonic=lambda: state.seconds, sleep=sleep))
@@ -371,6 +507,170 @@ def test_changed_executor_does_not_publish_success(supervisor: SimpleNamespace, 
         _launch(supervisor)
     assert not (supervisor.target / "receipt.json").exists()
     assert supervisor.marks == []
+    assert supervisor.terminated == supervisor.closed == 1
+
+
+@pytest.mark.parametrize("mutation", ["same_length", "extra_file", "missing_file", "duplicate_descriptor"])
+def test_supervisor_rejects_payload_mutation_before_receipt(supervisor: SimpleNamespace, mutation: str) -> None:
+    def attack(output: Path) -> None:
+        if mutation == "same_length":
+            _tamper_same_length(output / "0001-events.parquet")
+        elif mutation == "extra_file":
+            (output / "unclaimed.parquet").write_bytes(b"synthetic unexpected output")
+        elif mutation == "missing_file":
+            (output / "0001-events.parquet").unlink()
+        else:
+            audit_path = output / "audit.json"
+            audit = json.loads(audit_path.read_bytes())
+            audit["payload_descriptors"][0] = audit["payload_descriptors"][1].copy()
+            _json(audit_path, audit)
+
+    supervisor.after_start = attack
+    with pytest.raises((ValueError, FileNotFoundError)):
+        _launch(supervisor)
+    assert supervisor.marks == []
+    assert not (supervisor.target / "receipt.json").exists()
+    assert not hasattr(supervisor, "receipt")
+    assert supervisor.terminated == supervisor.closed == 1
+
+
+@pytest.mark.parametrize("mutation", ["audit_after_read", "output_directory"])
+def test_supervisor_audit_read_has_a_following_stability_gate(supervisor: SimpleNamespace, monkeypatch: pytest.MonkeyPatch, mutation: str) -> None:
+    read = pilot._Reads.json
+    attacked: list[Path] = []
+
+    def unstable_read(guard: Any, path: Path, **kwargs: Any) -> dict[str, Any]:
+        result = read(guard, path, **kwargs)
+        if path.name == "audit.json" and not attacked:
+            if mutation == "audit_after_read":
+                _tamper_same_length(path)
+            else:
+                original = path.parent.with_name("preserved-original-payload")
+                path.parent.rename(original)
+                shutil.copytree(original, path.parent)
+            attacked.append(path)
+        return result
+
+    monkeypatch.setattr(pilot._Reads, "json", unstable_read)
+    with pytest.raises(ValueError, match="changed|hash/size mismatch"):
+        _launch(supervisor)
+    assert len(attacked) == 1
+    assert supervisor.marks == []
+    assert not (supervisor.target / "receipt.json").exists()
+    assert not hasattr(supervisor, "receipt")
+
+
+def test_supervisor_checks_job_memory_against_original_canonical_bytes(supervisor: SimpleNamespace, monkeypatch: pytest.MonkeyPatch) -> None:
+    write = pilot.write_json
+    attacked = []
+
+    def unstable_write(path: Path, body: Any) -> None:
+        write(path, body)
+        if path.name == "job-memory.json":
+            _tamper_same_length(path)
+            attacked.append(path)
+
+    monkeypatch.setattr(pilot, "write_json", unstable_write)
+    with pytest.raises(ValueError, match="hash/size mismatch"):
+        _launch(supervisor)
+    assert len(attacked) == 1
+    assert supervisor.marks == []
+    assert not (supervisor.target / "receipt.json").exists()
+    assert not hasattr(supervisor, "receipt")
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        "result_hash",
+        "result_bytes",
+        "result_path",
+        "result_inventory",
+        "staged_receipt_bytes",
+        "payload_after_receipt",
+        "audit_after_receipt",
+        "job_after_receipt",
+    ],
+)
+def test_staging_receipt_failure_cannot_publish_or_mark_complete(supervisor: SimpleNamespace, mutation: str) -> None:
+    attacked = []
+
+    def attack(path: Path, body: dict[str, Any], kwargs: dict[str, Any]) -> None:
+        assert path.name == ".staging-receipt.json"
+        assert not (path.parent / "receipt.json").exists()
+        selected = next(iter(body["results"]))
+        if mutation == "result_hash":
+            body["results"][selected]["sha256"] = "0" * 64
+        elif mutation == "result_bytes":
+            body["results"][selected]["bytes"] += 1
+        elif mutation == "result_path":
+            body["results"][selected]["path"] = str(path.parent / "unrelated-result")
+        elif mutation == "result_inventory":
+            body["results"].pop(selected)
+        elif mutation == "staged_receipt_bytes":
+            _tamper_same_length(path)
+        else:
+            name = {"payload_after_receipt": "0001-events.parquet", "audit_after_receipt": "audit.json", "job_after_receipt": "job-memory.json"}[mutation]
+            _tamper_same_length(kwargs["results"][name])
+        if mutation.startswith("result_"):
+            # Return bytes-consistent but false descriptors: comparison to the
+            # pre-write expected descriptors must reject this independently.
+            path.write_bytes(canonical(body))
+        attacked.append(path)
+
+    supervisor.after_receipt = attack
+    with pytest.raises(ValueError, match="receipt|hash/size mismatch"):
+        _launch(supervisor)
+    assert attacked == [supervisor.target / ".staging-receipt.json"]
+    assert supervisor.marks == []
+    assert not (supervisor.target / "receipt.json").exists()
+    assert (supervisor.target / ".staging-receipt.json").exists()
+    assert supervisor.terminated == supervisor.closed == 1
+
+
+@pytest.mark.parametrize("gate", ["before_receipt", "after_receipt"])
+def test_supervisor_input_consistency_gates_leave_no_final_receipt(supervisor: SimpleNamespace, monkeypatch: pytest.MonkeyPatch, gate: str) -> None:
+    observations = []
+
+    def check(fingerprint: dict[str, Any]) -> None:
+        assert fingerprint == {"inputs": {}}
+        staged = (supervisor.target / ".staging-receipt.json").exists()
+        observations.append(staged)
+        if staged == (gate == "after_receipt"):
+            raise ValueError("synthetic final input stability rejection")
+
+    monkeypatch.setattr(pilot, "assert_inputs_unchanged", check)
+    with pytest.raises(ValueError, match="input stability"):
+        _launch(supervisor)
+    assert observations == ([False] if gate == "before_receipt" else [False, True])
+    assert supervisor.marks == []
+    assert not (supervisor.target / "receipt.json").exists()
+
+
+@pytest.mark.parametrize("target", ["0001-events.parquet", "audit.json", "job-memory.json", "receipt.json"])
+def test_post_publication_mutation_is_retained_as_failure_without_marking_complete(
+    supervisor: SimpleNamespace, monkeypatch: pytest.MonkeyPatch, target: str
+) -> None:
+    publish = pilot.publish_noreplace
+    attacked = []
+
+    def unstable_publish(source: Path, destination: Path) -> None:
+        publish(source, destination)
+        if destination.name == "receipt.json":
+            root = destination.parent if target in ("job-memory.json", "receipt.json") else destination.parent / "payload"
+            _tamper_same_length(root / target)
+            attacked.append(root / target)
+
+    monkeypatch.setattr(pilot, "publish_noreplace", unstable_publish)
+    with pytest.raises(ValueError, match="hash/size mismatch"):
+        _launch(supervisor)
+    assert len(attacked) == 1
+    assert supervisor.marks == []
+    # Publication already happened. Keep its bytes and failure record; the
+    # terminal gate prevents a success mark rather than undoing publication.
+    assert (supervisor.target / "receipt.json").exists()
+    assert (supervisor.target / "job-failure.json").exists()
+    assert not (supervisor.target / ".staging-receipt.json").exists()
     assert supervisor.terminated == supervisor.closed == 1
 
 

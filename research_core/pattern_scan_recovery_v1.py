@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import re
+import stat
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -58,21 +59,61 @@ def _legacy_checkpoint_label_pin(source: dict[str, Any], rows: dict[str, dict[st
     return {"version_id": f"checkpoint-only:{digest}", "manifest_sha256": digest}
 
 
-def _stamp(path: Path) -> tuple[int, int, int, int]:
-    stat = checked_path(path).stat()
-    return stat.st_size, stat.st_mtime_ns, stat.st_dev, stat.st_ino
-
-
 class _Reads:
-    def __init__(self) -> None:
-        self.observed: dict[Path, tuple[int, int, int, int]] = {}
+    """Track observations for one run; path safety is rechecked at every gate."""
+
+    def __init__(self, purpose: str = "input") -> None:
+        if purpose not in {"input", "output"}:
+            raise ValueError("observation purpose must be input or output")
+        self.purpose = purpose
+        self.observed: dict[Path, tuple[int, ...]] = {}
+        self._directories: set[Path] = set()
+        self._ancestors: dict[Path, tuple[int, int, int]] = {}
+        self.metrics = {"full_sweeps": 0, "scoped_sweeps": 0, "file_observations": 0, "directory_observations": 0, "ancestor_observations": 0}
+
+    def _directory(self, path: Path) -> tuple[int, int, int]:
+        info = path.lstat()
+        if (
+            not stat.S_ISDIR(info.st_mode)
+            or stat.S_ISLNK(info.st_mode)
+            or getattr(info, "st_file_attributes", 0) & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 1024)
+        ):
+            raise ValueError(f"linked/reparse or non-directory ancestor forbidden: {path}")
+        identity = (info.st_dev, info.st_ino, stat.S_IFMT(info.st_mode))
+        previous = self._ancestors.setdefault(path, identity)
+        if previous != identity:
+            raise ValueError(f"{self.purpose} ancestor changed: {path}")
+        self.metrics["ancestor_observations"] += 1
+        return identity
 
     def observe(self, path: Path) -> None:
         path = checked_path(path)
-        stamp = _stamp(path)
+        for ancestor in path.parents:
+            self._directory(ancestor)
+        stamp: tuple[int, ...]
+        if path in self._directories:
+            stamp = self._directory(path)
+            self.metrics["directory_observations"] += 1
+        else:
+            info = path.lstat()
+            if (
+                not stat.S_ISREG(info.st_mode)
+                or info.st_nlink > 1
+                or getattr(info, "st_file_attributes", 0) & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 1024)
+            ):
+                raise ValueError(f"linked/reparse or non-file input forbidden: {path}")
+            stamp = (info.st_size, info.st_mtime_ns, info.st_dev, info.st_ino, stat.S_IFMT(info.st_mode))
+            self.metrics["file_observations"] += 1
         if path in self.observed and self.observed[path] != stamp:
-            raise ValueError(f"recovery input changed: {path}")
+            raise ValueError(f"recovery {self.purpose} changed: {path}")
         self.observed[path] = stamp
+
+    def observe_directory(self, path: Path) -> None:
+        path = checked_path(path)
+        if path in self.observed and path not in self._directories:
+            raise ValueError(f"observed file cannot become directory: {path}")
+        self._directories.add(path)
+        self.observe(path)
 
     def json(self, path: Path, *, scan: bool = False) -> dict[str, Any]:
         self.observe(path)
@@ -94,8 +135,16 @@ class _Reads:
         self.observe(path)
         return result
 
-    def unchanged(self) -> None:
-        for path in tuple(self.observed):
+    def unchanged(self, paths: set[Path] | None = None) -> None:
+        if paths is None:
+            self.metrics["full_sweeps"] += 1
+            selected = tuple(self.observed)
+        else:
+            self.metrics["scoped_sweeps"] += 1
+            selected = tuple(Path(path).absolute() for path in paths)
+            if any(path not in self.observed for path in selected):
+                raise ValueError("scoped check requires already observed paths")
+        for path in selected:
             self.observe(path)
 
 
@@ -247,9 +296,17 @@ def recover_stock(inventory: RecoveryInventory, code: str) -> RecoveryStock:
     overall_before = resource_sample()
     phase_before = overall_before
     reads = inventory._reads
-    reads.unchanged()
     row = inventory.rows[code]
     directory = Path(row["output_path"])
+    local_paths = {
+        inventory.root / "phase-stock-result.json",
+        inventory.root / "derived-preparation.json",
+        inventory.root / "global" / "receipt.json",
+        directory / "receipt.json",
+    }
+    if code in inventory.retained:
+        local_paths.add(inventory.retained[code][0] / "receipt.json")
+    reads.unchanged(local_paths)
     records = {entry["path"]: entry for entry in row["artifacts"]}
     if len(records) != len(row["artifacts"]):
         raise ValueError("duplicate stock artifacts")
@@ -262,6 +319,7 @@ def recover_stock(inventory: RecoveryInventory, code: str) -> RecoveryStock:
         raise ValueError("base-label stock identity differs")
     quality = reads.frame(directory, records["indicators.parquet"], columns=["quality_reason"])
     common = reads.frame(directory, records["common_values.parquet"])
+    local_paths.update(directory / records[f"{name}.parquet"]["path"] for name in ("cohort_events", "base_labels", "indicators", "common_values"))
     if not quality.index.equals(inventory.calendar) or not common.index.equals(inventory.calendar):
         raise ValueError("stock calendar differs")
     dates = inventory.calendar.strftime("%Y-%m-%d").tolist()
@@ -278,6 +336,7 @@ def recover_stock(inventory: RecoveryInventory, code: str) -> RecoveryStock:
         raise ValueError("global path outside retained root")
     descriptor = {"path": global_path.name, "bytes": global_path.stat().st_size, "sha256": global_record["sha256"]}
     global_frame = reads.frame(global_path.parent, descriptor, columns=["security_id", "t0", "calendar_index", "MKT"])
+    local_paths.add(global_path)
     if (
         not global_frame.index.equals(inventory.calendar)
         or not global_frame.security_id.eq(f"TW:{code}").all()
@@ -331,6 +390,7 @@ def recover_stock(inventory: RecoveryInventory, code: str) -> RecoveryStock:
         except AssertionError as exc:
             raise ValueError("retained L1 event parity differs") from exc
         saved_conditions = reads.frame(saved_dir, saved_records["conditions.parquet"])
+        local_paths.update(saved_dir / saved_records[name]["path"] for name in ("group_memberships.parquet", "events.parquet", "conditions.parquet"))
         saved_conditions = saved_conditions.loc[saved_conditions.event_id.isin(ids), list(conditions.columns)].sort_values("event_id").reset_index(drop=True)
         try:
             pd.testing.assert_frame_equal(conditions.sort_values("event_id").reset_index(drop=True), saved_conditions, check_dtype=False, check_exact=True)
@@ -339,7 +399,7 @@ def recover_stock(inventory: RecoveryInventory, code: str) -> RecoveryStock:
         parity = True
         now = resource_sample()
         measurements.append(phase_receipt("retained_parity", phase_before, now))
-    reads.unchanged()
+    reads.unchanged(local_paths)
     markets = pd.Series(global_frame.MKT.to_numpy(), index=global_frame.t0)
     audit = {
         "code": code,

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import io
 import logging
 import re
@@ -14,13 +15,13 @@ from typing import Any
 import pandas as pd
 
 from research_core import scratch_runs
-from research_core.artifact_store import canonical, object_digest, publish_noreplace, read_json, write_json
+from research_core.artifact_store import canonical, object_digest, publish_generated_bytes, publish_noreplace, read_json, write_json
 from research_core.pattern_scan_dense_counts_v1 import DenseCounts
 from research_core.pattern_scan_execution_v1 import _MemoryBoundJob
 from research_core.pattern_scan_membership_v1 import StockCountPlan, membership_inventory
 from research_core.pattern_scan_parquet_v1 import write_frame
 from research_core.pattern_scan_q1_counts_v1 import Q1Counts
-from research_core.pattern_scan_recovery_v1 import load_recovery_inventory, recover_stock
+from research_core.pattern_scan_recovery_v1 import _Reads, load_recovery_inventory, recover_stock
 from research_core.pattern_scan_summary_store_v1 import YEARS
 from research_core.research_data_paths import checked_path
 from research_core.research_measurement_v1 import phase_receipt, resource_sample
@@ -99,6 +100,29 @@ def _parquet(frame: pd.DataFrame) -> bytes:
     return stream.getvalue()
 
 
+def _descriptor(name: str, body: bytes) -> dict[str, Any]:
+    # The expected digest comes from the serialized result, before filesystem IO.
+    return {"path": name, "bytes": len(body), "sha256": hashlib.sha256(body).hexdigest()}
+
+
+def _payload_names(codes: tuple[str, ...]) -> set[str]:
+    return {f"{code}-{kind}.parquet" for code in codes for kind in ("events", "conditions")} | {
+        "q1-summary.parquet",
+        "q1-annual.parquet",
+        "marginal-summary.parquet",
+        "marginal-annual.parquet",
+    }
+
+
+def _verify_payloads(output: Path, descriptors: list[dict[str, Any]], guard: _Reads, *, audit_present: bool) -> None:
+    guard.observe_directory(output)
+    guard.verify(output, descriptors)
+    expected = {item["path"] for item in descriptors} | ({"audit.json"} if audit_present else set())
+    if {path.name for path in output.iterdir()} != expected:
+        raise ValueError("pilot output inventory differs")
+    guard.unchanged()
+
+
 def run_pilot_worker(
     stock_root: Path,
     output: Path,
@@ -119,6 +143,8 @@ def run_pilot_worker(
     stock_root, output, repo_root = map(checked_path, (stock_root, output, repo_root))
     if _overlaps(stock_root, output) or _overlaps(repo_root, output) or output.exists():
         raise ValueError("pilot output must be fresh and separate from inputs and checkout")
+    output_guard = _Reads(purpose="output")
+    output_guard.observe_directory(output.parent)
     before = resource_sample()
     inputs = fingerprint_inputs([
         InputSpec("stock_index", stock_root / "phase-stock-result.json", live_producer=False),
@@ -170,22 +196,28 @@ def run_pilot_worker(
     reductions.append(phase_receipt("aggregate_finalize", reduction_before, resource_sample()))
     serial_before = resource_sample()
     payloads = {name: _parquet(frame) for name, frame in frames.items()}
+    payload_descriptors = [_descriptor(name, body) for name, body in payloads.items()]
     serialization = phase_receipt("serialization", serial_before, resource_sample())
     # Leave bounded room for the audit, supervisor records and result receipt.
     if sum(map(len, payloads.values())) > OUTPUT_LIMIT - 2 * 1024**2:
         raise ValueError("pilot serialized outputs exceed the bounded output budget")
     assert_inputs_unchanged(inputs)
     inventory._reads.unchanged()
+    output_guard.unchanged()
     output.mkdir()
+    output_guard.observe_directory(output)
+    publication_scratch = checked_path(output.parent / f".{output.name}-publication-scratch")
+    publication_scratch.mkdir()
+    output_guard.observe_directory(publication_scratch)
     write_before = resource_sample()
     for name, body in payloads.items():
-        staging = output / (".staging-" + name)
-        with staging.open("xb") as stream:
-            stream.write(body)
-        publish_noreplace(staging, output / name)
+        output_guard.unchanged({output.parent, output, publication_scratch})
+        publish_generated_bytes(output / name, body, scratch=publication_scratch)
+        output_guard.observe(output / name)
     output_write = phase_receipt("artifact_write", write_before, resource_sample())
     assert_inputs_unchanged(inputs)
     inventory._reads.unchanged()
+    _verify_payloads(output, payload_descriptors, output_guard, audit_present=False)
     audit = {
         "schema": "l1-recovery-pilot.v1",
         "run_id": run_id,
@@ -204,13 +236,16 @@ def run_pilot_worker(
         "overall": phase_receipt("worker", before, resource_sample()),
         "input_fingerprint": inputs,
         "expected_code": expected_code,
+        "payload_descriptors": payload_descriptors,
+        "stability_checks": inventory._reads.metrics.copy(),
     }
     audit_bytes = canonical(audit)
     if sum(map(len, payloads.values())) + len(audit_bytes) > OUTPUT_LIMIT - 1024**2:
         raise ValueError("pilot audit exceeds the bounded output budget")
-    with (output / ".staging-audit.json").open("xb") as stream:
-        stream.write(audit_bytes)
-    publish_noreplace(output / ".staging-audit.json", output / "audit.json")
+    output_guard.unchanged()
+    publish_generated_bytes(output / "audit.json", audit_bytes, scratch=publication_scratch)
+    output_guard.verify(output, [_descriptor("audit.json", audit_bytes)])
+    _verify_payloads(output, payload_descriptors, output_guard, audit_present=True)
     return audit
 
 
@@ -258,6 +293,8 @@ def launch_pilot(stock_root: Path, *, codes: tuple[str, ...], run_id: str, owner
     ) as run:
         request_path = run.path / "request.json"
         output = run.path / "payload"
+        output_guard = _Reads(purpose="output")
+        output_guard.observe_directory(run.path)
         write_json(
             request_path,
             {
@@ -292,19 +329,35 @@ def launch_pilot(stock_root: Path, *, codes: tuple[str, ...], run_id: str, owner
                 raise TimeoutError("pilot exceeded 600 second owned job limit")
             if exit_code:
                 raise subprocess.CalledProcessError(exit_code, process.args)
-            audit = read_json(output / "audit.json")
+            audit = output_guard.json(output / "audit.json")
             if audit.get("selected_codes") != list(codes) or audit.get("expected_code") != executor or code_identity(repo_root) != executor:
                 raise ValueError("pilot worker identity differs")
+            descriptors = audit.get("payload_descriptors")
+            if (
+                not isinstance(descriptors, list)
+                or len(descriptors) != len(_payload_names(codes))
+                or any(not isinstance(item, dict) for item in descriptors)
+                or {item.get("path") for item in descriptors} != _payload_names(codes)
+            ):
+                raise ValueError("pilot payload descriptors differ")
+            _verify_payloads(output, descriptors, output_guard, audit_present=True)
+            audit_descriptor = _descriptor("audit.json", canonical(audit))
+            output_guard.verify(output, [audit_descriptor])
             job_observation = {**job.memory_receipt(), "wall_seconds": time.monotonic() - started, "exit_code": exit_code, "timed_out": False}
             terminated = True
             job.terminate_and_confirm()
+            output_guard.unchanged()
             write_json(run.path / "job-memory.json", job_observation)
-            files = {path.name: path for path in output.iterdir() if path.is_file()}
+            job_descriptor = _descriptor("job-memory.json", canonical(job_observation))
+            output_guard.verify(run.path, [job_descriptor])
+            files = {name: output / name for name in _payload_names(codes) | {"audit.json"}}
             files["job-memory.json"] = run.path / "job-memory.json"
             if sum(path.stat().st_size for path in run.path.rglob("*") if path.is_file()) > OUTPUT_LIMIT - 1024**2:
                 raise ValueError("pilot artifacts exceed bounded output budget")
-            write_run_receipt(
-                run.path / "receipt.json",
+            assert_inputs_unchanged(audit["input_fingerprint"])
+            staged_receipt = run.path / ".staging-receipt.json"
+            receipt = write_run_receipt(
+                staged_receipt,
                 run_id=run_id,
                 definition="l1-recovery-pilot.v1",
                 parameters={
@@ -320,6 +373,32 @@ def launch_pilot(stock_root: Path, *, codes: tuple[str, ...], run_id: str, owner
                 repo_root=repo_root,
                 expected_code=executor,
             )
+            expected_results = {item["path"]: item for item in [*descriptors, audit_descriptor, job_descriptor]}
+            if set(receipt["results"]) != set(expected_results):
+                raise ValueError("pilot receipt result inventory differs")
+            for name, expected in expected_results.items():
+                actual = receipt["results"][name]
+                recorded = Path(actual["path"])
+                recorded = recorded if recorded.is_absolute() else repo_root / recorded
+                if actual["bytes"] != expected["bytes"] or actual["sha256"] != expected["sha256"] or checked_path(recorded) != files[name]:
+                    raise ValueError("pilot receipt differs from serialized results")
+            # A receipt hashes current files. Compare against the original serialized
+            # bytes as well, so mutations cannot silently become the recorded truth.
+            _verify_payloads(output, descriptors, output_guard, audit_present=True)
+            output_guard.verify(output, [audit_descriptor])
+            output_guard.verify(run.path, [job_descriptor])
+            assert_inputs_unchanged(audit["input_fingerprint"])
+            receipt_guard = _Reads(purpose="output")
+            receipt_bytes = canonical(receipt)
+            receipt_guard.verify(run.path, [_descriptor(staged_receipt.name, receipt_bytes)])
+            output_guard.unchanged()
+            publish_noreplace(staged_receipt, run.path / "receipt.json")
+            receipt_guard.verify(run.path, [_descriptor("receipt.json", receipt_bytes)])
+            _verify_payloads(output, descriptors, output_guard, audit_present=True)
+            output_guard.verify(output, [audit_descriptor])
+            output_guard.verify(run.path, [job_descriptor])
+            assert_inputs_unchanged(audit["input_fingerprint"])
+            output_guard.unchanged()
             run.heartbeat(progress={"step": len(codes), "total": len(codes), "label": "pilot complete; retained for review"})
             run.mark("complete")
             completed = True

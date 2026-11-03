@@ -913,6 +913,7 @@
         "scripts/tests/test_pattern_scan_rates_v1.py",
         "scripts/tests/test_pattern_scan_receipt_io_v2.py",
         "scripts/tests/test_pattern_scan_recovery_pilot_v1.py",
+        "scripts/tests/test_pattern_scan_recovery_stability_v1.py",
         "scripts/tests/test_pattern_scan_recovery_v1.py",
         "scripts/tests/test_pattern_scan_report_provenance_v2.py",
         "scripts/tests/test_pattern_scan_report_v1.py",
