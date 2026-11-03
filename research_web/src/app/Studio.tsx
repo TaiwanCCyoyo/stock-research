@@ -11,6 +11,10 @@ import { StrategyOverviewPage } from "../features/strategies/StrategyOverviewPag
 import { StrategyDetailPage } from "../features/strategies/StrategyDetailPage";
 import { StrategyComparePage } from "../features/strategies/StrategyComparePage";
 import { StudiesPage } from "../features/studies/StudiesPage";
+import {
+    DirectionDetailPage,
+    DirectionListPage,
+} from "../features/direction-discussion/DirectionDiscussionPage";
 import { ReportViewer } from "../features/report-library/ReportViewer";
 import { DevelopmentPreviews } from "../features/development-previews/DevelopmentPreviews";
 import {
@@ -20,7 +24,7 @@ import {
 } from "../features/data-overview/CoveragePages";
 import { DataOverviewPage } from "../features/data-overview/DataOverviewPage";
 import { studioRoute, type StudioPage } from "./routes";
-import { reportPalette, themeId, THEMES, type ThemeId } from "./themes";
+import { themeId, THEMES, type ThemeId } from "./themes";
 import { ThemeAtmosphere } from "./ThemeAtmosphere";
 import "./studio.css";
 import "./themes.css";
@@ -40,7 +44,14 @@ const NAV: {
         id: "studies",
         label: "研究",
         icon: "M6 4h9l3 3v13H6zM9 10h6M9 14h6M9 18h4",
-        also: ["strategies", "strategy", "compare", "report"],
+        also: [
+            "strategies",
+            "strategy",
+            "compare",
+            "report",
+            "directions",
+            "direction",
+        ],
     },
     {
         id: "market",
@@ -334,6 +345,13 @@ export default function Studio() {
             >
                 {page === "home" && <HomePage />}
                 {page === "studies" && <StudiesPage />}
+                {page === "directions" && <DirectionListPage />}
+                {page === "direction" && route.directionId && (
+                    <DirectionDetailPage
+                        key={route.directionId}
+                        taskId={route.directionId}
+                    />
+                )}
                 {page === "overview" && (
                     <DataOverviewPage stocks={route.overviewTab === "stocks"} />
                 )}
@@ -359,7 +377,7 @@ export default function Studio() {
                     <ReportViewer
                         key={reportId}
                         reportId={reportId}
-                        palette={reportPalette(palette)}
+                        palette={palette}
                         appearance={resolvedAppearance}
                     />
                 )}
