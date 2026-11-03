@@ -14,6 +14,7 @@ and ready. This follow-up uses the separate `codex/l1-recovery-stability` branch
 and targets main; it must not merge before #155. Its isolated review range starts
 at that dependency head. Normal main synchronization after the dependency merges
 must preserve both changes without force-pushing.
+Delivery: [draft PR #157](https://github.com/TaiwanCCyoyo/stock-research/pull/157).
 
 The coordinator owns the publication lifecycle, this record and the asset index.
 A Terra worker owns the recovery reader; a SOL worker owns synthetic reader and
