@@ -11,6 +11,7 @@ import { StrategyOverviewPage } from "../features/strategies/StrategyOverviewPag
 import { StrategyDetailPage } from "../features/strategies/StrategyDetailPage";
 import { StrategyComparePage } from "../features/strategies/StrategyComparePage";
 import { StudiesPage } from "../features/studies/StudiesPage";
+import { ComparisonPage } from "../features/condition-comparison/ComparisonPage";
 import {
     DirectionDetailPage,
     DirectionListPage,
@@ -52,6 +53,7 @@ const NAV: {
             "report",
             "directions",
             "direction",
+            "condition-comparison",
         ],
     },
     {
@@ -346,6 +348,7 @@ export default function Studio() {
             >
                 {page === "home" && <HomePage />}
                 {page === "studies" && <StudiesPage />}
+                {page === "condition-comparison" && <ComparisonPage />}
                 {page === "dataset" && <DatasetDetailPage />}
                 {page === "directions" && <DirectionListPage />}
                 {page === "direction" && route.directionId && (

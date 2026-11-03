@@ -8,6 +8,7 @@ import { StudiesRefreshNotice } from "./StudiesRefreshNotice";
 import { StudyCardView } from "./StudyCardView";
 import { useStudyCards } from "./useStudyCards";
 import { DirectionEntrance } from "../direction-discussion/DirectionDiscussionPage";
+import { ComparisonEntrance } from "../condition-comparison/ComparisonPage";
 import "./studies.css";
 
 export function StudiesPage() {
@@ -64,6 +65,9 @@ export function StudiesPage() {
             <h1 className="u-title">問過的問題，和得到的答案。</h1>
             <p className="u-lede">包含行不通的。最新的在最上面。</p>
             <DirectionEntrance />
+            <ComparisonEntrance
+                back={globalThis.location?.hash ?? "#studies"}
+            />
             {!studies.cards ? (
                 studies.error ? (
                     <StudioState

@@ -212,6 +212,7 @@ export function ConditionComparison(props: ConditionComparisonProps) {
                             <p>{item.reasons.join("；") || "無附加原因"}</p>
                             {item.readerRef && props.onOpenCase ? (
                                 <button
+                                    data-comparison-event={item.eventId}
                                     onClick={() => {
                                         const next = {
                                             ...selection,
