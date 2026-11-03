@@ -470,6 +470,8 @@
                 "scripts/audit_pattern_scan_local_candidates.py",
                 "scripts/run_pattern_scan_remaining.py",
                 "scripts/probe_pattern_scan_parallel.py",
+                "scripts/run_l1_recovery_pilot.py",
+                "scripts/tests/fixtures/l1-volume-comparison.synthetic.v1.json",
                 "scripts/export_pattern_scan_report.py"
             ],
             "tests": [
@@ -857,6 +859,7 @@
         "scripts/tests/test_pattern_scan_capacity_v4.py",
         "scripts/tests/test_pattern_scan_classification_cache_v1.py",
         "scripts/tests/test_pattern_scan_cohorts_v1.py",
+        "scripts/tests/test_pattern_scan_comparison_v1.py",
         "scripts/tests/test_pattern_scan_completion_v1.py",
         "scripts/tests/test_pattern_scan_conditions_v1.py",
         "scripts/tests/test_pattern_scan_context_v1.py",
@@ -909,6 +912,9 @@
         "scripts/tests/test_pattern_scan_q1_counts_v1.py",
         "scripts/tests/test_pattern_scan_rates_v1.py",
         "scripts/tests/test_pattern_scan_receipt_io_v2.py",
+        "scripts/tests/test_pattern_scan_recovery_pilot_v1.py",
+        "scripts/tests/test_pattern_scan_recovery_stability_v1.py",
+        "scripts/tests/test_pattern_scan_recovery_v1.py",
         "scripts/tests/test_pattern_scan_report_provenance_v2.py",
         "scripts/tests/test_pattern_scan_report_v1.py",
         "scripts/tests/test_pattern_scan_reporting_v1.py",
