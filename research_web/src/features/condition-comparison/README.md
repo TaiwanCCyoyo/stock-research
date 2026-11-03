@@ -80,3 +80,9 @@ The official materialization helper failed to download in this executor; the
 parent's detailed UX-10/11/12 instructions are the implementation input for now.
 Document alignment and real-data integration remain pending; no usability
 acceptance is claimed by this synthetic slice.
+
+The question panel now offers an explicit read-only draft chooser and inline
+same-revision discussion via the existing DirectionDetailContent. See
+[handoff contract](../../../../docs/en/direction-discussion-ui.md#saved-comparison-question-handoff).
+No draft is created; unavailable/stale targets keep the comparison question and
+its standalone export. The renderer accepts only proposed notes with null choices.

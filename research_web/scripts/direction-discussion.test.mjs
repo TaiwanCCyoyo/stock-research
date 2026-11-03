@@ -408,3 +408,44 @@ test("JSON download carries the proposed feedback and releases blob URLs on dest
     api.destroy();
     assert.equal(revoked.length, 2, "destroy is idempotent");
 });
+
+test("same-revision proposed notes mount without choices and remain editable", () => {
+    const seed = kit.createSession(example);
+    seed.setNotes("Synthetic comparison only\nsource settings v1");
+    const feedback = seed.exportFeedback();
+    const root = dom();
+    const view = kit.mount(root, example, feedback);
+    const notes = root.query(
+        (node) => node.tagName === "textarea" && node.className === "dd-notes",
+    );
+    assert.equal(notes.value, feedback.notes);
+    assert.equal(view.exportFeedback().notes, feedback.notes);
+    assert.ok(
+        view
+            .exportFeedback()
+            .selections.every((item) => item.optionId === null),
+    );
+    notes.value += "\nOwner note";
+    notes.dispatch("input");
+    assert.match(view.exportFeedback().notes, /Owner note/);
+    assert.equal(view.exportFeedback().status, "proposed");
+    view.destroy();
+    const clean = kit.mount(root, example);
+    assert.equal(clean.exportFeedback().notes, "");
+});
+test("handoff rejects stale identities, approval status and implied choices", () => {
+    const feedback = kit.createSession(example).exportFeedback();
+    for (const field of ["taskId", "draftPath", "revision"]) {
+        const bad = copy(feedback);
+        bad.source[field] += "-stale";
+        assert.throws(() => kit.createSession(example, bad));
+        const mounted = kit.mount(dom(), example, bad);
+        assert.throws(() => mounted.exportFeedback());
+    }
+    assert.throws(() =>
+        kit.createSession(example, { ...feedback, status: "approved" }),
+    );
+    const choice = copy(feedback);
+    choice.selections[0].optionId = example.choices[0].options[0].id;
+    assert.throws(() => kit.createSession(example, choice));
+});

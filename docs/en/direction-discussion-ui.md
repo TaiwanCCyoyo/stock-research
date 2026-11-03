@@ -102,3 +102,37 @@ Git 來源無法確認、路徑不安全、檔案過大或版本不符時拒絕�
 真實草稿尚未建立時，只能驗收空狀態與合成 fixture 的流程；不能宣稱真實研究已接入或取得 owner 接受。
 
 來源規則見 [direction drafts](direction-drafts.md)；本次需求見 [決策紀錄](decision-records/2026-11-02-interactive-direction-discussion.md)。
+
+## Saved-comparison question handoff
+
+The comparison question panel can explicitly open a read-only draft chooser. The
+user selects a ready index entry; its complete revision is pinned. The fetched
+detail must match that task/revision, and `interactiveModel` verifies the canonical
+`tasks/<taskId>/direction-draft.md` path and model identity. A stale revision,
+unavailable draft or read failure stops the handoff; retry never substitutes a
+new revision silently. Re-select from a refreshed list to accept a different pin.
+
+`comparisonDiscussionFeedback` uses the existing kit session to create
+`direction-feedback.v1`, with status `proposed`, all choices null, and the question
+plus complete comparison source/selection in `notes`. Synthetic questions retain
+an explicit synthetic warning. The `direction-discussion.v1` model, its questions,
+choices and original draft text are unchanged. No new persisted wire schema is
+introduced. `createSession(model, initialFeedback)` and
+`mount(root, model, initialFeedback)` optionally accept same-source proposed
+feedback with **only null choices**; an initial non-null choice is rejected.
+
+After a separate user click, the existing `DirectionDetailContent` and shared
+renderer open inline under the comparison, with editable notes and the existing
+manual Markdown/JSON export controls. No URL payload, storage, POST, draft file,
+automatic save or approval is created. Closing, changing target, refreshing the
+list or leaving clears unexported discussion edits; this is stated in the UI.
+The ordinary direction page still starts with blank notes. The pin identifies the
+loaded snapshot, not a live guarantee that the repository cannot change later;
+exported feedback must still be reconciled with the canonical draft before use.
+
+Synthetic mounted integration regression: run
+`node scripts/comparison-discussion-browser.mjs` from `research_web`, then open
+the printed URL. `?stale`, `?error` and `?empty` test rejected revisions, read failures and absence of a target.
+The test replaces only draft API responses and creates no real task draft.
+It is a manual browser regression, separate from npm/hosted automated tests.
+Formal L1 adapter work and owner usability acceptance remain separate gates.
