@@ -24,6 +24,7 @@ import {
     type ReportFrameThemeState,
 } from "./themeBridge";
 import "./reports.css";
+import { ComparisonEntrance } from "../condition-comparison/ComparisonPage";
 
 /**
  * Shows one report in its own framed document, so its CSS cannot restyle the studio
@@ -168,6 +169,9 @@ export function ReportViewer({
 
     return (
         <div className="rv-page">
+            {reportId === "20261013-pattern-scan" && (
+                <ComparisonEntrance back={`#report/${reportId}`} />
+            )}
             <div className="rv-bar u-card">
                 <a className="rv-back u-btn" href="#studies">
                     ← 返回研究列表

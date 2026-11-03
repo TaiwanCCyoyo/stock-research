@@ -105,8 +105,63 @@ to replay the old segment. This slice does not add map routing or calculations.
 
 ## Delivery boundaries
 
-This slice owns router, dataset detail, study source links and return behavior.
-The separate saved-comparison component/fixture and L1 recovery pilot do not
-depend on these internals and are not included. Existing unmerged reading PRs
-remain separate. No deployment, scheduling, permission, producer or research-data
-changes are part of this work.
+### Saved comparison navigation slice
+
+After merged PRs #153 and #154, the research list and the L1 report viewer expose
+an explicitly labelled **synthetic workflow example**. It is not the report's
+research result. `#condition-comparison` selects an exact registered immutable
+result; URL fields own horizon, cell, outcome filter, sort, page and selected/open
+event. Source metadata comes from the registration, never from URL overrides.
+Unknown result IDs, duplicate/unknown parameters, invalid pages and mismatched
+case contexts show a recoverable error rather than substituting another result.
+
+Opening a case replaces the current comparison entry with its selected event,
+then pushes one case entry. Refresh, Back/Forward and the explicit return retain
+the same comparison and restore focus to its case button. Return targets reuse
+the bounded study-list context (query/filter/study) or an allowlisted report ID.
+The original entrance receives focus on return; a bounded URL focus marker supports
+this after reload, while missing storage never affects semantic URL state.
+Report-section positioning is not claimed: the entrance is in the report shell.
+
+The registry currently contains only the previously merged component fixture.
+Its reader is explicitly a synthetic saved-event summary; it has no market chart
+or invented dataset link. The formal producer contract in open PR #155 has not
+been imported or copied into main by this slice. Integrating it must preserve
+its not-evaluated synthetic/pilot status, unavailable-condition partitions, null
+denominators and bounded references. Those references are not labelled outcomes
+or a complete pageable case list. A∖B summaries are not supplied by that producer:
+leave them unevaluated instead of subtracting counts or distinct-stock numbers.
+
+Questions can be exported with saved source/settings and `discussion-only` intent.
+No direction revision is guessed, no direction approval is recorded and no new
+research is launched. Connecting to an actual same-revision direction draft,
+formal L1 adapter, historical dataset/member readers and full owner journey
+acceptance remain subsequent integration work.
+
+Verification: 5 new registry/URL/identity tests plus the existing component and
+route tests. Edge verified the research-query return, keyboard page-2 case entry,
+refresh, Back/Forward, explicit return focus and rapid H252/H126/H252 selection.
+These are synthetic functional checks, not research validity or user acceptance.
+The complete frontend suite passed 579 tests locally; TypeScript and scoped lint
+passed. A 375px Edge viewport had equal client/scroll widths (360px). The source
+entrance regained focus after the explicit return. Export controls and draft
+provenance rendered correctly; downloaded-file contents have not been verified.
+
+The original dataset slice owns router, dataset detail, study source links and
+return behavior. The comparison follow-up reuses the merged component through
+the bounded navigation above; it does not import the unmerged L1 recovery pilot.
+Existing unmerged reading PRs and owner acceptance restrictions remain separate.
+No deployment, scheduling, permission, producer or research-data changes are
+part of this work.
+
+Comparison source focus takes precedence over a preserved `study` card target,
+including cached cards, delayed initial loading and later refreshes. Ordinary
+study returns still focus the selected card. Changing search/filter clears the
+return-focus intent along with the selected study.
+
+Mounted browser regression: from `research_web`, run
+`node scripts/comparison-focus-browser.mjs` and open the printed localhost URL.
+It mounts the actual StudiesPage and replaces only the data hook with a labelled
+synthetic fixture. In Edge, all 11 focus assertions passed for cached/delayed
+cards, two response generations and ordinary study navigation. This browser
+harness is a manual regression and is not included in `npm test` or hosted CI.
