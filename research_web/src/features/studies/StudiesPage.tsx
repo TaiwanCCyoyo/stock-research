@@ -7,6 +7,7 @@ import { filterStudies, groupByMonth, type StudyFilter } from "./model";
 import { StudiesRefreshNotice } from "./StudiesRefreshNotice";
 import { StudyCardView } from "./StudyCardView";
 import { useStudyCards } from "./useStudyCards";
+import { DirectionEntrance } from "../direction-discussion/DirectionDiscussionPage";
 import "./studies.css";
 
 export function StudiesPage() {
@@ -35,6 +36,7 @@ export function StudiesPage() {
             <div className="u-eyebrow">研究</div>
             <h1 className="u-title">問過的問題，和得到的答案。</h1>
             <p className="u-lede">包含行不通的。最新的在最上面。</p>
+            <DirectionEntrance />
             {!studies.cards ? (
                 studies.error ? (
                     <StudioState

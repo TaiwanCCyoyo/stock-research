@@ -123,6 +123,25 @@ def _coverage(day: pd.Timestamp, fact: CalendarFact | None, decision: pd.Timesta
     return DayCoverage(day, fact.session_state, state, fact.known_at, fact.close_at, fact.source_ref, tuple(reasons))
 
 
+def assess_calendar_range(snapshot: CalendarSnapshot, *, first_day: pd.Timestamp, last_day: pd.Timestamp) -> tuple[DayCoverage, ...]:
+    """Assess every civil date in an inclusive range using declared calendar facts.
+
+    Missing dates remain unknown. There is no weekday, holiday or quote-date
+    inference, and no claim that the caller selected authentic official facts.
+    """
+    if type(snapshot) is not CalendarSnapshot:
+        raise TypeError("snapshot must be CalendarSnapshot")
+    _date(first_day)
+    _date(last_day)
+    if first_day > last_day:
+        raise ValueError("first_day must not follow last_day")
+    validated = CalendarSnapshot(snapshot.calendar_id, snapshot.decision_at, snapshot.facts, snapshot.availability_note)
+    facts = {fact.date: fact for fact in validated.facts if first_day <= fact.date <= last_day}
+    return tuple(
+        _coverage(cast(pd.Timestamp, day), facts.get(cast(pd.Timestamp, day)), validated.decision_at) for day in pd.date_range(first_day, last_day, freq="D")
+    )
+
+
 def assess_week(snapshot: CalendarSnapshot, *, iso_year: int, iso_week: int) -> WeekAssessment:
     """Assess all seven civil days at one aware decision, without price inference.
 

@@ -5,6 +5,8 @@ export type StudioPage =
     | "strategy"
     | "compare"
     | "studies"
+    | "directions"
+    | "direction"
     | "overview"
     | "stock"
     | "history"
@@ -20,11 +22,25 @@ export function studioRoute(hash: string): {
     page: StudioPage;
     runId: string | null;
     reportId?: string;
+    directionId?: string;
     code?: string;
     securityKey?: string;
     overviewTab?: "stocks";
 } {
     const value = hash.replace(/^#/, "").split("?")[0];
+    if (value === "direction") return { page: "directions", runId: null };
+    if (value.startsWith("direction/")) {
+        try {
+            const directionId = decodeURIComponent(
+                value.slice("direction/".length),
+            );
+            return /^[0-9]{8}-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(directionId)
+                ? { page: "direction", runId: null, directionId }
+                : { page: "directions", runId: null };
+        } catch {
+            return { page: "directions", runId: null };
+        }
+    }
     if (value === "overview/stocks" || value === "data") {
         return { page: "overview", runId: null, overviewTab: "stocks" };
     }
@@ -83,6 +99,7 @@ export function studioRoute(hash: string): {
         "strategies",
         "compare",
         "studies",
+        "directions",
         "overview",
         "research",
         "funds",

@@ -3,6 +3,7 @@
    palette restyles existing pages without touching them. Gain/loss keep the
    Taiwanese red-up/green-down meaning in every palette. */
 .studio {
+    --warn: #a86a12;
     --gain: #c84c50;
     --loss: #238568;
     --negative: #a45b4b;
@@ -14,6 +15,7 @@
         0 2px 4px rgb(30 40 35 / 5%), 0 16px 40px rgb(30 40 35 / 11%);
 }
 .studio[data-appearance="dark"] {
+    --warn: #f0c27a;
     --gain: #f39293;
     --loss: #8ad2b3;
     --negative: #edb6a1;
