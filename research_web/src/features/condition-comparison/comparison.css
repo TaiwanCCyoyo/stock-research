@@ -1,0 +1,103 @@
+.condition-comparison {
+    color: var(--text, #172334);
+    background: var(--bg-panel, #fff);
+    padding: 1.25rem;
+    max-width: 70rem;
+    margin: auto;
+    font:
+        1rem/1.6 system-ui,
+        sans-serif;
+    overflow-wrap: anywhere;
+}
+.condition-comparison * {
+    box-sizing: border-box;
+}
+.condition-comparison button,
+.condition-comparison select,
+.condition-comparison textarea {
+    font: inherit;
+    color: inherit;
+    background: var(--bg-raised, #f2f6fc);
+    border: 1px solid var(--border-strong, #7a8ba0);
+    border-radius: 0.4rem;
+    padding: 0.5rem 0.7rem;
+    max-width: 100%;
+}
+.condition-comparison button,
+.condition-comparison summary {
+    cursor: pointer;
+}
+.condition-comparison button:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+.condition-comparison :focus-visible {
+    outline: 3px solid var(--accent, #1262d1);
+    outline-offset: 3px;
+}
+.condition-comparison [aria-pressed="true"] {
+    border: 2px solid var(--accent, #1262d1);
+}
+.cc-warning {
+    border-left: 0.3rem solid #bd7100;
+    background: var(--bg-hover, #fff3d8);
+    padding: 0.8rem;
+}
+.cc-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+}
+.cc-card,
+.cc-cases li {
+    border: 1px solid var(--border-strong, #a6b2c2);
+    border-radius: 0.6rem;
+    padding: 1rem;
+    min-width: 0;
+}
+.cc-card h3 {
+    margin-top: 0;
+}
+.cc-counts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem;
+}
+.condition-comparison dd {
+    margin: 0;
+    font-weight: 600;
+}
+.cc-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+}
+.cc-cases {
+    padding-left: 1.6rem;
+}
+.cc-cases li {
+    margin: 0.75rem 0;
+}
+.cc-cases [aria-current="true"] {
+    border-color: var(--accent, #1262d1);
+}
+.condition-comparison textarea {
+    display: block;
+    width: 100%;
+    min-height: 6rem;
+    margin: 0.5rem 0;
+}
+.condition-comparison details {
+    margin: 1rem 0;
+}
+@media (max-width: 600px) {
+    .cc-grid,
+    .cc-counts {
+        grid-template-columns: 1fr;
+    }
+    .condition-comparison {
+        padding: 0.75rem;
+    }
+}

@@ -326,9 +326,15 @@ verify-*.png
 !tasks/*/presentation.json
 # Study card v2 (owner decision 2026-10-24) and its contract.
 !tasks/*/study.json
+# Authored direction display models travel with the reviewed draft, not local-only previews.
+!tasks/*/preview/
+!tasks/*/preview/direction-discussion.json
 !tasks/20261024-data-homes-and-scratch/study-card-v2.schema.json
 !tasks/20261024-data-homes-and-scratch/study-card-v2-examples/
 !tasks/20261024-data-homes-and-scratch/study-card-v2-examples/*.json
+
+# Complete artificial CLI input; no market observations or source data.
+!tasks/20261102-order-card-freshness/synthetic-packet.json
 
 # Applies to every named publication version (completion-v2, completion-v3, ...).
 /tasks/20261013-annual-winner-rotation/publications/*/admission-audit.json

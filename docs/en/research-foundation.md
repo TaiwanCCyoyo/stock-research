@@ -28,6 +28,11 @@ Chat reports are the primary review interface. Existing K-line/trade viewers rem
 optional evidence drilldowns; dashboard feature expansion is paused. Figures must
 be rendered from traceable artifacts, never model-invented price/equity paths.
 
+For research-direction discussion, the [2026-11-02 owner clarification](decision-records/2026-11-02-interactive-direction-discussion.md)
+supersedes the older presentation limitation above: use the shared interactive discussion kit
+when exploration helps understanding, with draft/placeholder status and feedback tied to its
+source revision. This does not authorize market computation or unrelated dashboard expansion.
+
 ## Measurement before gates
 
 `research_core.ledger` reconstructs **recorded executions**, not hypothetical
