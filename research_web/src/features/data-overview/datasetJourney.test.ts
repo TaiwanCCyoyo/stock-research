@@ -32,6 +32,90 @@ const data: Families = {
         ],
     },
 };
+const collision: Families = {
+    ...data,
+    families: [
+        {
+            family: "events",
+            generation: "old",
+            asof: "",
+            status_sha256: "",
+            codes: 0,
+            calendar: { first: "", last: "", sessions: 0 },
+            definition: null,
+            bases: null,
+            technical: null,
+        },
+    ],
+};
+test("explicit namespaces resolve only their source despite identical id/version", () => {
+    assert.equal(
+        resolveDataset(collision, "catalog:events:old", null).kind,
+        "catalog",
+    );
+    assert.equal(
+        resolveDataset(collision, "derived:events", "old").kind,
+        "family",
+    );
+    assert.equal(
+        resolveDataset(collision, "derived:events", null).kind,
+        "choose",
+    );
+    assert.equal(resolveDataset(collision, "events", "old").kind, "ambiguous");
+    assert.equal(resolveDataset(collision, "events", null).kind, "ambiguous");
+});
+test("missing namespaced data never falls back to another source", () => {
+    const withoutCatalogEntry = {
+        ...collision,
+        catalog: { ...data.catalog!, entries: [] },
+    };
+    assert.equal(
+        resolveDataset(withoutCatalogEntry, "catalog:events:old", null).kind,
+        "missing",
+    );
+    assert.equal(resolveDataset(data, "derived:events", "old").kind, "missing");
+    assert.equal(resolveDataset(data, "derived:events", null).kind, "missing");
+    assert.equal(
+        resolveDataset(collision, "derived:events", "new").kind,
+        "missing",
+    );
+    assert.equal(
+        resolveDataset(collision, "catalog:events", "old").kind,
+        "missing",
+    );
+});
+test("catalog availability affects catalog and unqualified references, not derived ones", () => {
+    for (const unavailable of [
+        { ...collision, catalog: null, catalogError: "busy" },
+        { ...collision, catalog: null },
+        { ...collision, catalogError: "unverified" },
+    ]) {
+        assert.equal(
+            resolveDataset(unavailable, "catalog:events:old", null).kind,
+            "unavailable",
+        );
+        assert.equal(
+            resolveDataset(unavailable, "events", "old").kind,
+            "unavailable",
+        );
+        assert.equal(
+            resolveDataset(unavailable, "events", null).kind,
+            "unavailable",
+        );
+        assert.equal(
+            resolveDataset(unavailable, "derived:events", "old").kind,
+            "family",
+        );
+        assert.equal(
+            resolveDataset(unavailable, "derived:events", null).kind,
+            "choose",
+        );
+        assert.equal(
+            resolveDataset(unavailable, "derived:absent", "old").kind,
+            "missing",
+        );
+    }
+});
 test("direct dataset URLs round-trip the exact reference and study context", () => {
     const back = studyContext("#studies?q=volume&filter=report", "study-A");
     const href = datasetDetailHref("catalog:events:old", back);

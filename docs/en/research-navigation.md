@@ -32,6 +32,11 @@ This is an acceptance gap, not evidence that the discussion was implemented.
 | Open a coverage security             | Existing opaque securityKey route                                           | Existing coverage filters, pagination and scroll return remain; nested source context survives          |
 | Follow related research              | Exact equality against `study-card.v2.provenance.shared_data`               | Family references do not imply the selected version; do not infer relationships from titles             |
 
+Explicit `catalog:` and `derived:` namespaces constrain resolution to that source.
+When the catalog is unreadable, catalog and unqualified references are unavailable;
+an explicit derived reference can still resolve without the catalog. Unqualified
+same-ID references across both sources are ambiguous, even if versions match.
+
 Dataset source links, browser Back/Forward and refresh use URL state. Study
 selection focuses the original card after data loads. Return URLs are reconstructed
 from bounded local route/parameter allowlists; no external return URL is accepted.

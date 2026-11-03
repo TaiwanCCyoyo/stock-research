@@ -59,14 +59,27 @@ export function resolveDataset(
     version: string | null,
 ): DatasetMatch {
     const catalogIdentity = /^catalog:([^:]+):(.+)$/.exec(reference);
+    const source = reference.startsWith("catalog:")
+        ? "catalog"
+        : reference.startsWith("derived:")
+          ? "derived"
+          : null;
+    if ((source === "catalog" && !catalogIdentity) || reference === "derived:")
+        return { kind: "missing" };
     const id = catalogIdentity?.[1] ?? reference.replace(/^derived:/, "");
     const requested = version ?? catalogIdentity?.[2] ?? null;
     if (catalogIdentity && version && version !== catalogIdentity[2])
         return { kind: "ambiguous" };
+    // A namespace is part of identity, not a hint. Without one, an unreadable
+    // catalog also prevents us from ruling out a cross-source collision.
+    if (source !== "derived" && (!data.catalog || data.catalogError))
+        return { kind: "unavailable" };
     const entries = (data.catalog?.entries ?? []).filter(
-        (entry) => entry.data_id === id,
+        (entry) => source !== "derived" && entry.data_id === id,
     );
-    const families = data.families.filter((family) => family.family === id);
+    const families = data.families.filter(
+        (family) => source !== "catalog" && family.family === id,
+    );
     if ((entries.length && families.length) || families.length > 1)
         return { kind: "ambiguous" };
     if (!requested) {
@@ -87,14 +100,12 @@ export function resolveDataset(
             return { kind: "ambiguous" };
         return choices.length
             ? { kind: "choose", choices }
-            : { kind: data.catalogError ? "unavailable" : "missing" };
+            : { kind: "missing" };
     }
     const matches = entries.filter((entry) => entry.version_id === requested);
     if (matches.length > 1) return { kind: "ambiguous" };
     if (matches[0]) return { kind: "catalog", entry: matches[0] };
     if (families[0]?.generation === requested)
         return { kind: "family", family: families[0] };
-    return {
-        kind: data.catalogError && !families.length ? "unavailable" : "missing",
-    };
+    return { kind: "missing" };
 }
