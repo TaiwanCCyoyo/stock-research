@@ -19,7 +19,7 @@ stock without events. Its numbers must never be presented as market findings.
 | `synthetic`                                         | True exactly when `provenance.scope` is `synthetic`.                                                                                                                                                                                                |
 | `provenance.scope`                                  | `synthetic`, `pilot`, or future `full`; current recovery is at most five stocks.                                                                                                                                                                    |
 | `provenance.data_id`                                | Saved source identity, including its fixed catalog/bundle version when applicable.                                                                                                                                                                  |
-| `provenance.definition_id`, `source_id`, `input_id` | Explicit definition, original numerical-source and input identities. Never infer them from a filename or current data.                                                                                                                              |
+| `provenance.definition_id`, `source_id`, `input_id` | Explicit original numerical-source and input identities. In this L1 study, event definition_id is the numerical source_id, so both declarations must agree. Never infer them from a filename or current data.                                       |
 | `provenance.base_label_version_id`                  | Original immutable base-label version; does not assert that base labels equal effective event outcomes.                                                                                                                                             |
 | `provenance.code_commit`, `generation`              | Producing code identity and original price-generation lineage. Synthetic values are explicitly synthetic.                                                                                                                                           |
 | `provenance.actual_selected_stocks`                 | Unique stock identities; may include zero-event stocks. Pilot maximum is five.                                                                                                                                                                      |
@@ -28,6 +28,21 @@ stock without events. Its numbers must never be presented as market findings.
 | `cohort`                                            | `pattern_id=L1`, `cohort_id=union`, horizons `[126,252]`, and unique event count before conditions.                                                                                                                                                 |
 | `horizons`                                          | Exactly one entry each for H126 and H252. Each contains `cohort`, four `cells`, and eight `unavailable` status combinations.                                                                                                                        |
 | `semantics`                                         | Versioned outcome/count/denominator descriptions from the producer.                                                                                                                                                                                 |
+
+The envelope also requires `provenance.base_label_manifest_sha256`, a 64-character
+lowercase hexadecimal digest. Before counting, the producer requires every event
+to carry nonblank `definition_id`, `input_id`, `base_label_version_id` and
+`base_label_manifest_sha256`. Each identity must be uniform across the entire
+cohort and equal its declared provenance field. A pair of internally consistent
+horizon rows cannot hide a conflicting identity on another event. `full` scope
+and asserted parity flags cannot bypass this check.
+
+These rules apply equally to synthetic fixtures. The current synthetic fixture
+uses matching invented numerical-source identities and an all-zero manifest
+digest; its summaries and references are unchanged. An empty cohort still needs
+the complete column schema, while its source existence remains caller-asserted.
+This is a check for contradictions in supplied metadata, not independent
+certification of an external source or the caller's parity evidence.
 
 ## Cells, counts and unavailable inputs
 

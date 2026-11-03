@@ -16,11 +16,12 @@ def _provenance() -> dict[str, Any]:
     return {
         "scope": "synthetic",
         "data_id": "SYNTH-data",
-        "definition_id": "SYNTH-definition",
+        "definition_id": "SYNTH-source",
         "code_commit": "SYNTH-code",
         "source_id": "SYNTH-source",
         "input_id": "SYNTH-input",
         "base_label_version_id": "SYNTH-labels",
+        "base_label_manifest_sha256": "a" * 64,
         "generation": "SYNTH-generation",
         "actual_selected_stocks": ["SYNTH-0001", "SYNTH-0002", "SYNTH-0003"],
         "historical_exposed": True,
@@ -52,6 +53,10 @@ def _inputs() -> tuple[pd.DataFrame, pd.DataFrame]:
             "t0": day,
             "pattern_id": "L1",
             "cohort_id": "union",
+            "definition_id": "SYNTH-source",
+            "input_id": "SYNTH-input",
+            "base_label_version_id": "SYNTH-labels",
+            "base_label_manifest_sha256": "a" * 64,
             "horizon": horizon,
             "effective_label": label,
             "calendar_full": full,
@@ -196,6 +201,86 @@ def test_synthetic_cannot_claim_research_validation(flag: str) -> None:
     provenance["validation_scope"][flag] = True
     with pytest.raises(ValueError):
         build_l1_comparison(events, conditions, provenance=provenance)
+
+
+def _source_provenance(scope: str) -> dict[str, Any]:
+    provenance = _provenance()
+    provenance["scope"] = scope
+    if scope == "full":
+        provenance["validation_scope"].update(full_q1_parity=True, marginal_parity=True)
+    return provenance
+
+
+@pytest.mark.parametrize("scope", ["synthetic", "full"])
+@pytest.mark.parametrize("column", ["definition_id", "input_id", "base_label_version_id", "base_label_manifest_sha256"])
+def test_different_events_cannot_mix_source_cohorts(scope: str, column: str) -> None:
+    events, conditions = _inputs()
+    # Both rows of one event agree. This reproduces mixed cohorts that passed
+    # the older check which considered each event's two horizons in isolation.
+    events.loc[events.event_id.eq("synthetic-1"), column] = "b" * 64 if column.endswith("sha256") else "SYNTH-other-source"
+    assert bool(events.groupby("event_id")[column].nunique().eq(1).all())
+    assert events[column].nunique() == 2
+    with pytest.raises(ValueError):
+        build_l1_comparison(events, conditions, provenance=_source_provenance(scope))
+
+
+@pytest.mark.parametrize("scope", ["synthetic", "full"])
+@pytest.mark.parametrize("field", ["definition_id", "source_id", "input_id", "base_label_version_id", "base_label_manifest_sha256"])
+def test_provenance_cannot_claim_a_source_other_than_event_rows(scope: str, field: str) -> None:
+    events, conditions = _inputs()
+    provenance = _source_provenance(scope)
+    provenance[field] = "b" * 64 if field.endswith("sha256") else "SYNTH-other-source"
+    with pytest.raises(ValueError):
+        build_l1_comparison(events, conditions, provenance=provenance)
+
+
+@pytest.mark.parametrize("column", ["definition_id", "input_id", "base_label_version_id", "base_label_manifest_sha256"])
+@pytest.mark.parametrize("invalid", ["missing", "null", "blank"])
+def test_event_source_fields_are_required_known_and_nonblank(column: str, invalid: str) -> None:
+    events, conditions = _inputs()
+    if invalid == "missing":
+        events = events.drop(columns=column)
+    else:
+        events.loc[events.event_id.eq("synthetic-1"), column] = None if invalid == "null" else " "
+    with pytest.raises(ValueError):
+        build_l1_comparison(events, conditions, provenance=_provenance())
+
+
+@pytest.mark.parametrize("manifest", ["a" * 63, "z" * 64, "A" * 64, "a" * 64 + "\n"])
+def test_matching_but_invalid_manifest_does_not_establish_source_identity(manifest: str) -> None:
+    events, conditions = _inputs()
+    events["base_label_manifest_sha256"] = manifest
+    provenance = _provenance()
+    provenance["base_label_manifest_sha256"] = manifest
+    with pytest.raises(ValueError):
+        build_l1_comparison(events, conditions, provenance=provenance)
+
+
+@pytest.mark.parametrize("scope", ["synthetic", "full"])
+def test_same_source_multiple_stocks_and_both_horizons_remain_valid(scope: str) -> None:
+    events, conditions = _inputs()
+    provenance = _source_provenance(scope)
+    payload = build_l1_comparison(events, conditions, provenance=provenance)
+    Draft202012Validator(comparison_json_schema()).validate(payload)
+    assert payload["cohort"]["event_n"] == 8
+    assert payload["provenance"] == provenance
+    for horizon in payload["horizons"]:
+        assert horizon["cohort"]["distinct_stock_n"] == 3
+        assert horizon["cohort"]["event_n"] == 8
+
+
+def test_empty_cohort_with_selected_zero_event_stocks_retains_valid_schema() -> None:
+    events, conditions = _inputs()
+    provenance = _provenance()
+    payload = build_l1_comparison(events.iloc[:0], conditions.iloc[:0], provenance=provenance)
+    Draft202012Validator(comparison_json_schema()).validate(payload)
+    assert payload["provenance"] == provenance
+    assert payload["cohort"]["event_n"] == 0
+    assert [row["horizon"] for row in payload["horizons"]] == [126, 252]
+    for horizon in payload["horizons"]:
+        assert horizon["cohort"]["event_n"] == horizon["cohort"]["distinct_stock_n"] == 0
+        assert horizon["cohort"]["hit_rate"] is None
+        assert all(cell["summary"]["event_n"] == 0 and cell["references"] == [] for cell in horizon["cells"])
 
 
 def test_exported_fixture_schema_evaluation_state_and_hand_counts() -> None:

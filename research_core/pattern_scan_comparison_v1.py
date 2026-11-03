@@ -9,10 +9,11 @@ certification of the caller's provenance assertions.
 from __future__ import annotations
 
 import logging
+import re
 from collections.abc import Mapping
 from copy import deepcopy
 from itertools import product
-from typing import Any
+from typing import Any, cast
 
 import pandas as pd
 
@@ -21,6 +22,7 @@ from research_core.pattern_scan_rates_v1 import summarize_events
 
 SCHEMA_VERSION = "l1-volume-comparison.v1"
 HORIZONS = (126, 252)
+SOURCE_IDENTITY_COLUMNS = ("definition_id", "input_id", "base_label_version_id", "base_label_manifest_sha256")
 STATUSES = ("known", "feature_unknown", "not_applicable")
 CELL_GROUPS = tuple(product(("vol_le_0_7", "vol_gt_0_7"), ("g_ge_1_5", "g_lt_1_5")))
 LOGGER = logging.getLogger(__name__)
@@ -54,6 +56,7 @@ def _provenance(supplied: Mapping[str, Any], events: pd.DataFrame) -> dict[str, 
         "data_id",
         "input_id",
         "base_label_version_id",
+        "base_label_manifest_sha256",
         "definition_id",
         "code_commit",
         "source_id",
@@ -70,6 +73,17 @@ def _provenance(supplied: Mapping[str, Any], events: pd.DataFrame) -> dict[str, 
     for key in ("data_id", "input_id", "base_label_version_id", "definition_id", "code_commit", "source_id", "generation"):
         if not isinstance(result[key], str) or not result[key].strip():
             raise ValueError(f"provenance {key} must be nonblank")
+    manifest = result["base_label_manifest_sha256"]
+    if not isinstance(manifest, str) or re.fullmatch(r"[0-9a-f]{64}", manifest) is None:
+        raise ValueError("provenance base_label_manifest_sha256 must be a lowercase SHA256")
+    if result["source_id"] != result["definition_id"]:
+        raise ValueError("original numerical source_id must equal projected definition_id")
+    for column in SOURCE_IDENTITY_COLUMNS:
+        values = cast(pd.Series, events[column])
+        if not values.map(lambda value: isinstance(value, str) and bool(value.strip())).all():
+            raise ValueError(f"event {column} requires nonblank source identities")
+        if values.nunique(dropna=False) > 1 or not values.eq(result[column]).all():
+            raise ValueError(f"cohort {column} must match declared provenance")
     stocks = result["actual_selected_stocks"]
     if (
         not isinstance(stocks, (list, tuple))
@@ -142,11 +156,15 @@ def build_l1_comparison(events: pd.DataFrame, conditions: pd.DataFrame, *, prove
     ``conditions`` has one row/event with G_bin/G_status/G_reason and the same
     VOL_a fields. It must come from the saved-condition adapter; raw values are
     ignored. ``actual_selected_stocks`` may include selected zero-event stocks.
+    Projected definition/input/base-label identities must be present, uniform
+    across the cohort and equal the declared provenance. The original numerical
+    source_id is the projection's definition_id, as in the recovery adapter.
+    This checks supplied metadata consistency, not external source authenticity.
     Full-scope provenance assertions require separate caller-side acceptance.
     """
-    required = {"pattern_id", "cohort_id", "event_eligibility_excluded"}
+    required = {"pattern_id", "cohort_id", "event_eligibility_excluded", *SOURCE_IDENTITY_COLUMNS}
     if not events.columns.is_unique or not required.issubset(events):
-        raise ValueError("events require explicit L1 union and eligibility fields")
+        raise ValueError("events require explicit L1 union, eligibility and source identity fields")
     summarize_events(events)
     if not events.pattern_id.eq("L1").all() or not events.cohort_id.eq("union").all():
         raise ValueError("comparison accepts only preserved L1 union events")
@@ -241,6 +259,7 @@ def comparison_json_schema() -> dict[str, Any]:
     provenance = obj({
         "scope": {"enum": ["synthetic", "pilot", "full"]},
         **{key: text for key in ("data_id", "input_id", "base_label_version_id", "definition_id", "code_commit", "source_id", "generation")},
+        "base_label_manifest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
         "actual_selected_stocks": {"type": "array", "minItems": 1, "uniqueItems": True, "items": text},
         "historical_exposed": {"const": True},
         "validation_scope": validation,

@@ -4,9 +4,9 @@
     "provenance": {
         "scope": "synthetic",
         "data_id": "synthetic-eight-event-contract-example",
-        "definition_id": "synthetic-preserved-L1-union",
+        "definition_id": "SYNTH-original-numerical-source-v1",
         "code_commit": "synthetic-example-not-market-code-lineage",
-        "source_id": "synthetic-only-no-market-source",
+        "source_id": "SYNTH-original-numerical-source-v1",
         "generation": "synthetic-generation-v1",
         "actual_selected_stocks": [
             "SYNTH-A",
@@ -22,7 +22,8 @@
             "unseen_validation": false
         },
         "input_id": "SYNTH-input-id-v1",
-        "base_label_version_id": "SYNTH-base-label-version-v1"
+        "base_label_version_id": "SYNTH-base-label-version-v1",
+        "base_label_manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
     },
     "cohort": {
         "pattern_id": "L1",
