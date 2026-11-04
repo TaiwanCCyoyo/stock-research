@@ -1,16 +1,20 @@
 # Shared-data viewer v1
 
-The local-private dashboard's `/#data` page reads the maintained
-`adjusted-daily-v1` family and the existing research-data catalog in place.
-`/#data/<code>` opens a stock. No market values are bundled in Git or synthetic
-mode; the latter displays a local-data requirement.
+The local-private dashboard uses `/#overview` for dataset discovery,
+`/#overview/stocks` for coverage and `/#stock/<opaque-security-key>` for a stock.
+Research references open `/#dataset?ref=…` and explicitly select a version when
+the source did not record one. The [research navigation contract](research-navigation.md)
+owns destinations, version identity, return behavior and the acceptance matrix.
+Legacy `/#data` and `/#data/<code>` routes are compatibility resolvers.
+The viewer reads the maintained `adjusted-daily-v1` family and existing catalog
+in place. No market values are bundled in Git or synthetic mode; the latter
+displays a local-data requirement.
 
 ## Read-only API
 
 `/shared-data/v1` and `/api/shared-data/v1` expose the same router:
 
-- `families`: current generation/status summary plus verified catalog discovery
-  metadata. A missing catalog is explicit and does not hide the maintained family.
+- `families`: current generation/status summary plus verified catalog discovery. The private response reports independent `familyError` and `catalogError` states; an unavailable maintained family returns an empty `families` list without discarding a readable catalog. Explicit catalog references remain usable, while unqualified references cannot rule out identity collisions until both sources are readable. A missing catalog is explicit and does not hide the maintained family.
 - `adjusted-daily-v1/symbols`: code, optional name/market and first/last stored dates.
   Live producer names use idle-window guards and a stable read-only SQLite read;
   unavailable/busy metadata falls back to codes. Names arrive independently of

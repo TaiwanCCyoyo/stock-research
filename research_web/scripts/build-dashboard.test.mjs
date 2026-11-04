@@ -90,6 +90,24 @@ test("release rebuilds stale source and keeps frontend and report indexes on one
     }
 });
 
+test("a discussion kit edit invalidates an otherwise current Dashboard release", async () => {
+    const { root, web } = await fixture();
+    try {
+        const kit = join(web, "discussion-kit", "v1");
+        await mkdir(kit, { recursive: true });
+        await writeFile(join(kit, "discussion.js"), "renderer-v1");
+        const build = (atRoot, stage, version) =>
+            fakeBuild(atRoot, stage, version);
+        assert.equal(await ensureRelease({ root, build }), "built");
+        const before = sourceVersion(root);
+        await writeFile(join(kit, "discussion.js"), "renderer-v2");
+        assert.notEqual(sourceVersion(root), before);
+        assert.equal(await ensureRelease({ root, build }), "built");
+    } finally {
+        await rm(root, { recursive: true, force: true });
+    }
+});
+
 test("release fingerprint includes Vite production env files and effective overrides", async () => {
     const { root, web } = await fixture();
     try {

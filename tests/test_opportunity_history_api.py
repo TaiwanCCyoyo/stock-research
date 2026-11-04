@@ -91,6 +91,7 @@ def test_startup_progress_does_not_trigger_or_wait_for_load():
         provider._progress("核對各股價格與候選標記", 12, 20)
         assert provider.status() == {
             "schema": "opportunity-history-web.v1",
+            "bundleIdentity": {"versionId": provider.version_id, "manifestSha256": provider.expected_sha},
             "state": "loading",
             "stage": "核對各股價格與候選標記",
             "completed": 12,

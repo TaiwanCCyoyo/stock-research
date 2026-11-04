@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { readFileSync } from "node:fs";
-import { reportPalette, themeId, THEMES } from "./themes.ts";
+import { themeId, THEMES } from "./themes.ts";
+import {
+    readReportThemeTokens,
+    REPORT_KIT_COLOR_TOKEN_NAMES,
+    STUDIO_THEME_TOKEN_NAMES,
+} from "../features/report-library/themeBridge.ts";
 
 test("saved palette ids keep working and unknown ids fall back", () => {
     for (const id of ["forest", "ocean", "plum", "sand"])
@@ -9,15 +14,6 @@ test("saved palette ids keep working and unknown ids fall back", () => {
     assert.equal(themeId("sakura"), "sakura");
     assert.equal(themeId("neon"), "forest");
     assert.equal(themeId(null), "forest");
-});
-
-test("web reports only receive palettes report-kit v1 understands", () => {
-    for (const theme of THEMES)
-        assert.ok(
-            ["forest", "ocean", "plum", "sand"].includes(
-                reportPalette(theme.id),
-            ),
-        );
 });
 
 test("every theme defines both appearances in the stylesheet", () => {
@@ -30,6 +26,98 @@ test("every theme defines both appearances in the stylesheet", () => {
             ),
             theme.id,
         );
+    }
+});
+
+test("all eight themes define the shared report tokens for light and dark", () => {
+    const kitCss = readFileSync(
+        new URL("../../report-kit/v1/report-kit.css", import.meta.url),
+        "utf8",
+    );
+    const kitRoot = kitCss.match(/:root\s*\{([^}]*)\}/)?.[1] ?? "";
+    const kitColorTokens = [...kitRoot.matchAll(/(--[a-z0-9-]+)\s*:/gi)]
+        .map(([, name]) => name)
+        .filter(
+            (name) =>
+                !name.startsWith("--font-") &&
+                name !== "--radius" &&
+                name !== "--radius-sm",
+        )
+        .sort();
+    assert.deepEqual([...REPORT_KIT_COLOR_TOKEN_NAMES].sort(), kitColorTokens);
+
+    const css = [
+        readFileSync(new URL("./studio.css", import.meta.url), "utf8"),
+        readFileSync(new URL("./themes.css", import.meta.url), "utf8"),
+    ]
+        .join("\n")
+        .replace(/\/\*[\s\S]*?\*\//g, "");
+    const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(
+        ([, selectors = "", body = ""]) => ({
+            selectors: selectors.split(",").map((selector) => selector.trim()),
+            declarations: new Map(
+                [...body.matchAll(/(--[a-z0-9-]+)\s*:\s*([^;]+);/gi)].map(
+                    ([, name, value]) => [name, value.trim()],
+                ),
+            ),
+        }),
+    );
+
+    for (const theme of THEMES) {
+        for (const appearance of ["light", "dark"]) {
+            const selectors = new Set([":root", ".studio"]);
+            if (appearance === "dark")
+                selectors.add('.studio[data-appearance="dark"]');
+            selectors.add(`.studio[data-palette="${theme.id}"]`);
+            if (appearance === "dark")
+                selectors.add(
+                    `.studio[data-appearance="dark"][data-palette="${theme.id}"]`,
+                );
+            const computed = new Map<string, string>();
+            for (const rule of rules)
+                if (rule.selectors.some((selector) => selectors.has(selector)))
+                    for (const [name, value] of rule.declarations)
+                        computed.set(name, value);
+
+            for (const token of STUDIO_THEME_TOKEN_NAMES)
+                assert.ok(
+                    computed.has(token),
+                    `${theme.id}/${appearance} source: ${token}`,
+                );
+            const tokens = readReportThemeTokens(
+                (name) => computed.get(name) ?? "",
+            );
+            assert.ok(tokens, `${theme.id}/${appearance}`);
+            for (const name of STUDIO_THEME_TOKEN_NAMES)
+                assert.equal(
+                    tokens[name],
+                    computed.get(name),
+                    `${theme.id}/${appearance} source value: ${name}`,
+                );
+            for (const token of REPORT_KIT_COLOR_TOKEN_NAMES)
+                assert.ok(
+                    tokens[token],
+                    `${theme.id}/${appearance} kit color: ${token}`,
+                );
+            assert.equal(
+                tokens["--warn"],
+                appearance === "dark" ? "#f0c27a" : "#a86a12",
+            );
+            assert.equal(tokens["--compare"], "var(--muted)");
+            assert.equal(
+                tokens["--warn-soft"],
+                "color-mix(in srgb, var(--warn) 14%, var(--surface))",
+            );
+            assert.equal(
+                tokens["--line-strong"],
+                "color-mix(in srgb, var(--line) 60%, var(--ink))",
+            );
+            assert.notEqual(
+                computed.get("--muted"),
+                computed.get("--accent"),
+                `${theme.id}/${appearance}: compare must remain distinct from accent`,
+            );
+        }
     }
 });
 

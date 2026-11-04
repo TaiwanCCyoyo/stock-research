@@ -26,7 +26,13 @@ const launchOutcomeLabel: Record<Launch["outcome"], string> = {
 const methodLabel = { segments: "趨勢分段", filter: "趨勢濾波" } as const;
 const scaleLabel = { fine: "細", balanced: "中", coarse: "粗" } as const;
 
-export function HistoryChartDetail({ detail }: { detail: HistoryDetail }) {
+export function HistoryChartDetail({
+    detail,
+    initialInterval,
+}: {
+    detail: HistoryDetail;
+    initialInterval?: { from: string; to: string };
+}) {
     const { sample, results } = detail;
     const [raw, setRaw] = useState(false),
         [logarithmic, setLogarithmic] = useState(false);
@@ -50,8 +56,22 @@ export function HistoryChartDetail({ detail }: { detail: HistoryDetail }) {
         ),
     );
     const [range, setRange] = useState<[number, number]>([
-        0,
-        Math.max(0, sample.points.length - 1),
+        initialInterval
+            ? Math.max(
+                  0,
+                  sample.points.findIndex(
+                      (point) => point.date === initialInterval.from,
+                  ),
+              )
+            : 0,
+        initialInterval
+            ? Math.max(
+                  0,
+                  sample.points.findIndex(
+                      (point) => point.date === initialInterval.to,
+                  ),
+              )
+            : Math.max(0, sample.points.length - 1),
     ]);
     const [selectedWave, setSelectedWave] = useState<string | null>(null);
     const [selectedLaunch, setSelectedLaunch] = useState<string | null>(null);
@@ -194,7 +214,7 @@ export function HistoryChartDetail({ detail }: { detail: HistoryDetail }) {
                     <h2>
                         {sample.code} {sample.name}
                     </h2>
-                    {sample.code && (
+                    {sample.code && !initialInterval && (
                         <a href={`#data/${encodeURIComponent(sample.code)}`}>
                             在 K 線檢視
                         </a>

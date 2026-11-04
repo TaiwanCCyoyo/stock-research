@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { SourceInfo } from "../../components/ui/primitives";
+import { VersionIdentity } from "./VersionIdentity";
 import {
     groupCatalog,
     selectedCatalogVersion,
     metadataText,
     versionLabel,
+    compactVersionLabel,
     type CatalogEntry,
     type Families,
 } from "./model";
@@ -13,7 +15,7 @@ const contract = `${repository}docs/en/research-derived-data.md`;
 const catalogGuide = `${repository}tasks/20261012-research-data-entry/data-contract.md`;
 const assetIndex = `${repository}docs/en/research-program.md`;
 
-function CatalogCard({ entries }: { entries: CatalogEntry[] }) {
+export function CatalogCard({ entries }: { entries: CatalogEntry[] }) {
     const [version, setVersion] = useState<string>();
     const entry = selectedCatalogVersion(entries, version);
     return (
@@ -27,12 +29,13 @@ function CatalogCard({ entries }: { entries: CatalogEntry[] }) {
                         value={entry.version_id}
                         onChange={(event) => setVersion(event.target.value)}
                     >
-                        {entries.map((item, i) => (
+                        {entries.map((item, index) => (
                             <option
                                 key={item.version_id}
                                 value={item.version_id}
                             >
-                                資料 {i + 1}
+                                {index + 1}.{" "}
+                                {compactVersionLabel(item.version_id)}
                                 {item.recommended === true ? " · 建議選用" : ""}
                             </option>
                         ))}
@@ -43,6 +46,11 @@ function CatalogCard({ entries }: { entries: CatalogEntry[] }) {
                 {entry.coverage?.raw_input_period?.start ?? "期間未提供"} –{" "}
                 {entry.coverage?.raw_input_period?.end ?? "未提供"}
             </p>
+            <div className="shared-note shared-catalog-identity">
+                資料集：{entry.data_id}
+                <br />
+                <VersionIdentity version={entry.version_id} />
+            </div>
             <p>
                 涵蓋股票：
                 {entry.viewer_metadata?.security_count != null
@@ -59,6 +67,8 @@ function CatalogCard({ entries }: { entries: CatalogEntry[] }) {
             )}
             <SourceInfo>
                 <p>用途：{entry.purpose || "未提供"}</p>
+                <p>資料格式：{entry.viewer_metadata?.schema ?? "未提供"}</p>
+                <p>粒度與單位：摘要未提供，請核對資料契約。</p>
                 <p>
                     資料欄位：
                     {entry.viewer_metadata?.columns?.join("、") ||
@@ -125,6 +135,11 @@ export function SharedCatalog({
                     </button>
                 ))}
             </div>
+            {data.familyError && (
+                <p role="alert">
+                    Maintained data unavailable: {data.familyError}
+                </p>
+            )}
             {data.catalogError && (
                 <div role="alert" className="u-notice">
                     <p>研究資料包暫時無法讀取；仍可查看持續維護的資料。</p>

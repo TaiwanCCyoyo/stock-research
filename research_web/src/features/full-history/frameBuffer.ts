@@ -1,11 +1,18 @@
+import {
+    assertHistoryVersion,
+    historyVersionKey,
+    type HistoryBundleIdentity,
+} from "./versionIdentity.ts";
 import { HISTORY_SCHEMA, type HistoryFrame } from "./types.ts";
 
 export interface FrameIdentity {
     catalogId: string;
+    bundleIdentity?: HistoryBundleIdentity;
     date: string;
 }
 
-const keyOf = ({ catalogId, date }: FrameIdentity) => `${catalogId}:${date}`;
+const keyOf = ({ catalogId, date, bundleIdentity }: FrameIdentity) =>
+    JSON.stringify([historyVersionKey(bundleIdentity), catalogId, date]);
 
 /** Small, session-only LRU. Pending frames are shared by playback and lookahead. */
 export class FrameBuffer {
@@ -17,11 +24,16 @@ export class FrameBuffer {
     private readonly load: (
         date: string,
         signal: AbortSignal,
+        bundleIdentity?: HistoryBundleIdentity,
     ) => Promise<HistoryFrame>;
     private readonly capacity: number;
 
     constructor(
-        load: (date: string, signal: AbortSignal) => Promise<HistoryFrame>,
+        load: (
+            date: string,
+            signal: AbortSignal,
+            bundleIdentity?: HistoryBundleIdentity,
+        ) => Promise<HistoryFrame>,
         capacity = 24,
     ) {
         this.load = load;
@@ -45,7 +57,11 @@ export class FrameBuffer {
         const pending = this.pending.get(key);
         if (pending) return pending.promise;
         const controller = new AbortController();
-        const promise = this.load(identity.date, controller.signal)
+        const promise = this.load(
+            identity.date,
+            controller.signal,
+            identity.bundleIdentity,
+        )
             .then((frame) => {
                 if (controller.signal.aborted)
                     throw new DOMException("Aborted", "AbortError");
@@ -56,6 +72,8 @@ export class FrameBuffer {
                     !Array.isArray(frame.rows)
                 )
                     throw new Error("資料日期或版本不一致");
+                if (identity.bundleIdentity)
+                    assertHistoryVersion(frame, identity.bundleIdentity);
                 this.frames.set(key, frame);
                 while (this.frames.size > this.capacity)
                     this.frames.delete(this.frames.keys().next().value!);

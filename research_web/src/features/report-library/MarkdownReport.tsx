@@ -59,7 +59,13 @@ interface ReadingResponse {
     reason: string;
 }
 
-export function MarkdownReport({ reportId }: { reportId: string }) {
+export function MarkdownReport({
+    reportId,
+    relatedStudies = [],
+}: {
+    reportId: string;
+    relatedStudies?: { id: string; question: string }[];
+}) {
     const [data, setData] = useState<ReadingResponse | null>(null);
     const [error, setError] = useState("");
     const [retry, setRetry] = useState(0);
@@ -140,6 +146,13 @@ export function MarkdownReport({ reportId }: { reportId: string }) {
     );
     const base = `/history-api/studies/${encodeURIComponent(reportId)}`;
     const back = studiesBack(currentStudyHash());
+    const related = relatedStudies.filter(
+        (item) =>
+            item.id !== reportId &&
+            data?.sources.some(
+                (source) => source.path.split("/")[0] === item.id,
+            ),
+    );
     useEffect(() => {
         const controller = new AbortController();
         let timeout = false;
@@ -226,7 +239,6 @@ export function MarkdownReport({ reportId }: { reportId: string }) {
             <a className="u-btn" href={back}>
                 ← 返回研究列表
             </a>
-            <p className="st-identity">{reportId}</p>
             {error ? (
                 <div role="alert" className="u-notice">
                     <p>{error}</p>
@@ -241,18 +253,9 @@ export function MarkdownReport({ reportId }: { reportId: string }) {
                 <p role="status">正在讀取報告…</p>
             ) : (
                 <>
-                    <p className="u-notice">
-                        {data.reading?.state === "ready"
-                            ? "已整理閱讀版 · 原始結果與研究限制保留"
-                            : data.reason || "歷史原文，尚未完成閱讀版核對。"}
-                    </p>
-                    {data.reading?.updated_at && (
-                        <p>閱讀版更新：{data.reading.updated_at}</p>
-                    )}
-                    {data.reading?.data_period && (
-                        <p>
-                            研究資料：{data.reading.data_period.from} ～{" "}
-                            {data.reading.data_period.to}
+                    {data.reading?.state !== "ready" && (
+                        <p className="reading-limitation">
+                            {data.reason || "原文內容尚未完成核對。"}
                         </p>
                     )}
                     <div className="reading-prose">
@@ -265,6 +268,36 @@ export function MarkdownReport({ reportId }: { reportId: string }) {
                             {data.markdown}
                         </ReactMarkdown>
                     </div>
+                    <footer className="reading-metadata">
+                        {data.reading?.updated_at && (
+                            <span>內容更新：{data.reading.updated_at}</span>
+                        )}
+                        {data.reading?.data_period && (
+                            <span>
+                                研究資料：{data.reading.data_period.from} ～{" "}
+                                {data.reading.data_period.to}
+                            </span>
+                        )}
+                        <span>研究代號：{reportId}</span>
+                    </footer>
+                    {related.length > 0 && (
+                        <nav
+                            className="reading-related"
+                            aria-label="引用的研究"
+                        >
+                            <h2>引用的研究</h2>
+                            <p>研究之間的比較方式與差異，見正文說明。</p>
+                            {related.map((item) => (
+                                <a
+                                    className="u-btn"
+                                    key={item.id}
+                                    href={`#report/${encodeURIComponent(item.id)}?back=${encodeURIComponent(back)}`}
+                                >
+                                    {item.question}
+                                </a>
+                            ))}
+                        </nav>
+                    )}
                     {data.sources.length > 0 && (
                         <section
                             className="reading-sources"

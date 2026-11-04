@@ -2,8 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
     currentStudyHash,
+    reportView,
     pendingCard,
     readingState,
+    studyCollection,
+    withReportEntry,
     readingLink,
     studiesBack,
     withReading,
@@ -14,6 +17,13 @@ import { filterStudies } from "./model.ts";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createServer } from "vite";
+
+test("a pending private API never blocks a registered native report or guesses an unknown edition", () => {
+    assert.equal(reportView(null, undefined, true, true), "html");
+    assert.equal(reportView(null, undefined, false, true), "loading");
+    assert.equal(reportView("reading", "html", true, true), "reading");
+    assert.equal(reportView(null, "markdown", false, false), "reading");
+});
 
 test("card links name the reading edition separately from its acceptance state", async () => {
     const server = await createServer({
@@ -32,9 +42,9 @@ test("card links name the reading edition separately from its acceptance state",
             [original, "查看原文"],
             [
                 withReading(original, { ...record, state: "history" }),
-                "查看閱讀版",
+                "查看報告",
             ],
-            [withReading(original, record), "讀報告"],
+            [withReading(original, record), "查看報告"],
         ] as const) {
             const html = renderToStaticMarkup(
                 createElement(StudyCardView, { card }),
@@ -80,7 +90,7 @@ test("readability does not follow a favorable verdict or mere report existence",
         verdict: "promising" as const,
         reportHref: "#report/x",
     };
-    assert.equal(readingState(old), "history");
+    assert.equal(readingState(old), "in_progress");
     const accepted = withReading(old, record);
     assert.equal(readingState(accepted), "ready");
     assert.equal(accepted.answer, "沒有通過。");
@@ -100,8 +110,10 @@ test("unverifiable records remain identifiable without exposing their unverified
     });
     assert.equal(cards.length, 1);
     assert.equal(cards[0]?.id, record.task_id);
-    assert.equal(cards[0]?.reportHref, null);
-    assert.equal(readingState(cards[0]!), "history");
+    assert.equal(cards[0]?.question, "原始報告待補");
+    assert.equal(cards[0]?.reportKind, "summary");
+    assert.match(cards[0]?.reportHref ?? "", /view=summary/);
+    assert.equal(readingState(cards[0]!), "in_progress");
     assert.equal(filterStudies(cards, "all", "five-slot").length, 1);
 });
 test("an independently registered edition does not require repairing legacy card hashes", () => {
@@ -132,7 +144,7 @@ test("history gets an original link only when the service validates its readable
         ],
         original_reports: [record.task_id],
     });
-    assert.equal(card?.reading?.state, "history");
+    assert.equal(card?.reading?.state, "in_progress");
     assert.match(card?.reportHref ?? "", /view=reading/);
     assert.equal(card?.verdict, null);
     assert.deepEqual(card?.keyNumbers, []);
@@ -144,4 +156,36 @@ test("return navigation preserves study filters but rejects external destination
         studiesBack("#report/x?back=https%3A%2F%2Fevil.invalid"),
         "#studies",
     );
+});
+
+test("collections preserve explicit archival without equating editorial history with archive", () => {
+    const base = pendingCard(record.task_id, "Source unavailable");
+    assert.equal(studyCollection(base), "in_progress");
+    assert.equal(withReportEntry(base).reportKind, "summary");
+    for (const verdict of ["running", "not_evaluated"] as const) {
+        assert.equal(
+            studyCollection({ ...base, sourceVerdict: verdict }),
+            "in_progress",
+        );
+    }
+    const archived = withReading({ ...base, verdict: "archived" }, record);
+    assert.equal(archived.verdict, null);
+    assert.equal(studyCollection(archived), "history");
+    assert.equal(
+        withReportEntry({ ...base, sourceVerdict: "archived" }).reportHref,
+        null,
+    );
+});
+
+test("a native HTML report remains the default when an editorial edition exists", () => {
+    const original = {
+        ...pendingCard(record.task_id, "Unreviewed"),
+        reportKind: "html" as const,
+        reportHref: "#report/existing",
+    };
+    const card = withReading(original, record);
+    assert.equal(card.reportKind, "html");
+    assert.equal(card.reportHref, "#report/existing");
+    assert.equal(studyCollection(card), "ready");
+    assert.equal(card.reading?.edition, "reading-report.md");
 });

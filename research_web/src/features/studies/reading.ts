@@ -2,6 +2,21 @@ import type { StudyCard } from "./model.ts";
 
 export type ReadingState = "ready" | "in_progress" | "history";
 
+/** A registered static report remains readable while the private API is loading. */
+export function reportView(
+    requested: string | null,
+    kind: StudyCard["reportKind"],
+    nativeAvailable: boolean,
+    pending: boolean,
+) {
+    if (requested === "reading") return "reading";
+    if (requested === "summary") return "summary";
+    if (nativeAvailable || kind === "html") return "html";
+    if (kind === "markdown") return "reading";
+    if (kind === "summary") return "summary";
+    return pending ? "loading" : "html";
+}
+
 export function currentStudyHash(): string {
     return typeof window === "undefined" ? "" : window.location.hash;
 }
@@ -20,13 +35,45 @@ export interface ReadingRecord {
 }
 
 export const READING_LABELS: Record<ReadingState, string> = {
-    ready: "報告",
+    ready: "研究報告",
     in_progress: "進行中",
-    history: "歷史與待整理",
+    history: "已封存",
 };
 
 export function readingState(card: StudyCard): ReadingState {
     return card.reading?.state ?? "history";
+}
+
+/** Collections describe research lifecycle, independently of editorial review. */
+export function studyCollection(card: StudyCard): ReadingState {
+    const verdict = card.sourceVerdict ?? card.verdict;
+    if (verdict === "archived") return "history";
+    if (
+        verdict === "running" ||
+        verdict === "not_evaluated" ||
+        card.reading?.state === "in_progress"
+    )
+        return "in_progress";
+    return "ready";
+}
+
+/** Every nonarchived identity has an honest web entry, even with source gaps. */
+export function withReportEntry(card: StudyCard): StudyCard {
+    if (card.reportHref)
+        return {
+            ...card,
+            reportKind:
+                card.reportKind ??
+                (card.reportHref.includes("view=reading")
+                    ? "markdown"
+                    : "html"),
+        };
+    if (studyCollection(card) === "history") return card;
+    return {
+        ...card,
+        reportKind: "summary",
+        reportHref: `#report/${encodeURIComponent(card.id)}?view=summary`,
+    };
 }
 
 export function readingDate(card: StudyCard): string {
@@ -58,8 +105,11 @@ export function withReading(
         dataPeriod: reading.data_period,
         // Original metrics/verdict are not automatically claims of the new edition.
         keyNumbers: [],
+        sourceVerdict: card.sourceVerdict ?? card.verdict ?? undefined,
         verdict: null,
-        reportHref: reading.edition ? readingLink(card.id) : card.reportHref,
+        reportKind: card.reportKind === "html" ? "html" : "markdown",
+        reportHref:
+            card.reportKind === "html" ? card.reportHref : readingLink(card.id),
         caveats: [],
     };
 }
@@ -70,7 +120,7 @@ export function pendingCard(id: string, reason: string): StudyCard {
         date: /^\d{8}/.test(id)
             ? `${id.slice(0, 4)}-${id.slice(4, 6)}-${id.slice(6, 8)}`
             : "",
-        question: id,
+        question: "原始報告待補",
         answer: "這份紀錄尚未完成內容核對。",
         verdict: null,
         dataPeriod: null,
@@ -80,7 +130,7 @@ export function pendingCard(id: string, reason: string): StudyCard {
         accountRun: null,
         caveats: [],
         progress: null,
-        reading: { state: "history", reason },
+        reading: { state: "in_progress", reason },
         details: {
             originalSummary: null,
             summaryUnconfirmed: true,
