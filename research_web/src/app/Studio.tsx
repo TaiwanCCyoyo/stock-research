@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { MarketPage } from "../features/market/MarketPage";
 import { OpportunityPage } from "../features/opportunities/OpportunityPage";
+import { WaveStockPage } from "../features/full-history/WaveStockPage";
+import { hasWaveContext } from "../features/full-history/stockJourney";
 import { FullHistoryPage } from "../features/full-history/FullHistoryPage";
 import { ResearchLibraryPage } from "../features/research/ResearchLibraryPage";
 import { FundsPage } from "../features/funds/FundsPage";
@@ -371,13 +373,20 @@ export default function Studio() {
                     ) : (
                         <DataOverviewPage stocks />
                     ))}
-                {page === "stock" && route.securityKey && (
-                    <StockCoverageDetail
-                        key={route.securityKey}
-                        securityKey={route.securityKey}
-                        theme={`${palette}:${resolvedAppearance}`}
-                    />
-                )}
+                {page === "stock" &&
+                    route.securityKey &&
+                    (hasWaveContext(location.hash) ? (
+                        <WaveStockPage
+                            key={location.hash}
+                            hash={location.hash}
+                        />
+                    ) : (
+                        <StockCoverageDetail
+                            key={route.securityKey}
+                            securityKey={route.securityKey}
+                            theme={`${palette}:${resolvedAppearance}`}
+                        />
+                    ))}
                 {page === "report" && reportId && (
                     <ReportViewer
                         key={reportId}

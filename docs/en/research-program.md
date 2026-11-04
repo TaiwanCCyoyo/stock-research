@@ -1,7 +1,11 @@
 # 研究總覽與跨 session 交接
 
 Navigation UX: [research → dataset → stock contract and acceptance matrix](research-navigation.md).
-This is the maintained route/return entry point; data contracts remain with their owning assets.
+
+| Reusable navigation boundary                                                                     | Contract and access                                                                                                                                                                   | Availability                                                                                                                                                                                                |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Saved map wave → historical stock                                                                | [G3 context contract](research-navigation.md#g3-shared-context-contract); `research_web/src/features/full-history/stockJourney.ts`, existing `#market` / `#stock/<opaque key>` routes | Requires producer-verified opaque key and matching catalog/member/basis/prices. Current history rows lack the key; synthetic integration only until a proven mapping is supplied. No current-data fallback. |
+| This is the maintained route/return entry point; data contracts remain with their owning assets. |
 
 > Current public-export availability (2026-10-09): source-data packages containing
 > real quote vectors, anchor-close samples or corporate-action factors are retained

@@ -22,6 +22,13 @@ import {
     type HistoryDisplayMode,
 } from "./model.ts";
 import { PLAYBACK_GLIDE, PLAYBACK_SPEEDS, useHistory } from "./useHistory.ts";
+import {
+    readWaveContext,
+    matchWaveFrame,
+    matchWaveDetail,
+    waveContext,
+    waveHref,
+} from "./stockJourney";
 import { readMarketLink } from "./navigation.ts";
 import { HistoryChartDetail } from "./HistoryChartDetail";
 import { HistoryRanking } from "./HistoryRanking";
@@ -67,6 +74,18 @@ function usePanelSnapshot<F, C>(frame: F, comparisons: C, playing: boolean) {
 
 export function FullHistoryPage({ active }: { active: boolean }) {
     const history = useHistory(active);
+    const hash = location.hash;
+    const { goToDate, setPlaying } = history;
+    const pinned = useMemo(() => {
+        try {
+            return { context: readWaveContext(hash) };
+        } catch (error) {
+            return {
+                error:
+                    error instanceof Error ? error.message : "波段來源無效。",
+            };
+        }
+    }, [hash]);
     // Stable identity: the map is memoised and re-renders only when it changes.
     const glide = useMemo(
         () =>
@@ -100,12 +119,25 @@ export function FullHistoryPage({ active }: { active: boolean }) {
         }
         if (!metadata) return;
         const apply = () => {
+            if (pinned.context) {
+                const context = pinned.context;
+                if (metadata.catalogId !== context.catalogId) return;
+                const key = location.hash;
+                if (appliedLink.current === key) return;
+                appliedLink.current = key;
+                setPlaying(false);
+                goToDate(context.date);
+                setSelectedId(context.securityId);
+                setThresholdPct(context.threshold);
+                setMode(context.mode);
+                return;
+            }
             const link = readMarketLink(location.hash);
             if (!link) return;
             const key = `${metadata.catalogId}:${location.hash}`;
             if (appliedLink.current === key) return;
             appliedLink.current = key;
-            if (link.date) history.goToDate(link.date);
+            if (link.date) goToDate(link.date);
             if (link.code) setSelectedId(`TW:${link.code}`);
             if (link.thresholdPct !== null) setThresholdPct(link.thresholdPct);
             if (link.mode !== null) setMode(link.mode);
@@ -113,7 +145,7 @@ export function FullHistoryPage({ active }: { active: boolean }) {
         apply();
         window.addEventListener("hashchange", apply);
         return () => window.removeEventListener("hashchange", apply);
-    }, [active, metadata, history.goToDate, setSelectedId]);
+    }, [active, metadata, goToDate, setSelectedId, setPlaying, pinned]);
     useEffect(() => {
         if (!editingDate.current) setDateDraft(desiredDate);
     }, [desiredDate]);
@@ -237,18 +269,123 @@ export function FullHistoryPage({ active }: { active: boolean }) {
         if (!metadata || !/^\d{4}-\d{2}-\d{2}$/.test(requested)) return;
         const actualDate = metadata.dates[dateIndex(metadata.dates, requested)];
         editingDate.current = false;
-        history.goToDate(actualDate);
+        goToDate(actualDate);
         setDateDraft(actualDate);
         // Normalize the form even when the selected trading-day index is unchanged.
         const field = e.currentTarget.elements.namedItem("observationDate");
         if (field instanceof HTMLInputElement) field.value = actualDate;
     };
+    useEffect(() => {
+        if (
+            !active ||
+            !pinned.context ||
+            !metadata ||
+            !frame ||
+            history.loading
+        )
+            return;
+        try {
+            matchWaveFrame(pinned.context, metadata, frame);
+        } catch {
+            return;
+        }
+        if (selectedId === pinned.context.securityId) {
+            detailElement.current?.focus({ preventScroll: true });
+            detailElement.current?.scrollIntoView({ block: "start" });
+        }
+    }, [active, pinned, metadata, frame, selectedId, history.loading]);
+    let pinnedError = pinned.error;
+    let pinnedLoading = false;
+    if (active && pinned.context && !pinnedError) {
+        if (
+            !metadata ||
+            !frame ||
+            history.loading ||
+            frame.date !== pinned.context.date ||
+            selectedId !== pinned.context.securityId
+        )
+            pinnedLoading = true;
+        if (
+            metadata &&
+            (metadata.catalogId !== pinned.context.catalogId ||
+                metadata.basisLabel !== pinned.context.priceBasis ||
+                !metadata.dates.includes(pinned.context.date))
+        )
+            pinnedError = "原地圖版本、日期或價格基準不可用；未改讀現況。";
+        else if (!pinnedLoading && metadata && frame) {
+            try {
+                matchWaveFrame(pinned.context, metadata, frame);
+                if (history.detail && !history.detailLoading)
+                    matchWaveDetail(pinned.context, history.detail);
+            } catch (error) {
+                pinnedError =
+                    error instanceof Error ? error.message : "原波段不可用。";
+            }
+        }
+        if (history.error) pinnedError = history.error;
+        if (history.metadataError) pinnedError = history.metadataError;
+    }
+    let destination: string | null = null;
+    let destinationReason = "請先選取波段。";
+    if (metadata && frame && selected) {
+        try {
+            destination = waveHref(
+                waveContext(metadata, frame, selected, mode, thresholdPct),
+                "stock",
+            );
+        } catch (error) {
+            destinationReason =
+                error instanceof Error ? error.message : "缺少可信來源。";
+        }
+    }
+    if (active && (pinnedError || pinnedLoading))
+        return (
+            <div className="u-page">
+                <p role={pinnedError ? "alert" : "status"}>
+                    {pinnedError ||
+                        "正在核對原地圖波段；不顯示其他日期或版本。"}
+                </p>
+                <a href="#market">另行開啟地圖（離開原波段脈絡）</a>
+            </div>
+        );
     return (
         <div
             className="fh-page"
             ref={pageElement}
             data-panel-phase={panel.phase}
+            onClickCapture={(event) => {
+                // New control interactions leave replay; source links retain it.
+                if (
+                    pinned.context &&
+                    (event.target as Element).closest(
+                        "button,input,select,svg,[role=button]",
+                    )
+                ) {
+                    window.history.replaceState(
+                        window.history.state,
+                        "",
+                        "#market",
+                    );
+                    window.dispatchEvent(new HashChangeEvent("hashchange"));
+                }
+            }}
+            onChangeCapture={() => {
+                if (pinned.context) {
+                    window.history.replaceState(
+                        window.history.state,
+                        "",
+                        "#market",
+                    );
+                    window.dispatchEvent(new HashChangeEvent("hashchange"));
+                }
+            }}
         >
+            {pinned.context && (
+                <p className="u-notice">
+                    已返回指定版本的原波段。
+                    <a href="#market">離開來源脈絡以繼續探索</a>
+                </p>
+            )}
             <header className="fh-hero u-card">
                 <div className="fh-hero-title">
                     <h1>飆股地圖</h1>
@@ -446,9 +583,7 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                                         className="u-chip"
                                                         key={date}
                                                         onClick={() =>
-                                                            history.goToDate(
-                                                                date,
-                                                            )
+                                                            goToDate(date)
                                                         }
                                                     >
                                                         {date.slice(0, 4)} 年
@@ -465,9 +600,7 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                             >
                                 <button
                                     className="fh-play u-btn u-btn-primary"
-                                    onClick={() =>
-                                        history.setPlaying(!history.playing)
-                                    }
+                                    onClick={() => setPlaying(!history.playing)}
                                     disabled={!active || !!history.error}
                                     aria-label={
                                         history.playing
@@ -507,13 +640,13 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                             value={dateDraft}
                                             onFocus={() => {
                                                 editingDate.current = true;
-                                                history.setPlaying(false);
+                                                setPlaying(false);
                                             }}
                                             onBlur={() => {
                                                 editingDate.current = false;
                                             }}
                                             onChange={(e) => {
-                                                history.setPlaying(false);
+                                                setPlaying(false);
                                                 setDateDraft(e.target.value);
                                             }}
                                         />
@@ -837,7 +970,7 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                             frame={timeline.frame}
                             selectedId={selectedId}
                             onSelect={setSelectedId}
-                            onDate={history.goToDate}
+                            onDate={goToDate}
                             comparisons={timeline.comparisons}
                             thresholdPct={thresholdPct}
                         />
@@ -859,7 +992,46 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                             )}
                         </section>
                     )}
-                    <div ref={detailElement} className="fh-detail-anchor">
+                    <div
+                        ref={detailElement}
+                        tabIndex={-1}
+                        className="fh-detail-anchor"
+                    >
+                        {selected && (
+                            <div className="u-card">
+                                {destination ? (
+                                    <a
+                                        className="u-btn"
+                                        href={destination}
+                                        onClick={(event) => {
+                                            if (
+                                                event.button !== 0 ||
+                                                event.ctrlKey ||
+                                                event.metaKey ||
+                                                event.shiftKey ||
+                                                event.altKey
+                                            )
+                                                return;
+                                            setPlaying(false);
+                                            const context =
+                                                readWaveContext(destination);
+                                            if (context)
+                                                window.history.replaceState(
+                                                    window.history.state,
+                                                    "",
+                                                    waveHref(context, "market"),
+                                                );
+                                        }}
+                                    >
+                                        帶此波段來源開啟個股
+                                    </a>
+                                ) : (
+                                    <p role="status">
+                                        個股交接不可用：{destinationReason}
+                                    </p>
+                                )}
+                            </div>
+                        )}
                         {history.detailLoading && (
                             <div className="fh-card u-card" role="status">
                                 正在讀取個股走勢與候選標記…
@@ -885,6 +1057,7 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                             <HistoryChartDetail
                                 key={`${history.detail.catalogId}:${history.detail.sample.id}:${history.detail.date}`}
                                 detail={history.detail}
+                                initialInterval={pinned.context ?? undefined}
                             />
                         )}
                     </div>
@@ -1026,7 +1199,7 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                             <HistoryMethodOptions
                                 catalogId={frame.catalogId}
                                 date={frame.date}
-                                onDate={history.goToDate}
+                                onDate={goToDate}
                             />
                         )}
                     </section>
