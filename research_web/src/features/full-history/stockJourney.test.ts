@@ -1,3 +1,4 @@
+import type { HistoryBundleIdentity } from "./versionIdentity.ts";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
@@ -189,4 +190,69 @@ test("aborted stale read stops before the next request", async () => {
         return metadata as T;
     };
     await assert.rejects(readWaveDetail(ctx, controller.signal, reader));
+});
+
+test("two registered versions of one security retain exact pins through stock and return navigation", async () => {
+    for (const [index, sha] of ["a", "b"].entries()) {
+        const pin = {
+            versionId: `synthetic-version-${index}`,
+            manifestSha256: sha.repeat(64),
+        };
+        const m = {
+            ...metadata,
+            catalogId: pin.manifestSha256,
+            bundleIdentity: pin,
+        };
+        const f = {
+            ...frame,
+            catalogId: pin.manifestSha256,
+            bundleIdentity: pin,
+        };
+        const d = {
+            ...detail,
+            catalogId: pin.manifestSha256,
+            bundleIdentity: pin,
+            sample: {
+                ...detail.sample,
+                source: {
+                    ...detail.sample.source,
+                    catalogHash: pin.manifestSha256,
+                },
+                points: detail.sample.points.map((p) => ({
+                    ...p,
+                    adjusted: 100 * index + (p.adjusted ?? 0),
+                })),
+            },
+        };
+        const context = waveContext(m, f, row, "catalog", 100);
+        const calls: Array<HistoryBundleIdentity | undefined> = [];
+        const reader = async <T>(
+            path: string,
+            _signal: AbortSignal,
+            identity?: HistoryBundleIdentity,
+        ) => {
+            calls.push(identity);
+            return (
+                path === "/metadata" ? m : path.startsWith("/frame") ? f : d
+            ) as T;
+        };
+        const result = await readWaveDetail(
+            readWaveContext(waveHref(context, "stock"))!,
+            new AbortController().signal,
+            reader,
+        );
+        assert.equal(result.sample.points[0].adjusted, 100 * index + 10);
+        assert.deepEqual(calls, [pin, pin, pin]);
+        assert.deepEqual(readWaveContext(waveHref(context, "market")), context);
+        assert.throws(() =>
+            matchWaveDetail(context, {
+                ...d,
+                bundleIdentity: { ...pin, versionId: "other-registration" },
+            }),
+        );
+        assert.throws(() =>
+            matchWaveFrame(context, m, { ...f, bundleIdentity: undefined }),
+        );
+        assert.throws(() => matchWaveFrame(context, m, { ...f, rows: [] }));
+    }
 });

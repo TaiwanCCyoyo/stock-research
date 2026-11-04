@@ -1,3 +1,4 @@
+import type { HistoryBundleIdentity } from "./versionIdentity.ts";
 import type { AnalysisResult, LabCase } from "../wave-lab/types.ts";
 
 export const HISTORY_SCHEMA = "opportunity-history-web.v1";
@@ -19,6 +20,7 @@ export interface HistoryPhaseInterval {
 export interface HistoryMetadata {
     schema: typeof HISTORY_SCHEMA;
     catalogId: string;
+    bundleIdentity?: HistoryBundleIdentity;
     dates: string[];
     coverage: { stocks: number; excluded: number; from: string; to: string };
     limitations: string[];
@@ -78,12 +80,14 @@ export interface HistoryRow {
 export interface HistoryFrame {
     schema: typeof HISTORY_SCHEMA;
     catalogId: string;
+    bundleIdentity?: HistoryBundleIdentity;
     date: string;
     rows: HistoryRow[];
 }
 export interface HistoryDetail {
     schema: typeof HISTORY_SCHEMA;
     catalogId: string;
+    bundleIdentity?: HistoryBundleIdentity;
     date: string;
     row: HistoryRow | null;
     sample: LabCase;
@@ -115,6 +119,7 @@ export interface HistoryDirectoryRow {
 export interface HistoryDirectory {
     schema: typeof HISTORY_SCHEMA;
     catalogId: string;
+    bundleIdentity?: HistoryBundleIdentity;
     method: "segments";
     methodScale: "balanced";
     rows: HistoryDirectoryRow[];
@@ -122,6 +127,7 @@ export interface HistoryDirectory {
 export interface HistoryOptions {
     schema: typeof HISTORY_SCHEMA;
     catalogId: string;
+    bundleIdentity?: HistoryBundleIdentity;
     date: string;
     rows: {
         id: string;

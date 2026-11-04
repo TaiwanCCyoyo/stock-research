@@ -28,7 +28,15 @@ function SavedWave({ context }: { context: WaveContext }) {
                 <dt>價格基準</dt>
                 <dd>{context.priceBasis}</dd>
                 <dt>精確版本</dt>
-                <dd>{context.catalogId}</dd>
+                <dd>
+                    {context.bundleIdentity?.versionId && (
+                        <>
+                            {context.bundleIdentity.versionId}
+                            <br />
+                        </>
+                    )}
+                    {context.catalogId}
+                </dd>
                 <dt>來源紀錄</dt>
                 <dd>
                     {context.securityKey} ／ {context.securityId} ／{" "}

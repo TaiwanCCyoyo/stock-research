@@ -10,6 +10,7 @@ import gzip
 import hashlib
 import json
 import logging
+import os
 import threading
 from bisect import bisect_left
 from collections.abc import Callable
@@ -22,6 +23,7 @@ from research_core.opportunity_history_bundle import ORIGINAL_MANIFEST_SHA256, r
 from research_core.opportunity_history_catalog import RULE, _id
 from research_core.opportunity_history_view import GainIndex, build_frame
 from research_core.opportunity_startup_cache import StartupCache, canonical
+from research_core.research_data_paths import checked_path
 from scripts.opportunity_history_source_runs import expected_source_runs
 from scripts.opportunity_native_receipt_cache import semantic_receipt_cache
 from scripts.query_opportunity_history import (
@@ -53,18 +55,20 @@ class HistoryStore:
         *,
         progress: Callable[[str, int, int], None] | None = None,
         startup_cache: Path | None = None,
+        version_id: str | None = None,
     ) -> None:
         report = progress or (lambda _stage, _done, _total: None)
         report("檢查保存資料與版本", 0, 0)
-        self.bundle = bundle.resolve()
+        self.bundle = checked_path(Path(os.path.abspath(bundle)))
         self.root = self.bundle / "catalog-v2"
-        self.manifest_path = self.root / "manifest.json"
+        self.manifest_path = checked_path(self.root / "manifest.json")
         payload = self.manifest_path.read_bytes()
         try:
             trust = validate_manifest_trust(payload, expected_sha)
         except ValueError as error:
             raise ValueError("Configured catalog manifest hash mismatch") from error
         self.identity = trust["trusted_manifest_sha256"]
+        self.version_id = version_id if version_id is not None else self.identity
         self.manifest = json.loads(payload)
         self.evidence = validate_manifest_identity(self.manifest) | trust
         # Validate every path before invoking the source-run verifier, whose
@@ -255,18 +259,19 @@ class HistoryStore:
         return {
             "schema": "opportunity-web-startup-context.v1",
             "manifest": self.identity,
+            "version": getattr(self, "version_id", self.identity),
             "implementation": implementation.hexdigest(),
             "sources": hashlib.sha256(canonical({path: reference["sha256"].lower() for path, reference in sorted(references.items())})).hexdigest(),
         }
 
     def _path(self, reference: dict[str, Any]) -> Path:
         checked = _v2_dependency(reference, "website read dependency")
-        path = (self.root / checked["path"]).resolve()
-        if not path.is_relative_to(self.bundle) or any(
-            parent.is_symlink() or getattr(parent, "is_junction", lambda: False)() for parent in (path, *path.parents) if parent.is_relative_to(self.bundle)
-        ):
+        # Normalize legacy ../runs references lexically, then check the actual
+        # path we open. Resolving symlinks first would erase their alias evidence.
+        path = Path(os.path.abspath(self.root / checked["path"]))
+        if not path.is_relative_to(self.bundle):
             raise ValueError("Catalog reference escapes its physical bundle")
-        return path
+        return checked_path(path)
 
     def _check_paths(self, value: Any) -> None:
         if isinstance(value, dict):
@@ -301,10 +306,15 @@ class HistoryStore:
         references = references if isinstance(references, list) else [references]
         return [row for reference in references for row in self.read(reference)["rows"]]
 
+    @property
+    def bundle_identity(self) -> dict[str, str]:
+        return {"versionId": self.version_id, "manifestSha256": self.identity}
+
     def metadata(self) -> dict[str, Any]:
         return {
             "schema": SCHEMA,
             "catalogId": self.identity,
+            "bundleIdentity": self.bundle_identity,
             "dates": self.dates,
             "coverage": {"stocks": len(self.series), "excluded": len(self.securities) - len(self.series), "from": self.dates[0], "to": self.dates[-1]},
             "basisLabel": "收盤價經已記錄的公司行動調整；不含股息再投資",
@@ -320,14 +330,14 @@ class HistoryStore:
         }
 
     def frame(self, date: str) -> dict[str, Any]:
-        return deepcopy(self._cached_frame(date))
+        return deepcopy(self._cached_frame(date)) | {"bundleIdentity": self.bundle_identity}
 
     @lru_cache(maxsize=24)
     def _cached_frame(self, date: str) -> dict[str, Any]:
         return build_frame(self.catalog, date)
 
     def directory(self) -> dict[str, Any]:
-        return deepcopy(self._cached_directory())
+        return deepcopy(self._cached_directory()) | {"bundleIdentity": self.bundle_identity}
 
     @lru_cache(maxsize=1)
     def _cached_directory(self) -> dict[str, Any]:
@@ -338,7 +348,7 @@ class HistoryStore:
     def options(self, date: str) -> dict[str, Any]:
         from research_core.opportunity_history_display import build_options
 
-        return build_options(self.catalog, date)
+        return build_options(self.catalog, date) | {"bundleIdentity": self.bundle_identity}
 
     def detail(self, code: str, date: str) -> dict[str, Any]:
         if code not in self.series:
@@ -383,6 +393,7 @@ class HistoryStore:
         return {
             "schema": SCHEMA,
             "catalogId": self.identity,
+            "bundleIdentity": self.bundle_identity,
             "date": date,
             "row": row,
             "sample": {
@@ -433,11 +444,12 @@ class HistoryLoading(RuntimeError):
 class LazyHistoryStore:
     """One initialized snapshot per server process, including startup failures."""
 
-    def __init__(self, bundle: Path | None = None, expected_sha: str = DEFAULT_SHA) -> None:
+    def __init__(self, bundle: Path | None = None, expected_sha: str = DEFAULT_SHA, *, version_id: str | None = None) -> None:
         # None means "resolve through the shared catalog on first load". Resolution happens in
         # get(), never here, so an absent catalog entry is a reported failed state, not an import error.
         self.bundle = bundle
-        self.expected_sha = expected_sha
+        self.expected_sha = expected_sha.lower()
+        self.version_id = version_id if version_id is not None else self.expected_sha
         self.store: HistoryStore | None = None
         self.error: Exception | None = None
         self.lock = threading.Lock()
@@ -450,7 +462,12 @@ class LazyHistoryStore:
 
     def status(self) -> dict[str, Any]:
         """Nonblocking progress; never starts loading or exposes source paths."""
-        return {"schema": SCHEMA, "state": "failed" if self.error else "ready" if self.store else "loading", **self.progress}
+        return {
+            "schema": SCHEMA,
+            "state": "failed" if self.error else "ready" if self.store else "loading",
+            "bundleIdentity": {"versionId": self.version_id, "manifestSha256": self.expected_sha},
+            **self.progress,
+        }
 
     def get(self) -> HistoryStore:
         with self.lock:
@@ -460,11 +477,16 @@ class LazyHistoryStore:
                 try:
                     if self.bundle is None:
                         self._progress("確認共用資料目錄中的歷史快照", 0, 0)
-                        self.bundle = resolve_history_bundle().path
+                        resolved = resolve_history_bundle(version_id=self.version_id, manifest_sha256=self.expected_sha)
+                        if resolved.manifest_sha256 != self.expected_sha:
+                            raise ValueError("Resolved history manifest differs from requested pin")
+                        self.bundle = resolved.path
                     # Only the web reader opts in. Every source byte/hash and
                     # structural gate is still checked on each process startup.
                     with semantic_receipt_cache(WEB_RECEIPT_CACHE):
-                        self.store = HistoryStore(self.bundle, self.expected_sha, progress=self._progress, startup_cache=WEB_STARTUP_CACHE)
+                        self.store = HistoryStore(
+                            self.bundle, self.expected_sha, progress=self._progress, startup_cache=WEB_STARTUP_CACHE, version_id=self.version_id
+                        )
                 except Exception as error:
                     self.error = error
                     raise

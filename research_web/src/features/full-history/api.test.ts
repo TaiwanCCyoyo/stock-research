@@ -122,3 +122,103 @@ test("malformed readiness status stops polling rather than retrying indefinitely
     );
     assert.equal(fetch.mock.callCount(), 2);
 });
+
+const pinA = { versionId: "synthetic/one", manifestSha256: "a".repeat(64) };
+const pinB = { versionId: "synthetic/two", manifestSha256: "b".repeat(64) };
+
+test("explicit history pin is carried through metadata, status and retry", async (t) => {
+    const paths: string[] = [];
+    const bodies = [
+        pending(),
+        new Response(
+            JSON.stringify({
+                schema: HISTORY_SCHEMA,
+                state: "ready",
+                bundleIdentity: pinA,
+            }),
+        ),
+        new Response(
+            JSON.stringify({
+                catalogId: pinA.manifestSha256,
+                bundleIdentity: pinA,
+            }),
+        ),
+    ];
+    t.mock.method(globalThis, "fetch", async (path: string) => {
+        paths.push(path);
+        return bodies.shift()!;
+    });
+    await readHistoryWhenReady(
+        "/metadata",
+        new AbortController().signal,
+        undefined,
+        pinA,
+    );
+    assert.equal(paths.length, 3);
+    for (const path of paths) {
+        const query = new URL(path, "https://test.invalid").searchParams;
+        assert.equal(query.get("version_id"), pinA.versionId);
+        assert.equal(query.get("manifest_sha256"), pinA.manifestSha256);
+    }
+});
+
+test("wrong or missing response identity never silently becomes the requested version", async (t) => {
+    for (const payload of [
+        { catalogId: pinA.manifestSha256 },
+        { catalogId: pinB.manifestSha256, bundleIdentity: pinB },
+        { catalogId: pinB.manifestSha256, bundleIdentity: pinA },
+    ]) {
+        const mock = t.mock.method(
+            globalThis,
+            "fetch",
+            async () => new Response(JSON.stringify(payload)),
+        );
+        await assert.rejects(
+            readHistory("/metadata", new AbortController().signal, pinA),
+        );
+        assert.equal(mock.mock.callCount(), 1);
+        mock.mock.restore();
+    }
+});
+
+test("a fetch that ignores cancellation cannot return a stale successful payload", async (t) => {
+    const controller = new AbortController();
+    t.mock.method(globalThis, "fetch", async () => {
+        controller.abort();
+        return new Response(
+            JSON.stringify({
+                bundleIdentity: pinA,
+                catalogId: pinA.manifestSha256,
+            }),
+        );
+    });
+    await assert.rejects(
+        readHistory("/frame?date=2020-01-02", controller.signal, pinA),
+        { name: "AbortError" },
+    );
+});
+
+test("loading status from another version stops retry before a default metadata read", async (t) => {
+    const responses = [
+        pending(),
+        new Response(
+            JSON.stringify({
+                schema: HISTORY_SCHEMA,
+                state: "ready",
+                bundleIdentity: pinB,
+            }),
+        ),
+    ];
+    const mock = t.mock.method(globalThis, "fetch", async () =>
+        responses.shift()!,
+    );
+    await assert.rejects(
+        readHistoryWhenReady(
+            "/metadata",
+            new AbortController().signal,
+            undefined,
+            pinA,
+        ),
+    );
+    assert.equal(mock.mock.callCount(), 2);
+});
