@@ -3,24 +3,27 @@
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 18px;
 }
-.research-run-choices button {
+.research-library .research-run-choices button {
     display: grid;
     gap: 8px;
     text-align: left;
     padding: 22px;
     background: var(--surface);
-    border: 1px solid var(--line);
+    color: var(--ink);
+    border: 2px solid var(--line);
     border-radius: 12px;
 }
-.research-run-choices button[aria-pressed="true"] {
-    background: var(--accent-soft);
+.research-library .research-run-choices button[aria-pressed="true"] {
+    background: var(--surface);
     color: var(--ink);
-    border-color: var(--accent);
+    border-color: var(--action);
+    box-shadow: inset 4px 0 0 var(--action);
 }
 .research-run-choices strong {
     font-size: 16px;
 }
 .research-run-choices > button > span {
+    color: var(--emphasis);
     font:
         28px Georgia,
         serif;
@@ -106,13 +109,16 @@
     justify-content: space-around;
     flex-wrap: wrap;
     margin: 10px 0 20px;
+    padding: 16px;
+    background: var(--surface-muted);
+    border-radius: var(--radius-md);
 }
 .research-account-facts > span {
     font-size: 10px;
     color: var(--muted);
 }
 .research-account-facts b {
-    color: var(--ink);
+    color: var(--emphasis);
     display: block;
     font:
         22px/1.7 Georgia,

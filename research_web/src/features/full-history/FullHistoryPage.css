@@ -7,10 +7,12 @@
     color: var(--ink);
     overflow-wrap: anywhere;
 }
-.fh-hero {
+.fh-hero.u-card {
     position: relative;
     overflow: hidden;
     padding: 30px 24px;
+    background: var(--surface-feature);
+    border-top: 4px solid var(--emphasis);
 }
 .fh-hero::after {
     content: "";
@@ -83,8 +85,8 @@
     height: 46px;
     border-radius: 50%;
     font-size: 19px;
-    background: var(--accent);
-    color: var(--paper);
+    background: var(--action);
+    color: var(--on-action);
 }
 .fh-compare-toggle {
     display: flex;
@@ -519,11 +521,6 @@
     align-items: center;
     gap: 24px;
     padding: 24px 20px;
-    background: radial-gradient(
-        ellipse at 88% 100%,
-        var(--cell-light),
-        transparent 65%
-    );
     border-radius: 20px;
 }
 .fh-eyebrow {

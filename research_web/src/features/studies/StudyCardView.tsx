@@ -1,6 +1,7 @@
 import { SourceInfo, VerdictBadge } from "../../components/ui/primitives";
 import type { StudyCard, StudyDetails } from "./model";
 import { StudyCaveats } from "./StudyCaveats";
+import { currentStudyHash, readingDate, readingState } from "./reading";
 import {
     datasetDetailHref,
     studyContext,
@@ -35,11 +36,25 @@ export function StudyCardView({
                 <span>
                     {card.accountRun
                         ? card.accountRun.note
-                        : `紀錄日期：${shortDate(card.date)}`}
+                        : `${card.reading?.updated_at ? "閱讀版更新 " : "紀錄日期 "}${shortDate(readingDate(card))}`}
                 </span>
                 {card.verdict && <VerdictBadge verdict={card.verdict} />}
             </div>
             <h3 className="st-question">{card.question}</h3>
+            <p className="st-identity">{card.id}</p>
+            {card.dataPeriod && (
+                <p className="st-period">
+                    研究資料：{card.dataPeriod.from} ～ {card.dataPeriod.to}
+                </p>
+            )}
+            {card.reportKind !== "html" &&
+                card.reading &&
+                readingState(card) !== "ready" &&
+                card.reading.reason !== card.limitation && (
+                    <p className="u-notice">
+                        {card.reading?.reason ?? "原始紀錄尚未完成閱讀版核對。"}
+                    </p>
+                )}
             {card.answer && (
                 <p className={`st-answer${compact ? " is-clamped" : ""}`}>
                     {card.answer}
@@ -65,20 +80,31 @@ export function StudyCardView({
                     ))}
                 </dl>
             )}
-            {card.limitation && !compact && (
-                <p className="st-limit">
-                    <strong>解讀限制：</strong>
-                    {card.limitation}
-                </p>
-            )}
+            {card.limitation && <p className="st-limit">{card.limitation}</p>}
             {(card.reportHref || card.accountRun) && (
                 <div className="u-actions">
                     {card.reportHref && (
                         <a
                             className="u-btn u-btn-primary"
-                            href={card.reportHref}
+                            href={(() => {
+                                const [base, query] =
+                                    card.reportHref.split("?");
+                                const params = new URLSearchParams(query);
+                                params.set(
+                                    "back",
+                                    currentStudyHash().startsWith("#studies")
+                                        ? currentStudyHash()
+                                        : "#studies",
+                                );
+                                return `${base}?${params}`;
+                            })()}
                         >
-                            查看報告
+                            {card.reportKind === "summary"
+                                ? "查看研究紀錄"
+                                : !card.reading?.edition &&
+                                    card.reportHref.includes("view=reading")
+                                  ? "查看原文"
+                                  : "查看報告"}
                         </a>
                     )}
                     {card.accountRun && (
@@ -98,7 +124,7 @@ export function StudyCardView({
     );
 }
 
-function StudyDetailsView({
+export function StudyDetailsView({
     details,
     studyId,
 }: {
@@ -116,6 +142,7 @@ function StudyDetailsView({
     if (!hasAny) return null;
     return (
         <SourceInfo label="原文與資料來源">
+            <p>研究代號：{studyId}</p>
             {details.originalSummary && (
                 <p className="st-original">{details.originalSummary}</p>
             )}

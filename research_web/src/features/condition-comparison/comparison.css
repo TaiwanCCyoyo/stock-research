@@ -1,4 +1,9 @@
 .condition-comparison {
+    --text: var(--ink);
+    --bg-panel: var(--surface);
+    --bg-raised: var(--surface-muted);
+    --bg-hover: var(--surface-feature);
+    --border-strong: var(--card-border);
     color: var(--text, #172334);
     background: var(--bg-panel, #fff);
     padding: 1.25rem;
@@ -36,10 +41,13 @@
     outline-offset: 3px;
 }
 .condition-comparison [aria-pressed="true"] {
-    border: 2px solid var(--accent, #1262d1);
+    border: 2px solid var(--action, #1262d1);
+    background: var(--action);
+    color: var(--on-action);
+    font-weight: 700;
 }
 .cc-warning {
-    border-left: 0.3rem solid #bd7100;
+    border-left: 0.3rem solid var(--emphasis, #bd7100);
     background: var(--bg-hover, #fff3d8);
     padding: 0.8rem;
 }
@@ -63,6 +71,9 @@
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.7rem;
+    padding: 0.75rem;
+    background: var(--surface-muted);
+    border-radius: 0.4rem;
 }
 .condition-comparison dd {
     margin: 0;
