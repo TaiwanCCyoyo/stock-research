@@ -44,6 +44,7 @@ export function comparisonDiscussionFeedback(
                     source: request.source,
                     selection: request.selection,
                     synthetic: request.synthetic,
+                    ...(request.producer ? { producer: request.producer } : {}),
                 },
                 null,
                 2,

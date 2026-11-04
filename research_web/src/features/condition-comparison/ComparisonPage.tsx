@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ComparisonDiscussionHandoff } from "./ComparisonDiscussionHandoff";
 import { ConditionComparison } from "./ConditionComparison";
-import { syntheticComparison } from "./fixture";
 import {
     comparisonBack,
     comparisonSourceHref,
@@ -13,7 +12,7 @@ import {
 } from "./journey";
 import type { ComparisonLocation } from "./journey";
 import type { ComparisonView, QuestionRequest, SavedCase } from "./model";
-import { readRegisteredComparison } from "./registry";
+import { readRegisteredComparison, L1_SYNTHETIC_RESULT_ID } from "./registry";
 
 export function ComparisonEntrance({ back }: { back: string }) {
     const entrance = useRef<HTMLAnchorElement>(null);
@@ -21,11 +20,14 @@ export function ComparisonEntrance({ back }: { back: string }) {
     useEffect(() => {
         restoreComparisonEntrance(location.hash, target, entrance.current);
     }, [target]);
+    const registered = readRegisteredComparison(L1_SYNTHETIC_RESULT_ID);
+    if (registered.status !== "ready")
+        return <p role="alert">L1 合成契約示例無法讀取。</p>;
     return (
         <a
             ref={entrance}
             className="u-card direction-entrance"
-            href={comparisonEntryHref(syntheticComparison, back)}
+            href={comparisonEntryHref(registered.value, back)}
             onClick={(event) => {
                 if (
                     event.button !== 0 ||
@@ -43,8 +45,10 @@ export function ComparisonEntrance({ back }: { back: string }) {
                 );
             }}
         >
-            <strong>試用條件比較流程（合成示例） →</strong>
-            <span>只測試四格、個案與返回；不是本研究的真實比較結果。</span>
+            <strong>查看 L1 四格比較（producer 合成示例） →</strong>
+            <span>
+                沿用正式資料契約；合成計數尚未評估，追溯指標不是完整個案。
+            </span>
         </a>
     );
 }
@@ -128,7 +132,7 @@ export function ComparisonPage() {
         );
         const link = document.createElement("a");
         link.href = url;
-        link.download = "synthetic-comparison-question.json";
+        link.download = "comparison-question.json";
         link.click();
         setTimeout(() => URL.revokeObjectURL(url), 1000);
     };
@@ -138,8 +142,9 @@ export function ComparisonPage() {
                 返回來源研究頁
             </a>
             <p className="u-notice">
-                合成操作示例：沒有載入私有資料，不是市場研究結果。本輪尚未連接正式
-                L1 資料契約。
+                {view.producer
+                    ? "已連接 L1 producer 契約；目前登錄的是 producer 合成 fixture，沒有載入真實市場結果。"
+                    : "舊版元件合成操作示例：不是市場研究結果。"}
             </p>
             {item ? (
                 <section className="condition-comparison">
@@ -182,7 +187,15 @@ export function ComparisonPage() {
                         // exactly one reader entry. Back returns to the selected case.
                         if (next.eventId)
                             history.replaceState(history.state, "", href);
-                        else location.hash = href;
+                        else {
+                            location.hash = href;
+                            // Reflect our own navigation in the same event. A second
+                            // control must not merge against the prior hash while the
+                            // browser has not yet delivered hashchange.
+                            setHash(href);
+                            setQuestion(undefined);
+                            setHandoff(false);
+                        }
                     }}
                     onOpenCase={(request) => {
                         location.hash = comparisonHref(
@@ -202,7 +215,7 @@ export function ComparisonPage() {
                     className="condition-comparison"
                     aria-label="帶來源的問題草稿"
                 >
-                    <h2>問題草稿（合成來源、尚未批准）</h2>
+                    <h2>問題草稿（尚未批准）</h2>
                     <p>{question.question}</p>
                     <p>
                         {question.source.resultId} ·{" "}
