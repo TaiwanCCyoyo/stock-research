@@ -48,18 +48,3 @@ export function themeId(value: string | null): ThemeId {
         ? (value as ThemeId)
         : "forest";
 }
-
-/** Published web reports pin report-kit v1, which knows only four palettes. */
-const REPORT_PALETTE: Record<ThemeId, "forest" | "ocean" | "plum" | "sand"> = {
-    forest: "forest",
-    ocean: "ocean",
-    plum: "plum",
-    sand: "sand",
-    sakura: "plum",
-    soda: "forest",
-    sunset: "sand",
-    ink: "forest",
-};
-export function reportPalette(theme: ThemeId) {
-    return REPORT_PALETTE[theme];
-}

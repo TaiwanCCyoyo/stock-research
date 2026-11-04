@@ -13,7 +13,7 @@ import { StudiesRefreshNotice } from "../studies/StudiesRefreshNotice";
 import { useStudyCards } from "../studies/useStudyCards";
 import "../studies/studies.css";
 import "./home.css";
-import { readingDate, readingState } from "../studies/reading";
+import { readingDate, studyCollection } from "../studies/reading";
 
 function useLatestMarket() {
     const [frame, setFrame] = useState<HistoryFrame | null>(null),
@@ -73,7 +73,7 @@ export function HomePage() {
         studies = useStudyCards();
     const summary = market.frame ? latestMarketSummary(market.frame) : null;
     const recent = [...(studies.cards ?? [])]
-        .filter((card) => !card.accountRun && readingState(card) === "ready")
+        .filter((card) => !card.accountRun && studyCollection(card) === "ready")
         .sort(
             (a, b) =>
                 readingDate(b).localeCompare(readingDate(a)) ||
@@ -125,7 +125,7 @@ export function HomePage() {
                 </div>
             )}
             <h2 className="u-section-title">
-                最近的研究 <a href="#studies">全部研究 →</a>
+                近期研究紀錄 <a href="#studies">查看全部研究 →</a>
             </h2>
             {studies.cards ? (
                 <>
@@ -135,7 +135,7 @@ export function HomePage() {
                     <div className="hm-studies">
                         {recent.length === 0 && (
                             <div className="u-card hm-state" role="status">
-                                <p>目前尚無完成閱讀版核對的報告。</p>
+                                <p>目前沒有研究報告。</p>
                                 <a
                                     className="u-btn"
                                     href="#studies?collection=in_progress"
@@ -146,7 +146,7 @@ export function HomePage() {
                                     className="u-btn"
                                     href="#studies?collection=history"
                                 >
-                                    查看歷史與待整理
+                                    查看已封存紀錄
                                 </a>
                             </div>
                         )}

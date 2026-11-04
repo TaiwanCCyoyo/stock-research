@@ -64,7 +64,7 @@
 .do-period {
     font-size: 22px;
     font-weight: 800;
-    color: var(--accent);
+    color: var(--ink);
     font-variant-numeric: tabular-nums;
 }
 .do-facts {
@@ -76,7 +76,7 @@
 .do-facts div {
     padding: 8px 12px;
     border-radius: var(--radius-md);
-    background: var(--chip);
+    background: var(--surface-muted);
 }
 .do-facts dt {
     font-size: 12px;
@@ -89,6 +89,17 @@
 }
 .do-updated {
     font-size: 13px;
+}
+.do-identity,
+.do-source-links {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+.do-identity {
+    font-size: 13px;
+    color: var(--muted);
 }
 .do-warnings {
     margin-top: 32px;

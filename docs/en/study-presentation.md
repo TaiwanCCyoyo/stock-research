@@ -77,6 +77,8 @@ recorded verdict or delivery state. Old account links use `account_run` and
 explicitly label the saved 2019–2023 period. A new card never creates or
 refreshes an account simulation.
 
+A `not_evaluated` card for a study still in direction-draft discussion may set `report.markdown` to its `direction-draft.md` ([direction drafts](direction-drafts.md)).
+
 ## Retained v1 registrations
 
 `study-presentation.v1` adds current, source-backed report cards to the private
@@ -173,3 +175,52 @@ Existing `presentation.json` registrations remain readable through the v1
 reader and history projection above. Keep them and old packages unchanged
 during v2 registration. A known stale v1 registration can continue to show its
 warning while the independently verified v2 card cites the current report.
+
+## PR preview of a report (label-triggered)
+
+For a PR that changes `tasks/<id>/web-report/`, add the `preview` label. A static copy appears at
+`https://<owner>.github.io/<repo>/pr-<number>/_preview/`, and the site root lists current previews.
+Workflows: `.github/workflows/report-preview-trigger.yml` (PR side, no permissions, does nothing)
+and `.github/workflows/report-preview.yml` (default-branch reconcile and deployment); code in
+`research_core/report_preview.py`. Without the label nothing is published.
+
+- How it works (stateless reconcile): every run lists the open, same-repository PRs into `main`
+  that carry the label _now_, reads each head commit as git objects (never checked out or
+  executed), gates it with the default branch's gate code, and deploys the whole site with
+  `actions/deploy-pages`. Runs start after the trigger workflow, on `workflow_dispatch`, and every
+  six hours as a safety net. The deploy job re-lists PRs first and refuses to deploy a build whose
+  PR closed, lost the label or moved its head; the next run rebuilds it.
+- Removal: a PR that closed or lost the label is left out of the next deployment. A preview that
+  fails the gate is also left out (its old version comes down) without blocking other PRs. A
+  failure to list PRs deploys nothing. The PR comment changes only after `deploy-pages` reports
+  the deployment complete; the Pages cache can still serve old pages for a few minutes.
+- Scope: report PRs only. Dashboard PRs that need `research_api` cannot be previewed this way.
+  Report pages must stay self-contained inside their `web-report/` folder with a tracked
+  `index.html`. Changes to the gate take effect only after they merge into `main`.
+- Gate (any hit excludes that PR and names rule plus masked path, never content): no tracked
+  `index.html`; git symlink or submodule; path under `derived/ catalog/ archive/ scratch/
+stock-data-downloader/data`, a hidden path, `.env*` or key file names, or control/format
+  characters in a name; a file over 25 MiB, a PR over 50 MB, or a site over 500 MB. Content is
+  allowed by extension only: text (`html htm js mjs cjs css json map svg txt md csv tsv`) must
+  decode as UTF-8 or BOM-marked UTF-16, contain no NUL, and JSON must parse (strings are scanned
+  after unescaping, each string on its own); any `data:` URI in a text file (`src`, `href`, CSS
+  `url()`, JS or JSON strings, any letter case) is rejected with no exception, including images;
+  a scheme that only appears after entity or percent decoding is rejected as obfuscated. A report
+  references images and other assets as separate files by relative path, and those files get the
+  normal content checks for their extension. Plain text such as the JS key `data:rows,` is not a URI.
+  Binaries (`png jpg jpeg gif ico woff woff2 webp parquet`) must match their signature and are scanned raw and with NULs removed;
+  Parquet text columns and metadata are decompressed and scanned; `zip` gets a bounded check
+  (member count, size and ratio caps, no encryption, no nested archive, safe names, every member
+  gated by the same rules). Any other extension fails. Scans look for private-key blocks, common
+  token prefixes and `local-private` artifact markers. It catches mistakes, not a malicious author.
+  `local-private` markers are matched as one phrase in text and JSON; a Parquet column name and
+  a value scanned separately do not form that phrase, so structured markers are not fully covered.
+  A preview whose removal comment could not be posted (GitHub API error right after the
+  deployment) is not retried next run.
+- Local check before pushing: `uv run python -m scripts.report_preview check --base origin/main`.
+- Limits: the URL is public and hard to guess, not access control. `robots.txt` and the shell
+  pages ask crawlers not to index; GitHub Pages cannot set headers. PR descriptions, comments and
+  attachments are not checked by this gate.
+- One-time owner setup: Settings > Pages > Source: "GitHub Actions"; create the `preview` label.
+  Keep the default `github-pages` environment that GitHub creates (deployments from `main`
+  only); do not widen it, and do not add required reviewers or every deployment waits for approval.

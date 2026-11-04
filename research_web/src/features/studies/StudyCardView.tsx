@@ -2,6 +2,10 @@ import { SourceInfo, VerdictBadge } from "../../components/ui/primitives";
 import type { StudyCard, StudyDetails } from "./model";
 import { StudyCaveats } from "./StudyCaveats";
 import { currentStudyHash, readingDate, readingState } from "./reading";
+import {
+    datasetDetailHref,
+    studyContext,
+} from "../data-overview/datasetJourney";
 
 const UNIT: Record<StudyCard["keyNumbers"][number]["unit"], string> = {
     percent: "%",
@@ -12,7 +16,7 @@ const UNIT: Record<StudyCard["keyNumbers"][number]["unit"], string> = {
 };
 
 function shortDate(date: string) {
-    return `${Number(date.slice(5, 7))} 月 ${Number(date.slice(8, 10))} 日`;
+    return date ? date.replaceAll("-", "/") : "日期未提供";
 }
 
 export function StudyCardView({
@@ -23,12 +27,16 @@ export function StudyCardView({
     compact?: boolean;
 }) {
     return (
-        <article className="u-card st-card">
+        <article
+            className="u-card st-card"
+            id={"study-" + card.id}
+            tabIndex={-1}
+        >
             <div className="st-meta">
                 <span>
                     {card.accountRun
                         ? card.accountRun.note
-                        : `${card.reading?.updated_at ? "閱讀版更新 " : "建立 "}${shortDate(readingDate(card))}`}
+                        : `${card.reading?.updated_at ? "閱讀版更新 " : "紀錄日期 "}${shortDate(readingDate(card))}`}
                 </span>
                 {card.verdict && <VerdictBadge verdict={card.verdict} />}
             </div>
@@ -39,11 +47,14 @@ export function StudyCardView({
                     研究資料：{card.dataPeriod.from} ～ {card.dataPeriod.to}
                 </p>
             )}
-            {readingState(card) !== "ready" && (
-                <p className="u-notice">
-                    {card.reading?.reason ?? "原始紀錄尚未完成閱讀版核對。"}
-                </p>
-            )}
+            {card.reportKind !== "html" &&
+                card.reading &&
+                readingState(card) !== "ready" &&
+                card.reading.reason !== card.limitation && (
+                    <p className="u-notice">
+                        {card.reading?.reason ?? "原始紀錄尚未完成閱讀版核對。"}
+                    </p>
+                )}
             {card.answer && (
                 <p className={`st-answer${compact ? " is-clamped" : ""}`}>
                     {card.answer}
@@ -52,14 +63,17 @@ export function StudyCardView({
             <StudyCaveats caveats={card.caveats} />
             {card.progress && <RunProgress progress={card.progress} />}
             {card.keyNumbers.length > 0 && (
-                <dl className="st-numbers">
+                <dl className="st-numbers" aria-label="研究重點數字">
                     {card.keyNumbers.map((number) => (
-                        <div key={number.label}>
+                        <div
+                            key={number.label}
+                            className={
+                                number.highlight ? "is-highlighted" : undefined
+                            }
+                        >
                             <dt>{number.label}</dt>
                             <dd>
-                                {number.value.toLocaleString("zh-TW", {
-                                    maximumFractionDigits: 2,
-                                })}
+                                {number.value}
                                 {UNIT[number.unit]}
                             </dd>
                         </div>
@@ -85,11 +99,12 @@ export function StudyCardView({
                                 return `${base}?${params}`;
                             })()}
                         >
-                            {readingState(card) === "ready"
-                                ? "讀報告"
-                                : card.reading?.edition
-                                  ? "查看閱讀版"
-                                  : "查看原文"}
+                            {card.reportKind === "summary"
+                                ? "查看研究紀錄"
+                                : !card.reading?.edition &&
+                                    card.reportHref.includes("view=reading")
+                                  ? "查看原文"
+                                  : "查看報告"}
                         </a>
                     )}
                     {card.accountRun && (
@@ -97,17 +112,25 @@ export function StudyCardView({
                             className={`u-btn${card.reportHref ? "" : " u-btn-primary"}`}
                             href={`#strategy/${encodeURIComponent(card.accountRun.runId)}`}
                         >
-                            看帳戶模擬
+                            查看模擬交易結果
                         </a>
                     )}
                 </div>
             )}
-            {!compact && <StudyDetailsView details={card.details} />}
+            {!compact && (
+                <StudyDetailsView details={card.details} studyId={card.id} />
+            )}
         </article>
     );
 }
 
-function StudyDetailsView({ details }: { details: StudyDetails }) {
+export function StudyDetailsView({
+    details,
+    studyId,
+}: {
+    details: StudyDetails;
+    studyId: string;
+}) {
     const hasAny =
         details.originalSummary ||
         details.reportPath ||
@@ -119,6 +142,7 @@ function StudyDetailsView({ details }: { details: StudyDetails }) {
     if (!hasAny) return null;
     return (
         <SourceInfo label="原文與資料來源">
+            <p>研究代號：{studyId}</p>
             {details.originalSummary && (
                 <p className="st-original">{details.originalSummary}</p>
             )}
@@ -131,9 +155,21 @@ function StudyDetailsView({ details }: { details: StudyDetails }) {
                     {details.sharedData.map((id, index) => (
                         <span key={id}>
                             {index ? "、" : ""}
-                            <a href="#overview">{id}</a>
+                            <a
+                                href={datasetDetailHref(
+                                    id,
+                                    studyContext(
+                                        globalThis.location?.hash ?? "",
+                                        studyId,
+                                    ),
+                                )}
+                            >
+                                {id}
+                            </a>
                         </span>
                     ))}
+                    {" · "}
+                    <a href="#data">查看資料總覽</a>
                 </p>
             )}
             {details.sharedDataReason && <p>{details.sharedDataReason}</p>}

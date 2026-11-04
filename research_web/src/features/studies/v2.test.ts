@@ -179,9 +179,10 @@ test("an omitted task retains a neutral history placeholder without unverified c
     };
     const [view] = cardsFromStudies(response);
     assert.equal(view?.id, "20261021-momentum-only-doubling");
-    assert.equal(view?.reading?.state, "history");
+    assert.equal(view?.reading?.state, "in_progress");
     assert.equal(view?.verdict, null);
-    assert.equal(view?.reportHref, null);
+    assert.equal(view?.reportKind, "summary");
+    assert.match(view?.reportHref ?? "", /view=summary/);
     assert.deepEqual(view?.keyNumbers, []);
     assert.equal(hiddenCount(response), 1);
 });

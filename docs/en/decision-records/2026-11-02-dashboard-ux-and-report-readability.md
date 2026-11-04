@@ -318,3 +318,47 @@ identities were checked, its clean checkout was reused on the local-only branch
 `dashboard-ux-integrated`, port 20008). Original PR branches remain intact; this
 does not deploy or merge the report PRs. Other inventoried worktrees remain untouched. Cleanup
 requires verified owner merge and the normal preservation/process/data gates.
+
+### Reader-first revision requested 2026-11-04
+
+The owner requested applying the report-writing techniques now merged through
+PR113 and PR138 to these reading editions. The earlier source checks established
+factual consistency, but did not establish that a reader unfamiliar with the
+research could understand the opening without technical context.
+
+Continue in PR142–145 rather than opening replacement PRs. Integrate current
+`main`, preserve the original reports and saved results, and revise the separate
+reading editions. The primary `study-presentation` skill and its writing,
+reader-first and magazine-layout references are the editorial standard.
+
+Each batch examines all its editions: lead with the supported answer, explain
+groups and unfamiliar terms at first use, identify periods and denominators
+beside numbers, and distinguish prior methods from comparison baselines. Use a
+concrete hypothetical example only to explain a definition, labelled as such.
+Keep main limitations visible and express them as facts about the saved study.
+Remove generic disclaimers, teaching narration and technical shorthand that
+obscures the answer. Retain history status and unknowns where evidence is missing.
+
+The Markdown editions remain separate from frozen HTML reports and evidence.
+Presentation aids must serve an actual comparison or chronology; no new research
+or automatic conversion of all editions into bespoke HTML pages is planned.
+An independent reviewer first reads only the reader-facing overview, then checks
+the mission and saved evidence. Browser checks and owner acceptance are separate
+from that editorial review. Completion evidence for this revision is recorded
+after verification; the earlier checks above do not certify the revised drafts.
+
+The owner subsequently clarified three acceptance requirements: an independent
+stock-magazine subscriber reviews reader-facing wording; every nonarchived study
+has a web reading entry, so report availability is no longer a category; and
+visual hierarchy is reviewed across the whole Dashboard, including monochrome
+themes. Explicit archive status is preserved rather than assigned to source gaps.
+Existing HTML reports retain their primary entry. A missing source remains a
+source-gap record, and in-progress work does not acquire an invented result.
+
+The whole-Dashboard color pass covers home, studies, dataset/stock views, market
+and opportunity maps, ETF, strategy/account comparisons, direction discussions,
+condition comparisons and report readers. Shared neutral content surfaces,
+separate action/emphasis tokens, typography and spacing distinguish content
+roles while preserving theme backgrounds, market gain/loss meaning and chart
+series. The ink theme retains neutral action/emphasis colors. Existing frozen
+report kits are not rewritten.

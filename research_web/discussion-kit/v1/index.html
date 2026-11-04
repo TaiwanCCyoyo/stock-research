@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-Hant">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>一起把研究方向說清楚 · 互動示範</title>
+        <link rel="stylesheet" href="discussion.css" />
+        <style>
+            body {
+                margin: 0;
+                background: #f5f8f5;
+            }
+        </style>
+    </head>
+    <body>
+        <main id="discussion"></main>
+        <noscript
+            >這個互動示範需要
+            JavaScript。沒有執行任何研究，也沒有保存或送出選擇。</noscript
+        >
+        <script id="discussion-data" type="application/json">
+            {
+                "schema": "direction-discussion.v1",
+                "demo": true,
+                "source": {
+                    "taskId": "demo-task",
+                    "draftPath": "教學示例，未連接實際方向草稿",
+                    "revision": "demo-v1"
+                },
+                "ownerPurpose": "找出可研究的停損方法",
+                "purposeStatus": "pending",
+                "outcomes": [
+                    {
+                        "id": "supports",
+                        "title": "如果成立",
+                        "headline": "這類訊號可能值得再研究：錯殺比例為 ▢▢%。",
+                        "decision": "把訊號列為候選，再比較實際出場後的報酬與回撤。",
+                        "limitation": "光看錯殺比例，還不知道停損是否比繼續持有更好。"
+                    },
+                    {
+                        "id": "does-not-support",
+                        "title": "如果不成立",
+                        "headline": "這類訊號的錯殺代價仍高：比例為 ▢▢%。",
+                        "decision": "暫時不採用這個候選，回頭討論其他出場方式。",
+                        "limitation": "不能據此說所有停損都無效；這只回答目前選定的訊號與範圍。"
+                    },
+                    {
+                        "id": "unclear",
+                        "title": "如果分不出來",
+                        "headline": "目前還分不出訊號是否有用，證據不足。",
+                        "decision": "先釐清樣本或比較方式的限制，再決定是否值得補證據。",
+                        "limitation": "沒有結論不等於沒有作用，也不應把不確定寫成通過。"
+                    }
+                ],
+                "choices": [
+                    {
+                        "id": "C1",
+                        "question": "這次要走到停損方法的哪一步？",
+                        "options": [
+                            {
+                                "id": "false-exits",
+                                "label": "先看錯殺比例，篩選候選訊號",
+                                "impact": "承諾：回答離場訊號會錯過多少後來上漲的機會。工作較集中，但尚未比較停損後的報酬與回撤，還不能說找到了停損方法。"
+                            },
+                            {
+                                "id": "exit-comparison",
+                                "label": "進一步比較停損後報酬與回撤",
+                                "impact": "承諾：比較候選出場方式與繼續持有。需要另外定義出場價格、成交限制、成本與是否再進場；工作較多，卻更接近停損方法的問題。這是範圍提議，尚未定案。"
+                            }
+                        ]
+                    },
+                    {
+                        "id": "C2",
+                        "question": "標題與主要比較要承諾哪些倍數？",
+                        "options": [
+                            {
+                                "id": "two-primary",
+                                "label": "2 倍為主要；3／5／10 倍只做次要",
+                                "impact": "主要頭條只回答 2 倍的比較。3／5／10 倍清楚標示次要，不能把次要格的變化寫成整個研究的主要結論。"
+                            },
+                            {
+                                "id": "all-primary",
+                                "label": "2／3／5／10 倍都列為主要問題",
+                                "impact": "需要逐一承諾並設計這些倍數的主要比較，不能只算 2 倍後擴張標題。工作與多重比較的處理也會改變，須先回到方向草稿確認。"
+                            }
+                        ]
+                    }
+                ],
+                "questions": [
+                    {
+                        "reference": "demo-prior#Q1",
+                        "question": "型態在強勢條件之外，是否還有額外貢獻？",
+                        "status": "示例：尚未回答",
+                        "reason": "如果前作只看強勢條件，不能直接把結果解讀成型態沒有用。新方向要承接這個問題，或說明為何本次先不處理。",
+                        "source": "教學示例，沒有引用實際研究結果或擁有者原話。"
+                    }
+                ]
+            }
+        </script>
+        <script src="discussion.js"></script>
+        <script>
+            DirectionDiscussion.mount(
+                document.getElementById("discussion"),
+                JSON.parse(
+                    document.getElementById("discussion-data").textContent,
+                ),
+            );
+        </script>
+    </body>
+</html>

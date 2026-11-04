@@ -27,6 +27,7 @@ from research_api.data_coverage import create_data_coverage_router
 from research_api.data_series import create_data_series_router
 from research_api.data_status import create_data_status_router
 from research_api.development_previews import create_development_preview_router
+from research_api.direction_discussions import create_direction_discussions_router
 from research_api.history import history_router
 from research_api.private_artifacts import create_private_artifact_router
 from research_api.saved_research_studio import create_studio_router
@@ -273,6 +274,10 @@ def create_app() -> FastAPI:
     application.include_router(studies_router)
     application.include_router(studies_router, prefix="/api")
     application.include_router(studies_router, prefix="/history-api")
+    direction_router = create_direction_discussions_router()
+    application.include_router(direction_router)
+    application.include_router(direction_router, prefix="/api")
+    application.include_router(direction_router, prefix="/history-api")
 
     # API routes take precedence over the optional built frontend.
     mount_frontend(application, REPO_ROOT / "research_web" / "dist", dict(os.environ))

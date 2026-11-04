@@ -3,6 +3,7 @@
    palette restyles existing pages without touching them. Gain/loss keep the
    Taiwanese red-up/green-down meaning in every palette. */
 .studio {
+    --warn: #a86a12;
     --gain: #c84c50;
     --loss: #238568;
     --negative: #a45b4b;
@@ -14,6 +15,7 @@
         0 2px 4px rgb(30 40 35 / 5%), 0 16px 40px rgb(30 40 35 / 11%);
 }
 .studio[data-appearance="dark"] {
+    --warn: #f0c27a;
     --gain: #f39293;
     --loss: #8ad2b3;
     --negative: #edb6a1;
@@ -301,18 +303,47 @@
    never red or green, so it cannot be mistaken for a gain or a loss. */
 .studio {
     --card-border: color-mix(in srgb, var(--ink) 9%, transparent);
-    --surface-2: color-mix(in srgb, var(--surface) 82%, var(--accent-soft));
+    --surface-2: color-mix(in srgb, var(--surface) 94%, var(--ink));
+    --surface-muted: var(--surface-2);
+    --action: #274f86;
+    --on-action: #ffffff;
+    --emphasis: #80551b;
+    --surface-feature: color-mix(in srgb, var(--surface) 92%, var(--emphasis));
     --glass: color-mix(in srgb, var(--surface) 62%, transparent);
     --glass-edge: rgb(255 255 255 / 70%);
     --glass-shine: rgb(255 255 255 / 55%);
     --on-accent: #ffffff;
 }
 .studio[data-appearance="dark"] {
+    --action: #a7c9ff;
+    --on-action: #142438;
+    --emphasis: #f3c77a;
     --card-border: color-mix(in srgb, var(--ink) 12%, transparent);
     --glass: color-mix(in srgb, var(--surface) 55%, transparent);
     --glass-edge: rgb(255 255 255 / 14%);
     --glass-shine: rgb(255 255 255 / 12%);
     --on-accent: var(--paper);
+}
+/* Content uses a quiet neutral ground; the surrounding paper, charts and
+   accents retain the selected palette. Action/emphasis never encode returns. */
+.studio,
+.studio[data-palette] {
+    --surface: #ffffff;
+}
+.studio[data-appearance="dark"],
+.studio[data-appearance="dark"][data-palette] {
+    --surface: #20252c;
+}
+.studio[data-palette="ink"] {
+    --action: #262626;
+    --on-action: #ffffff;
+    --emphasis: #333333;
+}
+.studio[data-appearance="dark"][data-palette="ink"] {
+    --surface: #242424;
+    --action: #ededed;
+    --on-action: #202020;
+    --emphasis: #ededed;
 }
 .studio,
 .studio[data-palette="forest"] {

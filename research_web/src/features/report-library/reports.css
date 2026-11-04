@@ -162,6 +162,30 @@
 }
 
 /* ---------- viewer ---------- */
+.rv-notice {
+    display: grid;
+    gap: 10px;
+}
+.rv-notice p {
+    margin: 0;
+}
+.rv-theme-fallback {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px 14px;
+    margin: 0 0 12px;
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+}
+.rv-theme-fallback p {
+    flex: 1 1 28em;
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+}
 .rv-page {
     max-width: none;
     min-width: 0;
@@ -223,6 +247,12 @@
     font-size: 16px;
     line-height: 1.85;
     overflow-wrap: anywhere;
+    margin-top: 24px;
+    padding: clamp(20px, 4vw, 48px);
+    background: var(--surface);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
 }
 .reading-prose h1 {
     font-size: clamp(24px, 4vw, 36px);
@@ -232,6 +262,8 @@
 .reading-prose h2 {
     font-size: 23px;
     margin-top: 36px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
 }
 .reading-prose table {
     display: block;
@@ -255,9 +287,73 @@
     margin: 4px;
 }
 .reading-source-link {
-    color: var(--accent);
+    color: var(--action, var(--accent));
     background: transparent;
     border: 0;
     text-decoration: underline;
     font: inherit;
+}
+.reading-prose > h1 + p {
+    font-size: 19px;
+    font-weight: 600;
+    padding: 16px 20px;
+    border-left: 4px solid var(--emphasis, var(--highlight));
+    background: var(--surface-feature, var(--surface-2));
+}
+.reading-prose th {
+    background: var(--surface-muted, var(--surface-2));
+    font-weight: 700;
+}
+.reading-prose td {
+    font-variant-numeric: tabular-nums;
+}
+.reading-metadata {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 24px;
+    margin-top: 20px;
+    color: var(--muted);
+    font-size: 13px;
+}
+.reading-overview {
+    margin-top: 24px;
+    padding: clamp(20px, 4vw, 40px);
+    background: var(--surface);
+    border-top: 4px solid var(--emphasis, var(--highlight));
+    border-radius: var(--radius-md);
+}
+.reading-answer {
+    font-size: 22px;
+    line-height: 1.6;
+    font-weight: 600;
+}
+.reading-limitation {
+    padding: 16px 20px;
+    border-left: 3px solid var(--muted);
+    background: var(--surface-muted, var(--surface-2));
+    line-height: 1.7;
+}
+.reading-related {
+    margin-top: 32px;
+}
+.reading-related .u-btn {
+    white-space: normal;
+    text-align: left;
+    justify-content: flex-start;
+    margin: 4px;
+}
+.reading-source-gap {
+    margin-top: 24px;
+}
+@media (max-width: 600px) {
+    .reading-prose {
+        padding: 18px;
+    }
+    .reading-prose > h1 + p {
+        padding: 12px;
+        font-size: 17px;
+    }
+    .reading-prose h2 {
+        font-size: 21px;
+    }
 }

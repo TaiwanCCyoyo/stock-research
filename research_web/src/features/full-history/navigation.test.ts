@@ -1,3 +1,4 @@
+import { historyMarketHref, readMarketVersion } from "./versionIdentity.ts";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { marketCaptureLink, readMarketLink } from "./navigation.ts";
@@ -56,4 +57,18 @@ test("supported manual deep-link choices remain valid and independent", () => {
             assert.equal(link.date, null);
             assert.equal(link.code, null);
         }
+});
+
+test("explicit market version round trips without guessing a version from catalog hash", () => {
+    const pin = { versionId: "synthetic/v1", manifestSha256: "c".repeat(64) };
+    assert.deepEqual(readMarketVersion(historyMarketHref(pin)), pin);
+    assert.equal(readMarketVersion("#market?date=2020-01-02"), undefined);
+    for (const query of [
+        "version_id=synthetic",
+        `manifest_sha256=${pin.manifestSha256}`,
+        `version_id=x&version_id=y&manifest_sha256=${pin.manifestSha256}`,
+        `version_id=../x&manifest_sha256=${pin.manifestSha256}`,
+        `version_id=x&manifest_sha256=${pin.manifestSha256}&wave={}`,
+    ])
+        assert.throws(() => readMarketVersion(`#market?${query}`));
 });

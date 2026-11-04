@@ -1,0 +1,196 @@
+# 長期研究工程接續與 UX 依賴對齊
+
+日期：2026-11-02。狀態：有限工程範圍已授權；兩條工作線共同交付於
+[draft PR #146](https://github.com/TaiwanCCyoyo/stock-research/pull/146)，尚未合併。
+本紀錄追加當日範圍與依賴，不改寫歷史 mission、決策、結果或其接受狀態。
+
+本機驗證：新整合器、既有 E1 三層與 CI selector 共 **672 passed in 87.50s**；
+沿用既有日期 helper 解決型別相容問題後，新整合 suite 再驗 **39 passed in 3.25s**。
+實作提交 `170799376feebb5d02cd42f947858571040300da` 的正常 hooks 全過，含 Mypy、Pyright、Ruff。
+三個 SOL 子代理分別負責程式、合成測試與依賴文件；Terra 獨立審查八檔及最後增量，無可操作 findings。
+以上是本機證據；hosted CI 與 review 以 PR 最新 HEAD 為準，不代表本人接受或市場 admission。
+
+## Owner 意圖與本次範圍
+
+以下是 owner 中文意圖的摘要，並非逐字引文：接續長期研究中可獨立推進的工程，整理與新版 UX、
+報告閱讀及討論流程的依賴；互動介面要幫助理解與溝通，不能只剩文字。這個要求支持本次有限工程
+與依賴對齊，不新增研究方法、結果門檻、資料取得、市場運算或產品部署授權。
+
+| 工作線                   | 本次交付                                                                                                                              | 權威來源與界線                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A：E1 純記憶體整合       | 將已載入且宣告身份的 packets 經既有 staging、stock counts、整數聚合及 paired bootstrap 串成可測的單一路徑；交付合成驗證及整合 handoff | [mission](../../../tasks/20261027-entry-window/mission.md)、[資料契約](../../../tasks/20261027-entry-window/data-contract.md)、[B1 handoff](../../../tasks/20261027-entry-window/implementation-handoff.md)、[staging handoff](../../../tasks/20261027-entry-window/reader-staging-handoff.md)、[bootstrap handoff](../../../tasks/20261027-entry-window/bootstrap-handoff.md)；新[整合 handoff](../../../tasks/20261027-entry-window/assembly-handoff.md)記實際 API 與驗證 |
+| B：長期研究／UX 依賴對齊 | roadmap 追加日期段落、研究總覽同步入口與本紀錄，清楚標出已完成工程、pending contract 與本人接受                                       | [roadmap 新補充](../research-roadmap.md#9-2026-11-02-補充工程接續與閱讀依賴)、[研究總覽](../research-program.md)；沿用既有 UX 與討論負責 session，不建立競爭介面                                                                                                                                                                                                                                                                                                            |
+
+同一 draft PR 讓讀者能一起審查工程界線、可重用資產入口與後續依賴。它不交付市場研究報告，
+不改研究卡片 verdict、既有來源 pins、收據或 frozen evidence。主 session 統一處理 Git index、
+commit、PR 與後續驗證；各檔案維持唯一 writer。
+
+## E1 的方法與資料邊界
+
+整合只消費顯式記憶體輸入，重用既有公開 API。原訊號、母體、共同日曆、固定 t+1、六帶、
+原 labels、Q／M 與整數守恆均由既有契約決定；配對重抽樣沿用既有定義，不另挑方法或比較門檻。
+staging 對來源、generation／as-of 及日曆的宣告一致性驗證，不等於真實來源認證或完整歷史 PIT。
+
+真實 canonical loading、事件整段覆蓋、報價品質、官方 bounds、原 label admission、PR61 相容性及
+資料／資源／單次計算 admission 仍是另外的 reader／runner 工作包。`source_unavailable` 與
+`adapter_pending` 不得以空事件、單位因子、補值或改日曆消除。沒有真實市場讀取、下載、世代更新／hold、
+scratch research run、排程或部署。本次 E1 原訊號不含 S1／S2／S7，S7 未完成不阻止這個純記憶體工程包。
+
+## UX 與討論契約的依賴
+
+2026-11-02 交接狀態：#139–141 的 UI 已合併；#142、#143–145 的 reading/readiness 與閱讀版本待本人接受。
+以下以未合併工作的 branch 文件及 PR 作為接口，不假設它們已存在於 main：
+
+| 接口                                                                                                                                   | 目前邊界                                                                                                      | 後續處理                                                                                                                                                                                                                       |
+| -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [#142 reading contract](https://github.com/TaiwanCCyoyo/stock-research/blob/codex/report-reading-readiness/docs/en/report-reading.md)  | `ready` 是編輯核對；與研究 verdict、本人接受分開                                                              | [P5–P7／#145、#143、#144](https://github.com/TaiwanCCyoyo/stock-research/blob/codex/report-reading-readiness/docs/en/decision-records/2026-11-02-dashboard-ux-and-report-readability.md)依賴 #142；維持本人最終閱讀／接受 hold |
+| [#137 direction draft](https://github.com/TaiwanCCyoyo/stock-research/blob/claude/direction-draft-process/docs/en/direction-drafts.md) | 原 active session 正在處理互動理解與溝通的架構，接口仍 pending；D1–D6 只有 agent 敘述，尚未獨立取得使用者原文 | 本次只保留接口；GitHub 可記錄確認，純文字 PR 不是唯一討論介面。方向確認不能替代 mission／運算授權，流程合併也不能代替本人證據                                                                                                  |
+| [#113 報告](https://github.com/TaiwanCCyoyo/stock-research/pull/113)                                                                   | 呈現與本人接受仍由既有負責 session 處理，#128 先合併條件保留                                                  | 不擴成全專案工程阻擋；E2／E3 新市場研究保留各自依賴及 gates，不由本次工程推進解鎖                                                                                                                                              |
+
+上述是本次主 session 的狀態交接，不是重新驗收服務、報告、正式資料或本人確認證據。
+當相關 PR 或 pending contract 改變，後續工作應讀其最新已核實版本；本紀錄不修改他人分支。
+
+## Gates 與接受條件
+
+| Gate       | 本次完成能證明什麼                                     | 仍不能據此推論                                              |
+| ---------- | ------------------------------------------------------ | ----------------------------------------------------------- |
+| 方法／方向 | 工程重用既有 E1 定義；討論接口及未定問題可找到         | #137 的 D1–D6 已獲本人確認、新研究方向或門檻獲准            |
+| 資料       | 合成 packets 的身份、日曆、來源宣告與既有契約相容      | 正式來源可用、完整歷史 PIT、真實事件覆蓋或 labels 獲准      |
+| 運算       | 純記憶體路徑與配對整數聚合／bootstrap 通過相稱合成驗證 | 市場 run、資源 admission、延長 cutoff 或重開 holdout 獲准   |
+| 報告閱讀   | reading 契約與 P5–P7 依賴有明確入口                    | `ready` 表示策略有效或本人接受                              |
+| 本人接受   | 尚無本次研究結果或報告接受事件                         | CI、review、程式合併代替 owner 接受，或解除 #113／#128 條件 |
+| 產品使用   | 本次只交工程與文件                                     | 部署、排程恢復、前瞻起算、紙上操作或實盤獲准                |
+
+本次工程接受須能由整合 handoff 找到實際 API、輸入身份與假設、相稱合成驗證及未解事項；
+合成輸入應可對照既有分開呼叫路徑，確認計數／配對一致與拒絕不相容輸入。重用既有通過證據，
+由正常 hooks／CI 執行適用檢查，不為文件對齊跑市場資料或重算已發表結果。
+文件交付須連結可解析，清楚區分歷史快照、當日交接與未接受事項；資產與契約由研究總覽可發現。
+實際驗證結果與 PR 連結在完成後追加，未執行的檢查不能寫成通過。
+
+## 保留的 S7／O2 缺口
+
+S7 的[計數交接](../../../tasks/20261027-multi-timeframe-ma/counts-handoff.md)及
+[週曆交接](../../../tasks/20261027-multi-timeframe-ma/week-calendar-handoff.md)仍未定首次確認、延遲確認、
+多週同日確認與空週接續。後續先以合成案例表明可得時間、首次確認事件及前後週狀態；
+本次不寫 assembler，不選真實 calendar reader，也不產生 D／W 歷史序列或研究結果。
+universal scale-invariance acceptance 仍為 **UNSATISFIED**，既有 bounded engineering disposition
+不代表修復、豁免或量化市場影響。
+
+O2 的 finite G／receipt event 限制保留；內容發布、receipt 可讀與 cohort 生效不能混稱同一事件。
+[發布契約分支](https://github.com/TaiwanCCyoyo/stock-research/blob/codex/forward-publication-contract/tasks/20261027-forward-publication-deadline/data-contract.md)
+及[既有恢復交接](../../../tasks/20261027-forward-attempt-recovery/codex-handoff.md)的缺口、部署 gate 與
+首個未來準時日確認仍由原負責工作處理。本次不改變 G 的有限邊界或重新核實 production 狀態。
+
+## 2026-11-02 後續工程：P1-A
+
+本段追加較晚狀態，上方 draft 交付與依賴表保留為當時紀錄。#146 已核實合併，merge SHA
+`3d4378a49e80c25c6d59e50bd9f53334bf56b5f7`；其 Windows CI 共 739 tests 通過，
+並有[合併前獨立工程審查](https://github.com/TaiwanCCyoyo/stock-research/pull/146#issuecomment-6567647373)。
+Primary main 已快轉至該提交；原 session 的 `entry-window-assembly` 工作樹及本地分支，
+在確認 clean、無獨有資料／scratch run 或使用中的程序後移除。其他工作樹保持原狀。
+
+Owner 於 06:12 UTC 的新指示允許可繼續的工程先繼續，只有報告最後頁面需要本人確認。
+主線重新盤點 roadmap、open PR、工作樹與目前工作，未發現 P1 同範圍實作；#137 的互動
+討論及 JSON 下載整合仍由原 owner 負責。本次另建隔離工作樹 `order-card-freshness`，
+分支 `codex/order-card-freshness`，從上述 main 開始。
+
+選定里程碑是 **P1-A 純資料新鮮度前置檢查與顯式 JSON CLI**。P1 已要求「不是最新交易日
+就不出卡」，這個必要條件可先落實，不需選擇新研究方法、策略／停損／部位參數或卡片外觀。
+既有 Dashboard 顯示容許較寬鬆的日期差，不能替代每日卡片檢查；既有前瞻 cohort 規則也
+不能直接當成通用 P1。實作前先記錄[資料契約](../../../tasks/20261102-order-card-freshness/data-contract.md)，
+重用既有日曆證據原語，只新增公開日期範圍檢查，不改 S7 的週線評估與未定跨週方法。
+
+三個 `gpt-6.1-sol` 子代理分別負責純核心／日曆擴充、合成驗證、JSON／CLI；
+`gpt-6.1-terra` 獨立審查，主線獨佔 CI、正式文件與 Git index。各檔案維持唯一 writer。
+實際 API、完整人工封包與未完成接口見[交接](../../../tasks/20261102-order-card-freshness/implementation-handoff.md)。
+本包不讀市場、不計算結果、不部署，不解除報告本人接受、E2/E3、S7 或 O2 邊界。
+
+P1-A 本機驗證：核心／CLI、既有 S7 core／week 與 CI selector 首跑 **706 passed**，
+另 1 項發現新測試清單排序錯誤；只修正 manifest 排序後，受影響 selector 的
+**35 tests passed in 0.52s**。交接的完整人工封包 CLI 實跑 exit 0，保留三個日曆日、
+一個 dataset 與來源限制，沒有輸出檔案。Terra 審查的兩項 MEDIUM 已修正並覆蓋回歸：
+移除純核心 logging callback；讀取重用嚴格 JSON parser，拒絕重複欄位。最後唯讀審查
+沒有其他可操作 findings。正常 hooks 與 hosted CI 以交付提交及 PR 證據為準。
+
+交付為 [draft PR #150](https://github.com/TaiwanCCyoyo/stock-research/pull/150)。
+工程提交 `0614ad736c524e2af653c4e276352b3d1b6e1d38` 的正常 hooks 全過，含 Mypy、
+Pyright、Ruff；Terra 已對同一不可變提交確認無未解可操作 findings。本工作樹保留供
+open PR 跟進；hosted CI／review 以 PR 最新 HEAD 為準，不代表報告本人接受或產品啟用。
+
+## 2026-11-02 再接續：E1 raw quote 接入
+
+#150 已由父協調依既有授權 squash merge，merge SHA 為
+`4355d11fccdbc0a509aa7cc4b5c6d4305f1d272a`。Ready 後 Windows CI
+[41401331545](https://github.com/TaiwanCCyoyo/stock-research/actions/runs/41401331545)
+成功，1122 tests；[父端獨立審查](https://github.com/TaiwanCCyoyo/stock-research/pull/150#issuecomment-6570818064)
+及 hosted review 覆蓋最終 HEAD，無未解重要缺陷。Primary main 已快轉，原
+`order-card-freshness` 工作樹及本地分支經保存／使用狀態核對後移除，遠端分支已不存在。
+
+重新讀取 #98／#99、最新 roadmap、open PR 與工作狀態後，選擇 **E1 maintained raw quote
+adapter**，從上述 main 建立 `codex/entry-window-raw-reader`／同名工作樹。它接合既有
+`read_adjusted_daily` 與 `RawQuotePacket`，是 staging handoff 已列出的實際來源缺口。
+實作前記錄[接入契約](../../../tasks/20261027-entry-window/raw-reader-handoff.md)。
+
+本輪未接續 P1／P2：P1 尚需可產卡的規則，P2 位於 F1 之後且缺昨日卡片與成本／多批買進日
+語義；現有 `AccountState`、order lifecycle、ledger 與 decision API 已可重用，不再另造
+通用帳戶骨架。#137 與報告介面仍由既有 owner 處理。
+
+新 adapter 固定單股、世代、cutoff 與 caller calendar，保留 Raw OHLC、日別品質與來源紀錄；
+不從 masked OHLC 還原、不排序或補價。來源重複報價已失去另一筆真值時，整個呼叫失敗，
+不能默默刪股而改變研究分母。原始資料精度、官方日曆、完整事件覆蓋與 labels 仍不能由
+宣告一致性自證。Reader 功能只在人工 temporary generation 驗證，未開啟真實市場資料。
+
+SOL workers 分別負責核心接入、純邊界合成測試與真實 public reader 的人工 generation
+整合；Terra 獨立核對契約與最終實作。主線獨佔正式文件、CI 與 Git index。後續執行仍須
+資料 admission、generation retention／hold 協調、原 labels／parity、完整 interval quality、
+資源量測與計算授權。本包不產結果、不啟動 F1、不部署，也不解除報告本人確認。
+
+本機實跑：人工 generation reader／CI selector **384 passed in 63.18s**；
+原生 dtype 檢查完成後，pure adapter 與既有 E1 inputs／count／assembly
+**382 passed in 5.28s**。兩輪都只使用人工輸入。Terra 最終獨立唯讀審查無可操作 findings；
+正常 hooks／hosted CI 與正式 PR 連結在交付後記錄，不把工程通過當研究完成。
+
+交付為 [draft PR #151](https://github.com/TaiwanCCyoyo/stock-research/pull/151)。
+工程提交 `ad33afeeae4618fc93c3f9ebd729a0f211abdb6a` 的正常 hooks 全過；Terra 已核對
+同一不可變提交，無未解可操作 findings。`entry-window-raw-reader` 工作樹保留供 open PR
+跟進；hosted CI／review 以最新 HEAD 的 GitHub 紀錄為準。
+
+## 2026-11-02 接續：E1 canonical reader
+
+#151 已核實 squash merge，merge SHA 為
+`3355be44583d0cee5fea9fa7b560d79098e65ffb`。Ready Windows CI
+[41404718170](https://github.com/TaiwanCCyoyo/stock-research/actions/runs/41404718170)
+成功，890 tests；[父端獨立審查](https://github.com/TaiwanCCyoyo/stock-research/pull/151#issuecomment-6571302717)
+與 hosted review 均覆蓋最終 HEAD，無未解重要缺陷。Primary main 已同步；舊 raw-reader
+工作樹與本地分支在確認乾淨、只有測試快取、無連結／子模組／使用中程序後正常移除。
+沒有本 session 的研究 scratch run，其他 session 資料與工作樹保留原狀。
+
+依既有續辦授權再次盤點 roadmap、工作樹、open PR 與既有實作，選定 **E1 canonical
+reader → 原 PR61 stock_daily → CanonicalPacket**。上包已補 RawQuotePacket；此包補
+同一 staging consumer 的另一個必要輸入，有明確用途。原始計算公開且固定，不需要
+代選方法；人工 generation 足以驗證接線。相較之下，interval packet 尚缺完整事件
+來源；P1/P2 尚需卡片規則與持股契約；S7 首次／跨週確認、O2 事件 gate 保持未決。
+
+實作前記錄[契約](../../../tasks/20261027-entry-window/canonical-reader-handoff.md)，
+從上述 main 建立本 session 的 `entry-window-canonical-reader` 工作樹與
+`codex/entry-window-canonical-reader` 分支。三位 SOL workers 分別獨寫核心接入、純合成
+測試及真 public reader 人工世代整合；Terra 獨立審查。主線擁有文件、CI 與 Git index。
+兩個 reader 共用必要檢查，不複製 task 計算。股票資格必須明示，不能預設全股合格。
+
+契約審查發現既有 stock_daily 下游有診斷 logging，因此精確限定純接線不自行開檔、
+連網或讀資料來源；宿主 logging handler 的副作用不在保證內。不停用全域 logging，
+也不改原計算。只做人工資料驗證，沒有正式市場 generation／新結論／runner／報告。
+原始 labels admission、PR61 真資料 parity、完整 interval coverage、官方 bounds 與
+市場資源／運算授權仍是後續 gate；#137、報告本人確認、E2/E3、S7、O2 邊界未改。
+
+本機實跑：既有 raw adapter／reader **133 passed in 14.85s**；新 public-reader
+人工世代整合與第一輪 CI selector **380 passed in 43.43s**；canonical 邊界、既有 E1
+inputs／count／bootstrap／assembly 與補齊依賴傳播的 selector **816 passed in 27.64s**。
+Terra 最終唯讀審查無可操作 findings。新測試會隨原計算的十一個已知上游改動一起選取；
+`derived_features.py` 保留既有 full fallback。沒有變更原計算或任何已發布結果讀取程式。
+
+交付為 [draft PR #152](https://github.com/TaiwanCCyoyo/stock-research/pull/152)。
+工程提交 `f8fbfa237ce147de478855743819e9412ad4bc80` 的正常 hooks 全過；Terra 已核對
+同一不可變提交，無新增可操作 findings。`entry-window-canonical-reader` 是本 session
+唯一保留的工程工作樹，供 open PR 後續 CI／審查使用；#146、#150、#151 工作樹已移除。
+Draft 的 hosted CI／review 依最新 HEAD 的 GitHub 紀錄判定，不替代市場或報告驗收。

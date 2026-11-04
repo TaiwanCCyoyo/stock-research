@@ -8,6 +8,9 @@ import type {
 /** One research card. Mirrors the reader-facing part of study-card.v2 so the
  *  page can switch to GET /studies without changing its components. */
 export interface StudyCard {
+    /** Original lifecycle only; never used as the reading edition verdict badge. */
+    sourceVerdict?: Verdict;
+    reportKind?: "html" | "markdown" | "summary";
     reading?: {
         state: "ready" | "in_progress" | "history";
         reason: string;

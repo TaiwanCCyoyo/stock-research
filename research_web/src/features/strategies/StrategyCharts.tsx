@@ -39,6 +39,7 @@ export function LineChart({
     format?: (value: number) => string;
 }) {
     const [cursor, setCursor] = useState<number | null>(null);
+    const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
     const values = lines.flatMap((line) =>
         line.values.filter(
             (v): v is number => v !== null && Number.isFinite(v),
@@ -47,6 +48,16 @@ export function LineChart({
     const size = useChartWidth(dates.length > 0 && values.length > 0);
     if (!dates.length || !values.length)
         return <p className="ss-muted">這段資料尚未保存。</p>;
+    const activeIndex = Math.max(
+        0,
+        Math.min(cursor ?? selectedIndex ?? dates.length - 1, dates.length - 1),
+    );
+    const dateValues = lines
+        .map((line) => {
+            const value = line.values[activeIndex];
+            return `${line.name}：${value == null || !Number.isFinite(value) ? "無資料" : format(value)}`;
+        })
+        .join("；");
     const low = Math.min(...values),
         high = Math.max(...values),
         spread = high - low || Math.max(high * 0.02, 1);
@@ -155,10 +166,10 @@ export function LineChart({
                         </text>
                     </>
                 )}
-                {cursor !== null && (
+                {(!compact || cursor !== null) && (
                     <line
-                        x1={x(cursor)}
-                        x2={x(cursor)}
+                        x1={x(activeIndex)}
+                        x2={x(activeIndex)}
                         y1={top}
                         y2={height - bottom}
                         stroke="var(--muted)"
@@ -185,37 +196,37 @@ export function LineChart({
                             />
                             {line.name}
                             {!compact &&
-                            cursor !== null &&
-                            line.values[cursor] != null
-                                ? ` ${format(line.values[cursor]!)}`
-                                : ""}
+                                ` ${line.values[activeIndex] == null || !Number.isFinite(line.values[activeIndex]) ? "無資料" : format(line.values[activeIndex]!)}`}
                         </span>
                     ))}
-                    {!compact && cursor !== null && <b>{dates[cursor]}</b>}
+                    {!compact && <b>{dates[activeIndex]}</b>}
                 </div>
             }
-            {onPick && !compact && (
+            {!compact && (
                 <div className="ss-chart-date">
                     <label>
-                        選一天驗算{" "}
+                        查看日期與數值{" "}
                         <input
                             type="range"
+                            aria-label={`${label}：日期與數值`}
+                            aria-valuetext={`${dates[activeIndex]}；${dateValues}`}
                             min="0"
                             max={dates.length - 1}
-                            value={cursor ?? dates.length - 1}
-                            onChange={(event) =>
-                                setCursor(Number(event.target.value))
-                            }
+                            value={activeIndex}
+                            onChange={(event) => {
+                                setSelectedIndex(Number(event.target.value));
+                                setCursor(null);
+                            }}
                         />
                     </label>
-                    <button
-                        className="ss-button u-btn"
-                        onClick={() =>
-                            onPick(dates[cursor ?? dates.length - 1])
-                        }
-                    >
-                        {dates[cursor ?? dates.length - 1]} 持股與現金
-                    </button>
+                    {onPick && (
+                        <button
+                            className="ss-button u-btn"
+                            onClick={() => onPick(dates[activeIndex])}
+                        >
+                            {dates[activeIndex]} 持股與現金
+                        </button>
+                    )}
                 </div>
             )}
         </div>
