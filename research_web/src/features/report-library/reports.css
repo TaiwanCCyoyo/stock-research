@@ -283,8 +283,10 @@
 .reading-sources {
     margin: 32px 0;
 }
-.reading-sources .u-btn {
+.studio .reading-sources .u-btn {
     margin: 4px;
+    max-width: calc(100% - 8px);
+    white-space: normal;
 }
 .reading-source-link {
     color: var(--action, var(--accent));
@@ -336,7 +338,8 @@
 .reading-related {
     margin-top: 32px;
 }
-.reading-related .u-btn {
+.studio .reading-related .u-btn {
+    max-width: calc(100% - 8px);
     white-space: normal;
     text-align: left;
     justify-content: flex-start;
