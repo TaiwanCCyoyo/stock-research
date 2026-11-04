@@ -303,8 +303,9 @@ checks; no opaque security-key mapping is invented by this change.
 Verification mapping: `tests/test_opportunity_history_versions.py` builds two
 artificial registered bundles with different saved contents for the same stock;
 API/bundle/startup-cache tests cover identity, registration, missing members,
-corruption, frozen compatibility and isolated failures. Existing `opportunity`
-CI path/test globs include these files. Frontend API, frame-buffer, model,
+corruption, frozen compatibility and isolated failures. The `opportunity` CI
+path/test globs and reviewed-test inventory include these files. Frontend API,
+frame-buffer, model,
 navigation and stock-journey tests run through `npm test`. The manual
 `node scripts/history-version-browser.mjs` harness mounts the actual pages with
 synthetic-only HTTP responses and checks delayed version switches, stock/return,

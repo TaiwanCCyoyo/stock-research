@@ -1040,6 +1040,7 @@
         "tests/test_opportunity_history_api.py",
         "tests/test_opportunity_history_bundle.py",
         "tests/test_opportunity_history_display.py",
+        "tests/test_opportunity_history_versions.py",
         "tests/test_opportunity_history_view.py",
         "tests/test_post_checkout_hook.py",
         "tests/test_prepare_nightly_research.py",
