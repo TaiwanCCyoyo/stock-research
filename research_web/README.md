@@ -386,8 +386,11 @@ without a shell version remain compatible.
   `demo`, `superseded`, `failed`, `accepted`; `tags` is comma-separated.
 - **Shared look:** copy `report-kit/v1/report-kit.css` and `report-kit.js` into the
   report's `kit/` folder. The copy freezes the look of a published report; a later
-  kit version gets a new folder (`v2/`) instead of changing `v1`. The kit mirrors
-  the studio's palettes, light/dark appearance and Taiwan colours (red = up), and
+  kit version gets a new folder (`v2/`) instead of changing `v1`. Standalone reports
+  retain the kit's built-in palettes; embedded reports receive the Studio's resolved
+  semantic color tokens through `src/features/report-library/themeBridge.ts`.
+  Keep palette decisions in that shared adapter, not individual reports. The kit
+  supports light/dark appearance and Taiwan colours (red = up), and
   offers optional helpers: formatting, `{columns, rows}` tables, SVG/HTML builders,
   segmented controls, tooltips and a diverging scale.
 - **Data:** load data with classic `<script src="data/*.js">` files that assign to
@@ -403,7 +406,10 @@ without a shell version remain compatible.
   Chromium browser (tested 2026-10-13), it could not load scripts, images or fetch
   from `127.0.0.1`; other browsers were not tested. No popup permission is given.
   The kit reports its height (`rk:height`) and follows the studio theme
-  (`rk:theme`); the first paint reads the theme from the URL hash. Avoid `vh`
+  (`rk:theme`). The viewer applies host tokens before revealing the loaded frame,
+  updates colors without reloading report state, and offers a readable fallback
+  with retry if theme integration fails. The URL hash supplies the standalone
+  fallback, not a second copy of the Studio palette definitions. Avoid `vh`
   units inside a report, since the frame grows to the report's height.
 - **Links:** a report folder is served and copied only through plain directories
   and files. A symlink or junction anywhere on the way (the task folder,

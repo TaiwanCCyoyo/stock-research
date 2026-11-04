@@ -122,3 +122,110 @@ test("playback can prefetch deeper without passing the last date", () => {
     assert.deepEqual(playbackLookahead(dates, 0, 1, 4), ["b", "c", "d", "e"]);
     assert.deepEqual(playbackLookahead(dates, 4, 1, 4), ["f", "g"]);
 });
+
+const versionA = { versionId: "synthetic-a", manifestSha256: "a".repeat(64) };
+const versionB = { versionId: "synthetic-b", manifestSha256: "b".repeat(64) };
+function versionedFrame(pin: typeof versionA, price: number): HistoryFrame {
+    return {
+        ...frame("2020-01-02", pin.manifestSha256),
+        bundleIdentity: pin,
+        rows: [
+            {
+                securityId: "SYNTH-ONE",
+                code: "SYNTH-ONE",
+                name: "Synthetic only",
+                seriesId: "series",
+                waveId: "wave",
+                start: "2020-01-01",
+                peakDate: "2020-01-02",
+                endConfirmedAt: null,
+                observedThrough: "2020-01-02",
+                leftCensored: false,
+                rightCensored: true,
+                scale: "balanced",
+                gain: 1,
+                peakGain: 1,
+                raw: price,
+                adjusted: price,
+                reason: null,
+                industry: {
+                    id: "synthetic",
+                    label: "Synthetic",
+                    basis: "unknown",
+                    snapshotAt: null,
+                },
+                earliestCandidateId: null,
+                phase: null,
+            },
+        ],
+    };
+}
+const versionIdentity = (pin: typeof versionA) => ({
+    catalogId: pin.manifestSha256,
+    date: "2020-01-02",
+    bundleIdentity: pin,
+});
+
+test("two saved versions keep the same stock's distinct prices isolated", async () => {
+    const calls: string[] = [];
+    const buffer = new FrameBuffer(async (_date, _signal, pin) => {
+        assert.ok(pin);
+        calls.push(pin.versionId);
+        return versionedFrame(
+            pin,
+            pin.manifestSha256 === versionA.manifestSha256 ? 10 : 20,
+        );
+    });
+    const a = await buffer.read(versionIdentity(versionA));
+    const b = await buffer.read(versionIdentity(versionB));
+    assert.equal(a.rows[0].code, b.rows[0].code);
+    assert.equal(a.rows[0].adjusted, 10);
+    assert.equal(b.rows[0].adjusted, 20);
+    assert.equal(
+        (await buffer.read(versionIdentity(versionA))).rows[0].adjusted,
+        10,
+    );
+    assert.deepEqual(calls, ["synthetic-a", "synthetic-b"]);
+    const alias = { ...versionA, versionId: "registered-alias" };
+    await buffer.read(versionIdentity(alias));
+    assert.equal(
+        calls.length,
+        3,
+        "same manifest still requires its requested registered version",
+    );
+});
+
+test("explicit versions reject missing or mismatched identities rather than caching current data", async () => {
+    const wrong = new FrameBuffer(async () => versionedFrame(versionA, 10));
+    await assert.rejects(wrong.read(versionIdentity(versionB)));
+    assert.equal(wrong.peek(versionIdentity(versionB)), undefined);
+    const missing = new FrameBuffer(async () =>
+        frame("2020-01-02", versionB.manifestSha256),
+    );
+    await assert.rejects(missing.read(versionIdentity(versionB)));
+    const otherVersion = { ...versionA, versionId: "other-registration" };
+    await assert.rejects(wrong.read(versionIdentity(otherVersion)));
+});
+
+test("switching versions cancels old work and late responses cannot seed either cache", async () => {
+    const pending = new Map<
+        string,
+        { signal: AbortSignal; resolve: (frame: HistoryFrame) => void }
+    >();
+    const buffer = new FrameBuffer(
+        (_date, signal, pin) =>
+            new Promise((resolve) =>
+                pending.set(pin!.versionId, { signal, resolve }),
+            ),
+    );
+    const old = buffer.read(versionIdentity(versionA));
+    const fresh = buffer.read(versionIdentity(versionB));
+    buffer.retain([versionIdentity(versionB)]);
+    assert.equal(pending.get(versionA.versionId)!.signal.aborted, true);
+    pending.get(versionB.versionId)!.resolve(versionedFrame(versionB, 20));
+    await fresh;
+    pending.get(versionA.versionId)!.resolve(versionedFrame(versionA, 10));
+    await assert.rejects(old, { name: "AbortError" });
+    assert.equal(buffer.peek(versionIdentity(versionA)), undefined);
+    assert.equal(buffer.peek(versionIdentity(versionB))!.rows[0].adjusted, 20);
+});

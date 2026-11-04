@@ -15,7 +15,7 @@ export function StudioState({
 }) {
     if (error)
         return (
-            <div className="ss-error">
+            <div className="ss-error" role="alert">
                 <strong>研究資料暫時無法讀取</strong>
                 <p>{error}</p>
                 <button className="ss-button u-btn" onClick={retry}>
@@ -24,7 +24,7 @@ export function StudioState({
             </div>
         );
     return (
-        <div className="ss-loading">
+        <div className="ss-loading" role="status">
             {loading
                 ? "正在整理已保存的研究紀錄…"
                 : empty

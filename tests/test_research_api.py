@@ -51,6 +51,17 @@ def test_health_returns_ok(client: TestClient) -> None:
     assert response.json() == {"status": "ok"}
 
 
+@pytest.mark.parametrize("prefix", ["", "/api", "/history-api"])
+def test_direction_discussions_are_mounted_without_private_data_in_public_mode(monkeypatch: MonkeyPatch, prefix: str) -> None:
+    monkeypatch.setenv("STOCK_RESEARCH_DATA_MODE", "public-synthetic")
+    with TestClient(api_main.create_app()) as public_client:
+        response = public_client.get(f"{prefix}/direction-drafts", headers={"X-Research-Data-Mode": "public-synthetic"})
+        assert response.status_code == 200
+        assert response.json() == {"schema": "direction-drafts.v1", "mode": "public-synthetic", "items": []}
+        assert public_client.get(f"{prefix}/direction-drafts/20991231-not-real").status_code == 404
+        assert public_client.post(f"{prefix}/direction-drafts", json={"stage": "agreed"}).status_code == 405
+
+
 def test_data_quality_returns_not_available_when_report_missing(client: TestClient, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setattr(api_main, "DEFAULT_DATA_PATH", tmp_path / "no-such-dir")
 

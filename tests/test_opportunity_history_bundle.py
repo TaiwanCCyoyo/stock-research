@@ -251,7 +251,7 @@ def test_dashboard_resolves_through_the_catalog_and_opens_the_pinned_bundle(tmp_
 
     # The reader gate itself has its own tests; here only the located path and pin matter.
     monkeypatch.setattr(store, "HistoryStore", Recorder)
-    monkeypatch.setattr(store, "resolve_history_bundle", lambda: bundle.resolve_history_bundle(roots, version_id=pin, manifest_sha256=pin))
+    monkeypatch.setattr(store, "resolve_history_bundle", lambda **kwargs: bundle.resolve_history_bundle(roots, **kwargs))
     LazyHistoryStore = store.LazyHistoryStore
     LazyHistoryStore(expected_sha=pin).get()
     assert opened == [(roots.data / "patterns/opportunity-history-web" / pin, pin)]

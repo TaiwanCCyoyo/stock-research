@@ -1,3 +1,4 @@
+import { datasetDetailHref } from "./datasetJourney.ts";
 /** GET /data-status (research-data-status.v1), see docs/en/data-status.md. */
 export interface DataStatus {
     schema: "research-data-status.v1";
@@ -126,6 +127,7 @@ export function datasetUpdatedLabel(item: DatasetStatus): string {
     return updatedLabel(item.last_updated);
 }
 export function datasetHref(item: DatasetStatus): string | null {
+    if (catalogIdentity(item)) return datasetDetailHref(item.id, "#overview");
     if (item.source === "producer") {
         const query = new URLSearchParams({ kind: "", status: "all" });
         if (
@@ -145,3 +147,18 @@ export function datasetHref(item: DatasetStatus): string | null {
         return "#overview/stocks?dataset=adjusted_daily&kind=&status=all";
     return null;
 }
+
+/** The status API encodes the catalog identity; do not infer a source task. */
+export function catalogIdentity(item: DatasetStatus): {
+    dataId: string;
+    version: string;
+} | null {
+    if (item.source !== "catalog") return null;
+    const match = /^catalog:([^:]+):(.+)$/.exec(item.id);
+    return match ? { dataId: match[1], version: match[2] } : null;
+}
+
+export const catalogGuideHref =
+    "https://github.com/TaiwanCCyoyo/stock-research/blob/main/tasks/20261012-research-data-entry/data-contract.md";
+export const assetIndexHref =
+    "https://github.com/TaiwanCCyoyo/stock-research/blob/main/docs/en/research-program.md";

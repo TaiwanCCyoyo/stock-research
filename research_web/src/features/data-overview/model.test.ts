@@ -3,6 +3,7 @@ import test from "node:test";
 import {
     countLabel,
     datasetHref,
+    catalogIdentity,
     groupDatasets,
     periodLabel,
     statusLabel,
@@ -28,6 +29,28 @@ test("dataset discovery links only use supported coverage filters", () => {
     assert.equal(
         datasetHref(dataset({ id: "synthetic-prices" })),
         "#overview/stocks?kind=&status=all",
+    );
+});
+
+test("same-title catalog versions keep distinct complete identities without inferred tasks", () => {
+    const entry = dataset({
+        source: "catalog",
+        id: "catalog:annual-winner:version-one",
+    });
+    assert.deepEqual(catalogIdentity(entry), {
+        dataId: "annual-winner",
+        version: "version-one",
+    });
+    assert.deepEqual(
+        catalogIdentity({ ...entry, id: "catalog:annual-winner:version-two" }),
+        { dataId: "annual-winner", version: "version-two" },
+    );
+    assert.equal(catalogIdentity(dataset()), null);
+    assert.equal(catalogIdentity({ ...entry, id: "catalog:incomplete" }), null);
+    assert.match(datasetHref(entry)!, /^#dataset\?/);
+    assert.equal(
+        new URLSearchParams(datasetHref(entry)!.split("?")[1]).get("ref"),
+        entry.id,
     );
 });
 

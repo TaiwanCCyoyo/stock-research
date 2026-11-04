@@ -5,6 +5,7 @@ import {
     pendingCard,
     readingLink,
     withReading,
+    withReportEntry,
     type ReadingRecord,
 } from "./reading.ts";
 
@@ -133,6 +134,12 @@ export function cardFromV2(
     ];
     return {
         id: card.task_id,
+        sourceVerdict: card.verdict,
+        reportKind: card.report.web_report
+            ? "html"
+            : card.report.markdown
+              ? "markdown"
+              : undefined,
         reading: {
             state:
                 card.verdict === "running" ||
@@ -217,9 +224,12 @@ export function cardsFromStudies(response: StudiesResponse): StudyCard[] {
     }
     for (const id of response.original_reports ?? []) {
         const card = records.get(id);
-        if (card && !card.reportHref) card.reportHref = readingLink(id);
+        if (card && !card.reportHref) {
+            card.reportHref = readingLink(id);
+            card.reportKind = "markdown";
+        }
     }
-    return [...records.values()];
+    return [...records.values()].map(withReportEntry);
 }
 
 /** Cards hidden by the reader (legacy source unavailable, invalid card). */

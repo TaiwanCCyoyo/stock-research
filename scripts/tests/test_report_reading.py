@@ -242,3 +242,56 @@ def test_reparse_markdown_is_rejected_with_portable_lstat_simulation(tmp_path: P
     monkeypatch.setattr(Path, "lstat", fake_lstat)
     with pytest.raises((ValueError, ReportReadingError), match="reparse"):
         ReportReadings(tmp_path).record(IDENTITY)
+
+
+def test_mission_is_readable_but_not_presented_as_a_result(tmp_path: Path) -> None:
+    task = tmp_path / IDENTITY
+    task.mkdir()
+    card = original_card(task)
+    card["report"]["markdown"] = None
+    card["verdict"] = "not_evaluated"
+    write_json(task / "study.json", card)
+    reader = ReportReadings(tmp_path)
+    assert reader.read()["original_reports"] == []
+    (task / "mission.md").write_text("# Planned question", encoding="utf-8")
+    result = reader.document(IDENTITY)
+    assert result["markdown"] == "# Planned question"
+    assert result["state"] == "in_progress"
+    assert "尚無結果報告" in result["reason"]
+    assert reader.read()["original_reports"] == [IDENTITY]
+    card["report"]["markdown"] = "../secret.md"
+    write_json(task / "study.json", card)
+    with pytest.raises((ValueError, OSError)):
+        reader.document(IDENTITY)
+
+
+def test_mission_fallback_does_not_bypass_invalid_registration(tmp_path: Path) -> None:
+    task = tmp_path / IDENTITY
+    task.mkdir()
+    (task / "mission.md").write_text("# Planned question", encoding="utf-8")
+    write_json(task / "study.json", {"schema": "invalid"})
+    with pytest.raises((ValueError, OSError)):
+        ReportReadings(tmp_path).document(IDENTITY)
+
+
+def test_tooling_warnings_do_not_reappear_as_research(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    task, record = setup_reading(tmp_path)
+    card = original_card(task)
+    card["kind"] = "tooling"
+    write_json(task / "study.json", card)
+    monkeypatch.setenv("STOCK_RESEARCH_DATA_MODE", "local-private")
+    router = create_studies_router(tasks_root=tmp_path)
+    endpoint = next(getattr(route, "endpoint") for route in router.routes if getattr(route, "path", "") == "/studies")
+    result = endpoint(include_tooling=False, x_research_data_mode=None)
+    assert result["cards"] == []
+    assert result["warnings"] == []
+    assert result["readings"] == []
+    included = endpoint(include_tooling=True, x_research_data_mode=None)
+    assert included["cards"][0]["kind"] == "tooling"
+    assert included["warnings"]  # Fictional original hash deliberately mismatches.
+    assert included["readings"] == [record]
+    card["schema"] = "invalid"
+    write_json(task / "study.json", card)
+    unknown = endpoint(include_tooling=False, x_research_data_mode=None)
+    assert unknown["warnings"][0]["task_id"] == IDENTITY
+    assert unknown["readings"] == [record]

@@ -140,7 +140,12 @@
             ]
         },
         "web": {
-            "paths": ["research_web/*"],
+            "paths": [
+                "research_web/*",
+                "research_core/pattern_scan_comparison_v1.py",
+                "scripts/tests/fixtures/l1-volume-comparison.synthetic.v1.json",
+                "tasks/20261013-pattern-scan/l1-volume-comparison-contract-v1.md"
+            ],
             "tests": [],
             "frontend": true
         },
@@ -392,7 +397,7 @@
         "research_api_app": {
             "paths": ["research_api/main.py", "research_api/__main__.py"],
             "tests": ["scripts/tests/test_windows_viewer_launcher.py"],
-            "consumers": ["opportunity"]
+            "consumers": ["opportunity", "direction_discussions"]
         },
         "annual": {
             "paths": [
@@ -472,6 +477,8 @@
                 "scripts/audit_pattern_scan_local_candidates.py",
                 "scripts/run_pattern_scan_remaining.py",
                 "scripts/probe_pattern_scan_parallel.py",
+                "scripts/run_l1_recovery_pilot.py",
+                "scripts/tests/fixtures/l1-volume-comparison.synthetic.v1.json",
                 "scripts/export_pattern_scan_report.py"
             ],
             "tests": [
@@ -577,15 +584,48 @@
                 "scripts/tests/test_multi_timeframe_ma_counts_v1.py"
             ]
         },
+        "order_card_freshness": {
+            "paths": [
+                "research_core/order_card_freshness_v1.py",
+                "research_core/order_card_freshness_json_v1.py",
+                "scripts/check_order_card_freshness.py",
+                "tasks/20261102-order-card-freshness/*",
+                "research_core/multi_timeframe_ma_core_v1.py",
+                "research_core/multi_timeframe_ma_weeks_v1.py"
+            ],
+            "tests": [
+                "scripts/tests/test_order_card_freshness_v1.py",
+                "scripts/tests/test_order_card_freshness_cli.py"
+            ]
+        },
         "entry_window": {
             "paths": [
                 "research_core/entry_window_v1.py",
                 "research_core/entry_window_bootstrap_v1.py",
                 "research_core/entry_window_inputs_v1.py",
+                "research_core/entry_window_assembly_v1.py",
+                "research_core/entry_window_raw_quotes_v1.py",
+                "research_core/entry_window_price_inputs_v1.py",
+                "research_core/entry_window_canonical_v1.py",
+                "research_core/pattern_scan_inputs_v1.py",
+                "research_core/pattern_scan_indicators_v1.py",
+                "research_core/pattern_scan_controls_v1.py",
+                "research_core/pattern_scan_daily_values_v1.py",
+                "research_core/pattern_scan_conditions_v1.py",
+                "research_core/patterns/scan_contract_v1.py",
+                "research_core/feature_atlas_features.py",
+                "research_core/feature_atlas_legacy.py",
+                "research_core/hhhl_variants_daily.py",
+                "research_core/hhhl_variants_features.py",
+                "research_core/hhhl_variants_selection.py",
+                "research_core/maintained_adjusted_daily.py",
                 "research_core/count_cube_v1.py",
                 "tasks/20261027-entry-window/implementation-handoff.md",
                 "tasks/20261027-entry-window/bootstrap-handoff.md",
                 "tasks/20261027-entry-window/reader-staging-handoff.md",
+                "tasks/20261027-entry-window/assembly-handoff.md",
+                "tasks/20261027-entry-window/raw-reader-handoff.md",
+                "tasks/20261027-entry-window/canonical-reader-handoff.md",
                 "tasks/20261027-entry-window/mission.md",
                 "tasks/20261027-entry-window/data-contract.md",
                 "research_core/momentum_only_v1.py",
@@ -597,7 +637,12 @@
             "tests": [
                 "scripts/tests/test_entry_window_v1.py",
                 "scripts/tests/test_entry_window_bootstrap_v1.py",
-                "scripts/tests/test_entry_window_inputs_v1.py"
+                "scripts/tests/test_entry_window_inputs_v1.py",
+                "scripts/tests/test_entry_window_assembly_v1.py",
+                "scripts/tests/test_entry_window_raw_quotes_v1.py",
+                "scripts/tests/test_entry_window_raw_reader_v1.py",
+                "scripts/tests/test_entry_window_canonical_v1.py",
+                "scripts/tests/test_entry_window_canonical_reader_v1.py"
             ]
         },
         "study_card_records": {
@@ -614,14 +659,58 @@
                 "tests/test_dashboard_task_index.py",
                 "tests/test_dashboard_presentation.py",
                 "tests/test_research_api.py",
-                "tests/test_research_api_security.py"
+                "tests/test_research_api_security.py",
+                "scripts/tests/test_direction_drafts.py"
             ],
             "consumers": ["task_records"],
             "frontend": true
         },
+        "direction_discussions": {
+            "paths": [
+                "research_core/direction_discussions.py",
+                "research_api/direction_discussions.py",
+                "research_core/artifact_store.py",
+                "tasks/*/direction-draft.md",
+                "tasks/*/preview/direction-discussion.json",
+                "docs/en/direction-discussion-ui.md"
+            ],
+            "tests": [
+                "scripts/tests/test_direction_discussions.py",
+                "tests/test_research_api.py"
+            ],
+            "frontend": true
+        },
+        "direction_drafts": {
+            "paths": [
+                "tasks/*/direction-draft.md",
+                "docs/en/direction-drafts.md",
+                "docs/en/direction-discussion-ui.md",
+                "docs/en/decision-records/2026-11-02-interactive-direction-discussion.md",
+                "docs/en/templates/direction-draft.md",
+                "docs/en/templates/direction-draft-pr.md",
+                "docs/en/examples/direction-draft-*.md",
+                "tasks/*/report.md",
+                "tasks/*/web-report/index.html",
+                "tasks/*/results/**",
+                "tasks/*/runs/**",
+                "tasks/*/run_receipt.json",
+                "tasks/*/run-receipt.json",
+                "scripts/tests/fixtures/direction_drafts/*"
+            ],
+            "tests": ["scripts/tests/test_direction_drafts.py"]
+        },
         "scratch_card_consumer": {
             "paths": ["research_core/scratch_runs.py"],
             "tests": ["scripts/tests/test_study_cards.py"]
+        },
+        "report_preview": {
+            "paths": [
+                "research_core/report_preview.py",
+                "scripts/report_preview.py",
+                ".github/workflows/report-preview.yml",
+                ".github/workflows/report-preview-trigger.yml"
+            ],
+            "tests": ["scripts/tests/test_report_preview.py"]
         }
     },
     "reviewed_tests": [
@@ -665,8 +754,15 @@
         "scripts/tests/test_derived_features_chunk_v2.py",
         "scripts/tests/test_derived_features_selective_v1.py",
         "scripts/tests/test_desktop_launch_feedback.py",
+        "scripts/tests/test_direction_discussions.py",
+        "scripts/tests/test_direction_drafts.py",
+        "scripts/tests/test_entry_window_assembly_v1.py",
         "scripts/tests/test_entry_window_bootstrap_v1.py",
+        "scripts/tests/test_entry_window_canonical_reader_v1.py",
+        "scripts/tests/test_entry_window_canonical_v1.py",
         "scripts/tests/test_entry_window_inputs_v1.py",
+        "scripts/tests/test_entry_window_raw_quotes_v1.py",
+        "scripts/tests/test_entry_window_raw_reader_v1.py",
         "scripts/tests/test_entry_window_v1.py",
         "scripts/tests/test_export_market_atlas.py",
         "scripts/tests/test_feature_atlas_dataset.py",
@@ -756,6 +852,8 @@
         "scripts/tests/test_opportunity_snapshot_wal.py",
         "scripts/tests/test_opportunity_startup_cache.py",
         "scripts/tests/test_optional_research_dependencies.py",
+        "scripts/tests/test_order_card_freshness_cli.py",
+        "scripts/tests/test_order_card_freshness_v1.py",
         "scripts/tests/test_owner_hhhl_labels.py",
         "scripts/tests/test_pattern_scan_analysis_v1.py",
         "scripts/tests/test_pattern_scan_audit_v1.py",
@@ -771,6 +869,7 @@
         "scripts/tests/test_pattern_scan_capacity_v4.py",
         "scripts/tests/test_pattern_scan_classification_cache_v1.py",
         "scripts/tests/test_pattern_scan_cohorts_v1.py",
+        "scripts/tests/test_pattern_scan_comparison_v1.py",
         "scripts/tests/test_pattern_scan_completion_v1.py",
         "scripts/tests/test_pattern_scan_conditions_v1.py",
         "scripts/tests/test_pattern_scan_context_v1.py",
@@ -823,6 +922,8 @@
         "scripts/tests/test_pattern_scan_q1_counts_v1.py",
         "scripts/tests/test_pattern_scan_rates_v1.py",
         "scripts/tests/test_pattern_scan_receipt_io_v2.py",
+        "scripts/tests/test_pattern_scan_recovery_pilot_v1.py",
+        "scripts/tests/test_pattern_scan_recovery_v1.py",
         "scripts/tests/test_pattern_scan_report_provenance_v2.py",
         "scripts/tests/test_pattern_scan_report_v1.py",
         "scripts/tests/test_pattern_scan_reporting_v1.py",
@@ -851,6 +952,7 @@
         "scripts/tests/test_rebuild_saved_catalog_mutations.py",
         "scripts/tests/test_rebuild_saved_opportunity_catalog.py",
         "scripts/tests/test_registered_jobs.py",
+        "scripts/tests/test_report_preview.py",
         "scripts/tests/test_report_reading.py",
         "scripts/tests/test_research_attempt_stress.py",
         "scripts/tests/test_research_attribution.py",
@@ -944,6 +1046,7 @@
         "tests/test_opportunity_history_api.py",
         "tests/test_opportunity_history_bundle.py",
         "tests/test_opportunity_history_display.py",
+        "tests/test_opportunity_history_versions.py",
         "tests/test_opportunity_history_view.py",
         "tests/test_post_checkout_hook.py",
         "tests/test_prepare_nightly_research.py",

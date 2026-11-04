@@ -110,3 +110,9 @@ def test_invalid_horizon_and_calendar_and_price_types_fail_closed() -> None:
         describe_price_path([100], 1, horizon=1)
     with pytest.raises(ValueError, match="real"):
         describe_price_path([100, cast(float, "bad")], 0, horizon=1)
+
+
+def test_exact_minus_15_percent_is_slow_decline_not_sideways() -> None:
+    """The report wording ("drop under 15%" vs "15% or more") relies on this boundary."""
+    assert describe_price_path([100.0, 110.0, 85.0], 0, horizon=2).category == "slow_decline"
+    assert describe_price_path([100.0, 110.0, 85.01], 0, horizon=2).category == "sideways"

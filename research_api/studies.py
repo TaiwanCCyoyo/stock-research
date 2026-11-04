@@ -36,7 +36,13 @@ def create_studies_router(*, tasks_root: Path | None = None, package_path: Path 
             return {**synthetic_study_cards(include_tooling=include_tooling), "readings": [], "reading_warnings": []}
         assert service is not None
         assert readings is not None
-        return {**service.read(include_tooling=include_tooling), **readings.read()}
+        result = {**service.read(include_tooling=include_tooling), **readings.read()}
+        tooling = set(result.pop("tooling_tasks", []))
+        if not include_tooling:
+            for field in ("cards", "warnings", "readings", "reading_warnings"):
+                result[field] = [item for item in result[field] if item["task_id"] not in tooling]
+            result["original_reports"] = [identity for identity in result.get("original_reports", []) if identity not in tooling]
+        return result
 
     @router.get("/studies/{task_id}/reading")
     def reading_document(task_id: str, x_research_data_mode: str | None = Header(None)) -> dict[str, Any]:

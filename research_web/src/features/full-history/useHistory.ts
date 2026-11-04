@@ -1,10 +1,16 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+    assertHistoryVersion,
+    validateHistoryVersion,
+    type HistoryBundleIdentity,
+} from "./versionIdentity.ts";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { readHistory, readHistoryWhenReady } from "./api.ts";
 import { FrameBuffer, playbackLookahead } from "./frameBuffer.ts";
 import { SCRUB_SETTLE, isFastSeek, scrubStillActive } from "./scrub.ts";
 import {
     dateIndex,
     initialHistoryIndex,
+    historyDateStorageKey,
     isCurrentRequest,
     type RequestIdentity,
 } from "./model.ts";
@@ -31,7 +37,21 @@ export const PLAYBACK_SPEEDS = [
     { step: 40, label: "很快" },
 ] as const;
 
-export function useHistory(active: boolean) {
+export function useHistory(
+    active: boolean,
+    requestedVersion?: HistoryBundleIdentity,
+) {
+    // The page keys this hook by version. Stabilize equivalent caller objects so
+    // unrelated parent renders cannot abort an in-flight metadata request.
+    const versionId = requestedVersion?.versionId;
+    const manifestSha256 = requestedVersion?.manifestSha256;
+    const requestedPin = useMemo(
+        () =>
+            versionId === undefined
+                ? undefined
+                : validateHistoryVersion({ versionId, manifestSha256 }),
+        [versionId, manifestSha256],
+    );
     const [metadata, setMetadata] = useState<HistoryMetadata | null>(null);
     const [metadataError, setMetadataError] = useState("");
     const [startup, setStartup] = useState<{
@@ -63,10 +83,11 @@ export function useHistory(active: boolean) {
     const detailEpoch = useRef(0);
     const [buffer] = useState(
         () =>
-            new FrameBuffer((date, signal) =>
+            new FrameBuffer((date, signal, bundleIdentity) =>
                 readHistory<HistoryFrame>(
                     `/frame?date=${encodeURIComponent(date)}`,
                     signal,
+                    bundleIdentity,
                 ),
             ),
     );
@@ -86,6 +107,7 @@ export function useHistory(active: boolean) {
             setError("");
             const saved = buffer.peek({
                 catalogId: metadata.catalogId,
+                bundleIdentity: metadata.bundleIdentity,
                 date: metadata.dates[clamped],
             });
             if (saved) {
@@ -181,6 +203,7 @@ export function useHistory(active: boolean) {
             (value) => {
                 if (!controller.signal.aborted) setStartup(value);
             },
+            requestedPin,
         )
             .then((data) => {
                 if (controller.signal.aborted) return;
@@ -200,12 +223,20 @@ export function useHistory(active: boolean) {
                     page === "#market"
                         ? new URLSearchParams(query).get("date")
                         : null;
+                if (data.bundleIdentity) {
+                    const verified = validateHistoryVersion(
+                        data.bundleIdentity,
+                    );
+                    assertHistoryVersion(data, verified);
+                    data = { ...data, bundleIdentity: verified };
+                }
                 setIndex(
                     initialHistoryIndex(
                         data.dates,
                         data.catalogId,
                         (key) => localStorage.getItem(key),
                         requestedDate,
+                        data.bundleIdentity,
                     ),
                 );
                 setMetadata(data);
@@ -214,12 +245,16 @@ export function useHistory(active: boolean) {
                 if (!controller.signal.aborted) setMetadataError(String(cause));
             });
         return () => controller.abort();
-    }, [active, metadata, retry]);
+    }, [active, metadata, retry, requestedPin]);
     useEffect(() => {
         if (!active || !metadata || directory) return;
         const controller = new AbortController();
         setDirectoryError("");
-        readHistory<HistoryDirectory>("/directory", controller.signal)
+        readHistory<HistoryDirectory>(
+            "/directory",
+            controller.signal,
+            metadata.bundleIdentity,
+        )
             .then((data) => {
                 if (controller.signal.aborted) return;
                 if (
@@ -249,6 +284,7 @@ export function useHistory(active: boolean) {
         // can provide an intermediate preview.
         const identities = [queryDate, ...future].map((date) => ({
             catalogId: metadata.catalogId,
+            bundleIdentity: metadata.bundleIdentity,
             date,
         }));
         buffer.retain(identities);
@@ -262,6 +298,7 @@ export function useHistory(active: boolean) {
         const identity = {
             epoch: request.current.epoch + 1,
             catalogId: metadata?.catalogId ?? "",
+            bundleIdentity: metadata?.bundleIdentity,
             date: queryDate,
         };
         request.current = identity;
@@ -272,7 +309,10 @@ export function useHistory(active: boolean) {
         }
         try {
             localStorage.setItem(
-                `history.date.${metadata.catalogId}`,
+                historyDateStorageKey(
+                    metadata.catalogId,
+                    metadata.bundleIdentity,
+                ),
                 queryDate,
             );
         } catch {
@@ -377,12 +417,14 @@ export function useHistory(active: boolean) {
         const identity = {
             epoch,
             catalogId: frame.catalogId,
+            bundleIdentity: frame.bundleIdentity,
             date: frame.date,
         };
         setDetailLoading(true);
         readHistory<HistoryDetail>(
             `/security/${encodeURIComponent(code)}?date=${encodeURIComponent(frame.date)}`,
             controller.signal,
+            frame.bundleIdentity,
         )
             .then((data) => {
                 if (controller.signal.aborted || epoch !== detailEpoch.current)
