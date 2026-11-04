@@ -1,8 +1,4 @@
-import {
-    CompareBars,
-    SourceInfo,
-    VerdictBadge,
-} from "../../components/ui/primitives";
+import { SourceInfo, VerdictBadge } from "../../components/ui/primitives";
 import type { StudyCard, StudyDetails } from "./model";
 import { StudyCaveats } from "./StudyCaveats";
 import {
@@ -19,7 +15,7 @@ const UNIT: Record<StudyCard["keyNumbers"][number]["unit"], string> = {
 };
 
 function shortDate(date: string) {
-    return `${Number(date.slice(5, 7))} 月 ${Number(date.slice(8, 10))} 日`;
+    return date ? date.replaceAll("-", "/") : "日期未提供";
 }
 
 export function StudyCardView({
@@ -39,7 +35,7 @@ export function StudyCardView({
                 <span>
                     {card.accountRun
                         ? card.accountRun.note
-                        : shortDate(card.date)}
+                        : `紀錄日期：${shortDate(card.date)}`}
                 </span>
                 {card.verdict && <VerdictBadge verdict={card.verdict} />}
             </div>
@@ -52,18 +48,28 @@ export function StudyCardView({
             <StudyCaveats caveats={card.caveats} />
             {card.progress && <RunProgress progress={card.progress} />}
             {card.keyNumbers.length > 0 && (
-                <CompareBars
-                    stacked
-                    rows={card.keyNumbers.map((number) => ({
-                        label: number.label,
-                        value: number.value,
-                        display: `${number.value}${UNIT[number.unit]}`,
-                        highlight: number.highlight,
-                    }))}
-                />
+                <dl className="st-numbers" aria-label="研究重點數字">
+                    {card.keyNumbers.map((number) => (
+                        <div
+                            key={number.label}
+                            className={
+                                number.highlight ? "is-highlighted" : undefined
+                            }
+                        >
+                            <dt>{number.label}</dt>
+                            <dd>
+                                {number.value}
+                                {UNIT[number.unit]}
+                            </dd>
+                        </div>
+                    ))}
+                </dl>
             )}
             {card.limitation && !compact && (
-                <p className="st-limit">{card.limitation}</p>
+                <p className="st-limit">
+                    <strong>解讀限制：</strong>
+                    {card.limitation}
+                </p>
             )}
             {(card.reportHref || card.accountRun) && (
                 <div className="u-actions">
@@ -72,7 +78,7 @@ export function StudyCardView({
                             className="u-btn u-btn-primary"
                             href={card.reportHref}
                         >
-                            讀報告
+                            查看報告
                         </a>
                     )}
                     {card.accountRun && (
@@ -80,7 +86,7 @@ export function StudyCardView({
                             className={`u-btn${card.reportHref ? "" : " u-btn-primary"}`}
                             href={`#strategy/${encodeURIComponent(card.accountRun.runId)}`}
                         >
-                            看帳戶模擬
+                            查看模擬交易結果
                         </a>
                     )}
                 </div>
@@ -135,6 +141,8 @@ function StudyDetailsView({
                             </a>
                         </span>
                     ))}
+                    {" · "}
+                    <a href="#data">查看資料總覽</a>
                 </p>
             )}
             {details.sharedDataReason && <p>{details.sharedDataReason}</p>}

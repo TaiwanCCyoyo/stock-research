@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { readFileSync } from "node:fs";
+import { runInNewContext } from "node:vm";
 import { studioRoute } from "../../app/routes.ts";
 import {
     applyReportThemeTokens,
@@ -354,4 +356,117 @@ test("only this report frame can request data or a registered report route", () 
         null,
     );
     assert.equal(studioRoute("#data").page, "overview");
+});
+
+test("the actual report links post approved routes to their host", () => {
+    const script = readFileSync(
+        new URL(
+            "../../../../tasks/20261024-strength-weakening-flags/web-report/app.js",
+            import.meta.url,
+        ),
+        "utf8",
+    );
+    const html = readFileSync(
+        new URL(
+            "../../../../tasks/20261024-strength-weakening-flags/web-report/index.html",
+            import.meta.url,
+        ),
+        "utf8",
+    );
+    const link = html.match(/<a\b[^>]*\bid="shared-data-link"[^>]*>/)?.[0];
+    assert.ok(link);
+    assert.match(link, /href="\/#data"/);
+    assert.doesNotMatch(link, /target=/);
+    const relatedLink = html.match(
+        /<a\b[^>]*\bid="pattern-report-link"[^>]*>/,
+    )?.[0];
+    assert.ok(relatedLink);
+    assert.doesNotMatch(relatedLink, /target=/);
+    for (const embedded of [true, false]) {
+        const clicks = new Map<
+            string,
+            (event: { preventDefault(): void }) => void
+        >();
+        let start: (() => Promise<void>) | undefined;
+        let preventCount = 0;
+        const messages: unknown[] = [];
+        const frame = {};
+        const parent = {
+            postMessage: (data: unknown, target: string) => {
+                assert.equal(target, "*");
+                messages.push(data);
+            },
+        };
+        const page: Record<string, unknown> = {
+            ReportKit: {},
+            REPORT_READY: new Promise(() => {}),
+        };
+        page.parent = embedded ? parent : page;
+        runInNewContext(script, {
+            window: page,
+            document: {
+                querySelectorAll: (selector: string) => {
+                    assert.equal(selector, "a[data-related-report]");
+                    return [
+                        ...html.matchAll(/data-related-report="([^"]+)"/g),
+                    ].map((match) => ({
+                        dataset: { relatedReport: match[1] },
+                        addEventListener: (
+                            type: string,
+                            handler: (event: {
+                                preventDefault(): void;
+                            }) => void,
+                        ) => {
+                            assert.equal(type, "click");
+                            clicks.set("report:" + match[1], handler);
+                        },
+                    }));
+                },
+                querySelector: (selector: string) => {
+                    return {
+                        addEventListener: (
+                            type: string,
+                            handler: (event: {
+                                preventDefault(): void;
+                            }) => void,
+                        ) => {
+                            assert.equal(type, "click");
+                            clicks.set(selector, handler);
+                        },
+                    };
+                },
+                addEventListener: (type: string, handler: typeof start) => {
+                    assert.equal(type, "DOMContentLoaded");
+                    start = handler;
+                },
+            },
+        });
+        assert.ok(start);
+        void start();
+        const click = (selector: string) => {
+            const handler = clicks.get(selector);
+            assert.ok(handler, `missing click handler for ${selector}`);
+            handler({
+                preventDefault: () => {
+                    preventCount += 1;
+                },
+            });
+        };
+        click("report:20261013-pattern-scan");
+        click("#shared-data-link");
+        assert.equal(preventCount, embedded ? 2 : 0);
+        assert.equal(messages.length, embedded ? 2 : 0);
+        if (embedded) {
+            assert.equal(
+                reportNavigationHash(frame, frame, messages[0], [
+                    "20261013-pattern-scan",
+                ]),
+                "#report/20261013-pattern-scan",
+            );
+            assert.equal(
+                reportNavigationHash(frame, frame, messages[1], []),
+                "#data",
+            );
+        }
+    }
 });
