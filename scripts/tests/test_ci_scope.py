@@ -66,7 +66,7 @@ def test_forward_v3_owned_paths_select_exact_candidate_suite(status: str, source
         ),
         (
             "research_core/count_cube_v1.py",
-            {"entry_window", "momentum_only", "strength_flags", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3"},
+            {"entry_window", "momentum_only", "strength_flags", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3", "multi_timeframe_ma"},
         ),
         (
             "research_core/technical_daily_v1.py",
@@ -187,7 +187,7 @@ def test_canonical_calculation_dependencies_select_actual_e1_consumers(status: s
         ),
         (
             "research_core/count_cube_v1.py",
-            {"entry_window", "momentum_only", "strength_flags", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3"},
+            {"entry_window", "momentum_only", "strength_flags", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3", "multi_timeframe_ma"},
         ),
         ("research_core/pattern_scan_events_v1.py", {"entry_window", "pattern_scan", "strength_flags", "tenbagger_drivers", "multi_timeframe_ma"}),
         ("research_core/pattern_scan_groups_v1.py", {"entry_window", "pattern_scan", "strength_flags", "tenbagger_drivers", "multi_timeframe_ma"}),
@@ -407,7 +407,10 @@ def test_tenbagger_domain_registers_its_sources(status: str, path: str) -> None:
             "research_core/momentum_only_v1.py",
             {"momentum_only", "tenbagger_drivers", "momentum_forward_v2", "entry_window", "momentum_forward_v3", "multi_timeframe_ma"},
         ),
-        ("research_core/count_cube_v1.py", {"momentum_only", "tenbagger_drivers", "momentum_forward_v2", "entry_window", "momentum_forward_v3"}),
+        (
+            "research_core/count_cube_v1.py",
+            {"momentum_only", "tenbagger_drivers", "momentum_forward_v2", "entry_window", "momentum_forward_v3", "multi_timeframe_ma"},
+        ),
         ("research_core/live_producer.py", {"research_data", "annual", "pattern_scan", "tenbagger_drivers", "momentum_forward_v2", "momentum_forward_v3"}),
         (
             "research_core/maintained_adjusted_daily.py",
@@ -1508,6 +1511,8 @@ def test_checkout_identity_consumer_is_selected_for_test_and_eol_policy(change: 
     "source",
     [
         "research_core/multi_timeframe_ma_core_v1.py",
+        "research_core/multi_timeframe_ma_comparison_v1.py",
+        "tasks/20261027-multi-timeframe-ma/comparison-handoff.md",
         "tasks/20261027-multi-timeframe-ma/core-handoff.md",
         "research_core/multi_timeframe_ma_weeks_v1.py",
         "tasks/20261027-multi-timeframe-ma/week-calendar-handoff.md",
@@ -1526,6 +1531,7 @@ def test_multi_timeframe_ma_owned_paths(status: str, source: str) -> None:
     assert set(plan["domains"]) == {"multi_timeframe_ma"} | ({"order_card_freshness"} if is_calendar_dependency else set())
     expected = {
         "scripts/tests/test_multi_timeframe_ma_core_v1.py",
+        "scripts/tests/test_multi_timeframe_ma_comparison_v1.py",
         "scripts/tests/test_multi_timeframe_ma_panel_v1.py",
         "scripts/tests/test_multi_timeframe_ma_weeks_v1.py",
         "scripts/tests/test_multi_timeframe_ma_counts_v1.py",
@@ -1600,6 +1606,7 @@ def test_multi_timeframe_counts_actual_upstreams_preserve_suites(status: str, so
     assert "multi_timeframe_ma" in plan["domains"] and "entry_window" in plan["domains"]
     assert {
         "scripts/tests/test_multi_timeframe_ma_core_v1.py",
+        "scripts/tests/test_multi_timeframe_ma_comparison_v1.py",
         "scripts/tests/test_multi_timeframe_ma_panel_v1.py",
         "scripts/tests/test_multi_timeframe_ma_weeks_v1.py",
         "scripts/tests/test_multi_timeframe_ma_counts_v1.py",
@@ -1618,10 +1625,34 @@ def test_multi_timeframe_counts_unknown_path_keeps_full_fallback(status: str) ->
 
 
 @pytest.mark.parametrize("status", ["A", "M"])
-def test_multi_timeframe_counts_does_not_add_unused_cube_dependency(status: str) -> None:
+def test_multi_timeframe_comparison_count_cube_upstream_preserves_consumers(status: str) -> None:
     plan = ci_scope.make_plan([(status, "research_core/count_cube_v1.py")])
-    assert not plan["full"] and "multi_timeframe_ma" not in plan["domains"]
-    assert "scripts/tests/test_multi_timeframe_ma_counts_v1.py" not in plan["python_tests"]
+    assert not plan["full"] and not plan["frontend"]
+    assert set(plan["domains"]) == {
+        "entry_window",
+        "momentum_only",
+        "multi_timeframe_ma",
+        "strength_flags",
+        "tenbagger_drivers",
+        "momentum_forward_v2",
+        "momentum_forward_v3",
+    }
+    assert {
+        "scripts/tests/test_multi_timeframe_ma_comparison_v1.py",
+        "scripts/tests/test_multi_timeframe_ma_counts_v1.py",
+        "scripts/tests/test_momentum_only_v1.py",
+        "scripts/tests/test_momentum_forward_v1.py",
+        "scripts/tests/test_momentum_forward_attempts_v2.py",
+        "scripts/tests/test_momentum_forward_run_v2.py",
+        "scripts/tests/test_momentum_forward_publication_v3.py",
+        "scripts/tests/test_entry_window_v1.py",
+        "scripts/tests/test_entry_window_bootstrap_v1.py",
+        "scripts/tests/test_entry_window_inputs_v1.py",
+        "scripts/tests/test_entry_window_assembly_v1.py",
+        "scripts/tests/test_strength_flags_v1.py",
+        "scripts/tests/test_strength_flag_counts_v1.py",
+        "scripts/tests/test_tenbagger_drivers_v1.py",
+    } <= set(plan["python_tests"])
 
 
 @pytest.mark.parametrize("status", ["A", "M"])
@@ -1641,6 +1672,7 @@ def test_multi_timeframe_counts_program_registration_keeps_prose_contracts(statu
         "scripts/tests/test_strength_flags_v1.py",
         "scripts/tests/test_entry_window_v1.py",
         "scripts/tests/test_multi_timeframe_ma_core_v1.py",
+        "scripts/tests/test_multi_timeframe_ma_comparison_v1.py",
         "scripts/tests/test_momentum_forward_attempts_v2.py",
         "scripts/tests/test_momentum_forward_run_v2.py",
         "scripts/tests/test_momentum_forward_publication_v3.py",
