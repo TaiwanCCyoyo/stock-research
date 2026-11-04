@@ -141,6 +141,14 @@ refresh, missing key, version mismatch and missing prices. The manual harness is
 not part of hosted CI. No real generation/member mapping or owner visual acceptance
 was tested.
 
+PR #159 replay-exit regression: user date/selection callbacks (including timeline
+click/Left/Right and map bubble Enter/Space) leave replay before changing state.
+URL restoration keeps the raw setters. Starting exploration pushes a separate
+map entry so Back retains the original source, and return focus waits for the
+source view to be available. Edge `?scenario=explore` verified all five actions
+and all five returns against two explicitly synthetic members. This replaces the
+incomplete click/change capture approach identified in hosted review.
+
 ## Delivery boundaries
 
 ### Saved comparison navigation slice

@@ -1,6 +1,7 @@
 import { nextPanelSnapshot, type PanelSnapshot } from "./panelSnapshot.ts";
 import {
     memo,
+    useCallback,
     useEffect,
     useDeferredValue,
     useLayoutEffect,
@@ -112,6 +113,28 @@ export function FullHistoryPage({ active }: { active: boolean }) {
     const [comparisons, setComparisons] = useState<PortfolioComparison[]>([]);
     const detailElement = useRef<HTMLDivElement>(null);
     const appliedLink = useRef<string | null>(null);
+    const leaveReplay = useCallback(() => {
+        // Keep the exact source entry available to Back. Only user callbacks
+        // call this; restoring a saved URL uses the raw setters below.
+        if (!readWaveContext(location.hash)) return;
+        appliedLink.current = null;
+        window.history.pushState(window.history.state, "", "#market");
+        window.dispatchEvent(new HashChangeEvent("hashchange"));
+    }, []);
+    const selectStock = useCallback(
+        (id: string | null) => {
+            leaveReplay();
+            setSelectedId(id);
+        },
+        [leaveReplay, setSelectedId],
+    );
+    const chooseDate = useCallback(
+        (date: string) => {
+            leaveReplay();
+            goToDate(date);
+        },
+        [leaveReplay, goToDate],
+    );
     useEffect(() => {
         if (!active) {
             appliedLink.current = null;
@@ -119,8 +142,13 @@ export function FullHistoryPage({ active }: { active: boolean }) {
         }
         if (!metadata) return;
         const apply = () => {
-            if (pinned.context) {
-                const context = pinned.context;
+            let context;
+            try {
+                context = readWaveContext(location.hash);
+            } catch {
+                return;
+            }
+            if (context) {
                 if (metadata.catalogId !== context.catalogId) return;
                 const key = location.hash;
                 if (appliedLink.current === key) return;
@@ -145,7 +173,7 @@ export function FullHistoryPage({ active }: { active: boolean }) {
         apply();
         window.addEventListener("hashchange", apply);
         return () => window.removeEventListener("hashchange", apply);
-    }, [active, metadata, goToDate, setSelectedId, setPlaying, pinned]);
+    }, [active, metadata, goToDate, setSelectedId, setPlaying]);
     useEffect(() => {
         if (!editingDate.current) setDateDraft(desiredDate);
     }, [desiredDate]);
@@ -269,31 +297,12 @@ export function FullHistoryPage({ active }: { active: boolean }) {
         if (!metadata || !/^\d{4}-\d{2}-\d{2}$/.test(requested)) return;
         const actualDate = metadata.dates[dateIndex(metadata.dates, requested)];
         editingDate.current = false;
-        goToDate(actualDate);
+        chooseDate(actualDate);
         setDateDraft(actualDate);
         // Normalize the form even when the selected trading-day index is unchanged.
         const field = e.currentTarget.elements.namedItem("observationDate");
         if (field instanceof HTMLInputElement) field.value = actualDate;
     };
-    useEffect(() => {
-        if (
-            !active ||
-            !pinned.context ||
-            !metadata ||
-            !frame ||
-            history.loading
-        )
-            return;
-        try {
-            matchWaveFrame(pinned.context, metadata, frame);
-        } catch {
-            return;
-        }
-        if (selectedId === pinned.context.securityId) {
-            detailElement.current?.focus({ preventScroll: true });
-            detailElement.current?.scrollIntoView({ block: "start" });
-        }
-    }, [active, pinned, metadata, frame, selectedId, history.loading]);
     let pinnedError = pinned.error;
     let pinnedLoading = false;
     if (active && pinned.context && !pinnedError) {
@@ -338,6 +347,36 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                 error instanceof Error ? error.message : "缺少可信來源。";
         }
     }
+    useEffect(() => {
+        if (
+            pinnedError ||
+            pinnedLoading ||
+            !active ||
+            !pinned.context ||
+            !metadata ||
+            !frame ||
+            history.loading
+        )
+            return;
+        try {
+            matchWaveFrame(pinned.context, metadata, frame);
+        } catch {
+            return;
+        }
+        if (selectedId === pinned.context.securityId) {
+            detailElement.current?.focus({ preventScroll: true });
+            detailElement.current?.scrollIntoView({ block: "start" });
+        }
+    }, [
+        active,
+        pinned,
+        metadata,
+        frame,
+        selectedId,
+        history.loading,
+        pinnedError,
+        pinnedLoading,
+    ]);
     if (active && (pinnedError || pinnedLoading))
         return (
             <div className="u-page">
@@ -353,32 +392,6 @@ export function FullHistoryPage({ active }: { active: boolean }) {
             className="fh-page"
             ref={pageElement}
             data-panel-phase={panel.phase}
-            onClickCapture={(event) => {
-                // New control interactions leave replay; source links retain it.
-                if (
-                    pinned.context &&
-                    (event.target as Element).closest(
-                        "button,input,select,svg,[role=button]",
-                    )
-                ) {
-                    window.history.replaceState(
-                        window.history.state,
-                        "",
-                        "#market",
-                    );
-                    window.dispatchEvent(new HashChangeEvent("hashchange"));
-                }
-            }}
-            onChangeCapture={() => {
-                if (pinned.context) {
-                    window.history.replaceState(
-                        window.history.state,
-                        "",
-                        "#market",
-                    );
-                    window.dispatchEvent(new HashChangeEvent("hashchange"));
-                }
-            }}
         >
             {pinned.context && (
                 <p className="u-notice">
@@ -467,11 +480,12 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                         <select
                                             aria-label="飆股門檻"
                                             value={thresholdPct}
-                                            onChange={(event) =>
+                                            onChange={(event) => {
+                                                leaveReplay();
                                                 setThresholdPct(
                                                     Number(event.target.value),
-                                                )
-                                            }
+                                                );
+                                            }}
                                         >
                                             <option value={60}>
                                                 至少 +60%
@@ -549,7 +563,7 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                             comparisons={datedComparisons}
                                             selectedSecurityId={selectedId}
                                             selectedWaveId={selected?.waveId}
-                                            onSelect={setSelectedId}
+                                            onSelect={selectStock}
                                             reducedMotion={reducedMotion}
                                             showComparisonDots={
                                                 datedComparisons.length > 1
@@ -583,7 +597,7 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                                         className="u-chip"
                                                         key={date}
                                                         onClick={() =>
-                                                            goToDate(date)
+                                                            chooseDate(date)
                                                         }
                                                     >
                                                         {date.slice(0, 4)} 年
@@ -600,7 +614,10 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                             >
                                 <button
                                     className="fh-play u-btn u-btn-primary"
-                                    onClick={() => setPlaying(!history.playing)}
+                                    onClick={() => {
+                                        leaveReplay();
+                                        setPlaying(!history.playing);
+                                    }}
                                     disabled={!active || !!history.error}
                                     aria-label={
                                         history.playing
@@ -617,9 +634,12 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                         min={0}
                                         max={metadata.dates.length - 1}
                                         value={history.index}
-                                        onChange={(e) =>
-                                            history.seek(Number(e.target.value))
-                                        }
+                                        onChange={(e) => {
+                                            leaveReplay();
+                                            history.seek(
+                                                Number(e.target.value),
+                                            );
+                                        }}
                                     />
                                     <div className="fh-date-labels">
                                         <span>{metadata.dates[0]}</span>
@@ -727,7 +747,7 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                     <button
                                         className="fh-close"
                                         aria-label="收起股票卡"
-                                        onClick={() => setSelectedId(null)}
+                                        onClick={() => selectStock(null)}
                                     >
                                         ×
                                     </button>
@@ -846,7 +866,7 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                 rows={sidePanel.rows}
                                 date={sidePanel.date}
                                 selectedId={selectedId}
-                                onSelect={setSelectedId}
+                                onSelect={selectStock}
                                 comparisons={sidePanel.comparisons}
                                 concealed={panelConcealed(panel.phase)}
                                 display={
@@ -865,7 +885,7 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                             className="fh-ended-row"
                                             key={row.security.id}
                                             onClick={() =>
-                                                setSelectedId(row.security.id)
+                                                selectStock(row.security.id)
                                             }
                                         >
                                             {row.security.name}
@@ -969,8 +989,8 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                             metadata={metadata}
                             frame={timeline.frame}
                             selectedId={selectedId}
-                            onSelect={setSelectedId}
-                            onDate={goToDate}
+                            onSelect={selectStock}
+                            onDate={chooseDate}
                             comparisons={timeline.comparisons}
                             thresholdPct={thresholdPct}
                         />
@@ -1073,11 +1093,12 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                             版圖顯示
                             <select
                                 value={mode}
-                                onChange={(e) =>
+                                onChange={(e) => {
+                                    leaveReplay();
                                     setMode(
                                         e.target.value as HistoryDisplayMode,
-                                    )
-                                }
+                                    );
+                                }}
                             >
                                 <option value="launched">
                                     開始大漲後（候選標記）
@@ -1144,7 +1165,7 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                                         <button
                                                             className="fh-stock-link"
                                                             onClick={() =>
-                                                                setSelectedId(
+                                                                selectStock(
                                                                     row.securityId,
                                                                 )
                                                             }
@@ -1199,7 +1220,7 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                             <HistoryMethodOptions
                                 catalogId={frame.catalogId}
                                 date={frame.date}
-                                onDate={goToDate}
+                                onDate={chooseDate}
                             />
                         )}
                     </section>
