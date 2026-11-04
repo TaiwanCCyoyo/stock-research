@@ -1,0 +1,30 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260824-ranking-horizon",
+    "state": "history",
+    "reason": "任務與正式表的共同訓練起點不同，尚未完成一致性核對；保留結果及差異，暫不進預設報告。",
+    "updated_at": "2026-11-04",
+    "edition": "reading-report.md",
+    "question": "排名不只看近期漲幅，改看更長期間或同時考慮波動，能否改善十檔策略的報酬？",
+    "answer": "最長視窗的一個設定把驗證期年換手降到每部位 2.59 次，報酬為 +82.4%，接近基準的 +81.8%；但最大回撤更深，八個候選都未達原定的報酬改善要求。",
+    "limitation": "共同訓練起日仍有兩種記載：任務寫 2020-01-01，結果表寫 2020-02-03。本篇保留結果表與這個未對齊處，維持「歷史與待整理」。",
+    "data_period": null,
+    "sources": [
+        {
+            "label": "任務及共同期間修訂",
+            "path": "20260824-ranking-horizon/mission.md"
+        },
+        {
+            "label": "結果表與原解釋",
+            "path": "20260824-ranking-horizon/report.md"
+        },
+        {
+            "label": "後續加權解釋",
+            "path": "20260824-value-chain-ignition/report.md"
+        },
+        {
+            "label": "後續問題重述",
+            "path": "20260826-tail-selection/mission.md"
+        }
+    ]
+}

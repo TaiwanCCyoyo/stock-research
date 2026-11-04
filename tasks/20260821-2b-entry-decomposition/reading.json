@@ -1,0 +1,29 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260821-2b-entry-decomposition",
+    "state": "ready",
+    "reason": "已核對保存的任務與報告，補上問題覆蓋、分母及後續修正；編輯可讀不代表策略或 owner 驗收。",
+    "updated_at": "2026-11-04",
+    "edition": "reading-report.md",
+    "question": "原混合策略的結果來自價格轉強還是跌破低點後收回？跌破均線時減碼又改變了什麼？",
+    "answer": "單獨保留跌破低點後收回的 2B 訊號、關閉減碼後，兩期平均進場損益都為正；但它對價格轉強組的優勢仍不明確，且訓練期持有過程曾出現的跌幅較深，沒有通過風險規則。",
+    "limitation": "純 2B 驗證期只有 114 個部位，其中 109 個已平倉；兩組已平倉損益差的信賴區間跨過零，仍包含純 2B 沒有優勢的可能。",
+    "data_period": {
+        "from": "2019-01-02",
+        "to": "2026-08-14"
+    },
+    "sources": [
+        {
+            "label": "任務、設定與規則變動",
+            "path": "20260821-2b-entry-decomposition/mission.md"
+        },
+        {
+            "label": "結果與配對分母",
+            "path": "20260821-2b-entry-decomposition/report.md"
+        },
+        {
+            "label": "後續 MAE 解釋修正",
+            "path": "20260822-ratchet-generalization/report.md"
+        }
+    ]
+}

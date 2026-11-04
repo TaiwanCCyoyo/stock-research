@@ -1,5 +1,19 @@
 import type { Families, CatalogEntry, Family } from "../shared-data/model.ts";
 
+function preserveCollection(
+    query: URLSearchParams,
+    result: URLSearchParams,
+): void {
+    const collection = query.get("collection");
+    if (
+        collection === "ready" ||
+        collection === "in_progress" ||
+        collection === "history"
+    ) {
+        result.set("collection", collection);
+    }
+}
+
 /** Return contexts are a bounded set of local routes, never arbitrary URLs. */
 export function studyContext(hash: string, study: string): string {
     const source = hash.startsWith("#studies?") ? hash.slice(9) : "";
@@ -9,6 +23,7 @@ export function studyContext(hash: string, study: string): string {
         const value = query.get(key);
         if (value) result.set(key, value);
     }
+    preserveCollection(query, result);
     result.set("study", study);
     return "#studies?" + result;
 }
@@ -22,6 +37,7 @@ export function safeStudyBack(value: string | null): string {
         const value = query.get(key);
         if (value) result.set(key, value);
     }
+    preserveCollection(query, result);
     return result.size ? "#studies?" + result : "#studies";
 }
 export function datasetDetailHref(

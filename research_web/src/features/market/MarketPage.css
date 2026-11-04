@@ -21,11 +21,12 @@
 }
 .market-page button.primary-button,
 .market-page button[aria-pressed="true"] {
-    color: var(--paper);
-    background: var(--accent);
+    color: var(--on-action);
+    background: var(--action);
+    font-weight: 700;
 }
 .market-page .notice {
-    background: var(--accent-soft);
+    background: var(--surface-muted);
     color: var(--ink);
     border-radius: var(--radius-md);
 }
@@ -36,7 +37,8 @@
     padding: 16px;
 }
 .market-page .atlas-hero {
-    background: var(--surface);
+    background: var(--surface-feature);
+    border-top: 4px solid var(--emphasis);
     color: var(--ink);
 }
 .market-page :focus-visible {

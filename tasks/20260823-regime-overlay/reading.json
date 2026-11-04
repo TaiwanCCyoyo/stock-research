@@ -1,0 +1,37 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260823-regime-overlay",
+    "state": "ready",
+    "reason": "已核對保存的任務與報告，補上問題覆蓋、分母及後續修正；編輯可讀不代表策略或 owner 驗收。",
+    "updated_at": "2026-11-04",
+    "edition": "reading-report.md",
+    "question": "動能十檔策略遇到市場轉弱時，改放現金、改持 0050 或增加均線條件，能否減少跌幅又保住報酬？",
+    "answer": "部分市場轉弱設定減少了帳戶跌幅，但沒有一組相鄰三個門檻都同時保住報酬、回撤與換手要求。較好看的單點結果，對改放現金還是持有 0050 十分敏感。",
+    "limitation": "市場轉弱訊號長期統計與策略回測的期間不同；原換手規則未明訂兩期都要通過，實作只檢查驗證期。",
+    "data_period": {
+        "from": "2019-01-02",
+        "to": "2026-08-14"
+    },
+    "sources": [
+        {
+            "label": "任務及修訂日期",
+            "path": "20260823-regime-overlay/mission.md"
+        },
+        {
+            "label": "結果、口徑與限制",
+            "path": "20260823-regime-overlay/report.md"
+        },
+        {
+            "label": "後續雙窗口周轉規則",
+            "path": "20260824-ranking-horizon/mission.md"
+        },
+        {
+            "label": "後續目標澄清",
+            "path": "20260826-tail-selection/mission.md"
+        },
+        {
+            "label": "本次基準的來源",
+            "path": "20260823-turnover-mechanism/report.md"
+        }
+    ]
+}

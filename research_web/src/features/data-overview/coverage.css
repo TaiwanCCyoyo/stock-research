@@ -55,6 +55,9 @@
 }
 .coverage-filters {
     margin: 18px 0;
+    padding: 16px;
+    background: var(--surface-muted);
+    border-radius: var(--radius-md);
 }
 .coverage-filters label {
     display: grid;
@@ -71,6 +74,10 @@
     border-collapse: separate;
     border-spacing: 0;
     width: 100%;
+    background: var(--surface);
+}
+.coverage-values th {
+    background: var(--surface-muted);
 }
 .coverage-table th,
 .coverage-table td,
@@ -84,14 +91,14 @@
     position: sticky;
     top: 0;
     z-index: 2;
-    background: var(--surface);
+    background: var(--surface-muted);
     white-space: nowrap;
 }
 .coverage-table th:first-child {
     position: sticky;
     left: 0;
     text-align: left;
-    background: var(--surface);
+    background: var(--surface-muted);
     min-width: 130px;
     z-index: 1;
 }
@@ -166,6 +173,9 @@
     .coverage-table tbody {
         display: block;
     }
+    .coverage-table {
+        background: var(--surface-muted);
+    }
     .coverage-table tr {
         display: flex;
         flex-wrap: wrap;
@@ -173,6 +183,7 @@
         border-radius: 12px;
         margin: 10px 0;
         padding: 10px;
+        background: var(--surface);
     }
     .coverage-table th:first-child {
         position: static;

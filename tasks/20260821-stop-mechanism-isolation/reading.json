@@ -1,0 +1,37 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260821-stop-mechanism-isolation",
+    "state": "ready",
+    "reason": "已核對保存的任務與報告，補上問題覆蓋、分母及後續修正；編輯可讀不代表策略或 owner 驗收。",
+    "updated_at": "2026-11-04",
+    "edition": "reading-report.md",
+    "question": "箱型策略較好的損益，來自進場方式，還是跟著箱底上移的退出界線？",
+    "answer": "對照組在跌破近十日低點，或跌到進場時依波動設定的停損價時退出；改成隨新箱底上移的退出界線後，驗證期五個產業的平均進場損益都提高。但帳戶報酬相對回撤的比較只贏三個產業，未達原定的四個產業門檻。",
+    "limitation": "約三分之一進場尚無已確認箱型，仍使用近期低點作備援；這次比較的是含備援的出場實作，且進場方式只有唐奇安突破一種。",
+    "data_period": {
+        "from": "2019-01-02",
+        "to": "2026-08-14"
+    },
+    "sources": [
+        {
+            "label": "任務與單變數設計",
+            "path": "20260821-stop-mechanism-isolation/mission.md"
+        },
+        {
+            "label": "原報告",
+            "path": "20260821-stop-mechanism-isolation/report.md"
+        },
+        {
+            "label": "MAE 補量",
+            "path": "20260821-2b-entry-decomposition/report.md"
+        },
+        {
+            "label": "泛化及後續修正",
+            "path": "20260822-ratchet-generalization/report.md"
+        },
+        {
+            "label": "提供箱型方法線索的研究",
+            "path": "20260820-kline-archetype-extension/report.md"
+        }
+    ]
+}

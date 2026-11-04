@@ -1,0 +1,33 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260826-runner-retention",
+    "state": "history",
+    "reason": "後續研究揭露槽位量測及停牌持股缺陷，原配置影響未重新量化；保留歷史判定，不當成已修正的結果。",
+    "updated_at": "2026-11-04",
+    "edition": "reading-report.md",
+    "question": "十檔帳戶改按個股價格出場，能否多留下大波段，又維持買到大漲股票的比例？",
+    "answer": "在 2019-01-02 至 2023-12-31 訓練期，首次進前十名後 250 個交易日內曾漲至少 150% 的股票共有 64 檔。容許從高點回落三成再退出，保留了更多已買到股票的漲幅，卻讓買到這 64 檔的比例由 94% 降至 47%；十三個設定均未通過完整條件。",
+    "limitation": "後續發現持股名額計數與停牌持股占位有缺陷，原十三個設定沒有在本篇重算；滿倉比例及缺陷影響仍未確認，本篇維持「歷史與待整理」。",
+    "data_period": {
+        "from": "2019-01-02",
+        "to": "2026-08-14"
+    },
+    "sources": [
+        {
+            "label": "任務、母體與驗收",
+            "path": "20260826-runner-retention/mission.md"
+        },
+        {
+            "label": "原報告",
+            "path": "20260826-runner-retention/report.md"
+        },
+        {
+            "label": "後續槽位缺陷與影響範圍",
+            "path": "20260904-book-size/report.md"
+        },
+        {
+            "label": "提供強勢名單的前一研究",
+            "path": "20260826-tail-selection/report.md"
+        }
+    ]
+}

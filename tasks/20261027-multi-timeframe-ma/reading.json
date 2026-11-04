@@ -1,0 +1,13 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20261027-multi-timeframe-ma",
+    "state": "in_progress",
+    "reason": "研究規劃或實作階段；尚未完成可核對的結果閱讀版。",
+    "updated_at": "2026-11-02",
+    "edition": null,
+    "question": "日線轉強、整週轉強或週均線密集，能更早找到大漲機會嗎？",
+    "answer": "規劃中：先固定四種日／週訊號與公平比較方式，等待擁有者合併定義，並另行確認資料與計算關卡。",
+    "limitation": "尚未執行研究；歷史期間已看過，未來即使找到訊號優勢，也不等於實際投資報酬或策略核准。",
+    "data_period": null,
+    "sources": []
+}

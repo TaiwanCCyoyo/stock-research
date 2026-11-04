@@ -1,0 +1,26 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260824-value-chain-ignition",
+    "state": "ready",
+    "reason": "已核對保存的任務與報告，補上問題覆蓋、分母及後續修正；編輯可讀不代表策略或 owner 驗收。",
+    "updated_at": "2026-11-04",
+    "edition": "reading-report.md",
+    "question": "同一產業鏈多檔股票一起大漲，是否伴隨成員或尚未大漲者接下來較好的報酬？",
+    "answer": "把相近日期的重複觀察減少後，產業鏈一起大漲的事件，訓練期後續報酬落後全部合格股票的平均，驗證期則接近平均；尚未看到穩定比平均多賺的二十日結果。",
+    "limitation": "分組使用 2026-08-23 成員名單回套歷史；原報告沒有列出完整訓練與驗證起訖，也沒有獨立任務文件。",
+    "data_period": null,
+    "sources": [
+        {
+            "label": "原事件比較報告",
+            "path": "20260824-value-chain-ignition/report.md"
+        },
+        {
+            "label": "後續次要排序設計",
+            "path": "20260826-tail-selection/mission.md"
+        },
+        {
+            "label": "後續次要排序結果",
+            "path": "20260826-tail-selection/report.md"
+        }
+    ]
+}

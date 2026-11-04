@@ -1,0 +1,33 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260823-rank-profile",
+    "state": "ready",
+    "reason": "已核對保存的任務與報告，補上問題覆蓋、分母及後續修正；編輯可讀不代表策略或 owner 驗收。",
+    "updated_at": "2026-11-04",
+    "edition": "reading-report.md",
+    "question": "排名前十的股票，接下來約一個月是否比第十一到六十名更好？",
+    "answer": "驗證期沒有量出前十名與後面名次帶的明確報酬差距；但只有 30 個不重疊取樣日，現有精度不足以確認它們相同。",
+    "limitation": "比較的是每個日期當下不同股票的排名組別，沒有追蹤某筆持股排名下降後繼續持有的帳戶結果。",
+    "data_period": {
+        "from": "2019-01-02",
+        "to": "2026-08-14"
+    },
+    "sources": [
+        {
+            "label": "完整診斷",
+            "path": "20260823-rank-profile/report.md"
+        },
+        {
+            "label": "前作日期、股票池與方法",
+            "path": "20260823-selection-vs-random/mission.md"
+        },
+        {
+            "label": "後續周轉與持有路徑比較",
+            "path": "20260823-turnover-mechanism/report.md"
+        },
+        {
+            "label": "排名方法與原結果",
+            "path": "20260823-selection-vs-random/report.md"
+        }
+    ]
+}
