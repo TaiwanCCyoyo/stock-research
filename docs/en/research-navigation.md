@@ -271,3 +271,47 @@ route state within the input event so a second control cannot restore the previo
 horizon before `hashchange` arrives. A 375px viewport had equal client/scroll widths
 (360px); the unavailable table scrolls within its container. These synthetic checks
 are not owner visual acceptance or validation of real research data.
+
+### Exact saved history versions
+
+The existing history endpoints accept the optional pair `version_id` and
+`manifest_sha256`. Both are required together, duplicates are rejected, and the
+pair must resolve through `resolve_history_bundle` and the registered DataCatalog.
+A caller-supplied digest is not registration. Invalid pairs return 422; unknown,
+mismatched, missing or corrupt versions return unavailable without using current
+data. The default unpinned entry and frozen source formats remain compatible.
+
+`research_core.opportunity_history_versions.HistoryVersions` owns up to four
+explicit snapshots plus the default. Loading and failed readers retain slots;
+capacity exhaustion refuses another version. A matching loaded default reader is
+reused only after catalog authorization and full path/version/digest checks.
+Each response adds `bundleIdentity: {versionId, manifestSha256}`; `catalogId`
+continues to mean the manifest digest. Reader, capture, startup cache, frontend
+frame cache, selected-date storage and comparison selection use the full identity.
+The reader verifies all dependencies before publishing its immutable in-memory
+snapshot and verifies detail bytes again when read. It is not a filesystem watcher:
+already verified in-memory frames remain a saved snapshot after disk changes.
+
+`#market?version_id=...&manifest_sha256=...` opens a registered version. Metadata
+pins subsequent frame, detail, directory, options and startup-status requests.
+G3 wave context carries the same pair through stock, return and refresh. Manual
+exploration drops the selected wave while preserving its version. A version change
+remounts the page, cancels old requests and prevents late responses from entering
+the new cache. Legacy G3 links still require their original catalog/member/basis
+checks; no opaque security-key mapping is invented by this change.
+
+Verification mapping: `tests/test_opportunity_history_versions.py` builds two
+artificial registered bundles with different saved contents for the same stock;
+API/bundle/startup-cache tests cover identity, registration, missing members,
+corruption, frozen compatibility and isolated failures. The `opportunity` CI
+path/test globs and reviewed-test inventory include these files. Frontend API,
+frame-buffer, model,
+navigation and stock-journey tests run through `npm test`. The manual
+`node scripts/history-version-browser.mjs` harness mounts the actual pages with
+synthetic-only HTTP responses and checks delayed version switches, stock/return,
+Back/Forward, pinned exploration, unknown versions and refresh. It does not read
+market data, rebuild bundles or establish owner visual acceptance.
+
+This slice has no live-data smoke or published-artifact verification: the delegated
+scope preserves the existing restricted data paths. Synthetic verification cannot
+certify the availability or completeness of real saved versions.

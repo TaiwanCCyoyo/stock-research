@@ -1,3 +1,9 @@
+import {
+    historyMarketHref,
+    historyVersionKey,
+    readMarketVersion,
+    type HistoryBundleIdentity,
+} from "./versionIdentity.ts";
 import { nextPanelSnapshot, type PanelSnapshot } from "./panelSnapshot.ts";
 import {
     memo,
@@ -74,7 +80,34 @@ function usePanelSnapshot<F, C>(frame: F, comparisons: C, playing: boolean) {
 }
 
 export function FullHistoryPage({ active }: { active: boolean }) {
-    const history = useHistory(active);
+    try {
+        const explicit = readMarketVersion(location.hash);
+        const version =
+            readWaveContext(location.hash)?.bundleIdentity ?? explicit;
+        return (
+            <HistoryPage
+                key={historyVersionKey(version)}
+                active={active}
+                version={version}
+            />
+        );
+    } catch (error) {
+        return (
+            <div className="u-page">
+                <p role="alert">歷史版本無法讀取：{String(error)}</p>
+            </div>
+        );
+    }
+}
+
+function HistoryPage({
+    active,
+    version,
+}: {
+    active: boolean;
+    version?: HistoryBundleIdentity;
+}) {
+    const history = useHistory(active, version);
     const hash = location.hash;
     const { goToDate, setPlaying } = history;
     const pinned = useMemo(() => {
@@ -118,7 +151,11 @@ export function FullHistoryPage({ active }: { active: boolean }) {
         // call this; restoring a saved URL uses the raw setters below.
         if (!readWaveContext(location.hash)) return;
         appliedLink.current = null;
-        window.history.pushState(window.history.state, "", "#market");
+        window.history.pushState(
+            window.history.state,
+            "",
+            historyMarketHref(readWaveContext(location.hash)?.bundleIdentity),
+        );
         window.dispatchEvent(new HashChangeEvent("hashchange"));
     }, []);
     const selectStock = useCallback(
@@ -396,7 +433,9 @@ export function FullHistoryPage({ active }: { active: boolean }) {
             {pinned.context && (
                 <p className="u-notice">
                     已返回指定版本的原波段。
-                    <a href="#market">離開來源脈絡以繼續探索</a>
+                    <a href={historyMarketHref(pinned.context.bundleIdentity)}>
+                        離開來源脈絡以繼續探索
+                    </a>
                 </p>
             )}
             <header className="fh-hero u-card">
@@ -433,6 +472,18 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                         檔股票；價格基礎：{metadata.basisLabel}。
                     </InfoTip>
                 </p>
+            )}
+            {metadata?.bundleIdentity && (
+                <div
+                    className="u-muted"
+                    data-history-version={metadata.bundleIdentity.versionId}
+                >
+                    已保存版本：{metadata.bundleIdentity.versionId}
+                    <SourceInfo label="版本識別">
+                        Manifest SHA-256：
+                        {metadata.bundleIdentity.manifestSha256}
+                    </SourceInfo>
+                </div>
             )}
             {history.metadataError && (
                 <div className="fh-error u-notice" role="alert">
@@ -978,7 +1029,13 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                                 rows={displayed}
                                 shown={panel.shown ?? undefined}
                                 concealed={panelConcealed(panel.phase)}
-                                catalogId={frame.catalogId}
+                                catalogId={
+                                    metadata?.bundleIdentity
+                                        ? historyVersionKey(
+                                              metadata.bundleIdentity,
+                                          )
+                                        : frame.catalogId
+                                }
                                 onComparisons={setComparisons}
                             />
                         </div>
@@ -1219,6 +1276,7 @@ export function FullHistoryPage({ active }: { active: boolean }) {
                         {frame && (
                             <HistoryMethodOptions
                                 catalogId={frame.catalogId}
+                                bundleIdentity={metadata?.bundleIdentity}
                                 date={frame.date}
                                 onDate={chooseDate}
                             />

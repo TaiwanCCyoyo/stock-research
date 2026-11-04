@@ -1,3 +1,8 @@
+import {
+    assertHistoryVersion,
+    historyVersionPath,
+    type HistoryBundleIdentity,
+} from "./versionIdentity.ts";
 import { HISTORY_SCHEMA } from "./types.ts";
 
 export const HISTORY_API = "/history-api/opportunity-history/v1";
@@ -21,8 +26,12 @@ export interface HistoryStatus {
 export async function readHistory<T>(
     path: string,
     signal: AbortSignal,
+    identity?: HistoryBundleIdentity,
 ): Promise<T> {
-    const response = await fetch(`${HISTORY_API}${path}`, { signal });
+    const response = await fetch(
+        `${HISTORY_API}${historyVersionPath(path, identity)}`,
+        { signal },
+    );
     if (!response.ok) {
         if (response.status === 503) {
             const body: unknown = await response.json().catch(() => null);
@@ -50,7 +59,10 @@ export async function readHistory<T>(
         }
         throw new Error(`歷史資料服務回應 ${response.status}`);
     }
-    return (await response.json()) as T;
+    const value: unknown = await response.json();
+    signal.throwIfAborted();
+    if (identity) assertHistoryVersion(value, identity);
+    return value as T;
 }
 
 function delay(milliseconds: number, signal: AbortSignal): Promise<void> {
@@ -76,16 +88,21 @@ export async function readHistoryWhenReady<T>(
     path: string,
     signal: AbortSignal,
     onStatus?: (status: HistoryStatus) => void,
+    identity?: HistoryBundleIdentity,
 ): Promise<T> {
     while (!signal.aborted) {
         try {
-            return await readHistory<T>(path, signal);
+            return await readHistory<T>(path, signal, identity);
         } catch (cause) {
             if (!(cause instanceof HistoryLoadingError)) throw cause;
             let status: HistoryStatus;
             do {
                 await delay(cause.retryAfterMs, signal);
-                status = await readHistory<HistoryStatus>("/status", signal);
+                status = await readHistory<HistoryStatus>(
+                    "/status",
+                    signal,
+                    identity,
+                );
                 if (
                     status.schema !== HISTORY_SCHEMA ||
                     !["loading", "ready", "failed"].includes(status.state)

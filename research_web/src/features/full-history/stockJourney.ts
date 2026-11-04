@@ -1,3 +1,8 @@
+import {
+    assertHistoryVersion,
+    validateHistoryVersion,
+    type HistoryBundleIdentity,
+} from "./versionIdentity.ts";
 import { readHistory } from "./api.ts";
 import {
     HISTORY_SCHEMA,
@@ -9,6 +14,7 @@ import {
 
 /** URL context, not a new research-data schema. Keys are supplied by the producer. */
 export interface WaveContext {
+    bundleIdentity?: HistoryBundleIdentity;
     securityKey: string;
     securityId: string;
     seriesId: string;
@@ -46,7 +52,8 @@ export function validateWaveContext(value: unknown): WaveContext {
         throw new Error("波段來源脈絡缺漏。");
     const item = value as Record<string, unknown>;
     if (
-        Object.keys(item).length !== fields.length ||
+        Object.keys(item).length !==
+            fields.length + ("bundleIdentity" in item ? 1 : 0) ||
         fields.some((key) => !(key in item))
     )
         throw new Error("波段來源欄位不完整。");
@@ -62,7 +69,16 @@ export function validateWaveContext(value: unknown): WaveContext {
         )
             throw new Error("波段來源識別無效。");
     }
-    const context = item as unknown as WaveContext;
+    const identity =
+        "bundleIdentity" in item
+            ? validateHistoryVersion(item.bundleIdentity)
+            : undefined;
+    const context = {
+        ...item,
+        ...(identity ? { bundleIdentity: identity } : {}),
+    } as unknown as WaveContext;
+    if (identity && context.catalogId !== identity.manifestSha256)
+        throw new Error("波段目錄與版本識別不一致。");
     if (
         !["catalog", "launched"].includes(context.mode) ||
         ![60, 80, 100, 200].includes(context.threshold) ||
@@ -86,6 +102,9 @@ export function waveContext(
             "來源未提供可核對的 opaque security key；不能由股票代碼推測個股身分。",
         );
     const context = validateWaveContext({
+        ...(metadata.bundleIdentity
+            ? { bundleIdentity: metadata.bundleIdentity }
+            : {}),
         securityKey: row.securityKey,
         securityId: row.securityId,
         seriesId: row.seriesId,
@@ -138,6 +157,10 @@ export function matchWaveFrame(
     metadata: HistoryMetadata,
     frame: HistoryFrame,
 ): HistoryRow {
+    if (context.bundleIdentity) {
+        assertHistoryVersion(metadata, context.bundleIdentity);
+        assertHistoryVersion(frame, context.bundleIdentity);
+    }
     if (
         metadata.schema !== HISTORY_SCHEMA ||
         frame.schema !== HISTORY_SCHEMA ||
@@ -167,6 +190,8 @@ export function matchWaveDetail(
     context: WaveContext,
     detail: HistoryDetail,
 ): HistoryDetail {
+    if (context.bundleIdentity)
+        assertHistoryVersion(detail, context.bundleIdentity);
     const row = detail.row;
     if (
         detail.schema !== HISTORY_SCHEMA ||
@@ -201,7 +226,13 @@ export async function readWaveDetail(
     signal: AbortSignal,
     reader: typeof readHistory = readHistory,
 ) {
-    const metadata = await reader<HistoryMetadata>("/metadata", signal);
+    const metadata = await reader<HistoryMetadata>(
+        "/metadata",
+        signal,
+        context.bundleIdentity,
+    );
+    if (context.bundleIdentity)
+        assertHistoryVersion(metadata, context.bundleIdentity);
     signal.throwIfAborted();
     if (
         metadata.catalogId !== context.catalogId ||
@@ -211,6 +242,7 @@ export async function readWaveDetail(
     const frame = await reader<HistoryFrame>(
         `/frame?date=${encodeURIComponent(context.date)}`,
         signal,
+        context.bundleIdentity,
     );
     signal.throwIfAborted();
     const row = matchWaveFrame(context, metadata, frame);
@@ -218,6 +250,7 @@ export async function readWaveDetail(
     const detail = await reader<HistoryDetail>(
         `/security/${encodeURIComponent(row.code)}?date=${encodeURIComponent(context.date)}`,
         signal,
+        context.bundleIdentity,
     );
     signal.throwIfAborted();
     return matchWaveDetail(context, detail);
