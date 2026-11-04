@@ -223,7 +223,7 @@
         };
         const signed = (p) =>
             Math.abs(p.delta) < 0.05
-                ? "低 不到 0.1"
+                ? "約持平"
                 : `${p.delta > 0 ? "+" : "−"}${sizeText(p)}`;
         const h = (tag, className, ...kids) => {
             const el = document.createElement(tag);
