@@ -35,6 +35,11 @@ python -m scripts.development_preview retire --id report-editor
 
 The `open` CLI is also available for first-use verification before the new
 Dashboard entry reaches main. A registration needs no PR number until one exists.
+Once a single-PR preview has a PR, rerun `register` with the same ID, worktree,
+title and route plus `--pr <number>`. Verify the number in `list` before handoff.
+An integrated preview has no single PR: list all linked PR numbers in its title
+and record their purpose and retirement condition in the task's delivery record.
+Do not assign the PR of an earlier task merely because its worktree was reused.
 
 Use the Dashboard button to open the registered project. A GET of the list never
 starts a process. Only the explicit open action may start its standard launcher.
@@ -71,10 +76,33 @@ launcher must not terminate the other through Windows process-tree cleanup.
 The existing desktop heartbeat still stops an unused service normally; this
 feature adds no scheduler or permanently running background service.
 
-After verified owner merge, retire the registration. Retirement affects the
-preview listing only; it does not delete a worktree, data or another session's
-processes. Follow the existing Git/worktree cleanup contract separately. Do not
-register unrelated worktrees merely because they appear in Git's inventory.
+## Preview closeout
+
+Preview registrations do not synchronize with GitHub automatically. The agent
+responsible for delivery checks them at PR handoff and before worktree removal
+or reuse, using the primary checkout's `.tmp/development-previews/` registry and
+`python -m scripts.development_preview list`.
+
+- Match the registration ID, branch and exact worktree to the current task and
+  verify the linked PR's state on GitHub; a missing path, stopped service or
+  familiar directory name is not proof that a PR merged. If identity or state
+  is unknown, preserve the entry and report the uncertainty.
+- After verified merge, run `python -m scripts.development_preview retire --id <id>`
+  for the task's single-PR preview, even when the checkout must remain for
+  evidence or other preservation reasons. A closed, unmerged PR alone does not
+  establish that its preview is no longer needed.
+- Keep an integrated preview while any linked PR or owner acceptance remains
+  pending. Retire it when all linked work has been merged and its acceptance
+  purpose is complete; record any remaining reason to retain it instead.
+- Before reusing a worktree, settle its old registration explicitly. If it still
+  serves an integrated acceptance task, keep that task's worktree intact. Do not
+  silently repoint an old preview to unrelated work.
+- Read the list again and report which IDs were retired or retained and why.
+  Retirement removes only the listing; it does not stop services, remove
+  worktrees or delete research data. Apply the separate Git/worktree cleanup
+  contract to those resources.
+
+Do not register unrelated worktrees merely because they appear in Git's inventory.
 
 ## Acceptance
 
