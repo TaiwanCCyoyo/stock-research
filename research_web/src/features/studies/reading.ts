@@ -48,12 +48,14 @@ export function readingState(card: StudyCard): ReadingState {
 export function studyCollection(card: StudyCard): ReadingState {
     const verdict = card.sourceVerdict ?? card.verdict;
     if (verdict === "archived") return "history";
-    if (
-        verdict === "running" ||
-        verdict === "not_evaluated" ||
-        card.reading?.state === "in_progress"
-    )
+    if (verdict === "running" || card.reading?.state === "in_progress")
         return "in_progress";
+    if (
+        card.reading?.edition ||
+        (card.reportKind === "html" && card.reportHref)
+    )
+        return "ready";
+    if (verdict === "not_evaluated") return "in_progress";
     return "ready";
 }
 
