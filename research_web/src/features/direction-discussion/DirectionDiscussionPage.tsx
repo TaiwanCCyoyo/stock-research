@@ -16,8 +16,8 @@ import "./direction-discussion.css";
 export function DirectionEntrance() {
     return (
         <a className="u-card direction-entrance" href="#directions">
-            <strong>一起討論研究方向 →</strong>
-            <span>先試著切換可能的答案，再決定這次要回答什麼。</span>
+            <strong>研究方向草稿 →</strong>
+            <span>查看準備研究的問題，整理比較方式與待確認事項。</span>
         </a>
     );
 }
@@ -106,7 +106,7 @@ export function DirectionListPage() {
         <div className="u-page direction-page">
             <a href="#studies">← 返回研究</a>
             <div className="u-eyebrow">研究方向</div>
-            <h1 className="u-title">先一起想清楚，再開始研究。</h1>
+            <h1 className="u-title">研究方向草稿</h1>
             <p className="u-lede">
                 切換可能的答案、比較研究範圍，把你的想法帶回草稿討論。
             </p>

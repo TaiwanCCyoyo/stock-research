@@ -1,0 +1,26 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260906-loss-anatomy",
+    "state": "ready",
+    "reason": "已逐份對照保存的報告、可用研究契約與後續更正；閱讀版不代表策略批准。",
+    "updated_at": "2026-11-04",
+    "edition": "reading-report.md",
+    "question": "連續虧損是否主要來自重複買回同一檔？買進前的排名，能否區分迅速虧損與持有後獲利？",
+    "answer": "所選舊虧損窗口為 2021-07-14 至 2021-08-12，以及 2026-06-25 至 2026-07-29，各二十筆交易來自二十檔不同股票。另看買前排名，訓練期慢速獲利組較常已在前五名，驗證期卻是快速虧損組較常，方向沒有重現；這項分組的完整期間未保存，也沒有重跑冷卻規則。",
+    "limitation": "這是事後分組與兩個選定窗口的診斷，沒有重新跑冷卻策略；後來更正了連續未命中的定義，因此舊窗口不能代表修正後風險的完整成因。",
+    "data_period": null,
+    "sources": [
+        {
+            "label": "原始報告",
+            "path": "20260906-loss-anatomy/report.md"
+        },
+        {
+            "label": "基準設定",
+            "path": "20260906-five-slot-baseline/report.md"
+        },
+        {
+            "label": "風險窗口定義更正",
+            "path": "20260907-streak-correction/report.md"
+        }
+    ]
+}

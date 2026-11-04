@@ -79,7 +79,8 @@
 }
 .direction-view .dd-purpose,
 .direction-view .dd-result {
-    background: var(--accent-soft);
+    background: var(--surface-feature);
+    border-inline-start: 4px solid var(--emphasis);
 }
 .direction-view .dd-option,
 .direction-view .dd-secondary,
@@ -96,8 +97,8 @@
 }
 .direction-view .dd-branch[aria-pressed="true"],
 .direction-view .dd-primary {
-    background: var(--accent);
-    color: var(--paper);
+    background: var(--action);
+    color: var(--on-action);
 }
 .direction-view .dd-option[aria-pressed="true"],
 .direction-view .dd-option:hover,

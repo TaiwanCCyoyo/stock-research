@@ -20,11 +20,11 @@ test("the actual viewer permits result downloads while retaining other sandbox r
         server: { middlewareMode: true, hmr: false },
     });
     try {
-        const { ReportViewer } = await server.ssrLoadModule(
+        const { HtmlReportViewer } = await server.ssrLoadModule(
             "/src/features/report-library/ReportViewer.tsx",
         );
         const html = renderToStaticMarkup(
-            createElement(ReportViewer, {
+            createElement(HtmlReportViewer, {
                 reportId: "20261013-pattern-scan",
                 palette: "forest",
                 appearance: "dark",

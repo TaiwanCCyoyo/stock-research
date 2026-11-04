@@ -161,6 +161,12 @@ package or claim newer strategy results are represented there.
 
 ## Closeout deliverables
 
+Legacy studies can add a separate [reading edition](report-reading.md) without
+rewriting pinned reports. Dashboard collections describe research lifecycle:
+only explicit archival means archived, and source gaps remain visible through
+web records. Editorial readiness does not determine the collection, approve a
+strategy, or replace owner acceptance.
+
 A completed study provides a `web-report/` reading view, its `study.json`
 registration, and discoverable references to shared data, or explicitly records
 why an item cannot be provided. `report.md`, data contracts, catalog metadata and

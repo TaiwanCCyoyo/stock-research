@@ -1,0 +1,30 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260906-absolute-entry-bar",
+    "state": "ready",
+    "reason": "已逐份對照保存的報告、可用研究契約與後續更正；閱讀版不代表策略批准。",
+    "updated_at": "2026-11-04",
+    "edition": "reading-report.md",
+    "question": "五檔策略能否用絕對收斂門檻避開不適合進場的環境，同時保留報酬並減輕連續未命中損失？",
+    "answer": "五檔模型只買當下波動不超過自身近期常態八成的股票時，訓練期修正後的最差二十次未命中嘗試損失為 16.7%，低於當時 20% 界線；但帳戶報酬 61.9%，未達保留原基準七成報酬的 159.7% 要求。 完整訓練起訖未保存。",
+    "limitation": "這次只驗訓練期的候選門檻；未證明門檻能識別所有不良市場，也未通過相鄰三點全部合格的穩定性要求。",
+    "data_period": null,
+    "sources": [
+        {
+            "label": "原始報告",
+            "path": "20260906-absolute-entry-bar/report.md"
+        },
+        {
+            "label": "原始研究問題與規則",
+            "path": "20260906-absolute-entry-bar/mission.md"
+        },
+        {
+            "label": "連續損失定義與數值更正",
+            "path": "20260907-streak-correction/report.md"
+        },
+        {
+            "label": "五檔確認研究",
+            "path": "20260906-five-slot-confirmation/report.md"
+        }
+    ]
+}
