@@ -165,3 +165,20 @@ It mounts the actual StudiesPage and replaces only the data hook with a labelled
 synthetic fixture. In Edge, all 11 focus assertions passed for cached/delayed
 cards, two response generations and ordinary study navigation. This browser
 harness is a manual regression and is not included in `npm test` or hosted CI.
+
+### Comparison-to-discussion follow-up
+
+[PR #158](https://github.com/TaiwanCCyoyo/stock-research/pull/158) follows merged
+#156 with an explicit draft chooser and inline reuse of the existing direction
+renderer. It pins the selected task and complete revision, verifies draftPath,
+and carries the comparison question/provenance as proposed notes through the
+existing feedback contract. This implements the handoff mechanism listed above;
+real-draft integration, formal L1 data and owner usability acceptance remain
+pending. No actual draft is authored or approved by this slice.
+
+The [handoff contract and browser regression](direction-discussion-ui.md#saved-comparison-question-handoff)
+record access, empty/error/stale states and manual export boundaries. Validation:
+589 frontend tests passed; 20 final formatted handoff/kit tests passed; TypeScript,
+scoped lint and normal hooks passed. Edge synthetic integration passed normal
+handoff/edit/export/close, delayed target races, stale revisions, read errors and
+empty lists. This does not claim physical mobile or keyboard usability acceptance.

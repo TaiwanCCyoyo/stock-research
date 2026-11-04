@@ -83,7 +83,7 @@
         return model;
     }
 
-    function createSession(input) {
+    function createSession(input, initialFeedback) {
         validateModel(input);
         // A mounted view owns a snapshot. Caller edits cannot silently change its revision.
         const model = JSON.parse(JSON.stringify(input));
@@ -91,6 +91,18 @@
             model.choices.map((choice) => [choice.id, null]),
         );
         let notes = "";
+        if (initialFeedback !== undefined) {
+            // Reuse the existing feedback contract and exact source validation.
+            // Handoffs propose notes; they cannot choose research options for the owner.
+            toMarkdown(model, initialFeedback);
+            if (
+                initialFeedback.selections.some(
+                    (item) => item.optionId !== null,
+                )
+            )
+                throw new Error("交接只能帶入備註，不能代選研究方向。");
+            notes = initialFeedback.notes;
+        }
         return {
             select(choiceId, optionId) {
                 const choice = model.choices.find(
@@ -189,14 +201,16 @@
         return lines.join("\n");
     }
 
-    function mount(root, input) {
+    function mount(root, input, initialFeedback) {
         mounted.get(root)?.destroy();
         const document = root.ownerDocument;
         root.replaceChildren();
         let model;
+        let session;
         try {
             validateModel(input);
             model = JSON.parse(JSON.stringify(input));
+            session = createSession(model, initialFeedback);
         } catch (error) {
             const alert = document.createElement("p");
             alert.setAttribute("role", "alert");
@@ -210,7 +224,6 @@
                 },
             };
         }
-        const session = createSession(model);
         const disposers = [];
         const urls = new Set();
         const prefix = `dd-${++nextId}`;
@@ -348,6 +361,7 @@
         notes.id = `${prefix}-notes`;
         notesLabel.htmlFor = notes.id;
         notes.rows = 4;
+        notes.value = session.exportFeedback().notes;
         notes.placeholder =
             "例如：我更在意能不能作為停損依據，而不只是比例有沒有下降。";
         const output = el("textarea", "dd-export");

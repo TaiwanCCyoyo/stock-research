@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { ComparisonDiscussionHandoff } from "./ComparisonDiscussionHandoff";
 import { ConditionComparison } from "./ConditionComparison";
 import { syntheticComparison } from "./fixture";
 import {
@@ -76,11 +77,13 @@ function resolve(
 export function ComparisonPage() {
     const [hash, setHash] = useState(() => location.hash);
     const [question, setQuestion] = useState<QuestionRequest>();
+    const [handoff, setHandoff] = useState(false);
     const region = useRef<HTMLDivElement>(null);
     useEffect(() => {
         const change = () => {
             setHash(location.hash);
             setQuestion(undefined);
+            setHandoff(false);
         };
         window.addEventListener("hashchange", change);
         return () => window.removeEventListener("hashchange", change);
@@ -188,7 +191,10 @@ export function ComparisonPage() {
                             request.item.eventId,
                         );
                     }}
-                    onDiscuss={setQuestion}
+                    onDiscuss={(next) => {
+                        setQuestion(next);
+                        setHandoff(false);
+                    }}
                 />
             )}
             {question && (
@@ -204,9 +210,16 @@ export function ComparisonPage() {
                         {question.selection.horizon}
                     </p>
                     <p>
-                        匯出供下一輪討論核對；尚未綁定方向草稿
-                        revision，不會建立、批准或執行研究。
+                        匯出或選擇既有方向草稿的確切版本繼續討論；不會建立、批准或執行研究。
                     </p>
+                    <button onClick={() => setHandoff(!handoff)}>
+                        {handoff
+                            ? "關閉交接（清除未匯出修改）"
+                            : "選擇同版本方向討論"}
+                    </button>
+                    {handoff && (
+                        <ComparisonDiscussionHandoff request={question} />
+                    )}
                     <button onClick={exportQuestion}>
                         匯出問題與來源 JSON
                     </button>
