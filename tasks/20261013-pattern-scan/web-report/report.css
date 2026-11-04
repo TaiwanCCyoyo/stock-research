@@ -163,7 +163,7 @@ body {
     z-index: 4;
     margin: 0 0 28px;
     padding: 10px 0;
-    background: var(--paper);
+    background: var(--page);
     border-bottom: 1px solid var(--line);
 }
 .report-nav .rk-toc {
@@ -933,11 +933,11 @@ body {
 }
 
 /* ---- Ranking ladder and detail pane (first view of the main answer) ----
-   Quiet page: a white page in light mode, one focus surface (the selected row)
+   Quiet page: a tinted page with three white blocks, one focus surface (the selected row)
    and one stage (the shapes and the two comparisons). Local fallbacks stand in
    for report-kit v2 tokens; delete them when the kit provides focus/stage. */
 :root {
-    --page: var(--surface);
+    --page: color-mix(in srgb, var(--accent-soft) 80%, var(--paper));
     --focus-surface: var(--accent-soft);
     --focus-edge: color-mix(in srgb, var(--accent) 35%, transparent);
     --stage-bg: #fff;
@@ -946,11 +946,11 @@ body {
     --stage-line: #e3e8ec;
     --stage-edge: color-mix(in srgb, #1d2421 14%, transparent);
     --stage-s1: #2f6f8f;
-    --stage-s2: #8a949c;
+    --stage-s2: #7b858d;
     --stage-shadow: 0 10px 28px rgba(20, 30, 40, 0.08);
 }
 :root[data-appearance="dark"] {
-    --page: var(--paper);
+    --page: color-mix(in srgb, var(--accent-soft) 40%, var(--paper));
     --stage-bg: #0b1119;
     --stage-ink: #edf3fa;
     --stage-muted: #a3b2c4;
@@ -1378,5 +1378,612 @@ body.rank-open .rk-page > :not(.answer-layout) {
     }
     .rank-row {
         transition: none;
+    }
+}
+
+/* ---- Magazine layout (retail, phone first) ----
+   Tinted page; exactly three white blocks (.stage-block): the headline numbers,
+   the top-three ranking, the reverse card. Everything else has no frame and no
+   fill: only space and hairlines. Colour is kept for the two comparison series
+   (--stage-s1 = pattern, --stage-s2 = ordinary stocks) and for the numbers. */
+.rk-page {
+    max-width: 960px;
+    padding: 24px 20px 72px;
+    font-size: 16px;
+    line-height: 1.75;
+}
+.rk-page a {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 3px;
+}
+.rk-page a:hover {
+    text-decoration-color: currentColor;
+}
+.rk-hero {
+    margin-bottom: 8px;
+    padding-bottom: 0;
+    border-bottom: 0;
+}
+.rk-eyebrow,
+.mag-eyebrow,
+.rk-q {
+    display: block;
+    margin: 0 0 6px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+}
+.rk-hero h1 {
+    margin: 4px 0 14px;
+    font: 600 clamp(28px, 7vw, 44px) / 1.3 var(--font-serif);
+    letter-spacing: 0;
+}
+.rk-hero .rk-lede {
+    max-width: 34em;
+    margin: 0 0 24px;
+    font-size: 18px;
+    line-height: 1.75;
+}
+.rk-section h2,
+#main-answer h2,
+.reader-findings h2,
+.reader-method h2,
+.family-summary-header h2,
+.research-lineage h2 {
+    margin: 2px 0 12px;
+    font: 600 21px / 1.5 var(--font-serif);
+}
+#main-answer h2 {
+    max-width: 24em;
+}
+.rk-badge {
+    border-color: var(--line);
+    background: transparent;
+}
+.rk-meta {
+    margin-top: 10px;
+}
+
+/* the three white blocks */
+.stage-block {
+    --ink: var(--stage-ink);
+    --muted: var(--stage-muted);
+    --line: var(--stage-line);
+    --line-strong: var(--stage-edge);
+    --page: var(--stage-bg);
+    --focus-surface: color-mix(in srgb, var(--stage-s1) 10%, var(--stage-bg));
+    --focus-edge: color-mix(in srgb, var(--stage-s1) 45%, transparent);
+    padding: clamp(18px, 4vw, 32px);
+    border: 1px solid var(--stage-edge);
+    border-radius: 20px;
+    background: var(--stage-bg);
+    color: var(--stage-ink);
+    box-shadow: var(--stage-shadow);
+}
+.stage-block a {
+    color: var(--stage-s1);
+}
+.hero-numbers {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+    gap: 20px 40px;
+    margin: 0;
+}
+.big-label {
+    max-width: 17em;
+    margin: 0;
+    color: var(--stage-muted);
+    font-size: 14px;
+    line-height: 1.6;
+}
+.big-value {
+    margin: 4px 0 0;
+    font: 600 clamp(48px, 14vw, 96px) / 1.05 var(--font-serif);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+.is-pattern .big-value {
+    color: var(--stage-s1);
+}
+.is-base .big-value {
+    color: var(--stage-s2);
+}
+.hero-range {
+    margin: 12px 0 28px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+/* side notes: small grey text with a hairline on the left */
+.shared-example,
+.answer-note,
+.answer-overall,
+.main-limit {
+    max-width: 34em;
+    margin: 12px 0;
+    padding: 0 0 0 12px;
+    border-left: 2px solid var(--line-strong);
+    background: transparent;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.7;
+}
+.shared-example p {
+    margin: 0 0 4px;
+    font-size: 13px;
+}
+.shared-example {
+    margin-top: 0;
+}
+.hero-links,
+.lineage-crumb {
+    margin-top: 16px;
+}
+
+/* sections: no frame, space and one hairline */
+.answer-layout {
+    display: block;
+    margin: 56px 0;
+    padding: 0;
+    border: 0;
+}
+.rk-page > section,
+.rk-page > details.reader-family-details,
+.rk-page > #questions > section {
+    margin-block: 56px;
+    padding-top: 28px;
+    border-top: 1px solid var(--line);
+}
+.rk-section,
+#main-answer {
+    scroll-margin-top: 64px;
+}
+.rk-card,
+.question-table {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+}
+.rk-card h3 {
+    font-size: 17px;
+}
+.question-evidence,
+.reader-family-details,
+.evidence-details,
+.pattern-guide-details,
+.reader-explorer {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+}
+.question-evidence > summary,
+.reader-family-details > summary,
+.evidence-details > summary,
+.pattern-guide-details > summary,
+.reader-explorer > summary,
+.limit-line > summary,
+.overview-facts > summary,
+.rank-more > summary,
+.counter-detail > summary,
+.pattern-item > summary {
+    min-height: 44px;
+    padding: 8px 0;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+}
+.question-evidence {
+    margin: 12px 0 0;
+    border-top: 1px solid var(--line);
+}
+.rk-answer,
+.answer-purpose,
+.answer-plain,
+.pattern-guide-lead {
+    max-width: 34em;
+}
+.answer-purpose {
+    color: var(--muted);
+    font-size: 13px;
+}
+.answer-plain {
+    margin: 20px 0 0;
+    font-size: 16px;
+}
+.reader-explorer {
+    margin: 4px 0 0;
+}
+.rk-table-wrap,
+.headline-table-wrap,
+.family-summary-table-wrap {
+    border: 0;
+    border-block: 1px solid var(--line);
+    border-radius: 0;
+}
+.family-summary {
+    padding: 0;
+}
+.family-summary-codes,
+.family-summary-scope {
+    font-size: 13px;
+}
+.family-summary-units,
+.family-summary-status,
+.family-summary-candidates {
+    font-size: 12px;
+}
+.reader-cards h3 {
+    font-size: 18px;
+}
+.reader-method,
+.reader-findings {
+    margin-block: 56px;
+}
+.limit-line {
+    margin: 24px 0;
+}
+.limit-line > summary {
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 400;
+}
+.limit-line .main-limit {
+    margin-top: 4px;
+}
+
+/* nav and the six-question line: one line of anchors */
+.report-nav {
+    margin: 0 0 8px;
+    padding: 4px 0;
+}
+.report-nav .rk-toc {
+    flex-wrap: nowrap;
+    gap: 20px;
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none;
+}
+.rk-toc a,
+.report-nav .rk-toc a {
+    padding: 8px 0 6px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    text-decoration: none;
+}
+.report-nav a:hover,
+.report-nav a:focus-visible {
+    border-color: var(--ink);
+}
+.overview-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 20px;
+}
+.overview-line h2 {
+    margin: 0;
+    font-size: 15px;
+}
+.question-progress {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 18px;
+    overflow-x: auto;
+}
+.question-link {
+    position: relative;
+    flex: none;
+    padding: 6px 0;
+    border: 0;
+    border-bottom: 1px solid var(--line-strong);
+    border-radius: 0;
+    background: transparent;
+}
+.question-link p {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+}
+.overview-facts {
+    flex-basis: 100%;
+}
+.overview-facts .rk-findings {
+    gap: 16px 24px;
+    margin: 4px 0 0;
+}
+.rk-finding {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+}
+.rk-finding b {
+    font-size: 18px;
+}
+
+/* ranking block */
+.rank-view .rank-head {
+    margin: 0 0 8px;
+    color: var(--stage-muted);
+    font-size: 13px;
+}
+.rank-layout {
+    margin-top: 4px;
+}
+.rank-switch {
+    display: inline-flex;
+    margin: 4px 0 8px;
+}
+.rank-more[open] > summary {
+    margin-bottom: 4px;
+}
+.rank-more {
+    margin-top: 4px;
+    border-top: 1px solid var(--stage-line);
+}
+.rank-basis {
+    margin: 10px 0 0;
+    padding: 10px 0 0;
+    border-top: 1px solid var(--stage-line);
+    color: var(--stage-s2);
+    font-size: 14px;
+    font-weight: 600;
+}
+.rank-val small {
+    display: block;
+    color: var(--stage-muted);
+    font-size: 11px;
+    font-weight: 400;
+}
+.rank-stem {
+    background: var(--stage-s1);
+    opacity: 0.55;
+}
+.rank-zero {
+    border-left-color: var(--stage-s2);
+    opacity: 1;
+}
+.rank-dot {
+    background: var(--stage-s1);
+}
+.rank-dot.is-below {
+    background: var(--stage-bg);
+    box-shadow: inset 0 0 0 2px var(--stage-s1);
+}
+.rank-row[aria-selected="true"] .rank-dot.is-below {
+    background: var(--focus-surface);
+}
+.rank-pane {
+    position: sticky;
+    top: 56px;
+    padding: 0 0 0 24px;
+    border: 0;
+    border-left: 1px solid var(--stage-line);
+    border-radius: 0;
+}
+.rank-pane .stage {
+    margin: 12px 0 14px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+.rank-switch button,
+.rank-btn,
+.seg-switch button {
+    min-height: 40px;
+}
+.seg-switch {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 8px 0 12px;
+}
+.seg-switch button {
+    padding: 6px 14px;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    background: transparent;
+    font-size: 13px;
+    cursor: pointer;
+}
+.seg-switch button[aria-pressed="true"] {
+    border-color: var(--ink);
+    font-weight: 700;
+    box-shadow: inset 0 0 0 1px var(--ink);
+}
+.reader-bar-fill {
+    background: var(--stage-s1);
+}
+.reader-bar-fill.tone-1 {
+    background: var(--stage-s2);
+}
+.reader-bar-fill.tone-2,
+.reader-bar-fill.tone-3 {
+    background: var(--faint);
+}
+.headline-table .delta-up {
+    color: var(--stage-s1);
+}
+.headline-table-wrap {
+    margin-top: 8px;
+}
+
+/* reverse card */
+.counter-note {
+    margin-top: 48px;
+    font-size: 15px;
+}
+.counter-note h3 {
+    font: 600 20px / 1.5 var(--font-serif);
+}
+.counter-def {
+    margin: 0 0 6px;
+    color: var(--stage-muted);
+    font-size: 13px;
+}
+.counter-rate {
+    margin: 4px 0;
+}
+.counter-rate strong {
+    color: var(--stage-s1);
+    font-size: clamp(48px, 14vw, 96px);
+    line-height: 1.05;
+    white-space: normal;
+}
+.counter-detail > summary {
+    color: var(--stage-muted);
+    font-size: 13px;
+    font-weight: 400;
+}
+
+/* pattern guide: one line per pattern */
+.pattern-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    margin-top: 4px;
+}
+.pattern-item {
+    padding: 0;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    border-radius: 0;
+    background: transparent;
+}
+.pattern-item > summary h3 {
+    display: inline;
+    margin: 0;
+    font-size: 16px;
+}
+.pattern-item[open] {
+    padding-bottom: 14px;
+}
+.pattern-codeline {
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: 12px;
+}
+.pattern-code {
+    padding: 0 6px;
+    border: 1px solid var(--line-strong);
+    background: transparent;
+    color: var(--muted);
+}
+.pattern-item .shape {
+    max-width: 320px;
+}
+.shape .ln,
+.shape .k {
+    stroke: var(--stage-s1);
+}
+.shape .hit {
+    fill: var(--stage-s1);
+}
+.research-lineage {
+    margin-top: 56px;
+}
+.lineage-steps > li {
+    padding: 0 0 0 16px;
+    border: 0;
+    border-left: 2px solid var(--line-strong);
+    border-radius: 0;
+    background: transparent;
+}
+.lineage-steps > li[aria-current] {
+    border-color: var(--ink);
+}
+.lineage-crumb a {
+    color: inherit;
+}
+.report-footer {
+    margin-top: 56px;
+}
+
+/* phones: tables become card rows */
+@media (max-width: 680px) {
+    .headline-table,
+    .headline-table tbody,
+    .headline-table tr,
+    .headline-table td {
+        display: block;
+        width: auto;
+    }
+    .headline-table thead,
+    .headline-table caption,
+    .family-summary-table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+    }
+    .headline-table tr {
+        padding: 12px 0;
+        border-bottom: 1px solid var(--line);
+    }
+    .headline-table td,
+    .headline-table td:first-child {
+        width: auto;
+        padding: 1px 0;
+        border: 0;
+        font-size: 14px;
+    }
+    .headline-table td:first-child {
+        font-size: 16px;
+        font-weight: 700;
+    }
+    .headline-table td:nth-child(3) {
+        display: none;
+    }
+    .family-summary-table,
+    .family-summary-table tbody,
+    .family-summary-table tr {
+        display: block;
+        width: auto;
+    }
+    .family-summary-table tr {
+        padding: 12px 0;
+        border-bottom: 1px solid var(--line);
+    }
+    .family-summary-table td,
+    .family-summary-table td:first-child {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        width: auto;
+        padding: 2px 0;
+        border: 0;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+    .family-summary-table td::before {
+        content: attr(data-label);
+        color: var(--muted);
+        text-align: left;
+    }
+    .family-summary-table td.family-name {
+        font-size: 16px;
+        font-weight: 700;
+    }
+    .family-summary-table td.family-name::before {
+        content: none;
+    }
+    .family-summary-table tbody tr:nth-child(even) {
+        background: transparent;
+    }
+    .rank-pane {
+        padding: 0;
+        border-left: 0;
     }
 }

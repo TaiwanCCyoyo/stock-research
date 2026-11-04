@@ -39,7 +39,7 @@
         R3: [23, 34, 35],
     };
     const names = {
-        H1: "HHHL v4 突破型態",
+        H1: "高低點墊高突破",
         B1: "杯形突破",
         B2: "布林通道收縮後突破",
         B3: "平台突破",
@@ -158,7 +158,7 @@
         for (const r of model) {
             const tr = document.createElement("tr");
             const name = document.createElement("td");
-            name.textContent = `${r.name}（${r.code}）`;
+            name.textContent = r.name;
             const plain = document.createElement("td");
             const conditional = document.createElement("td");
             if (!r.enough) {
@@ -198,6 +198,14 @@
         if (!view || !model || !model.length) return;
         const layout = document.getElementById("rank-layout");
         const ladder = document.getElementById("rank-ladder");
+        const ladderMore = document.getElementById("rank-ladder-more");
+        const moreList = document.getElementById("rank-more-list");
+        const moreDetails = document.getElementById("rank-more");
+        const basis = document.getElementById("rank-basis");
+        // The first screen shows the top three; the rest wait in "看全部 12 種".
+        const TOP = 3;
+        const lists = [ladder, ladderMore];
+        const allRows = () => [...ladder.children, ...ladderMore.children];
         const pane = document.getElementById("rank-pane");
         const tableWrap = document.getElementById("headline-table-wrap");
         const switcher = document.getElementById("rank-switch");
@@ -239,7 +247,8 @@
         const clean = (el) => el.textContent.replace(/\s+/g, " ").trim();
 
         document.getElementById("rank-title").textContent =
-            `追蹤約一年（252 個交易日）：比一般合格日（隔 20 個交易日取一天，翻倍比例 ${baseTxt}）高或低幾個百分點`;
+            `追蹤約一年（252 個交易日）：一年內翻倍的比例，和一般股票比（點的位置＝比一般股票高或低幾個百分點）`;
+        basis.textContent = `一般股票（每檔每月約取一天）：一年內翻倍約 ${baseTxt}`;
 
         // ---- ladder ----
         const MIN = -4;
@@ -288,9 +297,14 @@
                 h("span", "rank-no", p.rank),
                 h("span", "rank-name", p.name),
                 track,
-                h("span", "rank-val", p.enough ? signed(p) : "—"),
+                h(
+                    "span",
+                    "rank-val",
+                    p.enough ? pct(p.rate) : "—",
+                    p.enough ? h("small", null, signed(p)) : null,
+                ),
             );
-            ladder.append(li);
+            (p.rank <= TOP ? ladder : ladderMore).append(li);
         }
 
         // ---- detail pane: text and shapes come from the guide on this page ----
@@ -365,12 +379,7 @@
             const next = model[i + 1];
             const back = h("button", "rank-btn rank-back", "‹ 返回排行");
             attr(back, { type: "button", "data-act": "back" });
-            const title = h(
-                "h3",
-                "rank-ptitle",
-                p.name,
-                h("small", null, p.code),
-            );
+            const title = h("h3", "rank-ptitle", p.name);
             title.id = "rank-ptitle";
             title.tabIndex = -1;
             const stage = h("div", "stage");
@@ -391,7 +400,7 @@
                         "div",
                         "cmp",
                         h("b", null, pct(p.rate)),
-                        h("span", null, `對 一般合格日 ${pct(p.control)}`),
+                        h("span", null, `對 一般股票 ${pct(p.control)}`),
                     ),
                     h(
                         "p",
@@ -525,12 +534,26 @@
         };
         function select(code, focusRow) {
             sel = code;
-            for (const row of ladder.children) {
+            for (const row of allRows()) {
                 const on = row.getAttribute("data-code") === code;
                 row.setAttribute("aria-selected", String(on));
                 row.tabIndex = on ? 0 : -1;
             }
-            ladder.setAttribute("aria-activedescendant", `rank-row-${code}`);
+            // Each list keeps one tab stop, even when the selection is in the other.
+            for (const list of lists) {
+                const own = Array.from(list.children).some(
+                    (row) => row.getAttribute("data-code") === code,
+                );
+                if (!own && list.firstElementChild)
+                    list.firstElementChild.tabIndex = 0;
+                if (own)
+                    list.setAttribute(
+                        "aria-activedescendant",
+                        `rank-row-${code}`,
+                    );
+                else list.removeAttribute("aria-activedescendant");
+            }
+            if (byCode[code].rank > TOP) moreDetails.open = true;
             buildPane(byCode[code]);
             if (focusRow)
                 document
@@ -561,7 +584,7 @@
                     ?.focus({ preventScroll: true });
             }
         }
-        ladder.addEventListener("click", (event) => {
+        const onClick = (event) => {
             const row = event.target.closest(".rank-row");
             if (!row) return;
             const code = row.getAttribute("data-code");
@@ -570,8 +593,8 @@
                 select(code, true);
                 writeHash(code, false);
             }
-        });
-        ladder.addEventListener("keydown", (event) => {
+        };
+        const onKeydown = (event) => {
             const i = model.findIndex((p) => p.code === sel);
             const to = {
                 ArrowDown: i + 1,
@@ -592,7 +615,11 @@
                 event.preventDefault();
                 enterDetail(sel, true);
             }
-        });
+        };
+        for (const list of lists) {
+            list.addEventListener("click", onClick);
+            list.addEventListener("keydown", onKeydown);
+        }
         const clearTarget = () => {
             for (const el of document.querySelectorAll(".is-target"))
                 el.classList.remove("is-target");
@@ -618,6 +645,8 @@
                 );
                 if (details) details.open = true;
                 const article = document.getElementById(`pg-${code}`);
+                if (article && article.tagName === "DETAILS")
+                    article.open = true;
                 const precise = article?.querySelector(".pattern-precise");
                 if (precise) precise.open = true;
                 reveal(article);
@@ -691,7 +720,7 @@
         // ---- view switch: ranking or the original table ----
         function setView(name) {
             const rank = name === "rank";
-            layout.hidden = !rank;
+            moreList.hidden = !rank;
             tableWrap.hidden = rank;
             for (const button of switcher.querySelectorAll("button"))
                 button.setAttribute(
@@ -726,6 +755,7 @@
             if (fixed !== history.state) writeHash(code, false, inDetail);
         }
         layout.hidden = false;
+        moreList.hidden = false;
         tableWrap.hidden = true;
         switcher.hidden = false;
         select(readCode() || model[0].code);
@@ -746,8 +776,14 @@
         "兩邊比例相同",
         "無法比較",
     ];
+    let current = 252;
     function render() {
-        const horizon = Number(selector.value);
+        const horizon = current;
+        for (const button of selector.querySelectorAll("button"))
+            button.setAttribute(
+                "aria-pressed",
+                String(Number(button.getAttribute("data-value")) === horizon),
+            );
         const values = counts[horizon];
         document.getElementById("reader-comparison-answer").textContent =
             `追蹤 ${horizon} 個交易日：${values[0]} 組較高，${values[1]} 組較低。`;
@@ -775,6 +811,11 @@
                 ? "約一年的 1,104 組中，571 組的型態樣本不足 100 件（含 80 組為零件）；比例很高的組合要連同樣本數一起看。"
                 : "各組的樣本數、未知數與原始比例在下方各問題的表格中。";
     }
-    selector.addEventListener("change", render);
+    selector.addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-value]");
+        if (!button) return;
+        current = Number(button.getAttribute("data-value"));
+        render();
+    });
     render();
 })();

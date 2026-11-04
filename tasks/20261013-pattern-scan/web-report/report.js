@@ -23,7 +23,7 @@
     };
 
     const familyNames = {
-        H1: "HHHL v4 突破型態",
+        H1: "高低點墊高突破",
         B1: "杯形突破",
         B2: "布林通道收縮後突破",
         B3: "平台突破",
@@ -53,7 +53,7 @@
         pattern: "有型態的日子",
         "C-base-no-pattern": "同條件、沒有型態的日子",
         "C-base-all": "同條件的所有日子（含有型態者）",
-        "C-base-daily": "所有合格日",
+        "C-base-daily": "一般股票（所有合格日）",
         "C-base-random": "隨機日期",
         "C-52w": "股價在 52 週高點附近的日子",
         "C-dip": "股價跌深的日子",
@@ -159,7 +159,7 @@
                 col("事件數", "integer", "event_n"),
                 col("可判定樣本數", "integer", "known_n"),
                 col("翻倍比例", "percent", "hit_rate"),
-                col("期滿仍虧損比例", "percent", "loss_rate"),
+                col("追蹤期滿仍低於起點的比例", "percent", "loss_rate"),
                 col("股票檔數", "integer", "distinct_stock_n"),
             ],
         },
@@ -182,7 +182,7 @@
                 ),
                 col("有型態樣本數", "integer", "pattern_known_n"),
                 col("沒型態樣本數", "integer", "no_pattern_known_n"),
-                col("期滿仍虧損比例", "percent", "loss_rate"),
+                col("追蹤期滿仍低於起點的比例", "percent", "loss_rate"),
             ],
         },
         "Q3:0": {
@@ -203,7 +203,7 @@
                 col("事件數", "integer", "event_n"),
                 col("可判定樣本數", "integer", "known_n"),
                 col("翻倍比例", "percent", "hit_rate"),
-                col("期滿仍虧損比例", "percent", "loss_rate"),
+                col("追蹤期滿仍低於起點的比例", "percent", "loss_rate"),
             ],
         },
         "Q4:0": {
@@ -643,7 +643,7 @@
             statusElement.textContent =
                 "尚未提供跨型態對照摘要；不以空白或零代替資料。";
             baselineElement.textContent =
-                "所有合格日的翻倍比例：N/A（比較摘要尚未提供）。";
+                "一般股票（所有合格日）的翻倍比例：N/A（比較摘要尚未提供）。";
             return;
         }
 
@@ -658,6 +658,15 @@
                 : "N/A";
         const cell = (value, className) => node("td", value, className);
 
+        // Column names shown on each card when the table collapses on phones.
+        const cardLabels = [
+            "型態",
+            "翻倍比例是一般股票的幾倍",
+            "比一般股票高（百分點）",
+            "型態樣本數",
+            "對照樣本數",
+            "追蹤期滿仍低於起點的比例",
+        ];
         function renderHorizon() {
             const horizon = Number(selector.value);
             const rows = comparison.rows.filter(
@@ -673,7 +682,7 @@
                 baseline && Number.isInteger(baseline.known_n)
                     ? baseline.known_n
                     : null;
-            baselineElement.textContent = `追蹤 ${horizon} 個交易日：所有合格日的翻倍比例 ${rateText(baseline?.hit_rate, baselineKnown)}（樣本 ${countText(baselineKnown)}）。`;
+            baselineElement.textContent = `追蹤 ${horizon} 個交易日：一般股票（所有合格日）的翻倍比例 ${rateText(baseline?.hit_rate, baselineKnown)}（樣本 ${countText(baselineKnown)}）。`;
 
             const fragment = document.createDocumentFragment();
             for (const row of rows) {
@@ -701,6 +710,9 @@
                     cell(countText(known)),
                     cell(countText(controlKnown)),
                     cell(rateText(row.loss_rate, known)),
+                );
+                Array.from(tr.children).forEach((td, index) =>
+                    td.setAttribute("data-label", cardLabels[index]),
                 );
                 fragment.append(tr);
             }
@@ -761,6 +773,7 @@
         const title = question.title || "尚未提供研究結果";
         const link = node("a", null, "question-link");
         link.href = `#${id}`;
+        link.title = title;
         const label = `問題 ${number}`;
         link.append(node("span", label, "question-id"));
         if (status !== "complete") link.append(badge(status));

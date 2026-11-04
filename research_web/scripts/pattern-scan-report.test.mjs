@@ -377,7 +377,7 @@ test("the first-screen comparison keeps twelve Q1 families on one scope and swit
     assert.equal(selector.value, "126");
     assert.equal(rows.children.length, 12);
     assert.deepEqual(rowCells(rows.children[0]), [
-        "HHHL v4 突破型態（H1）",
+        "高低點墊高突破（H1）",
         "1.25×",
         "+1.25 百分點",
         "100",
@@ -386,7 +386,7 @@ test("the first-screen comparison keeps twelve Q1 families on one scope and swit
     ]);
     assert.match(
         page.elements.get("family-summary-baseline").textContent,
-        /所有合格日的翻倍比例 40%（樣本 1,000）/,
+        /一般股票（所有合格日）的翻倍比例 40%（樣本 1,000）/,
     );
     assert.match(
         page.elements.get("family-summary-scope").textContent,
@@ -406,7 +406,7 @@ test("the first-screen comparison keeps twelve Q1 families on one scope and swit
 
     assert.equal(rows.children.length, 12);
     assert.deepEqual(rowCells(rows.children[0]), [
-        "HHHL v4 突破型態（H1）",
+        "高低點墊高突破（H1）",
         "0.75×",
         "−1.25 百分點",
         "80",
@@ -415,7 +415,7 @@ test("the first-screen comparison keeps twelve Q1 families on one scope and swit
     ]);
     assert.match(
         page.elements.get("family-summary-baseline").textContent,
-        /所有合格日的翻倍比例 50%（樣本 900）/,
+        /一般股票（所有合格日）的翻倍比例 50%（樣本 900）/,
     );
 });
 
@@ -459,7 +459,7 @@ test("summary denominators show N/A while real zero counts and rates remain zero
     const rowCells = (row) => row.children.map((cell) => cell.textContent);
 
     assert.deepEqual(rowCells(rows[0]), [
-        "HHHL v4 突破型態（H1）",
+        "高低點墊高突破（H1）",
         "N/A",
         "N/A",
         "0",
@@ -657,7 +657,7 @@ test("the headline summary matches the saved per-pattern numbers", () => {
     assert.equal(Math.round(top), 5);
     assert.match(
         html,
-        /七種的翻倍比例比一般合格日高（最多高約\s*5 個百分點），五種較低/,
+        /七種的翻倍比例比一般股票高（最多高約\s*5 個百分點），五種較低/,
     );
     assert.doesNotMatch(html, /兩種看不出差別|同一天也符合/);
     // Right column: a separate comparison; per-pattern group counts as saved.
@@ -1109,4 +1109,83 @@ test("layout switches normalise history so one back always returns to the rankin
         state = normalize(state, "B4", shows);
         assert.deepEqual({ ...state }, list);
     }
+});
+
+test("the first screen states its numbers statically and they match the saved data", () => {
+    const html = readFileSync(join(folder, "index.html"), "utf8");
+    const context = {};
+    context.window = context;
+    runInNewContext(
+        readFileSync(join(folder, "data/final-v1/summary.js"), "utf8"),
+        context,
+        { timeout: 5000 },
+    );
+    const summary = context.REPORT_DATA.comparisonSummary;
+    const baseline = summary.baselines.find((row) => row.horizon === 252);
+    const rows = summary.rows.filter((row) => row.horizon === 252);
+    const hero = html.slice(
+        html.indexOf('class="rk-hero"'),
+        html.indexOf('class="report-nav"'),
+    );
+    // Big numbers are in the HTML, not filled in by a script after "loading".
+    assert.match(hero, /<p class="big-value">9\.83%<\/p>/);
+    assert.equal((baseline.hit_rate * 100).toFixed(2), "9.83");
+    assert.match(hero, /<p class="big-value">約 15%<\/p>/);
+    const rate = (code) =>
+        rows.find((row) => row.target === code).baseline_multiple *
+        baseline.hit_rate;
+    assert.equal(Math.round(rate("B3") * 100), 15);
+    assert.equal(Math.round(rate("B4") * 100), 15);
+    const total = rows.reduce((sum, row) => sum + row.known_n, 0);
+    assert.ok(
+        hero
+            .replace(/\s+/g, "")
+            .includes(`共${total.toLocaleString("en-US")}次`),
+    );
+    assert.match(hero, /回測區間 2010-01-04 – 2026-10-12/);
+    // The 100 -> 200 example is its own block, below the headline numbers.
+    assert.ok(
+        hero.indexOf("hero-numbers") < hero.indexOf('class="shared-example"'),
+    );
+    // Reverse card: plain wording up front, the exact range only in the fold.
+    const card = html.slice(html.indexOf('class="stage-block counter-note"'));
+    assert.match(card, /轉弱訊號＝收盤跌破近 20 日平均價/);
+    assert.match(card, /約九成以上[\s\S]*88\.32%–100%/);
+    assert.ok(card.indexOf("約九成以上") < card.indexOf("88.32%"));
+    const conclusions = readFileSync(join(folder, "conclusions.js"), "utf8");
+    assert.match(conclusions, /約九成以上在翻倍前觸發/);
+    // Only three white blocks.
+    assert.equal((html.match(/class="stage-block /g) ?? []).length, 3);
+    // Jargon codes stay out of titles and body copy.
+    const visible = html
+        .slice(html.indexOf("<body>"))
+        .replace(/<script[\s\S]*?<\/script>/g, "");
+    assert.doesNotMatch(visible, /C-base|描述性研究|間隔取樣合格日|期滿仍虧損/);
+});
+
+test("the ranking shows the top three first and keeps the other nine behind one fold", () => {
+    const html = readFileSync(join(folder, "index.html"), "utf8");
+    assert.match(
+        html,
+        /<details class="rank-more" id="rank-more">\s*<summary>看全部 12 種<\/summary>/,
+    );
+    assert.match(html, /id="rank-ladder-more"/);
+    const reader = readFileSync(join(folder, "reader.js"), "utf8");
+    assert.match(reader, /const TOP = 3;/);
+    // Horizon choice is a button group, not a drop-down.
+    assert.match(html, /<div[^>]*id="reader-horizon"[^>]*role="group"/);
+    assert.doesNotMatch(html, /<select id="reader-horizon"/);
+    // Pattern sketches start folded, one line per pattern.
+    const guide = html.slice(
+        html.indexOf('id="pattern-guide"'),
+        html.indexOf('id="questions"'),
+    );
+    assert.equal(
+        (guide.match(/<details\s+class="pattern-item"/g) ?? []).length,
+        12,
+    );
+    assert.doesNotMatch(
+        guide,
+        /<details\s+class="pattern-item"[^>]*\sopen[\s>]/,
+    );
 });
