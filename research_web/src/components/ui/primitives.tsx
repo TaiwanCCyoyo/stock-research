@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+export { SourceInfo } from "./SourceInfo.tsx";
 import { VERDICT_LABELS, type Verdict } from "./verdicts.ts";
 
 export function VerdictBadge({ verdict }: { verdict: Verdict }) {
@@ -45,22 +45,6 @@ export function CompareBars({
                 </div>
             ))}
         </div>
-    );
-}
-
-/** Technical provenance stays available but collapsed by default. */
-export function SourceInfo({
-    children,
-    label = "資料來源",
-}: {
-    children: ReactNode;
-    label?: string;
-}) {
-    return (
-        <details className="u-source">
-            <summary>{label}</summary>
-            <div>{children}</div>
-        </details>
     );
 }
 
