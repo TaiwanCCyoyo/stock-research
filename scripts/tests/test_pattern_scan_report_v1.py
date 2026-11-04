@@ -261,3 +261,96 @@ def test_cli_exports_comparisons_and_rejects_remaining_root_overlap(tmp_path: Pa
     assert all(question["status"] == "pending" for question in report["questions"][1:])
     with pytest.raises(ValueError, match="overlap original remaining"):
         export_q1_report_data(q1, remaining / "output", as_of="2026-10-21", remaining_root=remaining)
+
+
+def test_split_scripts_reassemble_losslessly_in_javascript(tmp_path: Path) -> None:
+    import shutil
+    import subprocess
+
+    from research_core.pattern_scan_report_v1 import split_report_scripts
+
+    node = shutil.which("node")
+    if node is None:
+        pytest.skip("Node is required to execute the browser's classic script protocol")
+    report = {
+        "status": "partial",
+        "questions": [
+            {"id": f"Q{i}", "tables": [{"rows": [{"text": '中文\\"\n</script>', "n": n, "missing": None} for n in range(100)]}, {"rows": []}]}
+            for i in range(1, 7)
+        ],
+    }
+    original = json.dumps(report, ensure_ascii=False)
+    files = split_report_scripts(report, max_bytes=4000)
+    assert split_report_scripts(report, max_bytes=4000) == files
+    assert json.dumps(report, ensure_ascii=False) == original
+    manifest = json.loads(files["scripts-manifest.json"])
+    scripts = manifest["scripts"]
+    assert scripts[0] == "summary.js" and len(scripts) > 2
+    assert all(len(files[name]) < 4000 for name in scripts)
+    program = tmp_path / "roundtrip.cjs"
+    program.write_bytes(b"global.window = {};\n" + b"".join(files[name] for name in scripts) + b"process.stdout.write(JSON.stringify(window.REPORT_DATA));\n")
+    result = subprocess.run([node, str(program)], check=True, capture_output=True)
+    assert json.loads(result.stdout) == {**report, "dataScripts": scripts}
+
+
+def test_split_scripts_reject_oversized_row_or_metadata() -> None:
+    from research_core.pattern_scan_report_v1 import split_report_scripts
+
+    with pytest.raises(ValueError, match="one report row"):
+        split_report_scripts({"questions": [{"tables": [{"rows": [{"text": "中" * 1000}]}]}]}, max_bytes=1000)
+    with pytest.raises(ValueError, match="metadata"):
+        split_report_scripts({"questions": [], "title": "中" * 1000}, max_bytes=1000)
+
+
+def test_split_publication_returns_ordered_manifest(tmp_path: Path) -> None:
+    root = tmp_path / "q1"
+    before = _fixture(root)
+    output = tmp_path / "report/data"
+    report = export_q1_report_data(root, output, as_of="2026-10-31", split_scripts=True, display_csv=True, data_prefix="data/final-v1")
+    manifest = json.loads((output / "scripts-manifest.json").read_bytes())
+    assert report["dataScripts"] == manifest["scripts"]
+    assert all((output / name).stat().st_size < 500 * 1024 for name in manifest["scripts"])
+    import csv
+
+    table = report["questions"][0]["tables"][0]
+    csv_download = table["downloads"][-1]
+    assert csv_download["href"] == "data/final-v1/display/Q1-01.csv"
+    with (output / "display/Q1-01.csv").open(encoding="utf-8-sig", newline="") as stream:
+        rows = list(csv.DictReader(stream))
+    assert len(rows) == len(table["rows"])
+    assert rows[0]["hit_rate"] == "" and rows[0]["loss_rate"] == "0.0"
+    assert all(item["href"].startswith("data/final-v1/") for item in report["downloads"])
+    for relative, (raw, mtime_ns) in before.items():
+        assert (root / relative).read_bytes() == raw
+        assert (root / relative).stat().st_mtime_ns == mtime_ns
+
+
+def test_oversized_display_csv_is_deterministic_lossless_gzip() -> None:
+    import gzip
+
+    from research_core.pattern_scan_report_v1 import _display_downloads
+
+    report: dict[str, Any] = {
+        "questions": [
+            {
+                "id": "Q1",
+                "tables": [
+                    {"title": "large", "columns": [{"key": "text"}], "rows": [{"text": "x" * 600000}]},
+                    {"title": "small", "columns": [{"key": "text"}], "rows": [{"text": "zero"}]},
+                ],
+            }
+        ],
+        "downloads": [],
+    }
+    files: dict[str, bytes] = {}
+    _display_downloads(report, files)
+    raw = b"\xef\xbb\xbftext\n" + b"x" * 600000 + b"\n"
+    assert gzip.decompress(files["display/Q1-01.csv.gz"]) == raw
+    assert files["display/Q1-01.csv.gz"] == gzip.compress(raw, mtime=0)
+    assert files["display/Q1-02.csv"] == b"\xef\xbb\xbftext\nzero\n"
+    assert "display/Q1-01.csv" not in files
+    compressed = report["downloads"][0]
+    assert compressed["href"] == "data/display/Q1-01.csv.gz"
+    assert "CSV.gz" in compressed["label"]
+    assert compressed["bytes"] == len(files["display/Q1-01.csv.gz"])
+    assert compressed["sha256"] == hashlib.sha256(files["display/Q1-01.csv.gz"]).hexdigest()
