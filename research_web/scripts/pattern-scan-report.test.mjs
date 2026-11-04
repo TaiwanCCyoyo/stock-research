@@ -1189,3 +1189,304 @@ test("the ranking shows the top three first and keeps the other nine behind one 
         /<details\s+class="pattern-item"[^>]*\sopen[\s>]/,
     );
 });
+
+// A small tree with just the DOM surface reader.js uses for the ranking.
+class RankNode {
+    constructor(tag, doc) {
+        this.tagName = tag.toUpperCase();
+        this.doc = doc;
+        this.children = [];
+        this.parentElement = null;
+        this.attrs = new Map();
+        this.listeners = {};
+        this.className = "";
+        this.hidden = false;
+        this.open = false;
+        this.style = {};
+        this.text = "";
+        this.classList = {
+            add: (c) => {
+                this.className = `${this.className} ${c}`.trim();
+            },
+            remove: (c) => {
+                this.className = this.className
+                    .split(" ")
+                    .filter((x) => x !== c)
+                    .join(" ");
+            },
+            toggle: () => {},
+        };
+    }
+    get id() {
+        return this.attrs.get("id") ?? "";
+    }
+    set id(value) {
+        this.attrs.set("id", value);
+    }
+    get tabIndex() {
+        return Number(this.attrs.get("tabindex") ?? -1);
+    }
+    set tabIndex(value) {
+        this.attrs.set("tabindex", String(value));
+    }
+    set textContent(value) {
+        this.text = String(value);
+        this.children = [];
+    }
+    get textContent() {
+        return this.text + this.children.map((c) => c.textContent).join("");
+    }
+    get firstElementChild() {
+        return this.children[0] ?? null;
+    }
+    append(...kids) {
+        for (const kid of kids) {
+            kid.parentElement = this;
+            this.children.push(kid);
+        }
+    }
+    replaceChildren(...kids) {
+        this.children = [];
+        this.append(...kids);
+    }
+    setAttribute(name, value) {
+        this.attrs.set(name, String(value));
+    }
+    getAttribute(name) {
+        return this.attrs.has(name) ? this.attrs.get(name) : null;
+    }
+    removeAttribute(name) {
+        this.attrs.delete(name);
+    }
+    addEventListener(type, fn) {
+        (this.listeners[type] ??= []).push(fn);
+    }
+    closest(selector) {
+        const cls = selector.startsWith(".") ? selector.slice(1) : null;
+        for (let el = this; el; el = el.parentElement)
+            if (cls && el.className.split(" ").includes(cls)) return el;
+        return null;
+    }
+    querySelector() {
+        return null;
+    }
+    querySelectorAll() {
+        return [];
+    }
+    cloneNode() {
+        return this;
+    }
+    focus() {
+        this.doc.activeElement = this;
+    }
+    click() {}
+    scrollIntoView() {}
+    dispatchEvent() {}
+}
+
+function rankPage(width = 1000) {
+    const doc = { activeElement: null, listeners: {} };
+    const roots = new Map();
+    const make = (tag) => new RankNode(tag, doc);
+    for (const id of [
+        "rank-view",
+        "rank-layout",
+        "rank-ladder",
+        "rank-ladder-more",
+        "rank-more-list",
+        "rank-more",
+        "rank-basis",
+        "rank-pane",
+        "headline-table-wrap",
+        "rank-switch",
+        "rank-title",
+        "rank-axis",
+        "headline-rows",
+    ]) {
+        const el = make("div");
+        el.id = id;
+        roots.set(id, el);
+    }
+    roots.get("rank-layout").clientWidth = width;
+    const find = (el, id) => {
+        if (el.id === id) return el;
+        for (const kid of el.children) {
+            const hit = find(kid, id);
+            if (hit) return hit;
+        }
+        return null;
+    };
+    doc.getElementById = (id) => {
+        for (const root of roots.values()) {
+            const hit = find(root, id);
+            if (hit) return hit;
+        }
+        return null;
+    };
+    doc.createElement = make;
+    doc.createTextNode = (text) => {
+        const node = make("#text");
+        node.textContent = text;
+        return node;
+    };
+    doc.createDocumentFragment = () => make("#fragment");
+    doc.querySelectorAll = () => [];
+    doc.querySelector = () => null;
+    doc.addEventListener = (type, fn) => {
+        (doc.listeners[type] ??= []).push(fn);
+    };
+    doc.body = make("body");
+    const context = {};
+    context.window = context;
+    context.document = doc;
+    context.location = { protocol: "file:", hash: "", pathname: "/" };
+    context.history = {
+        state: null,
+        pushState() {},
+        replaceState() {},
+        back() {},
+    };
+    context.parent = context;
+    context.scrollY = 0;
+    context.scrollTo = () => {};
+    context.addEventListener = () => {};
+    context.Event = class {};
+    context.URLSearchParams = URLSearchParams;
+    for (const name of [
+        "data/final-v1/summary.js",
+        ...Array.from(
+            { length: 12 },
+            (_, i) => `data/final-v1/rows-${String(i + 1).padStart(3, "0")}.js`,
+        ),
+    ])
+        runInNewContext(readFileSync(join(folder, name), "utf8"), context, {
+            timeout: 5000,
+        });
+    runInNewContext(readFileSync(join(folder, "reader.js"), "utf8"), context, {
+        timeout: 5000,
+    });
+    const rows = (id) => doc.getElementById(id).children;
+    const press = (row, key) => {
+        let prevented = false;
+        const event = {
+            key,
+            target: row,
+            preventDefault: () => {
+                prevented = true;
+            },
+        };
+        for (const list of [
+            roots.get("rank-ladder"),
+            roots.get("rank-ladder-more"),
+        ])
+            if (list.children.includes(row))
+                for (const fn of list.listeners.keydown ?? []) fn(event);
+        return prevented;
+    };
+    const tabStops = () =>
+        [...rows("rank-ladder"), ...rows("rank-ladder-more")]
+            .filter((row) => row.tabIndex === 0)
+            .map((row) => row.getAttribute("data-code"));
+    return { context, doc, roots, rows, press, tabStops };
+}
+
+test("keyboard focus and selection stay together across the top-three and the other nine", () => {
+    for (const [width, stacked] of [
+        [1000, false],
+        [500, true],
+    ]) {
+        const page = rankPage(width);
+        const top = [...page.rows("rank-ladder")];
+        const rest = [...page.rows("rank-ladder-more")];
+        assert.equal(top.length, 3);
+        assert.equal(rest.length, 9);
+        const code = (row) => row.getAttribute("data-code");
+        const selected = () =>
+            [...top, ...rest]
+                .filter((row) => row.getAttribute("aria-selected") === "true")
+                .map(code);
+        assert.deepEqual(selected(), [code(top[0])]);
+        // Tab reaches the other list's first row (4th place), selection stays on 1st.
+        assert.deepEqual(page.tabStops(), [code(top[0]), code(rest[0])]);
+        // Enter on the focused 4th row acts on the 4th row, never the 1st.
+        page.press(rest[0], "Enter");
+        assert.deepEqual(
+            selected(),
+            [code(rest[0])],
+            `enter, stacked=${stacked}`,
+        );
+        assert.equal(
+            page.context.document.getElementById("rank-ptitle").textContent,
+            page.context.patternRank.patternModel()[3].name,
+        );
+        // Selection now sits in the other list: Tab into the top list's first row.
+        page.press(top[0], "Enter");
+        assert.deepEqual(selected(), [code(top[0])]);
+        // Back to a selection in the top three; Tab lands on 4th place again.
+        page.press(rest[0], "ArrowDown");
+        assert.deepEqual(
+            selected(),
+            [code(rest[1])],
+            "ArrowDown starts below the focused row",
+        );
+        assert.equal(page.doc.activeElement, rest[1]);
+        page.press(top[0], "ArrowDown");
+        assert.deepEqual(selected(), [code(top[1])]);
+        page.press(top[1], "ArrowDown");
+        page.press(top[2], "ArrowDown");
+        assert.deepEqual(
+            selected(),
+            [code(rest[0])],
+            "ArrowDown crosses into the second list",
+        );
+        assert.equal(page.doc.activeElement, rest[0]);
+        page.press(rest[0], "ArrowUp");
+        assert.deepEqual(selected(), [code(top[2])], "ArrowUp crosses back");
+        // Home and End keep working from any list.
+        page.press(rest[3], "End");
+        assert.deepEqual(selected(), [code(rest[8])]);
+        page.press(rest[8], "Home");
+        assert.deepEqual(selected(), [code(top[0])]);
+        // Roving tabindex: exactly one tab stop per list, selected row first.
+        assert.deepEqual(page.tabStops(), [code(top[0]), code(rest[0])]);
+        assert.equal(
+            page.roots.get("rank-ladder").getAttribute("aria-activedescendant"),
+            `rank-row-${code(top[0])}`,
+        );
+        assert.equal(
+            page.roots
+                .get("rank-ladder-more")
+                .getAttribute("aria-activedescendant"),
+            null,
+        );
+    }
+});
+
+test("every pattern details has a named direct summary matching its data name", () => {
+    const html = readFileSync(join(folder, "index.html"), "utf8");
+    const guide = html.slice(
+        html.indexOf('id="pattern-guide"'),
+        html.indexOf('id="questions"'),
+    );
+    const blocks = [
+        ...guide.matchAll(
+            /<details\s+class="pattern-item"\s+id="pg-(\w+)"[^>]*>\s*<summary>\s*<h3>([\s\S]*?)<\/h3>\s*<\/summary>/g,
+        ),
+    ];
+    assert.equal(blocks.length, 12);
+    const page = rankPage();
+    const model = page.context.patternRank.patternModel();
+    const plain = (text) => text.replace(/<[^>]+>/g, "").replace(/\s+/g, "");
+    for (const [, code, heading] of blocks) {
+        const row = model.find((p) => p.code === code);
+        assert.ok(row, `${code} exists in the data`);
+        assert.ok(
+            plain(heading).includes(plain(row.name)),
+            `${code}: heading "${plain(heading)}" names "${row.name}"`,
+        );
+    }
+    assert.deepEqual(
+        blocks.map((block) => block[1]).sort(),
+        Array.from(model, (p) => p.code).sort(),
+    );
+});
