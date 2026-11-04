@@ -43,3 +43,28 @@ For reader-first writing, predecessor links and visual aids, follow the Codex ve
 
 This workflow does not authorize downloads, updates, backtests, old-package
 replacement, cleanup or changes to accepted research rules.
+
+## Report look and phone preview (lessons from the strength-flags and pattern-scan reports)
+
+- Page ground is a visible tint of the theme (`--page`, never `--surface`: white
+  cards on a white page look like "everything is white"). Use at most three
+  fixed-neutral highlight blocks (`--stage-bg`, near-black in dark appearance):
+  the headline numbers, the main comparison or ranking, and the reverse card.
+  Every other section has no fill or frame; separate with whitespace and a thin
+  rule. Theme colour marks the two compared groups and their numbers only.
+- Open with a plain-language answer, the two big numbers, then one line with the
+  backtest period and how many events qualify, before any method text. Define a
+  term where it first appears (strong stock, big-rise day, the signal and which
+  trading days it is watched). Show the signal window and the doubling window as
+  a timeline that follows the selected options. Never write a number the data does
+  not produce: take figures from the saved results.
+- A ranking shows the top three plus the baseline; the rest sits in a details
+  block. Move counts of comparison cells, codes and version names into details.
+- Ask an Opus subagent for a read-only review as a retail subscriber with no
+  statistics background, then have a cheaper model implement the list.
+- Check at 390 px wide in light and dark: no horizontal scroll, large numbers do not
+  clip, tables become card rows. A static `http.server` caches CSS and JS: refetch
+  with `cache: "reload"` before judging a screenshot.
+- PR preview: the `preview` label publishes `pr-<N>/_preview/`. The gate rejects
+  any file outside its extension whitelist (a `.csv.gz` data file blocks the whole
+  PR) and any `data:` URI. Check the report's file types before labelling.
