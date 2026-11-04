@@ -103,10 +103,10 @@ body {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     margin: 20px 0 12px;
     padding: 16px;
-    border: 1px solid var(--focus-edge);
+    border: 1px solid var(--stage-edge);
     border-radius: 14px;
-    color: var(--ink);
-    background: var(--focus-surface);
+    color: var(--stage-ink);
+    background: var(--stage-bg);
 }
 
 .headline-rate {
@@ -118,11 +118,11 @@ body {
 
 .headline-rate + .headline-rate {
     padding-left: clamp(14px, 3vw, 28px);
-    border-left: 1px solid var(--line);
+    border-left: 1px solid var(--stage-edge);
 }
 
 .headline-label {
-    color: var(--ink);
+    color: var(--stage-muted);
     font-size: 14px;
     line-height: 1.5;
 }
@@ -137,11 +137,11 @@ body {
 
 .group-a strong,
 .group-b strong {
-    color: var(--ink);
+    color: var(--stage-ink);
 }
 
 .known-count {
-    color: var(--ink);
+    color: var(--stage-muted);
     font-size: 13px;
 }
 
@@ -149,8 +149,8 @@ body {
     grid-column: 1 / -1;
     margin: 0;
     padding: 10px 0 0;
-    border-top: 1px solid var(--focus-edge);
-    color: var(--ink);
+    border-top: 1px solid var(--stage-edge);
+    color: var(--stage-muted);
     font-size: 12.5px;
 }
 
@@ -952,7 +952,19 @@ body {
     }
 
     .headline-comparison {
-        padding: 12px;
+        grid-template-columns: minmax(0, 1fr);
+        padding: 14px;
+    }
+
+    .headline-rate,
+    .headline-rate + .headline-rate {
+        padding: 0 0 12px;
+        border-left: 0;
+    }
+
+    .headline-rate + .headline-rate {
+        padding-top: 12px;
+        border-top: 1px solid var(--stage-edge);
     }
 
     .answer-layout {
@@ -960,7 +972,7 @@ body {
     }
 
     .headline-rate strong {
-        font-size: 14vw;
+        font-size: 16vw;
     }
 
     .counter-note {
@@ -968,7 +980,7 @@ body {
     }
 
     .gap-row {
-        grid-template-columns: minmax(0, 1fr) 5.5em;
+        grid-template-columns: minmax(0, 1fr) 7.5em;
         gap: 4px 6px;
         font-size: 12px;
     }

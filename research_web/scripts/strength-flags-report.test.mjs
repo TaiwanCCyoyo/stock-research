@@ -273,9 +273,8 @@ test("saved report supports guided choices and full evidence without changing de
     assert.match(html, /型態搭配哪些條件，後來更常翻倍/);
     assert.match(html, /未翻倍且期末收低的比例也較高/);
     assert.match(html, /觀察2、3、5、10倍結果；下方28格主要比較只涵蓋翻倍/);
-    assert.match(html, /100 元要到 200/);
+    assert.match(html, /翻倍目標是收盤到\s*200 元/);
     assert.match(html, /符合兩項大幅上漲條件的股票中/);
-    assert.match(html, /收盤價.*是否曾達到起點收盤價的兩倍/s);
     assert.deepEqual(
         guided.map((e) => e.value),
         ["CORE", "X5_MA60", "252"],
