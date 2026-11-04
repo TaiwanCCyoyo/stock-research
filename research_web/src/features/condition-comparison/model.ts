@@ -35,8 +35,16 @@ export interface Counts {
     unknown?: number;
     censored?: number;
 }
-export type Summary =
-    { status: "evaluated"; counts: Counts } | { status: "not-evaluated" };
+export type Summary = (
+    | { status: "evaluated"; counts: Counts }
+    | { status: "not-evaluated"; counts?: Counts }
+) & { reason?: string; saved?: Readonly<Record<string, number | null>> };
+export interface TraceReference {
+    event_id: string;
+    security_id: string;
+    t0: string;
+    horizon: Horizon;
+}
 export interface SavedCase {
     eventId: string;
     securityId: string;
@@ -57,12 +65,29 @@ export interface WindowView {
     complements: Partial<Record<CellId, Summary>>;
     cases: readonly SavedCase[];
     caseCoverage: string;
+    references?: Partial<Record<CellId, readonly TraceReference[]>>;
+    unavailable?: readonly {
+        id: string;
+        GStatus: string;
+        volStatus: string;
+        summary: Summary;
+        reasons: Readonly<
+            Record<string, readonly { reason: string; event_n: number }[]>
+        >;
+        references: readonly TraceReference[];
+    }[];
 }
 export interface ComparisonView {
     id: string;
     synthetic: boolean;
     source: SourceContext;
     windows: Partial<Record<Horizon, WindowView>>;
+    producer?: {
+        schemaVersion: string;
+        scope: "synthetic" | "pilot" | "full";
+        provenance: Readonly<Record<string, unknown>>;
+        semantics: Readonly<Record<string, unknown>>;
+    };
 }
 export type ReadState =
     | { status: "loading" }
@@ -81,6 +106,7 @@ export interface NavigationContext {
     source: SourceContext;
     synthetic: boolean;
     selection: Selection;
+    producer?: ComparisonView["producer"];
 }
 export interface CaseRequest extends NavigationContext {
     item: SavedCase;

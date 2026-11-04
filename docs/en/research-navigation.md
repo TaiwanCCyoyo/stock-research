@@ -169,19 +169,16 @@ The original entrance receives focus on return; a bounded URL focus marker suppo
 this after reload, while missing storage never affects semantic URL state.
 Report-section positioning is not claimed: the entrance is in the report shell.
 
-The registry currently contains only the previously merged component fixture.
-Its reader is explicitly a synthetic saved-event summary; it has no market chart
-or invented dataset link. The formal producer contract in open PR #155 has not
-been imported or copied into main by this slice. Integrating it must preserve
-its not-evaluated synthetic/pilot status, unavailable-condition partitions, null
-denominators and bounded references. Those references are not labelled outcomes
-or a complete pageable case list. A∖B summaries are not supplied by that producer:
-leave them unevaluated instead of subtracting counts or distinct-stock numbers.
+The registry retains the earlier component example for its existing regression
+links and now exposes the producer L1 synthetic fixture through the formal adapter
+below. Neither example is a market research result. References from the producer
+are not labelled outcomes or a complete pageable case list. A\B summaries are
+not supplied: they remain unevaluated instead of subtracting counts or stocks.
 
 Questions can be exported with saved source/settings and `discussion-only` intent.
 No direction revision is guessed, no direction approval is recorded and no new
 research is launched. Connecting to an actual same-revision direction draft,
-formal L1 adapter, historical dataset/member readers and full owner journey
+historical dataset/member readers and full owner journey
 acceptance remain subsequent integration work.
 
 Verification: 5 new registry/URL/identity tests plus the existing component and
@@ -195,7 +192,8 @@ provenance rendered correctly; downloaded-file contents have not been verified.
 
 The original dataset slice owns router, dataset detail, study source links and
 return behavior. The comparison follow-up reuses the merged component through
-the bounded navigation above; it does not import the unmerged L1 recovery pilot.
+the bounded navigation above. The formal adapter imports only the tracked
+producer synthetic fixture, without reading recovery artifacts.
 Existing unmerged reading PRs and owner acceptance restrictions remain separate.
 No deployment, scheduling, permission, producer or research-data changes are
 part of this work.
@@ -228,3 +226,48 @@ record access, empty/error/stale states and manual export boundaries. Validation
 scoped lint and normal hooks passed. Edge synthetic integration passed normal
 handoff/edit/export/close, delayed target races, stale revisions, read errors and
 empty lists. This does not claim physical mobile or keyboard usability acceptance.
+
+### Formal L1 comparison adapter
+
+`features/condition-comparison/l1Adapter.ts::adaptL1Comparison(saved, resultId)`
+validates `l1-volume-comparison.v1` before exposing a presentation view. Its source
+contract is [the producer contract](../../tasks/20261013-pattern-scan/l1-volume-comparison-contract-v1.md).
+`registry.ts` registers `l1-volume-comparison.synthetic.v1` by directly importing
+`scripts/tests/fixtures/l1-volume-comparison.synthetic.v1.json`; adapter, rendering
+and browser tests all use that same file, without a second copied payload. The
+research/report entrance opens this explicitly synthetic result. There is no
+filesystem picker, live reader or market computation.
+
+The boundary checks schema and exact scope/evaluation claims, fixed horizons and
+cells, unavailable partitions, integer counts, saved denominators, trace bounds
+and provenance. All four cells and the common cohort remain visible. Eight
+unavailable partitions retain reason counts and complete saved summaries; unknown
+and censored can overlap. Null rates remain null. Synthetic/pilot summaries show
+saved counts with an unevaluated warning. Full-scope payloads can only claim
+historical descriptive evaluation, never unseen validation. Provenance assertions
+are shown as supplied, not promoted to independently certified input identity.
+The producer does not separately declare a price basis/effective outcome version;
+the view says so and preserves generation, label version and manifest identity.
+
+References are at most three trace pointers per partition. They have no success/
+failure label or reader destination, so the L1 view offers neither a case pager
+nor case links. It never derives A\B. Discussion callbacks and exported proposed
+notes retain the producer provenance, semantics and schema alongside existing
+source/settings; this does not save or approve a direction.
+
+Verification entry points: `l1Adapter.test.ts` covers producer fixture adaptation
+and malformed payloads; `scripts/l1-comparison.test.mjs` covers registered route
+identity and server rendering. Both run in `npm test`. The `web` CI domain also
+selects frontend tests when the producer module, contract or shared fixture changes.
+`node scripts/l1-comparison-browser.mjs` mounts the real registry/page on localhost
+using the same fixture and checks rapid horizon switches, cell selection, repeated
+source returns, focus and Back/Forward; refresh repeats the URL-state assertions.
+This manual browser harness is not hosted CI or owner usability acceptance.
+
+Edge verification of this adapter slice passed rapid H252/H126/H252 selection
+followed immediately by cell selection, two source-return/focus cycles, Back/Forward
+and refresh with the same result/H252/cell. Local navigation now updates the React
+route state within the input event so a second control cannot restore the previous
+horizon before `hashchange` arrives. A 375px viewport had equal client/scroll widths
+(360px); the unavailable table scrolls within its container. These synthetic checks
+are not owner visual acceptance or validation of real research data.

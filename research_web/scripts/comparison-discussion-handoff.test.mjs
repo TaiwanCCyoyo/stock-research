@@ -3,6 +3,10 @@ import { readFile } from "node:fs/promises";
 import { before, test } from "node:test";
 import { comparisonDiscussionFeedback } from "../src/features/condition-comparison/discussionHandoff.ts";
 
+import l1Fixture from "../../scripts/tests/fixtures/l1-volume-comparison.synthetic.v1.json" with { type: "json" };
+import { adaptL1Comparison } from "../src/features/condition-comparison/l1Adapter.ts";
+import { initialSelection } from "../src/features/condition-comparison/model.ts";
+
 const taskId = "20261103-demo";
 const revision = "a".repeat(40);
 const draftPath = `tasks/${taskId}/direction-draft.md`;
@@ -143,4 +147,30 @@ test("draft-path mismatch, incomplete SHA and malformed question cannot hand off
             blank.detail,
         ),
     );
+});
+
+test("L1 question preserves complete producer provenance in proposed same-revision notes", () => {
+    const x = setup();
+    const view = adaptL1Comparison(
+        l1Fixture,
+        "l1-volume-comparison.synthetic.v1",
+    );
+    const request = {
+        ...x.request,
+        source: view.source,
+        selection: initialSelection(view),
+        producer: view.producer,
+    };
+    const feedback = comparisonDiscussionFeedback(
+        request,
+        x.selected,
+        x.detail,
+    );
+    const envelope = JSON.parse(
+        feedback.notes.slice(feedback.notes.indexOf("{")),
+    );
+    assert.deepEqual(envelope.producer.provenance, l1Fixture.provenance);
+    assert.deepEqual(envelope.producer.semantics, l1Fixture.semantics);
+    assert.equal(feedback.status, "proposed");
+    assert.equal(feedback.source.revision, revision);
 });
