@@ -295,12 +295,16 @@
     text-decoration: underline;
     font: inherit;
 }
-.reading-prose > h1 + p {
+.reading-prose .reading-key-answer {
     font-size: 19px;
     font-weight: 600;
     padding: 16px 20px;
     border-left: 4px solid var(--emphasis, var(--highlight));
     background: var(--surface-feature, var(--surface-2));
+}
+.reading-prose .reading-inline-metadata {
+    color: var(--muted);
+    font-size: 13px;
 }
 .reading-prose th {
     background: var(--surface-muted, var(--surface-2));
@@ -352,7 +356,7 @@
     .reading-prose {
         padding: 18px;
     }
-    .reading-prose > h1 + p {
+    .reading-prose .reading-key-answer {
         padding: 12px;
         font-size: 17px;
     }
