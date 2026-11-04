@@ -15,7 +15,7 @@ const contract = `${repository}docs/en/research-derived-data.md`;
 const catalogGuide = `${repository}tasks/20261012-research-data-entry/data-contract.md`;
 const assetIndex = `${repository}docs/en/research-program.md`;
 
-function CatalogCard({ entries }: { entries: CatalogEntry[] }) {
+export function CatalogCard({ entries }: { entries: CatalogEntry[] }) {
     const [version, setVersion] = useState<string>();
     const entry = selectedCatalogVersion(entries, version);
     return (
@@ -67,6 +67,8 @@ function CatalogCard({ entries }: { entries: CatalogEntry[] }) {
             )}
             <SourceInfo>
                 <p>用途：{entry.purpose || "未提供"}</p>
+                <p>資料格式：{entry.viewer_metadata?.schema ?? "未提供"}</p>
+                <p>粒度與單位：摘要未提供，請核對資料契約。</p>
                 <p>
                     資料欄位：
                     {entry.viewer_metadata?.columns?.join("、") ||
@@ -133,6 +135,11 @@ export function SharedCatalog({
                     </button>
                 ))}
             </div>
+            {data.familyError && (
+                <p role="alert">
+                    Maintained data unavailable: {data.familyError}
+                </p>
+            )}
             {data.catalogError && (
                 <div role="alert" className="u-notice">
                     <p>研究資料包暫時無法讀取；仍可查看持續維護的資料。</p>

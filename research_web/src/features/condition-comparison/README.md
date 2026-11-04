@@ -1,5 +1,25 @@
 # Saved condition comparison integration
 
+## Routed integration after PRs #153/#154
+
+The research list and L1 report shell now link to an explicitly synthetic example
+at `#condition-comparison`. `registry.ts` resolves exact registered result IDs;
+`journey.ts` owns bounded URL parsing and identity checks, while `ComparisonPage`
+owns history, source return and case focus. Invalid result/case/page context is
+an error, not a fallback. The local standalone preview remains available.
+
+No formal L1 adapter is included while PR #155 is unmerged. In particular its
+bounded trace references must not be invented into effective outcome cases;
+its synthetic/pilot counts remain not-evaluated research, and absent A∖B results
+must not be calculated in the browser. The existing fixture is solely for the
+navigation demonstration. Real dataset links require a verified reader and exact
+version; the synthetic summary deliberately supplies none.
+
+The author subsequently read approved Library v1 through Library read and checked
+section 8D / UX-10/11/12 before PR #153 became ready. This supersedes the historical
+document-alignment blocker recorded below; real-data and owner acceptance remain
+pending. See `docs/en/research-navigation.md` for the current handoff.
+
 This is a presentation slice for UX-10/11/12, not a research result or a second
 persisted comparison schema. The research line owns the formal L1 data contract.
 No market inputs are read and no statistics or outcome labels are computed here.
@@ -60,3 +80,9 @@ The official materialization helper failed to download in this executor; the
 parent's detailed UX-10/11/12 instructions are the implementation input for now.
 Document alignment and real-data integration remain pending; no usability
 acceptance is claimed by this synthetic slice.
+
+The question panel now offers an explicit read-only draft chooser and inline
+same-revision discussion via the existing DirectionDetailContent. See
+[handoff contract](../../../../docs/en/direction-discussion-ui.md#saved-comparison-question-handoff).
+No draft is created; unavailable/stale targets keep the comparison question and
+its standalone export. The renderer accepts only proposed notes with null choices.

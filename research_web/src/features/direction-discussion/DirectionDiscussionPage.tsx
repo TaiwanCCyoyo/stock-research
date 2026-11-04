@@ -114,14 +114,25 @@ export function DirectionListPage() {
         </div>
     );
 }
-function InteractiveDirection({ detail }: { detail: DirectionDetail }) {
+function InteractiveDirection({
+    detail,
+    initialFeedback,
+}: {
+    detail: DirectionDetail;
+    initialFeedback?: unknown;
+}) {
     const container = useRef<HTMLDivElement>(null);
     const [error, setError] = useState("");
     useEffect(() => {
         setError("");
         if (!container.current) return;
         try {
-            return attachDiscussion(container.current, detail);
+            return attachDiscussion(
+                container.current,
+                detail,
+                undefined,
+                initialFeedback,
+            );
         } catch (reason) {
             setError(
                 reason instanceof Error
@@ -129,7 +140,7 @@ function InteractiveDirection({ detail }: { detail: DirectionDetail }) {
                     : "互動內容暫時無法開啟，請先查看草稿原文。",
             );
         }
-    }, [detail]);
+    }, [detail, initialFeedback]);
     return (
         <>
             <div className="direction-view" ref={container} />
@@ -143,8 +154,10 @@ function InteractiveDirection({ detail }: { detail: DirectionDetail }) {
 }
 export function DirectionDetailContent({
     detail,
+    initialFeedback,
 }: {
     detail: DirectionDetail;
+    initialFeedback?: unknown;
 }) {
     return (
         <>
@@ -152,6 +165,7 @@ export function DirectionDetailContent({
                 <InteractiveDirection
                     key={`${detail.taskId}:${detail.revision}`}
                     detail={detail}
+                    initialFeedback={initialFeedback}
                 />
             ) : (
                 <div className="u-card direction-empty">

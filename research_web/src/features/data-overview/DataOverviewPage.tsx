@@ -215,7 +215,9 @@ export function DataOverviewPage({ stocks = false }: { stocks?: boolean }) {
                                                     className="u-btn"
                                                     href={datasetHref(item)!}
                                                 >
-                                                    看涵蓋股票
+                                                    {item.source === "catalog"
+                                                        ? "查看此版本詳情"
+                                                        : "看涵蓋股票"}
                                                 </a>
                                             )}
                                             {item.source === "catalog" && (

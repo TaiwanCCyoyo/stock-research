@@ -155,7 +155,10 @@ test("study cards keep unlike metrics separate and preserve reading context", as
         const sourceHtml = renderToStaticMarkup(sourceContents[0]);
         assert.match(sourceHtml, /href="#data">查看資料總覽/);
         assert.match(sourceHtml, /synthetic-family/);
-        assert.doesNotMatch(sourceHtml, /<a[^>]*>synthetic-family<\/a>/);
+        assert.match(
+            sourceHtml,
+            /<a href="#dataset\?ref=synthetic-family[^"]*">synthetic-family<\/a>/,
+        );
     } finally {
         await server.close();
     }

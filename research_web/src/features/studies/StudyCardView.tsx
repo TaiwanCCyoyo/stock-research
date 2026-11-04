@@ -1,6 +1,10 @@
 import { SourceInfo, VerdictBadge } from "../../components/ui/primitives";
 import type { StudyCard, StudyDetails } from "./model";
 import { StudyCaveats } from "./StudyCaveats";
+import {
+    datasetDetailHref,
+    studyContext,
+} from "../data-overview/datasetJourney";
 
 const UNIT: Record<StudyCard["keyNumbers"][number]["unit"], string> = {
     percent: "%",
@@ -22,7 +26,11 @@ export function StudyCardView({
     compact?: boolean;
 }) {
     return (
-        <article className="u-card st-card">
+        <article
+            className="u-card st-card"
+            id={"study-" + card.id}
+            tabIndex={-1}
+        >
             <div className="st-meta">
                 <span>
                     {card.accountRun
@@ -83,12 +91,20 @@ export function StudyCardView({
                     )}
                 </div>
             )}
-            {!compact && <StudyDetailsView details={card.details} />}
+            {!compact && (
+                <StudyDetailsView details={card.details} studyId={card.id} />
+            )}
         </article>
     );
 }
 
-function StudyDetailsView({ details }: { details: StudyDetails }) {
+function StudyDetailsView({
+    details,
+    studyId,
+}: {
+    details: StudyDetails;
+    studyId: string;
+}) {
     const hasAny =
         details.originalSummary ||
         details.reportPath ||
@@ -112,7 +128,17 @@ function StudyDetailsView({ details }: { details: StudyDetails }) {
                     {details.sharedData.map((id, index) => (
                         <span key={id}>
                             {index ? "、" : ""}
-                            {id}
+                            <a
+                                href={datasetDetailHref(
+                                    id,
+                                    studyContext(
+                                        globalThis.location?.hash ?? "",
+                                        studyId,
+                                    ),
+                                )}
+                            >
+                                {id}
+                            </a>
                         </span>
                     ))}
                     {" · "}

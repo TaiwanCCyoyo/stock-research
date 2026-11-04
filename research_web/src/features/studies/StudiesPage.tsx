@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { SourceNotice } from "../../components/SourceNotice";
 import { VERDICT_LABELS } from "../../components/ui/verdicts";
 import { StudioState } from "../strategies/shared";
@@ -8,12 +8,46 @@ import { StudiesRefreshNotice } from "./StudiesRefreshNotice";
 import { StudyCardView } from "./StudyCardView";
 import { useStudyCards } from "./useStudyCards";
 import { DirectionEntrance } from "../direction-discussion/DirectionDiscussionPage";
+import { ComparisonEntrance } from "../condition-comparison/ComparisonPage";
+import { comparisonRequestsSourceFocus } from "../condition-comparison/journey";
 import "./studies.css";
 
 export function StudiesPage() {
     const studies = useStudyCards();
-    const [filter, setFilter] = useState<StudyFilter>("all");
-    const [query, setQuery] = useState("");
+    const params = new URLSearchParams(
+        globalThis.location?.hash.split("?")[1] ?? "",
+    );
+    const rawFilter = params.get("filter") ?? "all";
+    const filter = (
+        ["all", "report", ...Object.keys(VERDICT_LABELS)].includes(rawFilter)
+            ? rawFilter
+            : "all"
+    ) as StudyFilter;
+    const query = params.get("q") ?? "";
+    const [searchDraft, setSearchDraft] = useState(query);
+    useEffect(() => setSearchDraft(query), [query]);
+    const study = params.get("study");
+    const comparisonFocus = comparisonRequestsSourceFocus(
+        globalThis.location?.hash ?? "",
+    );
+    const update = (key: string, value: string) => {
+        const next = new URLSearchParams(params);
+        next.set(key, value);
+        next.delete("study");
+        next.delete("focus");
+        location.hash = "studies?" + next;
+    };
+    const setFilter = (value: StudyFilter) => update("filter", value);
+    const setQuery = (value: string) => update("q", value);
+    useEffect(() => {
+        // Explicit comparison return owns focus, including delayed card refreshes.
+        if (comparisonFocus || !study || !studies.cards) return;
+        const element = document.getElementById("study-" + study);
+        if (element) {
+            element.focus({ preventScroll: true });
+            element.scrollIntoView({ block: "center" });
+        }
+    }, [comparisonFocus, study, studies.cards]);
     const all = useMemo(() => studies.cards ?? [], [studies.cards]);
     const filters = useMemo(() => {
         const options: { id: StudyFilter; label: string; count: number }[] = [
@@ -37,6 +71,9 @@ export function StudiesPage() {
             <h1 className="u-title">問過的問題，和得到的答案。</h1>
             <p className="u-lede">包含行不通的。最新的在最上面。</p>
             <DirectionEntrance />
+            <ComparisonEntrance
+                back={globalThis.location?.hash ?? "#studies"}
+            />
             {!studies.cards ? (
                 studies.error ? (
                     <StudioState
@@ -81,14 +118,27 @@ export function StudiesPage() {
                                 </button>
                             ))}
                         </div>
-                        <input
-                            className="st-search"
-                            type="search"
-                            aria-label="搜尋研究"
-                            placeholder="搜尋研究"
-                            value={query}
-                            onChange={(event) => setQuery(event.target.value)}
-                        />
+                        <form
+                            role="search"
+                            onSubmit={(event) => {
+                                event.preventDefault();
+                                setQuery(searchDraft.trim());
+                            }}
+                        >
+                            <input
+                                className="st-search"
+                                type="search"
+                                aria-label="搜尋研究"
+                                placeholder="搜尋研究"
+                                value={searchDraft}
+                                onChange={(event) =>
+                                    setSearchDraft(event.target.value)
+                                }
+                            />
+                            <button className="u-btn" type="submit">
+                                搜尋
+                            </button>
+                        </form>
                     </div>
                     {groups.length === 0 && (
                         <p className="u-skeleton">沒有符合的研究。</p>

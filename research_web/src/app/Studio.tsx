@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { MarketPage } from "../features/market/MarketPage";
 import { OpportunityPage } from "../features/opportunities/OpportunityPage";
+import { WaveStockPage } from "../features/full-history/WaveStockPage";
+import { hasWaveContext } from "../features/full-history/stockJourney";
 import { FullHistoryPage } from "../features/full-history/FullHistoryPage";
 import { ResearchLibraryPage } from "../features/research/ResearchLibraryPage";
 import { FundsPage } from "../features/funds/FundsPage";
@@ -11,6 +13,7 @@ import { StrategyOverviewPage } from "../features/strategies/StrategyOverviewPag
 import { StrategyDetailPage } from "../features/strategies/StrategyDetailPage";
 import { StrategyComparePage } from "../features/strategies/StrategyComparePage";
 import { StudiesPage } from "../features/studies/StudiesPage";
+import { ComparisonPage } from "../features/condition-comparison/ComparisonPage";
 import {
     DirectionDetailPage,
     DirectionListPage,
@@ -23,6 +26,7 @@ import {
     StockSearch,
 } from "../features/data-overview/CoveragePages";
 import { DataOverviewPage } from "../features/data-overview/DataOverviewPage";
+import { DatasetDetailPage } from "../features/data-overview/DatasetDetailPage";
 import { studioRoute, type StudioPage } from "./routes";
 import { themeId, THEMES, type ThemeId } from "./themes";
 import { ThemeAtmosphere } from "./ThemeAtmosphere";
@@ -51,6 +55,7 @@ const NAV: {
             "report",
             "directions",
             "direction",
+            "condition-comparison",
         ],
     },
     {
@@ -61,7 +66,7 @@ const NAV: {
     {
         id: "overview",
         label: "資料總覽",
-        also: ["data", "stock"],
+        also: ["data", "stock", "dataset"],
         icon: "M5 6c0-1.1 3.1-2 7-2s7 .9 7 2-3.1 2-7 2-7-.9-7-2zM5 6v12c0 1.1 3.1 2 7 2s7-.9 7-2V6M5 12c0 1.1 3.1 2 7 2s7-.9 7-2",
     },
     {
@@ -345,6 +350,8 @@ export default function Studio() {
             >
                 {page === "home" && <HomePage />}
                 {page === "studies" && <StudiesPage />}
+                {page === "condition-comparison" && <ComparisonPage />}
+                {page === "dataset" && <DatasetDetailPage />}
                 {page === "directions" && <DirectionListPage />}
                 {page === "direction" && route.directionId && (
                     <DirectionDetailPage
@@ -366,13 +373,20 @@ export default function Studio() {
                     ) : (
                         <DataOverviewPage stocks />
                     ))}
-                {page === "stock" && route.securityKey && (
-                    <StockCoverageDetail
-                        key={route.securityKey}
-                        securityKey={route.securityKey}
-                        theme={`${palette}:${resolvedAppearance}`}
-                    />
-                )}
+                {page === "stock" &&
+                    route.securityKey &&
+                    (hasWaveContext(location.hash) ? (
+                        <WaveStockPage
+                            key={location.hash}
+                            hash={location.hash}
+                        />
+                    ) : (
+                        <StockCoverageDetail
+                            key={route.securityKey}
+                            securityKey={route.securityKey}
+                            theme={`${palette}:${resolvedAppearance}`}
+                        />
+                    ))}
                 {page === "report" && reportId && (
                     <ReportViewer
                         key={reportId}

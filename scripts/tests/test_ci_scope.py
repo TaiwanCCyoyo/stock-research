@@ -1782,3 +1782,17 @@ def test_direction_draft_closeout_selection_adds_only_the_validator() -> None:
     ):
         plan = ci_scope.make_plan([("M", path)])
         assert set(plan["python_tests"]) - set(baseline["python_tests"]) <= {DIRECTION_DRAFT_TEST}
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "research_core/pattern_scan_comparison_v1.py",
+        "scripts/tests/fixtures/l1-volume-comparison.synthetic.v1.json",
+        "tasks/20261013-pattern-scan/l1-volume-comparison-contract-v1.md",
+    ],
+)
+def test_l1_comparison_producer_changes_validate_browser_consumer(source: str) -> None:
+    plan = ci_scope.make_plan([("M", source)])
+    assert not plan["full"] and plan["frontend"]
+    assert "scripts/tests/test_pattern_scan_comparison_v1.py" in plan["python_tests"]

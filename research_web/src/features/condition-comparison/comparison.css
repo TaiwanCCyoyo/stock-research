@@ -92,6 +92,20 @@
 .condition-comparison details {
     margin: 1rem 0;
 }
+.condition-comparison pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+.cc-table-scroll {
+    max-width: 100%;
+    overflow-x: auto;
+}
+.cc-table-scroll th,
+.cc-table-scroll td {
+    padding: 0.5rem;
+    vertical-align: top;
+    text-align: left;
+}
 @media (max-width: 600px) {
     .cc-grid,
     .cc-counts {
