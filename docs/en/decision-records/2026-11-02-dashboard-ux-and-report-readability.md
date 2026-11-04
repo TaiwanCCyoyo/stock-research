@@ -362,3 +362,32 @@ separate action/emphasis tokens, typography and spacing distinguish content
 roles while preserving theme backgrounds, market gain/loss meaning and chart
 series. The ink theme retains neutral action/emphasis colors. Existing frozen
 report kits are not rewritten.
+
+Revision evidence (2026-11-04): all 52 editions received independent overview
+and source review; 49 retain editorial `ready` and three retain `history`.
+The integrated contract check validated 199 registered sources and 292 local
+body links. The three batch revision commits change only reading editions,
+their metadata and batch records; original missions, reports, results,
+receipts and hashes remain unchanged.
+
+Technical checks passed: 95 reader/study-card Python tests, TypeScript, the
+frontend suite (649 initially passed; both failing expectations corrected and
+their 19-test files passed), and focused report selection, lifecycle and dataset
+return-navigation tests. Published-artifact verification passed both before
+and after the reader changes. Normal commit hooks passed. Current-head hosted
+CI and Dot review remain separate delivery gates.
+
+Browser inspection covered home, research, stock coverage/detail, ETF, market,
+strategy accounts, direction-list empty state and condition comparison in
+forest light/dark and ink dark representative views. It found and corrected
+transparent coverage tables, CSS cascade overrides on selected controls/KPIs,
+and long related-report links overflowing the mobile reader. A 390px viewport
+was used for home and a revised September report. This is not an exhaustive
+all-theme, all-state or 52-page visual certification. Direction details had no
+saved drafts to inspect; frozen HTML report interiors retain their original kits.
+
+Research lifecycle is distinct from strategy evaluation: completed descriptive
+reports remain in the report collection even when no strategy has been evaluated.
+Missing-source records expose their limitation through a web record, not an
+invented completed report or an automatic archive decision. Dataset round trips
+preserve the selected report/in-progress/archive collection.

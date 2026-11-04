@@ -189,3 +189,48 @@ test("a native HTML report remains the default when an editorial edition exists"
     assert.equal(studyCollection(card), "ready");
     assert.equal(card.reading?.edition, "reading-report.md");
 });
+
+test("completed descriptive reports do not become ongoing strategy evaluations", () => {
+    const descriptive = {
+        ...pendingCard(
+            "20261004-feature-discrimination-atlas",
+            "Strategy not evaluated",
+        ),
+        verdict: "not_evaluated" as const,
+        sourceVerdict: "not_evaluated" as const,
+        reading: {
+            state: "history" as const,
+            reason: "Editorial review pending",
+        },
+    };
+    assert.equal(studyCollection(descriptive), "in_progress");
+    const edition = withReading(descriptive, record);
+    assert.equal(studyCollection(edition), "ready");
+    assert.equal(edition.sourceVerdict, "not_evaluated");
+    assert.equal(edition.verdict, null);
+    const html = {
+        ...descriptive,
+        reportKind: "html" as const,
+        reportHref: "#report/descriptive",
+    };
+    assert.equal(studyCollection(html), "ready");
+    assert.equal(html.verdict, "not_evaluated");
+    assert.equal(studyCollection({ ...html, reportHref: null }), "in_progress");
+    for (const report of [edition, html]) {
+        assert.equal(
+            studyCollection({ ...report, sourceVerdict: "running" }),
+            "in_progress",
+        );
+        assert.equal(
+            studyCollection({
+                ...report,
+                reading: { ...report.reading!, state: "in_progress" },
+            }),
+            "in_progress",
+        );
+        assert.equal(
+            studyCollection({ ...report, sourceVerdict: "archived" }),
+            "history",
+        );
+    }
+});
