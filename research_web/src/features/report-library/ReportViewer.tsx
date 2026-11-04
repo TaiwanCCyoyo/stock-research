@@ -24,7 +24,11 @@ import {
     type ReportFrameThemeState,
 } from "./themeBridge";
 import "./reports.css";
+import { MarkdownReport } from "./MarkdownReport";
+import { useStudyCards } from "../studies/useStudyCards";
+import { currentStudyHash, studiesBack, reportView } from "../studies/reading";
 import { ComparisonEntrance } from "../condition-comparison/ComparisonPage";
+import { StudyDetailsView } from "../studies/StudyCardView";
 
 /**
  * Shows one report in its own framed document, so its CSS cannot restyle the studio
@@ -43,6 +47,93 @@ import { ComparisonEntrance } from "../condition-comparison/ComparisonPage";
  * reports open nothing in new windows. Retained result links may download files.
  */
 export function ReportViewer({
+    reportId,
+    palette,
+    appearance,
+}: {
+    reportId: string;
+    palette: string;
+    appearance: string;
+}) {
+    const studies = useStudyCards();
+    const index = useReportIndex();
+    const card = studies.cards?.find((item) => item.id === reportId);
+    const requested = new URLSearchParams(
+        currentStudyHash().split("?")[1] ?? "",
+    ).get("view");
+    const view = reportView(
+        requested,
+        card?.reportKind,
+        !!index.reports?.some((item) => item.id === reportId),
+        !studies.cards && !studies.error,
+    );
+    if (view === "loading") return <p role="status">正在讀取報告…</p>;
+    if (view === "reading")
+        return (
+            <MarkdownReport
+                key={reportId}
+                reportId={reportId}
+                relatedStudies={studies.cards ?? []}
+            />
+        );
+    if (view === "summary") {
+        return (
+            <article className="u-page reading-page">
+                <a className="u-btn" href={studiesBack(currentStudyHash())}>
+                    ← 返回研究列表
+                </a>
+                {!studies.cards ? (
+                    studies.error ? (
+                        <div role="alert">
+                            <p>{studies.error}</p>
+                            <button className="u-btn" onClick={studies.retry}>
+                                重新讀取
+                            </button>
+                        </div>
+                    ) : (
+                        <p role="status">正在讀取研究紀錄…</p>
+                    )
+                ) : !card ? (
+                    <p role="alert">目前無法找到這份研究紀錄。</p>
+                ) : (
+                    <>
+                        <header className="reading-overview">
+                            <p className="u-eyebrow">研究紀錄</p>
+                            <h1>{card.question}</h1>
+                            <p className="reading-answer">{card.answer}</p>
+                            {card.limitation && (
+                                <p className="reading-limitation">
+                                    {card.limitation}
+                                </p>
+                            )}
+                        </header>
+                        <section className="u-card reading-source-gap">
+                            <h2>目前保存的資料</h2>
+                            <p>
+                                {card.reading?.reason ||
+                                    "尚未提供可核對的報告全文；本頁保留現有登錄資訊。"}
+                            </p>
+                            <p>這份紀錄尚不足以整理研究結論。</p>
+                            <StudyDetailsView
+                                details={card.details}
+                                studyId={card.id}
+                            />
+                        </section>
+                    </>
+                )}
+            </article>
+        );
+    }
+    return (
+        <HtmlReportViewer
+            reportId={reportId}
+            palette={palette}
+            appearance={appearance}
+        />
+    );
+}
+
+export function HtmlReportViewer({
     reportId,
     palette,
     appearance,
@@ -173,7 +264,10 @@ export function ReportViewer({
                 <ComparisonEntrance back={`#report/${reportId}`} />
             )}
             <div className="rv-bar u-card">
-                <a className="rv-back u-btn" href="#studies">
+                <a
+                    className="rv-back u-btn"
+                    href={studiesBack(currentStudyHash())}
+                >
                     ← 返回研究列表
                 </a>
                 <div className="rv-title">
@@ -241,7 +335,10 @@ export function ReportViewer({
                         >
                             {loading ? "正在重新讀取…" : "重新讀取報告資訊"}
                         </button>
-                        <a className="u-btn" href="#studies">
+                        <a
+                            className="u-btn"
+                            href={studiesBack(currentStudyHash())}
+                        >
                             返回研究列表
                         </a>
                     </div>

@@ -1,0 +1,26 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20261002-one-lot-delay-resumption",
+    "state": "ready",
+    "reason": "已依保存的完整文字結果整理問題、比較、分母、限制及後續資訊；屬閱讀就緒，不是策略或擁有者驗收。",
+    "updated_at": "2026-11-04",
+    "edition": "reading-report.md",
+    "question": "一張進場候選若所有交易多延遲一日，是否仍保留足夠淨利？",
+    "answer": "所有交易多等一個交易日，淨利由 293.41 萬元降至 155.21 萬元，只保留 52.90%，低於原定 70%。",
+    "limitation": "這裡把每筆交易都延遲一天，與偶爾缺席的情況不同；資料仍是已看過的 2019–2023 年。",
+    "data_period": null,
+    "sources": [
+        {
+            "label": "主要結果來源",
+            "path": "20261002-one-lot-delay-resumption/execution-v4.md"
+        },
+        {
+            "label": "後續結果或口徑說明",
+            "path": "20261002-add-stage-diagnostic/report.md"
+        },
+        {
+            "label": "後續結果或口徑說明",
+            "path": "20261002-add-retry/execution-normal-v1.md"
+        }
+    ]
+}

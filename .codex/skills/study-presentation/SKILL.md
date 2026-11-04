@@ -124,6 +124,14 @@ missing visual acceptance honestly and honor tool access restrictions.
 
 Before delivering a report or revising its reader-facing presentation, require
 an independent subagent that did not write the draft to review it in two passes.
+Have that reviewer act as a stock-magazine subscriber who is interested in stocks
+but has not followed the project. Include the research landing page, category
+names and report-entry labels in this review: ask what they expect to find,
+which question the page answers, and which wording makes them stop or guess.
+Project codes, slogans and internal implementation language are not adequate
+reader-facing titles. Theme atmosphere must not flatten the reading hierarchy:
+distinguish the page, report surfaces, main answer, comparisons and supporting
+sources through contrast, typography and spacing, including monochrome themes.
 First provide only the reader-facing overview, without the author's explanation
 or expected answer. Have it state the question, compared populations, time windows
 and main conclusion in everyday language. If it must consult the appendix to

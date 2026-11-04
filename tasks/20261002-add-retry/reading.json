@@ -1,0 +1,26 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20261002-add-retry",
+    "state": "ready",
+    "reason": "已依保存的完整文字結果整理問題、比較、分母、限制及後續資訊；屬閱讀就緒，不是策略或擁有者驗收。",
+    "updated_at": "2026-11-04",
+    "edition": "reading-report.md",
+    "question": "加碼提案未成交後，只允許一次有界重試，能否改善原帳戶？",
+    "answer": "加碼未成交後重試一次，原時點執行的帳戶多賺 34,908 元；所有交易延遲一天時是否仍改善，還沒有結果。",
+    "limitation": "只比較 2019–2023 年原時點執行的結果；同一重試規則在延遲、缺席及另一段未看過期間的表現尚未完成。",
+    "data_period": null,
+    "sources": [
+        {
+            "label": "主要結果來源",
+            "path": "20261002-add-retry/execution-normal-v1.md"
+        },
+        {
+            "label": "後續結果或口徑說明",
+            "path": "20261002-add-stage-diagnostic/report.md"
+        },
+        {
+            "label": "後續結果或口徑說明",
+            "path": "20261002-one-lot-delay-resumption/execution-v4.md"
+        }
+    ]
+}

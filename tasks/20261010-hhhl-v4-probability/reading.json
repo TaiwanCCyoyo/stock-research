@@ -1,0 +1,33 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20261010-hhhl-v4-probability",
+    "state": "ready",
+    "reason": "已依保存的完整文字結果整理問題、比較、分母、限制及後續資訊；屬閱讀就緒，不是策略或擁有者驗收。",
+    "updated_at": "2026-11-04",
+    "edition": "reading-report.md",
+    "question": "v4 原突破、上方壓力分組及同漲幅下的早期越線，與半年翻倍有何關係？",
+    "answer": "第四版全部突破半年翻倍為 8.49%，新高爆量對照為 8.86%；上方沒有壓力線的組別較高，但越線的額外差異不一致。",
+    "limitation": "價格使用研究指定的還原因子；2026 年較晚事件尚未走完半年，已提早達標與尚待觀察者的資料完整程度不同。",
+    "data_period": {
+        "from": "2019-01-02",
+        "to": "2026-08-14"
+    },
+    "sources": [
+        {
+            "label": "主要結果來源",
+            "path": "20261010-hhhl-v4-probability/report.md"
+        },
+        {
+            "label": "原始問題與規則",
+            "path": "20261010-hhhl-v4-probability/mission.md"
+        },
+        {
+            "label": "後續結果或口徑說明",
+            "path": "20261010-hhhl-v4-probability/data-contract.md"
+        },
+        {
+            "label": "後續結果或口徑說明",
+            "path": "20261012-hhhl-v4-variants/report.md"
+        }
+    ]
+}

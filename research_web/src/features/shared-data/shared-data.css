@@ -30,6 +30,9 @@
 }
 .shared-controls {
     margin: 8px 0;
+    padding: 12px;
+    border-radius: var(--radius-md);
+    background: var(--surface-muted);
 }
 .shared-data button,
 .shared-data input,
@@ -44,8 +47,9 @@
 }
 .shared-data button[aria-pressed="true"],
 .shared-data button[aria-selected="true"] {
-    background: var(--ink);
-    color: var(--paper);
+    background: var(--action);
+    color: var(--on-action);
+    font-weight: 700;
 }
 .shared-data a {
     color: var(--accent);
@@ -92,8 +96,9 @@
     border-top: 1px solid var(--line);
 }
 .shared-legend {
-    border-block: 1px dashed var(--line);
-    padding: 10px 0;
+    border-block: 1px solid var(--line);
+    padding: 10px 12px;
+    background: var(--surface-muted);
     min-height: 70px;
     font-size: 13px;
     font-variant-numeric: tabular-nums;
@@ -277,8 +282,9 @@
     padding: 7px 14px;
 }
 .shared-chart-card .shared-range button[aria-pressed="true"] {
-    background: var(--chip);
-    color: var(--ink);
+    background: var(--action);
+    color: var(--on-action);
+    font-weight: 700;
 }
 .shared-quote {
     border: 0;

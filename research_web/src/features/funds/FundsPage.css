@@ -62,8 +62,9 @@
         transform 0.15s ease;
 }
 .fund-card.fund-active {
+    background: var(--surface-feature);
     box-shadow:
-        0 0 0 2px var(--accent),
+        0 0 0 2px var(--emphasis),
         var(--shadow-card);
 }
 .fund-select {
@@ -80,7 +81,7 @@
     cursor: pointer;
 }
 .fund-select strong {
-    color: var(--accent);
+    color: var(--ink);
     font-size: 18px;
 }
 .fund-select span,
@@ -124,6 +125,8 @@
     align-items: flex-start;
     gap: 16px;
     margin-bottom: 22px;
+    padding-bottom: 18px;
+    border-bottom: 3px solid var(--emphasis);
 }
 .fund-title p {
     margin: 0 0 6px;

@@ -1,0 +1,13 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260814-2b-false-break-structure",
+    "state": "in_progress",
+    "reason": "研究規劃或實作階段；尚未完成可核對的結果閱讀版。",
+    "updated_at": "2026-11-02",
+    "edition": null,
+    "question": "2B 的效果來自假突破形狀嗎？",
+    "answer": "目前只有研究規劃，尚無結果報告。",
+    "limitation": "目前沒有結果可供判斷。",
+    "data_period": null,
+    "sources": []
+}

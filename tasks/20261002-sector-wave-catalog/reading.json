@@ -1,0 +1,29 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20261002-sector-wave-catalog",
+    "state": "ready",
+    "reason": "已依保存的完整文字結果整理問題、比較、分母、限制及後續資訊；屬閱讀就緒，不是策略或擁有者驗收。",
+    "updated_at": "2026-11-04",
+    "edition": "reading-report.md",
+    "question": "哪些台股曾快速翻倍，同族群其他股票同期表現如何？",
+    "answer": "已整理 2,561 段歷史上漲，能查同一時段誰漲得更多；它回答了案例在哪裡，尚未回答如何提前選出。",
+    "limitation": "產業分類使用目前名單回看歷史，漲幅不含現金股息；同一波段可能出現在多個族群視角。",
+    "data_period": {
+        "from": "2019-01-02",
+        "to": "2026-08-14"
+    },
+    "sources": [
+        {
+            "label": "主要結果來源",
+            "path": "20261002-sector-wave-catalog/report.md"
+        },
+        {
+            "label": "原始問題與規則",
+            "path": "20261002-sector-wave-catalog/mission.md"
+        },
+        {
+            "label": "後續結果或口徑說明",
+            "path": "20261004-sector-wave-full-history-preview/report.md"
+        }
+    ]
+}

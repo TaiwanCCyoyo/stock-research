@@ -327,6 +327,8 @@ verify-*.png
 !tasks/*/presentation.json
 # Study card v2 (owner decision 2026-10-24) and its contract.
 !tasks/*/study.json
+!tasks/*/reading.json
+!tasks/*/reading-report.md
 # Authored direction display models travel with the reviewed draft, not local-only previews.
 !tasks/*/preview/
 !tasks/*/preview/direction-discussion.json

@@ -1,0 +1,18 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20261002-entry-persistence",
+    "state": "ready",
+    "reason": "已依保存的完整文字結果整理問題、比較、分母、限制及後續資訊；屬閱讀就緒，不是策略或擁有者驗收。",
+    "updated_at": "2026-11-04",
+    "edition": "reading-report.md",
+    "question": "要求連續三晚符合進場條件，能否減少非命中侵蝕與操作？",
+    "answer": "連續三晚符合才進場，淨利保留 97.23%、委託減少；但一串二十次非命中持股的最大中途累積損失，比原版本更大。",
+    "limitation": "三晚確認組仍有未結束持股，因此該組所有二十次序列中最差的一串尚無法確定；原版本的全域值已知，候選已有一串較差，足以判定未過原定條件。",
+    "data_period": null,
+    "sources": [
+        {
+            "label": "主要結果來源",
+            "path": "20261002-entry-persistence/execution-v3.md"
+        }
+    ]
+}
