@@ -45,8 +45,10 @@ Add new prose separately from original reports, source snapshots, results,
 receipts and pinned registrations. No new hashes or research runs are needed
 for an editorial edition. Preserve a `source_unavailable` explanation when
 evidence cannot be found in this repository's authorized homes; the predecessor
-checkout is not a reconstruction source. Such records remain accessible in
-history rather than being deleted or promoted to the default collection.
+checkout is not a reconstruction source. Such records remain accessible through
+a web record that discloses the source gap, without inventing a completed report.
+Only explicit archival puts a study in the archived collection; source gaps and
+editorial state alone do not archive it or determine its lifecycle collection.
 
 `research_core.report_reading.ReportReadings` validates bounded UTF-8 Markdown,
 contained paths and the registration. `GET /studies` adds `readings` and
