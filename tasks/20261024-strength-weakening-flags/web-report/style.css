@@ -1,5 +1,5 @@
 :root {
-    --page: var(--surface);
+    --page: color-mix(in srgb, var(--accent-soft) 80%, var(--paper));
     --focus-surface: var(--accent-soft);
     --focus-edge: color-mix(in srgb, var(--accent) 35%, transparent);
     --stage-bg: #ffffff;
@@ -222,9 +222,11 @@ body {
 }
 
 .counter-note {
-    padding: 4px 0 4px 14px;
-    border-left: 2px solid var(--line-strong);
-    background: transparent;
+    padding: 16px;
+    border: 1px solid var(--stage-edge);
+    border-radius: 14px;
+    color: var(--stage-ink);
+    background: var(--stage-bg);
     font-size: 14px;
 }
 
