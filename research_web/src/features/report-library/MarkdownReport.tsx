@@ -18,6 +18,7 @@ import {
     imageUnavailableLabel,
     markdownFragmentId,
     markdownHeadingIds,
+    markdownText,
     scrollMarkdownFragment,
 } from "./markdownNavigation";
 
@@ -94,6 +95,17 @@ export function MarkdownReport({
     const editionComponents = useMemo<Components>(
         () => ({
             img: ({ alt }) => <span>{imageUnavailableLabel(alt)}</span>,
+            p: ({ node, children }) => {
+                const text = node ? markdownText(node) : "";
+                const answer = data?.reading?.answer;
+                const className =
+                    answer && text.includes(answer)
+                        ? "reading-key-answer"
+                        : /^(閱讀版更新|閱讀整理)：/.test(text)
+                          ? "reading-inline-metadata"
+                          : undefined;
+                return <p className={className}>{children}</p>;
+            },
             a: ({ href, children }) => {
                 if (markdownFragmentId(href, "reading-edition-"))
                     return (

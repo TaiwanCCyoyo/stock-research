@@ -6,8 +6,8 @@ interface MarkdownNode {
     children?: MarkdownNode[];
 }
 
-function text(node: MarkdownNode): string {
-    return node.value ?? node.children?.map(text).join("") ?? "";
+export function markdownText(node: MarkdownNode): string {
+    return node.value ?? node.children?.map(markdownText).join("") ?? "";
 }
 
 /** Unicode headings retain readable fragments; repeats use -1, -2, etc.
@@ -25,7 +25,7 @@ export function markdownHeadingIds({ prefix }: { prefix: string }) {
         const used = new Set<string>();
         function visit(node: MarkdownNode) {
             if (node.tagName && /^h[1-6]$/.test(node.tagName)) {
-                const base = headingSlug(text(node));
+                const base = headingSlug(markdownText(node));
                 let slug = base;
                 let suffix = 0;
                 while (used.has(slug)) slug = `${base}-${++suffix}`;
