@@ -62,8 +62,9 @@
         transform 0.15s ease;
 }
 .fund-card.fund-active {
+    background: var(--surface-feature);
     box-shadow:
-        0 0 0 2px var(--accent),
+        0 0 0 2px var(--emphasis),
         var(--shadow-card);
 }
 .fund-select {
@@ -80,7 +81,7 @@
     cursor: pointer;
 }
 .fund-select strong {
-    color: var(--accent);
+    color: var(--ink);
     font-size: 18px;
 }
 .fund-select span,
@@ -124,6 +125,8 @@
     align-items: flex-start;
     gap: 16px;
     margin-bottom: 22px;
+    padding-bottom: 18px;
+    border-bottom: 3px solid var(--emphasis);
 }
 .fund-title p {
     margin: 0 0 6px;
@@ -262,6 +265,18 @@
 .fund-page summary:focus-visible {
     outline: 3px solid var(--accent);
     outline-offset: 3px;
+}
+.fund-detail h2,
+.fund-compare-panel h2 {
+    scroll-margin-top: 100px;
+}
+.fund-detail h2:focus-visible,
+.fund-compare-panel h2:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
+}
+.fund-compare-card > button {
+    margin-bottom: 12px;
 }
 @media (max-width: 700px) {
     .fund-layout {

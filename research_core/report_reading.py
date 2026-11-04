@@ -134,6 +134,7 @@ class ReportReadings:
     def read(self) -> dict[str, Any]:
         records: list[dict[str, Any]] = []
         original_reports: list[str] = []
+        tooling_tasks: list[str] = []
         warnings: list[dict[str, str]] = []
         try:
             root = safe_path(self.tasks_root)
@@ -144,6 +145,12 @@ class ReportReadings:
             return {"readings": [], "reading_warnings": [{"task_id": "", "code": "readings_unavailable", "message": "閱讀版本目錄目前無法讀取。"}]}
         for task in sorted(tasks, key=lambda item: item.name, reverse=True):
             try:
+                try:
+                    card = _object(_task(root, task.name) / "study.json")
+                    if card.get("task_id") == task.name and next(_card_validator().iter_errors(card), None) is None and card["kind"] == "tooling":
+                        tooling_tasks.append(task.name)
+                except (OSError, ValueError, RecursionError):
+                    pass  # Unknown registrations must remain visible for clarification.
                 record = self.record(task.name)
                 if record is not None:
                     records.append(record)
@@ -156,7 +163,7 @@ class ReportReadings:
             except (OSError, ValueError, RecursionError):
                 LOGGER.warning("Reading registration unavailable: task=%s", task.name)
                 warnings.append({"task_id": task.name, "code": "reading_unavailable", "message": "閱讀版本或引用來源無法核對，暫時列為待整理。"})
-        return {"readings": records, "reading_warnings": warnings, "original_reports": original_reports}
+        return {"readings": records, "reading_warnings": warnings, "original_reports": original_reports, "tooling_tasks": tooling_tasks}
 
     def document(self, identity: str) -> dict[str, Any]:
         task = _task(self.tasks_root, identity)
@@ -177,15 +184,20 @@ class ReportReadings:
         if period is not None and period["from"] > period["to"]:
             raise ReportReadingError("original report period is reversed")
         name = card["report"]["markdown"]
-        if name is None:
-            raise ReportReadingError("no Markdown report is registered")
+        mission_only = name is None
+        if mission_only:
+            name = "mission.md"
         return {
             "task_id": identity,
             "reading": reading,
             "markdown": _markdown(task, name),
             "sources": reading["sources"] if reading is not None else [],
-            "state": reading["state"] if reading is not None else "history",
-            "reason": reading["reason"] if reading is not None else "原始報告，尚未完成閱讀版核對；內容可能與舊登錄不同，請以原文及既有來源提醒為準。",
+            "state": reading["state"] if reading is not None else "in_progress" if mission_only else "history",
+            "reason": "這是研究任務說明，尚無結果報告。"
+            if mission_only
+            else reading["reason"]
+            if reading is not None
+            else "原始報告，尚未完成閱讀版核對；內容可能與舊登錄不同，請以原文及既有來源提醒為準。",
         }
 
     def source(self, identity: str, index: int) -> dict[str, str]:

@@ -296,6 +296,7 @@ verify-*.png
 !tasks/20261013-pattern-scan/results/
 !tasks/20261013-pattern-scan/results/count-plan-probe-v5.zip
 !tasks/20261013-pattern-scan/results/followup-probe-v5.zip
+!tasks/20261013-pattern-scan/results/l1-recovery-pilot-v1.zip
 
 # Momentum-only study: audit decisions and final aggregate tables (counts and rates, no quotes).
 !tasks/20261021-momentum-only-doubling/audit-decisions.json
@@ -305,6 +306,9 @@ verify-*.png
 !tasks/20261024-strength-weakening-flags/results/
 !tasks/20261024-strength-weakening-flags/results/*.parquet
 !tasks/20261024-strength-weakening-flags/results/*.json
+!tasks/20261024-strength-weakening-flags/appendix/
+!tasks/20261024-strength-weakening-flags/appendix/*.csv
+!tasks/20261024-strength-weakening-flags/appendix/index.md
 !tasks/20261021-momentum-only-doubling/pr17-universe-v1.json
 # The forward log lives under the research-data root since 2026-10-31 (amendments/2026-10-31-forward-log-location.md).
 !tasks/20261021-momentum-only-doubling/amendments/
@@ -325,11 +329,20 @@ verify-*.png
 !tasks/*/study.json
 !tasks/*/reading.json
 !tasks/*/reading-report.md
+# Authored direction display models travel with the reviewed draft, not local-only previews.
+!tasks/*/preview/
+!tasks/*/preview/direction-discussion.json
 !tasks/20261024-data-homes-and-scratch/study-card-v2.schema.json
 !tasks/20261024-data-homes-and-scratch/study-card-v2-examples/
 !tasks/20261024-data-homes-and-scratch/study-card-v2-examples/*.json
+
+# Complete artificial CLI input; no market observations or source data.
+!tasks/20261102-order-card-freshness/synthetic-packet.json
 
 # Applies to every named publication version (completion-v2, completion-v3, ...).
 /tasks/20261013-annual-winner-rotation/publications/*/admission-audit.json
 /tasks/20261013-annual-winner-rotation/publications/*/run-receipt.json
 !tasks/20261013-annual-winner-rotation/publications/*/publication.zip
+
+!tasks/20261013-pattern-scan/evidence/publish_d_results_20261031.py
+!tasks/20261013-pattern-scan/evidence/summarize_d_results_20261031.py

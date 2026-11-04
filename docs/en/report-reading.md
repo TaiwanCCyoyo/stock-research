@@ -1,10 +1,25 @@
 # Report reading editions
 
 `report-reading.v1` is an editorial layer over preserved study evidence. It does
-not grant strategy acceptance or owner acceptance. The Dashboard defaults to
-`ready` reading editions; `in_progress` and `history` remain accessible in
-separate collections. Missing or invalid registrations appear in history with
-a reason. Research verdicts and reading readiness are independent.
+not grant strategy acceptance or owner acceptance. Research lifecycle and
+editorial readiness are separate: the Dashboard offers research reports,
+in-progress work and explicitly archived records. Missing or invalid evidence
+does not silently archive a study or certify its conclusions.
+
+Owner update 2026-11-04: web reading is the default for every nonarchived study,
+not an availability filter. Existing HTML reports keep their primary entry;
+legacy Markdown editions use the shared web report layout, source disclosures
+and related-study navigation. Valid saved missions have a web reading entry
+when results are not yet available. A record lacking a readable source has an
+explicit source-gap page, not a fabricated completed report. Only archived
+records may lack a web entry. These distinctions must remain visible.
+
+HTML and shared web reading editions meet the same reader-understanding
+standard in `study-presentation`: question, compared groups, answer, period,
+denominator and meaningful limitation. Test comprehension with an independent
+stock-magazine subscriber before checking against the saved evidence. Choose
+layout and visual evidence for the actual comparison; do not migrate frozen
+report kits or re-pin evidence solely to change presentation.
 
 Register an edition in `tasks/<task-id>/reading.json` with these required fields:
 

@@ -313,3 +313,79 @@ mission 的驗證須涵蓋除權跨窗、未完成週線、暖機與休市日合
 | 大量市場疊加搜尋                            | 舊研究 29 種疊加 0 種通過；S6 只看少數事先固定的狀態                                                           |
 | S3 之前新增型態家族                         | 先回答「型態有沒有額外貢獻」，再決定要不要更多型態                                                             |
 | 為了通知通道先做 Gmail、推播                | 卡片格式與規則還沒定；先存檔與 dashboard（P3）                                                                 |
+
+## 9. 2026-11-02 補充：工程接續與閱讀依賴
+
+本節追加後續狀態，前述 10-27 決策、佇列與歷史結果原樣保留。這次的 owner 意圖摘要是：
+接續可獨立推進的長期研究工程，並使研究進度、報告閱讀與討論流程的依賴容易理解；
+互動介面應幫助理解與溝通。這不是新的方法、門檻或市場運算授權。具體範圍、gates 與交付見
+[本次決策紀錄](decision-records/2026-11-02-long-term-research-engineering.md)。
+
+本次只有兩條有限工作線：
+
+| 工作線               | 接續內容                                                                                                                                                                                                                           | 停止邊界                                                                         |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| E1 純記憶體整合      | 串接既有 staging、stock counts、整數聚合及 paired bootstrap；依[既有資料契約](../../tasks/20261027-entry-window/data-contract.md)與[整合交接](../../tasks/20261027-entry-window/assembly-handoff.md)，只用明確記憶體輸入與合成案例 | 沒有真實 reader／runner、原 labels admission、研究結果或市場計算；不碰來源與排程 |
+| roadmap／UX 依賴對齊 | 以本節與研究總覽連結既有工程、閱讀及討論契約，保留各負責 session 的介面                                                                                                                                                            | 不另實作 #137 討論介面、不改既有報告與 frozen evidence                           |
+
+### UX 與討論流程的目前位置
+
+- #139–141 的 UI 工作已合併；#142 的 reading/readiness 契約及 #143–145 的閱讀版本仍待本人接受。
+  P5–P7 依賴 #142；`ready` 只表示編輯核對，不表示研究通過、本人接受或產品可用。
+  尚未合併的正式契約見 [reading branch](https://github.com/TaiwanCCyoyo/stock-research/blob/codex/report-reading-readiness/docs/en/report-reading.md)
+  與其 [UX 交接](https://github.com/TaiwanCCyoyo/stock-research/blob/codex/report-reading-readiness/docs/en/decision-records/2026-11-02-dashboard-ux-and-report-readability.md)。
+- #137 仍由原 active session 負責，互動理解與溝通的架構介面為 pending contract；GitHub 可保留確認紀錄，
+  不指定純文字 PR 為唯一討論介面。其 D1–D6 目前只有 agent 敘述，尚未獨立取得使用者原文；
+  不把流程草案或合併當成新市場運算授權。參照 [direction branch](https://github.com/TaiwanCCyoyo/stock-research/blob/claude/direction-draft-process/docs/en/direction-drafts.md)。
+- #113 的報告呈現與本人接受不阻止本次獨立工程；#113 保留 #128 先合併條件。
+  E2／E3 新市場研究仍須滿足各自前置報告、mission 與運算 gates；不因 UI 合併或報告可讀而解除。
+
+### 尚未解決的研究與營運 gates
+
+S7 的首次確認、延遲確認、多週同日確認與空週接續尚待方法規格；下一步只能先明定合成案例的輸入、
+確認時點與預期狀態，不在本次加 assembler。E1 既有原訊號不含 S7；上方歷史依賴圖不使 S7 成為
+本次純記憶體整合的資料前置。[counts handoff](../../tasks/20261027-multi-timeframe-ma/counts-handoff.md)
+與 [week handoff](../../tasks/20261027-multi-timeframe-ma/week-calendar-handoff.md) 的限制保留，
+universal scale-invariance 仍為 **UNSATISFIED**。O2 的 finite G／receipt event 限制、部署 gate 及首個未來準時日確認
+均未解除；本次不重新核實或更動正式 root、服務、排程、資料與市場結果。
+
+### 2026-11-02 接續：P1 的資料新鮮度前置檢查
+
+E1 整合 [#146](https://github.com/TaiwanCCyoyo/stock-research/pull/146) 已合併，
+merge commit 為 `3d4378a49e80c25c6d59e50bd9f53334bf56b5f7`。Owner 後續指示可繼續的
+工程先繼續，報告最後頁面保留本人確認；這不新增市場運算或研究參數授權。
+
+下一包選 P1-A `order-card-freshness.v1`：沿用 P1「未到最新交易日就不出卡」的規則，
+先做顯式輸入的純檢查與 JSON CLI。它重用既有日曆證據，要求預期交易日至決策日每天有
+已知狀態，逐源比對日期、可得時間、定義、世代與股票池；未知或落後都拒絕繼續。
+這不依賴報告外觀、新策略、S7 跨週方法或 O2 發布事件決策，因此可獨立交付。
+入口為[契約](../../tasks/20261102-order-card-freshness/data-contract.md)及
+[實作交接](../../tasks/20261102-order-card-freshness/implementation-handoff.md)。
+
+本包不產生卡片、不連真實資料、不選策略必要資料清單；通過只證明宣告的一致性。
+正式來源認證、策略及卡片生成、產品使用與 F1 起算仍須各自的後續工程與授權。
+#137 的互動討論／JSON 下載整合由原 owner 處理，本包不改該範圍。
+
+### 2026-11-02 再接續：E1 原始報價接入
+
+P1-A [#150](https://github.com/TaiwanCCyoyo/stock-research/pull/150) 已合併至
+`4355d11`。下一包接合 maintained adjusted-daily 的既有 raw reader 與 E1 `RawQuotePacket`，
+詳見[接入契約與交接](../../tasks/20261027-entry-window/raw-reader-handoff.md)。
+單股、世代、cutoff、日曆與 provenance 固定；缺價和品質理由保留，重複來源不默選第一筆。
+只以人工 generation 驗證，不開真實市場研究。這不是完整 E1 reader／runner：canonical
+labels、interval event／quote quality、官方日曆與 bounds、資料／資源／計算 gates 仍待接續。
+
+P1 卡片生成與 P2 持股對帳不由本包代選規則；P2 尚需 F1 及確定的昨日卡片／持股輸入契約。
+已有 account、lifecycle 與 ledger API 應重用，避免增造尚無消費用途的平行實作。
+
+### 2026-11-02 接續：E1 canonical 計算接入
+
+原始報價接入 [#151](https://github.com/TaiwanCCyoyo/stock-research/pull/151) 已合併至
+`3355be4`。本包將固定世代的 adjusted reader 接到既有 PR61 `stock_daily`，再輸出
+`CanonicalPacket`；[契約](../../tasks/20261027-entry-window/canonical-reader-handoff.md)
+要求明確股票資格與可得性說明，沿用原本全部訊號、標籤與分母計算。原始與調整價接入
+共用身分／日曆／來源檢查，人工世代驗證兩種 packet 可一起進入 E1 staging/count。
+
+這項接線不放行市場 labels，也不證明舊 PR61 結果完全重現。完整 interval event
+coverage／quote quality、官方來源認證／bounds、資源及市場計算仍未完成；不因單日品質
+正常就推論跨日區間乾淨。P1/P2、S7、O2 的研究決策與報告本人驗收界線維持。

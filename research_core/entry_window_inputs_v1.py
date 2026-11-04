@@ -169,6 +169,14 @@ def _stock(stock: canonical.StockDaily, request: InputRequest) -> None:
         _vector(stock.main_eligible[label], n, f"canonical.stock.main_eligible[{label}]", "b")
 
 
+def validate_input_request(request: InputRequest) -> None:
+    """Validate the public E1 request without loading or modifying any inputs."""
+    for field in ("security_id", "generation", "universe_id", "calendar_id"):
+        _text(getattr(request, field), f"request.{field}")
+    _date(request.study_as_of, "request.study_as_of")
+    _calendar(request.common_calendar, "request.common_calendar")
+
+
 def stage_stock_inputs(
     request: InputRequest,
     *,
@@ -183,10 +191,7 @@ def stage_stock_inputs(
     Missing/nonpositive float64 bars stay in place for B1's Q/diagnostics. Nothing
     interprets an empty event table or factor=1 as evidence of no action.
     """
-    for field in ("security_id", "generation", "universe_id", "calendar_id"):
-        _text(getattr(request, field), f"request.{field}")
-    _date(request.study_as_of, "request.study_as_of")
-    _calendar(request.common_calendar, "request.common_calendar")
+    validate_input_request(request)
     for name, packet in (("canonical", canonical), ("raw", raw), ("intervals", intervals)):
         _identity(request, packet, name)
     if canonical.definition != "momentum-only.v1" or canonical.basis != "reference_factor_adjusted":

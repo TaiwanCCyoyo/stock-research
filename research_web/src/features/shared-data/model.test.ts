@@ -10,9 +10,58 @@ import {
     formatSigned,
     featureRows,
     qualityCounts,
+    qualityReasonLabel,
     versionLabel,
+    compactVersionLabel,
+    symbolDisplayIdentity,
     type SharedSeries,
 } from "./model.ts";
+
+test("known security identity overrides a code-only name only for its own selection", () => {
+    const known = { code: "1240", name: "茂生農經", market: "TPEX" };
+    assert.deepEqual(
+        symbolDisplayIdentity("1240", { code: "1240", name: "1240" }, known),
+        { name: "茂生農經", market: "TPEX" },
+    );
+    assert.deepEqual(
+        symbolDisplayIdentity(
+            "2330",
+            { code: "2330", name: "台積電", market: "TWSE" },
+            known,
+        ),
+        { name: "台積電", market: "TWSE" },
+    );
+    assert.deepEqual(symbolDisplayIdentity("2330", undefined, known), {
+        name: "2330",
+        market: undefined,
+    });
+    assert.equal(
+        symbolDisplayIdentity(
+            "1240",
+            { code: "1240", name: "茂生農經" },
+            { code: "1240", name: "  " },
+        ).name,
+        "茂生農經",
+    );
+});
+
+test("version labels shorten hash tokens while preserving semantic identifiers", () => {
+    const hash = "abcdef0123456789".repeat(4);
+    assert.equal(compactVersionLabel(hash), "abcdef012345…");
+    assert.equal(
+        compactVersionLabel(`annual-v2-${hash}`),
+        "annual-v2-abcdef012345…",
+    );
+    assert.equal(
+        compactVersionLabel("annual-v2-20261022"),
+        "annual-v2-20261022",
+    );
+    assert.equal(
+        compactVersionLabel("releaseabcdef0123456789abcdef0123456789"),
+        "releaseabcdef0123456789abcdef0123456789",
+    );
+    assert.equal(hash.length, 64);
+});
 
 const fixture: SharedSeries = {
     code: "SYNTH",
@@ -31,6 +80,22 @@ const fixture: SharedSeries = {
     tech: { SMA5: [10.5, 99, null] },
     pivots: [],
 };
+test("compound quality failures remain distinct and untranslated codes are not presented as valid data", () => {
+    assert.equal(
+        qualityReasonLabel("missing_official_quote|invalid_ohlc"),
+        "缺少官方報價；開高低收價格不合理或缺漏",
+    );
+    assert.equal(
+        qualityReasonLabel("duplicate_date|duplicate_date"),
+        "同一日期有重複紀錄",
+    );
+    assert.equal(
+        qualityReasonLabel("future_reason"),
+        "其他資料品質問題（詳見來源）",
+    );
+    assert.equal(qualityReasonLabel(null), "缺少有效開高低收價格");
+    assert.equal(fixture.quality_reason[1], "missing_quote");
+});
 test("invalid quality and missing OHLC stay whitespace even if a numeric price exists", () => {
     assert.deepEqual(candleRows(fixture), [
         { time: "2020-01-01", open: 10, high: 12, low: 9, close: 11 },

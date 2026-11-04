@@ -3,6 +3,7 @@ import { test } from "node:test";
 import {
     dateIndex,
     initialHistoryIndex,
+    historyDateStorageKey,
     isCurrentRequest,
     toMapRow,
     toMapView,
@@ -581,5 +582,62 @@ test("timeline ranking uses sizing metrics, responds to threshold, and keeps exc
         defaultThreshold.find((entry) => entry.securityId === "long-loser")
             ?.gainAtEnd,
         1290,
+    );
+});
+
+test("saved date and stale-response guards bind both version id and manifest digest", () => {
+    const a = { versionId: "synthetic-a", manifestSha256: "a".repeat(64) };
+    const b = { ...a, versionId: "synthetic-b" };
+    const visits = new Map([
+        [historyDateStorageKey(a.manifestSha256, a), dates[0]],
+    ]);
+    assert.equal(
+        initialHistoryIndex(
+            dates,
+            a.manifestSha256,
+            (key) => visits.get(key) ?? null,
+            null,
+            a,
+        ),
+        0,
+    );
+    assert.equal(
+        initialHistoryIndex(
+            dates,
+            b.manifestSha256,
+            (key) => visits.get(key) ?? null,
+            null,
+            b,
+        ),
+        2,
+    );
+    assert.equal(historyDateStorageKey("legacy"), "history.date.legacy");
+    const current = {
+        epoch: 1,
+        catalogId: a.manifestSha256,
+        date: dates[0],
+        bundleIdentity: a,
+    };
+    const response = {
+        schema: HISTORY_SCHEMA,
+        catalogId: a.manifestSha256,
+        date: dates[0],
+        bundleIdentity: a,
+    };
+    assert.equal(isCurrentRequest(current, current, response), true);
+    assert.equal(
+        isCurrentRequest(current, { ...current, bundleIdentity: b }, response),
+        false,
+    );
+    assert.equal(
+        isCurrentRequest(current, current, { ...response, bundleIdentity: b }),
+        false,
+    );
+    assert.equal(
+        isCurrentRequest(current, current, {
+            ...response,
+            bundleIdentity: undefined,
+        }),
+        false,
     );
 });

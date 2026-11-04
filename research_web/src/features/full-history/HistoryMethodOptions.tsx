@@ -1,3 +1,4 @@
+import type { HistoryBundleIdentity } from "./versionIdentity.ts";
 import { InfoTip } from "../../components/ui/InfoTip";
 import { useEffect, useState } from "react";
 import { readHistory } from "./api.ts";
@@ -6,10 +7,12 @@ import { SourceInfo } from "../../components/ui/primitives.tsx";
 
 export function HistoryMethodOptions({
     catalogId,
+    bundleIdentity,
     date,
     onDate,
 }: {
     catalogId: string;
+    bundleIdentity?: HistoryBundleIdentity;
     date: string;
     onDate: (date: string) => void;
 }) {
@@ -24,6 +27,7 @@ export function HistoryMethodOptions({
         readHistory<HistoryOptions>(
             `/options?date=${encodeURIComponent(date)}`,
             controller.signal,
+            bundleIdentity,
         )
             .then((data) => {
                 if (controller.signal.aborted) return;
@@ -39,7 +43,7 @@ export function HistoryMethodOptions({
                 if (!controller.signal.aborted) setError(String(cause));
             });
         return () => controller.abort();
-    }, [opened, date, catalogId]);
+    }, [opened, date, catalogId, bundleIdentity]);
     return (
         <details
             className="fh-method-options u-source"

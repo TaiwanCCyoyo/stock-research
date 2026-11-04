@@ -1,3 +1,7 @@
+import {
+    historyVersionKey,
+    type HistoryBundleIdentity,
+} from "./versionIdentity.ts";
 import type {
     MapRow,
     MapView,
@@ -66,18 +70,30 @@ export function dateIndex(dates: readonly string[], requested: string): number {
     return Math.max(0, low - 1);
 }
 
+export function historyDateStorageKey(
+    catalogId: string,
+    bundleIdentity?: HistoryBundleIdentity,
+): string {
+    return bundleIdentity
+        ? `history.date.version.${historyVersionKey(bundleIdentity)}:${catalogId}`
+        : `history.date.${catalogId}`;
+}
+
 /** An explicit date keeps normal URL snapping; saved visits must match this catalog exactly. */
 export function initialHistoryIndex(
     dates: readonly string[],
     catalogId: string,
     readSavedDate: (key: string) => string | null,
     requestedDate: string | null = null,
+    bundleIdentity?: HistoryBundleIdentity,
 ): number {
     if (!dates.length) return -1;
     if (requestedDate && /^\d{4}-\d{2}-\d{2}$/.test(requestedDate))
         return dateIndex(dates, requestedDate);
     try {
-        const savedDate = readSavedDate(`history.date.${catalogId}`);
+        const savedDate = readSavedDate(
+            historyDateStorageKey(catalogId, bundleIdentity),
+        );
         const savedIndex = savedDate === null ? -1 : dates.indexOf(savedDate);
         if (savedIndex >= 0) return savedIndex;
     } catch {
@@ -132,6 +148,7 @@ export function timelineInclusiveRange(
 
 export interface RequestIdentity {
     epoch: number;
+    bundleIdentity?: HistoryBundleIdentity;
     catalogId: string;
     date: string;
 }
@@ -139,15 +156,25 @@ export interface RequestIdentity {
 export function isCurrentRequest(
     request: RequestIdentity,
     current: RequestIdentity,
-    response?: { schema: string; catalogId: string; date: string },
+    response?: {
+        schema: string;
+        catalogId: string;
+        date: string;
+        bundleIdentity?: HistoryBundleIdentity;
+    },
 ): boolean {
     return (
         request.epoch === current.epoch &&
+        historyVersionKey(request.bundleIdentity) ===
+            historyVersionKey(current.bundleIdentity) &&
         request.catalogId === current.catalogId &&
         request.date === current.date &&
         (!response ||
             (response.schema === HISTORY_SCHEMA &&
                 response.catalogId === request.catalogId &&
+                (!request.bundleIdentity ||
+                    historyVersionKey(response.bundleIdentity) ===
+                        historyVersionKey(request.bundleIdentity)) &&
                 response.date === request.date))
     );
 }
