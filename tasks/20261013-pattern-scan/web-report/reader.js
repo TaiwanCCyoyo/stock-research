@@ -595,25 +595,32 @@
             }
         };
         const onKeydown = (event) => {
-            const i = model.findIndex((p) => p.code === sel);
+            // Start from the row that has focus, not from the last selection:
+            // the two lists each keep a tab stop, so focus can sit in a list
+            // whose rows are not the selected one.
+            const focused = event.target?.closest?.(".rank-row");
+            const start = focused?.getAttribute("data-code") ?? sel;
+            const i = model.findIndex((p) => p.code === start);
             const to = {
                 ArrowDown: i + 1,
                 ArrowUp: i - 1,
                 Home: 0,
                 End: model.length - 1,
             }[event.key];
+            const activate =
+                (event.key === "Enter" || event.key === " ") && focused;
+            if (to === undefined && !activate) return;
+            event.preventDefault();
             if (to !== undefined) {
-                event.preventDefault();
                 const code =
                     model[Math.max(0, Math.min(model.length - 1, to))].code;
                 select(code, true);
                 if (!stacked) writeHash(code, false);
-            } else if (
-                (event.key === "Enter" || event.key === " ") &&
-                stacked
-            ) {
-                event.preventDefault();
-                enterDetail(sel, true);
+            } else if (stacked) {
+                enterDetail(start, true);
+            } else if (start !== sel) {
+                select(start);
+                writeHash(start, false);
             }
         };
         for (const list of lists) {
