@@ -70,3 +70,37 @@ The planned PR should explain the problem as missing question coverage and
 overbroad interpretations, the result as separate source-linked reading editions,
 and the limitations as the three explicit history holds plus saved-evidence-only
 verification. It must not present editorial readiness as owner acceptance.
+
+## Reader-first revision — 2026-11-04
+
+Applied the merged study-presentation skill and its writing, reader-first and magazine references from the primary checkout. This revision keeps the 15 reading editions as the editorial sources for the shared web reader. It changes no original mission, report, result or hash, and creates no per-study HTML package. The three `history` states and reasons remain unchanged; `history` is not reclassified as archived.
+
+All 15 editions now open with the saved answer and the material evidence boundary. Research codes move behind plain group names; relevant percentages identify their population, time origin and denominator. Compact comparisons replace the repeated question/comparison/answer/warning template where they reduce reading effort. Hypothetical prices or counts explain definitions and are explicitly labelled as examples. Generic approval warnings and unmeasured reader-action advice were removed from report prose; editorial readiness retains its meaning in this disposition and the shared interface.
+
+| Edition                              | Concrete reading improvement                                                                                                                                            |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 20260510-two-b-template-smoke        | Two source versions shown separately with their starting dates; explains partial sells versus complete positions, retains unknown end dates and version reconciliation. |
+| 20260812-loop-explore-v2             | Opens with the failed original direction and later reversal; separates eight attempts from six reused validation evaluations and preserves unknown units/split dates.   |
+| 20260816-kline-strategy-category-fit | Names the three entry mechanisms and five industries; explains return/drawdown with a labelled example and keeps the pre-backfill vintage visible.                      |
+| 20260820-kline-archetype-extension   | Defines contraction, box breakout and short-term rebound; places per-entry capital and closed-position counts beside pooled values, preserving post-hoc status.         |
+| 20260821-2b-entry-decomposition      | Plain mixed/momentum/false-break groups replace arm-only labels; separates signal-rule success from risk-rule failure and explains partial sales and adverse excursion. |
+| 20260821-stop-mechanism-isolation    | Explains the upward-only box boundary; keeps per-entry improvement beside account drawdown and labels fallback implementation.                                          |
+| 20260822-ratchet-generalization      | Defines peak-following and box-following exits; pairs named entry groups with their five-industry result and common-entry holding duration.                             |
+| 20260823-rank-profile                | Shows same-day grouping then twenty-day tracking; identifies uncertainty from 30 validation dates and distinguishes cross-sectional rank from a held-position path.     |
+| 20260823-selection-vs-random         | Explains same-entry/same-exit random controls, ranking-band multiples and percentile meaning; places return and turnover on distinct labelled columns.                  |
+| 20260823-turnover-mechanism          | Pairs original and twenty-day minimum holding; places 94% beside its excess-return denominator and distinguishes position sums from account returns.                    |
+| 20260823-regime-overlay              | Defines the advancing-stock signal with a count example; separates the long detector profile from the strategy window and pairs cash/0050 responses.                    |
+| 20260824-ranking-horizon             | Names long-window and recent-month exclusion; pairs turnover, return and drawdown while preserving the unresolved common-start discrepancy.                             |
+| 20260824-value-chain-ignition        | Defines group ignition and laggards with a ten-stock example; states the event-to-outcome sequence, overlapping sample issue and unknown calendar bounds.               |
+| 20260826-runner-retention            | Explains the 150% population threshold, capture versus participation, and full-pool denominator; keeps later slot defects visible with their source.                    |
+| 20260826-tail-selection              | Explains first screening versus within-list ranking; pairs both price tails on the same twenty-day window and names date-level uncertainty.                             |
+
+Predecessor and follow-up mentions now carry local Markdown report links and describe what they supply. Additional report references are registered in the sidecars. These are the reader's navigable source relationships; the shared web presentation and routing remain parent-owned. No new historical result is inferred from a follow-up or from another checkout.
+
+Representative visual candidates for the shared viewer are the turnover report's original-versus-twenty-day pair (separate scales for turnover and return), and tail-selection's full-pool-versus-top-thirty probabilities (same window and scale for the up/down proportions). They are already expressed as labelled tables. The current revision has passed all 15 `ReportReadings` registrations and exact question/answer/limitation checks, with 12 ready and 3 history preserved; 99 Markdown links resolved on the first static check. This establishes source navigation and metadata consistency, not fresh-reader understanding or visual acceptance. Parent-owned independent two-pass review and web/desktop/mobile acceptance are still pending for this revision.
+
+### Independent review and second edit pass
+
+The parent coordinated an independent reader-only pass followed by a mission/source comparison. The second edit pass incorporated the resulting concrete fixes: the stop-isolation opening now names both baseline exit triggers; tail-selection states both tails and the full-pool/top-thirty denominator in its opening; runner-retention names its 64-stock population, first-top-ten time origin and training window beside the capture figures; ratchet-generalization separates per-entry industry wins from the shared-account result (two of five for each entry type). Technical opening terms were replaced with descriptions of held-position price declines, long-period market-signal statistics and returns relative to all eligible stocks. Known calendar windows now appear directly in the opening; unknown split dates and the three historical holds remain explicit.
+
+Both editorial review passes were completed and their requested corrections applied. This is still separate from the parent-owned shared web presentation and actual desktop/mobile acceptance. The second pass changes no saved source or acceptance rule; question, answer and limitation remain verbatim in each edition and synchronized with its sidecar.
