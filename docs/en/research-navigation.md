@@ -93,7 +93,7 @@ Frontend tests: 568 passed; TypeScript passed. The earlier build's final dist
 rename EPERM was not retried. Owner acceptance, physical touch, real catalog/API
 integration, and integration with the separate reading PRs remain pending.
 
-## G3 shared context contract (proposed)
+## G3 shared context contract
 
 A future map-to-stock handoff must retain the API-provided opaque security key,
 source record identity, start/end dates, price basis and exact dataset version or
@@ -101,7 +101,53 @@ generation, plus a bounded local return context. Missing identity, unsupported
 historical generation, invalid interval or unavailable basis must remain explicit;
 never turn a retrospective wave into a contemporaneous signal. The chart may
 offer a separate current-data inspection, clearly labelled, but must not claim
-to replay the old segment. This slice does not add map routing or calculations.
+to replay the old segment.
+
+### Version-pinned map/stock boundary
+
+`full-history/stockJourney.ts` carries a bounded `wave` URL context on the
+existing `#stock/<encoded opaque key>` and `#market` routes. It preserves the
+security, series and wave identities, catalog version, observation date,
+interval, price basis, display mode and threshold. The saved history reader
+must verify metadata, then the exact frame member, then detail provenance and
+required interval prices before rendering. The code used by the existing detail
+endpoint comes only from that verified member. No current coverage reader or
+price fallback runs for a wave link, including malformed contexts.
+
+Map departure pins its history entry; explicit return, reload and Back/Forward
+restore the URL-owned selection. The stock chart starts at the source interval.
+New map control interactions leave replay context so exploration cannot silently
+claim to remain the original wave. No session storage is needed for identity.
+
+**Availability boundary:** today's history producer has `securityId`, `seriesId`
+and `waveId`, but no proven coverage `securityKey`. These are different identities.
+The optional `HistoryRow.securityKey` is an adapter boundary for a future proven
+mapping, not permission to derive a key from a ticker. Real rows without it show
+an unavailable handoff. The existing reader also cannot select arbitrary historic
+catalog generations: a version mismatch is unavailable, not a replay of current
+data. This slice does not change producer data or claim a real-data end-to-end
+journey. Synthetic tests supply explicit keys and fictional prices; they are
+functional checks, not owner visual acceptance or market research.
+
+Unit checks live in `full-history/stockJourney.test.ts`. The manual synthetic
+browser harness is `node scripts/map-stock-browser.mjs` from `research_web`;
+it mounts the real map and historical stock page with synthetic API responses.
+No history data, downloads, saved drafts or market computations are required.
+
+Verification for this slice: 7 new unit tests; complete frontend suite 596/596;
+TypeScript and scoped lint passed. Edge synthetic checks passed normal and delayed
+navigation, two Back/Forward cycles, explicit return/focus, keyboard entry, stock
+refresh, missing key, version mismatch and missing prices. The manual harness is
+not part of hosted CI. No real generation/member mapping or owner visual acceptance
+was tested.
+
+PR #159 replay-exit regression: user date/selection callbacks (including timeline
+click/Left/Right and map bubble Enter/Space) leave replay before changing state.
+URL restoration keeps the raw setters. Starting exploration pushes a separate
+map entry so Back retains the original source, and return focus waits for the
+source view to be available. Edge `?scenario=explore` verified all five actions
+and all five returns against two explicitly synthetic members. This replaces the
+incomplete click/change capture approach identified in hosted review.
 
 ## Delivery boundaries
 

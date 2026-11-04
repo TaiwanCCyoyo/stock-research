@@ -39,6 +39,8 @@ export interface GrowthMetric {
     reason: string | null;
 }
 export interface HistoryRow {
+    /** Optional producer-verified coverage identity; never derive from code/securityId. */
+    securityKey?: string;
     securityId: string;
     code: string;
     name: string;
