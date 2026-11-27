@@ -1,3 +1,4 @@
+import { withReportEntry } from "./reading";
 import { useEffect, useMemo, useState } from "react";
 import { useStudioHistory, useStudioIndex } from "../../api/strategyStudio";
 import { useReportIndex } from "../report-library/useReportIndex";
@@ -36,8 +37,15 @@ function useStudiesV2() {
     const [retry, setRetry] = useState(0);
     useEffect(() => {
         const control = new AbortController();
+        const timer = setTimeout(() => {
+            control.abort();
+            setState((current) =>
+                studiesFailed(current, "研究資料讀取逾時，請重試。"),
+            );
+        }, 20000);
         readStudies(control.signal)
             .then((data) => {
+                if (control.signal.aborted) return;
                 lastStudies = data;
                 setState(studiesLoaded(data));
             })
@@ -49,8 +57,12 @@ function useStudiesV2() {
                         cause.message || "研究卡片暫時讀不到。",
                     ),
                 );
-            });
-        return () => control.abort();
+            })
+            .finally(() => clearTimeout(timer));
+        return () => {
+            clearTimeout(timer);
+            control.abort();
+        };
     }, [retry]);
     return { ...state, retry: () => setRetry((n) => n + 1) };
 }
@@ -85,7 +97,7 @@ export function useStudyCards() {
             history.data?.items.map(cardFromHistory) ?? null,
             reportIndex.reports?.map(cardFromReport) ?? null,
         );
-        return merged && [...merged, ...runs];
+        return merged && [...merged, ...runs].map(withReportEntry);
     }, [
         studies.data,
         studies.stale,

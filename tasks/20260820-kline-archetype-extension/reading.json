@@ -1,0 +1,41 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260820-kline-archetype-extension",
+    "state": "ready",
+    "reason": "已核對保存的任務與報告，補上問題覆蓋、分母及後續修正；編輯可讀不代表策略或 owner 驗收。",
+    "updated_at": "2026-11-04",
+    "edition": "reading-report.md",
+    "question": "改用價格收縮後突破、箱型突破或短線反彈，是否比原來三種進場方式更有優勢？",
+    "answer": "三種新方法各有不同瓶頸：箱型與價格收縮突破在單一產業的交易太少；短線反彈雖有較多交易，部分小幅毛利被成本抵銷。沒有單一方法與產業組合同時完成原定的兩期要求。",
+    "limitation": "把五個產業合併後，箱型與收縮方法呈現正平均損益，但這是看過結果後增加的分析；原來逐產業的主要判定仍為未通過。",
+    "data_period": {
+        "from": "2019-01-02",
+        "to": "2026-08-14"
+    },
+    "sources": [
+        {
+            "label": "設計與預先規則",
+            "path": "20260820-kline-archetype-extension/mission.md"
+        },
+        {
+            "label": "原報告與修訂",
+            "path": "20260820-kline-archetype-extension/report.md"
+        },
+        {
+            "label": "MAE 補量及分母",
+            "path": "20260820-kline-archetype-extension/mae_retro.md"
+        },
+        {
+            "label": "停損隔離",
+            "path": "20260821-stop-mechanism-isolation/report.md"
+        },
+        {
+            "label": "棘輪泛化與風險修正",
+            "path": "20260822-ratchet-generalization/report.md"
+        },
+        {
+            "label": "原三種進場方式",
+            "path": "20260816-kline-strategy-category-fit/report.md"
+        }
+    ]
+}

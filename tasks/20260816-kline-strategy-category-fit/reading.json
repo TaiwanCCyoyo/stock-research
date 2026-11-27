@@ -1,0 +1,37 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260816-kline-strategy-category-fit",
+    "state": "ready",
+    "reason": "已核對保存的任務與報告，補上問題覆蓋、分母及後續修正；編輯可讀不代表策略或 owner 驗收。",
+    "updated_at": "2026-11-04",
+    "edition": "reading-report.md",
+    "question": "三種價格進場方式，在五個產業中是否有穩定獲利，且比同一批股票一路持有更好？",
+    "answer": "在這份舊資料比較中，只有航運的動能突破，連續兩個期間都比同籃子買進持有取得更高的「報酬相對回撤」比值；其他組合沒有同樣一致的結果。",
+    "limitation": "本篇使用 2026-08-17 除權息資料回補前的版本。後續同版本重跑另有報告，本篇保留舊結果及其資料界線。",
+    "data_period": {
+        "from": "2019-01-02",
+        "to": "2026-08-14"
+    },
+    "sources": [
+        {
+            "label": "設計與限制",
+            "path": "20260816-kline-strategy-category-fit/mission.md"
+        },
+        {
+            "label": "原報告與資料版本註記",
+            "path": "20260816-kline-strategy-category-fit/report.md"
+        },
+        {
+            "label": "後續同版本原型比較",
+            "path": "20260820-kline-archetype-extension/report.md"
+        },
+        {
+            "label": "每部位風險補量",
+            "path": "20260820-kline-archetype-extension/mae_retro.md"
+        },
+        {
+            "label": "後續風險解釋修正",
+            "path": "20260822-ratchet-generalization/report.md"
+        }
+    ]
+}

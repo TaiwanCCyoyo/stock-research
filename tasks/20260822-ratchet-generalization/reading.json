@@ -1,0 +1,33 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260822-ratchet-generalization",
+    "state": "ready",
+    "reason": "已核對保存的任務與報告，補上問題覆蓋、分母及後續修正；編輯可讀不代表策略或 owner 驗收。",
+    "updated_at": "2026-11-04",
+    "edition": "reading-report.md",
+    "question": "箱底退出相對於跟隨高點的退出方式，是否在突破、回檔反轉與放量轉強三種進場中都有優勢？",
+    "answer": "以平均每次進場損益較高的產業數衡量，箱底退出在突破與放量轉強兩種進場中較一致，回檔反轉則未達要求。換成共用資金帳戶的報酬相對回撤比值，三種進場在驗證期都只贏五個產業中的兩個；本次未支持通用優勢。",
+    "limitation": "持有期間內的最深價格逆行與持有天數一起改變；現有比較尚未把時間長短與退出機制本身的風險影響分離。",
+    "data_period": {
+        "from": "2019-01-02",
+        "to": "2026-08-14"
+    },
+    "sources": [
+        {
+            "label": "任務與比較規則",
+            "path": "20260822-ratchet-generalization/mission.md"
+        },
+        {
+            "label": "完整逐籃結果與修正",
+            "path": "20260822-ratchet-generalization/report.md"
+        },
+        {
+            "label": "原唐奇安停損隔離",
+            "path": "20260821-stop-mechanism-isolation/report.md"
+        },
+        {
+            "label": "後續不同帳戶的保留研究",
+            "path": "20260826-runner-retention/report.md"
+        }
+    ]
+}

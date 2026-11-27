@@ -131,7 +131,7 @@ test("study cards keep unlike metrics separate and preserve reading context", as
         assert.match(html, /2025\/12\/31/);
         assert.match(html, /不能推論實際交易績效/);
         assert.doesNotMatch(html, /is-clamped/);
-        assert.match(html, /href="#report\/synthetic-study"/);
+        assert.match(html, /href="#report\/synthetic-study\?back=%23studies"/);
         assert.match(html, /aria-expanded="false"[^>]*>.*原文與資料來源/);
         assert.doesNotMatch(html, /href="#data"/);
         // Closed portal contents are absent from SSR. Inspect the actual React

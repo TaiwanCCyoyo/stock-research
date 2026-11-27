@@ -1,0 +1,33 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260826-tail-selection",
+    "state": "ready",
+    "reason": "已核對保存的任務與報告，補上問題覆蓋、分母及後續修正；編輯可讀不代表策略或 owner 驗收。",
+    "updated_at": "2026-11-04",
+    "edition": "reading-report.md",
+    "question": "強勢名單是否提高大漲比例，而名單內再按其他條件排序，能否挑得更好又少換股？",
+    "answer": "驗證期從全部合格股票縮到強勢前 30 名，二十日淨漲至少 30% 的比例由 5.37% 升至 11.51%，淨跌至少 30% 也由 1.23% 升至 3.66%。在已選出的前 60 名裡再排序，十個候選條件都沒有形成穩定通過的門檻區間。",
+    "limitation": "主要驗證比較只有 31 個取樣日，且這段歷史已反覆使用；結果是股票日期的價格比例，未加入帳戶資金與實際成交路徑。",
+    "data_period": {
+        "from": "2019-01-02",
+        "to": "2026-08-14"
+    },
+    "sources": [
+        {
+            "label": "任務、修訂與主比較",
+            "path": "20260826-tail-selection/mission.md"
+        },
+        {
+            "label": "最終二十日結果表",
+            "path": "20260826-tail-selection/report.md"
+        },
+        {
+            "label": "沿用窗口的來源設計",
+            "path": "20260824-ranking-horizon/mission.md"
+        },
+        {
+            "label": "後續持有路徑研究",
+            "path": "20260826-runner-retention/report.md"
+        }
+    ]
+}

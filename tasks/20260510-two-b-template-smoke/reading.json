@@ -1,0 +1,34 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260510-two-b-template-smoke",
+    "state": "history",
+    "reason": "原報告與後續診斷的版本、期間及績效尚未建立一致對照；保留歷史閱讀，未判定不可修復。",
+    "updated_at": "2026-11-04",
+    "edition": "reading-report.md",
+    "question": "2B 與均線匯聚模板，能否完成指定 22 檔台股的回測與報告流程？",
+    "answer": "22 檔股票的模板留下了執行與報告紀錄；2024 年起的版本報酬為 −8.624700%，2022 年起的診斷版本為 +2.00%。兩者的期間與版本尚未對齊，現有資料沒有單一績效答案。",
+    "limitation": "兩份資料都未列出確定的回測結束日，且任務指定起日與其中一份執行起日不同；本篇維持「歷史與待整理」。",
+    "data_period": null,
+    "sources": [
+        {
+            "label": "任務與預檢",
+            "path": "20260510-two-b-template-smoke/mission.md"
+        },
+        {
+            "label": "保存的 nightly report",
+            "path": "20260510-two-b-template-smoke/nightly_report.md"
+        },
+        {
+            "label": "執行 walkthrough",
+            "path": "20260510-two-b-template-smoke/walkthrough.md"
+        },
+        {
+            "label": "另一版本的策略診斷",
+            "path": "20260510-two-b-template-smoke/strategy_diagnosis.md"
+        },
+        {
+            "label": "後續 2B 進場拆解",
+            "path": "20260821-2b-entry-decomposition/report.md"
+        }
+    ]
+}
