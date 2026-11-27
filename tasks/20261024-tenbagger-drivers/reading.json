@@ -1,0 +1,13 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20261024-tenbagger-drivers",
+    "state": "in_progress",
+    "reason": "研究規劃或實作階段；尚未完成可核對的結果閱讀版。",
+    "updated_at": "2026-11-02",
+    "edition": null,
+    "question": "10 倍股和產業齊漲、法人持續買進有沒有關係？",
+    "answer": "規劃中：先回顧大漲段落，完成後由擁有者決定是否繼續檢查條件出現後的大漲比例。",
+    "limitation": "尚未產生研究結果；歷史關係只能描述，不能證明因果或代表可取得的投資報酬。",
+    "data_period": null,
+    "sources": []
+}

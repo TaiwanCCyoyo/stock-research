@@ -1,0 +1,34 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20260906-five-slot-baseline",
+    "state": "ready",
+    "reason": "已逐份對照保存的報告、可用研究契約與後續更正；閱讀版不代表策略批准。",
+    "updated_at": "2026-11-04",
+    "edition": "reading-report.md",
+    "question": "在最多五檔、200 萬元資金的條件下，綜合評分排名能否比動能排名更符合持有大機會、承受小損失的需求？",
+    "answer": "五檔、200 萬元、不設最低持有期且同日收盤成交時，綜合評分的訓練／驗證報酬為 228.1%／154.1%，同條件動能排名為 161.6%／−20.0%。綜合評分帳戶仍曾降至約 162 萬／184 萬，並非從未跌破本金；本任務未保存精確的完整起訖。",
+    "limitation": "這是已看過資料的基準探索，沿用同日收盤成交；平均虧損不能代表每次都小虧，後續穩健性與可成交研究也未支持直接採用。",
+    "data_period": null,
+    "sources": [
+        {
+            "label": "原始報告",
+            "path": "20260906-five-slot-baseline/report.md"
+        },
+        {
+            "label": "前一份操作需求",
+            "path": "20260906-execution-reality/report.md"
+        },
+        {
+            "label": "穩健性確認",
+            "path": "20260906-five-slot-confirmation/report.md"
+        },
+        {
+            "label": "連續損失更正",
+            "path": "20260907-streak-correction/report.md"
+        },
+        {
+            "label": "可成交模型",
+            "path": "20260908-executable-fills/report.md"
+        }
+    ]
+}

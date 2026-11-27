@@ -29,6 +29,8 @@
 .hm-doors .u-card {
     display: grid;
     gap: 4px;
+    box-shadow: none;
+    border-inline-start: 3px solid var(--action);
 }
 .hm-doors b {
     font-size: 17px;
