@@ -74,8 +74,12 @@ def best_stock(counts: NDArray[np.integer], metrics: Sequence[str], codes: Seque
     return min((int(position) for position in tied), key=lambda position: codes[position])
 
 
-def bootstrap_weights(n: int, reps: int, seed: int) -> NDArray[np.int32]:
-    """Multinomial resample counts: row b says how often each cluster was drawn."""
+def bootstrap_weights(n: int, reps: int, seed: int | np.random.Generator) -> NDArray[np.int32]:
+    """Multinomial counts; an explicit Generator permits ordered paired axis draws.
+
+    Integer seeds retain the original stream. Passing a Generator advances that
+    same stream, allowing callers to draw all stocks before all years.
+    """
     rng = np.random.default_rng(seed)
     draws = rng.integers(0, n, size=(reps, n))
     weights = np.zeros((reps, n), dtype=np.int32)

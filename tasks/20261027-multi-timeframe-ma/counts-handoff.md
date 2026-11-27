@@ -6,6 +6,11 @@ and [data contract](data-contract.md). The study remains `not_evaluated`.
 This package supplies synthetic engineering evidence, not market admission or
 full S7 acceptance.
 
+The next bounded layer is now documented in the [comparison handoff](comparison-handoff.md):
+it consumes these unchanged StockCounts in memory for aggregate tables and paired
+intervals. The limitations below describe this counts component; that separate
+synthetic engineering package does not complete S7 or authorize market execution.
+
 ## Ownership and baseline
 
 - Owner: the original S7 core/panel implementer, task-15 executor, continuing
