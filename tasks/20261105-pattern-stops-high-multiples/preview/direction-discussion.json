@@ -1,0 +1,275 @@
+{
+    "schema": "direction-discussion.v1",
+    "demo": false,
+    "source": {
+        "taskId": "20261105-pattern-stops-high-multiples",
+        "draftPath": "tasks/20261105-pattern-stops-high-multiples/direction-draft.md",
+        "revision": "e85e62f309fd93393eac29aa381844e126527f7a"
+    },
+    "ownerPurpose": "最終，我會想要找到盡量有高倍機率的型態，型態也可以搭配，例如多重強勢……以及找到停損不會排掉過多會變成高倍股的停損方法，卻又不會讓停損要賠太多，停損也可以多個方法搭配，也可以有買回機制",
+    "purposeStatus": "pending",
+    "outcomes": [
+        {
+            "id": "supports",
+            "title": "如果成立",
+            "headline": "有 ▢▢ 個型態組合讓 2／3／5 倍比例明顯高於雙重強勢與全市場基準；最好的停損加買回保留 ▢▢% 高倍股，觸發時平均只賠 ▢▢%。",
+            "decision": "從 P1／P4 挑出高倍比例明顯高於基準的進場條件或組合，搭配 P2／P3 中錯殺少、賠得少的停損與買回，交給下一份研究定門檻（步驟 6）並做帳戶回測（步驟 7）。",
+            "limitation": "仍是已看過歷史上的描述統計，不等於帳戶報酬，也不批准策略。"
+        },
+        {
+            "id": "does-not-support",
+            "title": "如果不成立",
+            "headline": "沒有型態組合在雙重強勢之外明顯多抓到 2／3／5 倍股；每種停損不是錯殺超過 ▢▢% 高倍股，就是平均賠超過 ▢▢%。",
+            "decision": "型態路線不再加碼；改看法人、月營收等其他訊號，或接受「強勢股只能用寬停損」，在之後的帳戶回測中按此配置資金。",
+            "limitation": "只代表本次定義的型態與停損，不代表所有型態或停損都無效。"
+        },
+        {
+            "id": "unclear",
+            "title": "如果分不出來",
+            "headline": "型態組合與基準的差距落在不確定區間內，或可判定樣本只有 ▢▢%，無法區分。",
+            "decision": "不進帳戶回測；擴大樣本（例如序列條件放寬、合併同族型態）或改用前瞻紀錄累積新期間，再判斷。",
+            "limitation": "沒有結論不等於沒有作用，也不能把不確定寫成通過。"
+        }
+    ],
+    "choices": [
+        {
+            "id": "C1",
+            "question": "停損研究要不要先用雙重強勢做，不等型態資料？",
+            "options": [
+                {
+                    "id": "stops-first",
+                    "label": "建議：先做停損（雙重強勢），型態資料平行準備",
+                    "impact": "最早回答「雙重強勢停損難不難做」，並用答案決定 WP1 要找哪種型態（例如停損點比較近的型態）。"
+                },
+                {
+                    "id": "patterns-first",
+                    "label": "先做型態資料與單一條件，再做停損",
+                    "impact": "停損可用型態失效點，但要等每日型態資料做好，回答停損疑問會比較晚。"
+                }
+            ]
+        },
+        {
+            "id": "C2",
+            "question": "結果怎麼分級？",
+            "options": [
+                {
+                    "id": "eight-cells",
+                    "label": "建議：8 格：2／3／5 倍各分一年內與第二年，未翻倍分收高或收低",
+                    "impact": "每個事件只算一次，避免一年 2 倍與兩年 3 倍重複計算；可用實際到達天數年化。"
+                },
+                {
+                    "id": "two-primary",
+                    "label": "只以一年 2 倍當主格，其他倍數次要",
+                    "impact": "比較單純、樣本多，但看不到 3、5 倍大贏家的差別。"
+                }
+            ]
+        },
+        {
+            "id": "C3",
+            "question": "停損候選清單要用哪一版？",
+            "options": [
+                {
+                    "id": "full",
+                    "label": "建議：完整清單：固定百分比 7／10／15、跌破月線（20 日線）、跌破季線（60 日線）、季線連 3 日、老王分批、雷公 20 日線拐頭、老雷構造被跌破、移動停利回落 15／20／25、跌破已確認前低",
+                    "impact": "比較範圍最廣，P2 散點約 13 個點；候選要先登記。"
+                },
+                {
+                    "id": "short",
+                    "label": "精簡清單：固定百分比、月線與季線、老雷構造、跌破前低",
+                    "impact": "工作量小，先看大方向；老王、雷公方法延後。"
+                }
+            ]
+        },
+        {
+            "id": "C4",
+            "question": "買回候選要哪些？",
+            "options": [
+                {
+                    "id": "three",
+                    "label": "建議：三種都做：3 日內帶量站回月線、站回出場前 20 日高點、老雷頂部構造被突破而作廢",
+                    "impact": "可比較不同買回邏輯救回多少高倍股。"
+                },
+                {
+                    "id": "one",
+                    "label": "只做站回出場前 20 日高點",
+                    "impact": "最簡單，先確認買回有沒有用。"
+                }
+            ]
+        },
+        {
+            "id": "C5",
+            "question": "老雷 2B 的「B 不是構造」要怎麼判？",
+            "options": [
+                {
+                    "id": "both",
+                    "label": "建議：嚴格與寬鬆兩版都算，先比較事件數",
+                    "impact": "定義差異看得見，再決定主版本。"
+                },
+                {
+                    "id": "strict",
+                    "label": "只照影片的構造規則",
+                    "impact": "最貼近原話，但事件可能很少。"
+                },
+                {
+                    "id": "loose",
+                    "label": "寬鬆：反彈不超過 N 根就算",
+                    "impact": "事件較多，但離原話較遠。"
+                }
+            ]
+        },
+        {
+            "id": "C6",
+            "question": "老雷 2B 的「迅速」：B 到 C、以及 C 之後站回 A，各最多幾根 K 線？",
+            "options": [
+                {
+                    "id": "owner-sets",
+                    "label": "建議：由擁有者依看盤經驗給根數",
+                    "impact": "最接近擁有者的用法；請在備註寫兩個根數。"
+                },
+                {
+                    "id": "sweep",
+                    "label": "先試幾組根數並列比較",
+                    "impact": "不需先決定，但比較次數增加，要先登記。"
+                }
+            ]
+        },
+        {
+            "id": "C7",
+            "question": "深度乖離前提（只出現在二手來源）怎麼處理？",
+            "options": [
+                {
+                    "id": "variant",
+                    "label": "建議：當選配變體，不當主定義",
+                    "impact": "主定義只用影片原話；多一個變體看前提有沒有差。"
+                },
+                {
+                    "id": "required",
+                    "label": "當主定義的必要條件",
+                    "impact": "需擁有者確認雷公確實這樣說，並在備註附來源。"
+                }
+            ]
+        },
+        {
+            "id": "C8",
+            "question": "驗證期怎麼留？",
+            "options": [
+                {
+                    "id": "hold-years",
+                    "label": "建議：保留一段年份不看（例如 2017 到 2018）",
+                    "impact": "一年、兩年期都能在驗證期判定，但驗證期在中段。"
+                },
+                {
+                    "id": "hold-tail",
+                    "label": "一年期保留最後一段；兩年期只做描述",
+                    "impact": "驗證期最新，但兩年期結果不能當判定。"
+                }
+            ]
+        },
+        {
+            "id": "C9",
+            "question": "定義卡怎麼確認？",
+            "options": [
+                {
+                    "id": "examples",
+                    "label": "建議：型態類附擁有者認可與不認可的正反例圖；均線類只勾參數",
+                    "impact": "避免 2B 定義錯位再發生；需要擁有者標註時間。"
+                },
+                {
+                    "id": "params-only",
+                    "label": "全部只勾參數",
+                    "impact": "比較快，但型態類可能再次和擁有者原意不同。"
+                }
+            ]
+        },
+        {
+            "id": "C10",
+            "question": "民間方法第一批納入哪些？",
+            "options": [
+                {
+                    "id": "four",
+                    "label": "建議：均線糾結突破族（老王＋雷公＋民間合併）、KD 高檔鈍化、月營收創新高、法人連買",
+                    "impact": "P1 多四族；其他（紅三兵、缺口不補等）延後。"
+                },
+                {
+                    "id": "ma-only",
+                    "label": "只做均線糾結突破族",
+                    "impact": "範圍最小，先驗證老師方法。"
+                }
+            ]
+        },
+        {
+            "id": "C11",
+            "question": "母體與事件口徑？",
+            "options": [
+                {
+                    "id": "pr61",
+                    "label": "建議：沿用 1,942 檔與 2010 起日曆、冷卻後事件",
+                    "impact": "可與 momentum-only-doubling 直接對照。"
+                },
+                {
+                    "id": "full-market",
+                    "label": "改用目前全市場普通股",
+                    "impact": "涵蓋較新上市股票，但與前作分母不同。"
+                }
+            ]
+        }
+    ],
+    "questions": [
+        {
+            "reference": "20261021-momentum-only-doubling#Q1",
+            "question": "型態在強勢條件之外，額外貢獻多少？",
+            "status": "carried → 20261105-pattern-stops-high-multiples",
+            "reason": "卡在：每日型態狀態未發布；關閉路徑：WP0 共用資料後，由 WP1／WP2 回答",
+            "source": "草稿 ⑫（提出於 20261021-momentum-only-doubling 的 L1）"
+        },
+        {
+            "reference": "20261024-strength-weakening-flags#Q3",
+            "question": "哪條停損規則，報酬和回撤優於持有不動？",
+            "status": "carried → 20261105-pattern-stops-high-multiples",
+            "reason": "卡在：本作只做描述統計；關閉路徑：本作 WP3／WP4 給候選；帳戶部分由步驟 7（Q5）回答",
+            "source": "草稿 ⑫（提出於 20261024-strength-weakening-flags 的 L2）"
+        },
+        {
+            "reference": "20261105-pattern-stops-high-multiples#Q1",
+            "question": "等值機率的加權方式與挑選門檻",
+            "status": "open",
+            "reason": "卡在：需要 WP3 的觸發時平均賠；關閉路徑：WP3 後由擁有者定義，碰驗證期與帳戶回測前寫死",
+            "source": "草稿 ⑫（提出於 L2）"
+        },
+        {
+            "reference": "20261105-pattern-stops-high-multiples#Q2",
+            "question": "Dashboard 互動頁是否足以比較停損與買回候選，或需要另做候選比較視圖",
+            "status": "open",
+            "reason": "卡在：目前 kit 只支援選項與分支切換；關閉路徑：擁有者試用後在 PR 回覆",
+            "source": "草稿 ⑫（提出於 L17）"
+        },
+        {
+            "reference": "20261105-pattern-stops-high-multiples#Q3",
+            "question": "雷公其他影片（關鍵性波動、雙均線、交易流程表）與「深度乖離」前提的原話",
+            "status": "open",
+            "reason": "卡在：只有二手來源提到乖離；關閉路徑：擁有者提供連結，或讀同頻道影片字幕",
+            "source": "草稿 ⑫（提出於 L12）"
+        },
+        {
+            "reference": "20261105-pattern-stops-high-multiples#Q4",
+            "question": "融資融券、處置公告、股權分散資料有沒有、從何時起",
+            "status": "open",
+            "reason": "卡在：未查；關閉路徑：WP0 查 producer 資料",
+            "source": "草稿 ⑫（提出於 L10）"
+        },
+        {
+            "reference": "20261105-pattern-stops-high-multiples#Q5",
+            "question": "500 萬以內、最多 5 檔的帳戶回測會遇到哪些問題",
+            "status": "open",
+            "reason": "卡在：需要步驟 6 的候選；關閉路徑：另立研究",
+            "source": "草稿 ⑫（提出於 L15）"
+        },
+        {
+            "reference": "20261105-pattern-stops-high-multiples#Q6",
+            "question": "雷公多週期均線研究（multi-timeframe-ma）要併入本作還是另跑",
+            "status": "open",
+            "reason": "卡在：該 mission 仍待擁有者合併；關閉路徑：擁有者決定；併入時沿用其核心元件",
+            "source": "草稿 ⑫（提出於 L9）"
+        }
+    ]
+}
