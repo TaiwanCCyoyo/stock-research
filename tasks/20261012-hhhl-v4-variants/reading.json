@@ -1,0 +1,29 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20261012-hhhl-v4-variants",
+    "state": "ready",
+    "reason": "已依保存的完整文字結果整理問題、比較、分母、限制及後續資訊；屬閱讀就緒，不是策略或擁有者驗收。",
+    "updated_at": "2026-11-04",
+    "edition": "reading-report.md",
+    "question": "哪些條件伴隨頭頭高、底底高突破後翻倍？未翻倍者常出現哪些支撐失效訊號，最終翻倍者中又多少曾先出現？",
+    "answer": "頭頭高、底底高事件的半年與一年翻倍比例，都低於兩個新高對照；跌破支撐常見於未翻倍者，也曾出現在最終翻倍者身上。",
+    "limitation": "各組沿用同一段歷史；支撐跌破是價格過程的紀錄，沒有模擬當時賣出後的帳戶結果。",
+    "data_period": {
+        "from": "2019-01-02",
+        "to": "2026-08-14"
+    },
+    "sources": [
+        {
+            "label": "主要結果來源",
+            "path": "20261012-hhhl-v4-variants/report.md"
+        },
+        {
+            "label": "原始問題與規則",
+            "path": "20261012-hhhl-v4-variants/mission.md"
+        },
+        {
+            "label": "後續結果或口徑說明",
+            "path": "20261010-hhhl-v4-probability/report.md"
+        }
+    ]
+}

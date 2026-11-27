@@ -16,8 +16,9 @@
     padding: 7px 12px;
 }
 .op-page button[aria-pressed="true"] {
-    background: var(--accent);
-    color: var(--paper);
+    background: var(--action);
+    color: var(--on-action);
+    font-weight: 700;
 }
 .op-page .op-text-button {
     background: transparent;
@@ -138,6 +139,9 @@
 .op-controls {
     padding: 19px 22px 13px;
 }
+.op-controls.u-card {
+    border-top: 3px solid var(--action);
+}
 .op-time-control {
     display: flex;
     align-items: center;
@@ -148,8 +152,8 @@
     width: 46px;
     height: 46px;
     border-radius: 50%;
-    color: var(--surface);
-    background: var(--accent);
+    color: var(--on-action);
+    background: var(--action);
     box-shadow: var(--shadow-lift);
 }
 .op-slider-box {
@@ -548,8 +552,8 @@
     color: var(--muted);
 }
 .op-page .op-detail-button {
-    background: var(--accent);
-    color: var(--surface);
+    background: var(--action);
+    color: var(--on-action);
     width: 100%;
     margin-top: 16px;
     font-size: 12px;

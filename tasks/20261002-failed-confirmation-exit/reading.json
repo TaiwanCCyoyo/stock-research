@@ -1,0 +1,22 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20261002-failed-confirmation-exit",
+    "state": "ready",
+    "reason": "已依保存的完整文字結果整理問題、比較、分母、限制及後續資訊；屬閱讀就緒，不是策略或擁有者驗收。",
+    "updated_at": "2026-11-04",
+    "edition": "reading-report.md",
+    "question": "實際加碼後，經濟估值損益回到零或以下即退出，能否改善試錯？",
+    "answer": "加碼後回到損益零點就退出，非命中持股由合計賺 36.09 萬元轉為虧 17.05 萬元，委託也增加。",
+    "limitation": "退出是估計損益回到零時才提出，實際成交可能更晚；延遲執行、缺席與另一段歷史的比較尚未完成。",
+    "data_period": null,
+    "sources": [
+        {
+            "label": "主要結果來源",
+            "path": "20261002-failed-confirmation-exit/execution-v1.md"
+        },
+        {
+            "label": "後續結果或口徑說明",
+            "path": "20261002-add-stage-diagnostic/report.md"
+        }
+    ]
+}

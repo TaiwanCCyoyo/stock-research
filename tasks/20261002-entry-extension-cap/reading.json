@@ -1,0 +1,26 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20261002-entry-extension-cap",
+    "state": "ready",
+    "reason": "已依保存的完整文字結果整理問題、比較、分母、限制及後續資訊；屬閱讀就緒，不是策略或擁有者驗收。",
+    "updated_at": "2026-11-04",
+    "edition": "reading-report.md",
+    "question": "首次進場限制近 60 日漲幅不超過 50%，能否降低試錯成本而保留收益？",
+    "answer": "首次買入排除近 60 日已漲超過 50% 的股票，委託減少，但淨利只剩原來的 13.69%，低於事前要求的 70%。",
+    "limitation": "結果只涵蓋這個漲幅上限、排名與部位組合，以及已看過的 2019–2023 年。其他避免追高的方法尚未比較。",
+    "data_period": null,
+    "sources": [
+        {
+            "label": "主要結果來源",
+            "path": "20261002-entry-extension-cap/execution-v1.md"
+        },
+        {
+            "label": "後續結果或口徑說明",
+            "path": "20261002-one-lot-delay-resumption/execution-v4.md"
+        },
+        {
+            "label": "後續結果或口徑說明",
+            "path": "20261002-add-stage-diagnostic/report.md"
+        }
+    ]
+}

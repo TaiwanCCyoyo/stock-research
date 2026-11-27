@@ -1,0 +1,26 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20261002-add-stage-diagnostic",
+    "state": "ready",
+    "reason": "已依保存的完整文字結果整理問題、比較、分母、限制及後續資訊；屬閱讀就緒，不是策略或擁有者驗收。",
+    "updated_at": "2026-11-04",
+    "edition": "reading-report.md",
+    "question": "非命中損益主要來自已加碼或未加碼的嘗試？延遲路徑為何惡化？",
+    "answer": "2019–2023 年原時點和延遲一天帳戶中，已結束且未被列為捕捉到大漲的持股，有實際加碼的一組合計賺錢，沒有加碼的一組合計虧錢；延遲後，前一組少賺很多。",
+    "limitation": "分組是在持股結束後，依有沒有真的加碼決定；兩組股票和持有過程不同，尚未分離出加碼本身多賺或少賺多少。",
+    "data_period": null,
+    "sources": [
+        {
+            "label": "主要結果來源",
+            "path": "20261002-add-stage-diagnostic/report.md"
+        },
+        {
+            "label": "後續結果或口徑說明",
+            "path": "20261002-add-retry/execution-normal-v1.md"
+        },
+        {
+            "label": "後續結果或口徑說明",
+            "path": "20261002-one-lot-delay-resumption/execution-v4.md"
+        }
+    ]
+}

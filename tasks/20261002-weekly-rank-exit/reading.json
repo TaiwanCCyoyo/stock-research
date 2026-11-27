@@ -1,0 +1,22 @@
+{
+    "schema": "report-reading.v1",
+    "task_id": "20261002-weekly-rank-exit",
+    "state": "ready",
+    "reason": "已依保存的完整文字結果整理問題、比較、分母、限制及後續資訊；屬閱讀就緒，不是策略或擁有者驗收。",
+    "updated_at": "2026-11-04",
+    "edition": "reading-report.md",
+    "question": "把排名退出改成每週檢查，能否減少操作並保留收益？",
+    "answer": "每週才檢查排名退出，少操作 89 晚；但非命中持股由合計賺 39.64 萬元轉為虧 41.54 萬元。",
+    "limitation": "兩個帳戶都還有未結束持股，最差連續二十次序列仍未知；這種分組現金損失與整個帳戶從高點回落的幅度不同。",
+    "data_period": null,
+    "sources": [
+        {
+            "label": "主要結果來源",
+            "path": "20261002-weekly-rank-exit/execution-v2.md"
+        },
+        {
+            "label": "後續結果或口徑說明",
+            "path": "20261002-catalog-participation/report.md"
+        }
+    ]
+}

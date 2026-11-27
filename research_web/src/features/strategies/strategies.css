@@ -68,9 +68,11 @@
     gap: 12px;
     margin: 14px 0;
 }
-.ss-kpi {
+.ss-kpi.u-card {
     padding: 13px 15px;
     min-width: 0;
+    border-top: 3px solid var(--emphasis);
+    box-shadow: none;
 }
 .ss-kpi > span,
 .ss-kpi > small {
@@ -232,8 +234,8 @@
     position: sticky;
     top: 0;
     z-index: 1;
-    background: var(--surface);
-    color: var(--muted);
+    background: var(--surface-muted);
+    color: var(--ink);
 }
 .ss-table th button {
     border: 0;
@@ -305,13 +307,13 @@
     color: var(--ink);
     text-align: left;
     padding: 12px 13px;
-    background: var(--accent-soft);
+    background: var(--surface-muted);
     border: 2px solid transparent;
     border-radius: 12px;
 }
 .ss-step[aria-current="step"] {
-    border-color: var(--accent);
-    background: var(--surface);
+    border-color: var(--action);
+    background: var(--surface-feature);
 }
 .ss-step small,
 .ss-step strong {
