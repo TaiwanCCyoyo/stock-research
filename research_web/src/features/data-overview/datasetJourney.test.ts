@@ -236,3 +236,35 @@ test("family failure preserves explicit catalog versions but cannot exclude bare
         "unavailable",
     );
 });
+
+test("dataset journeys retain only recognized study collections through nested returns", () => {
+    for (const collection of ["ready", "in_progress", "history"]) {
+        const back = studyContext(
+            `#studies?collection=${collection}&q=volume&filter=failed`,
+            "study-A",
+        );
+        const href = datasetDetailHref("catalog:events:old", back);
+        const restored = safeDatasetBack(href)!;
+        const returnHash = new URLSearchParams(restored.split("?")[1]).get(
+            "back",
+        )!;
+        const query = new URLSearchParams(returnHash.split("?")[1]);
+        assert.equal(query.get("collection"), collection);
+        assert.equal(query.get("q"), "volume");
+        assert.equal(query.get("filter"), "failed");
+        assert.equal(query.get("study"), "study-A");
+    }
+    for (const collection of [
+        "archive",
+        "READY",
+        "https://evil",
+        "//evil",
+        "history&redirect=https://evil",
+    ]) {
+        const hash =
+            "#studies?" +
+            new URLSearchParams({ collection, redirect: "https://evil" });
+        assert.equal(safeStudyBack(hash), "#studies");
+        assert.equal(studyContext(hash, "study-A"), "#studies?study=study-A");
+    }
+});

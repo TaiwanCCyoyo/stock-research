@@ -22,7 +22,12 @@
 }
 .st-answer {
     color: var(--ink);
-    opacity: 0.86;
+    font-size: 17px;
+    line-height: 1.75;
+    border-left: 4px solid var(--emphasis, var(--highlight));
+    padding: 12px 16px;
+    background: var(--surface-feature, var(--surface-2));
+    border-radius: 0 10px 10px 0;
 }
 .st-numbers {
     display: grid;
@@ -49,15 +54,14 @@
 .st-numbers .is-highlighted {
     border-color: var(--accent);
 }
+.st-answer,
 .st-answer.is-clamped {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    white-space: normal;
 }
 .st-limit {
-    font-size: 13px;
+    font-size: 14px;
     color: var(--muted);
+    line-height: 1.65;
 }
 .st-toolbar {
     display: grid;
@@ -203,4 +207,35 @@
     margin-left: 10px;
     min-height: 32px;
     padding: 4px 14px;
+}
+
+.st-identity {
+    font-size: 12px;
+    overflow-wrap: anywhere;
+    color: var(--muted);
+}
+.st-period {
+    font-size: 14px;
+}
+.st-research-tools {
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+}
+.st-research-tools h2 {
+    font-size: 19px;
+}
+.st-research-tools .direction-entrance {
+    padding: 16px 20px;
+    box-shadow: none;
+}
+.st-card .st-question {
+    max-width: 36em;
+}
+.st-card .st-identity {
+    display: none;
+}
+.st-card .u-actions {
+    border-top: 1px solid var(--line);
+    padding-top: 16px;
 }

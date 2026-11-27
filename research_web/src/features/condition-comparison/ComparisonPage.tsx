@@ -22,7 +22,7 @@ export function ComparisonEntrance({ back }: { back: string }) {
     }, [target]);
     const registered = readRegisteredComparison(L1_SYNTHETIC_RESULT_ID);
     if (registered.status !== "ready")
-        return <p role="alert">L1 合成契約示例無法讀取。</p>;
+        return <p role="alert">條件比較示範暫時無法讀取。</p>;
     return (
         <a
             ref={entrance}
@@ -45,10 +45,8 @@ export function ComparisonEntrance({ back }: { back: string }) {
                 );
             }}
         >
-            <strong>查看 L1 四格比較（producer 合成示例） →</strong>
-            <span>
-                沿用正式資料契約；合成計數尚未評估，追溯指標不是完整個案。
-            </span>
+            <strong>試用條件比較工具 →</strong>
+            <span>以虛構資料示範如何比較不同條件下的結果。</span>
         </a>
     );
 }

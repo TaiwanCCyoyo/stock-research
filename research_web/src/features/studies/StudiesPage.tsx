@@ -11,36 +11,44 @@ import { DirectionEntrance } from "../direction-discussion/DirectionDiscussionPa
 import { ComparisonEntrance } from "../condition-comparison/ComparisonPage";
 import { comparisonRequestsSourceFocus } from "../condition-comparison/journey";
 import "./studies.css";
+import {
+    currentStudyHash,
+    READING_LABELS,
+    studyCollection,
+    type ReadingState,
+} from "./reading";
+
+function selection() {
+    const params = new URLSearchParams(currentStudyHash().split("?")[1] ?? "");
+    const value = params.get("collection");
+    const outcome = params.get("filter") ?? params.get("outcome");
+    return {
+        collection: (value === "in_progress" || value === "history"
+            ? value
+            : "ready") as ReadingState,
+        query: params.get("q") ?? "",
+        filter: (Object.hasOwn(VERDICT_LABELS, outcome ?? "")
+            ? outcome
+            : "all") as StudyFilter,
+    };
+}
 
 export function StudiesPage() {
     const studies = useStudyCards();
-    const params = new URLSearchParams(
-        globalThis.location?.hash.split("?")[1] ?? "",
-    );
-    const rawFilter = params.get("filter") ?? "all";
-    const filter = (
-        ["all", "report", ...Object.keys(VERDICT_LABELS)].includes(rawFilter)
-            ? rawFilter
-            : "all"
-    ) as StudyFilter;
-    const query = params.get("q") ?? "";
+    const [selected, setSelected] = useState(selection);
+    const { filter, query } = selected;
+    const params = new URLSearchParams(currentStudyHash().split("?")[1] ?? "");
+    const study = params.get("study");
+    const focusedCard = studies.cards?.find((card) => card.id === study);
+    const collection =
+        focusedCard && !params.has("collection")
+            ? studyCollection(focusedCard)
+            : selected.collection;
+    const comparisonFocus = comparisonRequestsSourceFocus(currentStudyHash());
     const [searchDraft, setSearchDraft] = useState(query);
     useEffect(() => setSearchDraft(query), [query]);
-    const study = params.get("study");
-    const comparisonFocus = comparisonRequestsSourceFocus(
-        globalThis.location?.hash ?? "",
-    );
-    const update = (key: string, value: string) => {
-        const next = new URLSearchParams(params);
-        next.set(key, value);
-        next.delete("study");
-        next.delete("focus");
-        location.hash = "studies?" + next;
-    };
-    const setFilter = (value: StudyFilter) => update("filter", value);
-    const setQuery = (value: string) => update("q", value);
+    const setQuery = (value: string) => update({ query: value });
     useEffect(() => {
-        // Explicit comparison return owns focus, including delayed card refreshes.
         if (comparisonFocus || !study || !studies.cards) return;
         const element = document.getElementById("study-" + study);
         if (element) {
@@ -48,15 +56,58 @@ export function StudiesPage() {
             element.scrollIntoView({ block: "center" });
         }
     }, [comparisonFocus, study, studies.cards]);
-    const all = useMemo(() => studies.cards ?? [], [studies.cards]);
+    function update(next: Partial<typeof selected>) {
+        const value = { ...selected, collection, ...next };
+        const params = new URLSearchParams(
+            currentStudyHash().split("?")[1] ?? "",
+        );
+        for (const key of [
+            "study",
+            "focus",
+            "collection",
+            "outcome",
+            "filter",
+            "q",
+        ])
+            params.delete(key);
+        if (value.collection !== "ready")
+            params.set("collection", value.collection);
+        if (value.filter !== "all") params.set("filter", value.filter);
+        if (value.query) params.set("q", value.query);
+        window.history.replaceState(
+            null,
+            "",
+            `#studies${params.size ? `?${params}` : ""}`,
+        );
+        setSelected(value);
+    }
+    useEffect(() => {
+        const change = () => setSelected(selection());
+        window.addEventListener("hashchange", change);
+        return () => window.removeEventListener("hashchange", change);
+    }, []);
+    const loaded = !!studies.cards;
+    useEffect(() => {
+        if (!loaded || study || comparisonFocus) return;
+        try {
+            const y = Number(
+                sessionStorage.getItem(`study-scroll:${window.location.hash}`),
+            );
+            if (y > 0) requestAnimationFrame(() => window.scrollTo(0, y));
+        } catch {
+            /* Storage is optional. */
+        }
+    }, [loaded, study, comparisonFocus]);
+    const all = useMemo(
+        () =>
+            (studies.cards ?? []).filter(
+                (card) => studyCollection(card) === collection,
+            ),
+        [studies.cards, collection],
+    );
     const filters = useMemo(() => {
         const options: { id: StudyFilter; label: string; count: number }[] = [
             { id: "all", label: "全部", count: all.length },
-            {
-                id: "report",
-                label: "有網頁報告",
-                count: all.filter((card) => card.reportHref).length,
-            },
         ];
         for (const [id, label] of Object.entries(VERDICT_LABELS)) {
             const count = all.filter((card) => card.verdict === id).length;
@@ -66,14 +117,28 @@ export function StudiesPage() {
     }, [all]);
     const groups = groupByMonth(filterStudies(all, filter, query));
     return (
-        <div className="u-page st-page">
+        <div
+            className="u-page st-page"
+            onClickCapture={(event) => {
+                if (
+                    (event.target as HTMLElement).closest("a[href^='#report/']")
+                ) {
+                    try {
+                        sessionStorage.setItem(
+                            `study-scroll:${window.location.hash}`,
+                            String(window.scrollY),
+                        );
+                    } catch {
+                        /* Optional. */
+                    }
+                }
+            }}
+        >
             <div className="u-eyebrow">研究</div>
-            <h1 className="u-title">問過的問題，和得到的答案。</h1>
-            <p className="u-lede">包含行不通的。最新的在最上面。</p>
-            <DirectionEntrance />
-            <ComparisonEntrance
-                back={globalThis.location?.hash ?? "#studies"}
-            />
+            <h1 className="u-title">股票研究報告</h1>
+            <p className="u-lede">
+                查看選股與交易方法的研究結果、比較依據與限制。
+            </p>
             {!studies.cards ? (
                 studies.error ? (
                     <StudioState
@@ -95,9 +160,46 @@ export function StudiesPage() {
                     )}
                     {studies.partial && (
                         <p className="u-notice st-partial">
-                            完整研究紀錄暫時讀不到，下面先列出網頁報告。
+                            完整紀錄暫時無法讀取，目前顯示備用紀錄；來源與核對狀態會列在各份報告。
                         </p>
                     )}
+                    <div
+                        className="u-segmented"
+                        role="group"
+                        aria-label="研究資料分類"
+                    >
+                        {(
+                            Object.entries(READING_LABELS) as [
+                                ReadingState,
+                                string,
+                            ][]
+                        ).map(([key, label]) => (
+                            <button
+                                key={key}
+                                aria-pressed={collection === key}
+                                onClick={() =>
+                                    update({ collection: key, filter: "all" })
+                                }
+                            >
+                                {label}{" "}
+                                <span className="u-count">
+                                    {
+                                        studies.cards?.filter(
+                                            (card) =>
+                                                studyCollection(card) === key,
+                                        ).length
+                                    }
+                                </span>
+                            </button>
+                        ))}
+                    </div>
+                    <p className="u-muted">
+                        {collection === "ready"
+                            ? "每份報告列出研究問題、發現與限制。依內容更新日期排列。"
+                            : collection === "in_progress"
+                              ? "查看正在規劃、執行或修訂的研究；各頁標示目前進度與已有發現。"
+                              : "已封存的研究與模擬紀錄；部分只保留原始資料，未提供網頁報告。"}
+                    </p>
                     <div className="st-toolbar">
                         <div
                             className="u-chips"
@@ -109,7 +211,9 @@ export function StudiesPage() {
                                     key={option.id}
                                     className="u-chip"
                                     aria-pressed={filter === option.id}
-                                    onClick={() => setFilter(option.id)}
+                                    onClick={() =>
+                                        update({ filter: option.id })
+                                    }
                                 >
                                     {option.label}
                                     <span className="u-count">
@@ -129,7 +233,7 @@ export function StudiesPage() {
                                 className="st-search"
                                 type="search"
                                 aria-label="搜尋研究"
-                                placeholder="搜尋研究"
+                                placeholder="問題、關鍵字或任務代號"
                                 value={searchDraft}
                                 onChange={(event) =>
                                     setSearchDraft(event.target.value)
@@ -141,7 +245,25 @@ export function StudiesPage() {
                         </form>
                     </div>
                     {groups.length === 0 && (
-                        <p className="u-skeleton">沒有符合的研究。</p>
+                        <div className="u-card" role="status">
+                            <p>
+                                {query || filter !== "all"
+                                    ? "沒有符合篩選的研究。"
+                                    : collection === "ready"
+                                      ? "目前沒有研究報告。可先查看進行中的研究。"
+                                      : "這個分類目前沒有紀錄。"}
+                            </p>
+                            {(query || filter !== "all") && (
+                                <button
+                                    className="u-btn"
+                                    onClick={() =>
+                                        update({ query: "", filter: "all" })
+                                    }
+                                >
+                                    清除篩選
+                                </button>
+                            )}
+                        </div>
                     )}
                     {groups.map((group) => (
                         <section key={group.month} className="st-month">
@@ -159,12 +281,6 @@ export function StudiesPage() {
                             </div>
                         </section>
                     ))}
-                    {studies.hidden > 0 && (
-                        <p className="u-muted st-hidden">
-                            另有 {studies.hidden}{" "}
-                            個任務的紀錄暫時無法核對，先不顯示。
-                        </p>
-                    )}
                     {studies.source && (
                         <div className="st-footnote">
                             <SourceNotice source={studies.source} history />
@@ -172,6 +288,11 @@ export function StudiesPage() {
                     )}
                 </>
             )}
+            <section className="st-research-tools" aria-label="研究規劃與工具">
+                <h2>研究規劃與工具</h2>
+                <DirectionEntrance />
+                <ComparisonEntrance back={currentStudyHash() || "#studies"} />
+            </section>
         </div>
     );
 }
